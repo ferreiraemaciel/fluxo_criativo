@@ -27,6 +27,79 @@
     min-height: 100vh;
     -webkit-font-smoothing: antialiased;
   }
+  header {
+    background: var(--ink-1);
+    border-bottom: 1px solid var(--line-2);
+    padding: 0 24px;
+    height: 56px;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 20px;
+    flex-shrink: 0;
+    -webkit-app-region: drag;
+  }
+  .brand {
+    display: flex; align-items: center; gap: 10px;
+    flex-shrink: 0;
+    -webkit-app-region: no-drag;
+  }
+  .brand-logo {
+    width: 28px; height: 28px; border-radius: 7px;
+    background: var(--ink-3);
+    border: 1px solid var(--line-2);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .brand-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--neon);
+    box-shadow: 0 0 10px var(--neon-glow);
+  }
+  .brand-text { display: flex; flex-direction: column; gap: 1px; }
+  .brand-name {
+    font-family: var(--font-display);
+    font-size: 14px; font-weight: 500;
+    letter-spacing: -.02em;
+    color: var(--text-hi);
+    line-height: 1;
+  }
+  .brand-sub {
+    font-family: var(--font-mono);
+    font-size: 9px; font-weight: 400;
+    color: var(--text-faint);
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    line-height: 1;
+    white-space: nowrap;
+  }
+  .controls {
+    display: flex; align-items: center; gap: 8px;
+    -webkit-app-region: no-drag;
+  }
+  .project-path {
+    font-family: var(--font-mono, monospace);
+    font-size: 10px; color: var(--text-faint);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    max-width: 320px; padding: 0 4px;
+    user-select: text; cursor: text;
+  }
+  .btn-claude {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 8px 16px;
+    background: var(--neon); color: var(--ink-0);
+    border: none; border-radius: 7px;
+    font-family: var(--font-body);
+    font-size: 13px; font-weight: 600;
+    cursor: pointer; transition: opacity .15s, transform .1s;
+    white-space: nowrap;
+    letter-spacing: -.01em;
+  }
+  .btn-claude:hover { opacity: .88; transform: translateY(-1px); }
+  .btn-claude:active { transform: translateY(0); opacity: 1; }
+  @media (max-width: 680px) {
+    header { padding: 0 14px; gap: 10px; }
+    .brand-sub { display: none; }
+    .project-path { max-width: 140px; }
+  }
   main {
     flex: 1;
     position: relative;
@@ -153,8 +226,24 @@
 </head>
 <body>
   <select id="select-produto" style="display:none" disabled></select>
-  <span id="subtitle" style="display:none"></span>
-  <span id="project-path" style="display:none"></span>
+  <header>
+    <div class="brand">
+      <div class="brand-logo">
+        <div class="brand-dot"></div>
+      </div>
+      <div class="brand-text">
+        <span class="brand-name">Fluxo Criativo</span>
+        <span class="brand-sub" id="subtitle">PAINEL · V—</span>
+      </div>
+    </div>
+    <div class="controls" id="controls">
+      <span class="project-path" id="project-path" title=""></span>
+      <button class="btn-claude" onclick="window.electronAPI && window.electronAPI.openClaude()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        Abrir Claude
+      </button>
+    </div>
+  </header>
   <main>
     <iframe id="painel-frame" class="hidden" title="Painel de entregas"></iframe>
     <div id="aviso" class="aviso hidden">
