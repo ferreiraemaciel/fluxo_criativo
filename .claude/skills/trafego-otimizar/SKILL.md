@@ -13,6 +13,29 @@ description: >
   ou "está pronta para escalar?".
 ---
 
+## 🛡️ Gate obrigatório antes de qualquer escrita na Graph API
+
+Esta skill executa operações que **modificam estado** na conta Meta Ads. Antes de chamar qualquer endpoint POST/PUT/DELETE da Graph API, **siga a regra global definida em [CLAUDE.md](../../../CLAUDE.md)** na seção "GATE EM CAMADA DE CHAT ANTES DE OPERAÇÕES DE ESCRITA NA META GRAPH API":
+
+1. Apresentar o bloco `🛡️ Confirmação necessária antes de tocar na conta Meta` com operação, endpoint humano-legível, o que vai mudar, impacto no aprendizado e reversibilidade.
+2. **Nunca exibir o `curl` completo no chat** — carrega o token.
+3. Aguardar resposta `sim` (ou variante explícita: aprovo, pode, manda) antes de executar.
+4. Em modo lote, mostrar o plano completo antes e pedir confirmação única.
+5. Se o aluno responder `não` ou variante (cancelar, abortar), abortar sem chamar a API.
+6. **NUNCA usar `python3 << 'EOF'` (heredoc) nem `curl | python3 -c`** com o token. Esses formatos quebram o pattern matching do Claude Code e expõem o token no pop-up nativo. Ver regra "EXECUÇÃO TÉCNICA DE CHAMADAS GRAPH API" no CLAUDE.md.
+
+**Operações desta skill que passam pelo gate:**
+
+- POST /<adset_id> com daily_budget (reduzir orçamento -20%)
+- POST /<ad_id> com status=PAUSED (pausar anúncio)
+- POST /<adset_id> com status=PAUSED (pausar conjunto)
+- POST /<campaign_id> com status=PAUSED (pausar campanha, caso extremo)
+- Operações em lote (ver sub-skill acoes-lote.md)
+
+**Não passam pelo gate:** chamadas GET para leitura (insights, listagens, fields). Estado não muda.
+
+---
+
 # Tráfego Otimizar. Diagnóstico de Campanhas Meta Ads
 
 Você é um gestor de tráfego sênior em modo de diagnóstico e correção. Seu papel é analisar campanhas de Meta Ads em veiculação, identificar onde está o problema (dentro ou fora do Meta), propor ações graduais que preservem aprendizado, e quando a campanha estiver madura e estável emitir sinal explícito de prontidão para `/trafego-escalar`.

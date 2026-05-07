@@ -151,13 +151,19 @@ def main():
     periodo = args.periodo
     filtro = args.filtro
 
-    # Calcula periodos comparativos
-    periodo_wow_map = {
-        "last_7d": ("last_14d", 7),
-        "last_14d": ("last_28d", 14),
-        "last_30d": ("last_60d", 30),
-    }
-    periodo_wow, time_increment = periodo_wow_map.get(periodo, (None, None))
+    # Calcula janela do periodo anterior usando time_range com datas explicitas.
+    # Evita usar presets compostos (ex: last_60d) que nao existem na Graph API v21.
+    # A janela anterior tem o MESMO tamanho do periodo principal e termina 1 dia
+    # antes do inicio do periodo principal.
+    from datetime import date, timedelta
+    periodo_dias_map = {"last_7d": 7, "last_14d": 14, "last_30d": 30}
+    dias_periodo = periodo_dias_map.get(periodo)
+    wow_since = wow_until = None
+    if dias_periodo:
+        # Periodo principal vai de hoje - dias_periodo ate ontem (Meta exclui hoje em "last_Nd").
+        inicio_atual = date.today() - timedelta(days=dias_periodo)
+        wow_until = inicio_atual - timedelta(days=1)
+        wow_since = wow_until - timedelta(days=dias_periodo - 1)
 
     # ── CHAMADA 1A: Metricas principais do periodo ──
     # Campos do nivel campaign (sem landing_page_views que so existe em ad level)
@@ -172,15 +178,16 @@ def main():
     )
     camps_1a = filtrar(all_1a, filtro)
 
-    # ── CHAMADA 1B: Comparativo WoW (apenas se periodo suportado) ──
+    # ── CHAMADA 1B: Comparativo do periodo anterior (mesma duracao) ──
+    # Usa time_range com datas explicitas em vez de preset combinado com time_increment.
+    # Retorna 1 linha agregada por campanha cobrindo a janela inteira do periodo anterior.
     camps_1b = []
-    if periodo_wow and time_increment:
+    if wow_since and wow_until:
         all_1b = fetch_all_pages(
             {
-                "fields": "campaign_id,campaign_name,spend,clicks,ctr,actions,cost_per_action_type,frequency,date_start,date_stop",
+                "fields": "campaign_id,campaign_name,spend,impressions,clicks,ctr,cpm,reach,frequency,actions,action_values,cost_per_action_type,date_start,date_stop",
                 "level": "campaign",
-                "date_preset": periodo_wow,
-                "time_increment": time_increment,
+                "time_range": json.dumps({"since": wow_since.isoformat(), "until": wow_until.isoformat()}),
                 "limit": 500,
             },
             account, "insights", token

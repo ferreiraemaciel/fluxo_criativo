@@ -3,6 +3,7 @@ name: workshop-marketing:trafego-insights
 description: Lê métricas de campanhas Meta Ads (Facebook + Instagram) com cálculo automático de métricas derivadas (connect rate, taxa de conversão por etapa, custo por etapa, hook rate). Modo campanha única ou conta completa com ranking de urgência. É a fonte única de leitura que /trafego-otimizar, /trafego-escalar e /trafego-analise consomem. Use quando o aluno pedir "como está performando", "me mostra os números", "qual o CPA", "quanto gastei", "puxar relatório", "quais campanhas estão ativas".
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash, Skill, AskUserQuestion
 model: sonnet
+user-invocable: false
 ---
 
 # Trafego Insights. Leitura de Métricas Meta Ads
@@ -21,9 +22,9 @@ Leia `meus-produtos/.ativo`. Se existir, leia também `meus-produtos/{ativo}/per
 ### 0.2 Conexão Meta (gate duro, passo zero obrigatório)
 Leia `META_AUTH_MODO` no `.env`.
 
-- **Se vazio ou ausente:** acione `/meta-conexao` antes de prosseguir. Não tente adivinhar nem cair em fallback. Esta verificação é o passo zero de toda skill `/trafego-*`.
-- **Se `MCP_CONECTOR`:** confirmar que pelo menos uma tool com prefixo `mcp__*__ads_*` está disponível. Se nenhuma estiver, pedir ao aluno para reabrir o Claude Code (MCP recém-adicionado às vezes precisa de reload). Se persistir, voltar a `/meta-conexao` para diagnosticar.
-- **Se `APP`:** confirmar que `FB_ACCESS_TOKEN_PERMANENTE` e `FB_AD_ACCOUNT_ID` existem no `.env`. Se faltar algum, acionar `/meta-conexao`.
+- **Se vazio ou ausente:** acione `/trafego-conexao` antes de prosseguir. Não tente adivinhar nem cair em fallback. Esta verificação é o passo zero de toda skill `/trafego-*`.
+- **Se `MCP_CONECTOR`:** confirmar que pelo menos uma tool com prefixo `mcp__*__ads_*` está disponível. Se nenhuma estiver, pedir ao aluno para reabrir o Claude Code (MCP recém-adicionado às vezes precisa de reload). Se persistir, voltar a `/trafego-conexao` para diagnosticar.
+- **Se `APP`:** confirmar que `FB_ACCESS_TOKEN_PERMANENTE` e `FB_AD_ACCOUNT_ID` existem no `.env`. Se faltar algum, acionar `/trafego-conexao`.
 
 A skill nunca prossegue sem essa validação passar.
 
@@ -313,7 +314,7 @@ Para forçar dado fresco, o aluno pode dizer "puxa de novo sem cache" ou "atuali
 
 ## Princípios que este command nunca viola
 
-1. **Nunca seguir sem `META_AUTH_MODO` configurado.** Aciona `/meta-conexao` antes.
+1. **Nunca seguir sem `META_AUTH_MODO` configurado.** Aciona `/trafego-conexao` antes.
 2. **Nunca tomar decisão.** Só entrega dado. Diagnóstico mora em `/trafego-otimizar`.
 3. **Sempre declarar a janela de atribuição** no output. Sem isso, dado não tem significado.
 4. **Sempre cruzar 3 janelas da trilha** quando o tipo de funil e ticket são conhecidos.

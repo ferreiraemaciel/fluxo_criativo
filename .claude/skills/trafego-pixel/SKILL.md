@@ -8,7 +8,7 @@ description: >
   criado para alimentar uma audience). Use quando o aluno perguntar "meu pixel está funcionando?",
   "quais eventos meu pixel está rastreando?", "tem pixel sem atividade?", "qual foi o último
   disparo do pixel?".
-
+user-invocable: false
 ---
 
 # Tráfego Pixel. Diagnóstico de Pixels Meta Ads
@@ -123,7 +123,7 @@ Correção: refazer a chamada com `aggregation=event_total_counts` e ler `data[]
 - `ads_read` (mínimo)
 - `business_management` (para pixels que pertencem a um Business Manager diferente do usuário)
 
-Se a chamada retornar `OAuthException` ou `permission denied`, a skill encerra com mensagem clara apontando para `/meta-conexao` (regenerar token com escopos corretos).
+Se a chamada retornar `OAuthException` ou `permission denied`, a skill encerra com mensagem clara apontando para `/trafego-conexao` (regenerar token com escopos corretos).
 
 ---
 

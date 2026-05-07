@@ -28,9 +28,9 @@ Leia `meus-produtos/.ativo` e `perfil.md`.
 ### 0.2 Conexão Meta (gate duro, passo zero obrigatório)
 Leia `META_AUTH_MODO` no `.env`.
 
-- **Se vazio ou ausente:** acione `/meta-conexao` antes de prosseguir. Não tente adivinhar nem cair em fallback. Esta verificação é o passo zero de toda skill `/trafego-*`.
-- **Se `MCP_CONECTOR`:** confirmar que pelo menos uma tool com prefixo `mcp__*__ads_*` está disponível. Se nenhuma estiver, pedir ao aluno para reabrir o Claude Code (MCP recém-adicionado às vezes precisa de reload). Se persistir, voltar a `/meta-conexao` para diagnosticar.
-- **Se `APP`:** confirmar que `FB_ACCESS_TOKEN_PERMANENTE` e `FB_AD_ACCOUNT_ID` existem no `.env`. Se faltar algum, acionar `/meta-conexao`.
+- **Se vazio ou ausente:** acione `/trafego-conexao` antes de prosseguir. Não tente adivinhar nem cair em fallback. Esta verificação é o passo zero de toda skill `/trafego-*`.
+- **Se `MCP_CONECTOR`:** confirmar que pelo menos uma tool com prefixo `mcp__*__ads_*` está disponível. Se nenhuma estiver, pedir ao aluno para reabrir o Claude Code (MCP recém-adicionado às vezes precisa de reload). Se persistir, voltar a `/trafego-conexao` para diagnosticar.
+- **Se `APP`:** confirmar que `FB_ACCESS_TOKEN_PERMANENTE` e `FB_AD_ACCOUNT_ID` existem no `.env`. Se faltar algum, acionar `/trafego-conexao`.
 
 A skill nunca prossegue sem essa validação passar.
 
@@ -261,8 +261,17 @@ Antes do próximo incremento, vou revalidar:
 - Tendência ainda estável
 - Sem freio leve/médio acionado
 
-Para ver dados antes do prazo: /trafego-insights
-Se algo piorar, rodar /trafego-otimizar para diagnóstico.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔭 Próximo passo recomendado: /trafego-analise
+Após D+7 (perpétuo low/mid e lançamento) ou D+14 (perpétuo high),
+volte pra /trafego-analise pra confirmar se a escala se sustentou
+e identificar o próximo movimento.
+
+Em caso de freio total acionado nesta sessão: o handoff
+automático aponta pra /trafego-otimizar — siga por lá.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Para ver dados antes do prazo: /trafego-insights.
 ```
 
 ---

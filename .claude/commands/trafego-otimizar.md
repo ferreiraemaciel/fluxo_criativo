@@ -25,9 +25,9 @@ Leia `meus-produtos/.ativo`. Leia `perfil.md` para inferir `ticket_brl` e `tipo_
 ### 0.2 Conexão Meta (gate duro, passo zero obrigatório)
 Leia `META_AUTH_MODO` no `.env`.
 
-- **Se vazio ou ausente:** acione `/meta-conexao` antes de prosseguir. Não tente adivinhar nem cair em fallback. Esta verificação é o passo zero de toda skill `/trafego-*`.
-- **Se `MCP_CONECTOR`:** confirmar que pelo menos uma tool com prefixo `mcp__*__ads_*` está disponível. Se nenhuma estiver, pedir ao aluno para reabrir o Claude Code (MCP recém-adicionado às vezes precisa de reload). Se persistir, voltar a `/meta-conexao` para diagnosticar.
-- **Se `APP`:** confirmar que `FB_ACCESS_TOKEN_PERMANENTE` e `FB_AD_ACCOUNT_ID` existem no `.env`. Se faltar algum, acionar `/meta-conexao`.
+- **Se vazio ou ausente:** acione `/trafego-conexao` antes de prosseguir. Não tente adivinhar nem cair em fallback. Esta verificação é o passo zero de toda skill `/trafego-*`.
+- **Se `MCP_CONECTOR`:** confirmar que pelo menos uma tool com prefixo `mcp__*__ads_*` está disponível. Se nenhuma estiver, pedir ao aluno para reabrir o Claude Code (MCP recém-adicionado às vezes precisa de reload). Se persistir, voltar a `/trafego-conexao` para diagnosticar.
+- **Se `APP`:** confirmar que `FB_ACCESS_TOKEN_PERMANENTE` e `FB_AD_ACCOUNT_ID` existem no `.env`. Se faltar algum, acionar `/trafego-conexao`.
 
 A skill nunca prossegue sem essa validação passar.
 
@@ -327,16 +327,35 @@ Caminho absoluto: `C:\Users\gabri\Documents\GitHub\workshop_inteligente\meus-pro
 
 ## Passo 12. Próximos passos
 
-Sugerir ao aluno:
+Mostrar ao aluno o bloco recomendado, escolhendo o ramo conforme o sinal `sinal_para_escala.pronta` calculado no Passo 9:
+
+**Se `sinal_para_escala.pronta = true`:**
 
 ```
-Próximos passos:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔭 Próximo passo recomendado: /trafego-escalar
+A campanha emitiu sinal de prontidão. Use modo {modo_recomendado}
+e velocidade {velocidade_sugerida} (vieram no diagnóstico).
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
 
-- Aguardar [janela] antes de nova análise (mínimo 48h após edição).
-- Se a campanha está pronta para escalar: /trafego-escalar
+**Se `sinal_para_escala.pronta = false`:**
+
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔭 Próximo passo recomendado: aguardar 48h e voltar pra /trafego-analise
+A campanha ainda não está pronta pra escalar. Aguarde 48h após as
+ações aplicadas e rode /trafego-analise pra ver se as métricas se
+recuperaram. Motivos da não prontidão: {motivo_se_nao_pronta}.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+Em seguida, listar alternativas pra contextos específicos:
+
+```
+Outras opções conforme o contexto:
+
 - Para ver dados atualizados antes do prazo: /trafego-insights
-- Para análise narrada com terminologia VTSD (Mandala, identidades):
-  /trafego-analise
 - Se o gargalo é página, checkout ou técnico: /feedback-pagina,
   /pagina-checkout ou /pagina-performance.
 ```

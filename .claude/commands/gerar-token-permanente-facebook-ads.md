@@ -109,7 +109,38 @@ Não precisa identificar um por um. É só marcar a opção "Selecionar tudo" no
 
 ## Passo 4. Validar o token (3 testes)
 
-Execute os três testes abaixo no terminal, em sequência. Os três precisam passar. Se qualquer um falhar, consulte o **Mapa de erros** logo abaixo antes de pedir ajuda.
+Execute os três testes abaixo, **um por vez, em chamadas Bash separadas**. Os três precisam passar. Se qualquer um falhar, consulte o **Mapa de erros** logo abaixo antes de pedir ajuda.
+
+> ### ⚙️ Como executar (regra dura para a skill)
+>
+> **Cada teste é uma chamada `Bash` independente.** Substituir `TOKEN` pelo valor literal **inline na URL** do `curl`. NÃO empacotar os 3 testes num script multi-linha com `TOKEN="..."` no início + `echo` + múltiplos `curl`. Esse formato (script bash com variável shell) **não casa** com os padrões `Bash(curl -s "https://graph.facebook.com/*)` autorizados no `.claude/settings.local.json` e dispara o pop-up nativo de permissão — que exibe o token completo na tela.
+>
+> Formato CORRETO (3 chamadas Bash independentes, cada uma um único `curl` com token inline):
+>
+> ```
+> curl -s "https://graph.facebook.com/v25.0/me?access_token=<TOKEN_DO_ENV>"
+> ```
+> ```
+> curl -s "https://graph.facebook.com/v25.0/me/adaccounts?access_token=<TOKEN_DO_ENV>"
+> ```
+> ```
+> curl -s "https://graph.facebook.com/v25.0/act_<id>/campaigns?limit=1&access_token=<TOKEN_DO_ENV>"
+> ```
+>
+> Formato ERRADO (script multi-linha, dispara pop-up com token visível):
+>
+> ```
+> TOKEN="EAA..."
+> echo "==== TESTE 1 ===="
+> curl -s "https://graph.facebook.com/v25.0/me?access_token=${TOKEN}"
+> echo ""
+> echo "==== TESTE 2 ===="
+> curl -s "https://graph.facebook.com/v25.0/me/adaccounts?access_token=${TOKEN}"
+> ```
+>
+> A diferença pro aluno: o formato CORRETO roda direto sem balão de permissão. O formato ERRADO exibe o token na tela e exige clique manual.
+>
+> Após cada chamada, mostrar a resposta resumida ao aluno (sucesso/erro), seguindo a regra de mascaramento de tokens do CLAUDE.md (não ecoar a URL completa com o token na resposta — descrever em linguagem natural: "Teste 1 passou: token responde como `relatorio-ads` em /me").
 
 Substitua `TOKEN` pelo token copiado e `SEU_AD_ACCOUNT_ID` pelo número da conta de anúncios (só os números, sem o prefixo `act_`).
 
@@ -170,7 +201,7 @@ META_AUTH_MODO=APP
 
 Use `Edit` cirurgico para adicionar ou atualizar essas linhas no `.env`. Nao sobrescreva outras variaveis.
 
-> **Por que `META_AUTH_MODO=APP`:** as skills `/trafego-*` leem essa variavel no Passo 0 para decidir como se conectar com o Meta Ads. Sem ela, qualquer skill de trafego para no gate e manda o aluno rodar `/meta-conexao` mesmo com o token e ad account ja configurados. Salvar `APP` aqui evita esse desvio.
+> **Por que `META_AUTH_MODO=APP`:** as skills `/trafego-*` leem essa variavel no Passo 0 para decidir como se conectar com o Meta Ads. Sem ela, qualquer skill de trafego para no gate e manda o aluno rodar `/trafego-conexao` mesmo com o token e ad account ja configurados. Salvar `APP` aqui evita esse desvio.
 
 ---
 
@@ -267,20 +298,22 @@ Regras de formato:
 
 ### Confirmacao final
 
-Apos salvar, confirmar com o usuario:
+Apos salvar, confirmar com o usuario EXATAMENTE com o bloco abaixo, nada mais:
 
 ```
 ✅ Salvo no .env:
 - META_AUTH_MODO = APP
-- FB_ACCESS_TOKEN_PERMANENTE = (token salvo)
+- FB_ACCESS_TOKEN_PERMANENTE = (token salvo, mascarado)
 - FB_AD_ACCOUNT_ID = {id_default} ({nome_default})
 - FB_AD_ACCOUNT_IDS = {n} contas salvas
 
-Tudo pronto. As skills /trafego-* ja conseguem acessar o Meta Ads.
+Tudo pronto. As skills /trafego-* já conseguem acessar o Meta Ads.
 
-Voce pode trocar a conta padrao depois com /meta-conta-trocar.
-Voce pode adicionar mais contas com /meta-conta-adicionar.
+Você pode trocar a conta padrão depois com /meta-conta-trocar.
+Você pode adicionar mais contas com /meta-conta-adicionar.
 ```
+
+> **Regra dura — não expandir esta saída.** Não acrescentar lista de "Próximas skills disponíveis", não categorizar em "Tráfego pago", "Operacional do Meta", "Relatórios e otimização atalho" nem variantes parecidas, não citar `/trafego-insights`, `/trafego-criar-campanha`, `/trafego-otimizar`, `/trafego-escalar`, `/trafego-analise`, `/trafego-pixel`, `/trafego-publicos`, `/trafego-regras`, `/trafego-testes`, `/ads-relatorio`, `/enviar-relatorio-ads`, `/lt-otimizar` ou qualquer outra skill aqui. Recomendação de "próximo passo" é responsabilidade exclusiva de `/trafego-conexao` (que é o ponto de entrada e tem o bloco `🔭 Próximo passo recomendado`). Esta skill é só infraestrutura técnica de geração de token; encerra com a confirmação acima e ponto.
 
 ---
 

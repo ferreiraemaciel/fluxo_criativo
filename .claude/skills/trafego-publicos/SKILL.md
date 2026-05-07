@@ -8,6 +8,29 @@ description: >
   Use quando o aluno pedir "criar público", "audience custom", "lookalike", "remarketing",
   "público de quem viu meu vídeo", "público dos compradores", "criar público de quem clicou
   no botão", "lista de remarketing".
+user-invocable: false
+---
+
+## 🛡️ Gate obrigatório antes de qualquer escrita na Graph API
+
+Esta skill executa operações que **modificam estado** na conta Meta Ads. Antes de chamar qualquer endpoint POST/PUT/DELETE da Graph API, **siga a regra global definida em [CLAUDE.md](../../../CLAUDE.md)** na seção "GATE EM CAMADA DE CHAT ANTES DE OPERAÇÕES DE ESCRITA NA META GRAPH API":
+
+1. Apresentar o bloco `🛡️ Confirmação necessária antes de tocar na conta Meta` com operação, endpoint humano-legível, o que vai mudar, impacto no aprendizado e reversibilidade.
+2. **Nunca exibir o `curl` completo no chat** — carrega o token.
+3. Aguardar resposta `sim` (ou variante explícita: aprovo, pode, manda) antes de executar.
+4. Em modo lote, mostrar o plano completo antes e pedir confirmação única.
+5. Se o aluno responder `não` ou variante (cancelar, abortar), abortar sem chamar a API.
+6. **NUNCA usar `python3 << 'EOF'` (heredoc) nem `curl | python3 -c`** com o token. Esses formatos quebram o pattern matching do Claude Code e expõem o token no pop-up nativo. Ver regra "EXECUÇÃO TÉCNICA DE CHAMADAS GRAPH API" no CLAUDE.md.
+
+**Operações desta skill que passam pelo gate:**
+
+- POST /act_<id>/customaudiences (criar Custom Audience)
+- POST /act_<id>/customaudiences com origin_audience_id (criar Lookalike)
+- POST /<custom_audience_id> (atualizar audience)
+- POST /<adaccount>/custom_conversions (criar evento custom para audience)
+
+**Não passam pelo gate:** chamadas GET para leitura (insights, listagens, fields). Estado não muda.
+
 ---
 
 # Tráfego Públicos. Audiences Meta Ads
@@ -64,7 +87,7 @@ API version: `v25.0`.
 - `ads_read`
 - `business_management` (para audiences que precisam acessar o pixel de outro Business)
 
-Sem essas permissões, encerrar com link para `/meta-conexao` para regenerar token.
+Sem essas permissões, encerrar com link para `/trafego-conexao` para regenerar token.
 
 ---
 

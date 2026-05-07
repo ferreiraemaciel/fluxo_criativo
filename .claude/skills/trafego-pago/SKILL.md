@@ -4,6 +4,7 @@ description: >
   Base de conhecimento para tráfego pago. estrutura de campanhas Meta Ads e Google Ads,
   métricas, pixel, API de conversão e otimização. Usado pelos commands /copy-anuncio e /estrategia-lancamento.
   Inclui segurança e boas práticas de investimento em mídia paga.
+user-invocable: false
 ---
 
 # Tráfego Pago. Base de Conhecimento

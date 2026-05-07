@@ -3,6 +3,7 @@ name: workshop-marketing:enviar-relatorio-ads
 description: Busca as métricas do Facebook Ads e envia o relatório pelo Telegram ou WhatsApp. Detecta automaticamente o modo configurado (CLI Python ou Manual PowerShell).
 allowed-tools: Read, Bash
 model: sonnet
+user-invocable: false
 ---
 
 # Enviar Relatorio de Ads
@@ -17,8 +18,8 @@ Detecta `RELATORIO_AUTH_MODO` no `.env` e usa o script correto:
 
 Antes de qualquer coisa, leia `META_AUTH_MODO` no `.env` para decidir o caminho.
 
-- **Vazia ou ausente:** chame a skill `/meta-conexao` para o aluno escolher o modo. Quando ela terminar e gravar `META_AUTH_MODO`, retorne aqui.
-- **`META_AUTH_MODO=MCP_CONECTOR`:** o Passo 1.1 (credenciais Facebook) é pulado por completo. A conexão Meta foi validada via conector personalizado em `/meta-conexao` e não usa token no `.env`. Vá direto para o Passo 1.2 (canal de envio).
+- **Vazia ou ausente:** chame a skill `/trafego-conexao` para o aluno escolher o modo. Quando ela terminar e gravar `META_AUTH_MODO`, retorne aqui.
+- **`META_AUTH_MODO=MCP_CONECTOR`:** o Passo 1.1 (credenciais Facebook) é pulado por completo. A conexão Meta foi validada via conector personalizado em `/trafego-conexao` e não usa token no `.env`. Vá direto para o Passo 1.2 (canal de envio).
 - **`META_AUTH_MODO=APP`:** executar normalmente o Passo 1.1 e o Passo 1.2.
 
 > **Nota sobre as duas variáveis.** `META_AUTH_MODO` decide o caminho de autenticação com o Meta (MCP via Claude ou Token via App no `.env`). `RELATORIO_AUTH_MODO` decide o executor do relatório dentro do ramo App (Python CLI cross-platform ou PowerShell Windows). Não são redundantes, atuam em camadas diferentes.
@@ -126,12 +127,12 @@ A busca varia conforme `META_AUTH_MODO`.
 
 ### Se `META_AUTH_MODO=MCP_CONECTOR` (modo MCP)
 
-Identifique no namespace MCP a tool de insights da Meta exposta pelo conector personalizado adicionado no `/meta-conexao`. O nome exato depende do nome que o aluno deu ao conector. Estratégia:
+Identifique no namespace MCP a tool de insights da Meta exposta pelo conector personalizado adicionado no `/trafego-conexao`. O nome exato depende do nome que o aluno deu ao conector. Estratégia:
 
 1. Listar tools com prefixo `mcp__*` cujo sufixo trate de insights/performance (ex: `mcp__Meta_Ads__ads_insights_advertiser_context`, `mcp__Meta_Ads__ads_insights_performance_trend`).
 2. Se a busca não for conclusiva, perguntar ao aluno o nome que ele deu ao MCP.
 
-Chame a tool de insights passando o intervalo de datas (`INICIO_ISO` a `FIM_ISO`) e os campos de métrica relevantes (gasto, alcance, impressões, cliques, CTR, CPM, CPC, ações de purchase/lead). O conector é responsável por decidir qual conta de anúncios usar (definido no OAuth feito em `/meta-conexao`).
+Chame a tool de insights passando o intervalo de datas (`INICIO_ISO` a `FIM_ISO`) e os campos de métrica relevantes (gasto, alcance, impressões, cliques, CTR, CPM, CPC, ações de purchase/lead). O conector é responsável por decidir qual conta de anúncios usar (definido no OAuth feito em `/trafego-conexao`).
 
 Guarde o JSON retornado na variável `data` para o Passo 4 montar a mensagem.
 

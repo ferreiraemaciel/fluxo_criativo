@@ -21,9 +21,9 @@ Ler `meus-produtos/.ativo` e `meus-produtos/{ativo}/perfil.md`.
 ### 0.2 Conexão Meta (gate duro)
 Ler `META_AUTH_MODO` no `.env`.
 
-- **Se vazio ou ausente:** acionar `/meta-conexao` antes de prosseguir.
+- **Se vazio ou ausente:** acionar `/trafego-conexao` antes de prosseguir.
 - **Se `MCP_CONECTOR`:** confirmar que pelo menos uma tool com prefixo `mcp__*__ads_*` está disponível. Se nenhuma, pedir ao aluno para reabrir o Claude Code.
-- **Se `APP`:** confirmar que `FB_ACCESS_TOKEN_PERMANENTE` e `FB_AD_ACCOUNT_ID` existem no `.env`. Se faltar algum, acionar `/meta-conexao`.
+- **Se `APP`:** confirmar que `FB_ACCESS_TOKEN_PERMANENTE` e `FB_AD_ACCOUNT_ID` existem no `.env`. Se faltar algum, acionar `/trafego-conexao`.
 
 A skill nunca prossegue sem essa validação passar.
 
@@ -296,12 +296,22 @@ Devolver caminho absoluto.
 
 ## Passo 7. Handoff para execução
 
-Se a análise sugerir ações executáveis:
+Se a análise sugerir ações executáveis, mostrar primeiro o bloco recomendado padrão:
 
 ```
-Para aplicar as ações recomendadas:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔭 Próximo passo recomendado: /trafego-otimizar
+Análise feita. Hora de executar as ações no Meta Ads (pausar
+criativos, reduzir orçamento, refresh) ou emitir sinal de
+prontidão pra escala.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
 
-- Pausar criativos / ajustar budget: /trafego-otimizar
+Em seguida, listar alternativas conforme o gargalo identificado na análise:
+
+```
+Outras skills executoras conforme o gargalo identificado:
+
 - Escalar campanhas validadas: /trafego-escalar
 - Criar regra automática ou alerta: /trafego-regras
 - Criar audience custom/lookalike: /trafego-publicos

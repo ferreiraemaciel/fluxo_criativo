@@ -8,6 +8,7 @@ description: >
   Consultada também pelo command /trafego-insights quando o aluno quer ver números de uma campanha.
   Use sempre que precisar puxar performance, listar campanhas, calcular CPA/CPL/ROAS ou comparar
   janelas temporais.
+user-invocable: false
 ---
 
 # Tráfego Insights. Leitura de Métricas Meta Ads
@@ -273,7 +274,7 @@ Quando uma chamada à Graph API falha em modo `escopo: conta_completa`, a skill 
 - Rate limit pontual (código 4 ou 17): aguarda backoff exponencial (1s, 2s, 4s, 8s. Máximo 4 retries) antes de marcar como erro definitivo.
 
 ### 8.2 Erros fatais (falha a skill toda)
-- Token revogado (código 190): para tudo, instrui o gestor a executar `/meta-conexao`.
+- Token revogado (código 190): para tudo, instrui o gestor a executar `/trafego-conexao`.
 - Ad account inteira sem permissão: para tudo, instrui o gestor a verificar atribuição do System User.
 - Erro 100 com mensagem indicando ID inválido: para tudo, declara qual ID está errado.
 
@@ -424,7 +425,7 @@ erros: []
 status: erro_fatal
 codigo: token_revogado | sem_permissao_conta | id_invalido
 mensagem: "Token revogado pelo Meta. Provavelmente houve troca de senha do admin que criou o System User."
-acao_recomendada: "Execute /meta-conexao para regenerar o token."
+acao_recomendada: "Execute /trafego-conexao para regenerar o token."
 detalhes_tecnicos:
   graph_api_error_code: 190
   graph_api_message: "..."
@@ -434,7 +435,7 @@ detalhes_tecnicos:
 
 ## 10. Como puxar os dados (rota por META_AUTH_MODO)
 
-A skill respeita a preferência de conexão definida em `META_AUTH_MODO` no `.env` (ver `/meta-conexao`).
+A skill respeita a preferência de conexão definida em `META_AUTH_MODO` no `.env` (ver `/trafego-conexao`).
 
 ### 10.1 Modo `MCP_CONECTOR`
 Usar as tools do MCP da Meta que o aluno adicionou como conector personalizado. Localizar tools com prefixo `mcp__*` cujo sufixo seja relacionado a Meta Ads (ex: `mcp__Meta_Ads__ads_get_ad_entities`, `mcp__Meta_Ads__ads_insights_*`, `mcp__Meta_Ads__ads_get_ad_accounts`).

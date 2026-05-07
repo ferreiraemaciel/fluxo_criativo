@@ -21,9 +21,9 @@ Leia `meus-produtos/.ativo`. Leia `meus-produtos/{ativo}/perfil.md` para inferir
 ### 0.2 Conexão Meta (gate duro, passo zero obrigatório)
 Leia `META_AUTH_MODO` no `.env`.
 
-- **Se vazio ou ausente:** acione `/meta-conexao` antes de prosseguir. Não tente adivinhar nem cair em fallback. Esta verificação é o passo zero de toda skill `/trafego-*`.
-- **Se `MCP_CONECTOR`:** confirmar que pelo menos uma tool com prefixo `mcp__*__ads_*` está disponível. Se nenhuma estiver, pedir ao aluno para reabrir o Claude Code (MCP recém-adicionado às vezes precisa de reload). Se persistir, voltar a `/meta-conexao` para diagnosticar.
-- **Se `APP`:** confirmar que `FB_ACCESS_TOKEN_PERMANENTE`, `FB_AD_ACCOUNT_ID` e `FB_PAGE_ID` existem no `.env` (e opcionalmente `FB_INSTAGRAM_USER_ID`, necessário se for usar Reels/Stories no Instagram). Se faltar algum, acionar `/meta-conexao`.
+- **Se vazio ou ausente:** acione `/trafego-conexao` antes de prosseguir. Não tente adivinhar nem cair em fallback. Esta verificação é o passo zero de toda skill `/trafego-*`.
+- **Se `MCP_CONECTOR`:** confirmar que pelo menos uma tool com prefixo `mcp__*__ads_*` está disponível. Se nenhuma estiver, pedir ao aluno para reabrir o Claude Code (MCP recém-adicionado às vezes precisa de reload). Se persistir, voltar a `/trafego-conexao` para diagnosticar.
+- **Se `APP`:** confirmar que `FB_ACCESS_TOKEN_PERMANENTE`, `FB_AD_ACCOUNT_ID` e `FB_PAGE_ID` existem no `.env` (e opcionalmente `FB_INSTAGRAM_USER_ID`, necessário se for usar Reels/Stories no Instagram). Se faltar algum, acionar `/trafego-conexao`.
 
 A skill nunca prossegue sem essa validação passar.
 
@@ -204,10 +204,13 @@ Próximos passos:
    anúncio (preview, copy, criativo).
 2. Quando estiver tudo certo, ativar manualmente OU me peça
    "ativa a campanha [nome]" que eu ativo via API.
-3. Após 48 a 72h de veiculação, rodar /trafego-insights para ver
-   primeiros números.
-4. Após maturação (7 a 14 dias), rodar /trafego-otimizar para
-   diagnóstico e ajustes.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔭 Próximo passo recomendado: /trafego-analise
+Espere a campanha rodar 48 a 72 horas (maturação mínima do
+algoritmo) e rode /trafego-analise pra primeira leitura narrada
+em método VTSD.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
 ---

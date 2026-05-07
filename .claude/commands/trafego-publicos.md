@@ -3,6 +3,7 @@ name: workshop-marketing:trafego-publicos
 description: Cria, lista e gerencia públicos (audiences) do Meta Ads via Marketing API. Cobre Custom Audiences por evento padrão do pixel, evento personalizado (cria evento + audience), engajamento de vídeo (25/50/75/100%), bases por nível (iniciante/intermediário/avançado), Lookalike e listagem. Toda criação passa por preview YAML e confirmação SIM. Use quando o aluno pedir "criar público", "audience custom", "lookalike", "remarketing", "público de quem viu vídeo", "público dos compradores", "público de quem clicou no botão".
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash, Skill, AskUserQuestion
 model: sonnet
+user-invocable: false
 ---
 
 # Trafego Publicos. Audiences Meta Ads
@@ -19,7 +20,7 @@ Especificação completa em `.claude/skills/trafego-publicos/SKILL.md`. Este com
 Leia `meus-produtos/.ativo`. Leia `perfil.md` e `idconsumidor.md` (necessários para o sub-fluxo "Bases por nível").
 
 ### 0.2 Conexão Meta (gate duro)
-Mesma validação dos outros `/trafego-*`. Se `META_AUTH_MODO` vazio, aciona `/meta-conexao`.
+Mesma validação dos outros `/trafego-*`. Se `META_AUTH_MODO` vazio, aciona `/trafego-conexao`.
 
 ### 0.3 Selecao de conta multi-conta
 Idem aos outros commands.

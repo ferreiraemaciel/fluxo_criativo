@@ -1,8 +1,9 @@
 ---
 name: workshop-marketing:obter-id-conta-anuncios
-description: Guia para localizar o ID da conta de anúncios no Business Manager do Facebook e salvar em FB_AD_ACCOUNT_ID no .env. Skill reutilizável chamada por qualquer skill de Meta Ads que precise do ID da conta (ex: /meta-conexao, /ads-relatorio).
+description: Guia para localizar o ID da conta de anúncios no Business Manager do Facebook e salvar em FB_AD_ACCOUNT_ID no .env. Skill reutilizável chamada por qualquer skill de Meta Ads que precise do ID da conta (ex: /trafego-conexao, /ads-relatorio).
 allowed-tools: Read, Write, Edit, Glob, Bash
 model: sonnet
+user-invocable: false
 ---
 
 # Obter ID da Conta de Anúncios
@@ -58,6 +59,6 @@ Confirme ao aluno:
 
 Retorne à skill que chamou esta e siga o próximo passo. Exemplos de fluxo:
 
-- Se chamada por `/meta-conexao` (modo APP): voltar para o Passo 3 (validação) da skill `meta-conexao`.
-- Se chamada por `/gerar-token-permanente-facebook-ads`: voltar e seguir para a próxima skill do fluxo (geralmente `/meta-conexao` ou `/ads-relatorio`).
+- Se chamada por `/trafego-conexao` (modo APP): voltar para o Passo 3 (validação) da skill `trafego-conexao`.
+- Se chamada por `/gerar-token-permanente-facebook-ads`: voltar e seguir para a próxima skill do fluxo (geralmente `/trafego-conexao` ou `/ads-relatorio`).
 - Se chamada por `/ads-relatorio`: voltar e continuar a configuração do relatório.

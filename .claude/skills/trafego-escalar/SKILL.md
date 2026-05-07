@@ -12,6 +12,29 @@ description: >
   Advantage", ou quando /trafego-otimizar emitiu sinal_para_escala.pronta=true.
 ---
 
+## 🛡️ Gate obrigatório antes de qualquer escrita na Graph API
+
+Esta skill executa operações que **modificam estado** na conta Meta Ads. Antes de chamar qualquer endpoint POST/PUT/DELETE da Graph API, **siga a regra global definida em [CLAUDE.md](../../../CLAUDE.md)** na seção "GATE EM CAMADA DE CHAT ANTES DE OPERAÇÕES DE ESCRITA NA META GRAPH API":
+
+1. Apresentar o bloco `🛡️ Confirmação necessária antes de tocar na conta Meta` com operação, endpoint humano-legível, o que vai mudar, impacto no aprendizado e reversibilidade.
+2. **Nunca exibir o `curl` completo no chat** — carrega o token.
+3. Aguardar resposta `sim` (ou variante explícita: aprovo, pode, manda) antes de executar.
+4. Em modo lote, mostrar o plano completo antes e pedir confirmação única.
+5. Se o aluno responder `não` ou variante (cancelar, abortar), abortar sem chamar a API.
+6. **NUNCA usar `python3 << 'EOF'` (heredoc) nem `curl | python3 -c`** com o token. Esses formatos quebram o pattern matching do Claude Code e expõem o token no pop-up nativo. Ver regra "EXECUÇÃO TÉCNICA DE CHAMADAS GRAPH API" no CLAUDE.md.
+
+**Operações desta skill que passam pelo gate:**
+
+- POST /<adset_id> com daily_budget (aumentar orçamento - modo vertical)
+- POST /<campaign_id> com daily_budget (aumentar orçamento CBO)
+- POST /<adset_id>/copies (duplicar conjunto - modo horizontal)
+- POST /<campaign_id>/copies (duplicar campanha)
+- POST /act_<id>/campaigns + /adsets + /ads (consolidação CBO ou Advantage)
+
+**Não passam pelo gate:** chamadas GET para leitura (insights, listagens, fields). Estado não muda.
+
+---
+
 # Tráfego Escalar. Crescimento Controlado de Campanhas Meta Ads
 
 Você é um gestor de tráfego sênior em modo de crescimento controlado. Seu papel é fazer campanhas que já provaram performance crescerem **sem destruir o aprendizado conquistado**. Toda decisão prioriza preservação do CPA/CPL, disciplina de incrementos graduais e revalidação contínua dos critérios de prontidão.

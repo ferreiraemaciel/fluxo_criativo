@@ -42,56 +42,58 @@ Os rankings de qualidade (`quality_ranking`, `engagement_rate_ranking`, `convers
 
 ### Chamada adicional — Comparativo CPM e ROAS (período anterior)
 
-Para responder "CPM de maio vs. abril ficou mais caro?", fazer **duas chamadas separadas** — uma por período.
+Para responder "CPM de maio vs. abril ficou mais caro?", fazer **duas chamadas curl separadas** — uma por período.
 
 **Regras obrigatórias:**
-- Usar `time_range` como JSON (não `since`/`until` direto no urlencode — causa comportamento imprevisível)
-- **NÃO usar `effective_status` nas chamadas de comparação** — com `effective_status`, a API ignora a janela histórica e retorna sempre o estado atual, fazendo ambos os períodos retornarem dados idênticos
-- Calcular as datas em Python antes de montar a chamada
+- Usar `time_range` como JSON (não `since`/`until` direto no urlencode — causa comportamento imprevisível).
+- **NÃO usar `effective_status` nas chamadas de comparação** — com `effective_status`, a API ignora a janela histórica e retorna sempre o estado atual, fazendo ambos os períodos retornarem dados idênticos.
+- Calcular as datas em **chamadas Bash separadas** com `date` (nunca em script Python heredoc — ver regra "EXECUÇÃO TÉCNICA DE CHAMADAS GRAPH API" no CLAUDE.md).
 
-```python
-import urllib.request, urllib.parse, json, datetime, time, tempfile, os, sys
+#### Padrão obrigatório (modo APP)
 
-# Calcular datas — cross-platform (Windows, Mac, Linux)
-TMPDIR = tempfile.gettempdir()  # funciona em Windows, Mac e Linux
+**Passo 1 — Calcular as 4 datas em chamadas `Bash(date ...)` separadas:**
 
-hoje = datetime.date.today()
-# Período atual: últimos 30 dias
-atual_ate = hoje - datetime.timedelta(days=1)
-atual_de  = hoje - datetime.timedelta(days=30)
-# Período anterior: os 30 dias antes desses
-ant_ate   = atual_de - datetime.timedelta(days=1)
-ant_de    = atual_de - datetime.timedelta(days=30)
-
-def fetch_periodo(since, until, token, account):
-    params = urllib.parse.urlencode({
-        'fields': 'campaign_id,campaign_name,spend,impressions,cpm,actions,action_values',
-        'level': 'campaign',
-        'time_range': json.dumps({'since': str(since), 'until': str(until)}),
-        'limit': 500,
-        'access_token': token
-    })
-    url = f'https://graph.facebook.com/v21.0/act_{account}/insights?{params}'
-    with urllib.request.urlopen(url, timeout=60) as r:
-        return json.loads(r.read()).get('data', [])
-
-dados_atual    = fetch_periodo(atual_de, atual_ate, TOKEN, ACCOUNT)
-time.sleep(3)  # pausa entre chamadas para evitar rate limit
-dados_anterior = fetch_periodo(ant_de,   ant_ate,   TOKEN, ACCOUNT)
-
-# Salvar cross-platform
-with open(os.path.join(TMPDIR, 'vtsd_cmp.json'), 'w', encoding='utf-8') as f:
-    json.dump({'atual': dados_atual, 'anterior': dados_anterior}, f, ensure_ascii=False)
+No Mac, cada uma é uma chamada Bash independente:
+```
+date -v-1d +%Y-%m-%d     # atual_ate (ontem)
+date -v-30d +%Y-%m-%d    # atual_de (há 30 dias)
+date -v-31d +%Y-%m-%d    # ant_ate (anteontem da janela atual)
+date -v-60d +%Y-%m-%d    # ant_de (60 dias atrás)
 ```
 
-**Modo MCP_CONECTOR:** usar `mcp__*__ads_insights_performance_trend` com parâmetros equivalentes.
-
-**Saída no terminal — encoding cross-platform (Windows cp1252 + Mac UTF-8):**
-```python
-# Para qualquer print com acentos/emojis, sempre usar:
-sys.stdout.buffer.write("texto com açento 🟢\n".encode('utf-8'))
-# Nunca usar print() diretamente para strings com chars especiais no Windows
+No Linux, equivalente:
 ```
+date -d "1 day ago" +%Y-%m-%d
+date -d "30 days ago" +%Y-%m-%d
+date -d "31 days ago" +%Y-%m-%d
+date -d "60 days ago" +%Y-%m-%d
+```
+
+**Passo 2 — Disparar 2 chamadas curl separadas (cada uma é uma `Bash(curl ...)` independente):**
+
+```
+curl -s "https://graph.facebook.com/v21.0/act_<ACCOUNT_ID>/insights?fields=campaign_id,campaign_name,spend,impressions,cpm,actions,action_values&level=campaign&time_range=%7B%22since%22%3A%22<atual_de>%22%2C%22until%22%3A%22<atual_ate>%22%7D&limit=500&access_token=<TOKEN_DO_ENV>"
+```
+
+```
+curl -s "https://graph.facebook.com/v21.0/act_<ACCOUNT_ID>/insights?fields=campaign_id,campaign_name,spend,impressions,cpm,actions,action_values&level=campaign&time_range=%7B%22since%22%3A%22<ant_de>%22%2C%22until%22%3A%22<ant_ate>%22%7D&limit=500&access_token=<TOKEN_DO_ENV>"
+```
+
+Notar o `time_range` URL-encoded: `%7B` é `{`, `%22` é `"`, `%2C` é `,`, `%7D` é `}`. URL final é `time_range={"since":"YYYY-MM-DD","until":"YYYY-MM-DD"}`.
+
+**Passo 3 — Processamento dos JSONs:**
+
+Cada `curl` retorna `{"data": [{"campaign_id": "...", "spend": "...", "cpm": "...", "actions": [...], "action_values": [...]}, ...]}`. O Claude lê os 2 JSONs como texto, calcula ROAS/CPL/CPM por campanha aplicando as fórmulas da seção "Fórmulas de cálculo" abaixo, e devolve o comparativo em linguagem natural.
+
+**Não rodar Python adicional pra fazer essas contas.** A regra global no CLAUDE.md proíbe heredoc, pipe `curl | python3` e `python3 -c` longo com token — disparam o detector "expansion obfuscation" e exibem o token no pop-up nativo.
+
+#### Modo MCP_CONECTOR
+
+Usar `mcp__*__ads_insights_performance_trend` com parâmetros equivalentes (sem token na chamada — o MCP cuida).
+
+#### Exceção (volume grande)
+
+Se a campanha tem 200+ entidades e o cálculo manual fica inviável, salvar os 2 JSONs em arquivos separados via `curl ... > /tmp/cmp_atual.json` e `curl ... > /tmp/cmp_anterior.json`, depois rodar `python3 /tmp/script.py` onde o script lê os arquivos locais (sem token dentro). Limpar `/tmp/cmp_*.json` ao final.
 
 ### Referência de produto
 

@@ -30,7 +30,7 @@ Análise narrada de campanhas Meta Ads pela lente da metodologia VTSD (Venda Tod
 Ao ser invocada, validar conexão Meta, perguntar a conta de anúncios e apresentar o menu. Aguardar escolha antes de pedir período ou dado.
 
 ### Passo 0. Validar conexão Meta
-Ler `META_AUTH_MODO` no `.env`. Se vazio, acionar `/meta-conexao` antes de qualquer outra ação.
+Ler `META_AUTH_MODO` no `.env`. Se vazio, acionar `/trafego-conexao` antes de qualquer outra ação.
 
 ### Passo 0.5. Selecionar conta de anúncios
 
@@ -38,22 +38,24 @@ Ler `FB_AD_ACCOUNT_IDS` no `.env` (campo com múltiplas contas separadas por ví
 
 **Se houver apenas uma conta configurada** (`FB_AD_ACCOUNT_ID` e `FB_AD_ACCOUNT_IDS` idênticos ou `FB_AD_ACCOUNT_IDS` vazio): usar automaticamente essa conta e pular a pergunta.
 
-**Se houver mais de uma conta em `FB_AD_ACCOUNT_IDS`**: listar as contas disponíveis e perguntar qual usar. Para obter o nome de todas as contas **em uma única chamada batch**:
+**Se houver mais de uma conta em `FB_AD_ACCOUNT_IDS`**: listar as contas disponíveis e perguntar qual usar. Para obter o nome de todas as contas **em uma única chamada batch**, fazer **uma chamada `Bash(curl ...)` direta** (sem heredoc Python — ver regra "EXECUÇÃO TÉCNICA DE CHAMADAS GRAPH API" no CLAUDE.md):
 
-```python
-import urllib.request, urllib.parse, json, sys, tempfile
+Construir a string `act_<id1>,act_<id2>,...` a partir de `FB_AD_ACCOUNT_IDS` e disparar:
 
-TOKEN = '...'  # FB_ACCESS_TOKEN_PERMANENTE
-ids = ['1495774484021523', '370754184010467', '672637689134915', '1210963877470650']
-ids_str = ','.join(f'act_{i}' for i in ids)
-params = urllib.parse.urlencode({'fields': 'name', 'access_token': TOKEN})
-url = f'https://graph.facebook.com/v21.0/?ids={ids_str}&{params}'
-with urllib.request.urlopen(url, timeout=30) as r:
-    d = json.loads(r.read())
-# d = { "act_1234": {"name": "...", "id": "act_1234"}, ... }
+```
+curl -s "https://graph.facebook.com/v21.0/?ids=act_1495774484021523,act_370754184010467,act_672637689134915,act_1210963877470650&fields=name&access_token=<TOKEN_DO_ENV>"
 ```
 
-Uma única chamada retorna nomes de todas as contas de uma vez. **Nunca fazer N chamadas separadas** — cada chamada conta contra o rate limit.
+A resposta vem em JSON único:
+```json
+{
+  "act_1495774484021523": {"name": "Conta A", "id": "act_1495774484021523"},
+  "act_370754184010467":  {"name": "Conta B", "id": "act_370754184010467"},
+  ...
+}
+```
+
+O Claude lê o JSON retornado como texto e monta o menu numerado. **Nunca fazer N chamadas separadas** — uma única chamada batch é o suficiente e conta como 1 contra o rate limit.
 
 **Tratamento de erro:** se a chamada batch falhar, exibir só os IDs sem nome e continuar.
 

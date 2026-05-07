@@ -3,6 +3,7 @@ name: workshop-marketing:trafego-testes
 description: Cria testes A/B disciplinados e variações estruturadas no Meta Ads — A/B de criativo, headline, audiência, faixa etária, posicionamento, lance, estrutura, duplicar campanha alterando UMA dimensão, e fluxo composto de campanha de remarketing (público + campanha). Toda criação documenta hipótese e devolve handoff para /trafego-analise [3] após D+7. Use quando o aluno pedir "testar A vs B", "duplicar minha melhor campanha mudando idade", "criar campanha de remarketing", "Reels vs Feed", "broad vs segmentado".
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash, Skill, AskUserQuestion
 model: sonnet
+user-invocable: false
 ---
 
 # Trafego Testes. A/B e Variações Estruturadas Meta Ads

@@ -3,6 +3,7 @@ name: workshop-marketing:trafego-regras
 description: Cria automações no Meta Ads — regras automáticas (adrules_library) com triggers de CPA/CPL/ROAS, agendamento de resumo recorrente via /schedule + Telegram/WhatsApp, e programação liga/pausa de adsets (delivery schedule). Use quando o aluno pedir "automatizar", "regra automática", "se CPA passar de X pause", "me avisa toda segunda", "rodar campanha só em horário comercial", "programar liga/pausa".
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash, Skill, AskUserQuestion
 model: sonnet
+user-invocable: false
 ---
 
 # Trafego Regras. Automação, Alertas e Agendamento
@@ -19,7 +20,7 @@ Especificação completa em `.claude/skills/trafego-regras/SKILL.md`.
 Leia `meus-produtos/.ativo` e `perfil.md` (para inferir ticket e tipo_funil — usado nas validações de trigger).
 
 ### 0.2 Conexão Meta (gate duro)
-Idem `/trafego-otimizar`. Se `META_AUTH_MODO` vazio, aciona `/meta-conexao`.
+Idem `/trafego-otimizar`. Se `META_AUTH_MODO` vazio, aciona `/trafego-conexao`.
 
 ### 0.3 Selecao de conta multi-conta
 Idem demais commands.

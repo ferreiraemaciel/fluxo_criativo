@@ -9,6 +9,28 @@ description: >
   "lançar anúncio novo", "rodar tráfego" para um produto específico.
 ---
 
+## 🛡️ Gate obrigatório antes de qualquer escrita na Graph API
+
+Esta skill executa operações que **modificam estado** na conta Meta Ads. Antes de chamar qualquer endpoint POST/PUT/DELETE da Graph API, **siga a regra global definida em [CLAUDE.md](../../../CLAUDE.md)** na seção "GATE EM CAMADA DE CHAT ANTES DE OPERAÇÕES DE ESCRITA NA META GRAPH API":
+
+1. Apresentar o bloco `🛡️ Confirmação necessária antes de tocar na conta Meta` com operação, endpoint humano-legível, o que vai mudar, impacto no aprendizado e reversibilidade.
+2. **Nunca exibir o `curl` completo no chat** — carrega o token.
+3. Aguardar resposta `sim` (ou variante explícita: aprovo, pode, manda) antes de executar.
+4. Em modo lote, mostrar o plano completo antes e pedir confirmação única.
+5. Se o aluno responder `não` ou variante (cancelar, abortar), abortar sem chamar a API.
+6. **NUNCA usar `python3 << 'EOF'` (heredoc) nem `curl | python3 -c`** com o token. Esses formatos quebram o pattern matching do Claude Code e expõem o token no pop-up nativo. Ver regra "EXECUÇÃO TÉCNICA DE CHAMADAS GRAPH API" no CLAUDE.md.
+
+**Operações desta skill que passam pelo gate:**
+
+- POST /act_<id>/campaigns (criar campanha)
+- POST /act_<id>/adsets (criar conjunto)
+- POST /act_<id>/ads (criar anúncio)
+- POST /act_<id>/adimages, /advideos (subir criativo)
+
+**Não passam pelo gate:** chamadas GET para leitura (insights, listagens, fields). Estado não muda.
+
+---
+
 # Tráfego Criar Campanha. Subir Campanha Meta Ads
 
 Você é um gestor de tráfego sênior em modo de criação. Seu papel é conduzir o aluno pela montagem de uma campanha nova de Meta Ads, garantindo que tudo esteja correto antes de tocar a Marketing API. A skill foca exclusivamente em **infoprodutos**, com dois objetivos suportados: `OUTCOME_SALES` (perpétuo de venda direta) e `OUTCOME_LEADS` (lançamento de captação).
@@ -128,7 +150,7 @@ Se NÃO houver pixel no `.env`, perguntar:
 
 Casos especiais:
 - Conta sem nenhum pixel: parar e instruir "essa conta não tem pixel cadastrado. Crie um no Gerenciador de Eventos (https://business.facebook.com/events_manager) ou rode `/pagina-pixel` para instalar em uma página HTML."
-- Erro de autenticação na API: voltar para `/meta-conexao` para revalidar o token.
+- Erro de autenticação na API: voltar para `/trafego-conexao` para revalidar o token.
 
 **5.1. Salvar a escolha.**
 
@@ -234,7 +256,7 @@ Quais quer usar? Você pode:
 **Casos de borda:**
 - Se a busca não retornar nenhum interesse relevante (lista vazia ou só ruído): avisar "não encontrei interesses sólidos a partir do perfil. Quer ir para Advantage+ puro (opção 1) ou definir interesses manualmente (opção 3)?"
 - Se `perfil.md` não existir: avisar "não encontrei o perfil do produto. Rode `/produto-concepcao` antes ou escolha a opção 1 (Advantage+ puro) ou 3 (personalizado)."
-- Erro de autenticação na API: voltar para `/meta-conexao`.
+- Erro de autenticação na API: voltar para `/trafego-conexao`.
 
 **6.3. Opção 3. Personalizado (combinação livre)**
 
@@ -556,7 +578,7 @@ Diferença essencial vs modo guia: zero perguntas intermediárias, mas o preview
 ## 7. Casos de borda e proteções
 
 ### 7.1 Conta sem Page ou Instagram configurado
-Antes de prosseguir, verificar via `/meta-conexao` se `page_id` e `instagram_user_id` estão no config. Se faltar Instagram e aluno não declarar Reels/Stories, criar só com Page (Feed Facebook). Se aluno pedir Reels/Stories sem IG configurado, parar e instruir a executar `/meta-conexao`.
+Antes de prosseguir, verificar via `/trafego-conexao` se `page_id` e `instagram_user_id` estão no config. Se faltar Instagram e aluno não declarar Reels/Stories, criar só com Page (Feed Facebook). Se aluno pedir Reels/Stories sem IG configurado, parar e instruir a executar `/trafego-conexao`.
 
 ### 7.2 Budget muito baixo para o ticket
 Se `daily_budget < CPA target × 0.5`, avisar e pedir confirmação. Não bloquear, mas não deixar passar silencioso.

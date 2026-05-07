@@ -3,6 +3,7 @@ name: workshop-marketing:ads-relatorio
 description: Configura as credenciais e preferências do relatório de Facebook Ads (canal, métricas, filtro de campanhas) e oferece envio imediato via /enviar-relatorio-ads. Telegram ou WhatsApp. Usa o Meta Ads CLI via Python.
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash, AskUserQuestion
 model: sonnet
+user-invocable: false
 ---
 
 # Configurar Relatorio de Ads
@@ -30,16 +31,16 @@ A conexão Meta ainda não foi configurada. Avise o aluno:
 ```
 Você ainda não configurou a conexão com o Meta Ads.
 
-Vou rodar /meta-conexao primeiro para você escolher entre o MCP da
+Vou rodar /trafego-conexao primeiro para você escolher entre o MCP da
 Meta (recomendado) ou o caminho do App via Facebook Developers.
 Quando terminar, volto direto pra configuração do relatório.
 ```
 
-Acione a skill `/meta-conexao`. Quando ela terminar e gravar `META_AUTH_MODO` no `.env`, retorne aqui e siga conforme o valor salvo.
+Acione a skill `/trafego-conexao`. Quando ela terminar e gravar `META_AUTH_MODO` no `.env`, retorne aqui e siga conforme o valor salvo.
 
 **Se `META_AUTH_MODO=MCP_CONECTOR`:**
 
-Pule todo o **Passo 0** e o **Passo 0-CLI**. Não precisa instalar Python, nem o pacote `meta-ads`, nem coletar `ACCESS_TOKEN` ou `AD_ACCOUNT_ID` (essas variáveis só importam no caminho APP). A conexão com o Meta já está garantida pelo conector personalizado validado em `/meta-conexao`.
+Pule todo o **Passo 0** e o **Passo 0-CLI**. Não precisa instalar Python, nem o pacote `meta-ads`, nem coletar `ACCESS_TOKEN` ou `AD_ACCOUNT_ID` (essas variáveis só importam no caminho APP). A conexão com o Meta já está garantida pelo conector personalizado validado em `/trafego-conexao`.
 
 Vá direto para o **Passo 0-CANAL** (configuração do canal de envio Telegram ou WhatsApp).
 

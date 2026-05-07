@@ -3,6 +3,7 @@ name: workshop-marketing:trafego-pixel
 description: Diagnostica pixels do Meta Ads (Meta Pixel / Datasets) — status, último disparo, eventos rastreados nos últimos 7 dias e pixels sem atividade. Apenas leitura, sem configurar evento. Use quando o aluno perguntar "meu pixel está funcionando?", "quais eventos meu pixel rastreia?", "tem pixel sem atividade?", "qual foi o último disparo do pixel?". Para criar evento personalizado que vire audience, use /trafego-publicos.
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash, Skill, AskUserQuestion
 model: sonnet
+user-invocable: false
 ---
 
 # Trafego Pixel. Diagnóstico de Pixels Meta Ads
@@ -21,7 +22,7 @@ Leia `meus-produtos/.ativo`. Se existir, leia `meus-produtos/{ativo}/perfil.md` 
 ### 0.2 Conexão Meta (gate duro)
 Leia `META_AUTH_MODO` no `.env`.
 
-- **Vazio ou ausente:** acione `/meta-conexao` antes de prosseguir.
+- **Vazio ou ausente:** acione `/trafego-conexao` antes de prosseguir.
 - **MCP_CONECTOR:** confirmar que pelo menos uma tool com prefixo `mcp__*__ads_*` está disponível.
 - **APP:** confirmar que `FB_ACCESS_TOKEN_PERMANENTE` e `FB_AD_ACCOUNT_ID` existem no `.env`.
 
