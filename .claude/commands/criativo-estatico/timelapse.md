@@ -219,14 +219,17 @@ MÚSICA DE FUNDO SUGERIDA: [MÚSICA com ritmo que combina com o timelapse — lo
 
 Este mesmo texto de animação serve tanto pro formato Feed quanto pro Stories.
 
-Em seguida, entregue o prompt no formato Stories:
+**D) Prompt de Stories (9:16)**. entregue junto com o Feed, de uma vez.
+
+O Prompt Stories é o **Prompt Feed completo** (item B) repetido por inteiro, mudando APENAS o bloco final de formato. Mesma foto, mesmo ângulo aéreo, mesmos elementos, mesma composição flat lay, mesma copy, mesmo layout, mesmos placeholders já preenchidos. Não é prompt de recomposição: o aluno tem que conseguir colar o Stories sozinho, sem precisar ter gerado o Feed antes.
+
+Para montar: copie o texto inteiro do Prompt Feed e troque o bloco final `IMPORTANT: exact 4:5...` por:
+
 ````
-Agora cria a exata mesma foto, mesmo ângulo aéreo, mesmos elementos, mesma composição flat lay, mesmos textos, só diagramada pro formato Stories.
-
-O ângulo de cima pode mostrar mais da superfície verticalmente. Os textos mantêm a mesma posição relativa.
-
 IMPORTANT: exact 9:16 full-screen vertical composition for Instagram Reels and Stories. Must occupy entire smartphone screen vertically. Exact size reference: 1080x1920.
 ````
+
+O resultado é um prompt Stories completo, com todo o texto do Feed, terminando nesse bloco 9:16.
 
 ### Auto-revisão obrigatória
 
@@ -236,9 +239,30 @@ A cena, o título "COMECE HOJE", os 3 passos e o CTA da arte NÃO passam pela re
 
 ### Aprovação e salvamento
 
-Apresente a entrega final e pergunte:
+Apresente tudo junto:
 
 ```
+Pronto. Aqui está o seu criativo Timelapse:
+
+📌 IDEIA ESCOLHIDA (nº {numero_ideia} das 10)
+CENA: [cena, ângulo aéreo]
+TÍTULO: "COMECE HOJE" (ou variação com o nicho)
+3 PASSOS: [passo 1] / [passo 2] / [passo 3]
+CTA: [CTA]
+
+🎨 PROMPT PRO CHATGPT, FORMATO FEED
+[prompt Feed preenchido, dentro de bloco de código]
+
+📱 PROMPT PRO CHATGPT, FORMATO STORIES
+[prompt Stories, dentro de bloco de código]
+
+🎬 PROMPT DE ANIMAÇÃO TIMELAPSE PRO FREEPIK
+[prompt de animação preenchido, dentro de bloco de código]
+
+📝 LEGENDA PRO INSTAGRAM
+[legenda gerada]
+
+---
 1. Aprovar e salvar
 2. Quero ajustar algo
 3. Voltar e escolher outra ideia (das 10)
@@ -313,10 +337,9 @@ Conteúdo do arquivo:
 ## Como usar
 
 1. Abra o ChatGPT (com geração de imagem habilitada).
-2. Cole o **Prompt Feed** e espere a arte ser gerada.
-3. Quando estiver pronto, mande "ok" no chat.
-4. Cole o **Prompt Stories** pra gerar a versão vertical da mesma arte.
-5. Pegue a imagem (Feed ou Stories) e leve pro Freepik com o **Prompt de Animação TIMELAPSE** pra gerar o vídeo final.
+2. Cole o **Prompt Feed** pra gerar a arte no formato de feed (4:5).
+3. Cole o **Prompt Stories** pra gerar a arte no formato vertical (9:16). Cada prompt é completo e gera a arte sozinho, não precisa ter feito o Feed antes.
+4. Pegue a imagem (Feed ou Stories) e leve pro Freepik com o **Prompt de Animação TIMELAPSE** pra gerar o vídeo final.
 
 ## Banco completo (as 10 ideias geradas nesta sessão)
 
@@ -375,9 +398,9 @@ Caminho: {caminho-raiz-projeto}\meus-produtos\{ativo}\entregas\criativos\criativ
 
 Como usar:
 1. Abra o ChatGPT ou o Gemini (com geração de imagem habilitada).
-2. Cole o Prompt Feed do arquivo salvo.
-3. Quando a arte de Feed estiver pronta, mande "ok".
-4. Cole o Prompt Stories pra gerar a versão vertical da mesma arte.
+2. Cole o Prompt Feed pra gerar a arte no formato de feed (4:5).
+3. Cole o Prompt Stories pra gerar a arte no formato vertical (9:16). Os dois prompts são completos e independentes, cada um gera a arte sozinho.
+4. Pegue a imagem (Feed ou Stories) e leve pro Freepik com o Prompt de Animação TIMELAPSE pra gerar o vídeo final.
 ```
 
 No modo ChatGPT, depois da mensagem de confirmação, ofereça o menu padrão:
