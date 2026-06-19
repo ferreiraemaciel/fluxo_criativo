@@ -1,0 +1,438 @@
+# Centro das Atenções. Sub-skill do `/criativo-estatico`
+
+Sub-skill chamada pelo orquestrador `/criativo-estatico` quando o aluno escolhe a opção 27 (Centro das Atenções). Gera um infográfico radial: um OBJETO CENTRAL do nicho como protagonista da imagem, cercado por 6 a 8 dicas, fatos ou informações úteis que radiam ao redor com setas e pequenos ícones. Gera 5 variações (cada uma com um objeto central diferente), o aluno escolhe uma, e a sub-skill entrega título, legenda e três prompts prontos (Feed, Stories e animação no Freepik).
+
+**Por que esse formato funciona:**
+O olho humano busca o centro da imagem primeiro, então o objeto central segura o scroll antes do leitor processar qualquer texto. Cada dica ao redor é valor real entregue de graça, o que constrói autoridade e gera salvamento. O formato comunica "domínio do assunto" visualmente: quem mostra 8 detalhes de um único objeto demonstra que conhece o nicho a fundo. É conteúdo de valor, não venda direta, então o leitor baixa a guarda.
+
+## O Que Fazer
+
+### 0. Contexto
+
+O orquestrador `/criativo-estatico` já carregou o contexto enriquecido (perfil.md, idconsumidor.md, tipo.md, preco.md, pesquisa-mercado.md, e inferências a partir do slug do produto).
+
+Se a sub-skill foi chamada direto, carregue esses arquivos agora seguindo o Passo 0 do orquestrador.
+
+Extraia (combinando dado real + inferência):
+
+- **Produto**: nome do produto (do `perfil.md` ou inferido do slug, ex: `automacoes-inteligentes` vira "Automações Inteligentes").
+- **Nicho**: do `perfil.md` (seção "Nicho") ou inferido do nome + tipo + preço. É o dado central deste formato.
+- **Público**: do `idconsumidor.md` ou seção "Para Quem É" do `perfil.md` ou inferido do nicho.
+- **Quadro / promessa**: a transformação principal do `perfil.md`, pra alimentar o CTA (o CTA sempre carrega o resultado que o público quer).
+- **Método / abordagem do produto**: o vocabulário do método da Furadeira do `perfil.md`, se houver. As dicas ao redor do objeto DEVEM usar o vocabulário e os frameworks do método quando existir.
+
+### 1. Apresentar resumo do contexto e confirmar
+
+SEMPRE mostre o resumo, mesmo se algum campo veio de inferência. Marque o que é real e o que foi inferido:
+
+```
+Vou usar estes dados do seu produto ativo ({slug}):
+
+Produto: [nome do produto]
+Nicho: [nicho]
+Público: [resumo do público]
+Método / abordagem: [método do produto, se houver]
+
+(Marque "✓ do perfil" pros campos extraídos diretamente do perfil.md ou idconsumidor.md.
+Marque "○ inferido" pros campos que foram um chute a partir do slug, tipo ou preço.)
+
+Está tudo certo?
+
+1. Sim, está certo, pode seguir
+2. Quero ajustar algum campo
+```
+
+**Se escolher 1**, pular pra etapa 2 (Geração das 5 variações).
+
+**Se escolher 2**, perguntar qual campo ajustar e refazer só a parte indicada. Pergunta de ajuste com exemplos do mesmo universo do produto ativo (NUNCA genéricos):
+
+```
+Qual é o seu nicho?
+(ex: [3 exemplos do mesmo universo do produto ativo])
+```
+
+Se o aluno não especificou público, assumir um plausível brasileiro com base no nicho e avisar antes de gerar as variações. Não travar o fluxo.
+
+### 2. Geração das 5 variações
+
+Anuncie:
+
+```
+🔍 Próximo passo: gerar 5 variações de Centro das Atenções pro seu nicho. Tempo estimado: cerca de 60 segundos.
+```
+
+#### Identificar o objeto central e as dicas (interno)
+
+Para cada variação, identifique internamente:
+
+1. Qual OBJETO, ELEMENTO ou SÍMBOLO do nicho pode ser o centro visual.
+2. As 6 a 8 DICAS, FATOS ou INFORMAÇÕES ÚTEIS que radiam ao redor dele.
+
+**Regras do objeto central:**
+- CONCRETO e VISUAL: algo que a IA de imagem renderiza bem (objeto físico, alimento, ferramenta, instrumento).
+- IMEDIATAMENTE RECONHECÍVEL como pertencente ao nicho.
+- INTERESSANTE como protagonista de uma imagem.
+
+Exemplos por nicho (use como inspiração, adapte ao nicho real):
+
+| Nicho | Possíveis objetos centrais |
+|---|---|
+| Cronograma capilar | Fio de cabelo, pente, shampoo, folículo, secador |
+| Concurso | Livro, apostila, caneta, edital, cartão de prova |
+| Culinária | Panela, faca de chef, tábua, tempero, colher de pau |
+| Investimentos | Cofre, moeda, gráfico, calculadora, carteira |
+| Fitness | Haltere, garrafa d'água, tênis, corda, whey |
+| Skincare | Sérum, rolo de jade, espelho, pote de creme |
+| Jardinagem | Vaso, regador, semente, tesoura de poda, terra |
+| Costura | Agulha, carretel, máquina de costura, tesoura, tecido |
+
+**Regras das informações ao redor:**
+- Cada uma é uma DICA REAL, FATO ÚTIL ou ENSINAMENTO PRÁTICO. Específica e aplicável, nunca genérica.
+- Cada uma tem TÍTULO CURTO (2 a 4 palavras) e EXPLICAÇÃO BREVE (1 a 2 frases).
+- Cada uma tem um ÍCONE pequeno que a represente.
+- Mínimo 6, máximo 8 dicas por variação.
+- Quando o produto tem método específico, as dicas usam o vocabulário desse método.
+- Sem travessão. Use vírgula, ponto ou parênteses.
+
+Errado: "Cuide do cabelo" (genérico, sem valor).
+Certo: "Água morna, nunca quente, abre as cutículas sem ressecar o fio" (específico, útil).
+
+**Regra da headline (vira o título):**
+A headline SEMPRE contém o RESULTADO DESEJADO do nicho. A pessoa lê e sabe imediatamente o que vai conquistar. Fórmula: [objeto central] + [resultado que o público quer]. Sem "funciona" genérico, sem pergunta no título, sem exclamação, sem travessão.
+
+Errado: "O segredo do haltere" (vago).
+Certo: "Por que o haltere te ajuda a queimar gordura mais rápido" (resultado claro).
+
+#### Formato da listagem
+
+As 5 variações usam objetos centrais COMPLETAMENTE DIFERENTES entre si. Apresente SOMENTE objeto, headline e as dicas em texto. Não descreva o layout visual ainda (isso entra quando o aluno escolher).
+
+```
+Aqui estão 5 variações de Centro das Atenções pro seu nicho.
+
+**Variação 1. [nome do objeto central]**
+Headline: [headline com o resultado]
+Dicas ao redor:
+1. [Título curto]: [explicação breve]
+2. [Título curto]: [explicação breve]
+... (6 a 8 dicas)
+
+**Variação 2. [outro objeto central]**
+[mesmo formato]
+
+... até a Variação 5.
+
+---
+Qual variação você quer transformar em criativo?
+```
+
+Se o número for inválido, peça de novo de forma curta, sem repetir a lista inteira.
+
+### 3. Escolha e geração do criativo
+
+Após o aluno escolher uma variação, anuncie:
+
+```
+🔍 Próximo passo: gerar título, legenda e os prompts. Tempo estimado: cerca de 30 segundos.
+```
+
+Gere quatro coisas a partir da variação escolhida:
+
+#### A) Título do anúncio
+
+É a headline da variação (objeto + resultado desejado), lapidada com Light Copy. Sem travessão, sem exclamação, sem pergunta, sem promessa vaga, sem "não é X. É Y.". Produto não aparece no lead.
+
+#### B) Legenda pro Instagram
+
+2 a 3 linhas. Reforça o valor das dicas e gera curiosidade sem entregar tudo. Termina com **"Link na bio"**. Light Copy aplicada.
+
+#### C) Prompt pro ChatGPT (formato Feed)
+
+Substitua todos os placeholders pelos dados reais da variação escolhida. **O texto final ao usuário não pode ter colchetes.** O prompt é CURTO, DESCRITIVO e CONCEITUAL: descreve o que se quer VER, não como construir. Deixa o GPT interpretar o layout radial.
+
+````
+Cria pra mim um infográfico radial pra Instagram no estilo "centro das atenções". No centro da imagem, como protagonista grande e nítido, [DESCRIÇÃO VISUAL DO OBJETO CENTRAL]. Ao redor dele, distribuídas em círculo, [NÚMERO] dicas úteis, cada uma com um ícone pequeno ilustrativo e uma seta fina apontando do objeto central pra dica, estilo desenhado à mão por creator. As dicas e seus textos curtos: [LISTAR CADA DICA COM TÍTULO E EXPLICAÇÃO BREVE]. No topo, a headline em destaque: "[HEADLINE]". Embaixo, um botão CTA claro e clicável: "[CTA] →". O nome do nicho aparece legível na imagem. Estilo de infográfico editorial premium, ilustração [ESCOLHER UM ESTILO DA LISTA ABAIXO], paleta [CORES COERENTES COM O NICHO], visual de conteúdo de autoridade e alta retenção, não panfleto genérico. Tipografia sans-serif moderna e legível em celular. Sem travessão em nenhum texto. IMPORTANT: exact 4:5 Instagram feed aspect ratio. Exact size reference: 1080x1350.
+````
+
+**Estilos visuais sugeridos (varie entre as variações):**
+- Hand-drawn com caneta azul sobre papel bege (minimalista).
+- Ilustração digital colorida com fundo temático quente.
+- Poster vintage com ilustração realista e paleta fria.
+- Flat design moderno com cores vibrantes.
+- Aquarela editorial.
+- Ilustração 3D estilizada.
+
+#### D) Prompt pro ChatGPT (formato Stories)
+
+Esse é fixo. Não precisa preencher placeholders.
+
+````
+Agora cria a exata mesma arte, mesmo objeto central, mesmas dicas, mesmas cores, mesmo texto, só diagramada pro formato Stories, com mais espaçamento vertical pra ocupar a tela inteira.
+
+IMPORTANT: exact 9:16 full-screen vertical composition for Instagram Reels and Stories. Exact size reference: 1080x1920.
+````
+
+#### E) Prompt de Animação pro Freepik (Magnific)
+
+Texto curto (2 a 3 frases) pra animar a imagem do Stories. Foco apenas em movimento e transição, não repete a descrição da arte.
+
+````
+Anima essa imagem mantendo o objeto central e todas as dicas, ícones, setas, headline e botão CTA 100% estáticos e legíveis. APENAS um leve brilho ou pulso sutil percorre as setas do centro pras dicas, em loop suave de 4 a 6 segundos, como se a informação fluísse do objeto central pra cada dica. Nada de texto se move, nada some, nada balança. Trilha instrumental leve e curiosa de fundo, sem letra.
+````
+
+### 4. Auto-revisão obrigatória
+
+Antes de mostrar ao aluno: aplicar a rotina de auto-revisão de copy do CLAUDE.md (carregar Manual da Copy + acionar a skill `revisora`) no título e na legenda. Corrigir direto. Nunca mostrar versão bruta.
+
+As dicas ao redor e o CTA NÃO passam pela revisora (são conteúdo da arte com tom próprio), mas respeitam Light Copy: sem travessão, sem exclamação, e cada dica é informação concreta e útil, nunca genérica.
+
+### 5. Apresentação e aprovação
+
+```
+Pronto. Aqui está o seu criativo Centro das Atenções:
+
+📌 VARIAÇÃO ESCOLHIDA (nº {numero_variacao} das 5)
+Objeto central: [objeto]
+Dicas ao redor: [listar]
+
+📌 TÍTULO DO ANÚNCIO
+[título gerado]
+
+📝 LEGENDA PRO INSTAGRAM
+[legenda gerada terminando em "Link na bio"]
+
+🎨 PROMPT PRO CHATGPT, FORMATO FEED
+[prompt Feed preenchido, dentro de bloco de código]
+
+🎬 PROMPT DE ANIMAÇÃO PRO FREEPIK (MAGNIFIC)
+[prompt de animação, dentro de bloco de código]
+
+📱 PROMPT PRO CHATGPT, FORMATO STORIES
+[prompt Stories, dentro de bloco de código]
+
+---
+1. Aprovar e salvar
+2. Quero ajustar algo
+3. Voltar e escolher outra variação (das 5)
+```
+
+Se escolher 2, perguntar o que ajustar (título, legenda, dicas, objeto central, descrição visual ou CTA) e refazer apenas a parte indicada.
+
+Se escolher 3, apresentar as 5 variações de novo e perguntar o novo número.
+
+### 6. Gerar e salvar
+
+Após a aprovação, pergunte como o aluno quer gerar a imagem:
+
+```
+Como você quer gerar a imagem?
+
+1. Colar no ChatGPT ou Gemini (grátis)
+   Eu te entrego os prompts prontos. Você cola, gera as artes e salva.
+
+2. Gerar agora pelo OpenRouter (tem custo)
+   Eu mando o prompt direto pro modelo de imagem e já salvo o PNG na sua
+   pasta. Custa centavos por imagem.
+
+Digite o número:
+```
+
+Em qualquer um dos modos, salve o arquivo `.md` do criativo. Descubra o próximo número sequencial verificando arquivos existentes em `meus-produtos/{ativo}/entregas/criativos/` (procurar `criativo-centro-das-atencoes-*.md` e pegar o maior número + 1; se nenhum existir, começar em 1).
+
+Salve em:
+`meus-produtos/{ativo}/entregas/criativos/criativo-centro-das-atencoes-{numero}.md`
+
+Conteúdo do arquivo:
+
+```markdown
+# Centro das Atenções nº {numero}
+
+**Data:** {data atual no formato YYYY-MM-DD}
+**Produto:** [nome do produto]
+**Nicho:** [nicho]
+**Público:** [público]
+
+## Variação escolhida (nº {numero_variacao} das 5)
+
+**Objeto central:** [objeto]
+**Dicas ao redor:** [listar todas]
+
+## Título do anúncio
+
+[título]
+
+## Legenda pro Instagram
+
+[legenda terminando em "Link na bio"]
+
+## Prompt pro ChatGPT. Formato Feed (1080x1350, 4:5)
+
+\`\`\`
+[prompt Feed preenchido]
+\`\`\`
+
+## Prompt de Animação pro Freepik (Magnific) (serve pro Feed e pro Stories)
+
+\`\`\`
+[prompt de animação preenchido]
+\`\`\`
+
+## Prompt pro ChatGPT. Formato Stories (1080x1920, 9:16)
+
+\`\`\`
+[prompt Stories]
+\`\`\`
+
+## Como usar
+
+1. Abra o ChatGPT (com geração de imagem habilitada).
+2. Cole o **Prompt Feed** e espere a arte ser gerada.
+3. Quando estiver pronto, mande "ok" no chat.
+4. Cole o **Prompt Stories** pra gerar a versão vertical da mesma arte.
+5. Pra animar, abra o Freepik (Magnific), suba a imagem gerada e cole o **Prompt de Animação**. O mesmo prompt serve pro Feed e pro Stories.
+
+## Banco completo (as 5 variações geradas nesta sessão)
+
+Liste aqui todas as 5 variações geradas nesta sessão, pra o aluno usar depois sem rodar a sub-skill de novo.
+```
+
+### 6b. Modo API (só se o aluno escolheu a opção 2)
+
+Depois de salvar o `.md`, gere apenas a imagem do Feed pela API. A versão Stories sai depois, como opção no menu do Passo 7, reaproveitando a imagem do Feed como referência visual.
+
+1. Leia `OPENROUTER_API_KEY` no `.env`. Se faltar, ofereça configurar com o `/configurar-imagens` ou voltar pro modo ChatGPT.
+
+2. Pergunte o modelo:
+
+```
+Qual modelo de imagem?
+
+1. GPT Image 2 (recomendado)
+   Cerca de US$ 0,05 por imagem.
+2. Gemini Nano Banana 2
+   Cerca de US$ 0,07 por imagem.
+
+Digite o número:
+```
+
+Opção 1 vira `openai/gpt-5.4-image-2`, opção 2 vira `google/gemini-3.1-flash-image-preview`. Guarde o modelo escolhido, ele vai ser reaproveitado se o aluno pedir Stories no Passo 7.
+
+3. Grave o Prompt Feed num arquivo `.txt` na pasta de criativos, com o nome `prompt-centro-das-atencoes-{numero}-feed.txt`. Conteúdo é o Prompt Feed apresentado ao aluno, sem alterações.
+
+4. Anuncie e rode o script no formato Feed (4:5):
+
+```
+🔍 Próximo passo: gerar a imagem do Feed via API. Tempo estimado: 2 a 3 minutos.
+```
+
+Use o comando Python correto da sessão (`python3` ou `py -3`), conforme a seção Execução de Scripts Python do CLAUDE.md.
+
+```bash
+py -3 scripts/gerar-criativo-estatico.py --prompt-file "meus-produtos/{ativo}/entregas/criativos/prompt-centro-das-atencoes-{numero}-feed.txt" --model "{modelo}" --aspect "4:5" --out "meus-produtos/{ativo}/entregas/criativos/criativo-centro-das-atencoes-{numero}-feed.png"
+```
+
+5. Se o script falhar (erro de chave, rede ou modelo), avise o aluno em linguagem simples e ofereça o modo ChatGPT mostrando os prompts.
+
+6. NÃO gere Stories automaticamente. A opção aparece como primeira no menu do Passo 7 e usa a imagem do Feed como referência (image-to-image).
+
+### 7. Confirmação final e próximo passo
+
+Apresente o resultado conforme o modo escolhido. Sempre mostrar o caminho absoluto (regra 4a do CLAUDE.md).
+
+**No modo ChatGPT:**
+
+```
+✅ Concluído: criativo Centro das Atenções salvo.
+
+Caminho: {caminho-raiz-projeto}\meus-produtos\{ativo}\entregas\criativos\criativo-centro-das-atencoes-{numero}.md
+
+Como usar:
+1. Abra o ChatGPT ou o Gemini (com geração de imagem habilitada).
+2. Cole o Prompt Feed do arquivo salvo.
+3. Quando a arte de Feed estiver pronta, mande "ok".
+4. Cole o Prompt Stories pra gerar a versão vertical da mesma arte.
+```
+
+No modo ChatGPT, depois da confirmação, ofereça o menu padrão:
+
+```
+Quer fazer mais alguma coisa?
+1. Gerar outro Centro das Atenções com outra das 5 variações
+2. Trocar o nicho ou público e gerar 5 variações novas
+3. Voltar e escolher outro formato de criativo
+```
+
+**No modo API:**
+
+```
+✅ Concluído: criativo Centro das Atenções gerado e salvo.
+
+Imagem do Feed: {caminho-raiz-projeto}\meus-produtos\{ativo}\entregas\criativos\criativo-centro-das-atencoes-{numero}-feed.png
+Briefing: {caminho-raiz-projeto}\meus-produtos\{ativo}\entregas\criativos\criativo-centro-das-atencoes-{numero}.md
+```
+
+Depois ofereça o menu com "Gerar para o formato de Stories" como nova primeira opção:
+
+```
+Quer fazer mais alguma coisa?
+1. Gerar para o formato de Stories (a partir da imagem do Feed)
+2. Gerar outro Centro das Atenções com outra das 5 variações
+3. Trocar o nicho ou público e gerar 5 variações novas
+4. Voltar e escolher outro formato de criativo
+```
+
+#### Sub-fluxo "Gerar para o formato de Stories" (opção 1 do menu acima)
+
+Quando o aluno escolher 1, execute:
+
+a) Grave num arquivo `.txt` na pasta de criativos o prompt curto de recomposição abaixo (sem placeholders), com o nome `prompt-centro-das-atencoes-{numero}-stories.txt`:
+
+```
+Recompose this exact same creative for a vertical 9:16 Instagram Stories and Reels canvas (1080x1920). Keep the same central object, same surrounding tips, same icons, same arrows, same colors, same text content, same headline, same CTA, same design language. Only recompose the framing to fill the entire vertical screen. Do not redesign, do not change typography, do not change wording. Only adapt the proportion from 4:5 to 9:16.
+```
+
+b) Anuncie:
+
+```
+🔍 Próximo passo: gerar a versão Stories a partir da imagem do Feed. Tempo estimado: 2 a 3 minutos.
+```
+
+c) Rode o script reaproveitando o modelo escolhido no Passo 6b, passando a imagem do Feed como referência visual (image-to-image):
+
+```bash
+py -3 scripts/gerar-criativo-estatico.py --prompt-file "meus-produtos/{ativo}/entregas/criativos/prompt-centro-das-atencoes-{numero}-stories.txt" --model "{modelo}" --aspect "9:16" --reference-image "meus-produtos/{ativo}/entregas/criativos/criativo-centro-das-atencoes-{numero}-feed.png" --out "meus-produtos/{ativo}/entregas/criativos/criativo-centro-das-atencoes-{numero}-stories.png"
+```
+
+d) Confirme:
+
+```
+✅ Concluído: versão Stories gerada e salva.
+
+Imagem do Stories: {caminho-raiz-projeto}\meus-produtos\{ativo}\entregas\criativos\criativo-centro-das-atencoes-{numero}-stories.png
+```
+
+e) Reapresente o mesmo menu de opções.
+
+## Regras
+
+- Light Copy obrigatória no título e na legenda. Sem travessão, sem exclamação, sem pergunta no título, sem promessa vaga, sem "não é X. É Y.".
+- Produto NÃO aparece no lead do título nem da legenda.
+- As dicas ao redor e o CTA seguem regras próprias e NÃO passam pela revisora, mas devem respeitar Light Copy.
+- Auto-revisão obrigatória de copy (Manual da Copy + revisora) antes de apresentar o título e a legenda.
+- **NUNCA use travessão** em nenhum texto da skill (nem nas dicas, nem nos títulos, nem nas legendas, nem nos prompts do GPT). Use vírgula ou ponto final no lugar.
+- **Objeto central concreto e visual**, imediatamente reconhecível como do nicho. As 5 variações usam objetos centrais completamente diferentes.
+- **Dicas específicas e úteis**, nunca genéricas. Mínimo 6, máximo 8 por variação. Quando o produto tem método específico, as dicas usam o vocabulário desse método.
+- **Headline sempre com o resultado desejado** do nicho. Fórmula: objeto central + resultado que o público quer. Sem "funciona" vago.
+- Substituir TODOS os placeholders dos prompts pro ChatGPT. O texto final no chat e no arquivo salvo NÃO pode ter colchetes.
+- Texto pro ChatGPT em linguagem coloquial brasileira misturada com as diretrizes técnicas em inglês (gatilhos eficazes pro gerador de imagem).
+- **É conteúdo de valor, não venda.** O CTA é uma promessa ligada ao resultado do público (ex: "Quer aprender a ter um cabelo mais bonito? Clique aqui"), nunca escassez comercial ("compre agora", "últimas vagas").
+
+### Regras de segurança e compliance
+
+- Nunca usar marcas reais, logos, fotos de pessoas reais identificáveis, celebridades, propriedades intelectuais protegidas, claims médicos não comprovados, diagnósticos ou prescrições, nem comparação direta com concorrente real nomeado.
+- As dicas são seguras, baseadas em conhecimento geral do nicho, nunca substituindo orientação profissional quando aplicável.
+- Compliance Facebook Ads: sem nudez, sensualização ou violência.
+- Aprovação obrigatória antes de salvar (regra 5 do CLAUDE.md). Pular só se o aluno pediu explicitamente "ir direto à versão final" na mesma sessão.
+- Acentuação correta em todo o texto gerado: não, são, você, está, três, público, próximo, último, vídeo, página, específico, lógico, estratégia, técnica.
+- Número do criativo é sequencial dentro da pasta do produto. Verificar arquivos existentes antes de numerar.
+- Após salvar, sempre exibir caminho absoluto no chat (regra 4a do CLAUDE.md).
