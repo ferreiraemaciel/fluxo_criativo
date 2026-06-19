@@ -576,6 +576,9 @@ Em seguida, liste os comandos disponíveis organizados por categoria:
 - `/estrategia-lancamento`. Planejar lançamento ou evento completo
 - `/estrategia-funil`. Mapear funil perpétuo ou de lançamento
 
+**Estudo:**
+- `/gestor-pedagogico`. Transformar um material de ensino (texto colado ou link do YouTube) em entregáveis de estudo. O mentorado escolhe o que gerar entre 8 opções (transcrição, mapa mental, apostila, avaliação Q&A, checklist de implementação, resumo, sequência lógica, aula em 5 a 7 conceitos)
+
 **Comercial:**
 - `/comercial-playbook`. Criar scripts de venda 1:1 (SPIN Selling), entrega em HTML pronto para PDF
 
