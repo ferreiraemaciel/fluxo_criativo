@@ -543,6 +543,7 @@ Em seguida, liste os comandos disponíveis organizados por categoria:
 - `/copy-pagina`. Criar copy e/ou página HTML profissional (vendas, captura ou obrigado)
 - `/copy-anuncio`. Criar anúncios para Meta Ads (Mandala da Criatividade, 18 tipos)
 - `/elementos-literarios`. Aplicar 1 a 3 dos 26 elementos literários do Light Copy
+- `/urgencia-oculta`. Gerar Urgências Ocultas de forma rápida e standalone, calibradas por nível do público (iniciante, intermediário, avançado) no espectro frio para quente. Usa o produto ativo se existir, senão trabalha só com nicho e descrição digitados. Atalho fora do `/produto-concepcao`
 - `/criativo-estatico`. Gerar criativos estáticos para anúncios (prompt para colar em ferramenta externa OU geração automática via API)
 - `/gerar-furadeira`. Gerar a Furadeira (método do produto) no `perfil.md` aplicando uma das 6 mecânicas (Fases, Condicional, Enquadramento, Listas, Empecilhos, Dinâmica de Entrega) escolhida automaticamente conforme o nicho
 - `/furadeira-visual`. Gerar a imagem PNG da Furadeira via prompt para ChatGPT (a skill decide o layout sozinha conforme mecânica + nicho)

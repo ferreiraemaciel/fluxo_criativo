@@ -25,6 +25,8 @@
 |----------|----------------|---------|
 | Gerar 50 Decorados (5 categorias x 10) | cerca de 90 segundos | segundos |
 | Gerar 70 Urgências Ocultas (7 categorias x 10) | cerca de 90 segundos | segundos |
+| Gerar Urgências Ocultas calibradas por nível (1 nível) | cerca de 90 segundos | segundos |
+| Gerar Urgências Ocultas nos 3 níveis (iniciante, intermediário, avançado) | 3 a 5 minutos | minutos |
 | Gerar Identidade do Consumidor completa (idconsumidor.md) | 3 a 5 minutos | minutos |
 | Gerar Furadeira (prompt visual) | cerca de 30 segundos | segundos |
 | Gerar Argumentos Incontestáveis | cerca de 45 segundos | segundos |
