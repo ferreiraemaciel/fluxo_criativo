@@ -69,6 +69,8 @@ Os títulos são **ganchos**: premissas não óbvias, nunca perguntas, que avisa
 
 **Para os tipos Atualidades e Atualidades Trend**: antes de gerar os títulos, faça uma busca na web por notícias e trends recentes. Veja as regras específicas na seção "Regras para Atualidades e Atualidades Trend" mais abaixo.
 
+**Para o tipo Ultra Segmentado**: existe um sub-modo opcional. Em vez das 12 ideias soltas, você pode oferecer gerar o criativo em 5 versões (iniciante, intermediário, avançado e os dois extremos). Veja a seção "Sub-modo opcional para Ultra Segmentado" mais abaixo. O fluxo padrão de 12 ideias continua valendo se o aluno preferir.
+
 No fim, peça: "Qual ideia você quer que eu desenvolva?"
 
 ### Passo 4 — Copy completa + 4 opções de CTA
@@ -271,7 +273,7 @@ Apresente todos no Passo 1, na ordem abaixo:
 10. **Prova** — Evidência concreta de que funciona: prints de alunos, depoimentos com antes/resultado/prazo, troféus, capacete com 10 mil placas. Prova é fato, não elogio.
 11. **Contraste** — Como comparação, mas mais "preto no branco". Ex: gordo vs magro; perpétuo como anãozinho trabalhador vs lançamento como gigante que come muito.
 12. **História** — História pessoal, de cliente ou parábola com moral. Ex: guia idosa e analfabeta da cachoeira que se mostrou mais preparada fisicamente, gerando reflexão sobre o "superpoder" de saber ler.
-13. **Ultra Segmentado** — Fala direto com público super específico. Ex: mães de crianças de 4-5 anos; aposentados do INSS; signo de Touro ("gosta de comer bem, mas custa caro").
+13. **Ultra Segmentado** — Fala direto com um público super específico, a ponto de a pessoa sentir que o anúncio foi feito só pra ela. Pode abrir nomeando o público com a fórmula "estou procurando você que...", descrevendo a cena exata dele ("estou procurando você que está fazendo seu primeiro aquário, com os peixes morrendo, cheio de dúvida"). Quando o recorte é uma fraqueza, usa a virada de empatia que inverte a fraqueza em pertencimento ("nunca mexeu num computador na vida, parabéns, você é igual a mim quando comecei"). O mesmo produto rende criativos diferentes por nível de consciência (iniciante, intermediário, avançado): muda a linguagem, a dor e os termos. Em vez de mirar o público médio, vale atirar nos dois extremos, iniciante e avançado, e ver qual converte mais. Continua avisando ou ensinando, sem promessa vazia. Ex: mães de crianças de 4-5 anos; aposentados do INSS; signo de Touro ("gosta de comer bem, mas custa caro"). Sub-modo opcional na seção abaixo.
 14. **Reflexão** — Provoca reflexão profunda, como um "filósofo do nicho". Os ganchos devem ser sobre o que a pessoa **pensa sobre a vida**: envelhecer, se comparar, autoestima, pressão, medo, ambição, frustração, identidade. A reflexão é humana, não comercial. O nicho é o pano de fundo, não o protagonista. Ex: "Nunca foi tão ruim ser classe média (inflação, sem casa/carro), mas nunca foi tão fácil enriquecer (empreender sem fábrica/estoque)".
 15. **Explicação** — Ensina algo de forma lógica e direta. Ex: "Abdominal não faz barriga aparecer porque tem gordura em cima; só déficit calórico seca; o ideal é treino intensivo + dieta".
 16. **Problema-Solução** — Identifica problema específico e oferece solução prática. Ex: baixa margem no digital = falta de conteúdo (solução: criar público engajado); maquiadora sem noivas = anunciar no Google.
@@ -318,6 +320,28 @@ Quando o aluno escolher este tipo:
 5. O aluno escolhe uma. A partir dela, gere a copy normalmente (Passo 4).
 
 **Nunca recicle as mesmas trends pra nichos diferentes.** Se dois alunos de nichos diferentes rodam Atualidades Trend, a lista de trends deve ser completamente diferente.
+
+---
+
+## Sub-modo opcional para Ultra Segmentado (#13)
+
+Quando o aluno escolher o tipo **Ultra Segmentado**, ofereça um caminho alternativo ao fluxo padrão de 12 ideias:
+
+"Quer as 12 ideias soltas de sempre, ou prefere que eu gere o criativo em versões por nível de público (iniciante, intermediário e avançado) mais os dois extremos, pra você testar qual converte mais?"
+
+Se o aluno escolher o sub-modo, entregue **5 versões** do mesmo produto, cada uma com gancho + 2 parágrafos no padrão do Passo 4, em vez da lista de 12. O eixo é o **nível de consciência** do leitor em relação ao que o produto resolve, não a idade nem a renda. O mesmo produto serve aos cinco: muda a linguagem, a dor nomeada e os termos, nunca a oferta.
+
+1. **Iniciante** — linguagem leiga, sem jargão. A dor é "não sei nada, parece tudo difícil demais pra mim". Abre nomeando o leigo com a fórmula "estou procurando você que...".
+2. **Intermediário** — já saiu do zero, mas travou. A dor é "aprendi o básico, mas não consigo avançar". Linguagem do meio termo, com alguns termos do nicho já explicados.
+3. **Avançado** — linguagem técnica, termos do nicho sem precisar explicar. A dor é "já domino o básico, quero o próximo nível". O leitor sente que finalmente alguém fala a língua dele.
+4. **Extremo iniciante** — a versão mais crua do iniciante, pro recorte que nunca tentou, tem medo ou acha que não é capaz. Aqui cabe a virada de empatia que inverte a fraqueza em pertencimento ("nunca mexeu num computador na vida, parabéns, você é igual a mim quando comecei").
+5. **Extremo avançado** — a versão mais técnica possível, pro recorte mais experiente, que já fatura ou já pratica e acha tudo básico demais.
+
+As versões 4 e 5 são a técnica de **atirar nos dois extremos**: em vez de mirar o público médio, você empurra os dois polos ao máximo e deixa o teste dizer qual converte.
+
+Cada uma das 5 versões passa pelos 15 princípios e pelo filtro dos 20 vícios, igual a qualquer peça desta skill. Depois das versões, siga normalmente para as 4 opções de CTA por fase do funil.
+
+Esse sub-modo vale só para o tipo #13. Os outros 20 tipos seguem o fluxo padrão de 12 ideias.
 
 ---
 
