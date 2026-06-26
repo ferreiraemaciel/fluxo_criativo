@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <title>Tracker FMN</title>
+
+  <!-- FMN Design System Fonts -->
+  <style>
+    @font-face { font-family:"BwSurco"; src:url("fonts/BwSurco-Light.otf") format("opentype"); font-weight:300; font-display:swap; }
+    @font-face { font-family:"BwSurco"; src:url("fonts/BwSurco-Book.otf") format("opentype"); font-weight:400; font-display:swap; }
+    @font-face { font-family:"BwSurco"; src:url("fonts/BwSurco-Regular.otf") format("opentype"); font-weight:450; font-display:swap; }
+    @font-face { font-family:"BwSurco"; src:url("fonts/BwSurco-Medium.otf") format("opentype"); font-weight:500; font-display:swap; }
+    @font-face { font-family:"BwSurco"; src:url("fonts/BwSurco-Bold.otf") format("opentype"); font-weight:700; font-display:swap; }
+    @font-face { font-family:"BwSurco"; src:url("fonts/BwSurco-Black.otf") format("opentype"); font-weight:900; font-display:swap; }
+    @font-face { font-family:"Aleo"; src:url("fonts/Aleo-Light.otf") format("opentype"); font-weight:300; font-display:swap; }
+    @font-face { font-family:"Aleo"; src:url("fonts/Aleo-Regular.otf") format("opentype"); font-weight:400; font-display:swap; }
+    @font-face { font-family:"Aleo"; src:url("fonts/Aleo-Italic.otf") format("opentype"); font-weight:400; font-style:italic; font-display:swap; }
+    @font-face { font-family:"Aleo"; src:url("fonts/Aleo-Bold.otf") format("opentype"); font-weight:700; font-display:swap; }
+  </style>
+
+  <!-- FMN Design System tokens -->
+  <style>
+    :root {
+      --fmn-gold:#eaaa41; --fmn-gold-deep:#c88a2e; --fmn-gold-soft:#f2c878;
+      --fmn-orange:#e8600a; --fmn-cream:#f5f0e8; --fmn-white:#ffffff;
+      --fmn-charcoal:#3f3f3f; --fmn-black:#1a1a1a; --fmn-navy:#1a1f2e;
+      --font-display:"BwSurco","Antonio","Bebas Neue",system-ui,sans-serif;
+      --font-body:"Aleo","PT Serif",Georgia,serif;
+      --font-mono:"Courier Prime",ui-monospace,monospace;
+      --ease-out:cubic-bezier(.2,.7,.2,1);
+      --ease-in-out:cubic-bezier(.5,.05,.2,1);
+      --dur-fast:120ms; --dur-base:200ms; --dur-slow:360ms;
+      --r-xs:4px; --r-sm:8px; --r-md:12px; --r-lg:20px; --r-xl:28px; --r-pill:999px;
+      --space-1:4px; --space-2:8px; --space-3:12px; --space-4:16px; --space-5:24px;
+      --space-6:32px; --space-7:48px; --space-8:64px; --space-9:96px;
+    }
+    html, body { margin:0; padding:0; background:#0f1013; overflow:hidden; height:100%; }
+    body { -webkit-font-smoothing:antialiased; }
+  </style>
+
+  <!-- App tokens -->
+  <link rel="stylesheet" href="app/tokens.css" />
+
+  <!-- Roboto Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet" />
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+
+  <!-- D3 (mapa GeoJSON) -->
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+
+  <!-- React 18 -->
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js"
+    integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L"
+    crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js"
+    integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm"
+    crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js"
+    integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y"
+    crossorigin="anonymous"></script>
+</head>
+<body>
+  <div id="root"></div>
+
+  <!-- Load order: supabase → shared → screens → main -->
+  <script src="app/supabase.js?v=26"></script>
+  <script type="text/babel" src="app/shared.jsx?v=39"></script>
+  <script type="text/babel" src="app/map.jsx?v=44"></script>
+  <script type="text/babel" src="app/dashboard.jsx?v=65"></script>
+  <script type="text/babel" src="app/kanban.jsx?v=56"></script>
+  <script type="text/babel" src="app/financeiro.jsx?v=38"></script>
+  <script type="text/babel" src="app/ideias.jsx?v=26"></script>
+  <script type="text/babel" src="app/trafego.jsx?v=53"></script>
+  <script type="text/babel" src="app/sistema.jsx?v=26"></script>
+  <script type="text/babel" src="app/main.jsx?v=26"></script>
+</body>
+</html>

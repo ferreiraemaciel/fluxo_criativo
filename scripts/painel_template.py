@@ -1259,6 +1259,7 @@ def render_identidade_consumidor(dados: dict) -> str:
                     f"{paragrafos}"
                     "</div>"
                 )
+            _fallback_args = '<p class="card-body">Sem argumentos registrados.</p>'
             acc_items.append(
                 '<div class="objecao">'
                 '<div class="objecao-head" onclick="toggleObjecao(this)">'
@@ -1267,7 +1268,7 @@ def render_identidade_consumidor(dados: dict) -> str:
                 '<span style="color:var(--text-faint);font-size:11px">&#9662;</span>'
                 "</div>"
                 '<div class="objecao-body">'
-                f"{corpo_args or '<p class=\"card-body\">Sem argumentos registrados.</p>'}"
+                f"{corpo_args or _fallback_args}"
                 "</div>"
                 "</div>"
             )

@@ -2,6 +2,10 @@ electron/
 build/
 docs/
 
+# Tracker FMN — credenciais locais (nunca subir)
+tracker-fmn/.env
+tracker-fmn/google-credentials.json
+
 
 # Arquivos binários grandes do Whisper
 .claude/tools/whisper/Release/

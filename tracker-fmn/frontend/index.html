@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <title>Tracker FMN</title>
+
+  <!-- FMN Design System Fonts -->
+  <style>
+    @font-face { font-family:"BwSurco"; src:url("fonts/BwSurco-Light.otf") format("opentype"); font-weight:300; font-display:swap; }
+    @font-face { font-family:"BwSurco"; src:url("fonts/BwSurco-Book.otf") format("opentype"); font-weight:400; font-display:swap; }
+    @font-face { font-family:"BwSurco"; src:url("fonts/BwSurco-Regular.otf") format("opentype"); font-weight:450; font-display:swap; }
+    @font-face { font-family:"BwSurco"; src:url("fonts/BwSurco-Medium.otf") format("opentype"); font-weight:500; font-display:swap; }
+    @font-face { font-family:"BwSurco"; src:url("fonts/BwSurco-Bold.otf") format("opentype"); font-weight:700; font-display:swap; }
+    @font-face { font-family:"BwSurco"; src:url("fonts/BwSurco-Black.otf") format("opentype"); font-weight:900; font-display:swap; }
+    @font-face { font-family:"Aleo"; src:url("fonts/Aleo-Light.otf") format("opentype"); font-weight:300; font-display:swap; }
+    @font-face { font-family:"Aleo"; src:url("fonts/Aleo-Regular.otf") format("opentype"); font-weight:400; font-display:swap; }
+    @font-face { font-family:"Aleo"; src:url("fonts/Aleo-Italic.otf") format("opentype"); font-weight:400; font-style:italic; font-display:swap; }
+    @font-face { font-family:"Aleo"; src:url("fonts/Aleo-Bold.otf") format("opentype"); font-weight:700; font-display:swap; }
+  </style>
+
+  <!-- FMN Design System tokens -->
+  <style>
+    :root {
+      --fmn-gold:#eaaa41; --fmn-gold-deep:#c88a2e; --fmn-gold-soft:#f2c878;
+      --fmn-orange:#e8600a; --fmn-cream:#f5f0e8; --fmn-white:#ffffff;
+      --fmn-charcoal:#3f3f3f; --fmn-black:#1a1a1a; --fmn-navy:#1a1f2e;
+      --font-display:"BwSurco","Antonio","Bebas Neue",system-ui,sans-serif;
+      --font-body:"Aleo","PT Serif",Georgia,serif;
+      --font-mono:"Courier Prime",ui-monospace,monospace;
+      --ease-out:cubic-bezier(.2,.7,.2,1);
+      --ease-in-out:cubic-bezier(.5,.05,.2,1);
+      --dur-fast:120ms; --dur-base:200ms; --dur-slow:360ms;
+      --r-xs:4px; --r-sm:8px; --r-md:12px; --r-lg:20px; --r-xl:28px; --r-pill:999px;
+      --space-1:4px; --space-2:8px; --space-3:12px; --space-4:16px; --space-5:24px;
+      --space-6:32px; --space-7:48px; --space-8:64px; --space-9:96px;
+    }
+    html, body { margin:0; padding:0; background:#0f1013; overflow:hidden; height:100%; }
+    body { -webkit-font-smoothing:antialiased; }
+
+    /* ── Login Screen ── */
+    #loginScreen {
+      display: none;
+      position: fixed; inset: 0;
+      background: #0f1013;
+      z-index: 9999;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    #loginScreen::before {
+      content:'';
+      position:absolute; inset:0;
+      background: radial-gradient(ellipse 60% 50% at 50% 40%, rgba(234,170,65,.07) 0%, transparent 70%);
+      pointer-events:none;
+    }
+    .ls-box {
+      width: 100%; max-width: 380px;
+      background: #18191d;
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 16px;
+      padding: 44px 40px 40px;
+      position: relative; z-index: 1;
+      box-shadow: 0 24px 64px rgba(0,0,0,.5);
+    }
+    .ls-logo {
+      text-align: center; margin-bottom: 8px; line-height: 0;
+    }
+    .ls-logo img { height: 52px; width: auto; display: inline-block;
+      filter: drop-shadow(0 0 16px rgba(234,170,65,.3)); }
+    .ls-title {
+      font-family: "BwSurco", sans-serif; font-weight: 500;
+      font-size: 11px; letter-spacing: 2.5px; color: rgba(255,255,255,.3);
+      text-align: center; text-transform: uppercase; margin-bottom: 36px;
+    }
+    .ls-label {
+      display: block; font-family: "BwSurco", sans-serif; font-weight: 700;
+      font-size: 10px; letter-spacing: 1.5px; color: rgba(255,255,255,.4);
+      text-transform: uppercase; margin-bottom: 7px;
+    }
+    .ls-input {
+      width: 100%; box-sizing: border-box;
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.1);
+      color: #fff; padding: 12px 14px;
+      border-radius: 8px; font-size: 13px;
+      font-family: "Aleo", serif; outline: none;
+      transition: border .15s; margin-bottom: 16px;
+    }
+    .ls-input:focus { border-color: rgba(234,170,65,.45); }
+    .ls-btn {
+      width: 100%; background: #eaaa41; color: #000;
+      border: none; padding: 14px; border-radius: 8px;
+      font-size: 13px; font-weight: 700;
+      font-family: "BwSurco", sans-serif; letter-spacing: .5px;
+      cursor: pointer; transition: background .15s; margin-top: 4px;
+    }
+    .ls-btn:hover { background: #c88a2e; }
+    .ls-btn:disabled { background: #2a2a2a; color: #555; cursor: default; }
+    .ls-err {
+      font-size: 11px; font-family: "Aleo", serif;
+      color: #e05a5a; text-align: center;
+      margin-top: 14px; min-height: 16px;
+    }
+    .ls-forgot {
+      display: block; text-align: center; margin-top: 20px;
+      font-size: 11px; font-family: "Aleo", serif;
+      color: rgba(255,255,255,.25); cursor: pointer;
+      text-decoration: underline; text-underline-offset: 3px;
+      transition: color .15s;
+    }
+    .ls-forgot:hover { color: rgba(234,170,65,.6); }
+  </style>
+
+  <!-- App tokens -->
+  <link rel="stylesheet" href="app/tokens.css" />
+
+  <!-- Roboto Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet" />
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+
+  <!-- D3 (mapa GeoJSON) -->
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+
+  <!-- React 18 -->
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js"
+    integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L"
+    crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js"
+    integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm"
+    crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js"
+    integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y"
+    crossorigin="anonymous"></script>
+</head>
+<body>
+
+  <!-- Login Screen (escondida por padrão; auth.js decide se mostra) -->
+  <div id="loginScreen">
+    <div class="ls-box">
+      <div class="ls-logo">
+        <img src="https://imagens.ferreiraemaciel.com.br/logos/fem-logo-09.png" alt="Ferreira &amp; Maciel">
+      </div>
+      <div class="ls-title">Tracker FMN</div>
+      <label class="ls-label">E-mail</label>
+      <input class="ls-input" id="lsEmail" type="email"
+        placeholder="contato@ferreiraemaciel.com.br" autocomplete="email" />
+      <label class="ls-label">Senha</label>
+      <input class="ls-input" id="lsSenha" type="password"
+        placeholder="••••••••" autocomplete="current-password"
+        onkeydown="if(event.key==='Enter') lsEntrar()" />
+      <button class="ls-btn" id="lsBtn" onclick="lsEntrar()">Entrar</button>
+      <div class="ls-err" id="lsErr"></div>
+      <span class="ls-forgot" onclick="lsEsqueciSenha()">Esqueci minha senha</span>
+    </div>
+  </div>
+
+  <!-- App React -->
+  <div id="root"></div>
+
+  <!-- Auth -->
+  <script src="app/auth.js?v=1"></script>
+
+  <!-- Load order: supabase → shared → screens → main -->
+  <script src="app/supabase.js?v=26"></script>
+  <script type="text/babel" src="app/shared.jsx?v=39"></script>
+  <script type="text/babel" src="app/map.jsx?v=44"></script>
+  <script type="text/babel" src="app/dashboard.jsx?v=65"></script>
+  <script type="text/babel" src="app/kanban.jsx?v=57"></script>
+  <script type="text/babel" src="app/financeiro.jsx?v=38"></script>
+  <script type="text/babel" src="app/ideias.jsx?v=26"></script>
+  <script type="text/babel" src="app/trafego.jsx?v=53"></script>
+  <script type="text/babel" src="app/sistema.jsx?v=26"></script>
+  <script type="text/babel" src="app/main.jsx?v=26"></script>
+
+  <script>
+    /* ── Login handlers ── */
+    async function lsEntrar() {
+      const email = document.getElementById('lsEmail').value;
+      const senha = document.getElementById('lsSenha').value;
+      const btn   = document.getElementById('lsBtn');
+      const err   = document.getElementById('lsErr');
+      if (!email || !senha) { err.textContent = 'Preencha e-mail e senha.'; return; }
+      btn.disabled = true; btn.textContent = 'Entrando…'; err.textContent = '';
+      try {
+        await window.FMNAuth.login(email, senha);
+        document.getElementById('loginScreen').style.display = 'none';
+      } catch(e) {
+        err.textContent = e.message;
+        btn.disabled = false; btn.textContent = 'Entrar';
+      }
+    }
+
+    async function lsEsqueciSenha() {
+      const email = document.getElementById('lsEmail').value || 'contato@ferreiraemaciel.com.br';
+      const err = document.getElementById('lsErr');
+      err.style.color = '#eaaa41';
+      err.textContent = 'Enviando link de redefinição…';
+      try {
+        await fetch('https://wntzzzuqoqmfcjebmzul.supabase.co/auth/v1/recover', {
+          method: 'POST',
+          headers: { apikey: 'sb_publishable_eknjN5BlmwD9_H6kDUtuPw_ejoa8rwx', 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email })
+        });
+        err.textContent = 'Link enviado! Verifique seu e-mail.';
+      } catch {
+        err.style.color = '#e05a5a';
+        err.textContent = 'Erro ao enviar. Tente novamente.';
+      }
+    }
+
+    /* Inicia auth assim que o DOM estiver pronto */
+    document.addEventListener('DOMContentLoaded', () => {
+      window.FMNAuth.init();
+    });
+  </script>
+
+</body>
+</html>

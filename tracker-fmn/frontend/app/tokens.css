@@ -1,0 +1,70 @@
+/* ================================================================
+   Tracker FMN — App-layer design tokens
+   Extends the FMN Design System base tokens
+   ================================================================ */
+:root {
+  /* Base backgrounds — dark mode */
+  --app-bg:        #0f1013;
+  --app-sidebar:   #0c0d11;
+  --app-surface:   #181a1f;
+  --app-surface-2: #1f2229;
+  --app-surface-3: #272b34;
+  --app-border:    rgba(255,255,255,.07);
+  --app-border-2:  rgba(255,255,255,.13);
+
+  /* Text hierarchy */
+  --text-1: rgba(255,255,255,.92);
+  --text-2: rgba(255,255,255,.57);
+  --text-3: rgba(255,255,255,.32);
+
+  /* Semantic data colors */
+  --clr-pos:      #4ade80;
+  --clr-pos-bg:   rgba(74,222,128,.1);
+  --clr-neg:      #f87171;
+  --clr-neg-bg:   rgba(248,113,113,.1);
+  --clr-warn:     #fbbf24;
+  --clr-warn-bg:  rgba(251,191,36,.1);
+  --clr-info:     #60a5fa;
+  --clr-info-bg:  rgba(96,165,250,.1);
+  --clr-teal:     #34d399;
+  --clr-teal-bg:  rgba(52,211,153,.1);
+
+  /* Layout */
+  --sidebar-w:  232px;
+  --topbar-h:   60px;
+}
+
+/* Override FMN fonts → Roboto */
+:root {
+  --font-display: 'Roboto', system-ui, sans-serif;
+  --font-body:    'Roboto', system-ui, sans-serif;
+}
+
+/* Base reset */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+button { border: none; background: none; cursor: pointer; }
+input, textarea, select { border: none; outline: none; background: transparent; color: inherit; font-family: 'Roboto', sans-serif; }
+
+/* Dark mode date inputs */
+input[type="date"], input[type="text"] {
+  color-scheme: dark;
+}
+input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.6); cursor: pointer; }
+
+#root {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+  background: var(--app-bg);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,.12); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,.22); }
+
+@keyframes pulse-dot {
+  0%, 100% { box-shadow: 0 0 0 2px rgba(34,197,94,.25); }
+  50%       { box-shadow: 0 0 0 4px rgba(34,197,94,.08); }
+}
