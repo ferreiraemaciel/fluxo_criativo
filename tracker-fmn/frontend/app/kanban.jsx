@@ -24,7 +24,7 @@ const { LucideIcon, Btn, Badge, TopBar } = window;
 const PRODUCT_TICKET = 297;
 const UTM_GLOBAL = 'utm_source=FB&utm_campaign={{campaign.name}}&utm_content={{ad.id}}&utm_medium=paid';
 
-const COLUMNS = [
+const ADS_COLUMNS = [
   { id:'fazer',           label:'Fazer',            colorDot:'#3b82f6', colorBg:'rgba(59,130,246,.08)',  colorBorder:'rgba(59,130,246,.25)' },
   { id:'fazendo',         label:'Fazendo',          colorDot:'#fbbf24', colorBg:'rgba(251,191,36,.08)',  colorBorder:'rgba(251,191,36,.25)' },
   { id:'ativo',           label:'Ativos',           colorDot:'#f97316', colorBg:'rgba(249,115,22,.08)',  colorBorder:'rgba(249,115,22,.3)'  },
@@ -75,7 +75,7 @@ function useAdsCards() {
     setLoading(true);
     const { data: adsList } = await window.db
       .from('ads')
-      .select('numero,titulo,status,tag,tipo,headline,hook_copy,hook_visual,desenvolvimento_cta,texto_principal,titulo_ad,descricao_ad,posicionamento,media_drive_url,media_tipo,media_files,meta_ad_id,meta_ad_url,vendas_total,cpa_historico,gasto_total,isento_regra,observacoes')
+      .select('numero,titulo,status,tag,tipo,headline,hook_copy,hook_visual,desenvolvimento_cta,texto_principal,titulo_ad,descricao_ad,posicionamento,media_drive_url,media_tipo,media_files,meta_ad_id,meta_ad_url,vendas_total,cpa_historico,gasto_total,isento_regra,observacoes,thumb_url,media_url,meta_image_hash,meta_video_id')
       .order('numero', { ascending: false });
 
     const { data: insights } = await window.db
@@ -158,6 +158,9 @@ function MedalBadge({ rank }) {
 
 /* ── KanbanCard ──────────────────────────────────────────────────*/
 function cardThumb(raw) {
+  // R2 thumb tem prioridade
+  if (raw?.thumb_url) return raw.thumb_url;
+  // Legado: Drive
   try {
     const files = Array.isArray(raw?.media_files) ? raw.media_files : JSON.parse(raw?.media_files || '[]');
     const img = files.find(f => f.tipo === 'imagem');
@@ -183,6 +186,8 @@ function KanbanCard({ card, col, onOpen, onDragStart }) {
       return fs.length > 0 || !!card.raw?.media_drive_url;
     } catch { return !!card.raw?.media_drive_url; }
   })();
+  // Pendente migração Drive→R2
+  const needsMigration = !card.raw?.thumb_url && hasMedia;
   return (
     <div
       draggable
@@ -212,13 +217,21 @@ function KanbanCard({ card, col, onOpen, onDragStart }) {
           letterSpacing:'0.06em', color:col.colorDot, textTransform:'uppercase', flexShrink:0 }}>
           ADS {card.num}
         </span>
-        {card.tag && (
-          <div style={{ marginLeft:'auto', flexShrink:0 }}>
+        <div style={{ marginLeft:'auto', display:'flex', gap:4, alignItems:'center', flexShrink:0 }}>
+          {needsMigration && (
+            <div title="Mídia no Drive — clique para migrar para R2"
+              style={{ display:'flex', alignItems:'center', gap:2, padding:'1px 5px', borderRadius:999,
+                background:'rgba(234,170,65,.15)', border:'1px solid rgba(234,170,65,.3)', fontSize:9,
+                fontFamily:'Roboto,sans-serif', fontWeight:700, color:'var(--fmn-gold)', whiteSpace:'nowrap' }}>
+              ⚠ Drive
+            </div>
+          )}
+          {card.tag && (
             <Badge tone={TAG_TONE[card.tag]||'default'} style={{ fontSize:9, padding:'1px 5px', whiteSpace:'nowrap' }}>
               {card.tag === 'Testar novamente' ? 'Testar nov.' : card.tag}
             </Badge>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {/* Hook */}
@@ -828,10 +841,338 @@ function MetaIdField({ card, onSaved }) {
 }
 
 
+/* ── R2UploadSection ─────────────────────────────────────────────*/
+const ADS_MEDIA_WORKER = 'https://ads-media.blindagem-fmn.workers.dev';
+
+function R2UploadSection({ card, onUploadComplete }) {
+  const [step, setStep]         = useState('idle'); // idle|files-ready|compressing|uploading-thumb|uploading-original|uploading-meta|done|error
+  const [progress, setProgress] = useState('');
+  const [errMsg, setErrMsg]     = useState('');
+  const [carouselFiles, setCarouselFiles]     = useState([]); // File[] para carrossel
+  const [carouselPreviews, setCarouselPreviews] = useState([]); // object URLs
+  const fileRef                 = useRef(null);
+
+  const adNum        = parseInt(card.num, 10);
+  const isMigration  = !!card.raw?.media_drive_url && !card.raw?.thumb_url;
+  const isCarrossel  = card.raw?.tipo === 'carrossel';
+
+  async function compressImage(file) {
+    return new Promise((resolve, reject) => {
+      const isPng = file.type === 'image/png';
+      const img   = new Image();
+      const url   = URL.createObjectURL(file);
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        let w = img.width, h = img.height;
+        if (Math.max(w, h) > 1920) {
+          const r = 1920 / Math.max(w, h);
+          w = Math.round(w * r); h = Math.round(h * r);
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+
+        // PNG com transparência → mantém PNG; PNG opaco → converte para JPEG 80%
+        let outMime = 'image/jpeg';
+        if (isPng) {
+          const pixels = ctx.getImageData(0, 0, w, h).data;
+          let hasAlpha = false;
+          for (let i = 3; i < pixels.length; i += 4) {
+            if (pixels[i] < 255) { hasAlpha = true; break; }
+          }
+          if (hasAlpha) outMime = 'image/png';
+        }
+
+        canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error('Falha na compressão')),
+          outMime, 0.82);
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Falha ao ler imagem')); };
+      img.src = url;
+    });
+  }
+
+  // Vídeo sobe sem recompressão (SharedArrayBuffer não disponível no browser sem COOP/COEP)
+  // Frame para thumbnail é capturado via Canvas
+  async function passVideo(file) {
+    return file; // passa o original direto
+  }
+
+  async function captureFrame(videoBlob) {
+    return new Promise(resolve => {
+      const video = document.createElement('video');
+      const url   = URL.createObjectURL(videoBlob);
+      video.src = url; video.muted = true;
+      video.onloadeddata = () => { video.currentTime = 1; };
+      video.onseeked = () => {
+        const c = document.createElement('canvas');
+        c.width = video.videoWidth; c.height = video.videoHeight;
+        c.getContext('2d').drawImage(video, 0, 0);
+        URL.revokeObjectURL(url);
+        c.toBlob(b => resolve(b), 'image/webp', 0.82);
+      };
+      video.onerror = () => { URL.revokeObjectURL(url); resolve(null); };
+    });
+  }
+
+  function fmtBytes(b) {
+    if (b < 1024 * 1024) return `${(b / 1024).toFixed(0)} KB`;
+    return `${(b / (1024 * 1024)).toFixed(1)} MB`;
+  }
+
+  function handleCarouselFilesSelected(files) {
+    const arr = Array.from(files);
+    if (!arr.length) return;
+    // Revoga previews anteriores
+    carouselPreviews.forEach(u => URL.revokeObjectURL(u));
+    const previews = arr.map(f => f.type.startsWith('video/') ? null : URL.createObjectURL(f));
+    setCarouselFiles(arr);
+    setCarouselPreviews(previews);
+    setStep('files-ready');
+    setErrMsg('');
+  }
+
+  async function handleCarouselUpload() {
+    const files = carouselFiles;
+    if (!files.length) return;
+    setErrMsg('');
+    const results = [];
+    try {
+      for (let i = 0; i < files.length; i++) {
+        const file  = files[i];
+        const isVid = file.type.startsWith('video/');
+        if (isVid && file.size / (1024*1024) > 95) throw new Error(`Arquivo ${i+1}: vídeo maior que 95 MB. Use HandBrake ou iMovie.`);
+        const origExt = file.name.split('.').pop().toLowerCase() || (isVid ? 'mp4' : 'jpg');
+
+        setStep('compressing');
+        setProgress(`${i+1}/${files.length}`);
+        let optimized, thumbBlob = null;
+        if (isVid) { optimized = await passVideo(file); thumbBlob = await captureFrame(optimized); }
+        else       { optimized = await compressImage(file); }
+
+        setStep('uploading-thumb');
+        setProgress(`${i+1}/${files.length}`);
+        const imgExt = isVid ? 'mp4' : (optimized.type === 'image/png' ? 'png' : 'jpg');
+        const tForm = new FormData();
+        tForm.append('file', new File([optimized], `ad${adNum}_s${i+1}.${imgExt}`, { type: isVid?'video/mp4':(optimized.type||'image/jpeg') }));
+        tForm.append('ad_num', String(adNum));
+        if (thumbBlob) tForm.append('thumb_frame', new File([thumbBlob], 'thumb.webp', { type:'image/webp' }));
+
+        const tRes = await fetch(`${ADS_MEDIA_WORKER}/upload-thumb`, { method:'POST', body:tForm });
+        if (!tRes.ok) throw new Error(`Arquivo ${i+1}: erro R2 (${tRes.status})`);
+        const { thumbUrl, mediaUrl } = await tRes.json();
+        results.push({ thumbUrl, mediaUrl });
+      }
+
+      carouselPreviews.forEach(u => u && URL.revokeObjectURL(u));
+      const thumbUrl = results[0].thumbUrl;
+      const mediaUrl = JSON.stringify(results.map(r => r.mediaUrl));
+      await window.db.from('ads').update({ thumb_url: thumbUrl, media_url: mediaUrl }).eq('numero', adNum);
+      setProgress('');
+      setStep('done');
+      if (onUploadComplete) onUploadComplete({ thumbUrl, mediaUrl, metaImageHash:null, metaVideoId:null });
+    } catch(err) {
+      setStep('error');
+      setErrMsg(err.message || 'Erro desconhecido');
+    }
+  }
+
+  async function handleFile(file) {
+    setErrMsg('');
+    const isVid  = file.type.startsWith('video/');
+    const fileMB = file.size / (1024 * 1024);
+
+    // Aviso de tamanho: Workers têm limite ~100 MB no body
+    if (isVid && fileMB > 95) {
+      setStep('error');
+      setErrMsg(`Vídeo muito grande (${fmtBytes(file.size)}). Comprima para menos de 95 MB antes de subir — use HandBrake ou iMovie.`);
+      return;
+    }
+
+    try {
+      let optimized, thumbBlob = null;
+      const origExt = file.name.split('.').pop().toLowerCase() || (isVid ? 'mp4' : 'jpg');
+
+      setStep('compressing');
+      if (isVid) {
+        setProgress(fmtBytes(file.size));
+        optimized = await passVideo(file);
+        thumbBlob = await captureFrame(optimized);
+        setProgress('');
+      } else {
+        optimized = await compressImage(file);
+      }
+
+      setStep('uploading-thumb');
+      if (isVid) setProgress(fmtBytes(optimized.size));
+      const tForm = new FormData();
+      const imgExt2 = isVid ? 'mp4' : (optimized.type === 'image/png' ? 'png' : 'jpg');
+      const tName = `ad${adNum}.${imgExt2}`;
+      const tType = isVid ? 'video/mp4' : (optimized.type || 'image/jpeg');
+      tForm.append('file', new File([optimized], tName, { type: tType }));
+      tForm.append('ad_num', String(adNum));
+      if (thumbBlob) tForm.append('thumb_frame', new File([thumbBlob], 'thumb.webp', { type: 'image/webp' }));
+
+      const tRes  = await fetch(`${ADS_MEDIA_WORKER}/upload-thumb`, { method:'POST', body:tForm });
+      if (!tRes.ok) throw new Error(`Erro ao subir no R2 (${tRes.status})`);
+      setProgress('');
+      const { thumbUrl, mediaUrl } = await tRes.json();
+
+      let metaImageHash = null, metaVideoId = null;
+
+      if (!isMigration) {
+        setStep('uploading-original');
+        const oForm = new FormData();
+        oForm.append('file', new File([file], file.name, { type: file.type }));
+        oForm.append('ad_num', String(adNum));
+
+        const oRes  = await fetch(`${ADS_MEDIA_WORKER}/upload-original`, { method:'POST', body:oForm });
+        if (!oRes.ok) throw new Error('Erro ao subir original');
+        const { origKey, origUrl } = await oRes.json();
+
+        setStep('uploading-meta');
+        const mRes = await fetch(`${ADS_MEDIA_WORKER}/upload-meta`, {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ tipo: isVid ? 'video' : 'image', origUrl }),
+        });
+        if (!mRes.ok) throw new Error('Erro ao enviar ao Meta');
+        const mData = await mRes.json();
+        metaImageHash = mData.imageHash || null;
+        metaVideoId   = mData.videoId   || null;
+
+        fetch(`${ADS_MEDIA_WORKER}/original/${encodeURIComponent(origKey)}`, { method:'DELETE' });
+      }
+
+      const patch = { thumb_url: thumbUrl, media_url: mediaUrl };
+      if (metaImageHash) patch.meta_image_hash = metaImageHash;
+      if (metaVideoId)   patch.meta_video_id   = metaVideoId;
+      await window.db.from('ads').update(patch).eq('numero', adNum);
+
+      setStep('done');
+      if (onUploadComplete) onUploadComplete({ thumbUrl, mediaUrl, metaImageHash, metaVideoId });
+    } catch(err) {
+      setStep('error');
+      setErrMsg(err.message || 'Erro desconhecido');
+    }
+  }
+
+  const STEP_ORDER  = ['compressing','uploading-thumb','uploading-original','uploading-meta','done'];
+  const STEP_LABELS = { compressing:'Processando', 'uploading-thumb':'Subindo no R2', 'uploading-original':'Subindo original', 'uploading-meta':'Enviando ao Meta', done:'Concluído' };
+  const visibleSteps = isMigration
+    ? ['compressing','uploading-thumb','done']
+    : ['compressing','uploading-thumb','uploading-original','uploading-meta','done'];
+
+  if (step === 'idle' || step === 'files-ready') {
+    if (isCarrossel) {
+      return (
+        <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+          <input ref={fileRef} type="file" accept="image/*,video/*" multiple style={{ display:'none' }}
+            onChange={e => e.target.files?.length && handleCarouselFilesSelected(e.target.files)}/>
+          <button onClick={() => fileRef.current?.click()}
+            style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'center', gap:6,
+              padding:'7px 12px', borderRadius:8, cursor:'pointer',
+              background:'rgba(234,170,65,.1)', border:'1px solid rgba(234,170,65,.3)',
+              color:'var(--fmn-gold)', fontFamily:'Roboto,sans-serif', fontWeight:700, fontSize:11.5,
+              transition:'all 150ms' }}
+            onMouseEnter={e=>e.currentTarget.style.background='rgba(234,170,65,.18)'}
+            onMouseLeave={e=>e.currentTarget.style.background='rgba(234,170,65,.1)'}>
+            <LucideIcon icon="images" size={13}/>
+            {step === 'files-ready' ? `Trocar arquivos (${carouselFiles.length})` : (isMigration ? 'Migrar slides p/ R2' : 'Selecionar slides')}
+          </button>
+          {step === 'files-ready' && carouselFiles.length > 0 && (
+            <>
+              <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:4 }}>
+                {carouselFiles.map((f, i) => (
+                  <div key={i} style={{ borderRadius:5, overflow:'hidden', background:'rgba(255,255,255,.06)',
+                    border:'1px solid rgba(255,255,255,.1)', aspectRatio:'1', display:'flex',
+                    alignItems:'center', justifyContent:'center' }}>
+                    {carouselPreviews[i]
+                      ? <img src={carouselPreviews[i]} style={{ width:'100%', height:'100%', objectFit:'cover' }}/>
+                      : <LucideIcon icon="film" size={16} style={{ color:'var(--text-3)' }}/>
+                    }
+                  </div>
+                ))}
+              </div>
+              <button onClick={handleCarouselUpload}
+                style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:6,
+                  padding:'8px 12px', borderRadius:8, cursor:'pointer',
+                  background:'rgba(74,222,128,.12)', border:'1px solid rgba(74,222,128,.3)',
+                  color:'#4ade80', fontFamily:'Roboto,sans-serif', fontWeight:700, fontSize:11.5 }}>
+                <LucideIcon icon="upload-cloud" size={13}/>
+                Subir {carouselFiles.length} arquivo{carouselFiles.length > 1 ? 's' : ''} no R2
+              </button>
+            </>
+          )}
+        </div>
+      );
+    }
+    return (
+      <>
+        <input ref={fileRef} type="file" accept="image/*,video/*" style={{ display:'none' }}
+          onChange={e => e.target.files?.[0] && handleFile(e.target.files[0])}/>
+        <button onClick={() => fileRef.current?.click()}
+          style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'center', gap:6,
+            padding:'7px 12px', borderRadius:8, cursor:'pointer',
+            background:'rgba(234,170,65,.1)', border:'1px solid rgba(234,170,65,.3)',
+            color:'var(--fmn-gold)', fontFamily:'Roboto,sans-serif', fontWeight:700, fontSize:11.5,
+            transition:'all 150ms' }}
+          onMouseEnter={e=>e.currentTarget.style.background='rgba(234,170,65,.18)'}
+          onMouseLeave={e=>e.currentTarget.style.background='rgba(234,170,65,.1)'}>
+          <LucideIcon icon="upload" size={13}/>
+          {isMigration ? 'Migrar para R2' : 'Upload R2'}
+        </button>
+      </>
+    );
+  }
+
+  if (step === 'error') {
+    return (
+      <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+        <div style={{ padding:'8px 12px', borderRadius:8, background:'rgba(248,113,113,.1)',
+          border:'1px solid rgba(248,113,113,.3)', fontSize:11, color:'#f87171', fontFamily:'Roboto,sans-serif' }}>
+          {errMsg}
+        </div>
+        <button onClick={() => { setStep('idle'); setErrMsg(''); }}
+          style={{ padding:'6px 12px', borderRadius:7, background:'rgba(255,255,255,.06)',
+            border:'1px solid var(--app-border)', color:'var(--text-3)',
+            fontFamily:'Roboto,sans-serif', fontSize:11, cursor:'pointer' }}>
+          Tentar novamente
+        </button>
+      </div>
+    );
+  }
+
+  const curIdx = STEP_ORDER.indexOf(step);
+  return (
+    <div style={{ display:'flex', flexDirection:'column', gap:6, padding:'8px 12px', borderRadius:8,
+      background:'rgba(234,170,65,.04)', border:'1px solid rgba(234,170,65,.15)' }}>
+      {visibleSteps.map(s => {
+        const sIdx = STEP_ORDER.indexOf(s);
+        const done   = step === 'done' || curIdx > sIdx;
+        const active = step === s;
+        return (
+          <div key={s} style={{ display:'flex', alignItems:'center', gap:8 }}>
+            <div style={{ width:16, height:16, borderRadius:'50%', flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center',
+              border:`2px solid ${done ? 'var(--clr-pos)' : active ? 'var(--fmn-gold)' : 'rgba(255,255,255,.15)'}`,
+              background: done ? 'var(--clr-pos)' : 'transparent' }}>
+              {done && <LucideIcon icon="check" size={9} style={{ color:'#000' }}/>}
+              {active && !done && <div style={{ width:6, height:6, borderRadius:'50%', background:'var(--fmn-gold)' }}/>}
+            </div>
+            <span style={{ fontSize:11, fontFamily:'Roboto,sans-serif',
+              color: done ? 'var(--clr-pos)' : active ? 'var(--fmn-gold)' : 'rgba(255,255,255,.2)' }}>
+              {STEP_LABELS[s]}{active && progress ? ` ${progress}` : ''}
+            </span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 /* ── AdsDetailModal ──────────────────────────────────────────────*/
 function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
   const raw = card.raw || {};
-  const col = COLUMNS.find(cl => cl.id === card.col) || COLUMNS[0];
+  const col = ADS_COLUMNS.find(cl => cl.id === card.col) || ADS_COLUMNS[0];
   const cpaColor = getCpaColor(card.cpa);
   const [showMeta, setShowMeta]     = useState(false);
   const [noMediaAlert, setNoMediaAlert] = useState(false);
@@ -991,7 +1332,7 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
         <textarea value={fields[fieldKey]} onChange={e => set(fieldKey, e.target.value)} rows={rows}
           style={{ width:'100%', padding:'9px 12px', borderRadius:8, resize:'vertical',
             background:'var(--app-surface-2)', border:'1px solid var(--app-border)',
-            color:'var(--text-1)', fontFamily:'Roboto,sans-serif', fontSize:12.5, lineHeight:1.55,
+            color:'var(--text-1)', fontFamily:'Roboto,sans-serif', fontSize:13, lineHeight:1.55,
             transition:'border-color 150ms' }}
           onFocus={e=>e.target.style.borderColor='rgba(234,170,65,.4)'}
           onBlur={e=>e.target.style.borderColor='var(--app-border)'}/>
@@ -1011,7 +1352,7 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
     );
   }
 
-  const currentCol = COLUMNS.find(c => c.id === fields.status) || col;
+  const currentCol = ADS_COLUMNS.find(c => c.id === fields.status) || col;
 
   return (
     <>
@@ -1022,7 +1363,7 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
       }}>
         <div onClick={e=>e.stopPropagation()}
           style={{ flex:1, background:'var(--app-surface)',
-            border:'1px solid var(--app-border-2)', borderRadius:16, overflow:'auto',
+            border:'1px solid var(--app-border-2)', borderRadius:16, overflow:'hidden',
             boxShadow:'0 32px 80px rgba(0,0,0,.65)', display:'flex', flexDirection:'column' }}>
 
           {/* Header */}
@@ -1064,9 +1405,15 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
                   </span>
                 </div>
               )}
+              <span style={{ fontSize:12, fontFamily:'Roboto,sans-serif', fontWeight:900,
+                letterSpacing:'0.08em', textTransform:'uppercase', color:currentCol.colorDot,
+                background:`${currentCol.colorDot}20`, border:`1px solid ${currentCol.colorDot}40`,
+                borderRadius:6, padding:'3px 9px', flexShrink:0 }}>
+                ADS {card.num}
+              </span>
               <span style={{ fontSize:14.5, fontFamily:'Roboto,sans-serif', fontWeight:700,
                 color:'var(--text-1)', lineHeight:1.4 }}>
-                ADS {card.num} — {fields.titulo || card.hook}
+                {fields.titulo || card.hook || 'Editar criativo'}
               </span>
             </div>
             <div style={{ display:'flex', gap:8, flexShrink:0, alignItems:'center' }}>
@@ -1115,10 +1462,10 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
               <div style={{ position:'relative' }}>
                 <button onClick={() => { if (!mediaFiles.length) { setNoMediaAlert(true); setTimeout(() => setNoMediaAlert(false), 3500); } else setShowMeta(true); }}
                   style={{ display:'flex', alignItems:'center', gap:6, padding:'8px 14px',
-                    background:'#1877f2', color:'#fff', borderRadius:8, border:'none',
-                    fontFamily:'Roboto,sans-serif', fontWeight:700, fontSize:11.5,
-                    letterSpacing:'0.03em', textTransform:'uppercase', cursor:'pointer' }}>
-                  <LucideIcon icon="rocket" size={14}/>Criar no Meta
+                    background:'rgba(234,170,65,.12)', color:'var(--fmn-gold)', borderRadius:8,
+                    border:'1px solid rgba(234,170,65,.35)', fontFamily:'Roboto,sans-serif',
+                    fontWeight:700, fontSize:11.5, cursor:'pointer' }}>
+                  <LucideIcon icon="send" size={14}/>Publicar
                 </button>
                 {noMediaAlert && (
                   <div style={{ position:'absolute', top:'calc(100% + 8px)', right:0, zIndex:10,
@@ -1132,22 +1479,19 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
                   </div>
                 )}
               </div>
-              <button onClick={salvar} disabled={saveStatus==='saving'}
-                style={{ display:'flex', alignItems:'center', gap:6, padding:'8px 14px',
-                  background:'rgba(234,170,65,.15)', color:'var(--fmn-gold)', borderRadius:8,
-                  border:'1px solid rgba(234,170,65,.3)', fontFamily:'Roboto,sans-serif',
-                  fontWeight:700, fontSize:11.5, cursor:'pointer', transition:'all 150ms' }}>
-                <LucideIcon icon={saveStatus==='saving'?'loader':'save'} size={14}/>
+              <Btn variant="primary" size="sm" icon={saveStatus==='saving'?'loader':'save'}
+                onClick={salvar} disabled={saveStatus==='saving'}>
                 {saveStatus==='saving'?'Salvando...':'Salvar'}
-              </button>
+              </Btn>
             </div>
           </div>
 
-          {/* Body */}
-          <div style={{ padding:'20px 24px', display:'flex', flexDirection:'column', gap:16 }}>
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 1.15fr', gap:16 }}>
-              {/* Mídia */}
-              <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+          {/* Body: 2 painéis */}
+          <div style={{ flex:1, display:'flex', overflow:'hidden' }}>
+            {/* Painel esquerdo — mídia */}
+            <div style={{ width:340, flexShrink:0, borderRight:'1px solid var(--app-border)',
+              background:'rgba(0,0,0,.25)', display:'flex', flexDirection:'column',
+              alignItems:'center', padding:'20px', gap:10, overflowY:'auto' }}>
                 <div style={{ borderRadius:12, overflow:'hidden', position:'relative',
                   width:'100%', height:380,
                   background: previewIsVideo ? '#000' : 'var(--app-surface-2)',
@@ -1262,79 +1606,93 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
                     </div>
                   </div>
                 ) : (
-                  <div style={{ display:'flex', gap:8 }}>
-                    {previewViewUrl && (
-                      <Btn variant="ghost" size="sm" icon="external-link" style={{ flex:1, justifyContent:'center' }}
-                        onClick={() => window.open(previewViewUrl, '_blank')}>
-                        Drive
+                  <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+                    <div style={{ display:'flex', gap:8 }}>
+                      {previewViewUrl && (
+                        <Btn variant="ghost" size="sm" icon="external-link" style={{ flex:1, justifyContent:'center' }}
+                          onClick={() => window.open(previewViewUrl, '_blank')}>
+                          Drive
+                        </Btn>
+                      )}
+                      <Btn variant="secondary" size="sm" icon="link"
+                        style={{ flex:1, justifyContent:'center' }}
+                        onClick={() => { setDriveInputVal(fields.media_drive_url || ''); setShowDriveInput(true); }}>
+                        {driveId ? 'Trocar mídia' : 'Vincular Drive'}
                       </Btn>
-                    )}
-                    <Btn variant="secondary" size="sm" icon="link"
-                      style={{ flex:1, justifyContent:'center' }}
-                      onClick={() => { setDriveInputVal(fields.media_drive_url || ''); setShowDriveInput(true); }}>
-                      {driveId ? 'Trocar mídia' : 'Vincular Drive'}
-                    </Btn>
+                    </div>
+                    <div style={{ display:'flex', gap:8 }}>
+                      <R2UploadSection card={card} onUploadComplete={({ thumbUrl, mediaUrl, metaImageHash, metaVideoId }) => {
+                        if (onUpdate) onUpdate({ ...card, raw: { ...raw, thumb_url: thumbUrl, media_url: mediaUrl, meta_image_hash: metaImageHash, meta_video_id: metaVideoId } });
+                      }}/>
+                    </div>
                   </div>
                 )}
-              </div>
-
+            </div>
+            {/* Painel direito — scrollável */}
+            <div style={{ flex:1, minHeight:0, overflowY:'auto', padding:'20px 24px',
+              display:'flex', flexDirection:'column', gap:16 }}>
               {/* Propriedades */}
               <div style={{ background:'var(--app-surface)', border:'1px solid var(--app-border)',
-                borderRadius:14, overflow:'hidden' }}>
-                <div style={{ padding:'12px 16px', borderBottom:'1px solid var(--app-border)',
+                borderRadius:14 }}>
+                <div style={{ padding:'12px 18px', borderBottom:'1px solid var(--app-border)',
                   display:'flex', alignItems:'center', justifyContent:'space-between' }}>
                   <span style={{ fontSize:12.5, fontFamily:'Roboto,sans-serif', fontWeight:700, color:'var(--text-1)' }}>
                     Propriedades
                   </span>
                 </div>
                 <div style={{ padding:'16px', display:'flex', flexDirection:'column', gap:14 }}>
-                  <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
-
-                    {/* Status — dropdown funcional */}
-                    <div style={{ display:'flex', flexDirection:'column', gap:4 }}>
-                      <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700,
-                        letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)' }}>Status</span>
-                      <select value={fields.status} onChange={e => mudarStatus(e.target.value)}
-                        style={{ padding:'7px 10px', borderRadius:8, background:'var(--app-surface-2)',
-                          border:`1px solid ${currentCol.colorBorder}`, color: currentCol.colorDot,
-                          fontFamily:'Roboto,sans-serif', fontSize:12, fontWeight:700,
-                          cursor:'pointer', appearance:'none', colorScheme:'dark' }}>
-                        {COLUMNS.map(col => (
-                          <option key={col.id} value={col.id}>{col.label}</option>
-                        ))}
-                      </select>
+                  {/* Status — chips */}
+                  <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+                    <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700,
+                      letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)' }}>Status</span>
+                    <div style={{ display:'flex', gap:5, flexWrap:'wrap' }}>
+                      {ADS_COLUMNS.map(c => {
+                        const active = fields.status === c.id;
+                        return (
+                          <button key={c.id} onClick={() => mudarStatus(c.id)}
+                            style={{ padding:'4px 10px', borderRadius:999, fontSize:11, cursor:'pointer',
+                              fontFamily:'Roboto,sans-serif', fontWeight:700, transition:'all 120ms',
+                              background: active ? `${c.colorDot}22` : 'rgba(255,255,255,.04)',
+                              border: active ? `1px solid ${c.colorDot}66` : '1px solid var(--app-border)',
+                              color: active ? c.colorDot : 'var(--text-3)' }}>
+                            {c.label}
+                          </button>
+                        );
+                      })}
                     </div>
+                  </div>
 
-                    {/* Tipo */}
-                    <div style={{ display:'flex', flexDirection:'column', gap:4 }}>
-                      <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700,
-                        letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)' }}>
-                        Tipo
-                        {mediaFiles.length > 0 && (
-                          <span style={{ marginLeft:5, fontSize:9, color:'var(--text-3)', fontWeight:400, textTransform:'none' }}>
-                            (detectado automaticamente)
-                          </span>
-                        )}
-                      </span>
-                      {mediaFiles.length > 0 ? (
-                        <div style={{ padding:'7px 10px', borderRadius:8, background:'rgba(255,255,255,.03)',
-                          border:'1px solid var(--app-border)', color:'var(--text-2)',
-                          fontFamily:'Roboto,sans-serif', fontSize:12 }}>
-                          {{reels:'Reels', imagem:'Imagem', carrossel:'Carrossel'}[fields.tipo] || fields.tipo}
-                        </div>
-                      ) : (
-                        <select value={fields.tipo} onChange={e => set('tipo', e.target.value)}
-                          style={{ padding:'7px 10px', borderRadius:8, background:'var(--app-surface-2)',
-                            border:'1px solid var(--app-border)', color:'var(--text-1)',
-                            fontFamily:'Roboto,sans-serif', fontSize:12, cursor:'pointer',
-                            appearance:'none', colorScheme:'dark' }}>
-                          <option value="reels">Reels</option>
-                          <option value="imagem">Imagem</option>
-                          <option value="carrossel">Carrossel</option>
-                        </select>
+                  {/* Tipo — chips com ícone */}
+                  <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+                    <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700,
+                      letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)' }}>
+                      Tipo
+                      {mediaFiles.length > 0 && (
+                        <span style={{ marginLeft:5, fontSize:9, color:'var(--text-3)', fontWeight:400, textTransform:'none' }}>
+                          (detectado automaticamente)
+                        </span>
                       )}
+                    </span>
+                    <div style={{ display:'flex', gap:5, flexWrap:'wrap', opacity: mediaFiles.length > 0 ? .55 : 1 }}>
+                      {[{v:'reels',l:'Reels',i:'play-circle',c:'#f87171'},{v:'imagem',l:'Imagem',i:'image',c:'#a78bfa'},{v:'carrossel',l:'Carrossel',i:'layout-grid',c:'#60a5fa'}].map(t => {
+                        const active = fields.tipo === t.v;
+                        return (
+                          <button key={t.v} onClick={() => !mediaFiles.length && set('tipo', t.v)}
+                            style={{ display:'flex', alignItems:'center', gap:4, padding:'4px 10px',
+                              borderRadius:999, fontSize:11, cursor: mediaFiles.length ? 'default' : 'pointer',
+                              fontFamily:'Roboto,sans-serif', fontWeight:700, transition:'all 120ms',
+                              background: active ? `${t.c}22` : 'rgba(255,255,255,.04)',
+                              border: active ? `1px solid ${t.c}66` : '1px solid var(--app-border)',
+                              color: active ? t.c : 'var(--text-3)' }}>
+                            <LucideIcon icon={t.i} size={11}/>{t.l}
+                          </button>
+                        );
+                      })}
                     </div>
+                  </div>
 
+                  {/* Métricas */}
+                  <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
                     <PropRow label="Vendas">
                       <span style={{ color:card.vendas?'var(--clr-pos)':'var(--text-3)' }}>
                         {card.vendas ?? '—'}
@@ -1368,32 +1726,24 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
                   <MetaIdField card={card} onSaved={(id) => { card.meta_ad_id = id; }}/>
                 </div>
               </div>
-            </div>
 
             {/* Copy */}
-            <div style={{ background:'var(--app-surface)', border:'1px solid var(--app-border)', borderRadius:14, overflow:'hidden' }}>
+            <div style={{ background:'var(--app-surface)', border:'1px solid var(--app-border)', borderRadius:14 }}>
               <div style={{ padding:'12px 18px', borderBottom:'1px solid var(--app-border)' }}>
                 <span style={{ fontSize:12.5, fontFamily:'Roboto,sans-serif', fontWeight:700, color:'var(--text-1)' }}>Copy</span>
               </div>
-              <div style={{ padding:16 }}>
-                <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
-                  <CopyField id="headline"     label="Headline"              fieldKey="headline"         rows={2}/>
-                  <CopyField id="hook-visual"  label="Hook Visual"           fieldKey="hook_visual"      rows={2}/>
-                  <CopyField id="hook-copy"    label="Hook Copy"             fieldKey="hook_copy"        rows={2}/>
-                  <CopyField id="texto-p"      label="Texto Principal"       fieldKey="texto_principal"  rows={3}/>
-                  <CopyField id="dev-cta"      label="Desenvolvimento + CTA" fieldKey="desenvolvimento_cta" rows={3}/>
-                  <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
-                    <CopyField id="titulo-ad"  label="Título (feed)"         fieldKey="titulo_ad"        rows={2}/>
-                    <CopyField id="descricao"  label="Descrição"             fieldKey="descricao_ad"     rows={2}/>
-                  </div>
-                </div>
-                <div style={{ marginTop:14 }}>
-                  <CopyField id="obs" label="Informações Adicionais" fieldKey="observacoes" rows={4}/>
-                </div>
-                <div style={{ marginTop:14 }}>
-                  <CopyField id="ref" label="Referência" fieldKey="referencia" rows={2}/>
-                </div>
+              <div style={{ padding:16, display:'flex', flexDirection:'column', gap:14 }}>
+                <CopyField id="headline"     label="Headline"               fieldKey="headline"           rows={2}/>
+                <CopyField id="hook-visual"  label="Hook Visual"            fieldKey="hook_visual"        rows={2}/>
+                <CopyField id="hook-copy"    label="Hook Copy"              fieldKey="hook_copy"          rows={2}/>
+                <CopyField id="texto-p"      label="Texto Principal"        fieldKey="texto_principal"    rows={3}/>
+                <CopyField id="dev-cta"      label="Desenvolvimento + CTA"  fieldKey="desenvolvimento_cta" rows={3}/>
+                <CopyField id="titulo-ad"    label="Título (feed)"          fieldKey="titulo_ad"          rows={2}/>
+                <CopyField id="descricao"    label="Descrição"              fieldKey="descricao_ad"       rows={2}/>
+                <CopyField id="obs"          label="Informações Adicionais" fieldKey="observacoes"        rows={4}/>
+                <CopyField id="ref"          label="Referência"             fieldKey="referencia"         rows={2}/>
               </div>
+            </div>
             </div>
           </div>
         </div>
@@ -1480,7 +1830,7 @@ function NovoAdsModal({ onClose, onCreated }) {
               <div style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700,
                 letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)', marginBottom:5 }}>Coluna</div>
               <select value={status} onChange={e=>setStatus(e.target.value)} style={{ ...inputStyle, appearance:'none' }}>
-                {COLUMNS.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
+                {ADS_COLUMNS.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
               </select>
             </div>
           </div>
@@ -1729,7 +2079,7 @@ function KanbanScreen({ targetAd, onConsumeTarget }) {
       {/* Colunas Kanban */}
       <div style={{ flex:1, overflowX:'auto', overflowY:'hidden',
         padding:'20px 24px', display:'flex', gap:12, alignItems:'stretch' }}>
-        {COLUMNS.map(col => {
+        {ADS_COLUMNS.map(col => {
           const cards = filteredCards.filter(c => c.col === col.id);
           return <KanbanColumn key={col.id} col={col} cards={cards}
             onOpen={setSelectedCard} onAddNew={() => setShowNovoAds(true)}
