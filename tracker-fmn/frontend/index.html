@@ -168,20 +168,20 @@
   <!-- App React -->
   <div id="root"></div>
 
-  <!-- Auth -->
-  <script src="app/auth.js?v=1"></script>
-
-  <!-- Load order: supabase → shared → screens → main -->
+  <!-- Load order: supabase → auth → shared → screens → main -->
   <script src="app/supabase.js?v=26"></script>
-  <script type="text/babel" src="app/shared.jsx?v=39"></script>
+  <script src="app/auth.js?v=2"></script>
+  <script type="text/babel" src="app/shared.jsx?v=41"></script>
   <script type="text/babel" src="app/map.jsx?v=44"></script>
   <script type="text/babel" src="app/dashboard.jsx?v=65"></script>
-  <script type="text/babel" src="app/kanban.jsx?v=57"></script>
+  <script type="text/babel" src="app/kanban.jsx?v=62"></script>
   <script type="text/babel" src="app/financeiro.jsx?v=38"></script>
-  <script type="text/babel" src="app/ideias.jsx?v=26"></script>
-  <script type="text/babel" src="app/trafego.jsx?v=53"></script>
+  <script type="text/babel" src="app/ideias.jsx?v=27"></script>
+  <script type="text/babel" src="app/organico.jsx?v=10"></script>
+  <script type="text/babel" src="app/trafego.jsx?v=54"></script>
+  <script type="text/babel" src="app/funis.jsx?v=5"></script>
   <script type="text/babel" src="app/sistema.jsx?v=26"></script>
-  <script type="text/babel" src="app/main.jsx?v=26"></script>
+  <script type="text/babel" src="app/main.jsx?v=29"></script>
 
   <script>
     /* ── Login handlers ── */
@@ -194,7 +194,7 @@
       btn.disabled = true; btn.textContent = 'Entrando…'; err.textContent = '';
       try {
         await window.FMNAuth.login(email, senha);
-        document.getElementById('loginScreen').style.display = 'none';
+        window.FMNAuth.mount();
       } catch(e) {
         err.textContent = e.message;
         btn.disabled = false; btn.textContent = 'Entrar';
