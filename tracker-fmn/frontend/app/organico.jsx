@@ -6,25 +6,23 @@ const { useState, useEffect, useRef } = React;
 const { LucideIcon, Btn, Badge, TopBar } = window;
 
 const WORKER_URL   = 'https://organico-media.blindagem-fmn.workers.dev';
-const PLATAFORMAS  = ['Reels', 'Carrossel', 'Imagem', 'Stories'];
+const PLATAFORMAS  = window.PLATAFORMAS; // fonte única em shared.jsx (inclui Artigo, Youtube)
 const RESPONSAVEIS = ['Felipe', 'Amanda'];
-// Para usar foto real: substitua null pela URL da imagem
 const RESPONSAVEL_CONFIG = {
   'Felipe': { initials:'FF', color:'#eaaa41', bg:'rgba(234,170,65,.18)', photo:null },
   'Amanda': { initials:'AM', color:'#60a5fa', bg:'rgba(96,165,250,.18)', photo:null },
 };
 
 const COLUMNS = [
-  { id:'Fazer',    label:'Fazer',    colorDot:'#94a3b8', colorBg:'rgba(148,163,184,.06)', colorBorder:'rgba(148,163,184,.2)'  },
-  { id:'Criação',  label:'Criação',  colorDot:'#60a5fa', colorBg:'rgba(96,165,250,.06)',  colorBorder:'rgba(96,165,250,.22)'  },
-  { id:'Gravação', label:'Gravação', colorDot:'#fbbf24', colorBg:'rgba(251,191,36,.06)',  colorBorder:'rgba(251,191,36,.22)'  },
-  { id:'Edição',   label:'Edição',   colorDot:'#a78bfa', colorBg:'rgba(167,139,250,.06)', colorBorder:'rgba(167,139,250,.22)' },
-  { id:'Postagem', label:'Postagem', colorDot:'#fb923c', colorBg:'rgba(251,146,60,.06)',  colorBorder:'rgba(251,146,60,.22)'  },
-  { id:'Feito',    label:'Feito',    colorDot:'#4ade80', colorBg:'rgba(74,222,128,.06)',  colorBorder:'rgba(74,222,128,.22)'  },
+  { id:'Fazer',     label:'Fazer',     colorDot:'#94a3b8', colorBg:'rgba(148,163,184,.06)', colorBorder:'rgba(148,163,184,.22)' },
+  { id:'Produção',  label:'Produção',  colorDot:'#38bdf8', colorBg:'rgba(56,189,248,.06)',  colorBorder:'rgba(56,189,248,.22)'  },
+  { id:'Postagem',  label:'Postagem',  colorDot:'#fb923c', colorBg:'rgba(251,146,60,.06)',  colorBorder:'rgba(251,146,60,.22)'  },
+  { id:'Agendado',  label:'Agendado',  colorDot:'#a78bfa', colorBg:'rgba(167,139,250,.06)', colorBorder:'rgba(167,139,250,.22)' },
+  { id:'Feito',     label:'Feito',     colorDot:'#4ade80', colorBg:'rgba(74,222,128,.06)',  colorBorder:'rgba(74,222,128,.22)'  },
 ];
 
-const PLAT_COLOR = { Reels:'#f87171', Carrossel:'#60a5fa', Imagem:'#a78bfa', Stories:'#fb923c' };
-const PLAT_ICON  = { Reels:'play-circle', Carrossel:'layout-grid', Imagem:'image', Stories:'circle-dot' };
+const PLAT_COLOR = window.PLAT_COLOR; // fonte única em shared.jsx
+const PLAT_ICON  = window.PLAT_ICON;  // fonte única em shared.jsx
 
 const FIELD_STYLE = {
   width:'100%', boxSizing:'border-box',
@@ -94,10 +92,15 @@ function CarouselLightbox({ urls, initialIdx, onClose }) {
         style={{ position:'relative', maxHeight:'88vh', display:'flex',
           flexDirection:'column', alignItems:'center', gap:12 }}>
 
-        <img src={urls[idx]} alt={`Slide ${idx+1}`}
-          style={{ maxHeight:'80vh', maxWidth:'min(480px, 90vw)',
-            borderRadius:10, display:'block', objectFit:'contain',
-            boxShadow:'0 24px 80px rgba(0,0,0,.7)' }}/>
+        {/\.(mp4|webm|mov|m4v)$/i.test(urls[idx] || '')
+          ? <video src={urls[idx]} controls autoPlay loop playsInline
+              style={{ maxHeight:'80vh', maxWidth:'min(480px, 90vw)',
+                borderRadius:10, display:'block', objectFit:'contain',
+                boxShadow:'0 24px 80px rgba(0,0,0,.7)' }}/>
+          : <img src={urls[idx]} alt={`Slide ${idx+1}`}
+              style={{ maxHeight:'80vh', maxWidth:'min(480px, 90vw)',
+                borderRadius:10, display:'block', objectFit:'contain',
+                boxShadow:'0 24px 80px rgba(0,0,0,.7)' }}/>}
 
         {/* Contador */}
         <div style={{ fontSize:12, fontFamily:'Roboto,sans-serif', fontWeight:700,
@@ -598,31 +601,36 @@ function PublishModal({ form, slidesArr, slideFiles, onClose, onSuccess }) {
       if (!imageUrls.length) throw new Error('Nenhuma imagem disponível para publicar. Adicione imagens ao carrossel primeiro.');
 
       setPhase('publishing');
-      setMsg(modo === 'agendar' ? 'Agendando no Instagram...' : 'Publicando no Instagram...');
 
+      const caption    = (form.legenda || form.gancho || '').trim();
+      const tipo       = form.plataforma === 'Carrossel' ? 'carrossel' : 'imagem';
       const scheduleAt = modo === 'agendar' && schedDate
         ? new Date(`${schedDate}T${schedTime}:00-03:00`).toISOString()
         : null;
 
-      const caption = (form.legenda || form.gancho || '').trim();
+      let pubData;
 
-      setMsg((modo === 'agendar' ? 'Agendando' : 'Publicando') +
-        (comFacebook ? ' no Instagram e Facebook...' : ' no Instagram...'));
-
-      const pubRes  = await fetch(`${WORKER_URL}/publish`, {
-        method: 'POST',
-        headers: { 'Content-Type':'application/json' },
-        body: JSON.stringify({
-          tipo:           form.plataforma === 'Carrossel' ? 'carrossel' : 'imagem',
-          imageUrls,
-          caption,
-          scheduleAt,
-          origKeys,
-          comFacebook,
-        }),
-      });
-      const pubData = await pubRes.json();
-      if (!pubData.ok) throw new Error(pubData.error || 'Falha na publicação.');
+      if (modo === 'agendar' && scheduleAt) {
+        // Agendamento próprio: salva no Supabase, cron do Worker publica na hora certa
+        setMsg('Salvando agendamento...');
+        const schedRes = await fetch(`${WORKER_URL}/schedule`, {
+          method: 'POST',
+          headers: { 'Content-Type':'application/json' },
+          body: JSON.stringify({ itemId: form.id, scheduleAt, imageUrls, origKeys, caption, tipo, comFacebook }),
+        });
+        pubData = await schedRes.json();
+        if (!pubData.ok) throw new Error(pubData.error || 'Falha ao agendar.');
+      } else {
+        // Publicação imediata
+        setMsg('Publicando' + (comFacebook ? ' no Instagram e Facebook...' : ' no Instagram...'));
+        const pubRes = await fetch(`${WORKER_URL}/publish`, {
+          method: 'POST',
+          headers: { 'Content-Type':'application/json' },
+          body: JSON.stringify({ tipo, imageUrls, caption, scheduleAt: null, origKeys, comFacebook }),
+        });
+        pubData = await pubRes.json();
+        if (!pubData.ok) throw new Error(pubData.error || 'Falha na publicação.');
+      }
 
       // Atualiza slides com thumbUrls das novas imagens
       let fi = 0;
@@ -640,7 +648,7 @@ function PublishModal({ form, slidesArr, slideFiles, onClose, onSuccess }) {
         ? `Agendado para ${schedDate.split('-').reverse().join('/')} às ${schedTime}.`
         : 'Publicado no Instagram com sucesso.');
 
-      onSuccess(newSlides, pubData.postId, modo === 'agendar');
+      onSuccess(newSlides, pubData.postId, modo === 'agendar', schedDate || null, scheduleAt);
 
     } catch (err) {
       setPhase('error');
@@ -901,7 +909,7 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
     tema:'', plataforma:'Reels', responsavel:'Felipe',
     status: defaultStatus || 'Fazer',
     gancho:'', desenvolvimento:'', slides:'', legenda:'', cta:'',
-    prompt_imagem:'',
+    prompt_imagem:'', referencia:'',
     data_prevista: prefillDate || '',
   });
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
@@ -911,6 +919,12 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
   const [showPublish, setShowPublish] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [saveStatus, setSaveStatus]   = useState('idle');
+
+  useEffect(() => {
+    const handler = e => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [onClose]);
 
   const currentCol = COLUMNS.find(c => c.id === form.status) || COLUMNS[0];
   const sibIdx  = siblings.findIndex(s => s.id === item?.id);
@@ -942,10 +956,20 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
     setTimeout(() => setSaveStatus('idle'), 2000);
   };
 
-  const handlePublishSuccess = (newSlides, postId, scheduled) => {
+  const handlePublishSuccess = (newSlides, postId, scheduled, scheduledDate, scheduledAtISO) => {
     const updatedSlides = form.plataforma === 'Carrossel' ? JSON.stringify(newSlides) : form.slides;
-    const newStatus     = scheduled ? 'Postagem' : 'Feito';
-    const updated       = { ...form, slides: updatedSlides, status: newStatus };
+    const newStatus     = scheduled ? 'Agendado' : 'Feito';
+    const updated       = {
+      ...form,
+      slides: updatedSlides,
+      status: newStatus,
+      ...(scheduled && scheduledDate ? { data_prevista: scheduledDate } : {}),
+      ...(scheduled && scheduledAtISO ? { scheduled_at: scheduledAtISO } : {}),
+      // Publicação imediata: registra "agora" como o horário publicado, pro calendário mostrar.
+      ...(!scheduled ? { published_at: new Date().toISOString() } : {}),
+      // Guarda o id do post no Meta pra casar com as métricas orgânicas depois.
+      ...(!scheduled && postId ? { meta_media_id: postId } : {}),
+    };
     setForm(updated);
     setSlidesArr(newSlides);
     onSave(updated);
@@ -955,6 +979,7 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
 
   // Painel esquerdo — navegador de slides embarcado
   const [previewIdx, setPreviewIdx] = useState(0);
+  const [lightbox, setLightbox]     = useState(null); // índice aberto na visualização ampliada
   const previewUrls = slidesArr.map(s => s.image_url).filter(Boolean);
   const hasPreview  = previewUrls.length > 0;
 
@@ -1093,7 +1118,8 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
                   overflow:'hidden', background:'rgba(255,255,255,.04)',
                   border:'1px solid rgba(255,255,255,.08)' }}>
                   <img src={previewUrls[previewIdx]} alt={`Slide ${previewIdx+1}`}
-                    style={{ width:'100%', display:'block', aspectRatio:'4/5', objectFit:'cover' }}/>
+                    onClick={() => setLightbox(previewIdx)} title="Clique para ampliar"
+                    style={{ width:'100%', display:'block', aspectRatio:'4/5', objectFit:'cover', cursor:'zoom-in' }}/>
                   {previewUrls.length > 1 && (<>
                     <button onClick={()=>setPreviewIdx(i=>(i-1+previewUrls.length)%previewUrls.length)}
                       style={{ position:'absolute', left:6, top:'50%', transform:'translateY(-50%)',
@@ -1139,6 +1165,9 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
                       : 'Sem prévia disponível'}
                   </span>
                 </div>
+              )}
+              {lightbox !== null && previewUrls.length > 0 && (
+                <CarouselLightbox urls={previewUrls} initialIdx={lightbox} onClose={() => setLightbox(null)}/>
               )}
             </div>
 
@@ -1320,6 +1349,21 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
                         onBlur={e=>e.target.style.borderColor='var(--app-border)'}/>
                     </div>
 
+                    {/* Legenda da postagem — Imagem / Reels / Stories */}
+                    <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+                      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+                        <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)' }}>Legenda da postagem</span>
+                        <CopyBtn text={form.legenda||''}/>
+                      </div>
+                      <textarea value={form.legenda||''} onChange={e=>set('legenda',e.target.value)}
+                        rows={5} placeholder="Texto da postagem no Instagram..."
+                        style={{ width:'100%', boxSizing:'border-box', padding:'9px 12px', borderRadius:8, resize:'vertical',
+                          background:'var(--app-surface-2)', border:'1px solid var(--app-border)',
+                          color:'var(--text-1)', fontFamily:'Roboto,sans-serif', fontSize:13, outline:'none', lineHeight:1.55 }}
+                        onFocus={e=>e.target.style.borderColor='rgba(234,170,65,.4)'}
+                        onBlur={e=>e.target.style.borderColor='var(--app-border)'}/>
+                    </div>
+
                     {/* Prompt de imagem */}
                     <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
                       <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
@@ -1351,6 +1395,9 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
                       onBlur={e=>e.target.style.borderColor='var(--app-border)'}/>
                   </div>
 
+                  {/* Referência */}
+                  <RefBlock value={form.referencia} onChange={v=>set('referencia',v)}/>
+
                 </div>
               </div>
             </div>
@@ -1375,21 +1422,73 @@ function FilterPill({ label, active, color, onClick }) {
   );
 }
 
+/* ── ScheduleEditPopover — editor rápido de data/hora de um post agendado ──*/
+function ScheduleEditPopover({ item, onSave, onClose }) {
+  const initDate = item.data_prevista ? item.data_prevista.slice(0,10) : '';
+  const initTime = item.scheduled_at
+    ? new Date(item.scheduled_at).toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit', timeZone:'America/Sao_Paulo', hour12:false })
+    : '09:00';
+  const [date, setDate] = useState(initDate);
+  const [time, setTime] = useState(initTime);
+
+  return (
+    <div onClick={e=>e.stopPropagation()}
+      style={{ position:'absolute', top:'calc(100% + 4px)', left:0, zIndex:50,
+        background:'#1a1b1f', border:'1px solid rgba(255,255,255,.15)', borderRadius:10,
+        padding:12, boxShadow:'0 12px 32px rgba(0,0,0,.5)', width:200,
+        display:'flex', flexDirection:'column', gap:8 }}>
+      <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700,
+        letterSpacing:'0.08em', textTransform:'uppercase', color:'var(--text-3)' }}>
+        Editar agendamento
+      </span>
+      <input type="date" value={date} onChange={e=>setDate(e.target.value)}
+        style={{ width:'100%', boxSizing:'border-box', padding:'6px 8px', borderRadius:6,
+          background:'var(--app-surface-2)', border:'1px solid var(--app-border)',
+          color:'var(--text-1)', fontFamily:'Roboto,sans-serif', fontSize:12, outline:'none' }}/>
+      <input type="time" value={time} onChange={e=>setTime(e.target.value)}
+        style={{ width:'100%', boxSizing:'border-box', padding:'6px 8px', borderRadius:6,
+          background:'var(--app-surface-2)', border:'1px solid var(--app-border)',
+          color:'var(--text-1)', fontFamily:'Roboto,sans-serif', fontSize:12, outline:'none' }}/>
+      <div style={{ display:'flex', gap:6 }}>
+        <button onClick={onClose}
+          style={{ flex:1, padding:'6px 0', borderRadius:6, border:'1px solid var(--app-border)',
+            background:'rgba(255,255,255,.04)', color:'var(--text-2)', fontSize:11,
+            fontFamily:'Roboto,sans-serif', fontWeight:700, cursor:'pointer' }}>
+          Cancelar
+        </button>
+        <button onClick={()=>date && time && onSave(date, time)}
+          disabled={!date || !time}
+          style={{ flex:1, padding:'6px 0', borderRadius:6, border:'none',
+            background: (date && time) ? '#eaaa41' : 'rgba(255,255,255,.08)',
+            color: (date && time) ? '#000' : 'var(--text-3)', fontSize:11,
+            fontFamily:'Roboto,sans-serif', fontWeight:700,
+            cursor: (date && time) ? 'pointer' : 'not-allowed' }}>
+          Salvar
+        </button>
+      </div>
+    </div>
+  );
+}
+
 /* ── CalendarioView ──────────────────────────────────────────────*/
 const DIAS_SEMANA = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
 const MESES_PT   = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho',
                     'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 
-function CalendarioView({ items, onOpen, onNewWithDate }) {
+function CalendarioView({ items, onOpen, onNewWithDate, onReschedule, onEditSchedule }) {
   const today = new Date();
   const [ano, setAno]   = useState(today.getFullYear());
   const [mes, setMes]   = useState(today.getMonth()); // 0-based
+  const [dragId, setDragId]         = useState(null);
+  const [dragOverDate, setDragOverDate] = useState(null);
+  const [editingId, setEditingId]   = useState(null); // id do card com editor de horário aberto
 
   const primeiroDia = new Date(ano, mes, 1).getDay(); // 0=dom
   const diasNoMes   = new Date(ano, mes + 1, 0).getDate();
   const todayStr    = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
 
-  // Agrupa items por data_prevista (YYYY-MM-DD)
+  // Agrupa items por data_prevista (YYYY-MM-DD). Posts já publicados (Feito) continuam
+  // aparecendo, só mudam de cor pra verde (ver render dos chips abaixo).
   const byDate = {};
   items.forEach(item => {
     if (!item.data_prevista) return;
@@ -1471,16 +1570,27 @@ function CalendarioView({ items, onOpen, onNewWithDate }) {
             if (isToday)        borderColor = 'rgba(234,170,65,.45)';
             else if (isWeekend) borderColor = 'rgba(255,255,255,.06)';
 
+            const isDragOver = dragOverDate === dateStr;
+
             return (
               <div key={dateStr}
                 onClick={() => onNewWithDate(dateStr)}
-                style={{ border:`1px solid ${borderColor}`,
-                  borderRadius:8, padding:'7px 8px', background: bgColor,
+                onDragOver={e => { e.preventDefault(); if (dragOverDate !== dateStr) setDragOverDate(dateStr); }}
+                onDragLeave={() => setDragOverDate(prev => prev === dateStr ? null : prev)}
+                onDrop={e => {
+                  e.preventDefault();
+                  setDragOverDate(null);
+                  if (dragId) onReschedule(dragId, dateStr);
+                  setDragId(null);
+                }}
+                style={{ border: isDragOver ? '1px solid rgba(234,170,65,.7)' : `1px solid ${borderColor}`,
+                  borderRadius:8, padding:'7px 8px',
+                  background: isDragOver ? 'rgba(234,170,65,.1)' : bgColor,
                   cursor:'pointer', display:'flex', flexDirection:'column', gap:4,
                   overflow:'hidden', transition:'border-color 150ms, background 150ms',
                   opacity: isWeekend && !isToday ? 0.7 : 1 }}
-                onMouseEnter={e => { if (!isToday) e.currentTarget.style.borderColor='rgba(255,255,255,.18)'; }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = borderColor; }}>
+                onMouseEnter={e => { if (!isToday && !isDragOver) e.currentTarget.style.borderColor='rgba(255,255,255,.18)'; }}
+                onMouseLeave={e => { if (!isDragOver) e.currentTarget.style.borderColor = borderColor; }}>
 
                 {/* Número do dia */}
                 <span style={{ fontSize:11, fontFamily:'Roboto,sans-serif', fontWeight:900,
@@ -1493,26 +1603,58 @@ function CalendarioView({ items, onOpen, onNewWithDate }) {
 
                 {/* Chips dos conteúdos */}
                 {dayItems.slice(0,4).map(item => {
-                  const color = PLAT_COLOR[item.plataforma] || '#94a3b8';
+                  const isFeito = item.status === 'Feito';
+                  const color = isFeito ? '#4ade80' : (PLAT_COLOR[item.plataforma] || '#94a3b8');
                   const num   = String(item.numero||0).padStart(3,'0');
                   let thumb = null;
                   try { const sa = JSON.parse(item.slides||'[]'); thumb = sa.map(s=>s.image_url).filter(Boolean)[0]||null; } catch {}
+                  let horario = null;
+                  const horarioSource = isFeito ? item.published_at : item.scheduled_at;
+                  if (horarioSource) {
+                    const d = new Date(horarioSource);
+                    horario = d.toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit', timeZone:'America/Sao_Paulo' });
+                  }
+                  const isEditing = editingId === item.id;
                   return (
-                    <div key={item.id} onClick={e=>{e.stopPropagation();onOpen(item);}}
-                      style={{ display:'flex', alignItems:'center', gap:5, padding:'4px 7px',
-                        borderRadius:6, background:`${color}18`, border:`1px solid ${color}33`,
-                        cursor:'pointer', overflow:'hidden', flexShrink:0,
-                        transition:'background 120ms' }}
-                      onMouseEnter={e=>e.currentTarget.style.background=`${color}32`}
-                      onMouseLeave={e=>e.currentTarget.style.background=`${color}18`}>
-                      {thumb
-                        ? <img src={thumb} style={{ width:18,height:18,borderRadius:3,objectFit:'cover',flexShrink:0 }}/>
-                        : <LucideIcon icon={PLAT_ICON[item.plataforma]||'file'} size={11} style={{ color, flexShrink:0 }}/>}
-                      <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:900,
-                        color, letterSpacing:'0.04em', whiteSpace:'nowrap', overflow:'hidden',
-                        textOverflow:'ellipsis' }}>
-                        ORG {num}
-                      </span>
+                    <div key={item.id} style={{ position:'relative', flexShrink:0 }}>
+                      <div
+                        draggable
+                        onDragStart={e=>{ e.stopPropagation(); setDragId(item.id); e.dataTransfer.effectAllowed='move'; }}
+                        onDragEnd={()=>setDragId(null)}
+                        onClick={e=>{e.stopPropagation();onOpen(item);}}
+                        style={{ display:'flex', alignItems:'center', gap:5, padding:'4px 7px',
+                          borderRadius:6, background:`${color}18`, border:`1px solid ${color}33`,
+                          cursor:'grab', overflow:'hidden',
+                          transition:'background 120ms', opacity: dragId===item.id ? 0.4 : 1 }}
+                        onMouseEnter={e=>e.currentTarget.style.background=`${color}32`}
+                        onMouseLeave={e=>e.currentTarget.style.background=`${color}18`}>
+                        {thumb
+                          ? <img src={thumb} style={{ width:18,height:18,borderRadius:3,objectFit:'cover',flexShrink:0 }}/>
+                          : <LucideIcon icon={isFeito ? 'check-circle' : (PLAT_ICON[item.plataforma]||'file')} size={11} style={{ color, flexShrink:0 }}/>}
+                        <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:900,
+                          color, letterSpacing:'0.04em', whiteSpace:'nowrap', overflow:'hidden',
+                          textOverflow:'ellipsis' }}>
+                          ORG {num}
+                        </span>
+                        {horario && (
+                          <span onClick={e=>{ e.stopPropagation(); if (!isFeito) setEditingId(isEditing ? null : item.id); }}
+                            style={{ display:'flex', alignItems:'center', gap:3,
+                              marginLeft:'auto', paddingLeft:6, flexShrink:0, cursor: isFeito ? 'default' : 'pointer' }}>
+                            <LucideIcon icon="clock" size={10} style={{ color, opacity:.85, flexShrink:0 }}/>
+                            <span style={{ fontSize:9.5, fontFamily:'Roboto,sans-serif', fontWeight:700,
+                              color, opacity:.85, whiteSpace:'nowrap' }}>
+                              {horario}
+                            </span>
+                          </span>
+                        )}
+                      </div>
+
+                      {isEditing && (
+                        <ScheduleEditPopover
+                          item={item}
+                          onSave={(newDate, newTime) => { onEditSchedule(item.id, newDate, newTime); setEditingId(null); }}
+                          onClose={() => setEditingId(null)}/>
+                      )}
                     </div>
                   );
                 })}
@@ -1535,6 +1677,120 @@ function CalendarioView({ items, onOpen, onNewWithDate }) {
 }
 
 /* ── OrganicoScreen ──────────────────────────────────────────────*/
+/* ── Desempenho: métricas reais dos posts orgânicos (tabela ordenável) ── */
+function DesempenhoView({ metricas }) {
+  const [sortKey, setSortKey] = useState('reach');
+  const [sortDir, setSortDir] = useState('desc');
+
+  const fmt = n => (n == null ? '—' : Number(n).toLocaleString('pt-BR'));
+
+  const toggleSort = k => {
+    if (sortKey === k) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
+    else { setSortKey(k); setSortDir('desc'); }
+  };
+
+  const rows = [...metricas].sort((a, b) => {
+    if (sortKey === 'posted_at') {
+      const av = String(a.posted_at || ''), bv = String(b.posted_at || '');
+      return sortDir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av);
+    }
+    const av = a[sortKey] ?? -1, bv = b[sortKey] ?? -1;
+    return sortDir === 'asc' ? av - bv : bv - av;
+  });
+
+  const soma = k => metricas.reduce((s, m) => s + (m[k] || 0), 0);
+  const alcanceTotal = soma('reach');
+  const alcanceMedio = metricas.length ? Math.round(alcanceTotal / metricas.length) : 0;
+
+  const COLS = [
+    ['posted_at', 'Data', 'left'], ['media_product_type', 'Tipo', 'left'],
+    ['reach', 'Alcance', 'right'], ['likes', 'Curtidas', 'right'],
+    ['comments', 'Coment.', 'right'], ['saved', 'Salvos', 'right'],
+    ['shares', 'Compart.', 'right'], ['follows', 'Seguidores', 'right'],
+    ['total_interactions', 'Interações', 'right'],
+  ];
+
+  const tipoLabel = m => m.media_product_type === 'REELS' ? 'Reels'
+    : m.media_type === 'CAROUSEL_ALBUM' ? 'Carrossel' : 'Imagem';
+
+  const card = (label, value) => (
+    <div style={{ flex:1, minWidth:130, padding:'12px 14px', borderRadius:10,
+      background:'var(--app-surface)', border:'1px solid var(--app-border)' }}>
+      <div style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700,
+        letterSpacing:'0.08em', textTransform:'uppercase', color:'var(--text-3)' }}>{label}</div>
+      <div style={{ fontSize:20, fontWeight:800, color:'var(--fmn-gold)', marginTop:4 }}>{value}</div>
+    </div>
+  );
+
+  const td = (extra) => ({ padding:'8px 10px', borderBottom:'1px solid rgba(255,255,255,.05)', ...extra });
+
+  return (
+    <div style={{ flex:1, overflow:'auto', padding:'16px 24px', minHeight:0 }}>
+      {metricas.length === 0 ? (
+        <div style={{ color:'var(--text-3)', fontSize:13, padding:40, textAlign:'center' }}>
+          Ainda não há métricas sincronizadas. O buscador roda uma vez por dia e traz o desempenho dos posts.
+        </div>
+      ) : (
+        <>
+          <div style={{ display:'flex', gap:10, marginBottom:16, flexWrap:'wrap' }}>
+            {card('Posts medidos', fmt(metricas.length))}
+            {card('Alcance total', fmt(alcanceTotal))}
+            {card('Alcance médio', fmt(alcanceMedio))}
+            {card('Salvamentos', fmt(soma('saved')))}
+            {card('Seguidores ganhos', fmt(soma('follows')))}
+          </div>
+
+          <table style={{ width:'100%', borderCollapse:'collapse', fontSize:12, fontFamily:'Roboto,sans-serif' }}>
+            <thead>
+              <tr>
+                <th style={{ textAlign:'left', padding:'8px 10px', borderBottom:'1px solid var(--app-border)',
+                  color:'var(--text-3)', fontSize:10, fontWeight:700, letterSpacing:'0.06em', textTransform:'uppercase' }}>Post</th>
+                {COLS.map(([k, label, align]) => (
+                  <th key={k} onClick={()=>toggleSort(k)}
+                    style={{ textAlign:align, padding:'8px 10px', cursor:'pointer',
+                      borderBottom:'1px solid var(--app-border)', userSelect:'none', whiteSpace:'nowrap',
+                      color: sortKey===k ? 'var(--fmn-gold)' : 'var(--text-3)',
+                      fontSize:10, fontWeight:700, letterSpacing:'0.06em', textTransform:'uppercase' }}>
+                    {label}{sortKey===k ? (sortDir==='asc' ? ' ↑' : ' ↓') : ''}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map(m => (
+                <tr key={m.meta_media_id}
+                  onClick={()=> m.permalink && window.open(m.permalink, '_blank')}
+                  style={{ cursor: m.permalink ? 'pointer' : 'default' }}
+                  onMouseEnter={e=>e.currentTarget.style.background='var(--app-surface)'}
+                  onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
+                  <td style={td({ width:46 })}>
+                    {(m.thumbnail_url || m.media_url)
+                      ? <img src={m.thumbnail_url || m.media_url} alt="" loading="lazy"
+                          style={{ width:38, height:38, objectFit:'cover', borderRadius:6, display:'block' }}
+                          onError={e=>{ e.currentTarget.style.visibility='hidden'; }}/>
+                      : <div style={{ width:38, height:38, borderRadius:6, background:'var(--app-surface)' }}/>}
+                  </td>
+                  <td style={td({ color:'var(--text-2)', whiteSpace:'nowrap' })}>
+                    {m.posted_at ? m.posted_at.slice(0,10).split('-').reverse().join('/') : '—'}
+                  </td>
+                  <td style={td({ color:'var(--text-3)', fontSize:10, whiteSpace:'nowrap' })}>{tipoLabel(m)}</td>
+                  <td style={td({ textAlign:'right', color:'var(--text-1)', fontWeight:700 })}>{fmt(m.reach)}</td>
+                  <td style={td({ textAlign:'right', color:'var(--text-2)' })}>{fmt(m.likes)}</td>
+                  <td style={td({ textAlign:'right', color:'var(--text-2)' })}>{fmt(m.comments)}</td>
+                  <td style={td({ textAlign:'right', color:'var(--fmn-gold)', fontWeight:700 })}>{fmt(m.saved)}</td>
+                  <td style={td({ textAlign:'right', color:'var(--text-2)' })}>{fmt(m.shares)}</td>
+                  <td style={td({ textAlign:'right', color:'var(--text-2)' })}>{fmt(m.follows)}</td>
+                  <td style={td({ textAlign:'right', color:'var(--text-2)' })}>{fmt(m.total_interactions)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </>
+      )}
+    </div>
+  );
+}
+
 function OrganicoScreen() {
   const [items, setItems]           = useState([]);
   const [dbAvailable, setDbAvail]   = useState(false);
@@ -1544,7 +1800,8 @@ function OrganicoScreen() {
   const [nextNum, setNextNum]       = useState(1);
   const [dragId, setDragId]         = useState(null);  // id do card sendo arrastado
   const [dropTarget, setDropTarget] = useState(null);  // colId sendo hovereado
-  const [viewMode, setViewMode]     = useState('kanban'); // 'kanban' | 'calendario'
+  const [viewMode, setViewMode]     = useState('kanban'); // 'kanban' | 'calendario' | 'desempenho'
+  const [metricas, setMetricas]     = useState([]);
 
   const handleDragStart = (e, id) => {
     setDragId(id);
@@ -1565,6 +1822,46 @@ function OrganicoScreen() {
     }
   };
 
+  // Move card pra outro dia no calendário (drag-and-drop). Se já tiver horário
+  // agendado, preserva a hora e só troca a data.
+  const handleReschedule = async (itemId, newDateStr) => {
+    const item = items.find(i => i.id === itemId);
+    if (!item || item.data_prevista === newDateStr) return;
+
+    let newScheduledAt = item.scheduled_at || null;
+    if (newScheduledAt) {
+      const old = new Date(newScheduledAt);
+      const hh  = String(old.getUTCHours()).padStart(2,'0');
+      const mm  = String(old.getUTCMinutes()).padStart(2,'0');
+      newScheduledAt = `${newDateStr}T${hh}:${mm}:00.000Z`;
+    }
+
+    setItems(prev => prev.map(i => i.id === itemId
+      ? { ...i, data_prevista: newDateStr, ...(newScheduledAt ? { scheduled_at: newScheduledAt } : {}) }
+      : i));
+
+    if (dbAvailable) {
+      const patch = { data_prevista: newDateStr };
+      if (newScheduledAt) patch.scheduled_at = newScheduledAt;
+      await window.db.from('conteudo_organico').update(patch).eq('id', itemId);
+    }
+  };
+
+  // Edita diretamente a data/hora de um post já agendado (sem reabrir o fluxo de publicação).
+  const handleEditSchedule = async (itemId, newDateStr, newTimeStr) => {
+    const newScheduledAt = new Date(`${newDateStr}T${newTimeStr}:00-03:00`).toISOString();
+
+    setItems(prev => prev.map(i => i.id === itemId
+      ? { ...i, data_prevista: newDateStr, scheduled_at: newScheduledAt }
+      : i));
+
+    if (dbAvailable) {
+      await window.db.from('conteudo_organico')
+        .update({ data_prevista: newDateStr, scheduled_at: newScheduledAt })
+        .eq('id', itemId);
+    }
+  };
+
   useEffect(() => {
     if (!window.db) return;
     setDbAvail(true);
@@ -1579,6 +1876,20 @@ function OrganicoScreen() {
       });
   }, []);
 
+  // Carrega as métricas orgânicas (desempenho dos posts). Mantém só o snapshot
+  // mais recente de cada post, já que a tabela guarda um registro por dia.
+  useEffect(() => {
+    if (!window.db) return;
+    window.db.from('organico_metricas')
+      .select('*').order('data', { ascending:false })
+      .then(({ data }) => {
+        if (!data) return;
+        const latest = {};
+        for (const m of data) if (!latest[m.meta_media_id]) latest[m.meta_media_id] = m;
+        setMetricas(Object.values(latest));
+      });
+  }, []);
+
   const handleSave = async form => {
     const row = {
       tema:form.tema, plataforma:form.plataforma, responsavel:form.responsavel,
@@ -1586,10 +1897,14 @@ function OrganicoScreen() {
       slides:form.slides, legenda:form.legenda,
       cta:form.cta, prompt_imagem:form.prompt_imagem||null,
       data_prevista:form.data_prevista||null,
+      referencia:form.referencia||null,
+      published_at:form.published_at||null,
     };
     if (form.id) {
       if (dbAvailable) await window.db.from('conteudo_organico').update(row).eq('id',form.id);
-      setItems(prev => prev.map(i => i.id===form.id ? { ...i, ...row } : i));
+      // scheduled_at não faz parte do `row` (é gerido pelo endpoint /schedule), mas o
+      // estado local precisa refletir o valor vindo do form pra o calendário mostrar o horário na hora.
+      setItems(prev => prev.map(i => i.id===form.id ? { ...i, ...row, scheduled_at: form.scheduled_at ?? i.scheduled_at } : i));
       // Modal permanece aberto — ContentModal exibe "Salvo!" e fecha quando o usuário quiser
     } else {
       if (dbAvailable) {
@@ -1625,26 +1940,11 @@ function OrganicoScreen() {
       )}
       <TopBar title="Orgânico"
         actions={
-          <div style={{ display:'flex', alignItems:'center', gap:8, flexWrap:'wrap' }}>
-            <div style={{ display:'flex', gap:4, padding:3, borderRadius:8,
-              background:'rgba(255,255,255,.04)', border:'1px solid var(--app-border)' }}>
-              {['Todos',...PLATAFORMAS].map(p => (
-                <FilterPill key={p} label={p} active={platFilter===p}
-                  color={PLAT_COLOR[p]} onClick={()=>setPlatFilter(p)}/>
-              ))}
-            </div>
-            <div style={{ width:1, height:20, background:'var(--app-border)' }}/>
-            <div style={{ display:'flex', gap:4 }}>
-              {['Todos',...RESPONSAVEIS].map(r => (
-                <FilterPill key={r} label={r} active={respFilter===r}
-                  color={r==='Felipe'?'#eaaa41':r==='Amanda'?'#60a5fa':null}
-                  onClick={()=>setRespFilter(r)}/>
-              ))}
-            </div>
+          <div style={{ display:'flex', alignItems:'center', gap:8 }}>
             {/* Toggle Kanban / Calendário */}
             <div style={{ display:'flex', gap:2, padding:3, borderRadius:8,
               background:'rgba(255,255,255,.04)', border:'1px solid var(--app-border)' }}>
-              {[['kanban','layout-dashboard','Kanban'],['calendario','calendar','Calendário']].map(([id,icon,label]) => (
+              {[['kanban','layout-dashboard','Kanban'],['calendario','calendar','Calendário'],['desempenho','trending-up','Desempenho']].map(([id,icon,label]) => (
                 <button key={id} onClick={()=>setViewMode(id)}
                   style={{ display:'flex', alignItems:'center', gap:5, padding:'5px 11px',
                     borderRadius:6, cursor:'pointer', fontSize:11, fontFamily:'Roboto,sans-serif',
@@ -1657,10 +1957,38 @@ function OrganicoScreen() {
             </div>
             <Btn variant="primary" size="sm" icon="plus"
               onClick={()=>setModal({ item:null, defaultStatus:'Fazer' })}>
-              + Novo
+              Novo
             </Btn>
           </div>
         }/>
+
+      {/* Barra de filtros */}
+      <div style={{ padding:'8px 24px', borderBottom:'1px solid var(--app-border)',
+        background:'var(--app-bg)', display:'flex', alignItems:'center', gap:16, flexShrink:0,
+        flexWrap:'wrap' }}>
+        <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+          <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700,
+            letterSpacing:'0.08em', textTransform:'uppercase', color:'var(--text-3)' }}>Plataforma</span>
+          <div style={{ display:'flex', gap:4 }}>
+            {['Todos',...PLATAFORMAS].map(p => (
+              <FilterPill key={p} label={p} active={platFilter===p}
+                color={PLAT_COLOR[p]} onClick={()=>setPlatFilter(p)}/>
+            ))}
+          </div>
+        </div>
+        <div style={{ width:1, height:20, background:'var(--app-border)', flexShrink:0 }}/>
+        <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+          <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700,
+            letterSpacing:'0.08em', textTransform:'uppercase', color:'var(--text-3)' }}>Responsável</span>
+          <div style={{ display:'flex', gap:4 }}>
+            {['Todos',...RESPONSAVEIS].map(r => (
+              <FilterPill key={r} label={r} active={respFilter===r}
+                color={r==='Felipe'?'#eaaa41':r==='Amanda'?'#60a5fa':null}
+                onClick={()=>setRespFilter(r)}/>
+            ))}
+          </div>
+        </div>
+      </div>
 
       {viewMode === 'kanban' ? (
         <div style={{ flex:1, display:'flex', gap:10, padding:'16px 20px',
@@ -1675,11 +2003,15 @@ function OrganicoScreen() {
               isDragOver={dragId && dropTarget === col.id}/>
           ))}
         </div>
-      ) : (
+      ) : viewMode === 'calendario' ? (
         <CalendarioView
           items={filtered}
           onOpen={item=>setModal({ item, siblings: filtered.filter(i=>i.status===item.status) })}
-          onNewWithDate={date=>setModal({ item:null, defaultStatus:'Fazer', prefillDate:date })}/>
+          onNewWithDate={date=>setModal({ item:null, defaultStatus:'Fazer', prefillDate:date })}
+          onReschedule={handleReschedule}
+          onEditSchedule={handleEditSchedule}/>
+      ) : (
+        <DesempenhoView metricas={metricas}/>
       )}
     </div>
   );

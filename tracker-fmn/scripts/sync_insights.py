@@ -302,12 +302,14 @@ def main():
     since_3d, until_3d = date_range(3)
     since_5d, until_5d = date_range(5)
 
-    # 1.5. Gasto diário da conta (para o filtro de período do dashboard)
-    print("Buscando gasto diário da conta...")
-    try:
-        sync_gasto_diario(60)
-    except Exception as e:
-        print(f"  Aviso: falha no gasto diário: {e}")
+    # 1.5. Gasto diário da conta — aposentado em 2026-07-04: a Edge Function
+    # meta-sync (escopo "curtas", cron a cada 6h) já mantém gasto_diario fresco
+    # direto na nuvem, sem depender deste script rodando no Mac. Se a nuvem tiver
+    # algum problema, descomente a linha abaixo para retomar o fallback local.
+    # try:
+    #     sync_gasto_diario(60)
+    # except Exception as e:
+    #     print(f"  Aviso: falha no gasto diário: {e}")
 
     # 2. Varrer a conta inteira, 4 períodos
     print("Varrendo insights da conta (período máximo)...")
@@ -379,12 +381,17 @@ def main():
 
     print(f"  {len(agg)} ADS com dados agregados.")
 
-    # 4. Gravar instâncias em insights_cache
-    if cache_rows:
-        print(f"Salvando {len(cache_rows)} instâncias em insights_cache...")
-        # em lotes de 100
-        for i in range(0, len(cache_rows), 100):
-            supabase_upsert("insights_cache", cache_rows[i:i+100], ["meta_ad_id", "periodo"])
+    # 4. Gravar instâncias em insights_cache — aposentado em 2026-07-04: a Edge
+    # Function meta-sync (nuvem) já escreve isso a cada 6h (curtas) e 1x/dia
+    # (maximo), com a lógica de "anúncio ativo" correta (direto do Meta, não do
+    # status do Kanban). Escrever aqui também não quebra nada (upsert idempotente),
+    # mas é redundante. Se a nuvem tiver problema, descomente para retomar o
+    # fallback local — os dados acima (rows_max/3d/5d/hoje, cache_rows) já estão
+    # prontos, só reativar a escrita.
+    # if cache_rows:
+    #     print(f"Salvando {len(cache_rows)} instâncias em insights_cache...")
+    #     for i in range(0, len(cache_rows), 100):
+    #         supabase_upsert("insights_cache", cache_rows[i:i+100], ["meta_ad_id", "periodo"])
 
     # 5. Gravar totais agregados na tabela ads
     print("Atualizando totais agregados na tabela ads...")

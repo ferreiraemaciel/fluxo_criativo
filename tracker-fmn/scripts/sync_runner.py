@@ -46,7 +46,24 @@ def record_status(script, status, message, duration_s):
     except Exception as e:
         print(f"  (não consegui registrar status de {script}: {e})")
 
-for script in ["drive_sync_pastas.py", "drive_organizar.py", "sync_drive.py", "sync_insights.py", "aplicar_regras.py"]:
+# Sincronizar = enxuto: indexa material do Drive e reconcilia vendas Hotmart.
+# O preview (Fluxo A) NÃO roda aqui — ele é gerado no momento em que o criativo
+# é adicionado ao card (por card), não em varredura periódica.
+#
+# sync_insights.py e aplicar_regras.py foram retirados desta lista em
+# 2026-07-05: toda a lógica que ainda rodava aqui (status do Kanban com o Meta,
+# agregados 3d/5d/máximo, permalinks, pausas automáticas, classificação) foi
+# portada para a nuvem (Edge Functions kanban-sync + processar-pausas, cron via
+# pg_cron). Rodar os dois lados juntos duplicaria pausas automáticas e chamadas
+# ao Meta. Os arquivos continuam no repositório, prontos para rodar manualmente
+# como fallback se a nuvem falhar — não precisam ser reincluídos aqui para isso.
+#
+# sync_recuperacao.py retirado em 2026-07-05: script quebrado por desenho (tenta
+# escrever em recuperacao_vendas, que é uma VIEW somente leitura sobre vendas +
+# abandono_carrinho) e inteiramente redundante — a mesma informação já chega em
+# tempo real pelo webhook, sem precisar de nenhum sync. Card "Recuperação de
+# Vendas" do painel nunca dependeu deste script.
+for script in ["drive_sync_pastas.py", "drive_organizar.py", "sync_drive.py", "sync_hotmart.py"]:
     t0 = time.time()
     result = subprocess.run(
         [sys.executable, str(base / script)],

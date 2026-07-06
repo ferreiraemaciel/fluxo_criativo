@@ -13,6 +13,7 @@ cp "$SRC_SCRIPTS/sync_drive.py"        "$RUNTIME/scripts/"
 cp "$SRC_SCRIPTS/sync_hotmart.py"      "$RUNTIME/scripts/"
 cp "$SRC_SCRIPTS/sync_recuperacao.py"  "$RUNTIME/scripts/"
 cp "$SRC_SCRIPTS/sync_insights.py"     "$RUNTIME/scripts/"
+cp "$SRC_SCRIPTS/aplicar_regras.py"    "$RUNTIME/scripts/"
 cp "$SRC_ROOT/.env"                    "$RUNTIME/"
 cp "$SRC_ROOT/google-credentials.json" "$RUNTIME/"
 

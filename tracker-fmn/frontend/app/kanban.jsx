@@ -22,7 +22,7 @@ const { useState, useRef, useEffect } = React;
 const { LucideIcon, Btn, Badge, TopBar } = window;
 
 const PRODUCT_TICKET = 297;
-const UTM_GLOBAL = 'utm_source=FB&utm_campaign={{campaign.name}}&utm_content={{ad.id}}&utm_medium=paid';
+const UTM_GLOBAL = window.UTM_GLOBAL; // fonte única em shared.jsx
 
 const ADS_COLUMNS = [
   { id:'fazer',           label:'Fazer',            colorDot:'#3b82f6', colorBg:'rgba(59,130,246,.08)',  colorBorder:'rgba(59,130,246,.25)' },
@@ -75,7 +75,7 @@ function useAdsCards() {
     setLoading(true);
     const { data: adsList } = await window.db
       .from('ads')
-      .select('numero,titulo,status,tag,tipo,headline,hook_copy,hook_visual,desenvolvimento_cta,texto_principal,titulo_ad,descricao_ad,posicionamento,media_drive_url,media_tipo,media_files,meta_ad_id,meta_ad_url,vendas_total,cpa_historico,gasto_total,isento_regra,observacoes,thumb_url,media_url,meta_image_hash,meta_video_id')
+      .select('numero,titulo,status,tag,tipo,headline,hook_copy,hook_visual,desenvolvimento_cta,texto_principal,titulo_ad,descricao_ad,posicionamento,media_drive_url,media_tipo,media_files,meta_ad_id,meta_ad_url,vendas_total,cpa_historico,gasto_total,isento_regra,observacoes,thumb_url,media_url,meta_image_hash,meta_video_id,meta_campaign_id,meta_adset_id,meta_publish_status')
       .order('numero', { ascending: false });
 
     const { data: insights } = await window.db
@@ -188,6 +188,11 @@ function KanbanCard({ card, col, onOpen, onDragStart }) {
   })();
   // Pendente migração Drive→R2
   const needsMigration = !card.raw?.thumb_url && hasMedia;
+  // Ícone por tipo (mesmo padrão do orgânico)
+  const tipoIcon = card.raw?.tipo === 'carrossel' ? 'layout-grid'
+                 : card.raw?.tipo === 'imagem'    ? 'image' : 'clapperboard';
+  // Sem preview no R2. Aceitável em Fazer/Fazendo; nas outras colunas, sinaliza.
+  const semPreview = !card.raw?.thumb_url && !['fazer','fazendo'].includes(card.col);
   return (
     <div
       draggable
@@ -209,8 +214,8 @@ function KanbanCard({ card, col, onOpen, onDragStart }) {
           {thumb
             ? <img src={thumb} alt="" onError={e => { e.currentTarget.style.display='none'; }}
                 style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }}/>
-            : <LucideIcon icon={isVideo ? 'play-circle' : 'image'} size={15}
-                style={{ color:'rgba(255,255,255,.25)' }}/>
+            : <LucideIcon icon={tipoIcon} size={15}
+                style={{ color: semPreview ? 'var(--clr-warn,#fbbf24)' : 'rgba(255,255,255,.25)' }}/>
           }
         </div>
         <span style={{ fontSize:13, fontFamily:'Roboto,sans-serif', fontWeight:900,
@@ -218,12 +223,20 @@ function KanbanCard({ card, col, onOpen, onDragStart }) {
           ADS {card.num}
         </span>
         <div style={{ marginLeft:'auto', display:'flex', gap:4, alignItems:'center', flexShrink:0 }}>
-          {needsMigration && (
-            <div title="Mídia no Drive — clique para migrar para R2"
+          {card.raw?.meta_video_id && (
+            <div title="Criativo de vídeo já preparado na biblioteca do Meta"
               style={{ display:'flex', alignItems:'center', gap:2, padding:'1px 5px', borderRadius:999,
-                background:'rgba(234,170,65,.15)', border:'1px solid rgba(234,170,65,.3)', fontSize:9,
-                fontFamily:'Roboto,sans-serif', fontWeight:700, color:'var(--fmn-gold)', whiteSpace:'nowrap' }}>
-              ⚠ Drive
+                background:'rgba(56,189,248,.14)', border:'1px solid rgba(56,189,248,.3)', fontSize:9,
+                fontFamily:'Roboto,sans-serif', fontWeight:700, color:'#38bdf8', whiteSpace:'nowrap' }}>
+              Meta ✓
+            </div>
+          )}
+          {semPreview && (
+            <div title="Sem preview — o criativo ainda não foi otimizado para o R2"
+              style={{ display:'flex', alignItems:'center', gap:3, padding:'1px 5px', borderRadius:999,
+                background:'rgba(251,191,36,.15)', border:'1px solid rgba(251,191,36,.3)', fontSize:9,
+                fontFamily:'Roboto,sans-serif', fontWeight:700, color:'#fbbf24', whiteSpace:'nowrap' }}>
+              <LucideIcon icon="image-off" size={9}/>sem preview
             </div>
           )}
           {card.tag && (
@@ -351,15 +364,35 @@ function UtmCopyBtn() {
 }
 
 /* ── MetaAdModal ─────────────────────────────────────────────────*/
+// Objetivos oferecidos pelo Tracker → chave usada pelo worker ads-media.
+const META_OBJETIVOS = [
+  { key: 'vendas',    label: 'Vendas'    },
+  { key: 'cadastros', label: 'Cadastros' },
+  { key: 'trafego',   label: 'Tráfego'   },
+];
+// Mapeia o objetivo ODAX do Meta de volta para a chave do worker.
+function metaObjToKey(obj) {
+  if (obj === 'OUTCOME_LEADS')   return 'cadastros';
+  if (obj === 'OUTCOME_TRAFFIC') return 'trafego';
+  return 'vendas';
+}
+// "1.234,56" (R$) → 123456 centavos. Aceita vírgula ou ponto decimal.
+function brlToCents(s) {
+  if (!s) return 0;
+  const n = parseFloat(String(s).replace(/\./g, '').replace(',', '.'));
+  return Number.isFinite(n) ? Math.round(n * 100) : 0;
+}
+
 function MetaAdModal({ card, onClose }) {
-  const SUPA_URL = window.db?.supabaseUrl || '';
-  const SUPA_KEY = window.db?.supabaseKey  || '';
+  // Link de destino limpo. O rastreamento (UTM) vai no campo "Parâmetros de URL".
+  const LINK_DEFAULT = `https://www.fotografoprotegido.fotografiaeomeunegocio.com.br`;
 
   // listas e seleção
   const [campaigns, setCampaigns]       = useState([]);
   const [adsets, setAdsets]             = useState([]);
   const [campaignId, setCampaignId]     = useState('');
   const [campaignName, setCampaignName] = useState('');
+  const [campaignObj, setCampaignObj]   = useState('vendas'); // chave do worker
   const [adsetId, setAdsetId]           = useState('');
   const [adsetName, setAdsetName]       = useState('');
   const [loadingCamp, setLoadingCamp]   = useState(true);
@@ -368,53 +401,91 @@ function MetaAdModal({ card, onClose }) {
   // criar nova campanha
   const [newCamp, setNewCamp]           = useState(false);
   const [newCampName, setNewCampName]   = useState('');
-  const [newCampObj, setNewCampObj]     = useState('OUTCOME_SALES');
+  const [newCampObj, setNewCampObj]     = useState('vendas');
+  const [budgetLevel, setBudgetLevel]   = useState('conjunto'); // 'conjunto' (ABO) | 'campanha' (CBO)
+  const [newCampBudget, setNewCampBudget] = useState('');       // R$ formato 00,00
   const [creatingCamp, setCreatingCamp] = useState(false);
+
+  // a campanha selecionada usa orçamento na campanha (CBO)?
+  const [campaignIsCbo, setCampaignIsCbo] = useState(false);
 
   // criar novo conjunto
   const [newAdset, setNewAdset]         = useState(false);
   const [newAdsetName, setNewAdsetName] = useState('');
-  const [newAdsetBudget, setNewAdsetBudget] = useState('');
+  const [newAdsetBudget, setNewAdsetBudget] = useState('');    // R$ formato 00,00
   const [creatingAdset, setCreatingAdset]   = useState(false);
 
-  // fluxo final
+  // copy do anúncio (pré-preenchida do card, editável)
+  const [msgText, setMsgText]     = useState((card.raw||{}).texto_principal || '');
+  const [titleText, setTitleText] = useState((card.raw||{}).titulo_ad || '');
+  const [descText, setDescText]   = useState((card.raw||{}).descricao_ad || '');
+  const [urlTags, setUrlTags]     = useState(UTM_GLOBAL);
+
+  // destino + fluxo final
+  const [linkDestino, setLinkDestino] = useState(LINK_DEFAULT);
   const [confirm, setConfirm]   = useState(false);
   const [status, setStatus]     = useState('idle');
+  const [loadingMsg, setLoadingMsg] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
-  const [resultId, setResultId] = useState('');
+  const [resultUrl, setResultUrl] = useState('');
+
+  // ESC fecha
+  React.useEffect(() => {
+    const h = e => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', h);
+    return () => window.removeEventListener('keydown', h);
+  }, [onClose]);
 
   const raw = card.raw || {};
-  const mediaFiles = (() => { try { return Array.isArray(raw.media_files) ? raw.media_files : JSON.parse(raw.media_files || '[]'); } catch { return []; } })();
-  const firstFile  = mediaFiles[0] || null;
+  const adNum   = parseInt(card.num, 10);
+  const isVideo = /reels|video/i.test(raw.tipo || '') || raw.media_tipo === 'video';
 
-  async function callFn(body) {
-    const r = await fetch(`${SUPA_URL}/functions/v1/meta-criar-ad`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPA_KEY}` },
+  // Mídia no R2 (primeiro item se for JSON array)
+  const r2Url = (() => {
+    try {
+      const v = raw.media_url;
+      if (!v) return '';
+      const p = JSON.parse(v);
+      return Array.isArray(p) ? (p[0] || '') : p;
+    } catch { return raw.media_url || ''; }
+  })();
+  const hasMedia = !!(raw.meta_image_hash || raw.meta_video_id || r2Url);
+
+  // ── chamadas ao worker ads-media ──
+  async function workerGet(path) {
+    const r = await fetch(`${ADS_MEDIA_WORKER}${path}`);
+    const d = await r.json();
+    if (!d.ok) throw new Error(d.error || `Erro HTTP ${r.status}`);
+    return d;
+  }
+  async function workerPost(path, body) {
+    const r = await fetch(`${ADS_MEDIA_WORKER}${path}`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     });
     const d = await r.json();
-    if (!r.ok) {
-      const msg = d?.error || d?.message || `Erro HTTP ${r.status}`;
-      throw new Error(msg);
-    }
+    if (!d.ok) throw new Error(d.error || `Erro HTTP ${r.status}`);
     return d;
   }
 
   useEffect(() => {
-    callFn({ action: 'campaigns' })
+    workerGet('/campaigns')
       .then(d => { setCampaigns(d.campaigns || []); setLoadingCamp(false); })
-      .catch(() => setLoadingCamp(false));
+      .catch(e => { setErrorMsg(e.message); setLoadingCamp(false); });
   }, []);
 
-  async function handleCampaignChange(id, name) {
+  async function handleCampaignChange(id, name, objKey) {
     setCampaignId(id); setCampaignName(name);
+    if (objKey) setCampaignObj(objKey);
     setAdsetId(''); setAdsetName(''); setAdsets([]);
     setNewAdset(false);
+    // Detecta se a campanha existente é CBO (tem orçamento na campanha)
+    const c = campaigns.find(x => x.id === id);
+    setCampaignIsCbo(!!(c && (Number(c.daily_budget) > 0 || Number(c.lifetime_budget) > 0)));
     if (!id) return;
     setLoadingAdset(true);
     try {
-      const d = await callFn({ action: 'adsets', campaign_id: id });
+      const d = await workerGet(`/adsets?campaign=${id}`);
       setAdsets(d.adsets || []);
     } catch (e) {
       setErrorMsg(e.message || 'Erro ao carregar conjuntos');
@@ -425,49 +496,117 @@ function MetaAdModal({ card, onClose }) {
 
   async function handleCreateCampaign() {
     if (!newCampName.trim()) return;
-    setCreatingCamp(true);
-    const d = await callFn({ action: 'create_campaign', name: newCampName.trim(), objective: newCampObj, daily_budget: 0 });
-    if (d.campaign) {
-      setCampaigns(prev => [...prev, d.campaign]);
-      await handleCampaignChange(d.campaign.id, d.campaign.name);
-      setNewCamp(false); setNewCampName('');
-    } else {
-      setErrorMsg(d.error || 'Erro ao criar campanha');
+    const isCbo = budgetLevel === 'campanha';
+    const cents = brlToCents(newCampBudget);
+    if (isCbo && cents <= 0) { setErrorMsg('Informe o orçamento diário da campanha (ex: 50,00).'); return; }
+    setCreatingCamp(true); setErrorMsg('');
+    try {
+      const d = await workerPost('/create-campaign', {
+        nome: newCampName.trim(), objetivo: newCampObj,
+        ...(isCbo ? { dailyBudget: cents } : {}),
+      });
+      const nova = { id: d.campaignId, name: newCampName.trim(), objective: null,
+        effective_status: 'PAUSED', daily_budget: isCbo ? cents : 0 };
+      setCampaigns(prev => [nova, ...prev]);
+      setCampaignIsCbo(isCbo);
+      await handleCampaignChange(d.campaignId, nova.name, newCampObj);
+      setCampaignIsCbo(isCbo); // handleCampaignChange recalcula; garante o valor certo
+      setNewCamp(false); setNewCampName(''); setNewCampBudget('');
+    } catch (e) {
+      setErrorMsg(e.message || 'Erro ao criar campanha');
+    } finally {
+      setCreatingCamp(false);
     }
-    setCreatingCamp(false);
   }
 
   async function handleCreateAdset() {
-    if (!newAdsetName.trim() || !newAdsetBudget) return;
-    setCreatingAdset(true);
-    const d = await callFn({ action: 'create_adset', campaign_id: campaignId, name: newAdsetName.trim(), daily_budget: parseFloat(newAdsetBudget) });
-    if (d.adset) {
-      setAdsets(prev => [...prev, d.adset]);
-      setAdsetId(d.adset.id); setAdsetName(d.adset.name);
+    if (!newAdsetName.trim()) return;
+    const cents = brlToCents(newAdsetBudget);
+    if (!campaignIsCbo && cents <= 0) { setErrorMsg('Informe o orçamento diário do conjunto (ex: 50,00).'); return; }
+    setCreatingAdset(true); setErrorMsg('');
+    try {
+      const d = await workerPost('/create-adset', {
+        nome: newAdsetName.trim(), campaignId,
+        cbo: campaignIsCbo,
+        ...(campaignIsCbo ? {} : { dailyBudget: cents }),
+        objetivo: campaignObj,
+      });
+      const novo = { id: d.adsetId, name: newAdsetName.trim() };
+      setAdsets(prev => [novo, ...prev]);
+      setAdsetId(d.adsetId); setAdsetName(novo.name);
       setNewAdset(false); setNewAdsetName(''); setNewAdsetBudget('');
-    } else {
-      setErrorMsg(d.error || 'Erro ao criar conjunto');
+    } catch (e) {
+      setErrorMsg(e.message || 'Erro ao criar conjunto');
+    } finally {
+      setCreatingAdset(false);
     }
-    setCreatingAdset(false);
+  }
+
+  // Resolve a mídia para o criativo.
+  // Imagem: usa a URL pública do R2 (preview otimizado) direto no criativo.
+  // Vídeo: usa o video_id se já existe; senão prepara o criativo (Fluxo B, só no Mac).
+  async function ensureMetaMedia() {
+    if (!isVideo) {
+      if (r2Url) return { imageUrl: r2Url };
+      if (raw.meta_image_hash) return { imageHash: raw.meta_image_hash };
+      throw new Error('Sem mídia no R2 para o anúncio.');
+    }
+    if (raw.meta_video_id) return { videoId: raw.meta_video_id };
+    // Vídeo ainda sem criativo no Meta → Fluxo B, que precisa do Mac (ffmpeg + Drive).
+    const isLocal = ['localhost', '127.0.0.1'].includes(location.hostname);
+    if (!isLocal) {
+      throw new Error('Este vídeo ainda não tem criativo no Meta. Prepare no Mac "Fotografia é o Meu Negócio" antes de publicar (é a 1ª vez deste vídeo).');
+    }
+    const videoId = await prepararCriativoMeta(adNum);
+    return { videoId };
+  }
+
+  // Fluxo B via servidor local: pega o original no Drive, otimiza em alta,
+  // sobe pro Meta, salva o video_id e apaga o temporário. Leva ~1-2 min.
+  async function prepararCriativoMeta(numero) {
+    setLoadingMsg('Preparando o criativo no Meta (1ª vez, ~1-2 min)…');
+    await fetch(`/api/preparar-criativo-meta?numero=${numero}`, { method: 'POST' });
+    for (let i = 0; i < 120; i++) {
+      await new Promise(r => setTimeout(r, 3000));
+      const s = await (await fetch(`/api/preparar-criativo-meta?numero=${numero}`)).json();
+      if (s.msg) setLoadingMsg(s.msg);
+      if (s.video_id) return s.video_id;
+      if (!s.running && s.error) throw new Error(s.error);
+      if (!s.running && !s.video_id) throw new Error('Falha ao preparar o criativo.');
+    }
+    throw new Error('Tempo esgotado preparando o criativo.');
   }
 
   async function handleCreate() {
     setStatus('loading'); setErrorMsg('');
+    setLoadingMsg(isVideo && !raw.meta_video_id ? 'Enviando vídeo ao Meta (pode levar 1 min)…' : 'Publicando…');
     try {
-      const d = await callFn({
-        action: 'create',
-        adset_id: adsetId,
-        card: {
-          num: card.num, titulo: raw.titulo || '',
-          hook: raw.hook_copy || raw.hook || '',
-          texto_principal: raw.texto_principal || '',
-          titulo_ad: raw.titulo_ad || '', descricao_ad: raw.descricao_ad || '',
-          media_tipo: raw.tipo || 'reels', file_id: firstFile?.file_id || '',
-        },
-        utm: UTM_GLOBAL,
+      const media = await ensureMetaMedia();
+      setLoadingMsg('Montando o anúncio…');
+      const d = await workerPost('/create-ad', {
+        nome:      `ADS ${card.num} - ${raw.titulo || ''}`.trim().slice(0, 200),
+        adsetId,
+        imageUrl:  media.imageUrl,
+        imageHash: media.imageHash,
+        videoId:   media.videoId,
+        thumbUrl:  raw.thumb_url || '',
+        mensagem:  msgText,
+        titulo:    titleText,
+        descricao: descText,
+        link:      linkDestino.trim() || LINK_DEFAULT,
+        urlTags:   urlTags.trim(),
+        cta:       'LEARN_MORE',
       });
-      if (d.error) { setStatus('error'); setErrorMsg(d.error); }
-      else { setStatus('success'); setResultId(d.ad_id || ''); }
+      // Persiste os IDs no card + status de publicação (rascunho = pausado)
+      await window.db.from('ads').update({
+        meta_campaign_id:    campaignId,
+        meta_adset_id:       adsetId,
+        meta_ad_id:          d.adId,
+        meta_ad_url:         d.adUrl,
+        meta_publish_status: 'rascunho',
+      }).eq('numero', adNum);
+      setResultUrl(d.adUrl || '');
+      setStatus('success');
     } catch (e) {
       setStatus('error'); setErrorMsg(e.message || 'Erro inesperado');
     }
@@ -520,11 +659,13 @@ function MetaAdModal({ card, onClose }) {
               border:'2px solid var(--clr-pos)', display:'flex', alignItems:'center', justifyContent:'center' }}>
               <LucideIcon icon="check" size={24} color="var(--clr-pos)"/>
             </div>
-            <div style={{ fontSize:15, fontWeight:700, color:'var(--clr-pos)' }}>Anúncio criado!</div>
+            <div style={{ fontSize:15, fontWeight:700, color:'var(--clr-pos)' }}>Anúncio criado (pausado)</div>
             <div style={{ fontSize:12, color:'var(--text-3)' }}>{campaignName} › {adsetName}</div>
-            {resultId && (
-              <a href={`https://adsmanager.facebook.com/adsmanager/manage/ads?selected_ad_ids=${resultId}`}
-                target="_blank" rel="noopener noreferrer"
+            <div style={{ fontSize:11.5, color:'var(--text-3)', maxWidth:300, lineHeight:1.5 }}>
+              Subiu pausado. Use "Ativar tudo no Meta" no topo do quadro para ligar em massa.
+            </div>
+            {resultUrl && (
+              <a href={resultUrl} target="_blank" rel="noopener noreferrer"
                 style={{ fontSize:12, color:'var(--fmn-gold)', textDecoration:'none' }}>
                 Ver no Gerenciador →
               </a>
@@ -552,9 +693,10 @@ function MetaAdModal({ card, onClose }) {
                   ? <>
                       <select value={campaignId} onChange={e => {
                         const opt = e.target.options[e.target.selectedIndex];
-                        handleCampaignChange(e.target.value, opt.text);
+                        const c = campaigns.find(x => x.id === e.target.value);
+                        handleCampaignChange(e.target.value, opt.text, c ? metaObjToKey(c.objective) : 'vendas');
                       }} style={S.select}>
-                        <option value="">Selecionar campanha ativa...</option>
+                        <option value="">Selecionar campanha...</option>
                         {campaigns.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                       </select>
                       <div style={{ marginTop:5 }}>
@@ -565,13 +707,28 @@ function MetaAdModal({ card, onClose }) {
                       <input style={S.input} placeholder="Nome da campanha" value={newCampName}
                         onChange={e => setNewCampName(e.target.value)}/>
                       <select value={newCampObj} onChange={e => setNewCampObj(e.target.value)} style={S.select}>
-                        <option value="OUTCOME_SALES">Vendas</option>
-                        <option value="OUTCOME_LEADS">Leads</option>
-                        <option value="OUTCOME_TRAFFIC">Tráfego</option>
-                        <option value="OUTCOME_AWARENESS">Reconhecimento</option>
+                        {META_OBJETIVOS.map(o => <option key={o.key} value={o.key}>{o.label}</option>)}
                       </select>
+                      {/* Nível do orçamento: CBO (campanha) x ABO (conjunto) */}
+                      <div>
+                        <span style={{ ...S.label, marginBottom:6 }}>Orçamento</span>
+                        <div style={{ display:'flex', gap:8 }}>
+                          <button onClick={() => setBudgetLevel('conjunto')}
+                            style={S.miniBtn(budgetLevel === 'conjunto')}>No conjunto (ABO)</button>
+                          <button onClick={() => setBudgetLevel('campanha')}
+                            style={S.miniBtn(budgetLevel === 'campanha')}>Na campanha (CBO)</button>
+                        </div>
+                        {budgetLevel === 'campanha' && (
+                          <div style={{ display:'flex', alignItems:'center', gap:8, marginTop:8 }}>
+                            <span style={{ fontSize:13, color:'var(--text-2)' }}>R$</span>
+                            <input style={S.input} placeholder="00,00" inputMode="decimal"
+                              value={newCampBudget} onChange={e => setNewCampBudget(e.target.value)}/>
+                            <span style={{ fontSize:11, color:'var(--text-3)', whiteSpace:'nowrap' }}>/ dia</span>
+                          </div>
+                        )}
+                      </div>
                       <div style={S.row}>
-                        <button style={S.miniBtn(false)} onClick={() => { setNewCamp(false); setNewCampName(''); }}>Cancelar</button>
+                        <button style={S.miniBtn(false)} onClick={() => { setNewCamp(false); setNewCampName(''); setNewCampBudget(''); }}>Cancelar</button>
                         <button style={S.miniBtn(!!newCampName.trim())} onClick={handleCreateCampaign}
                           disabled={!newCampName.trim() || creatingCamp}>
                           {creatingCamp ? 'Criando...' : 'Criar campanha'}
@@ -594,7 +751,7 @@ function MetaAdModal({ card, onClose }) {
                           const opt = e.target.options[e.target.selectedIndex];
                           setAdsetId(e.target.value); setAdsetName(opt.text);
                         }} style={S.select}>
-                          <option value="">Selecionar conjunto ativo...</option>
+                          <option value="">Selecionar conjunto...</option>
                           {adsets.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
                         </select>
                         <div style={{ marginTop:5 }}>
@@ -604,14 +761,24 @@ function MetaAdModal({ card, onClose }) {
                     : <div style={S.subBox}>
                         <input style={S.input} placeholder="Nome do conjunto" value={newAdsetName}
                           onChange={e => setNewAdsetName(e.target.value)}/>
-                        <input style={S.input} placeholder="Orçamento diário (R$)" type="number" min="1"
-                          value={newAdsetBudget} onChange={e => setNewAdsetBudget(e.target.value)}/>
-                        <div style={{ fontSize:11, color:'var(--text-3)' }}>Segmentação padrão: Brasil, 20–65 anos. Ajuste depois no Gerenciador.</div>
+                        {campaignIsCbo
+                          ? <div style={{ fontSize:11.5, color:'var(--fmn-gold)', padding:'8px 10px',
+                              borderRadius:8, background:'rgba(234,170,65,.06)', border:'1px solid rgba(234,170,65,.2)' }}>
+                              Orçamento fica na campanha (CBO). O conjunto não define valor.
+                            </div>
+                          : <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                              <span style={{ fontSize:13, color:'var(--text-2)' }}>R$</span>
+                              <input style={S.input} placeholder="00,00" inputMode="decimal"
+                                value={newAdsetBudget} onChange={e => setNewAdsetBudget(e.target.value)}/>
+                              <span style={{ fontSize:11, color:'var(--text-3)', whiteSpace:'nowrap' }}>/ dia</span>
+                            </div>
+                        }
+                        <div style={{ fontSize:11, color:'var(--text-3)' }}>Segmentação padrão: Brasil, 18–65 anos, Advantage+. Ajuste depois no Gerenciador.</div>
                         <div style={S.row}>
                           <button style={S.miniBtn(false)} onClick={() => { setNewAdset(false); setNewAdsetName(''); setNewAdsetBudget(''); }}>Cancelar</button>
-                          <button style={S.miniBtn(!!(newAdsetName.trim() && newAdsetBudget))}
+                          <button style={S.miniBtn(!!newAdsetName.trim())}
                             onClick={handleCreateAdset}
-                            disabled={!newAdsetName.trim() || !newAdsetBudget || creatingAdset}>
+                            disabled={!newAdsetName.trim() || creatingAdset}>
                             {creatingAdset ? 'Criando...' : 'Criar conjunto'}
                           </button>
                         </div>
@@ -619,28 +786,55 @@ function MetaAdModal({ card, onClose }) {
               }
             </div>
 
-            {/* UTM */}
-            <div style={{ padding:'9px 12px', borderRadius:8, background:'var(--app-surface-2)',
-              border:'1px solid var(--app-border)', fontSize:11, color:'var(--text-3)', lineHeight:1.6 }}>
-              <span style={{ fontWeight:700, color:'var(--text-2)' }}>UTM: </span>
-              <span style={{ color:'var(--fmn-gold)' }}>{UTM_GLOBAL}</span>
+            {/* Copy do anúncio (pré-preenchida do card) */}
+            <div>
+              <label style={S.label}>Texto principal</label>
+              <textarea style={{ ...S.input, minHeight:76, resize:'vertical', fontFamily:'Roboto,sans-serif' }}
+                value={msgText} onChange={e => setMsgText(e.target.value)} placeholder="Texto principal do anúncio"/>
+            </div>
+            <div>
+              <label style={S.label}>Título</label>
+              <input style={S.input} value={titleText} onChange={e => setTitleText(e.target.value)}
+                placeholder="Título do anúncio"/>
+            </div>
+            <div>
+              <label style={S.label}>Descrição</label>
+              <input style={S.input} value={descText} onChange={e => setDescText(e.target.value)}
+                placeholder="Descrição do link"/>
             </div>
 
-            {!firstFile && (
+            {/* Link de destino */}
+            <div>
+              <label style={S.label}>Link de destino</label>
+              <input style={S.input} value={linkDestino} onChange={e => setLinkDestino(e.target.value)}
+                placeholder="https://..."/>
+            </div>
+
+            {/* Parâmetros de URL (rastreamento) */}
+            <div>
+              <label style={S.label}>Parâmetros de URL (rastreamento)</label>
+              <input style={S.input} value={urlTags} onChange={e => setUrlTags(e.target.value)}
+                placeholder="utm_source=FB&utm_campaign=..."/>
+              <div style={{ marginTop:4, fontSize:10.5, color:'var(--text-3)', lineHeight:1.5 }}>
+                Vai no campo "Parâmetros de URL" do anúncio. Os tokens {'{{campaign.name}}'} e {'{{ad.id}}'} são preenchidos pelo Meta.
+              </div>
+            </div>
+
+            {!hasMedia && (
               <div style={{ padding:'8px 12px', borderRadius:8, background:'rgba(234,170,65,.06)',
                 border:'1px solid rgba(234,170,65,.2)', fontSize:11, color:'var(--fmn-gold)' }}>
-                Nenhum arquivo indexado. Vincule o Drive antes de criar no Meta.
+                Sem mídia no R2. Faça o upload do criativo no card antes de publicar no Meta.
               </div>
             )}
 
-            <button onClick={() => setConfirm(true)} disabled={!campaignId || !adsetId || !firstFile}
+            <button onClick={() => setConfirm(true)} disabled={!campaignId || !adsetId || !hasMedia}
               style={{ padding:'12px', borderRadius:8, border:'none',
-                background: campaignId && adsetId && firstFile ? 'var(--fmn-gold)' : 'rgba(255,255,255,.08)',
-                color: campaignId && adsetId && firstFile ? 'var(--fmn-black)' : 'var(--text-3)',
+                background: campaignId && adsetId && hasMedia ? 'var(--fmn-gold)' : 'rgba(255,255,255,.08)',
+                color: campaignId && adsetId && hasMedia ? 'var(--fmn-black)' : 'var(--text-3)',
                 fontFamily:'Roboto,sans-serif', fontWeight:700, fontSize:13,
-                cursor: campaignId && adsetId && firstFile ? 'pointer' : 'not-allowed',
+                cursor: campaignId && adsetId && hasMedia ? 'pointer' : 'not-allowed',
                 display:'flex', alignItems:'center', justifyContent:'center', gap:8 }}>
-              <LucideIcon icon="rocket" size={16}/>Criar Anúncio
+              <LucideIcon icon="rocket" size={16}/>Publicar no Meta
             </button>
           </>
         )}
@@ -648,22 +842,13 @@ function MetaAdModal({ card, onClose }) {
         {/* Gate de confirmação */}
         {confirm && status !== 'success' && (
           <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
-            {firstFile?.tipo === 'video' && (
-              <div style={{ padding:'10px 12px', borderRadius:8, background:'rgba(251,191,36,.07)',
-                border:'1px solid rgba(251,191,36,.25)', display:'flex', alignItems:'flex-start', gap:8 }}>
-                <LucideIcon icon="triangle-alert" size={14} style={{ color:'#fbbf24', flexShrink:0, marginTop:1 }}/>
-                <span style={{ fontSize:11.5, fontFamily:'Roboto,sans-serif', color:'var(--text-2)', lineHeight:1.5 }}>
-                  Upload de vídeo via Drive pode falhar — o Meta exige uma URL pública acessível sem login. Se der erro, hospede o vídeo em outro lugar (ex: servidor próprio, Cloudflare R2) e cole a URL direta no campo de mídia do card.
-                </span>
-              </div>
-            )}
             <div style={{ padding:'14px', borderRadius:10, background:'rgba(234,170,65,.06)',
               border:'1px solid rgba(234,170,65,.2)', lineHeight:1.8 }}>
-              <div style={{ fontWeight:700, fontSize:13, color:'var(--text-1)', marginBottom:6 }}>Confirmar criação</div>
+              <div style={{ fontWeight:700, fontSize:13, color:'var(--text-1)', marginBottom:6 }}>Confirmar publicação</div>
               <div style={{ fontSize:12, color:'var(--text-2)' }}>
                 <b>Campanha:</b> {campaignName}<br/>
                 <b>Conjunto:</b> {adsetName}<br/>
-                <b>Arquivo:</b> {firstFile?.tipo} ({firstFile?.file_id?.slice(0,12)}…)<br/>
+                <b>Mídia:</b> {isVideo ? 'vídeo' : 'imagem'} ({(raw.meta_image_hash || raw.meta_video_id) ? 'já na biblioteca do Meta' : 'sobe do R2 agora'})<br/>
                 <b>Status inicial:</b> PAUSADO
               </div>
             </div>
@@ -679,7 +864,7 @@ function MetaAdModal({ card, onClose }) {
                   fontFamily:'Roboto,sans-serif', fontWeight:700, fontSize:13,
                   cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:8 }}>
                 {status==='loading'
-                  ? <><LucideIcon icon="loader" size={16}/>Criando...</>
+                  ? <><LucideIcon icon="loader" size={16}/>{loadingMsg || 'Criando…'}</>
                   : <><LucideIcon icon="check" size={16}/>Confirmar e criar</>}
               </button>
             </div>
@@ -841,6 +1026,68 @@ function MetaIdField({ card, onSaved }) {
 }
 
 
+/* ── AdicionarCriativoBtn ────────────────────────────────────────
+   Fluxo A (preview). Roda o ffmpeg/otimização no Mac via serve.py.
+   Auto: acha a pasta ADS no Drive. Manual: usuário cola a pasta.
+─────────────────────────────────────────────────────────────────*/
+function AdicionarCriativoBtn({ card, onDone }) {
+  const [step, setStep] = useState('idle'); // idle | running | warn
+  const [msg, setMsg]   = useState('');
+  const adNum = parseInt(card.num, 10);
+
+  async function run(pasta) {
+    const isLocal = ['localhost', '127.0.0.1'].includes(location.hostname);
+    if (!isLocal) {
+      setStep('warn'); setMsg('Precisa estar no Mac "Fotografia é o Meu Negócio"');
+      setTimeout(() => { setStep('idle'); setMsg(''); }, 5000); return;
+    }
+    setStep('running'); setMsg('Buscando no Drive…');
+    const qs = `numero=${adNum}` + (pasta ? `&pasta=${encodeURIComponent(pasta)}` : '');
+    try { await fetch(`/api/adicionar-criativo?${qs}`, { method: 'POST' }); }
+    catch { setStep('warn'); setMsg('Servidor local não respondeu'); setTimeout(() => { setStep('idle'); setMsg(''); }, 5000); return; }
+    const poll = setInterval(async () => {
+      try {
+        const s = await (await fetch('/api/adicionar-criativo')).json();
+        if (s.msg) setMsg(s.msg);
+        if (!s.running) {
+          clearInterval(poll);
+          if (s.error) { setStep('warn'); setMsg(s.error); setTimeout(() => { setStep('idle'); setMsg(''); }, 6000); }
+          else { setStep('idle'); setMsg(''); onDone && onDone(); }
+        }
+      } catch { clearInterval(poll); setStep('idle'); setMsg(''); }
+    }, 2000);
+  }
+
+  function manual() {
+    const p = window.prompt('Cole o link ou ID da pasta do criativo no Drive:');
+    if (p && p.trim()) run(p.trim());
+  }
+
+  if (step === 'running') {
+    return (
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:6, padding:'8px',
+        borderRadius:8, background:'rgba(56,189,248,.1)', border:'1px solid rgba(56,189,248,.3)',
+        color:'#38bdf8', fontFamily:'Roboto,sans-serif', fontWeight:700, fontSize:11.5 }}>
+        <LucideIcon icon="loader" size={13} style={{ animation:'spin 1s linear infinite' }}/>{msg || 'Otimizando…'}
+      </div>
+    );
+  }
+  return (
+    <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+      {step === 'warn' && (
+        <div style={{ padding:'6px 10px', borderRadius:8, background:'rgba(248,113,113,.08)',
+          border:'1px solid rgba(248,113,113,.3)', fontSize:11, color:'#f87171', lineHeight:1.4 }}>{msg}</div>
+      )}
+      <div style={{ display:'flex', gap:8 }}>
+        <Btn variant="secondary" size="sm" icon="image-plus" style={{ flex:1, justifyContent:'center' }}
+          onClick={() => run(null)}>Adicionar criativo</Btn>
+        <Btn variant="ghost" size="sm" icon="folder" style={{ justifyContent:'center' }}
+          onClick={manual} title="Escolher a pasta do Drive manualmente">Pasta</Btn>
+      </div>
+    </div>
+  );
+}
+
 /* ── R2UploadSection ─────────────────────────────────────────────*/
 const ADS_MEDIA_WORKER = 'https://ads-media.blindagem-fmn.workers.dev';
 
@@ -892,10 +1139,73 @@ function R2UploadSection({ card, onUploadComplete }) {
     });
   }
 
-  // Vídeo sobe sem recompressão (SharedArrayBuffer não disponível no browser sem COOP/COEP)
-  // Frame para thumbnail é capturado via Canvas
-  async function passVideo(file) {
-    return file; // passa o original direto
+  // Comprime vídeo via Canvas + MediaRecorder (sem SharedArrayBuffer, sem FFmpeg.wasm)
+  // Target: 3 Mbps, máx 1080p. Processa em tempo real (60s de vídeo = 60s de compressão).
+  async function compressVideo(file, onProgress) {
+    return new Promise((resolve, reject) => {
+      const video  = document.createElement('video');
+      const objUrl = URL.createObjectURL(file);
+      video.src = objUrl; video.muted = true; video.playsInline = true;
+
+      video.onloadedmetadata = async () => {
+        const duration = video.duration;
+        let w = video.videoWidth, h = video.videoHeight;
+        if (Math.max(w, h) > 1080) {
+          const r = 1080 / Math.max(w, h);
+          w = Math.round(w * r); h = Math.round(h * r);
+        }
+        w = w % 2 === 0 ? w : w - 1;
+        h = h % 2 === 0 ? h : h - 1;
+
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        const ctx = canvas.getContext('2d');
+
+        // Combina vídeo do canvas com áudio do elemento original
+        const canvasStream = canvas.captureStream(30);
+        const combined = new MediaStream();
+        canvasStream.getVideoTracks().forEach(t => combined.addTrack(t));
+        const srcStream = video.captureStream ? video.captureStream() : null;
+        if (srcStream) srcStream.getAudioTracks().forEach(t => combined.addTrack(t));
+
+        const mimeType = [
+          'video/webm;codecs=vp9,opus',
+          'video/webm;codecs=vp8,opus',
+          'video/webm;codecs=vp9',
+          'video/webm;codecs=vp8',
+          'video/webm',
+        ].find(m => MediaRecorder.isTypeSupported(m)) || 'video/webm';
+
+        const recorder = new MediaRecorder(combined, { mimeType, videoBitsPerSecond: 3_000_000 });
+        const chunks   = [];
+
+        recorder.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
+        recorder.onstop = () => {
+          URL.revokeObjectURL(objUrl);
+          resolve(new Blob(chunks, { type: 'video/webm' }));
+        };
+        recorder.onerror = () => { URL.revokeObjectURL(objUrl); reject(new Error('Erro ao gravar vídeo')); };
+
+        video.onended = () => {
+          cancelAnimationFrame(video._rafId);
+          setTimeout(() => recorder.stop(), 300);
+        };
+        video.onerror = () => { URL.revokeObjectURL(objUrl); reject(new Error('Falha ao ler vídeo')); };
+
+        function drawLoop() {
+          if (!video.ended && !video.paused) {
+            ctx.drawImage(video, 0, 0, w, h);
+            if (onProgress && duration > 0) onProgress(Math.min(video.currentTime / duration, 1));
+          }
+          if (!video.ended) video._rafId = requestAnimationFrame(drawLoop);
+        }
+
+        recorder.start(200);
+        try { await video.play(); } catch(e) { URL.revokeObjectURL(objUrl); reject(e); return; }
+        drawLoop();
+      };
+      video.onerror = () => { URL.revokeObjectURL(objUrl); reject(new Error('Falha ao ler vídeo')); };
+    });
   }
 
   async function captureFrame(videoBlob) {
@@ -941,20 +1251,26 @@ function R2UploadSection({ card, onUploadComplete }) {
       for (let i = 0; i < files.length; i++) {
         const file  = files[i];
         const isVid = file.type.startsWith('video/');
-        if (isVid && file.size / (1024*1024) > 95) throw new Error(`Arquivo ${i+1}: vídeo maior que 95 MB. Use HandBrake ou iMovie.`);
         const origExt = file.name.split('.').pop().toLowerCase() || (isVid ? 'mp4' : 'jpg');
 
         setStep('compressing');
-        setProgress(`${i+1}/${files.length}`);
+        let lastPct = -1;
         let optimized, thumbBlob = null;
-        if (isVid) { optimized = await passVideo(file); thumbBlob = await captureFrame(optimized); }
-        else       { optimized = await compressImage(file); }
+        if (isVid) {
+          optimized = await compressVideo(file, pct => {
+            const p = Math.round(pct * 100);
+            if (p - lastPct >= 5) { lastPct = p; setProgress(`${i+1}/${files.length} · ${p}%`); }
+          });
+          thumbBlob = await captureFrame(optimized);
+        } else {
+          optimized = await compressImage(file);
+        }
 
         setStep('uploading-thumb');
         setProgress(`${i+1}/${files.length}`);
-        const imgExt = isVid ? 'mp4' : (optimized.type === 'image/png' ? 'png' : 'jpg');
+        const imgExt = isVid ? 'webm' : (optimized.type === 'image/png' ? 'png' : 'jpg');
         const tForm = new FormData();
-        tForm.append('file', new File([optimized], `ad${adNum}_s${i+1}.${imgExt}`, { type: isVid?'video/mp4':(optimized.type||'image/jpeg') }));
+        tForm.append('file', new File([optimized], `ad${adNum}_s${i+1}.${imgExt}`, { type: isVid?'video/webm':(optimized.type||'image/jpeg') }));
         tForm.append('ad_num', String(adNum));
         if (thumbBlob) tForm.append('thumb_frame', new File([thumbBlob], 'thumb.webp', { type:'image/webp' }));
 
@@ -982,21 +1298,18 @@ function R2UploadSection({ card, onUploadComplete }) {
     const isVid  = file.type.startsWith('video/');
     const fileMB = file.size / (1024 * 1024);
 
-    // Aviso de tamanho: Workers têm limite ~100 MB no body
-    if (isVid && fileMB > 95) {
-      setStep('error');
-      setErrMsg(`Vídeo muito grande (${fmtBytes(file.size)}). Comprima para menos de 95 MB antes de subir — use HandBrake ou iMovie.`);
-      return;
-    }
-
     try {
       let optimized, thumbBlob = null;
       const origExt = file.name.split('.').pop().toLowerCase() || (isVid ? 'mp4' : 'jpg');
 
       setStep('compressing');
       if (isVid) {
-        setProgress(fmtBytes(file.size));
-        optimized = await passVideo(file);
+        setProgress(`0% · ${fmtBytes(file.size)} original`);
+        let lastPct = -1;
+        optimized = await compressVideo(file, pct => {
+          const p = Math.round(pct * 100);
+          if (p - lastPct >= 5) { lastPct = p; setProgress(`${p}%`); }
+        });
         thumbBlob = await captureFrame(optimized);
         setProgress('');
       } else {
@@ -1006,9 +1319,9 @@ function R2UploadSection({ card, onUploadComplete }) {
       setStep('uploading-thumb');
       if (isVid) setProgress(fmtBytes(optimized.size));
       const tForm = new FormData();
-      const imgExt2 = isVid ? 'mp4' : (optimized.type === 'image/png' ? 'png' : 'jpg');
+      const imgExt2 = isVid ? 'webm' : (optimized.type === 'image/png' ? 'png' : 'jpg');
       const tName = `ad${adNum}.${imgExt2}`;
-      const tType = isVid ? 'video/mp4' : (optimized.type || 'image/jpeg');
+      const tType = isVid ? 'video/webm' : (optimized.type || 'image/jpeg');
       tForm.append('file', new File([optimized], tName, { type: tType }));
       tForm.append('ad_num', String(adNum));
       if (thumbBlob) tForm.append('thumb_frame', new File([thumbBlob], 'thumb.webp', { type: 'image/webp' }));
@@ -1018,49 +1331,21 @@ function R2UploadSection({ card, onUploadComplete }) {
       setProgress('');
       const { thumbUrl, mediaUrl } = await tRes.json();
 
-      let metaImageHash = null, metaVideoId = null;
-
-      if (!isMigration) {
-        setStep('uploading-original');
-        const oForm = new FormData();
-        oForm.append('file', new File([file], file.name, { type: file.type }));
-        oForm.append('ad_num', String(adNum));
-
-        const oRes  = await fetch(`${ADS_MEDIA_WORKER}/upload-original`, { method:'POST', body:oForm });
-        if (!oRes.ok) throw new Error('Erro ao subir original');
-        const { origKey, origUrl } = await oRes.json();
-
-        setStep('uploading-meta');
-        const mRes = await fetch(`${ADS_MEDIA_WORKER}/upload-meta`, {
-          method:'POST', headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({ tipo: isVid ? 'video' : 'image', origUrl }),
-        });
-        if (!mRes.ok) throw new Error('Erro ao enviar ao Meta');
-        const mData = await mRes.json();
-        metaImageHash = mData.imageHash || null;
-        metaVideoId   = mData.videoId   || null;
-
-        fetch(`${ADS_MEDIA_WORKER}/original/${encodeURIComponent(origKey)}`, { method:'DELETE' });
-      }
-
-      const patch = { thumb_url: thumbUrl, media_url: mediaUrl };
-      if (metaImageHash) patch.meta_image_hash = metaImageHash;
-      if (metaVideoId)   patch.meta_video_id   = metaVideoId;
-      await window.db.from('ads').update(patch).eq('numero', adNum);
+      // R2 upload é apenas para visualização no Tracker.
+      // O envio ao Meta acontece via botão "Publicar", não aqui.
+      await window.db.from('ads').update({ thumb_url: thumbUrl, media_url: mediaUrl }).eq('numero', adNum);
 
       setStep('done');
-      if (onUploadComplete) onUploadComplete({ thumbUrl, mediaUrl, metaImageHash, metaVideoId });
+      if (onUploadComplete) onUploadComplete({ thumbUrl, mediaUrl, metaImageHash: null, metaVideoId: null });
     } catch(err) {
       setStep('error');
       setErrMsg(err.message || 'Erro desconhecido');
     }
   }
 
-  const STEP_ORDER  = ['compressing','uploading-thumb','uploading-original','uploading-meta','done'];
-  const STEP_LABELS = { compressing:'Processando', 'uploading-thumb':'Subindo no R2', 'uploading-original':'Subindo original', 'uploading-meta':'Enviando ao Meta', done:'Concluído' };
-  const visibleSteps = isMigration
-    ? ['compressing','uploading-thumb','done']
-    : ['compressing','uploading-thumb','uploading-original','uploading-meta','done'];
+  const STEP_ORDER   = ['compressing','uploading-thumb','done'];
+  const STEP_LABELS  = { compressing:'Comprimindo', 'uploading-thumb':'Subindo no R2', done:'Concluído' };
+  const visibleSteps = ['compressing','uploading-thumb','done'];
 
   if (step === 'idle' || step === 'files-ready') {
     if (isCarrossel) {
@@ -1183,6 +1468,13 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
   const [deleting, setDeleting] = useState(false);
   const [videoPlaying, setVideoPlaying] = useState(false);
 
+  // ESC fecha o modal
+  React.useEffect(() => {
+    const handler = e => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [onClose]);
+
   // Estado de todos os campos editáveis
   const [fields, setFields] = useState({
     titulo:           raw.titulo          || '',
@@ -1232,12 +1524,31 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
     return `https://drive.google.com/thumbnail?id=${fileId}&sz=w800`;
   }
 
-  // Preview: sempre usa Drive
+  // URLs R2 do ad (JSON array ou string simples)
+  const r2Urls = (() => {
+    try {
+      const v = raw.media_url;
+      if (!v) return [];
+      const parsed = JSON.parse(v);
+      return Array.isArray(parsed) ? parsed : [parsed];
+    } catch { return raw.media_url ? [raw.media_url] : []; }
+  })();
+  const r2CurrentUrl = r2Urls[isCarousel ? carouselIdx : 0] || null;
+
+  const cardIsVideo = /reels/i.test(raw.tipo) || raw.tipo === 'video';
+
+  // Preview: R2 tem prioridade sobre Drive (após migração/upload R2, não puxar mais do Drive)
   let previewEmbed = null;
   let previewIsVideo = false;
   let previewViewUrl = null;
-  const cardIsVideo = /reels/i.test(raw.tipo) || raw.tipo === 'video';
-  if (isCarousel && currentFile) {
+  let isR2Embed = false;
+
+  if (r2CurrentUrl) {
+    previewEmbed   = r2CurrentUrl;
+    previewIsVideo = cardIsVideo || /\.(webm|mp4|mov)$/i.test(r2CurrentUrl);
+    previewViewUrl = r2CurrentUrl;
+    isR2Embed      = true;
+  } else if (isCarousel && currentFile) {
     previewEmbed    = drivePreviewUrl(currentFile.file_id, currentFile.tipo);
     previewIsVideo  = /^(video|reels)$/i.test(currentFile.tipo) || cardIsVideo;
     previewViewUrl  = currentFile.url_view;
@@ -1246,7 +1557,7 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
     previewIsVideo  = /^(video|reels)$/i.test(currentFile.tipo) || cardIsVideo;
     previewViewUrl  = currentFile.url_view;
   } else {
-    // fallback legado
+    // fallback legado: media_drive_url
     const driveId = parseDriveUrl(fields.media_drive_url);
     if (driveId) {
       previewIsVideo = /^reels$/i.test(fields.tipo) || fields.media_tipo === 'video';
@@ -1367,9 +1678,9 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
             boxShadow:'0 32px 80px rgba(0,0,0,.65)', display:'flex', flexDirection:'column' }}>
 
           {/* Header */}
-          <div style={{ padding:'16px 24px', borderBottom:'1px solid var(--app-border)',
-            display:'flex', alignItems:'flex-start', justifyContent:'space-between', gap:16 }}>
-            <div style={{ display:'flex', alignItems:'center', gap:12, minWidth:0 }}>
+          <div style={{ padding:'14px 20px', borderBottom:'1px solid var(--app-border)',
+            display:'flex', alignItems:'center', justifyContent:'space-between', gap:16 }}>
+            <div style={{ display:'flex', alignItems:'center', gap:10, minWidth:0 }}>
               <button onClick={onClose}
                 style={{ display:'flex', alignItems:'center', gap:5, flexShrink:0,
                   color:'var(--text-2)', cursor:'pointer', fontFamily:'Roboto,sans-serif',
@@ -1427,7 +1738,7 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
               {deleteConfirm ? (
                 <div style={{ display:'flex', alignItems:'center', gap:6, padding:'6px 10px',
                   borderRadius:8, background:'rgba(248,113,113,.1)', border:'1px solid rgba(248,113,113,.3)' }}>
-                  <span style={{ fontSize:11, fontFamily:'Roboto,sans-serif', color:'#f87171' }}>Confirmar exclusão?</span>
+                  <span style={{ fontSize:11, fontFamily:'Roboto,sans-serif', color:'#f87171' }}>Confirmar?</span>
                   <button onClick={deletarAd} disabled={deleting}
                     style={{ padding:'4px 10px', borderRadius:6, background:'#f87171', color:'#fff',
                       fontFamily:'Roboto,sans-serif', fontWeight:700, fontSize:11, cursor:'pointer' }}>
@@ -1443,10 +1754,11 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
               ) : (
                 <button onClick={() => setDeleteConfirm(true)}
                   title="Apagar AD"
-                  style={{ width:32, height:32, display:'flex', alignItems:'center', justifyContent:'center',
-                    borderRadius:7, background:'rgba(248,113,113,.08)', border:'1px solid rgba(248,113,113,.2)',
-                    color:'#f87171', cursor:'pointer' }}>
-                  <LucideIcon icon="trash-2" size={14}/>
+                  style={{ padding:'7px 12px', borderRadius:8, background:'rgba(248,113,113,.08)',
+                    border:'1px solid rgba(248,113,113,.2)', color:'#f87171', cursor:'pointer',
+                    display:'flex', alignItems:'center', justifyContent:'center',
+                    fontFamily:'Roboto,sans-serif', fontWeight:700, fontSize:12 }}>
+                  <LucideIcon icon="trash-2" size={13}/>
                 </button>
               )}
               {fields.status === 'testar-novamente' && (
@@ -1460,7 +1772,7 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
                 </button>
               )}
               <div style={{ position:'relative' }}>
-                <button onClick={() => { if (!mediaFiles.length) { setNoMediaAlert(true); setTimeout(() => setNoMediaAlert(false), 3500); } else setShowMeta(true); }}
+                <button onClick={() => { const temMidia = r2Urls.length || raw.meta_image_hash || raw.meta_video_id || mediaFiles.length; if (!temMidia) { setNoMediaAlert(true); setTimeout(() => setNoMediaAlert(false), 3500); } else setShowMeta(true); }}
                   style={{ display:'flex', alignItems:'center', gap:6, padding:'8px 14px',
                     background:'rgba(234,170,65,.12)', color:'var(--fmn-gold)', borderRadius:8,
                     border:'1px solid rgba(234,170,65,.35)', fontFamily:'Roboto,sans-serif',
@@ -1474,11 +1786,12 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
                     display:'flex', alignItems:'flex-start', gap:8 }}>
                     <LucideIcon icon="link-2-off" size={14} style={{ color:'#f87171', flexShrink:0, marginTop:1 }}/>
                     <span style={{ fontSize:12, fontFamily:'Roboto,sans-serif', color:'var(--text-2)', lineHeight:1.5 }}>
-                      Criativo não vinculado. Adicione o link do Drive antes de subir no Meta.
+                      Criativo sem mídia. Faça o upload do arquivo no card antes de subir no Meta.
                     </span>
                   </div>
                 )}
               </div>
+              <Btn variant="ghost" size="sm" onClick={onClose}>Cancelar</Btn>
               <Btn variant="primary" size="sm" icon={saveStatus==='saving'?'loader':'save'}
                 onClick={salvar} disabled={saveStatus==='saving'}>
                 {saveStatus==='saving'?'Salvando...':'Salvar'}
@@ -1491,7 +1804,7 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
             {/* Painel esquerdo — mídia */}
             <div style={{ width:340, flexShrink:0, borderRight:'1px solid var(--app-border)',
               background:'rgba(0,0,0,.25)', display:'flex', flexDirection:'column',
-              alignItems:'center', padding:'20px', gap:10, overflowY:'auto' }}>
+              alignItems:'center', justifyContent:'center', padding:24, gap:16, overflowY:'auto' }}>
                 <div style={{ borderRadius:12, overflow:'hidden', position:'relative',
                   width:'100%', height:380,
                   background: previewIsVideo ? '#000' : 'var(--app-surface-2)',
@@ -1500,8 +1813,11 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
                     <>
                       {previewIsVideo
                         ? videoPlaying
-                          ? <iframe src={`${previewEmbed}?rm=minimal&autoplay=1`} style={{ width:'100%', height:'100%', border:'none', display:'block' }}
-                              allow="autoplay" title="Prévia do vídeo"/>
+                          ? isR2Embed
+                            ? <video src={previewEmbed} autoPlay controls
+                                style={{ width:'100%', height:'100%', display:'block', objectFit:'contain' }}/>
+                            : <iframe src={`${previewEmbed}?rm=minimal&autoplay=1`} style={{ width:'100%', height:'100%', border:'none', display:'block' }}
+                                allow="autoplay" title="Prévia do vídeo"/>
                           : <div onClick={() => setVideoPlaying(true)}
                               style={{ width:'100%', height:'100%', position:'relative', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>
                               <img
@@ -1607,6 +1923,12 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
                   </div>
                 ) : (
                   <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+                    {/* Novo fluxo: puxa do Drive e gera o preview (Fluxo A) */}
+                    <AdicionarCriativoBtn card={card} onDone={async () => {
+                      const { data } = await window.db.from('ads')
+                        .select('media_url,thumb_url,tipo,media_tipo').eq('numero', parseInt(card.num,10)).single();
+                      if (data && onUpdate) onUpdate({ ...card, raw: { ...raw, ...data } });
+                    }}/>
                     <div style={{ display:'flex', gap:8 }}>
                       {previewViewUrl && (
                         <Btn variant="ghost" size="sm" icon="external-link" style={{ flex:1, justifyContent:'center' }}
@@ -1614,13 +1936,6 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
                           Drive
                         </Btn>
                       )}
-                      <Btn variant="secondary" size="sm" icon="link"
-                        style={{ flex:1, justifyContent:'center' }}
-                        onClick={() => { setDriveInputVal(fields.media_drive_url || ''); setShowDriveInput(true); }}>
-                        {driveId ? 'Trocar mídia' : 'Vincular Drive'}
-                      </Btn>
-                    </div>
-                    <div style={{ display:'flex', gap:8 }}>
                       <R2UploadSection card={card} onUploadComplete={({ thumbUrl, mediaUrl, metaImageHash, metaVideoId }) => {
                         if (onUpdate) onUpdate({ ...card, raw: { ...raw, thumb_url: thumbUrl, media_url: mediaUrl, meta_image_hash: metaImageHash, meta_video_id: metaVideoId } });
                       }}/>
@@ -1667,19 +1982,14 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
                     <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700,
                       letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)' }}>
                       Tipo
-                      {mediaFiles.length > 0 && (
-                        <span style={{ marginLeft:5, fontSize:9, color:'var(--text-3)', fontWeight:400, textTransform:'none' }}>
-                          (detectado automaticamente)
-                        </span>
-                      )}
                     </span>
-                    <div style={{ display:'flex', gap:5, flexWrap:'wrap', opacity: mediaFiles.length > 0 ? .55 : 1 }}>
+                    <div style={{ display:'flex', gap:5, flexWrap:'wrap' }}>
                       {[{v:'reels',l:'Reels',i:'play-circle',c:'#f87171'},{v:'imagem',l:'Imagem',i:'image',c:'#a78bfa'},{v:'carrossel',l:'Carrossel',i:'layout-grid',c:'#60a5fa'}].map(t => {
                         const active = fields.tipo === t.v;
                         return (
-                          <button key={t.v} onClick={() => !mediaFiles.length && set('tipo', t.v)}
+                          <button key={t.v} onClick={() => set('tipo', t.v)}
                             style={{ display:'flex', alignItems:'center', gap:4, padding:'4px 10px',
-                              borderRadius:999, fontSize:11, cursor: mediaFiles.length ? 'default' : 'pointer',
+                              borderRadius:999, fontSize:11, cursor:'pointer',
                               fontFamily:'Roboto,sans-serif', fontWeight:700, transition:'all 120ms',
                               background: active ? `${t.c}22` : 'rgba(255,255,255,.04)',
                               border: active ? `1px solid ${t.c}66` : '1px solid var(--app-border)',
@@ -1741,7 +2051,7 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
                 <CopyField id="titulo-ad"    label="Título (feed)"          fieldKey="titulo_ad"          rows={2}/>
                 <CopyField id="descricao"    label="Descrição"              fieldKey="descricao_ad"       rows={2}/>
                 <CopyField id="obs"          label="Informações Adicionais" fieldKey="observacoes"        rows={4}/>
-                <CopyField id="ref"          label="Referência"             fieldKey="referencia"         rows={2}/>
+                <RefBlock value={fields.referencia} onChange={v => set('referencia', v)}/>
               </div>
             </div>
             </div>
@@ -1861,7 +2171,6 @@ function KanbanScreen({ targetAd, onConsumeTarget }) {
   const { cards: CARDS, loading, reload } = useAdsCards();
   const [syncing, setSyncing]   = useState(false);
   const [syncMsg, setSyncMsg]   = useState('');
-
   async function handleSync() {
     setSyncing(true);
     const startedAt = new Date().toISOString();
@@ -1927,6 +2236,48 @@ function KanbanScreen({ targetAd, onConsumeTarget }) {
     if (novaTag !== null) patch.tag = novaTag;
     await window.db.from('ads').update(patch).eq('numero', parseInt(card.num, 10));
     reload();
+  }
+
+  // ── Ativar tudo no Meta (aprovação em massa dos rascunhos) ──
+  const [activating, setActivating] = useState(false);
+  const pendentesMeta = CARDS.filter(c => c.raw?.meta_publish_status === 'rascunho' && c.raw?.meta_ad_id);
+
+  async function handleActivateAll() {
+    if (!pendentesMeta.length || activating) return;
+    const ok = window.confirm(
+      `Ativar ${pendentesMeta.length} anúncio(s) no Meta?\n\n` +
+      `Isso liga a campanha, o conjunto e o anúncio de cada um. Eles começam a gastar assim que o Meta aprovar.`
+    );
+    if (!ok) return;
+    setActivating(true);
+    try {
+      const itens = pendentesMeta.map(c => ({
+        campaignId: c.raw.meta_campaign_id,
+        adsetId:    c.raw.meta_adset_id,
+        adId:       c.raw.meta_ad_id,
+      }));
+      const r = await fetch(`${ADS_MEDIA_WORKER}/activate-ads`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ itens }),
+      });
+      const d = await r.json();
+      const resultados = d.resultados || [];
+      // Marca como 'ativo' os que ativaram com sucesso
+      for (const res of resultados) {
+        if (res.ok) {
+          const card = pendentesMeta.find(c => c.raw.meta_ad_id === res.adId);
+          if (card) await window.db.from('ads').update({ meta_publish_status: 'ativo' }).eq('numero', parseInt(card.num, 10));
+        }
+      }
+      const okCount  = resultados.filter(x => x.ok).length;
+      const errCount = resultados.length - okCount;
+      alert(`Ativados: ${okCount}${errCount ? ` · Falharam: ${errCount}` : ''}`);
+      reload();
+    } catch (e) {
+      alert(`Erro ao ativar: ${e.message}`);
+    } finally {
+      setActivating(false);
+    }
   }
 
   const filteredCards = CARDS.filter(c => {
@@ -2008,11 +2359,24 @@ function KanbanScreen({ targetAd, onConsumeTarget }) {
             </button>
               );
             })()}
+            {pendentesMeta.length > 0 && (
+              <button onClick={handleActivateAll} disabled={activating}
+                title="Liga campanha, conjunto e anúncio de tudo que o Tracker subiu pausado"
+                style={{ display:'flex', alignItems:'center', gap:6, padding:'8px 14px',
+                  background: activating ? 'rgba(74,222,128,.1)' : 'rgba(74,222,128,.14)',
+                  color:'#4ade80', borderRadius:8, border:'1px solid rgba(74,222,128,.35)',
+                  fontFamily:'Roboto,sans-serif', fontWeight:700, fontSize:12,
+                  cursor: activating ? 'default' : 'pointer' }}>
+                <LucideIcon icon={activating ? 'loader' : 'circle-play'} size={14}
+                  style={activating ? { animation:'spin 1s linear infinite' } : {}}/>
+                {activating ? 'Ativando…' : `Ativar tudo no Meta (${pendentesMeta.length})`}
+              </button>
+            )}
             <button onClick={() => setShowNovoAds(true)}
               style={{ display:'flex', alignItems:'center', gap:6, padding:'8px 14px',
                 background:'var(--fmn-gold)', color:'var(--fmn-black)', borderRadius:8, border:'none',
                 fontFamily:'Roboto,sans-serif', fontWeight:700, fontSize:12, cursor:'pointer' }}>
-              <LucideIcon icon="plus" size={14}/>Novo ADS
+              <LucideIcon icon="plus" size={14}/>Novo
             </button>
           </div>
         }/>

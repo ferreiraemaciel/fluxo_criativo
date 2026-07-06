@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Autorização Instagram</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0d0d0d;
+      color: #e2e8f0;
+      font-family: 'Roboto', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .card {
+      background: rgba(255,255,255,.05);
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 16px;
+      padding: 40px;
+      max-width: 520px;
+      width: 90%;
+      text-align: center;
+    }
+    h2 { font-size: 20px; margin-bottom: 12px; }
+    p  { font-size: 14px; color: #94a3b8; margin-bottom: 24px; }
+    .token-box {
+      background: rgba(0,0,0,.4);
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 10px;
+      padding: 16px;
+      font-family: monospace;
+      font-size: 11px;
+      word-break: break-all;
+      text-align: left;
+      color: #a3e635;
+      margin-bottom: 20px;
+      max-height: 120px;
+      overflow-y: auto;
+    }
+    .copy-btn {
+      background: #2563eb;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 12px 28px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-bottom: 12px;
+      display: block;
+      width: 100%;
+    }
+    .copy-btn:hover { background: #1d4ed8; }
+    .cmd-box {
+      background: rgba(0,0,0,.4);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 10px;
+      padding: 14px 16px;
+      font-family: monospace;
+      font-size: 12px;
+      text-align: left;
+      color: #fbbf24;
+      margin-bottom: 12px;
+      word-break: break-all;
+    }
+    .status { font-size: 13px; color: #94a3b8; }
+    .ok { color: #4ade80; }
+    .err { color: #f87171; }
+    .spinner {
+      width: 40px; height: 40px;
+      border: 3px solid rgba(255,255,255,.1);
+      border-top-color: #2563eb;
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+      margin: 0 auto 20px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+<div class="card" id="card">
+  <div class="spinner"></div>
+  <h2>Trocando token...</h2>
+  <p>Aguarde enquanto geramos o token de longa duração.</p>
+</div>
+
+<script>
+const WORKER = 'https://organico-media.blindagem-fmn.workers.dev';
+
+async function main() {
+  const params = new URLSearchParams(window.location.search);
+  const code  = params.get('code');
+  const error = params.get('error');
+  const card  = document.getElementById('card');
+
+  if (error || !code) {
+    card.innerHTML = `
+      <h2 class="err">Autorização cancelada</h2>
+      <p>${error || 'Nenhum código recebido.'}</p>`;
+    return;
+  }
+
+  try {
+    const res  = await fetch(`${WORKER}/auth/exchange?code=${encodeURIComponent(code)}`);
+    const data = await res.json();
+
+    if (!data.ok || !data.token) {
+      throw new Error(data.error || 'Resposta inesperada do servidor.');
+    }
+
+    const token = data.token;
+    const days  = data.expires_in ? Math.floor(data.expires_in / 86400) : 60;
+    const cmd   = `python3 tracker-fmn/scripts/gerar-token-instagram.py --salvar "${token}"`;
+
+    card.innerHTML = `
+      <h2 class="ok">Token gerado com sucesso!</h2>
+      <p>Token de longa duração (válido por ~${days} dias). Copie e rode o comando abaixo no terminal.</p>
+      <div class="token-box" id="tok">${token}</div>
+      <button class="copy-btn" onclick="copyToken('${token.replace(/'/g, "\\'")}')">Copiar token</button>
+      <p style="margin-bottom:12px; font-size:12px;">Depois rode este comando no terminal para salvar:</p>
+      <div class="cmd-box" id="cmd">${cmd}</div>
+      <button class="copy-btn" style="background:#059669" onclick="copyCmd()">Copiar comando</button>
+      <div class="status" id="status"></div>`;
+
+  } catch (e) {
+    card.innerHTML = `
+      <h2 class="err">Erro ao trocar token</h2>
+      <p>${e.message}</p>`;
+  }
+}
+
+function copyToken(t) {
+  navigator.clipboard.writeText(t);
+  document.getElementById('status').textContent = 'Token copiado!';
+}
+function copyCmd() {
+  navigator.clipboard.writeText(document.getElementById('cmd').textContent);
+  document.getElementById('status').textContent = 'Comando copiado!';
+}
+
+main();
+</script>
+</body>
+</html>

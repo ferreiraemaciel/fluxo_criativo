@@ -79,7 +79,7 @@ function useTrafficData() {
       const [{ data: insights, error: e1 }, { data: adsList, error: e2 }] = await Promise.all([
         window.db.from('insights_cache')
           .select('meta_ad_id,meta_ad_name,meta_campaign_id,meta_campaign_name,meta_adset_id,meta_adset_name,periodo,gasto,cpa,compras,roas,cpm,ctr_unico,frequencia,connect_rate,link_clicks,landing_page_views,initiate_checkout,hook_rate')
-          .in('periodo', ['maximum','5d','3d','hoje']),
+          .in('periodo', ['maximum','7d','5d','3d','hoje']),
         window.db.from('ads')
           .select('numero,titulo,status,meta_ad_id,media_drive_url,media_files,meta_ad_url,media_tipo')
           .eq('status', 'ativo')
@@ -102,7 +102,9 @@ function useTrafficData() {
         rowsByAid[aid][row.periodo] = row;
       }
 
-      // Filtra: somente meta_ad_ids que (a) são o ID atual de um ADS ativo E (b) tiveram gasto em 3d ou 5d.
+      // Filtra: somente meta_ad_ids que são o ID atual de um ADS ATIVO (status='ativo').
+      // Aparece porque está ativo — NÃO depende de ter gasto no período. O filtro de
+      // período muda só as métricas exibidas, não quais anúncios aparecem.
       // O fallback por nome só aceita se o aid for exatamente o meta_ad_id atual do ADS ativo —
       // isso impede que IDs antigos do mesmo anúncio (rodando em campanhas encerradas) apareçam.
       const activeAids = new Set(
@@ -118,9 +120,7 @@ function useTrafficData() {
               const ativoAd = num ? numMap[num] : null;
               if (!ativoAd || ativoAd.meta_ad_id !== aid) return false;
             }
-            const has3d = (periods['3d']?.gasto || 0) > 0;
-            const has5d = (periods['5d']?.gasto || 0) > 0;
-            return has3d || has5d;
+            return true;
           })
           .map(([aid]) => aid)
       );
@@ -176,6 +176,7 @@ function useTrafficData() {
               mediaTipo: info?.media_tipo || null,
               metaAdUrl: aid ? `https://adsmanager.facebook.com/adsmanager/manage/ads?selected_ad_ids=${aid}` : null,
               hist:    mkMetrics(periods['maximum']),
+              d7:      mkMetrics(periods['7d']),
               d5:      mkMetrics(periods['5d']),
               d3:      mkMetrics(periods['3d']),
               hoje:    mkMetrics(periods['hoje']),
@@ -185,6 +186,7 @@ function useTrafficData() {
           ads.sort((a, b) => (a.d3 && a.d3.cpa != null ? a.d3.cpa : Infinity) - (b.d3 && b.d3.cpa != null ? b.d3.cpa : Infinity));
           return { ...as, ads,
             hist: aggregateMetrics(ads.map(a => a.hist)),
+            d7:   aggregateMetrics(ads.map(a => a.d7)),
             d5:   aggregateMetrics(ads.map(a => a.d5)),
             d3:   aggregateMetrics(ads.map(a => a.d3)),
             hoje: aggregateMetrics(ads.map(a => a.hoje)),
@@ -192,6 +194,7 @@ function useTrafficData() {
         });
         return { ...c, adsets,
           hist: aggregateMetrics(adsets.map(a => a.hist)),
+          d7:   aggregateMetrics(adsets.map(a => a.d7)),
           d5:   aggregateMetrics(adsets.map(a => a.d5)),
           d3:   aggregateMetrics(adsets.map(a => a.d3)),
           hoje: aggregateMetrics(adsets.map(a => a.hoje)),
@@ -357,6 +360,7 @@ const PERIOD_COLS = [
   { pk:'hoje', head:'Hoje'   },
   { pk:'d3',   head:'3D'     },
   { pk:'d5',   head:'5D'     },
+  { pk:'d7',   head:'7D'     },
   { pk:'hist', head:'Máximo' },
 ];
 
@@ -519,7 +523,7 @@ function MediaModal({ ad, onClose }) {
 }
 
 /* ── TrafficRow ─────────────────────────────────────────────────*/
-function TrafficRow({ row, depth=0, period, viewMode='periodo', metricCol, onCellHover, specificRules, pausedIds, pausingIds, focusIds, setFocusIds, onThumbClick, onAddRule, adAlerts, onBellClick }) {
+function TrafficRow({ row, depth=0, period, viewMode='periodo', metricCol, onCellHover, specificRules, pausedIds, pausingIds, focusIds, setFocusIds, onThumbClick, onAddRule, adAlerts, onBellClick, onPauseDirect }) {
   const [open, setOpen]   = useState(depth <= 1);
   const indent  = depth * 20;
   const isAd    = depth === 2;
@@ -529,7 +533,7 @@ function TrafficRow({ row, depth=0, period, viewMode='periodo', metricCol, onCel
   const isFocused = focusIds.has(row.id);
   const faded     = focusIds.size > 0 && !isFocused;
 
-  const PKEY = { hoje:'hoje', '3d':'d3', '5d':'d5', maximum:'hist' };
+  const PKEY = { hoje:'hoje', '3d':'d3', '5d':'d5', '7d':'d7', maximum:'hist' };
   const m = row[PKEY[period] || 'd3'] || null;
 
   const baseBg  = isPaused ? 'rgba(248,113,113,.03)' : 'transparent';
@@ -544,8 +548,8 @@ function TrafficRow({ row, depth=0, period, viewMode='periodo', metricCol, onCel
         opacity: isPaused ? 0.55 : faded ? 0.3 : 1,
         transition:'background 120ms, opacity 150ms',
         outline: isFocused ? '1px solid rgba(234,170,65,.3)' : 'none' }}
-        onMouseEnter={e => !isPaused && !faded && (e.currentTarget.style.background=isFocused?'rgba(234,170,65,.09)':'rgba(255,255,255,.03)')}
-        onMouseLeave={e => e.currentTarget.style.background=focusBg}>
+        onMouseEnter={e => { if (!isPaused && !faded) e.currentTarget.style.background=isFocused?'rgba(234,170,65,.09)':'rgba(255,255,255,.03)'; e.currentTarget.querySelectorAll('.pause-direct-btn').forEach(b => b.style.opacity='1'); }}
+        onMouseLeave={e => { e.currentTarget.style.background=focusBg; e.currentTarget.querySelectorAll('.pause-direct-btn').forEach(b => b.style.opacity='0'); }}>
 
         {/* ── Nome ── */}
         <td style={{ padding:'9px 12px', paddingLeft: 14+indent,
@@ -644,6 +648,24 @@ function TrafficRow({ row, depth=0, period, viewMode='periodo', metricCol, onCel
               );
             })()}
 
+            {/* Botão pausar direto — visível em qualquer linha ativa */}
+            {!isPaused && onPauseDirect && (
+              <button
+                onClick={e => { e.stopPropagation(); onPauseDirect(row, depth); }}
+                title="Pausar no Meta"
+                style={{ display:'flex', alignItems:'center', gap:3, flexShrink:0,
+                  height:18, padding:'0 6px', borderRadius:3, cursor:'pointer',
+                  background:'rgba(248,113,113,.1)', border:'1px solid rgba(248,113,113,.25)',
+                  color:'#f87171', fontSize:9.5, fontFamily:'Roboto,sans-serif',
+                  fontWeight:700, letterSpacing:'0.05em', transition:'all 150ms', opacity:0 }}
+                onMouseEnter={e => { e.currentTarget.style.opacity='1'; e.currentTarget.style.background='rgba(248,113,113,.2)'; }}
+                onMouseLeave={e => { e.currentTarget.style.opacity='0'; }}
+                className="pause-direct-btn">
+                <LucideIcon icon="pause-circle" size={10}/>
+                Pausar
+              </button>
+            )}
+
             {isPaused && <Badge tone="warning">Pausado</Badge>}
             {myRules.map(re => (
               <span key={re.id} style={{ padding:'1px 6px', borderRadius:999, fontSize:9, flexShrink:0,
@@ -664,12 +686,12 @@ function TrafficRow({ row, depth=0, period, viewMode='periodo', metricCol, onCel
       {open && (row.adsets||[]).map(a => (
         <TrafficRow key={a.id} row={a} depth={1} period={period} viewMode={viewMode} metricCol={metricCol} onCellHover={onCellHover}
           specificRules={specificRules} pausedIds={pausedIds} pausingIds={pausingIds} focusIds={focusIds} setFocusIds={setFocusIds}
-          onThumbClick={onThumbClick} onAddRule={onAddRule} adAlerts={adAlerts} onBellClick={onBellClick}/>
+          onThumbClick={onThumbClick} onAddRule={onAddRule} adAlerts={adAlerts} onBellClick={onBellClick} onPauseDirect={onPauseDirect}/>
       ))}
       {open && (row.ads||[]).map(a => (
         <TrafficRow key={a.id} row={a} depth={2} period={period} viewMode={viewMode} metricCol={metricCol} onCellHover={onCellHover}
           specificRules={specificRules} pausedIds={pausedIds} pausingIds={pausingIds} focusIds={focusIds} setFocusIds={setFocusIds}
-          onThumbClick={onThumbClick} onAddRule={onAddRule} adAlerts={adAlerts} onBellClick={onBellClick}/>
+          onThumbClick={onThumbClick} onAddRule={onAddRule} adAlerts={adAlerts} onBellClick={onBellClick} onPauseDirect={onPauseDirect}/>
       ))}
     </>
   );
@@ -1329,7 +1351,7 @@ function SubstituirModal({ adNum, defaultAdsetId, defaultAdsetName, defaultCampI
   const [resultId, setResultId]       = useState('');
   const [errorMsg, setErrorMsg]       = useState('');
 
-  const UTM_GLOBAL = 'utm_source=facebook&utm_medium=cpa&utm_campaign=mkv_mcv_perp';
+  const UTM_GLOBAL = window.UTM_GLOBAL; // fonte única em shared.jsx
 
   async function callFn(body) {
     const r = await fetch(`${SUPA_URL}/functions/v1/meta-criar-ad`, {
@@ -1888,6 +1910,35 @@ function TrafficScreen() {
 
   const handleBellClose = () => setOpenBell(null);
 
+  const handlePauseDirect = async (row, depth) => {
+    const scopeLabel = depth === 0 ? 'campanha' : depth === 1 ? 'conjunto' : 'anúncio';
+    const metaId = depth === 2 ? row.metaAdId : row.id;
+    if (!metaId) { alert(`Sem ID Meta vinculado para pausar este ${scopeLabel}.`); return; }
+    const nome = depth === 2 ? `ADS ${row.num} — ${row.name}` : row.name;
+    if (!window.confirm(`Pausar ${scopeLabel} no Meta?\n\n${nome}\n\nEsta ação é imediata.`)) return;
+
+    setPausingIds(prev => new Set([...prev, row.id]));
+    try {
+      const r = await fetch(`${window.db.supabaseUrl}/functions/v1/meta-criar-ad`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${window.db.supabaseKey}` },
+        body: JSON.stringify({ action: 'pause_ad', ad_id: metaId }),
+      });
+      const res = await r.json();
+      if (res?.error || res?.ok === false || res?.success === false) {
+        alert(`Meta não pausou: ${res?.error || 'resposta inesperada'}`);
+        setPausingIds(prev => { const n = new Set(prev); n.delete(row.id); return n; });
+        return;
+      }
+    } catch (e) {
+      alert(`Erro de rede: ${e?.message || e}`);
+      setPausingIds(prev => { const n = new Set(prev); n.delete(row.id); return n; });
+      return;
+    }
+    setPausingIds(prev => { const n = new Set(prev); n.delete(row.id); return n; });
+    setPausedIds(prev => [...new Set([...prev, row.id])]);
+  };
+
   const handleBellIgnore = () => {
     if (!openBell) return;
     const adId = openBell.adId;
@@ -1934,6 +1985,7 @@ function TrafficScreen() {
     { id:'hoje',    label:'Hoje'   },
     { id:'3d',      label:'3D'     },
     { id:'5d',      label:'5D'     },
+    { id:'7d',      label:'7D'     },
     { id:'maximum', label:'Máximo' },
   ];
 
@@ -2090,7 +2142,8 @@ function TrafficScreen() {
                   onThumbClick={setThumbModal}
                   onAddRule={setAddRuleForAd}
                   adAlerts={adAlerts}
-                  onBellClick={handleBellClick}/>
+                  onBellClick={handleBellClick}
+                  onPauseDirect={handlePauseDirect}/>
               ))}
             </tbody>
           </table>

@@ -210,11 +210,12 @@ function useDashboardData(period, dateRange) {
           { label: 'Vendas Aprovadas',        value: totComp,    pct: +((totComp/totCliques)*100).toFixed(1) },
         ] : null;
 
-        /* CPA médio (meta insights × período maximum) */
-        const adsComCpa = (insights || []).filter(i => Number(i.compras) > 0);
-        const cpaMedio  = adsComCpa.length > 0
-          ? adsComCpa.reduce((s,i) => s + Number(i.gasto)/Number(i.compras), 0) / adsComCpa.length
-          : null;
+        /* CPA médio consolidado (blended): investimento total ÷ compras totais do período.
+           Usa gasto e totComp já calculados acima (gasto_diario para 7/14/30d — fresco e
+           batido contra o Meta; insights_cache maximum para a visão de vida inteira).
+           Antes era média das médias sobre o insights_cache (cada anúncio pesava igual,
+           tendo 1 ou 100 vendas, e incluía linhas congeladas de anúncios já pausados). */
+        const cpaMedio = totComp > 0 ? gasto / totComp : null;
 
         /* ranking de ADs — apenas campeões */
         const { data: adsRaw } = await window.db

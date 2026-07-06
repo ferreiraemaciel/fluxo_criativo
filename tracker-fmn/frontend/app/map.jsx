@@ -29,44 +29,20 @@ function useMapData(from, to, refreshKey) {
   React.useEffect(() => {
     if (!window.db) return;
     async function load() {
-      // Inclui todos os status com geo (não só aprovada) — canceladas/protestos também têm endereço
-      // Se o período filtrado retornar vazio, cai para todo o histórico (fallback)
-      async function fetchGeo(applyDateFilter) {
-        var q = window.db.from('vendas').select('comprador_estado, comprador_cidade')
-          .not('comprador_estado','is',null)
-          .not('status','in','("recuperacao","pendente")')
-          .limit(5000);
-        if (applyDateFilter && from) q = q.gte('created_at', from + 'T00:00:00');
-        if (applyDateFilter && to)   q = q.lte('created_at', to   + 'T23:59:59');
-        return q;
-      }
-      var cntQ = window.db.from('vendas').select('id', {count:'exact', head:true}).eq('status','aprovada');
-      if (from) cntQ = cntQ.gte('created_at', from + 'T00:00:00');
-      if (to)   cntQ = cntQ.lte('created_at', to   + 'T23:59:59');
-
-      var [geoRes, countRes] = await Promise.all([fetchGeo(true), cntQ]);
-      var rows = geoRes.data || [];
-
-      // Fallback para todo o histórico se período retornou vazio
-      if (rows.length === 0 && (from || to)) {
-        var fallback = await fetchGeo(false);
-        rows = fallback.data || [];
-      }
-
-      var st = {}; var ct = {};
-      for (var r of rows) {
-        if (r.comprador_estado) {
-          var s = r.comprador_estado.toUpperCase().slice(0,2);
-          st[s] = (st[s]||0)+1;
-          if (r.comprador_cidade) {
-            if (!ct[s]) ct[s] = {};
-            ct[s][r.comprador_cidade] = (ct[s][r.comprador_cidade]||0)+1;
-          }
-        }
-      }
-      setByState(st);
-      setCitiesByState(ct);
-      setTotal(countRes.count || 0);
+      // Lê os agregados (sem PII) da Edge Function pública mapa-publico.
+      // A tabela `vendas` tem dados pessoais e é bloqueada para anon por RLS,
+      // então a agregação roda no servidor (service role) e devolve só contagens.
+      try {
+        var qs = [];
+        if (from) qs.push('from=' + from);
+        if (to) qs.push('to=' + to);
+        var fnUrl = window.db.supabaseUrl + '/functions/v1/mapa-publico' + (qs.length ? ('?' + qs.join('&')) : '');
+        var res = await fetch(fnUrl, { headers: { apikey: window.db.supabaseKey } });
+        var d = await res.json();
+        setByState(d.byState || {});
+        setCitiesByState(d.citiesByState || {});
+        setTotal(d.total || 0);
+      } catch (e) { console.error('mapa-publico', e); }
     }
     load();
   }, [from, to, refreshKey]);
@@ -165,12 +141,13 @@ function BrazilD3Map({ byState, citiesByState, total }) {
               + c[0] + ' <span style="color:rgba(234,170,65,.7)">'+c[1]+'</span></div>'; }).join('')
             + '</div>';
         }
-        tip.style('opacity','1')
-          .style('left', ex+'px')
-          .style('top', ey+'px')
-          .html('<span style="font-weight:700;color:rgba(255,255,255,.9)">'+name+'</span><br>'
+        tip.html('<span style="font-weight:700;color:rgba(255,255,255,.9)">'+name+'</span><br>'
               + '<span style="font-size:11px;color:'+vc+'">'+vt+'</span>'
               + citiesHtml);
+        const tw=tipEl.offsetWidth||200,th=tipEl.offsetHeight||80;
+        const vw=window.innerWidth,vh=window.innerHeight;
+        const cx=Math.max(8,Math.min(ex,vw-tw-8)),cy=Math.max(8,Math.min(ey,vh-th-8));
+        tip.style('left',cx+'px').style('top',cy+'px').style('opacity','1');
       })
       .on('mouseleave', function(event, d) {
         window.d3.select(this).attr('fill', stateFill((d.properties && d.properties.sigla) || ''));
@@ -244,19 +221,6 @@ function SalesMapWidget({ from, to }) {
       </div>
       <div style={{flex:1, display:'flex', alignItems:'center', justifyContent:'center', minHeight:0}}>
         <BrazilD3Map byState={byState} citiesByState={citiesByState} total={total}/>
-      </div>
-      <div style={{display:'flex', alignItems:'center', justifyContent:'space-between',
-        flexWrap:'wrap', gap:8, paddingTop:8, borderTop:'1px solid rgba(255,255,255,.06)', flexShrink:0}}>
-        <div style={{display:'flex', alignItems:'center', gap:8}}>
-          <div style={{width:80, height:8, borderRadius:4,
-            background:'linear-gradient(to right, rgba(255,255,255,.06), rgba(234,170,65,.8))'}}/>
-          <span style={{fontSize:10, fontFamily:'Roboto,sans-serif', color:'var(--text-3)'}}>
-            Intensidade proporcional ao volume
-          </span>
-        </div>
-        <span style={{fontSize:10, fontFamily:'Roboto,sans-serif', color:'rgba(255,255,255,.18)'}}>
-          {from ? 'período filtrado' : 'acumulado total'}
-        </span>
       </div>
     </div>
   );

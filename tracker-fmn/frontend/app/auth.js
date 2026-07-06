@@ -1,75 +1,49 @@
 /* ================================================================
-   Tracker FMN — Auth Module
-   Login com Supabase Auth. Local (localhost) pula o login.
+   Tracker FMN — Auth Module v2
+   Login REAL via Supabase Auth: a sessão é anexada ao window.db,
+   então as leituras vão como usuário autenticado (não mais anon).
+   A aplicação só monta depois da sessão confirmada.
    Apenas contato@ferreiraemaciel.com.br tem acesso.
    ================================================================ */
-const _AUTH_URL  = 'https://wntzzzuqoqmfcjebmzul.supabase.co';
-const _AUTH_KEY  = 'sb_publishable_eknjN5BlmwD9_H6kDUtuPw_ejoa8rwx';
 const _AUTH_EMAIL_ALLOWED = 'contato@ferreiraemaciel.com.br';
-const _AUTH_SESSION_KEY   = 'fmn_tracker_token';
 
 window.FMNAuth = {
-  isLocal() {
-    return ['localhost', '127.0.0.1'].includes(location.hostname);
-  },
-
-  getToken() {
-    return sessionStorage.getItem(_AUTH_SESSION_KEY);
-  },
-
-  setToken(t) {
-    sessionStorage.setItem(_AUTH_SESSION_KEY, t);
-  },
-
-  clear() {
-    sessionStorage.removeItem(_AUTH_SESSION_KEY);
-  },
-
-  async verify() {
-    const token = this.getToken();
-    if (!token) return false;
-    try {
-      const r = await fetch(`${_AUTH_URL}/auth/v1/user`, {
-        headers: { apikey: _AUTH_KEY, Authorization: `Bearer ${token}` }
-      });
-      const u = await r.json();
-      return u?.email === _AUTH_EMAIL_ALLOWED;
-    } catch { return false; }
+  async session() {
+    try { const { data } = await window.db.auth.getSession(); return data.session; }
+    catch { return null; }
   },
 
   async login(email, password) {
     if (email.trim().toLowerCase() !== _AUTH_EMAIL_ALLOWED) {
       throw new Error('Este e-mail não tem permissão de acesso.');
     }
-    const r = await fetch(`${_AUTH_URL}/auth/v1/token?grant_type=password`, {
-      method: 'POST',
-      headers: { apikey: _AUTH_KEY, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: email.trim(), password })
-    });
-    const d = await r.json();
-    if (!d.access_token) {
-      throw new Error(d.error_description || 'E-mail ou senha incorretos.');
+    const { data, error } = await window.db.auth.signInWithPassword({ email: email.trim(), password });
+    if (error) {
+      throw new Error(/invalid login/i.test(error.message) ? 'E-mail ou senha incorretos.' : error.message);
     }
-    this.setToken(d.access_token);
-    return d;
+    return data;
   },
 
-  logout() {
-    this.clear();
+  async logout() {
+    try { await window.db.auth.signOut(); } catch {}
     location.reload();
   },
 
-  /* Roda ao carregar a página. Mostra login ou libera o app. */
+  /* Mostra a aplicação (monta o React) e remove a tela de login. */
+  mount() {
+    window.__trackerAuthed = true;
+    if (window.__renderTracker) window.__renderTracker();
+    document.getElementById('loginScreen')?.remove();
+  },
+
+  /* Roda ao carregar a página. */
   async init() {
-    if (this.isLocal()) {
-      document.getElementById('loginScreen')?.remove();
-      return;
-    }
-    const ok = await this.verify();
-    if (ok) {
-      document.getElementById('loginScreen')?.remove();
+    const s = await this.session();
+    if (s && s.user && s.user.email === _AUTH_EMAIL_ALLOWED) {
+      this.mount();
     } else {
-      document.getElementById('loginScreen').style.display = 'flex';
+      const ls = document.getElementById('loginScreen');
+      if (ls) ls.style.display = 'flex';
     }
   }
 };

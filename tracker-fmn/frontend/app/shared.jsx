@@ -176,13 +176,16 @@ function Divider({ style = {} }) {
 
 /* ── Sidebar ─────────────────────────────────────────────────────*/
 function Sidebar({ activePage, onNavigate, collapsed = false, onToggle }) {
-  /* Ordem: Visão Geral · Ideias · Criativos · Tráfego · Automação · Financeiro */
+  /* Ordem: Visão Geral · Ideias · Orgânico · Anúncios · Tráfego · Financeiro */
   const navMain = [
     { id: 'dashboard',  icon: 'layout-dashboard', label: 'Visão Geral' },
     { id: 'ideias',     icon: 'lightbulb',         label: 'Ideias' },
-    { id: 'criativos',  icon: 'clapperboard',      label: 'Criativos' },
+    { id: 'organico',   icon: 'leaf',              label: 'Orgânico' },
+    { id: 'criativos',  icon: 'clapperboard',      label: 'Anúncios' },
     { id: 'trafego',    icon: 'trending-up',        label: 'Tráfego' },
+    { id: 'funis',      icon: 'filter',             label: 'Funis' },
     { id: 'financeiro', icon: 'wallet',             label: 'Financeiro' },
+    { id: 'site',       icon: 'globe',              label: 'Site'       },
   ];
 
   function NavItem({ item }) {
@@ -323,4 +326,106 @@ function TopBar({ title, period, onPeriodChange, actions, backButton }) {
   );
 }
 
-Object.assign(window, { LucideIcon, Btn, Badge, CardKPI, SectionCard, Divider, Sidebar, TopBar, fmtBRL });
+/* ── RefBlock ────────────────────────────────────────────────────
+   Campo de referência reutilizável nos modais de ADS e Orgânico.
+   Detecta automaticamente o tipo de valor e renderiza:
+     - URL (http...)      → link clicável com ícone
+     - JSON com imagem    → preview inline + link
+     - texto simples      → textarea editável
+   ─────────────────────────────────────────────────────────────── */
+function RefBlock({ value, onChange }) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft]     = useState(value || '');
+
+  // Tenta detectar o tipo do valor armazenado
+  const parsed = (() => {
+    if (!value) return null;
+    if (value.startsWith('{')) {
+      try { return JSON.parse(value); } catch { return null; }
+    }
+    if (value.startsWith('http')) return { type:'url', value };
+    return { type:'text', value };
+  })();
+
+  const fieldStyle = {
+    width:'100%', boxSizing:'border-box', padding:'9px 12px', borderRadius:8, resize:'vertical',
+    background:'var(--app-surface-2)', border:'1px solid var(--app-border)',
+    color:'var(--text-1)', fontFamily:'Roboto,sans-serif', fontSize:13, outline:'none', lineHeight:1.55,
+  };
+
+  return (
+    <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+        <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700,
+          letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)' }}>Referência</span>
+        {value && !editing && (
+          <button onClick={() => { setDraft(value); setEditing(true); }}
+            style={{ fontSize:10, fontFamily:'Roboto,sans-serif', color:'var(--text-3)',
+              background:'none', border:'none', cursor:'pointer', padding:0 }}>editar</button>
+        )}
+      </div>
+
+      {/* Preview quando tem valor e não está editando */}
+      {!editing && parsed?.type === 'url' && (
+        <a href={parsed.value} target="_blank" rel="noreferrer"
+          style={{ display:'flex', alignItems:'center', gap:7, padding:'9px 12px', borderRadius:8,
+            background:'var(--app-surface-2)', border:'1px solid var(--app-border)',
+            textDecoration:'none', color:'var(--fmn-gold)', fontSize:12, fontFamily:'Roboto,sans-serif',
+            wordBreak:'break-all', lineHeight:1.4 }}>
+          <LucideIcon icon="link" size={13} style={{ flexShrink:0 }}/>
+          {parsed.value}
+        </a>
+      )}
+      {!editing && parsed?.type === 'image' && (
+        <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+          <div style={{ borderRadius:8, overflow:'hidden', border:'1px solid var(--app-border)',
+            background:'rgba(0,0,0,.25)', display:'flex', justifyContent:'center' }}>
+            <img src={parsed.value} alt="ref"
+              style={{ maxWidth:'100%', maxHeight:220, objectFit:'contain', display:'block' }}/>
+          </div>
+        </div>
+      )}
+      {!editing && parsed?.type === 'text' && (
+        <div style={{ padding:'9px 12px', borderRadius:8, background:'var(--app-surface-2)',
+          border:'1px solid var(--app-border)', fontSize:12, fontFamily:'Roboto,sans-serif',
+          color:'var(--text-2)', lineHeight:1.5, whiteSpace:'pre-wrap' }}>{parsed.value}</div>
+      )}
+
+      {/* Campo vazio ou em edição */}
+      {(!value || editing) && (
+        <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+          <textarea value={draft} onChange={e => setDraft(e.target.value)}
+            rows={2} placeholder="Cole um link ou descreva a referência..."
+            style={fieldStyle}
+            onFocus={e => e.target.style.borderColor='rgba(234,170,65,.4)'}
+            onBlur={e => e.target.style.borderColor='var(--app-border)'}/>
+          <div style={{ display:'flex', gap:6, justifyContent:'flex-end' }}>
+            {editing && (
+              <button onClick={() => { setEditing(false); setDraft(value||''); }}
+                style={{ fontSize:11, fontFamily:'Roboto,sans-serif', padding:'5px 12px',
+                  borderRadius:6, border:'1px solid var(--app-border)', background:'transparent',
+                  color:'var(--text-3)', cursor:'pointer' }}>Cancelar</button>
+            )}
+            <button onClick={() => { onChange(draft.trim()); setEditing(false); }}
+              style={{ fontSize:11, fontFamily:'Roboto,sans-serif', padding:'5px 12px',
+                borderRadius:6, border:'1px solid rgba(234,170,65,.3)',
+                background:'rgba(234,170,65,.1)', color:'var(--fmn-gold)', cursor:'pointer', fontWeight:700 }}>
+              Salvar referência
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// UTM padrão do projeto (fonte única). Usada no Meta e no Tracker:
+// modal de publicar, botão copiar UTM, cards e aba Tráfego. Não duplicar.
+const UTM_GLOBAL = 'utm_source=FB&utm_campaign={{campaign.name}}&utm_content={{ad.id}}&utm_medium=paid';
+
+// Plataformas do conteúdo orgânico (fonte única). Ideias reusa esta lista.
+const PLATAFORMAS = ['Reels', 'Carrossel', 'Imagem', 'Stories', 'Artigo', 'Youtube'];
+const PLAT_COLOR  = { Reels:'#f472b6', Carrossel:'#60a5fa', Imagem:'#a78bfa', Stories:'#fb923c', Artigo:'#34d399', Youtube:'#ef4444' };
+const PLAT_ICON   = { Reels:'clapperboard', Carrossel:'layout-grid', Imagem:'image', Stories:'circle-dot', Artigo:'newspaper', Youtube:'play' };
+
+Object.assign(window, { LucideIcon, Btn, Badge, CardKPI, SectionCard, Divider, Sidebar, TopBar, fmtBRL, RefBlock, UTM_GLOBAL, PLATAFORMAS, PLAT_COLOR, PLAT_ICON });

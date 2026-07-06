@@ -6,39 +6,19 @@ const { useState, useRef, useEffect } = React;
 const { LucideIcon, Btn, Badge, TopBar } = window;
 
 const FMT_TONE = { Reels:'reels', Imagem:'image', Carrossel:'carousel' };
-const ALL_FMTS = ['Reels', 'Imagem', 'Carrossel'];
-const STATUS_COLS = ['Ideia', 'Convertido para ADS'];
+const ALL_FMTS = window.PLATAFORMAS; // fonte única em shared.jsx (Reels, Carrossel, Imagem, Stories, Artigo, Youtube)
+const STATUS_COLS = ['Ideia', 'Convertido'];
 const COL_CFG = {
-  'Ideia':               { dot:'#3b82f6', bg:'rgba(59,130,246,.05)',  border:'rgba(59,130,246,.2)' },
-  'Convertido para ADS': { dot:'#4ade80', bg:'rgba(74,222,128,.05)', border:'rgba(74,222,128,.2)' },
+  'Ideia':      { dot:'#3b82f6', bg:'rgba(59,130,246,.05)',  border:'rgba(59,130,246,.2)' },
+  'Convertido': { dot:'#4ade80', bg:'rgba(74,222,128,.05)', border:'rgba(74,222,128,.2)' },
+};
+const DESTINOS = ['Anúncio', 'Orgânico'];
+const DESTINO_CFG = {
+  'Anúncio': { color:'#f87171', bg:'rgba(248,113,113,.1)', border:'rgba(248,113,113,.25)', icon:'megaphone' },
+  'Orgânico':{ color:'#a78bfa', bg:'rgba(167,139,250,.1)', border:'rgba(167,139,250,.25)', icon:'leaf' },
 };
 
-const INIT_IDEAS = [
-  { id:1, title:'Depoimento real: de R$400 para R$2.800 por ensaio',
-    desc:'Hook: "Ela cobrava R$400. Hoje cobra R$2.800. A diferença? Método." Print real com permissão.',
-    formats:['Reels'], status:'Ideia', ref:null },
-  { id:2, title:'Comparativo antes/depois de precificação',
-    desc:'Planilha de faturamento antes e depois do FMN. Fotógrafa real, números reais.',
-    formats:['Carrossel'], status:'Ideia', ref:null },
-  { id:3, title:'POV: o cliente que sumiu após a proposta',
-    desc:'"Você enviou o orçamento. O cliente sumiu. Por que isso acontece — e como evitar."',
-    formats:['Reels'], status:'Ideia', ref:null },
-  { id:4, title:'"Por que você ainda cobra por hora?"',
-    desc:'Abordagem direta sobre o modelo errado. CTA direto para o método.',
-    formats:['Reels'], status:'Convertido para ADS', ref:null },
-  { id:5, title:'Técnica perfeita. Conta bancária vazia.',
-    desc:'A contradição de ser excelente tecnicamente mas sem resultado financeiro.',
-    formats:['Imagem'], status:'Ideia', ref:null },
-  { id:6, title:'Quanto você deixou de ganhar esse mês?',
-    desc:'"Fechou 3 casamentos a R$2.000 quando poderia ter fechado a R$4.500."',
-    formats:['Carrossel'], status:'Ideia', ref:null },
-  { id:7, title:'5 perguntas que definem seu preço',
-    desc:'Carrossel educativo. Cada slide é uma pergunta com resposta direta.',
-    formats:['Carrossel'], status:'Convertido para ADS', ref:null },
-  { id:8, title:'A fotógrafa que parou de competir por preço',
-    desc:'Mini-depoimento em vídeo. Antes/depois emocional + método como virada.',
-    formats:['Reels'], status:'Ideia', ref:null },
-];
+const INIT_IDEAS = [];
 
 /* ── Helpers de URL ─────────────────────────────────────────────*/
 function getYouTubeId(url) {
@@ -104,15 +84,17 @@ function RefPreview({ r, embed }) {
       );
     }
     return (
-      <div style={{ height:32, borderRadius:7, background:'rgba(96,165,250,.06)',
-        border:'1px solid rgba(96,165,250,.15)', display:'flex', alignItems:'center',
-        padding:'0 10px', gap:7, overflow:'hidden' }}>
-        <LucideIcon icon="link" size={12} color="#60a5fa"/>
-        <span style={{ fontSize:11, fontFamily:'Roboto,sans-serif', color:'#60a5fa',
-          overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
-          {r.value}
-        </span>
-      </div>
+      <a href={r.value} target="_blank" rel="noreferrer" style={{ textDecoration:'none' }}>
+        <div style={{ height:32, borderRadius:7, background:'rgba(96,165,250,.06)',
+          border:'1px solid rgba(96,165,250,.15)', display:'flex', alignItems:'center',
+          padding:'0 10px', gap:7, overflow:'hidden', cursor:'pointer' }}>
+          <LucideIcon icon="external-link" size={12} color="#60a5fa"/>
+          <span style={{ fontSize:11, fontFamily:'Roboto,sans-serif', color:'#60a5fa',
+            overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+            {r.value}
+          </span>
+        </div>
+      </a>
     );
   }
   return null;
@@ -121,7 +103,7 @@ function RefPreview({ r, embed }) {
 /* ── IdeaCard ───────────────────────────────────────────────────*/
 function IdeaCard({ idea, colCfg, onEdit, onConvert, onDelete }) {
   const [hov, setHov] = useState(false);
-  const converted = idea.status === 'Convertido para ADS';
+  const converted = idea.status === 'Convertido';
   return (
     <div onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
       onClick={() => onEdit(idea)}
@@ -141,8 +123,15 @@ function IdeaCard({ idea, colCfg, onEdit, onConvert, onDelete }) {
         </button>
       )}
 
-      <div style={{ display:'flex', gap:5, flexWrap:'wrap', paddingRight: hov ? 28 : 0 }}>
+      <div style={{ display:'flex', gap:5, flexWrap:'wrap', alignItems:'center', paddingRight: hov ? 28 : 0 }}>
         {idea.formats.map(f => <Badge key={f} tone={FMT_TONE[f]||'default'}>{f}</Badge>)}
+        {idea.destino && (() => { const dc = DESTINO_CFG[idea.destino]; return (
+          <span style={{ display:'flex', alignItems:'center', gap:4, padding:'2px 8px', borderRadius:999,
+            background: dc?.bg, border:`1px solid ${dc?.border}`,
+            fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700, color: dc?.color }}>
+            <LucideIcon icon={dc?.icon||'circle'} size={9}/>{idea.destino}
+          </span>
+        ); })()}
       </div>
 
       <div style={{ fontSize:13.5, fontFamily:'Roboto,sans-serif', fontWeight:700,
@@ -180,7 +169,7 @@ function IdeaCard({ idea, colCfg, onEdit, onConvert, onDelete }) {
               background:'rgba(234,170,65,.08)', border:'1px solid rgba(234,170,65,.2)',
               color:'var(--fmn-gold)', fontFamily:'Roboto,sans-serif', fontSize:11, fontWeight:700,
               display:'flex', alignItems:'center', justifyContent:'center', gap:5, transition:'all 130ms' }}>
-            <LucideIcon icon="send" size={11}/>Gerar ADS
+            <LucideIcon icon="send" size={11}/>{idea.destino === 'Orgânico' ? 'Produzir' : 'Gerar ADS'}
           </button>
         ) : (
           <button onClick={() => onConvert(idea.id)}
@@ -199,18 +188,24 @@ function IdeaCard({ idea, colCfg, onEdit, onConvert, onDelete }) {
 /* ── IdeaModal ──────────────────────────────────────────────────*/
 function IdeaModal({ idea, onClose, onSave }) {
   const [form, setForm] = useState(
-    idea ? { ...idea } : { title:'', desc:'', formats:['Reels'], status:'Ideia', ref:null }
+    idea ? { ...idea } : { title:'', desc:'', formats:['Reels'], status:'Ideia', destino:'Orgânico', ref:null }
   );
   const [refMode, setRefMode] = useState('link');
   const [urlInput, setUrlInput]   = useState(idea?.ref?.type==='url' ? idea.ref.value : '');
   const fileRef = useRef(null);
+
+  useEffect(() => {
+    const handler = e => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [onClose]);
 
   const toggleFmt = f => setForm(p => ({
     ...p, formats: p.formats.includes(f) ? p.formats.filter(x=>x!==f) : [...p.formats,f]
   }));
 
   const applyUrl = () => {
-    if (urlInput.trim()) setForm(p => ({ ...p, ref:{ type:'url', value:urlInput.trim() } }));
+    if (urlInput.trim()) { setForm(p => ({ ...p, ref:{ type:'url', value:urlInput.trim() } })); setUrlInput(''); }
   };
 
   const handleFile = e => {
@@ -262,18 +257,43 @@ function IdeaModal({ idea, onClose, onSave }) {
         </div>
 
         <div>
-          <span style={LBL}>Formato</span>
+          <span style={LBL}>Destino</span>
           <div style={{ display:'flex', gap:6 }}>
-            {ALL_FMTS.map(f => (
-              <button key={f} onClick={()=>toggleFmt(f)}
-                style={{ padding:'7px 18px', borderRadius:999, cursor:'pointer',
-                  fontFamily:'Roboto,sans-serif', fontWeight:700, fontSize:12.5, transition:'all 150ms',
-                  background:form.formats.includes(f)?'rgba(234,170,65,.18)':'rgba(255,255,255,.06)',
-                  border:`1px solid ${form.formats.includes(f)?'rgba(234,170,65,.4)':'var(--app-border)'}`,
-                  color:form.formats.includes(f)?'var(--fmn-gold)':'var(--text-2)' }}>
-                {f}
-              </button>
-            ))}
+            {DESTINOS.map(d => {
+              const dc = DESTINO_CFG[d];
+              const active = form.destino === d;
+              return (
+                <button key={d} onClick={() => setForm(p => ({ ...p, destino: d }))}
+                  style={{ padding:'7px 18px', borderRadius:999, cursor:'pointer',
+                    fontFamily:'Roboto,sans-serif', fontWeight:700, fontSize:12.5, transition:'all 150ms',
+                    display:'flex', alignItems:'center', gap:6,
+                    background: active ? dc.bg : 'rgba(255,255,255,.06)',
+                    border: `1px solid ${active ? dc.border : 'var(--app-border)'}`,
+                    color: active ? dc.color : 'var(--text-2)' }}>
+                  <LucideIcon icon={dc.icon} size={12}/>{d}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div>
+          <span style={LBL}>Plataforma</span>
+          <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
+            {ALL_FMTS.map(f => {
+              const sel = form.formats[0] === f;
+              return (
+                <button key={f} onClick={()=>setForm(p=>({...p, formats:[f]}))}
+                  style={{ padding:'7px 16px', borderRadius:999, cursor:'pointer',
+                    fontFamily:'Roboto,sans-serif', fontWeight:700, fontSize:12.5, transition:'all 150ms',
+                    display:'flex', alignItems:'center', gap:6,
+                    background:sel?'rgba(234,170,65,.18)':'rgba(255,255,255,.06)',
+                    border:`1px solid ${sel?'rgba(234,170,65,.4)':'var(--app-border)'}`,
+                    color:sel?'var(--fmn-gold)':'var(--text-2)' }}>
+                  <LucideIcon icon={(window.PLAT_ICON||{})[f]||'file'} size={13}/>{f}
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -311,7 +331,7 @@ function IdeaModal({ idea, onClose, onSave }) {
             ))}
           </div>
 
-          {refMode === 'link' ? (
+          {refMode === 'link' && !form.ref ? (
             <div style={{ display:'flex', gap:8 }}>
               <input value={urlInput} onChange={e=>setUrlInput(e.target.value)}
                 placeholder="https://..." style={{...INP, flex:1}}
@@ -323,7 +343,7 @@ function IdeaModal({ idea, onClose, onSave }) {
                 OK
               </button>
             </div>
-          ) : (
+          ) : refMode === 'link' && form.ref ? null : (
             <>
               <input type="file" accept="video/*,image/*" ref={fileRef}
                 onChange={handleFile} style={{ display:'none' }}/>
@@ -340,23 +360,16 @@ function IdeaModal({ idea, onClose, onSave }) {
           )}
 
           {form.ref && (
-            <div style={{ marginTop:8, display:'flex', flexDirection:'column', gap:6 }}>
-              <RefPreview r={form.ref} embed={true}/>
-              <div style={{ display:'flex', alignItems:'center', gap:8,
-                padding:'6px 12px', borderRadius:8, background:'rgba(255,255,255,.04)',
-                border:'1px solid var(--app-border)' }}>
-                <LucideIcon icon={form.ref.type==='url'?'link':'file'} size={13} color="var(--text-3)"/>
-                <span style={{ fontSize:11, fontFamily:'Roboto,sans-serif', color:'var(--text-2)',
-                  flex:1, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
-                  {form.ref.type==='url' ? form.ref.value : `Arquivo (${form.ref.mime?.split('/')[0]})`}
-                </span>
-                <button onClick={()=>setForm(p=>({...p,ref:null}))}
-                  style={{ width:20,height:20,borderRadius:'50%',background:'rgba(248,113,113,.15)',
-                    border:'none',color:'#f87171',display:'flex',alignItems:'center',
-                    justifyContent:'center',cursor:'pointer',flexShrink:0 }}>
-                  <LucideIcon icon="x" size={11}/>
-                </button>
+            <div style={{ marginTop:8, display:'flex', alignItems:'center', gap:8 }}>
+              <div style={{ flex:1, minWidth:0 }}>
+                <RefPreview r={form.ref} embed={true}/>
               </div>
+              <button onClick={()=>setForm(p=>({...p,ref:null}))}
+                style={{ width:22,height:22,borderRadius:'50%',background:'rgba(248,113,113,.15)',
+                  border:'none',color:'#f87171',display:'flex',alignItems:'center',
+                  justifyContent:'center',cursor:'pointer',flexShrink:0 }}>
+                <LucideIcon icon="x" size={11}/>
+              </button>
             </div>
           )}
         </div>
@@ -435,7 +448,7 @@ function IdeiaScreen() {
   useEffect(() => {
     if (!window.db) return;
     window.db.from('ideias')
-      .select('id,title,status,formats,description,ref_type,ref_value,ref_mime')
+      .select('id,title,status,formats,description,destino,ref_type,ref_value,ref_mime')
       .order('created_at', { ascending: false })
       .then(({ data, error }) => {
         if (error) return; // tabela não existe ainda
@@ -445,6 +458,7 @@ function IdeiaScreen() {
             id: r.id, title: r.title, status: r.status,
             formats: r.formats || [],
             desc: r.description || '',
+            destino: r.destino || 'Anúncio',
             ref: r.ref_type ? { type: r.ref_type, value: r.ref_value, mime: r.ref_mime } : null,
           })));
         }
@@ -457,6 +471,7 @@ function IdeiaScreen() {
     const row = {
       title: form.title, status: form.status,
       formats: form.formats, description: form.desc || '',
+      destino: form.destino || 'Anúncio',
       ref_type: form.ref?.type || null, ref_value: form.ref?.value || null, ref_mime: form.ref?.mime || null,
     };
     if (form.id && typeof form.id === 'string') {
@@ -477,24 +492,55 @@ function IdeiaScreen() {
     const idea = ideas.find(i => i.id === id);
     if (!idea) return;
     const goingToAds = idea.status === 'Ideia';
-    const newStatus = goingToAds ? 'Convertido para ADS' : 'Ideia';
+    const newStatus = goingToAds ? 'Convertido' : 'Ideia';
 
-    // Ao converter, cria um card de criativo real na aba Criativos, coluna "Fazer"
+    // Ao converter: ADS → aba Criativos | Orgânico → aba Orgânico
     if (goingToAds && dbAvailable) {
-      const fmtMap = { Reels:'reels', Imagem:'imagem', Carrossel:'carrossel' };
-      const tipo = fmtMap[idea.formats?.[0]] || 'reels';
-      const { data: maxRows } = await window.db.from('ads')
-        .select('numero').order('numero', { ascending:false }).limit(1);
-      const novoNumero = ((maxRows?.[0]?.numero) || 0) + 1;
-      const { error } = await window.db.from('ads').insert({
-        numero: novoNumero,
-        titulo: idea.title,
-        tipo,
-        status: 'fazer',
-        observacoes: idea.desc ? `Origem: ideia convertida.\n\n${idea.desc}` : 'Origem: ideia convertida.',
-      });
-      if (error) { alert('Não consegui criar o ADS: ' + error.message); return; }
-      setConvertedInfo(`Criativo ADS ${String(novoNumero).padStart(3,'0')} criado na aba Criativos, coluna Fazer.`);
+      // Serializa a referência da ideia para preservar no novo card
+      const refToStore = (() => {
+        if (!idea.ref) return null;
+        if (idea.ref.type === 'url') return idea.ref.value;
+        if (idea.ref.type === 'file' && idea.ref.mime?.startsWith('image')) {
+          return JSON.stringify({ type:'image', mime: idea.ref.mime, value: idea.ref.value });
+        }
+        if (idea.ref.type === 'file' && idea.ref.mime?.startsWith('video')) {
+          return '[vídeo de referência — ver ideia original]';
+        }
+        return null;
+      })();
+
+      if (idea.destino === 'Orgânico') {
+        // Orgânico suporta todas as plataformas (inclui Artigo, Youtube, Stories)
+        const plataforma = (window.PLATAFORMAS || []).includes(idea.formats?.[0]) ? idea.formats[0] : 'Reels';
+        const row = {
+          tema: idea.title,
+          plataforma,
+          status: 'Fazer',
+          responsavel: 'Felipe',
+          gancho: idea.desc || '',
+        };
+        if (refToStore) row.referencia = refToStore;
+        const { error } = await window.db.from('conteudo_organico').insert(row);
+        if (error) { alert('Não consegui criar o orgânico: ' + error.message); return; }
+        setConvertedInfo(`Card orgânico "${idea.title.slice(0,30)}..." criado na aba Orgânico.`);
+      } else {
+        const fmtMap = { Reels:'reels', Imagem:'imagem', Carrossel:'carrossel' };
+        const tipo = fmtMap[idea.formats?.[0]] || 'reels';
+        const { data: maxRows } = await window.db.from('ads')
+          .select('numero').order('numero', { ascending:false }).limit(1);
+        const novoNumero = ((maxRows?.[0]?.numero) || 0) + 1;
+        const row = {
+          numero: novoNumero,
+          titulo: idea.title,
+          tipo,
+          status: 'fazer',
+          observacoes: idea.desc ? `Origem: ideia convertida.\n\n${idea.desc}` : 'Origem: ideia convertida.',
+        };
+        if (refToStore) row.referencia = refToStore;
+        const { error } = await window.db.from('ads').insert(row);
+        if (error) { alert('Não consegui criar o ADS: ' + error.message); return; }
+        setConvertedInfo(`Criativo ADS ${String(novoNumero).padStart(3,'0')} criado na aba Criativos, coluna Fazer.`);
+      }
       setTimeout(() => setConvertedInfo(null), 4000);
     }
 

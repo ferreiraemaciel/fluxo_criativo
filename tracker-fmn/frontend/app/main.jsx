@@ -6,7 +6,7 @@
   const DEPS = [
     'LucideIcon','Btn','Badge','CardKPI','SectionCard','Sidebar','TopBar',
     'DashboardScreen','KanbanScreen','FinancialScreen',
-    'IdeiaScreen','TrafficScreen','SystemScreen'
+    'IdeiaScreen','OrganicoScreen','TrafficScreen','FunisScreen','SystemScreen','SiteScreen'
   ];
   if (DEPS.some(d => !window[d])) { setTimeout(tryMount, 80); return; }
 
@@ -14,7 +14,7 @@
   const {
     Sidebar, TopBar, LucideIcon,
     DashboardScreen, KanbanScreen,
-    FinancialScreen, IdeiaScreen, TrafficScreen, AutomacaoScreen, SystemScreen
+    FinancialScreen, IdeiaScreen, OrganicoScreen, TrafficScreen, FunisScreen, AutomacaoScreen, SystemScreen, SiteScreen
   } = window;
 
   function PlaceholderScreen({ title, icon }) {
@@ -52,9 +52,12 @@
       switch (screen) {
         case 'dashboard':  return <DashboardScreen period={period} onPeriodChange={setPeriod} dateRange={dateRange} onDateRangeChange={setDateRange} onNavigate={navigate}/>;
         case 'ideias':     return <IdeiaScreen/>;
+        case 'organico':   return <OrganicoScreen/>;
         case 'criativos':  return <KanbanScreen targetAd={targetAd} onConsumeTarget={() => setTargetAd(null)}/>;
         case 'trafego':    return <TrafficScreen/>;
+        case 'funis':      return <FunisScreen onNavigate={navigate}/>;
         case 'financeiro': return <FinancialScreen/>;
+        case 'site':       return <SiteScreen/>;
         case 'sistema':    return <SystemScreen/>;
         default:           return <DashboardScreen period={period} onPeriodChange={setPeriod} dateRange={dateRange} onDateRangeChange={setDateRange}/>;
       }
@@ -71,5 +74,7 @@
     );
   }
 
-  ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+  /* Só monta a aplicação depois que a autenticação confirmar (auth.js chama). */
+  window.__renderTracker = () => ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+  if (window.__trackerAuthed) window.__renderTracker();
 })();
