@@ -227,6 +227,13 @@ Deno.serve(async (req) => {
   // preco_oferta: original_offer_price (sem juros de parcelamento) ou valor_bruto
   const precoOferta = Number(compra?.original_offer_price?.value || compra?.hotmart_fee?.base || valorBruto);
 
+  // Valor do desconto de cupom: full_price (preço cheio antes do desconto) menos
+  // price (o que foi de fato cobrado). 0 quando não houve desconto.
+  const fullPriceVal = compra?.full_price?.value;
+  const descontoCupom = (fullPriceVal != null && compra?.price?.value != null)
+    ? Number(fullPriceVal) - Number(compra.price.value)
+    : null;
+
   // Data real da compra (order_date em ms → ISO) para created_at correto
   const orderDateMs   = compra?.order_date    || compra?.approved_date;
   const approvedDateMs = compra?.approved_date || null;
@@ -249,6 +256,8 @@ Deno.serve(async (req) => {
       oferta_codigo:          compra?.offer?.code  || null,
       oferta_nome:            compra?.offer?.name  || null,
       is_order_bump:          compra?.order_bump?.is_order_bump ?? false,
+      order_bump_parent_transaction: compra?.order_bump?.parent_purchase_transaction || null,
+      desconto_cupom:         descontoCupom,
       utm_source:             utmSource,
       utm_campaign:           utmCampaign,
       utm_medium:             utmMedium,
@@ -262,6 +271,7 @@ Deno.serve(async (req) => {
       comprador_cep:          comprador?.address?.zipcode   || null,
       comprador_bairro:       comprador?.address?.neighborhood || null,
       comprador_end:          comprador?.address?.address   || null,
+      comprador_numero:       comprador?.address?.number    || null,
       comprador_nome:         comprador?.name               || null,
       comprador_email:        comprador?.email              || null,
       comprador_telefone:     comprador?.checkout_phone || comprador?.phone || comprador?.mobile_phone || null,

@@ -1,6 +1,6 @@
 // Tracker FMN — Sincronização Meta Graph API
-// Endpoint: POST /functions/v1/meta-sync
-// Agendado via Supabase Cron Jobs (dashboard → Cron Jobs → a cada 6h)
+// Endpoint: POST /functions/v1/meta-sync?scope=curtas|maximo
+// Agendado via pg_cron: "curtas" a cada 6h, "maximo" 1x/dia de madrugada (ver migração 044).
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -14,26 +14,19 @@ const AD_ACCOUNT_ID = Deno.env.get("FB_AD_ACCOUNT_ID")!;
 const GRAPH_VERSION = "v25.0";
 const GRAPH_BASE    = `https://graph.facebook.com/${GRAPH_VERSION}`;
 
-// Status que indicam anúncio ativo (rodando ou com histórico recente)
-const STATUS_ATIVOS = [
-  "fazendo-teste",
-  "fazendo-recorrencia",
-  "fazendo-producao",
-  "feito-otimo",
-  "feito-mediano",
-];
+// BRT = UTC-3 (Brasil não observa horário de verão desde 2019)
+function hojeBrt(): string {
+  return new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString().split("T")[0];
+}
 
-function getPeriodos() {
-  const hoje = new Date();
-  const fmt  = (d: Date) => d.toISOString().split("T")[0];
+function getPeriodosCurtos() {
+  const hojeStr = hojeBrt();
   const diasAtras = (n: number) => {
-    const d = new Date(hoje);
+    const d = new Date(hojeStr + "T00:00:00Z");
     d.setDate(d.getDate() - n);
-    return fmt(d);
+    return d.toISOString().split("T")[0];
   };
-  const hojeStr = fmt(hoje);
   return {
-    maximum: { date_preset: "maximum" },
     "30d":   { since: diasAtras(29), until: hojeStr },
     "14d":   { since: diasAtras(13), until: hojeStr },
     "7d":    { since: diasAtras(6),  until: hojeStr },
@@ -105,115 +98,156 @@ function calcularMetricas(raw: any) {
   };
 }
 
-const LOTE = 20; // ADs por execução para não estourar limite de CPU
+// Busca no Meta (fonte da verdade, não no status interno do Kanban) os anúncios
+// ativos ou em revisão. Evita a divergência de vocabulário entre o Kanban (que já
+// mudou de "fazendo-teste"/"feito-otimo" para "ativo"/"campeoes"/"fazendo"/"fazer")
+// e o status usado aqui — sem isso, o filtro por status do Kanban silenciosamente
+// não encontra nenhum anúncio.
+async function fetchAdsAtivosNoMeta(): Promise<{ id: string; name: string }[]> {
+  const ativos: { id: string; name: string }[] = [];
+  let url = `${GRAPH_BASE}/act_${AD_ACCOUNT_ID}/ads?` + new URLSearchParams({
+    fields: "id,name,effective_status",
+    effective_status: JSON.stringify(["ACTIVE", "IN_PROCESS", "PENDING_REVIEW"]),
+    limit: "500",
+    access_token: META_TOKEN,
+  });
+  while (url) {
+    const res  = await fetch(url);
+    const json = await res.json();
+    for (const d of json?.data || []) {
+      ativos.push({ id: d.id, name: d.name });
+    }
+    url = json?.paging?.next || "";
+  }
+  return ativos;
+}
 
 Deno.serve(async (req) => {
   if (req.method !== "POST" && req.method !== "GET") {
     return new Response("Método não permitido", { status: 405 });
   }
 
-  // Suporte a paginação via ?offset=N
-  const url    = new URL(req.url);
-  const offset = parseInt(url.searchParams.get("offset") || "0");
+  const url   = new URL(req.url);
+  const scope = url.searchParams.get("scope") === "maximo" ? "maximo" : "curtas";
 
-  // Busca apenas ADS ativos com meta_ad_id cadastrado
-  const { data: adsList, error: adsError } = await supabase
+  const adsAtivos = await fetchAdsAtivosNoMeta();
+
+  // Mapeia meta_ad_id → numero (para atualizar a tabela ads); ignora se o
+  // anúncio ainda não está cadastrado localmente (não é responsabilidade
+  // desta função criar ADs novos, isso é feito pelo sync local do Kanban).
+  const { data: adsCadastrados } = await supabase
     .from("ads")
-    .select("numero, meta_ad_id, status")
-    .not("meta_ad_id", "is", null)
-    .in("status", STATUS_ATIVOS)
-    .range(offset, offset + LOTE - 1);
+    .select("numero, meta_ad_id")
+    .not("meta_ad_id", "is", null);
+  const numeroPorMetaId = Object.fromEntries(
+    (adsCadastrados || []).map((a) => [a.meta_ad_id, a.numero])
+  );
 
-  if (adsError) {
-    return new Response(JSON.stringify({ erro: adsError.message }), { status: 500 });
-  }
-
-  const periodos   = getPeriodos();
   const resultados: any[] = [];
-  const erros:     any[] = [];
+  const erros:      any[] = [];
 
-  for (const ads of adsList || []) {
-    let gastoMaximum: number | null = null;
+  if (scope === "curtas") {
+    const periodos = getPeriodosCurtos();
 
-    for (const [nomePeriodo, params] of Object.entries(periodos)) {
+    for (const ad of adsAtivos) {
+      const numero = numeroPorMetaId[ad.id] ?? null;
+
+      for (const [nomePeriodo, params] of Object.entries(periodos)) {
+        try {
+          const raw = await fetchInsights(ad.id, params as any);
+          if (!raw) continue;
+
+          const metricas = calcularMetricas(raw);
+
+          await supabase
+            .from("insights_cache")
+            .upsert({
+              meta_ad_id:         ad.id,
+              meta_ad_name:       raw.ad_name,
+              meta_adset_id:      raw.adset_id,
+              meta_campaign_id:   raw.campaign_id,
+              meta_campaign_name: raw.campaign_name,
+              periodo:            nomePeriodo,
+              data_inicio:        raw.date_start || null,
+              data_fim:           raw.date_stop  || null,
+              status_meta:        "ativo",
+              ...metricas,
+              atualizado_em: new Date().toISOString(),
+            }, { onConflict: "meta_ad_id,periodo" });
+
+          resultados.push({ ads_numero: numero, periodo: nomePeriodo, cpa: metricas.cpa });
+        } catch (err) {
+          erros.push({ ads_numero: numero, periodo: nomePeriodo, erro: String(err) });
+        }
+      }
+    }
+
+    await sincronizarGastoDiarioHoje();
+    await verificarRegraG5();
+  } else {
+    // scope=maximo: só o período de vida inteira, 1x/dia. Atualiza também
+    // gasto_total/cpa_historico na tabela ads (usado no Ranking de ADS).
+    for (const ad of adsAtivos) {
+      const numero = numeroPorMetaId[ad.id] ?? null;
       try {
-        const raw = await fetchInsights(ads.meta_ad_id!, params as any);
+        const raw = await fetchInsights(ad.id, { date_preset: "maximum" });
         if (!raw) continue;
 
         const metricas = calcularMetricas(raw);
 
-        // Guarda gasto do período maximum para atualizar ads.gasto_total
-        if (nomePeriodo === "maximum") {
-          gastoMaximum = metricas.gasto;
-        }
-
         await supabase
           .from("insights_cache")
           .upsert({
-            meta_ad_id:         ads.meta_ad_id,
+            meta_ad_id:         ad.id,
             meta_ad_name:       raw.ad_name,
             meta_adset_id:      raw.adset_id,
             meta_campaign_id:   raw.campaign_id,
             meta_campaign_name: raw.campaign_name,
-            periodo:            nomePeriodo,
+            periodo:            "maximum",
             data_inicio:        raw.date_start || null,
             data_fim:           raw.date_stop  || null,
-            status_meta:        ads.status,
+            status_meta:        "ativo",
             ...metricas,
             atualizado_em: new Date().toISOString(),
           }, { onConflict: "meta_ad_id,periodo" });
 
-        resultados.push({ ads_numero: ads.numero, periodo: nomePeriodo, cpa: metricas.cpa });
+        resultados.push({ ads_numero: numero, periodo: "maximum", cpa: metricas.cpa });
+
+        if (numero !== null) {
+          const { data: adsRow } = await supabase
+            .from("ads")
+            .select("vendas_total")
+            .eq("numero", numero)
+            .single();
+
+          const vendas = adsRow?.vendas_total || 0;
+          const cpaHistorico = vendas > 0 ? metricas.gasto / vendas : null;
+
+          await supabase
+            .from("ads")
+            .update({ gasto_total: metricas.gasto, cpa_historico: cpaHistorico })
+            .eq("numero", numero);
+        }
       } catch (err) {
-        erros.push({ ads_numero: ads.numero, periodo: nomePeriodo, erro: String(err) });
+        erros.push({ ads_numero: numero, periodo: "maximum", erro: String(err) });
       }
     }
-
-    // Atualiza gasto_total na tabela ads com o período maximum
-    // CPA histórico = gasto_total / vendas_total (calculado aqui e também pelo trigger de vendas)
-    if (gastoMaximum !== null) {
-      const { data: adsRow } = await supabase
-        .from("ads")
-        .select("vendas_total")
-        .eq("numero", ads.numero)
-        .single();
-
-      const vendas = adsRow?.vendas_total || 0;
-      const cpaHistorico = vendas > 0 ? gastoMaximum / vendas : null;
-
-      await supabase
-        .from("ads")
-        .update({
-          gasto_total:   gastoMaximum,
-          cpa_historico: cpaHistorico,
-        })
-        .eq("numero", ads.numero);
-    }
   }
-
-  // Atualiza gasto_diario para hoje (nível de conta)
-  await sincronizarGastoDiarioHoje();
-
-  // Verifica regras ATP nos ADS sincronizados
-  await verificarRegraG5();
-
-  const temMais = (adsList?.length || 0) === LOTE;
 
   return new Response(
     JSON.stringify({
       ok:            true,
+      scope,
+      ads_encontrados: adsAtivos.length,
       sincronizados: resultados.length,
       erros:         erros.length,
-      ads_lote:      adsList?.length || 0,
-      offset_atual:  offset,
-      proximo_offset: temMais ? offset + LOTE : null,
     }),
     { headers: { "Content-Type": "application/json" } }
   );
 });
 
 async function sincronizarGastoDiarioHoje() {
-  const hoje = new Date().toISOString().split("T")[0];
+  const hoje = hojeBrt();
   const campos = "spend,impressions,clicks,actions";
   const qs = new URLSearchParams({
     fields: campos,

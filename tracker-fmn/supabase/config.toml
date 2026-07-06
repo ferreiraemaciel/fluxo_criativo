@@ -13,4 +13,8 @@ port = 54323
 port = 54324
 
 [auth]
-site_url = "http://localhost:3000"
+site_url = "https://tracker.fotografiaeomeunegocio.com.br"
+additional_redirect_urls = ["https://www.tracker.fotografiaeomeunegocio.com.br","http://localhost:3030"]
+
+[storage.vector]
+enabled = false
