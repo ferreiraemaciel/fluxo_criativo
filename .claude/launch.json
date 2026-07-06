@@ -1,0 +1,65 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "contratovisual",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "cwd": "/Users/ferreiraemaciel/Documents/contratovisual",
+      "port": 8080,
+      "autoPort": false
+    },
+    {
+      "name": "tracker-fmn",
+      "runtimeExecutable": "/opt/homebrew/bin/python3",
+      "runtimeArgs": ["serve.py"],
+      "cwd": "tracker-fmn/frontend",
+      "port": 3030,
+      "autoPort": false
+    }
+    ,{
+      "name": "quiz-fp",
+      "runtimeExecutable": "/opt/homebrew/bin/python3",
+      "runtimeArgs": ["-m", "http.server", "4546", "--directory", "/Users/ferreiraemaciel/Documents/fluxo-criativo/quiz-fotografo-protegido"],
+      "port": 4546
+    }
+    ,{
+      "name": "fem-site",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["serve", "-p", "4321", "/Users/ferreiraemaciel/Documents/fem-site"],
+      "port": 4321
+    }
+    ,{
+      "name": "fmn-site",
+      "runtimeExecutable": "/opt/homebrew/bin/python3",
+      "runtimeArgs": ["-m", "http.server", "8731", "--directory", "/Users/ferreiraemaciel/Documents/fmn-site/public"],
+      "port": 8731
+    }
+    ,{
+      "name": "trilha-spec",
+      "runtimeExecutable": "/opt/homebrew/bin/python3",
+      "runtimeArgs": ["-m", "http.server", "8137", "--directory", "/Users/ferreiraemaciel/Downloads"],
+      "port": 8137
+    }
+    ,{
+      "name": "trilha-app",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "cwd": "/Users/ferreiraemaciel/Documents/contratovisual-trilha",
+      "port": 8080,
+      "autoPort": false
+    }
+    ,{
+      "name": "upsell-blindagem",
+      "runtimeExecutable": "/opt/homebrew/bin/python3",
+      "runtimeArgs": ["-m", "http.server", "5577", "--directory", "/Users/ferreiraemaciel/Documents/fluxo-criativo/meus-produtos/blindagem/entregas/paginas"],
+      "port": 5577
+    }
+    ,{
+      "name": "khronus",
+      "runtimeExecutable": "/opt/homebrew/bin/python3",
+      "runtimeArgs": ["-m", "http.server", "3040", "--directory", "/Users/ferreiraemaciel/Documents/khronus/frontend"],
+      "port": 3040
+    }
+  ]
+}

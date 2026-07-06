@@ -44,6 +44,41 @@ O hook automático em `scripts/verificar-acentuacao.py` roda ao fim de cada gera
 
 ---
 
+## TRACKER FMN — LANÇAR AD (REGRA GLOBAL)
+
+> Aplica-se a qualquer pedido de lançar, registrar ou adicionar um AD no Tracker FMN, em qualquer conversa.
+
+Quando o usuário disser "lança no Tracker", "adiciona no Tracker", "registra no Tracker" ou equivalente:
+
+1. Montar os campos a partir do contexto da conversa (criativo gerado, produto ativo, headline, hook visual, copy).
+2. Executar `python3 scripts/tracker-lancar-ad.py` com os argumentos preenchidos.
+3. O script lê as credenciais do `tracker-fmn/.env` automaticamente, sem expor tokens.
+4. Confirmar ao usuário o número do AD lançado e o status ("fazer").
+
+**Campos obrigatórios:** `--titulo`, `--tipo` (imagem/reels/carrossel).
+**Campos opcionais preenchidos automaticamente quando disponíveis:** headline, hook-visual, hook-copy, texto-principal, titulo-ad, descricao-ad, posicionamento, observacoes.
+
+Se algum campo essencial não estiver claro no contexto, perguntar antes de lançar.
+
+---
+
+## GERAÇÃO DE IMAGEM VIA CHATGPT (REGRA GLOBAL)
+
+> Esta regra se aplica a qualquer pedido de imagem no chat, em skills ou em agentes. Sem exceção.
+
+Sempre que o usuário pedir uma imagem, ou quando uma skill precisar gerar uma imagem, o fluxo obrigatório é:
+
+1. **Gerar o prompt em inglês** adequado ao contexto (produto ativo, nicho, objetivo visual).
+2. **Acionar a skill `gerar-imagem`** passando o prompt e o caminho de destino. A skill usa o Claude in Chrome para abrir o ChatGPT no navegador do usuário, digitar o prompt e fazer o download automaticamente.
+3. **Nunca pedir para o usuário colar o prompt manualmente** se o Chrome estiver conectado.
+4. **Fallback:** se o Chrome não estiver conectado, exibir o prompt e orientar o usuário a colar no ChatGPT, depois aguardar a imagem.
+
+**Esta integração usa a assinatura ChatGPT Plus do usuário. Sem custo adicional de API.**
+
+Aplica-se a: pedidos diretos no chat ("gera uma imagem de X"), `/furadeira-visual`, `/criativo-estatico`, `/banner-visual`, `/avat-whisk` e qualquer outro contexto que precise de imagem gerada por IA.
+
+---
+
 ## TOKENS E SEGREDOS APENAS NO .env (REGRA GLOBAL)
 
 > Esta regra tem prioridade absoluta sobre qualquer skill, agente ou conveniência operacional. Aplica-se a 100% dos arquivos do projeto.

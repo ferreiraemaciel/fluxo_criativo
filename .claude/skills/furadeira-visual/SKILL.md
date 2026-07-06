@@ -173,22 +173,30 @@ Modelos de imagem (ChatGPT, Gemini, etc.) têm dificuldade real de renderizar te
 
 **Para uso em produção (página de vendas, anúncios, slides públicos):** sugerir ao aluno usar a imagem como referência de layout e refazer no Canva ou Figma com texto correto. Tempo: ~15 minutos para reproduzir o layout com texto perfeito.
 
-## Recepção da imagem
+## Geração automática da imagem
 
-Após exibir o prompt, a skill aguarda. Duas formas válidas de o aluno entregar a imagem:
+Após montar o prompt, **não exibir o prompt ao usuário nem pedir para colar no ChatGPT**. Acionar diretamente a skill `gerar-imagem` com:
+- `prompt`: o prompt completo em inglês gerado acima
+- `destino`: `meus-produtos/{ativo}/entregas/furadeira/furadeira.png`
 
-1. **Colar no chat.** O aluno arrasta o PNG na conversa. A skill identifica o caminho temporário, copia para `entregas/furadeira/furadeira.png`.
-2. **Salvar manual.** O aluno salva direto na pasta `entregas/furadeira/` e diz "imagem salva". A skill confirma a existência do arquivo e segue.
+A skill `gerar-imagem` abre o ChatGPT no Chrome, digita o prompt, aguarda a geração e salva o arquivo automaticamente.
 
-**Após receber a imagem, sempre perguntar:**
+Avisar ao usuário apenas:
+```
+⏳ Gerando a Furadeira no ChatGPT automaticamente. Isso leva cerca de 30 a 60 segundos.
+```
+
+**Após a geração automática, perguntar:**
 
 ```
-Posso conferir a imagem com você. Os modelos de imagem do ChatGPT costumam errar acentos e algumas palavras em português. Como ficou?
+Imagem gerada. Os modelos de imagem do ChatGPT costumam errar acentos em português. Como ficou?
 
-1. Texto está OK, pode usar (vou salvar e atualizar o painel)
-2. Tem erros aceitáveis (vou salvar como placeholder, mas você refaz no Canva pra produção)
-3. Quero regenerar no ChatGPT
+1. Texto está OK, pode usar
+2. Tem erros aceitáveis (salvo como placeholder, você refaz no Canva para produção)
+3. Quero regenerar
 ```
+
+**Fallback (se Chrome não estiver conectado):** exibir o prompt para o aluno colar manualmente no ChatGPT e aguardar a imagem via colagem no chat ou confirmação de salvamento manual.
 
 ## Pós-recepção
 

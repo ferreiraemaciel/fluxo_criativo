@@ -147,3 +147,8 @@ inputs/
 
 package-lock.json
 package.json
+**/.wrangler/
+**/.temp/
+supabase/.temp/
+.installed
+*.dmg
