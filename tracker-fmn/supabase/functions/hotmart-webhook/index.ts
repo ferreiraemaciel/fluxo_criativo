@@ -305,12 +305,106 @@ Deno.serve(async (req) => {
     await verificarRegrasATP(adsNumero, metaAdId);
   }
 
+  // Enriquecimento automático de telefone: Hotmart parou de mandar o telefone
+  // no payload do webhook. Backup 1 = API de vendas da própria Hotmart (o dado
+  // pode existir lá mesmo sem vir no webhook). Backup 2 = WhatsApp que o
+  // comprador preencheu no quiz (quiz_leads, casando por email).
+  const telefoneWebhook = comprador?.checkout_phone || comprador?.phone || comprador?.mobile_phone || null;
+  if (!telefoneWebhook && status === "aprovada") {
+    await enriquecerTelefone(transactionId, comprador?.email || null);
+  }
+
   console.log("Venda salva:", transactionId, status, "ADS:", adsNumero);
   return new Response(
     JSON.stringify({ ok: true, transaction: transactionId, status, adsNumero }),
     { headers: { "Content-Type": "application/json" } }
   );
 });
+
+const HOTMART_CLIENT_ID     = Deno.env.get("HOTMART_CLIENT_ID");
+const HOTMART_CLIENT_SECRET = Deno.env.get("HOTMART_CLIENT_SECRET");
+
+async function hotmartToken(): Promise<string | null> {
+  if (!HOTMART_CLIENT_ID || !HOTMART_CLIENT_SECRET) return null;
+  try {
+    const creds = btoa(`${HOTMART_CLIENT_ID}:${HOTMART_CLIENT_SECRET}`);
+    const r = await fetch("https://api-sec-vlc.hotmart.com/security/oauth/token", {
+      method: "POST",
+      headers: {
+        "Content-Type":  "application/x-www-form-urlencoded",
+        "Authorization": `Basic ${creds}`,
+      },
+      body: "grant_type=client_credentials",
+    });
+    if (!r.ok) return null;
+    const j = await r.json();
+    return j.access_token || null;
+  } catch (e) {
+    console.error("hotmartToken erro:", e);
+    return null;
+  }
+}
+
+async function buscarTelefoneHotmart(transactionId: string): Promise<string | null> {
+  const token = await hotmartToken();
+  if (!token) return null;
+  try {
+    const r = await fetch(
+      `https://developers.hotmart.com/payments/api/v1/sales/users?transaction=${transactionId}`,
+      { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } }
+    );
+    if (!r.ok) return null;
+    const data = await r.json();
+    const items = data?.items || [];
+    for (const item of items) {
+      const buyer = item?.buyer || {};
+      const phone = buyer.checkout_phone || buyer.phone || buyer.mobile_phone;
+      if (phone) return String(phone).trim();
+    }
+    return null;
+  } catch (e) {
+    console.error("buscarTelefoneHotmart erro:", e);
+    return null;
+  }
+}
+
+async function buscarWhatsappQuiz(email: string | null): Promise<string | null> {
+  if (!email) return null;
+  try {
+    const { data } = await supabase
+      .from("quiz_leads")
+      .select("whatsapp")
+      .ilike("email", email)
+      .not("whatsapp", "is", null)
+      .limit(1)
+      .single();
+    return data?.whatsapp ? String(data.whatsapp).trim() : null;
+  } catch {
+    return null;
+  }
+}
+
+async function enriquecerTelefone(transactionId: string, email: string | null) {
+  let telefone = await buscarTelefoneHotmart(transactionId);
+  let fonte = "hotmart_api";
+  if (!telefone) {
+    telefone = await buscarWhatsappQuiz(email);
+    fonte = "quiz";
+  }
+  if (!telefone) {
+    console.log("Enriquecimento de telefone: nada encontrado (nem Hotmart nem quiz) para", transactionId);
+    return;
+  }
+  const { error } = await supabase
+    .from("vendas")
+    .update({ comprador_telefone: telefone })
+    .eq("hotmart_transaction_id", transactionId);
+  if (error) {
+    console.error("Erro ao salvar telefone enriquecido:", error.message);
+  } else {
+    console.log(`Telefone enriquecido (${fonte}):`, transactionId, telefone);
+  }
+}
 
 async function verificarRegrasATP(adsNumero: number, metaAdId: string | null) {
   const { data: regra } = await supabase
