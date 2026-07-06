@@ -46,6 +46,19 @@
 
 ---
 
+## Gestor Pedagógico (/gestor-pedagogico)
+
+| Operação | Tempo estimado | Unidade |
+|----------|----------------|---------|
+| Buscar transcrição do YouTube | cerca de 30 segundos | segundos |
+| Digestão de material longo (dividir + resumir blocos em paralelo) | cerca de 90 segundos | segundos |
+| Gerar 1 entregável pedagógico (apostila, Q&A, resumo, etc.) | cerca de 60 segundos | segundos |
+| Gerar pacote de 3 a 5 entregáveis (em paralelo) | 2 a 3 minutos | minutos |
+| Gerar pacote completo de 8 entregáveis (em paralelo) | 3 a 4 minutos | minutos |
+| Gerar pacote completo (fallback sequencial, sem paralelo) | 6 a 9 minutos | minutos |
+
+---
+
 ## Criativos Estáticos (/criativo-estatico)
 
 | Operação | Tempo estimado | Unidade |
