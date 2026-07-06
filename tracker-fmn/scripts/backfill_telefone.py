@@ -76,6 +76,21 @@ def buscar_telefone_hotmart(token, transaction_id):
         print(f"    API erro para {transaction_id}: {e}")
         return None
 
+# ── Fallback: WhatsApp do quiz (o comprador digitou no quiz_leads) ──────────────
+def buscar_whatsapp_quiz(email):
+    """Se o Hotmart não tem o telefone, tenta o WhatsApp que o comprador
+    preencheu no quiz (casando pelo email, case-insensitive)."""
+    if not email:
+        return None
+    enc = urllib.parse.quote(email)
+    try:
+        rows = sb_get(f"quiz_leads?email=ilike.{enc}&whatsapp=not.is.null&select=whatsapp&limit=1")
+        if rows and rows[0].get("whatsapp"):
+            return str(rows[0]["whatsapp"]).strip()
+    except Exception as e:
+        print(f"    quiz_leads erro para {email}: {e}")
+    return None
+
 # ── Supabase helpers ───────────────────────────────────────────────────────────
 def sb_get(path):
     req = urllib.request.Request(f"{SUPABASE_URL}/rest/v1/{path}", headers={
@@ -107,7 +122,7 @@ def main():
         "vendas?status=eq.aprovada"
         "&comprador_telefone=is.null"
         "&hotmart_transaction_id=not.is.null"
-        "&select=id,comprador_nome,hotmart_transaction_id"
+        "&select=id,comprador_nome,comprador_email,hotmart_transaction_id"
         "&order=created_at.desc"
         "&limit=200"
     )
@@ -127,16 +142,21 @@ def main():
         print(f"  [{tid}] {nome[:30]:<30} ", end="", flush=True)
 
         phone = buscar_telefone_hotmart(token, tid)
+        fonte = "Hotmart"
+        if not phone:
+            # Fallback: WhatsApp do quiz (casando pelo email do comprador)
+            phone = buscar_whatsapp_quiz(row.get("comprador_email"))
+            fonte = "quiz"
         if phone:
             try:
                 sb_patch(f"vendas?id=eq.{row['id']}", {"comprador_telefone": phone})
-                print(f"✅ {phone}")
+                print(f"✅ {phone} ({fonte})")
                 ok += 1
             except Exception as e:
                 print(f"❌ erro ao salvar: {e}")
                 erros += 1
         else:
-            print("— sem telefone na API")
+            print("— sem telefone (nem Hotmart nem quiz)")
             sem += 1
 
         time.sleep(0.3)  # respeita rate limit do Hotmart
