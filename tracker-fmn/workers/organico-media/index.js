@@ -45,6 +45,38 @@ function json(data, status = 200) {
   });
 }
 
+/* ── Reels: cria o container de vídeo e espera processar antes de publicar.
+   Video processing no Instagram não é instantâneo (diferente de imagem). ── */
+async function createReelsContainer(graph, igId, token, videoUrl, caption, comFacebook, thumbUrl) {
+  const FB_PAGE_ID = '1738059673077819';
+  const params = new URLSearchParams({
+    media_type:   'REELS',
+    video_url:    videoUrl,
+    caption:      caption || '',
+    share_to_feed: 'true',
+    access_token: token,
+  });
+  if (thumbUrl) params.set('thumb_offset', '0');
+  if (comFacebook) params.set('fb_page_id', FB_PAGE_ID);
+  const r = await fetch(`${graph}/${igId}/media`, { method: 'POST', body: params });
+  const d = await r.json();
+  if (!d.id) throw new Error(`Erro ao criar container REELS: ${JSON.stringify(d)}`);
+  return d.id;
+}
+
+async function waitReelsReady(graph, containerId, token, tries = 20, delayMs = 3000) {
+  for (let i = 0; i < tries; i++) {
+    const r = await fetch(`${graph}/${containerId}?fields=status_code&access_token=${token}`);
+    const d = await r.json();
+    if (d.status_code === 'FINISHED') return true;
+    if (d.status_code === 'ERROR' || d.status_code === 'EXPIRED') {
+      throw new Error(`Processamento do Reels falhou: ${JSON.stringify(d)}`);
+    }
+    await new Promise(res => setTimeout(res, delayMs));
+  }
+  return false;
+}
+
 /* ── Upload ──────────────────────────────────────────────────────────────── */
 async function handleUpload(request, env) {
   const form = await request.formData();
@@ -102,8 +134,10 @@ async function handlePublish(request, env) {
   }
 
   const {
-    tipo,          // 'imagem' | 'carrossel'
-    imageUrls,     // array de URLs públicas das originais
+    tipo,          // 'imagem' | 'carrossel' | 'reels'
+    imageUrls,     // array de URLs públicas das originais (imagem/carrossel)
+    videoUrl,      // URL pública do vídeo em alta (reels)
+    thumbUrl,      // URL da thumb (reels)
     caption,       // legenda completa
     scheduleAt,    // ISO string ou null (null = postar agora)
     origKeys,      // keys do R2 para deletar depois
@@ -112,7 +146,11 @@ async function handlePublish(request, env) {
 
   const FB_PAGE_ID = '1738059673077819';
 
-  if (!imageUrls?.length) return json({ error: 'imageUrls ausente.' }, 400);
+  if (tipo === 'reels') {
+    if (!videoUrl) return json({ error: 'videoUrl ausente.' }, 400);
+  } else if (!imageUrls?.length) {
+    return json({ error: 'imageUrls ausente.' }, 400);
+  }
 
   const token  = env.FB_ACCESS_TOKEN;
   const igId   = env.IG_USER_ID;
@@ -122,6 +160,30 @@ async function handlePublish(request, env) {
   const graph  = 'https://graph.facebook.com/v21.0';
 
   const scheduleTs = scheduleAt ? Math.floor(new Date(scheduleAt).getTime() / 1000) : null;
+
+  if (tipo === 'reels') {
+    /* ── Reels ── */
+    const containerId = await createReelsContainer(graph, igId, token, videoUrl, caption, comFacebook, thumbUrl);
+    const ready = await waitReelsReady(graph, containerId, token);
+    if (!ready) return json({ error: 'Vídeo ainda processando no Instagram — tente publicar de novo em instantes.' }, 202);
+
+    let postId = null;
+    if (!scheduleTs) {
+      const pubParams = new URLSearchParams({ creation_id: containerId, access_token: token });
+      const pubRes  = await fetch(`${graph}/${igId}/media_publish`, { method: 'POST', body: pubParams });
+      const pubData = await pubRes.json();
+      if (!pubData.id) throw new Error(`Erro ao publicar Reels: ${JSON.stringify(pubData)}`);
+      postId = pubData.id;
+    }
+
+    // Só apaga a versão em alta depois que o Instagram terminou de processar
+    // (FINISHED) e, no caso imediato, depois de publicar de verdade.
+    const key = origKeyFromUrl(videoUrl);
+    const keysToDelete = collectOrigKeys([], [...(origKeys || []), ...(key ? [key] : [])]);
+    if (keysToDelete.length) await Promise.all(keysToDelete.map(k => env.BUCKET.delete(k)));
+
+    return json({ ok: true, scheduled: !!scheduleTs, postId, creationId: containerId });
+  }
 
   let creationId;
 
@@ -206,9 +268,12 @@ async function handleSchedule(request, env) {
   let body;
   try { body = await request.json(); } catch (e) { return json({ error: 'JSON inválido.' }, 400); }
 
-  const { itemId, scheduleAt, imageUrls, origKeys, caption, tipo, comFacebook } = body;
-  if (!itemId || !scheduleAt || !imageUrls?.length) {
-    return json({ error: 'itemId, scheduleAt e imageUrls são obrigatórios.' }, 400);
+  const { itemId, scheduleAt, imageUrls, videoUrl, thumbUrl, origKeys, caption, tipo, comFacebook } = body;
+  if (!itemId || !scheduleAt) {
+    return json({ error: 'itemId e scheduleAt são obrigatórios.' }, 400);
+  }
+  if (tipo === 'reels' ? !videoUrl : !imageUrls?.length) {
+    return json({ error: tipo === 'reels' ? 'videoUrl ausente.' : 'imageUrls ausente.' }, 400);
   }
 
   const sbUrl = env.SUPABASE_URL;
@@ -227,7 +292,7 @@ async function handleSchedule(request, env) {
       status: 'Agendado',
       scheduled_at: scheduleAt,
       data_prevista: scheduleAt.slice(0, 10), // YYYY-MM-DD para o calendário
-      scheduled_media: { imageUrls, origKeys: origKeys || [], caption, tipo, comFacebook: !!comFacebook },
+      scheduled_media: { imageUrls, videoUrl, thumbUrl, origKeys: origKeys || [], caption, tipo, comFacebook: !!comFacebook },
     }),
   });
 
@@ -274,10 +339,36 @@ async function runScheduledPublish(env) {
 
   for (const post of posts) {
     const m = post.scheduled_media || {};
-    const { imageUrls = [], origKeys = [], caption = '', tipo = 'imagem', comFacebook = false } = m;
+    const { imageUrls = [], videoUrl = null, thumbUrl = null, origKeys = [], caption = '', tipo = 'imagem', comFacebook = false } = m;
 
     try {
       let creationId;
+
+      if (tipo === 'reels') {
+        creationId = await createReelsContainer(graph, igId, token, videoUrl, caption, comFacebook, thumbUrl);
+        const ready = await waitReelsReady(graph, creationId, token);
+        if (!ready) throw new Error('Vídeo não terminou de processar a tempo — tenta de novo no próximo ciclo.');
+
+        const pubP = new URLSearchParams({ creation_id: creationId, access_token: token });
+        const pubR = await fetch(`${graph}/${igId}/media_publish`, { method: 'POST', body: pubP });
+        const pubD = await pubR.json();
+        if (!pubD.id) throw new Error(`Erro ao publicar Reels: ${JSON.stringify(pubD)}`);
+
+        const key = origKeyFromUrl(videoUrl);
+        const keysToDelete = collectOrigKeys([], [...origKeys, ...(key ? [key] : [])]);
+        if (keysToDelete.length) await Promise.all(keysToDelete.map(k => env.BUCKET.delete(k)));
+
+        await fetch(`${sbUrl}/rest/v1/conteudo_organico?id=eq.${post.id}`, {
+          method: 'PATCH',
+          headers: { 'apikey': sbKey, 'Authorization': `Bearer ${sbKey}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+          body: JSON.stringify({
+            status: 'Feito', published_at: post.scheduled_at || new Date().toISOString(),
+            scheduled_at: null, scheduled_media: null, meta_media_id: pubD.id,
+          }),
+        });
+        console.log(`[cron] Reels publicado: ${post.id} → ${pubD.id}`);
+        continue;
+      }
 
       if (tipo === 'carrossel' && imageUrls.length > 1) {
         const childIds = [];

@@ -508,11 +508,61 @@ function PublishModal({ form, slidesArr, slideFiles, onClose, onSuccess }) {
   const [msg, setMsg]             = useState('');
   const [comFacebook, setFB]      = useState(false);
 
-  const hasImages = form.plataforma === 'Carrossel'
-    ? slidesArr.some((s, i) => slideFiles[i] || s.image_url)
-    : (slideFiles[0] || slidesArr[0]?.image_url);
+  const isReels = form.plataforma === 'Reels';
+  const reelsVideo = (() => {
+    if (!isReels) return null;
+    let mf = form.media_files;
+    if (typeof mf === 'string') { try { mf = JSON.parse(mf); } catch { mf = null; } }
+    return Array.isArray(mf) ? mf.find(m => m.tipo === 'video') : null;
+  })();
+
+  const hasImages = isReels
+    ? !!reelsVideo?.url_alta
+    : form.plataforma === 'Carrossel'
+      ? slidesArr.some((s, i) => slideFiles[i] || s.image_url)
+      : (slideFiles[0] || slidesArr[0]?.image_url);
+
+  const runReels = async () => {
+    try {
+      setPhase('publishing');
+      const caption = (form.legenda || form.gancho || '').trim();
+      const scheduleAt = modo === 'agendar' && schedDate
+        ? new Date(`${schedDate}T${schedTime}:00-03:00`).toISOString()
+        : null;
+
+      let pubData;
+      if (modo === 'agendar' && scheduleAt) {
+        setMsg('Salvando agendamento...');
+        const r = await fetch(`${WORKER_URL}/schedule`, {
+          method: 'POST', headers: { 'Content-Type':'application/json' },
+          body: JSON.stringify({ itemId: form.id, scheduleAt, videoUrl: reelsVideo.url_alta,
+            thumbUrl: reelsVideo.thumb_url, caption, tipo: 'reels', comFacebook }),
+        });
+        pubData = await r.json();
+        if (!pubData.ok) throw new Error(pubData.error || 'Falha ao agendar.');
+      } else {
+        setMsg('Publicando Reels no Instagram' + (comFacebook ? ' e Facebook' : '') + '... isso pode levar até 1 minuto (processamento do vídeo).');
+        const r = await fetch(`${WORKER_URL}/publish`, {
+          method: 'POST', headers: { 'Content-Type':'application/json' },
+          body: JSON.stringify({ tipo: 'reels', videoUrl: reelsVideo.url_alta, thumbUrl: reelsVideo.thumb_url,
+            caption, scheduleAt: null, comFacebook }),
+        });
+        pubData = await r.json();
+        if (!pubData.ok) throw new Error(pubData.error || 'Falha na publicação.');
+      }
+
+      setPhase('done');
+      setMsg(modo === 'agendar'
+        ? `Agendado para ${schedDate.split('-').reverse().join('/')} às ${schedTime}.`
+        : 'Reels publicado com sucesso!');
+      setTimeout(() => onSuccess(slidesArr, pubData.postId, modo === 'agendar', schedDate, scheduleAt), 1400);
+    } catch (e) {
+      setPhase('error'); setMsg(e.message || 'Erro desconhecido.');
+    }
+  };
 
   const run = async () => {
+    if (isReels) return runReels();
     try {
       setPhase('uploading'); setMsg('Subindo imagens para o R2...');
 
@@ -952,7 +1002,7 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
     onSave(updated);
   };
 
-  const canShowPublish = !isNew && (form.plataforma === 'Carrossel' || form.plataforma === 'Imagem');
+  const canShowPublish = !isNew && (form.plataforma === 'Carrossel' || form.plataforma === 'Imagem' || form.plataforma === 'Reels');
 
   // Painel esquerdo — navegador de slides embarcado
   const [previewIdx, setPreviewIdx] = useState(0);
