@@ -71,7 +71,7 @@ function useDashboardData(period, dateRange) {
         /* vendas aprovadas no período */
         const { data: vendas } = await window.db
           .from('vendas')
-          .select('valor_bruto, valor_liquido, preco_oferta, produto_nome, utm_source, status, created_at')
+          .select('valor_bruto, valor_liquido, preco_oferta, produto_nome, utm_source, status, created_at, comprador_email')
           .eq('status', 'aprovada')
           .gte('created_at', brt.gte)
           .lte('created_at', brt.lte);
@@ -168,6 +168,40 @@ function useDashboardData(period, dateRange) {
         const lucro          = fat - impostoMeta - impostoNota - desp - reimb;
         const margem         = fat > 0 ? (lucro / fat) * 100 : 0;
 
+        const totalVendasBruto = (vendas || []).length;
+        const roas        = gasto > 0 ? fat / gasto : null;
+        const roi          = (gasto + desp) > 0 ? lucro / (gasto + desp) : null;
+        const ticketMedio  = totalVendasBruto > 0 ? fat / totalVendasBruto : null;
+
+        // CAC (só cliente novo, ache pela 1ª compra em toda a história) e LTV
+        // (histórico COMPLETO de quem comprou no período, não só o período).
+        const emailsPeriodo = [...new Set((vendas || []).map(v => v.comprador_email).filter(Boolean))];
+        let cac = null, ltv = null;
+        if (emailsPeriodo.length) {
+          const { data: historico } = await window.db
+            .from('vendas')
+            .select('comprador_email, valor_bruto, preco_oferta, created_at')
+            .eq('status', 'aprovada')
+            .in('comprador_email', emailsPeriodo);
+
+          const porEmail = {};
+          (historico || []).forEach(v => {
+            (porEmail[v.comprador_email] ||= []).push(v);
+          });
+
+          let clientesNovos = 0;
+          let somaLtv = 0;
+          for (const email of emailsPeriodo) {
+            const compras = porEmail[email] || [];
+            if (!compras.length) continue;
+            const primeiraCompra = compras.reduce((min, v) => v.created_at < min ? v.created_at : min, compras[0].created_at);
+            if (primeiraCompra >= brt.gte && primeiraCompra <= brt.lte) clientesNovos++;
+            somaLtv += compras.reduce((s, v) => s + Number(v.preco_oferta || v.valor_bruto || 0), 0);
+          }
+          cac = clientesNovos > 0 ? gasto / clientesNovos : null;
+          ltv = emailsPeriodo.length > 0 ? somaLtv / emailsPeriodo.length : null;
+        }
+
         /* vendas por produto */
         const prodMap = {};
         (vendas || []).forEach(v => {
@@ -260,6 +294,7 @@ function useDashboardData(period, dateRange) {
         const adsRanking = [...comVenda, ...semVenda].slice(0, 10);
 
         setData({ fat, lucro, gasto, margem, reimb, totalVendas, cpaMedio,
+          roas, roi, ticketMedio, cac, ltv,
           breakdownRows, salesByProduct, salesBySource, funnelSteps,
           impostoMeta, impostoNota, desp, adsRanking });
       } catch(e) {
@@ -2051,6 +2086,11 @@ function DashboardScreen({ period, onPeriodChange, dateRange, onDateRangeChange,
   const margem      = data?.margem      || 0;
   const totalVendas = data?.totalVendas || 0;
   const cpaMedio    = data?.cpaMedio    || null;
+  const roas        = data?.roas        ?? null;
+  const roi         = data?.roi         ?? null;
+  const ticketMedio = data?.ticketMedio ?? null;
+  const cac         = data?.cac         ?? null;
+  const ltv         = data?.ltv         ?? null;
   const [rankingSort, setRankingSort] = useState('cpa'); // 'cpa' | 'vendas'
   const adsRankingRaw = data?.adsRanking || [];
   const adsRanking = [...adsRankingRaw].sort((a, b) => {
@@ -2101,9 +2141,22 @@ function DashboardScreen({ period, onPeriodChange, dateRange, onDateRangeChange,
           <CardKPI label="Faturamento"  value={fmtCur(fat)}   icon="trending-up" accent/>
           <CardKPI label="Lucro Real"   value={fmtCur(lucro)} icon="wallet"/>
           <CardKPI label="Gasto Meta"   value={fmtCur(gasto)} icon="zap"/>
-          <CardKPI label="Margem"       value={`${margem.toFixed(1)}%`} icon="percent"/>
           <CardKPI label="Vendas"       value={totalVendas} icon="shopping-cart"/>
           <CardKPI label="CPA Médio"    value={cpaMedio ? fmtCur(cpaMedio) : '—'} icon="target"/>
+        </div>
+
+        {/* KPIs reais — linha 2 (retorno sobre investimento) */}
+        <div style={{ display:'flex', gap:12 }}>
+          <CardKPI label="ROAS"          value={roas != null ? `${roas.toFixed(2)}x` : '—'} icon="rotate-cw"
+            title="Retorno sobre Gasto de Anúncio: faturamento ÷ gasto no Meta. Quanto cada real investido em anúncio virou de faturamento."/>
+          <CardKPI label="ROI"           value={roi != null ? `${(roi*100).toFixed(1)}%` : '—'} icon="trending-up"
+            title="Retorno sobre Investimento: lucro real ÷ (gasto Meta + despesas recorrentes do período)."/>
+          <CardKPI label="CAC"           value={cac != null ? fmtCur(cac) : '—'} icon="user-plus"
+            title="Custo de Aquisição de Cliente: gasto Meta ÷ clientes que compraram pela 1ª vez no período."/>
+          <CardKPI label="Ticket Médio"  value={ticketMedio != null ? fmtCur(ticketMedio) : '—'} icon="receipt"
+            title="Faturamento ÷ número de vendas do período."/>
+          <CardKPI label="LTV"           value={ltv != null ? fmtCur(ltv) : '—'} icon="repeat"
+            title="Valor médio por cliente: soma de TODO o histórico de compras (mesmo antes do período) de quem comprou no período, dividido pelo nº de clientes únicos."/>
         </div>
 
         {/* Chart + Breakdown */}

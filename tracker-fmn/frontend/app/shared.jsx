@@ -103,14 +103,14 @@ function Badge({ children, tone = 'default', dot = false, style = {} }) {
 }
 
 /* ── CardKPI ─────────────────────────────────────────────────────*/
-function CardKPI({ label, value, delta, deltaLabel, icon, accent = false }) {
+function CardKPI({ label, value, delta, deltaLabel, icon, accent = false, title }) {
   const isStr = typeof delta === 'string';
   const deltaPos = isStr ? delta.startsWith('+') : (typeof delta === 'number' ? delta >= 0 : true);
   const dc = deltaPos ? 'var(--clr-pos)' : 'var(--clr-neg)';
   const db = deltaPos ? 'var(--clr-pos-bg)' : 'var(--clr-neg-bg)';
   const dv = typeof delta === 'number' ? `${delta >= 0 ? '+' : ''}${delta}%` : delta;
   return (
-    <div style={{
+    <div title={title} style={{
       flex: 1, minWidth: 0, background: 'var(--app-surface)',
       border: `1px solid ${accent ? 'rgba(234,170,65,.2)' : 'var(--app-border)'}`,
       borderRadius: 14, padding: '16px 18px', display: 'flex', flexDirection: 'column', gap: 10,
