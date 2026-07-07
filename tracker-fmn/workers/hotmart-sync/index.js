@@ -222,6 +222,26 @@ async function run(env) {
   const existentes = await transacoesExistentes(env, vendas.map(v => v.hotmart_transaction_id));
   const faltantes = vendas.filter(v => !existentes.has(v.hotmart_transaction_id));
 
+  // Resolve ads_numero a partir do meta_ad_id (igual o webhook faz) — sem
+  // isso o card "Últimas Vendas" mostra a campanha/conjunto em vez do
+  // criativo específico que vendeu.
+  const metaAdIds = [...new Set(faltantes.map(v => v.meta_ad_id).filter(Boolean))];
+  if (metaAdIds.length) {
+    const ids = metaAdIds.map(id => `"${id}"`).join(',');
+    const res = await fetch(
+      `${env.SUPABASE_URL}/rest/v1/ads?meta_ad_id=in.(${ids})&select=numero,meta_ad_id`,
+      { headers: { apikey: env.SUPABASE_SERVICE_KEY, Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}` } }
+    );
+    if (res.ok) {
+      const numeroPorMetaId = Object.fromEntries((await res.json()).map(a => [a.meta_ad_id, a.numero]));
+      for (const v of faltantes) {
+        if (v.meta_ad_id && numeroPorMetaId[v.meta_ad_id] != null) v.ads_numero = numeroPorMetaId[v.meta_ad_id];
+      }
+    } else {
+      console.error(`[hotmart-sync] Falha ao resolver ads_numero (${res.status})`);
+    }
+  }
+
   console.log(`[hotmart-sync] ${existentes.size} já processadas pelo webhook (ignoradas), ${faltantes.length} realmente faltando`);
 
   if (!faltantes.length) {

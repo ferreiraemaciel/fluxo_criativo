@@ -1487,20 +1487,45 @@ function useRecentSales(limit = 10) {
       }
       prevIds.current = new Set(rows.map(r => r.id));
 
-      // Buscar títulos e thumbnails dos ADS vinculados
+      // Buscar títulos e thumbnails dos ADS vinculados. Venda sem ads_numero
+      // mas com meta_ad_id (comum em vendas recuperadas via backfill, que não
+      // tinham essa resolução) ainda dá pra achar o criativo pelo meta_ad_id —
+      // sem isso o card mostra a campanha/conjunto em vez do anúncio certo.
       const nums = [...new Set(rows.filter(r => r.ads_numero).map(r => r.ads_numero))];
+      const semNumero = rows.filter(r => !r.ads_numero && r.meta_ad_id);
+      const metaIds = [...new Set(semNumero.map(r => r.meta_ad_id))];
+
       let adsMap = {};
       if (nums.length) {
         const { data: adsRows } = await window.db
           .from('ads').select('numero,titulo,media_drive_url').in('numero', nums);
         adsMap = Object.fromEntries((adsRows||[]).map(a => [a.numero, a]));
       }
+      let metaIdMap = {};
+      if (metaIds.length) {
+        const { data: adsRows } = await window.db
+          .from('ads').select('numero,titulo,media_drive_url,meta_ad_id').in('meta_ad_id', metaIds);
+        metaIdMap = Object.fromEntries((adsRows||[]).map(a => [a.meta_ad_id, a]));
+        // Corrige a venda de vez (evita recalcular isso toda hora e ajuda
+        // qualquer outra tela que dependa de ads_numero).
+        const patches = semNumero
+          .map(r => ({ id: r.id, numero: metaIdMap[r.meta_ad_id]?.numero }))
+          .filter(p => p.numero != null);
+        for (const p of patches) {
+          window.db.from('vendas').update({ ads_numero: p.numero }).eq('id', p.id).then(() => {});
+        }
+      }
 
-      setSales(rows.map(r => ({
-        ...r,
-        ads_titulo: adsMap[r.ads_numero]?.titulo || null,
-        ads_thumb:  adsMap[r.ads_numero]?.media_drive_url ? `thumbnails/${r.ads_numero}.jpg` : null,
-      })));
+      setSales(rows.map(r => {
+        const resolved = r.ads_numero ? adsMap[r.ads_numero] : metaIdMap[r.meta_ad_id];
+        const resolvedNum = r.ads_numero || metaIdMap[r.meta_ad_id]?.numero || null;
+        return {
+          ...r,
+          ads_numero: resolvedNum,
+          ads_titulo: resolved?.titulo || null,
+          ads_thumb:  resolved?.media_drive_url ? `thumbnails/${resolvedNum}.jpg` : null,
+        };
+      }));
     }
 
     load(false);
