@@ -2122,7 +2122,7 @@ function DashboardScreen({ period, onPeriodChange, dateRange, onDateRangeChange,
             }>
             <LineAreaChart data={chartDays}/>
           </SectionCard>
-          <SectionCard title="Breakdown Financeiro"><BreakdownTable rows={bkRows} margem={margem}/></SectionCard>
+          <SectionCard title="Detalhamento Financeiro"><BreakdownTable rows={bkRows} margem={margem}/></SectionCard>
         </div>
 
         {/* Últimas Vendas com atribuição — só renderiza se houver dados */}
