@@ -104,13 +104,14 @@ function Badge({ children, tone = 'default', dot = false, style = {} }) {
 
 /* ── CardKPI ─────────────────────────────────────────────────────*/
 function CardKPI({ label, value, delta, deltaLabel, icon, accent = false, title }) {
+  const [hovIcon, setHovIcon] = useState(false);
   const isStr = typeof delta === 'string';
   const deltaPos = isStr ? delta.startsWith('+') : (typeof delta === 'number' ? delta >= 0 : true);
   const dc = deltaPos ? 'var(--clr-pos)' : 'var(--clr-neg)';
   const db = deltaPos ? 'var(--clr-pos-bg)' : 'var(--clr-neg-bg)';
   const dv = typeof delta === 'number' ? `${delta >= 0 ? '+' : ''}${delta}%` : delta;
   return (
-    <div title={title} style={{
+    <div style={{
       flex: 1, minWidth: 0, background: 'var(--app-surface)',
       border: `1px solid ${accent ? 'rgba(234,170,65,.2)' : 'var(--app-border)'}`,
       borderRadius: 14, padding: '16px 18px', display: 'flex', flexDirection: 'column', gap: 10,
@@ -121,11 +122,27 @@ function CardKPI({ label, value, delta, deltaLabel, icon, accent = false, title 
           {label}
         </span>
         {icon && (
-          <div style={{ width: 28, height: 28, borderRadius: 7, display: 'flex', alignItems: 'center',
-            justifyContent: 'center', flexShrink: 0,
+          <div onMouseEnter={() => title && setHovIcon(true)} onMouseLeave={() => setHovIcon(false)}
+            style={{ position: 'relative', width: 28, height: 28, borderRadius: 7, display: 'flex',
+            alignItems: 'center', justifyContent: 'center', flexShrink: 0,
             background: accent ? 'rgba(234,170,65,.1)' : 'rgba(255,255,255,.05)',
-            color: accent ? 'var(--fmn-gold)' : 'var(--text-3)' }}>
+            color: accent ? 'var(--fmn-gold)' : 'var(--text-3)',
+            cursor: title ? 'help' : 'default' }}>
             <LucideIcon icon={icon} size={14} />
+            {hovIcon && title && (
+              <div style={{ position: 'absolute', bottom: 'calc(100% + 8px)', right: -6, zIndex: 20,
+                width: 220, padding: '9px 11px', borderRadius: 9,
+                background: '#1a1b1f', border: '1px solid rgba(255,255,255,.14)',
+                boxShadow: '0 12px 32px rgba(0,0,0,.5)',
+                fontSize: 11, lineHeight: 1.5, fontFamily: 'Roboto, sans-serif',
+                fontWeight: 500, color: 'var(--text-2)', textTransform: 'none',
+                letterSpacing: 'normal', pointerEvents: 'none' }}>
+                {title}
+                <div style={{ position: 'absolute', top: '100%', right: 10, width: 0, height: 0,
+                  borderLeft: '6px solid transparent', borderRight: '6px solid transparent',
+                  borderTop: '6px solid #1a1b1f' }}/>
+              </div>
+            )}
           </div>
         )}
       </div>
