@@ -126,8 +126,18 @@ function ContentCard({ item, col, onOpen, onDragStart }) {
 
   let thumbUrl = null;
   try {
-    const slidesArr = JSON.parse(item.slides || '[]');
-    thumbUrl = slidesArr.map(s => s.image_url).filter(Boolean)[0] || null;
+    // Vídeo (Reels): usa a thumb JPG gerada junto (media_files), nunca o .mp4
+    // direto num <img> — <img> não sabe renderizar vídeo.
+    let mf = item.media_files;
+    if (typeof mf === 'string') mf = JSON.parse(mf || '[]');
+    const videoThumb = Array.isArray(mf) ? mf.find(m => m.tipo === 'video')?.thumb_url : null;
+    if (videoThumb) {
+      thumbUrl = videoThumb;
+    } else {
+      const slidesArr = JSON.parse(item.slides || '[]');
+      thumbUrl = slidesArr.map(s => s.image_url).filter(Boolean)[0] || null;
+      if (/\.(mp4|webm|mov|m4v)$/i.test(thumbUrl || '')) thumbUrl = null;
+    }
   } catch {}
 
   return (
