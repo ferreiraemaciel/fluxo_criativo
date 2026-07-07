@@ -47,10 +47,18 @@ const CAMPOS_INSIGHTS = [
 ].join(",");
 
 async function fetchInsights(adId: string, params: Record<string, string>) {
+  // O Meta ignora "since"/"until" soltos neste endpoint (sempre devolve a
+  // mesma janela default). Precisa ir embrulhado em time_range (igual o
+  // sync_insights.py já fazia). date_preset continua indo solto (esse funciona).
+  const { since, until, ...rest } = params;
+  const finalParams: Record<string, string> = { ...rest };
+  if (since && until) {
+    finalParams.time_range = JSON.stringify({ since, until });
+  }
   const qs = new URLSearchParams({
     fields: CAMPOS_INSIGHTS,
     access_token: META_TOKEN,
-    ...params,
+    ...finalParams,
   });
   const res  = await fetch(`${GRAPH_BASE}/${adId}/insights?${qs}`);
   const json = await res.json();

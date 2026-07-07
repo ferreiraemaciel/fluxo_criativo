@@ -419,6 +419,105 @@ function RefBlock({ value, onChange }) {
   );
 }
 
+/* ── CarouselLightbox — visualização ampliada (Orgânico + Tráfego) ─
+   Escurece o resto da tela, mostra imagem/vídeo em tamanho maior sem
+   distorcer (contain), com setas/dots quando há mais de um item.
+─────────────────────────────────────────────────────────────────*/
+function CarouselLightbox({ urls, initialIdx, onClose }) {
+  const [idx, setIdx] = useState(initialIdx || 0);
+  const prev = () => setIdx(i => (i - 1 + urls.length) % urls.length);
+  const next = () => setIdx(i => (i + 1) % urls.length);
+
+  // Fechar com ESC ou seta no teclado
+  useEffect(() => {
+    const onKey = e => {
+      if (e.key === 'Escape')      onClose();
+      if (e.key === 'ArrowLeft')   prev();
+      if (e.key === 'ArrowRight')  next();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+
+  return (
+    <div onClick={onClose}
+      style={{ position:'fixed', inset:0, background:'rgba(0,0,0,.88)', zIndex:900,
+        display:'flex', alignItems:'center', justifyContent:'center' }}>
+
+      {/* Imagem/vídeo central */}
+      <div onClick={e => e.stopPropagation()}
+        style={{ position:'relative', maxHeight:'88vh', display:'flex',
+          flexDirection:'column', alignItems:'center', gap:12 }}>
+
+        {/\.(mp4|webm|mov|m4v)$/i.test(urls[idx] || '')
+          ? <video src={urls[idx]} controls autoPlay loop playsInline
+              style={{ maxHeight:'80vh', maxWidth:'min(480px, 90vw)',
+                borderRadius:10, display:'block', objectFit:'contain',
+                boxShadow:'0 24px 80px rgba(0,0,0,.7)' }}/>
+          : <img src={urls[idx]} alt={`Item ${idx+1}`}
+              style={{ maxHeight:'80vh', maxWidth:'min(480px, 90vw)',
+                borderRadius:10, display:'block', objectFit:'contain',
+                boxShadow:'0 24px 80px rgba(0,0,0,.7)' }}/>}
+
+        {urls.length > 1 && (
+          <>
+            {/* Contador */}
+            <div style={{ fontSize:12, fontFamily:'Roboto,sans-serif', fontWeight:700,
+              color:'rgba(255,255,255,.6)', letterSpacing:'0.08em' }}>
+              {idx + 1} / {urls.length}
+            </div>
+
+            {/* Dots */}
+            <div style={{ display:'flex', gap:5 }}>
+              {urls.map((_, i) => (
+                <button key={i} onClick={() => setIdx(i)}
+                  style={{ width: i === idx ? 18 : 6, height:6, borderRadius:999,
+                    border:'none', cursor:'pointer', transition:'all 200ms',
+                    background: i === idx ? '#fff' : 'rgba(255,255,255,.3)' }}/>
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+
+      {urls.length > 1 && (<>
+        {/* Seta esquerda */}
+        <button onClick={e => { e.stopPropagation(); prev(); }}
+          style={{ position:'fixed', left:20, top:'50%', transform:'translateY(-50%)',
+            background:'rgba(255,255,255,.1)', border:'1px solid rgba(255,255,255,.15)',
+            borderRadius:'50%', width:44, height:44, cursor:'pointer', color:'#fff',
+            display:'flex', alignItems:'center', justifyContent:'center',
+            transition:'background 150ms' }}
+          onMouseEnter={e => e.currentTarget.style.background='rgba(255,255,255,.2)'}
+          onMouseLeave={e => e.currentTarget.style.background='rgba(255,255,255,.1)'}>
+          <LucideIcon icon="chevron-left" size={20}/>
+        </button>
+
+        {/* Seta direita */}
+        <button onClick={e => { e.stopPropagation(); next(); }}
+          style={{ position:'fixed', right:20, top:'50%', transform:'translateY(-50%)',
+            background:'rgba(255,255,255,.1)', border:'1px solid rgba(255,255,255,.15)',
+            borderRadius:'50%', width:44, height:44, cursor:'pointer', color:'#fff',
+            display:'flex', alignItems:'center', justifyContent:'center',
+            transition:'background 150ms' }}
+          onMouseEnter={e => e.currentTarget.style.background='rgba(255,255,255,.2)'}
+          onMouseLeave={e => e.currentTarget.style.background='rgba(255,255,255,.1)'}>
+          <LucideIcon icon="chevron-right" size={20}/>
+        </button>
+      </>)}
+
+      {/* Fechar */}
+      <button onClick={onClose}
+        style={{ position:'fixed', top:16, right:16,
+          background:'rgba(255,255,255,.1)', border:'1px solid rgba(255,255,255,.15)',
+          borderRadius:'50%', width:36, height:36, cursor:'pointer', color:'#fff',
+          display:'flex', alignItems:'center', justifyContent:'center' }}>
+        <LucideIcon icon="x" size={16}/>
+      </button>
+    </div>
+  );
+}
+
 // UTM padrão do projeto (fonte única). Usada no Meta e no Tracker:
 // modal de publicar, botão copiar UTM, cards e aba Tráfego. Não duplicar.
 const UTM_GLOBAL = 'utm_source=FB&utm_campaign={{campaign.name}}&utm_content={{ad.id}}&utm_medium=paid';
@@ -428,4 +527,4 @@ const PLATAFORMAS = ['Reels', 'Carrossel', 'Imagem', 'Stories', 'Artigo', 'Youtu
 const PLAT_COLOR  = { Reels:'#f472b6', Carrossel:'#60a5fa', Imagem:'#a78bfa', Stories:'#fb923c', Artigo:'#34d399', Youtube:'#ef4444' };
 const PLAT_ICON   = { Reels:'clapperboard', Carrossel:'layout-grid', Imagem:'image', Stories:'circle-dot', Artigo:'newspaper', Youtube:'play' };
 
-Object.assign(window, { LucideIcon, Btn, Badge, CardKPI, SectionCard, Divider, Sidebar, TopBar, fmtBRL, RefBlock, UTM_GLOBAL, PLATAFORMAS, PLAT_COLOR, PLAT_ICON });
+Object.assign(window, { LucideIcon, Btn, Badge, CardKPI, SectionCard, Divider, Sidebar, TopBar, fmtBRL, RefBlock, UTM_GLOBAL, PLATAFORMAS, PLAT_COLOR, PLAT_ICON, CarouselLightbox });

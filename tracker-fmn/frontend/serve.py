@@ -16,6 +16,7 @@ SYNC_SCRIPT     = os.path.join(SCRIPTS, "sync_runner.py")
 VIDEO_SCRIPT    = os.path.join(SCRIPTS, "otimizar-video-r2.py")
 CRIATIVO_SCRIPT = os.path.join(SCRIPTS, "preparar-criativo-meta.py")
 ADICIONAR_SCRIPT = os.path.join(SCRIPTS, "adicionar-criativo.py")
+ADICIONAR_ORG_SCRIPT = os.path.join(SCRIPTS, "adicionar-criativo-organico.py")
 
 # Estado da otimização de vídeo (Fluxo A, batch)
 VIDEO_STATUS = {"running": False, "total": 0, "done": 0, "msg": "", "error": None}
@@ -23,6 +24,8 @@ VIDEO_STATUS = {"running": False, "total": 0, "done": 0, "msg": "", "error": Non
 CRIATIVO_STATUS = {"running": False, "numero": None, "video_id": None, "error": None, "msg": ""}
 # Estado do "Adicionar criativo" (Fluxo A, por card, gera o preview)
 ADD_STATUS = {"running": False, "numero": None, "tipo": None, "done": False, "error": None, "msg": ""}
+# Estado do "Adicionar criativo" no Orgânico (mesma ideia, script separado)
+ADD_ORG_STATUS = {"running": False, "numero": None, "done": False, "error": None, "msg": ""}
 
 class TrackerHandler(http.server.SimpleHTTPRequestHandler):
     def end_headers(self):
@@ -46,6 +49,8 @@ class TrackerHandler(http.server.SimpleHTTPRequestHandler):
             self._json(200, CRIATIVO_STATUS)
         elif path == "/api/adicionar-criativo":
             self._json(200, ADD_STATUS)
+        elif path == "/api/adicionar-criativo-organico":
+            self._json(200, ADD_ORG_STATUS)
         else:
             super().do_GET()
 
@@ -64,6 +69,11 @@ class TrackerHandler(http.server.SimpleHTTPRequestHandler):
             numero = (qs.get("numero") or [None])[0]
             pasta  = (qs.get("pasta") or [None])[0]
             self._run_adicionar(numero, pasta)
+        elif path == "/api/adicionar-criativo-organico":
+            qs = parse_qs(urlparse(self.path).query)
+            numero = (qs.get("numero") or [None])[0]
+            pasta  = (qs.get("pasta") or [None])[0]
+            self._run_adicionar_organico(numero, pasta)
         else:
             self.send_error(404)
 
@@ -171,6 +181,40 @@ class TrackerHandler(http.server.SimpleHTTPRequestHandler):
                 ADD_STATUS["error"] = str(e)
             finally:
                 ADD_STATUS["running"] = False
+
+        self._json(202, {"status": "running"})
+        threading.Thread(target=run, daemon=True).start()
+
+    def _run_adicionar_organico(self, numero, pasta):
+        if not numero:
+            self._json(400, {"error": "numero ausente"}); return
+        if ADD_ORG_STATUS["running"]:
+            self._json(202, ADD_ORG_STATUS); return
+
+        def run():
+            ADD_ORG_STATUS.update(running=True, numero=numero, done=False,
+                                  error=None, msg="Buscando material no Drive…")
+            try:
+                cmd = ["python3", ADICIONAR_ORG_SCRIPT, "--numero", str(numero)]
+                if pasta:
+                    cmd += ["--pasta", pasta]
+                proc = subprocess.Popen(cmd, stdout=subprocess.PIPE,
+                                        stderr=subprocess.STDOUT, text=True, cwd=SCRIPTS, env={**os.environ, "PYTHONWARNINGS": "ignore"})
+                for line in proc.stdout:
+                    line = line.strip()
+                    if line.startswith("##DONE"):
+                        ADD_ORG_STATUS["done"] = True
+                    elif line.startswith("##SKIP"):
+                        ADD_ORG_STATUS["error"] = "Pasta vazia no Drive (sem material)"
+                    elif line and not line.startswith("#"):
+                        ADD_ORG_STATUS["msg"] = line[:80]
+                proc.wait()
+                if proc.returncode != 0 and not ADD_ORG_STATUS["done"]:
+                    ADD_ORG_STATUS["error"] = ADD_ORG_STATUS.get("error") or ADD_ORG_STATUS.get("msg") or "Erro ao adicionar criativo"
+            except Exception as e:
+                ADD_ORG_STATUS["error"] = str(e)
+            finally:
+                ADD_ORG_STATUS["running"] = False
 
         self._json(202, {"status": "running"})
         threading.Thread(target=run, daemon=True).start()

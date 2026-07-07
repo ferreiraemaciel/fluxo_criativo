@@ -65,95 +65,9 @@ async function compressToWebP(file, maxPx = 1920, quality = 0.82) {
   });
 }
 
-/* ── CarouselLightbox — visualização ampliada ────────────────────*/
-function CarouselLightbox({ urls, initialIdx, onClose }) {
-  const [idx, setIdx] = useState(initialIdx || 0);
-  const prev = () => setIdx(i => (i - 1 + urls.length) % urls.length);
-  const next = () => setIdx(i => (i + 1) % urls.length);
-
-  // Fechar com ESC ou seta no teclado
-  React.useEffect(() => {
-    const onKey = e => {
-      if (e.key === 'Escape')      onClose();
-      if (e.key === 'ArrowLeft')   prev();
-      if (e.key === 'ArrowRight')  next();
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, []);
-
-  return (
-    <div onClick={onClose}
-      style={{ position:'fixed', inset:0, background:'rgba(0,0,0,.88)', zIndex:900,
-        display:'flex', alignItems:'center', justifyContent:'center' }}>
-
-      {/* Imagem central */}
-      <div onClick={e => e.stopPropagation()}
-        style={{ position:'relative', maxHeight:'88vh', display:'flex',
-          flexDirection:'column', alignItems:'center', gap:12 }}>
-
-        {/\.(mp4|webm|mov|m4v)$/i.test(urls[idx] || '')
-          ? <video src={urls[idx]} controls autoPlay loop playsInline
-              style={{ maxHeight:'80vh', maxWidth:'min(480px, 90vw)',
-                borderRadius:10, display:'block', objectFit:'contain',
-                boxShadow:'0 24px 80px rgba(0,0,0,.7)' }}/>
-          : <img src={urls[idx]} alt={`Slide ${idx+1}`}
-              style={{ maxHeight:'80vh', maxWidth:'min(480px, 90vw)',
-                borderRadius:10, display:'block', objectFit:'contain',
-                boxShadow:'0 24px 80px rgba(0,0,0,.7)' }}/>}
-
-        {/* Contador */}
-        <div style={{ fontSize:12, fontFamily:'Roboto,sans-serif', fontWeight:700,
-          color:'rgba(255,255,255,.6)', letterSpacing:'0.08em' }}>
-          {idx + 1} / {urls.length}
-        </div>
-
-        {/* Dots */}
-        <div style={{ display:'flex', gap:5 }}>
-          {urls.map((_, i) => (
-            <button key={i} onClick={() => setIdx(i)}
-              style={{ width: i === idx ? 18 : 6, height:6, borderRadius:999,
-                border:'none', cursor:'pointer', transition:'all 200ms',
-                background: i === idx ? '#fff' : 'rgba(255,255,255,.3)' }}/>
-          ))}
-        </div>
-      </div>
-
-      {/* Seta esquerda */}
-      <button onClick={e => { e.stopPropagation(); prev(); }}
-        style={{ position:'fixed', left:20, top:'50%', transform:'translateY(-50%)',
-          background:'rgba(255,255,255,.1)', border:'1px solid rgba(255,255,255,.15)',
-          borderRadius:'50%', width:44, height:44, cursor:'pointer', color:'#fff',
-          display:'flex', alignItems:'center', justifyContent:'center',
-          transition:'background 150ms' }}
-        onMouseEnter={e => e.currentTarget.style.background='rgba(255,255,255,.2)'}
-        onMouseLeave={e => e.currentTarget.style.background='rgba(255,255,255,.1)'}>
-        <LucideIcon icon="chevron-left" size={20}/>
-      </button>
-
-      {/* Seta direita */}
-      <button onClick={e => { e.stopPropagation(); next(); }}
-        style={{ position:'fixed', right:20, top:'50%', transform:'translateY(-50%)',
-          background:'rgba(255,255,255,.1)', border:'1px solid rgba(255,255,255,.15)',
-          borderRadius:'50%', width:44, height:44, cursor:'pointer', color:'#fff',
-          display:'flex', alignItems:'center', justifyContent:'center',
-          transition:'background 150ms' }}
-        onMouseEnter={e => e.currentTarget.style.background='rgba(255,255,255,.2)'}
-        onMouseLeave={e => e.currentTarget.style.background='rgba(255,255,255,.1)'}>
-        <LucideIcon icon="chevron-right" size={20}/>
-      </button>
-
-      {/* Fechar */}
-      <button onClick={onClose}
-        style={{ position:'fixed', top:16, right:16,
-          background:'rgba(255,255,255,.1)', border:'1px solid rgba(255,255,255,.15)',
-          borderRadius:'50%', width:36, height:36, cursor:'pointer', color:'#fff',
-          display:'flex', alignItems:'center', justifyContent:'center' }}>
-        <LucideIcon icon="x" size={16}/>
-      </button>
-    </div>
-  );
-}
+// CarouselLightbox agora vive em shared.jsx (window.CarouselLightbox) — reusado
+// no Tráfego também. Não duplicar aqui.
+const { CarouselLightbox } = window;
 
 /* ── SlideCarousel — viewer inline no card ───────────────────────*/
 function SlideCarousel({ urls, onExpand }) {
@@ -388,6 +302,69 @@ function CopyAllPromptsBtn({ slidesArr }) {
         cursor:has?'pointer':'default', transition:'all 150ms', flexShrink:0 }}>
       <LucideIcon icon={copied?'check':'sparkles'} size={12}/>{copied?'Copiado!':'Copiar prompts p/ ChatGPT'}
     </button>
+  );
+}
+
+/* ── AdicionarCriativoOrganicoBtn ──────────────────────────────────
+   Mesmo fluxo do Tráfego (adicionar-criativo.py), aqui usando o script
+   adicionar-criativo-organico.py: busca a pasta ORG N no Drive, otimiza
+   as imagens (1350px / 1920px stories, JPEG 82%) e sobe pro R2.
+   Roda no Mac via serve.py; fora do Mac mostra aviso.
+─────────────────────────────────────────────────────────────────*/
+function AdicionarCriativoOrganicoBtn({ numero, onDone }) {
+  const [step, setStep] = useState('idle'); // idle | running | warn
+  const [msg, setMsg]   = useState('');
+
+  async function run(pasta) {
+    const isLocal = ['localhost', '127.0.0.1'].includes(location.hostname);
+    if (!isLocal) {
+      setStep('warn'); setMsg('Precisa estar no Mac "Fotografia é o Meu Negócio"');
+      setTimeout(() => { setStep('idle'); setMsg(''); }, 5000); return;
+    }
+    setStep('running'); setMsg('Buscando no Drive…');
+    const qs = `numero=${numero}` + (pasta ? `&pasta=${encodeURIComponent(pasta)}` : '');
+    try { await fetch(`/api/adicionar-criativo-organico?${qs}`, { method: 'POST' }); }
+    catch { setStep('warn'); setMsg('Servidor local não respondeu'); setTimeout(() => { setStep('idle'); setMsg(''); }, 5000); return; }
+    const poll = setInterval(async () => {
+      try {
+        const s = await (await fetch('/api/adicionar-criativo-organico')).json();
+        if (s.msg) setMsg(s.msg);
+        if (!s.running) {
+          clearInterval(poll);
+          if (s.error) { setStep('warn'); setMsg(s.error); setTimeout(() => { setStep('idle'); setMsg(''); }, 6000); }
+          else { setStep('idle'); setMsg(''); onDone && onDone(); }
+        }
+      } catch { clearInterval(poll); setStep('idle'); setMsg(''); }
+    }, 2000);
+  }
+
+  function manual() {
+    const p = window.prompt('Cole o link ou ID da pasta do criativo no Drive:');
+    if (p && p.trim()) run(p.trim());
+  }
+
+  if (step === 'running') {
+    return (
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:6, padding:'8px',
+        borderRadius:8, background:'rgba(56,189,248,.1)', border:'1px solid rgba(56,189,248,.3)',
+        color:'#38bdf8', fontFamily:'Roboto,sans-serif', fontWeight:700, fontSize:11.5 }}>
+        <LucideIcon icon="loader" size={13} style={{ animation:'spin 1s linear infinite' }}/>{msg || 'Otimizando…'}
+      </div>
+    );
+  }
+  return (
+    <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+      {step === 'warn' && (
+        <div style={{ padding:'6px 10px', borderRadius:8, background:'rgba(248,113,113,.08)',
+          border:'1px solid rgba(248,113,113,.3)', fontSize:11, color:'#f87171', lineHeight:1.4 }}>{msg}</div>
+      )}
+      <div style={{ display:'flex', gap:8 }}>
+        <Btn variant="secondary" size="sm" icon="image-plus" style={{ flex:1, justifyContent:'center' }}
+          onClick={() => run(null)}>Adicionar criativo</Btn>
+        <Btn variant="ghost" size="sm" icon="folder" style={{ justifyContent:'center' }}
+          onClick={manual} title="Escolher a pasta do Drive manualmente">Pasta</Btn>
+      </div>
+    </div>
   );
 }
 
@@ -1299,6 +1276,19 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
 
                   {form.plataforma === 'Carrossel' ? (<>
                     <div>
+                      {!isNew && item?.numero && (
+                        <div style={{ marginBottom:12 }}>
+                          <AdicionarCriativoOrganicoBtn numero={item.numero} onDone={async () => {
+                            if (!window.db) return;
+                            const { data } = await window.db.from('conteudo_organico').select('slides').eq('id', item.id).single();
+                            if (data?.slides) {
+                              const novo = parseSlides(data.slides);
+                              setSlidesArr(novo);
+                              set('slides', data.slides);
+                            }
+                          }}/>
+                        </div>
+                      )}
                       <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:10 }}>
                         <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)' }}>Slides ({slidesArr.length})</span>
                         <div style={{ display:'flex', gap:6 }}>
@@ -1335,6 +1325,17 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
                         onBlur={e=>e.target.style.borderColor='var(--app-border)'}/>
                     </div>
                   </>) : (<>
+                    {!isNew && item?.numero && ['Imagem','Stories'].includes(form.plataforma) && (
+                      <AdicionarCriativoOrganicoBtn numero={item.numero} onDone={async () => {
+                        if (!window.db) return;
+                        const { data } = await window.db.from('conteudo_organico').select('slides').eq('id', item.id).single();
+                        if (data?.slides) {
+                          const novo = parseSlides(data.slides);
+                          setSlidesArr(novo);
+                          set('slides', data.slides);
+                        }
+                      }}/>
+                    )}
                     <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
                       <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
                         <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)' }}>Desenvolvimento</span>

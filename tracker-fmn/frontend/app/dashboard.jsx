@@ -1524,12 +1524,17 @@ const ORIGEM_CONFIG = {
   'Facebook':   { color: '#1877f2', bg: 'rgba(24,119,242,.12)',  icon: 'facebook' },
   'Site':       { color: '#8b5cf6', bg: 'rgba(139,92,246,.12)',  icon: 'globe' },
   'Direto':     { color: '#94a3b8', bg: 'rgba(148,163,184,.08)', icon: 'link' },
+  'Sem rastreio (webhook falhou)': { color: '#f59e0b', bg: 'rgba(245,158,11,.10)', icon: 'alert-triangle' },
   'Outros':     { color: '#64748b', bg: 'rgba(100,116,139,.08)', icon: 'help-circle' },
 };
 
 function classifyOrigin(sale) {
   if (sale.meta_ad_id) return 'Meta Ads';
   const s = (sale.utm_source || '').toLowerCase();
+  // hotmart-sync (backfill) só grava quando o webhook em tempo real perdeu a
+  // venda — nesse caso a Hotmart não devolve o sck (tracking), então não dá
+  // pra saber a origem real. Diferente de "Direto" (alguém digitou a URL).
+  if (!s && (sale.hotmart_event || '').startsWith('SYNC_')) return 'Sem rastreio (webhook falhou)';
   if (!s) return 'Direto';
   if (s.includes('whatsapp') || s.includes('wpp') || s.includes('zap')) return 'WhatsApp';
   if (s.includes('instagram') || s === 'ig')                             return 'Instagram';
@@ -1918,6 +1923,89 @@ function Dicas({ data }) {
   );
 }
 
+/* ── Hook: Funil Upsell Blindagem ────────────────────────────────*/
+function useUpsellData() {
+  const [upsell, setUpsell] = useState(null);
+  useEffect(() => {
+    if (!window.db) return;
+    async function load() {
+      const [{ data: mcvRows }, { data: blindRows }] = await Promise.all([
+        window.db.from('vendas').select('id').eq('status','aprovada').ilike('produto_nome','%contrato visual%'),
+        window.db.from('vendas').select('id').eq('status','aprovada').ilike('produto_nome','%blindagem%'),
+      ]);
+      const mcv   = (mcvRows   || []).length;
+      const blind = (blindRows || []).length;
+      setUpsell({
+        vendasMcv:     mcv,
+        upsells:       blind,
+        taxaConversao: mcv > 0 ? (blind / mcv) * 100 : 0,
+        receitaExtra:  blind * 100,
+      });
+    }
+    load();
+    const ch = window.db.channel('upsell-rt')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'vendas' }, load)
+      .subscribe();
+    return () => window.db.removeChannel(ch);
+  }, []);
+  return upsell;
+}
+
+/* ── UpsellFunnelCard ────────────────────────────────────────────*/
+function UpsellFunnelCard({ data }) {
+  const { vendasMcv, upsells, taxaConversao, receitaExtra } = data;
+  const metrics = [
+    { label: 'Vendas MCV (base)', value: vendasMcv, icon: 'shopping-cart', color: 'var(--text-1)' },
+    { label: 'Upsells Blindagem', value: upsells,   icon: 'zap',           color: 'var(--fmn-gold)' },
+    { label: 'Taxa de Upsell',    value: taxaConversao.toFixed(1) + '%', icon: 'percent', color: 'var(--clr-pos)' },
+    { label: 'Receita Extra',     value: fmtCur(receitaExtra), icon: 'wallet', color: 'var(--clr-pos)' },
+  ];
+  return (
+    <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:10 }}>
+        {metrics.map(m => (
+          <div key={m.label} style={{ display:'flex', flexDirection:'column', gap:4,
+            padding:'12px 14px', borderRadius:10,
+            background:'var(--app-surface-2)', border:'1px solid var(--app-border)' }}>
+            <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:2 }}>
+              <LucideIcon icon={m.icon} size={13} color="var(--text-3)"/>
+              <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700,
+                color:'var(--text-3)', letterSpacing:'0.04em', textTransform:'uppercase' }}>
+                {m.label}
+              </span>
+            </div>
+            <span style={{ fontSize:22, fontFamily:'Roboto,sans-serif', fontWeight:700,
+              color:m.color, lineHeight:1 }}>
+              {m.value}
+            </span>
+          </div>
+        ))}
+      </div>
+
+      {vendasMcv > 0 && (
+        <div style={{ padding:'12px 14px', borderRadius:10,
+          background:'var(--app-surface-2)', border:'1px solid var(--app-border)' }}>
+          <div style={{ display:'flex', justifyContent:'space-between', marginBottom:8 }}>
+            <span style={{ fontSize:10.5, fontFamily:'Roboto,sans-serif', fontWeight:700,
+              color:'var(--text-2)' }}>MCV → Blindagem</span>
+            <span style={{ fontSize:10.5, fontFamily:'Roboto,sans-serif', fontWeight:700,
+              color:'var(--fmn-gold)' }}>{vendasMcv} → {upsells}</span>
+          </div>
+          <div style={{ background:'rgba(255,255,255,.07)', borderRadius:999, height:8, overflow:'hidden' }}>
+            <div style={{ height:'100%', borderRadius:999,
+              background:'linear-gradient(90deg,rgba(234,170,65,.9),rgba(232,130,10,.8))',
+              width:`${Math.min(taxaConversao,100)}%`, transition:'width .6s ease' }}/>
+          </div>
+          <div style={{ marginTop:6, fontSize:10, fontFamily:'Roboto,sans-serif',
+            color:'var(--text-3)', textAlign:'right' }}>
+            {taxaConversao.toFixed(1)}% de conversão de upsell · acumulado total
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ── DashboardScreen ─────────────────────────────────────────────*/
 function DashboardScreen({ period, onPeriodChange, dateRange, onDateRangeChange, onNavigate }) {
   // Captura o mapa com fallback: se ainda não estava no window no primeiro render,
@@ -1930,6 +2018,7 @@ function DashboardScreen({ period, onPeriodChange, dateRange, onDateRangeChange,
   const periodHeatmap      = useWeeklySalesHeatmap(rangeFrom, rangeTo);
   const recuperacao             = useRecuperacao(rangeFrom, rangeTo);
   const recentSales             = useRecentSales(10);
+  const upsellData              = useUpsellData();
 
   const fat         = data?.fat         || 0;
   const lucro       = data?.lucro       || 0;
@@ -2063,6 +2152,15 @@ function DashboardScreen({ period, onPeriodChange, dateRange, onDateRangeChange,
             </div>
           </SectionCard>
         )}
+
+        {/* Funil Upsell Blindagem */}
+        <SectionCard title="Funil Upsell — Blindagem"
+          headerRight={<span style={{ fontSize:10, fontFamily:'Roboto,sans-serif',
+            color:'var(--text-3)', letterSpacing:'0.04em' }}>acumulado total · todos os períodos</span>}>
+          {upsellData
+            ? <UpsellFunnelCard data={upsellData}/>
+            : <EmptyState icon="zap" label="Carregando..."/>}
+        </SectionCard>
 
         {/* Linhas finais — grid 3×3 com mapa ocupando coluna direita */}
         <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gridTemplateRows:'auto auto auto', gap:12, alignItems:'stretch' }}>

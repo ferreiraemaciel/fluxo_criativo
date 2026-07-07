@@ -418,12 +418,18 @@ function MetricHoverPopover({ hover }) {
 
 /* ── MediaModal ─────────────────────────────────────────────────*/
 function MediaModal({ ad, onClose }) {
-  const [idx, setIdx] = React.useState(0);
   if (!ad) return null;
   const files = ad.files || [];
-  const isCarrossel = ad.mediaTipo === 'carrossel' || files.filter(f => f.tipo === 'imagem').length > 1;
   const images = files.filter(f => f.tipo === 'imagem');
   const video = files.find(f => f.tipo === 'video');
+
+  // Imagem/carrossel: visualização ampliada (mesmo componente do Orgânico).
+  // Vídeo do Drive não dá pra embutir direto (sem stream público), então
+  // esse caso continua abrindo no Drive pelo box abaixo.
+  if (images.length > 0) {
+    const urls = images.map(f => f.url_embed || `https://drive.google.com/thumbnail?id=${f.file_id}&sz=w1080`);
+    return <CarouselLightbox urls={urls} initialIdx={0} onClose={onClose}/>;
+  }
 
   const overlay = {
     position:'fixed', inset:0, background:'rgba(0,0,0,.85)', zIndex:9000,
@@ -438,7 +444,7 @@ function MediaModal({ ad, onClose }) {
   const videoThumb = video ? `https://drive.google.com/thumbnail?id=${video.file_id}&sz=w640` : null;
 
   let content;
-  if (video && (!isCarrossel || images.length === 0)) {
+  if (video) {
     const viewUrl = video.url_view || `https://drive.google.com/file/d/${video.file_id}/view`;
     content = (
       <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:14 }}>
@@ -467,37 +473,6 @@ function MediaModal({ ad, onClose }) {
           Abrir vídeo no Drive
         </a>
       </div>
-    );
-  } else if (isCarrossel && images.length > 0) {
-    const cur = images[idx] || images[0];
-    content = (
-      <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:12 }}>
-        <img src={cur.url_embed || `https://drive.google.com/thumbnail?id=${cur.file_id}&sz=w800`}
-          alt={`slide ${idx+1}`}
-          style={{ maxWidth:'min(640px,80vw)', maxHeight:'60vh', borderRadius:8, objectFit:'contain' }}/>
-        {images.length > 1 && (
-          <div style={{ display:'flex', alignItems:'center', gap:16 }}>
-            <button onClick={() => setIdx(i => (i - 1 + images.length) % images.length)}
-              style={{ background:'rgba(255,255,255,.12)', border:'none', borderRadius:8, padding:'6px 12px', cursor:'pointer', color:'#fff' }}>
-              <LucideIcon icon="chevron-left" size={18}/>
-            </button>
-            <span style={{ color:'rgba(255,255,255,.5)', fontSize:12, fontFamily:'Roboto,sans-serif' }}>
-              {idx+1} / {images.length}
-            </span>
-            <button onClick={() => setIdx(i => (i + 1) % images.length)}
-              style={{ background:'rgba(255,255,255,.12)', border:'none', borderRadius:8, padding:'6px 12px', cursor:'pointer', color:'#fff' }}>
-              <LucideIcon icon="chevron-right" size={18}/>
-            </button>
-          </div>
-        )}
-      </div>
-    );
-  } else if (images.length > 0) {
-    const cur = images[0];
-    content = (
-      <img src={cur.url_embed || `https://drive.google.com/thumbnail?id=${cur.file_id}&sz=w800`}
-        alt="criativo"
-        style={{ maxWidth:'min(640px,80vw)', maxHeight:'70vh', borderRadius:8, objectFit:'contain' }}/>
     );
   } else {
     content = <div style={{ color:'rgba(255,255,255,.4)', padding:40, fontFamily:'Roboto,sans-serif' }}>Sem mídia disponível</div>;
