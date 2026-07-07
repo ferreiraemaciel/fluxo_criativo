@@ -1144,9 +1144,14 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
                 <div style={{ position:'relative', width:'100%', maxWidth:280, borderRadius:10,
                   overflow:'hidden', background:'rgba(255,255,255,.04)',
                   border:'1px solid rgba(255,255,255,.08)' }}>
-                  <img src={previewUrls[previewIdx]} alt={`Slide ${previewIdx+1}`}
-                    onClick={() => setLightbox(previewIdx)} title="Clique para ampliar"
-                    style={{ width:'100%', display:'block', aspectRatio:'4/5', objectFit:'cover', cursor:'zoom-in' }}/>
+                  {/\.(mp4|webm|mov|m4v)$/i.test(previewUrls[previewIdx] || '')
+                    ? <video src={previewUrls[previewIdx]} muted loop playsInline
+                        onClick={() => setLightbox(previewIdx)} title="Clique para ampliar"
+                        onMouseEnter={e => e.currentTarget.play()} onMouseLeave={e => e.currentTarget.pause()}
+                        style={{ width:'100%', display:'block', aspectRatio:'4/5', objectFit:'cover', cursor:'zoom-in' }}/>
+                    : <img src={previewUrls[previewIdx]} alt={`Slide ${previewIdx+1}`}
+                        onClick={() => setLightbox(previewIdx)} title="Clique para ampliar"
+                        style={{ width:'100%', display:'block', aspectRatio:'4/5', objectFit:'cover', cursor:'zoom-in' }}/>}
                   {previewUrls.length > 1 && (<>
                     <button onClick={()=>setPreviewIdx(i=>(i-1+previewUrls.length)%previewUrls.length)}
                       style={{ position:'absolute', left:6, top:'50%', transform:'translateY(-50%)',
