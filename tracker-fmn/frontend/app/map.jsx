@@ -179,43 +179,16 @@ function BrazilD3Map({ byState, citiesByState, total }) {
   return <div ref={containerRef} style={{width:'100%', position:'relative', minHeight:200}}/>;
 }
 
-var DRIVE_FOLDER_URL = 'https://drive.google.com/open?id=1nmgaOveiB5YFA1ZgYyllMjfNTq_4CElA&usp=drive_fs';
-
 function SalesMapWidget({ from, to }) {
-  var [loading, setLoading] = React.useState(false);
-  var [refreshKey, setRefreshKey] = React.useState(0);
-  var data = useMapData(from, to, refreshKey);
+  // O botão "Atualizar" chamava importar-geo (CSV manual no Drive) — hoje o
+  // estado/cidade já vem automático da Hotmart (webhook em tempo real e o
+  // backfill do hotmart-sync), então esse import manual não faz mais sentido.
+  var data = useMapData(from, to, 0);
   var byState = data.byState; var citiesByState = data.citiesByState; var total = data.total;
-
-  function handleAtualizar() {
-    if (loading) return;
-    setLoading(true);
-    var SUPA_URL = window.__SUPABASE_URL__ || '';
-    var SUPA_KEY = window.__SUPABASE_ANON_KEY__ || '';
-    fetch(SUPA_URL + '/functions/v1/importar-geo', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPA_KEY },
-      body: JSON.stringify({ driveUrl: DRIVE_FOLDER_URL }),
-    })
-      .then(function(r) { return r.json(); })
-      .then(function() { setLoading(false); setRefreshKey(function(k){return k+1;}); })
-      .catch(function() { setLoading(false); });
-  }
 
   return (
     <div style={{display:'flex', flexDirection:'column', height:'100%', minHeight:360}}>
-      <div style={{display:'flex', alignItems:'center', justifyContent:'space-between', flexShrink:0}}>
-        <button
-          onClick={handleAtualizar}
-          disabled={loading}
-          style={{
-            background:'rgba(255,255,255,.06)', border:'1px solid rgba(255,255,255,.1)',
-            borderRadius:6, padding:'4px 10px', color:'rgba(255,255,255,.5)',
-            fontSize:10, fontFamily:'Roboto,sans-serif', letterSpacing:'0.08em',
-            textTransform:'uppercase', cursor: loading ? 'default' : 'pointer', fontWeight:600,
-          }}>
-          {loading ? 'Atualizando...' : 'Atualizar'}
-        </button>
+      <div style={{display:'flex', alignItems:'center', justifyContent:'flex-end', flexShrink:0}}>
         <span style={{fontSize:28, fontFamily:'Roboto,sans-serif', fontWeight:900,
           color:'var(--fmn-gold)', lineHeight:1, letterSpacing:'-0.02em'}}>{total}</span>
       </div>

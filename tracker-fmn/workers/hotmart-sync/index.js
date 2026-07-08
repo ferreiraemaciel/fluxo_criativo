@@ -20,26 +20,37 @@ const STATUS_MAP = {
   WAITING_PAYMENT: 'pendente',
 };
 
-// Busca telefone por transação (endpoint /sales/users, diferente do
-// /sales/history usado no resto do worker — esse aqui TEM o telefone).
-async function buscarTelefoneHotmart(token, transactionId) {
+// Busca telefone + endereço por transação (endpoint /sales/users, diferente
+// do /sales/history usado no resto do worker — esse aqui TEM esses dados).
+// Uma chamada só resolve telefone e geo (mapa de vendas), em vez de duas.
+async function buscarDadosCompradorHotmart(token, transactionId) {
   try {
     const res = await fetch(`https://developers.hotmart.com/payments/api/v1/sales/users?transaction=${transactionId}`,
       { headers: { Authorization: `Bearer ${token}` } });
-    if (!res.ok) return null;
+    if (!res.ok) return {};
     const data = await res.json();
     const items = data?.items || [];
     for (const item of items) {
       for (const u of item.users || []) {
         if (u.role !== 'BUYER') continue;
-        const phone = u.user?.cellphone || u.user?.phone;
-        if (phone) return String(phone).trim();
+        const buyer = u.user || {};
+        const phone = buyer.cellphone || buyer.phone;
+        const addr  = buyer.address || {};
+        return {
+          telefone:  phone ? String(phone).trim() : null,
+          estado:    addr.state          || null,
+          cidade:    addr.city           || null,
+          cep:       addr.zip_code       || null,
+          bairro:    addr.neighborhood   || null,
+          endereco:  addr.address        || null,
+          numero:    addr.number         || null,
+        };
       }
     }
-    return null;
+    return {};
   } catch (e) {
-    console.error(`[hotmart-sync] buscarTelefoneHotmart(${transactionId}) erro:`, e.message);
-    return null;
+    console.error(`[hotmart-sync] buscarDadosCompradorHotmart(${transactionId}) erro:`, e.message);
+    return {};
   }
 }
 
@@ -287,13 +298,21 @@ async function run(env) {
     return { ok: true, message: `0 vendas faltando (${items.length} retornadas, todas já cobertas pelo webhook)` };
   }
 
-  // Telefone: /sales/history (usado acima) não traz telefone nenhum. Busca
-  // por transação em /sales/users (tem o telefone) e, se não achar, cai no
-  // WhatsApp do quiz — mesmo fallback de duas camadas do webhook em tempo real.
+  // Telefone + geo: /sales/history (usado acima) não traz nem um nem outro.
+  // Busca por transação em /sales/users (tem os dois) e, se o telefone não
+  // vier, cai no WhatsApp do quiz — mesmo fallback do webhook em tempo real.
+  // Sem isso a venda fica sem estado/cidade e some do mapa de vendas.
   for (const v of faltantes) {
-    let telefone = await buscarTelefoneHotmart(token, v.hotmart_transaction_id);
+    const dados = await buscarDadosCompradorHotmart(token, v.hotmart_transaction_id);
+    let telefone = dados.telefone;
     if (!telefone) telefone = await buscarWhatsappQuiz(env, v.comprador_email);
     if (telefone) v.comprador_telefone = telefone;
+    if (dados.estado)   v.comprador_estado   = dados.estado;
+    if (dados.cidade)   v.comprador_cidade   = dados.cidade;
+    if (dados.cep)      v.comprador_cep      = dados.cep;
+    if (dados.bairro)   v.comprador_bairro   = dados.bairro;
+    if (dados.endereco) v.comprador_end      = dados.endereco;
+    if (dados.numero)   v.comprador_numero   = dados.numero;
   }
 
   const count = await upsertVendas(env, faltantes);
