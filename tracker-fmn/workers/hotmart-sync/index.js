@@ -20,6 +20,45 @@ const STATUS_MAP = {
   WAITING_PAYMENT: 'pendente',
 };
 
+// Busca telefone por transação (endpoint /sales/users, diferente do
+// /sales/history usado no resto do worker — esse aqui TEM o telefone).
+async function buscarTelefoneHotmart(token, transactionId) {
+  try {
+    const res = await fetch(`https://developers.hotmart.com/payments/api/v1/sales/users?transaction=${transactionId}`,
+      { headers: { Authorization: `Bearer ${token}` } });
+    if (!res.ok) return null;
+    const data = await res.json();
+    const items = data?.items || [];
+    for (const item of items) {
+      for (const u of item.users || []) {
+        if (u.role !== 'BUYER') continue;
+        const phone = u.user?.cellphone || u.user?.phone;
+        if (phone) return String(phone).trim();
+      }
+    }
+    return null;
+  } catch (e) {
+    console.error(`[hotmart-sync] buscarTelefoneHotmart(${transactionId}) erro:`, e.message);
+    return null;
+  }
+}
+
+// Fallback: WhatsApp que o comprador preencheu no quiz (casando por email).
+async function buscarWhatsappQuiz(env, email) {
+  if (!email) return null;
+  try {
+    const res = await fetch(
+      `${env.SUPABASE_URL}/rest/v1/quiz_leads?email=ilike.${encodeURIComponent(email)}&whatsapp=not.is.null&select=whatsapp&limit=1`,
+      { headers: { apikey: env.SUPABASE_SERVICE_KEY, Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}` } }
+    );
+    if (!res.ok) return null;
+    const rows = await res.json();
+    return rows?.[0]?.whatsapp ? String(rows[0].whatsapp).trim() : null;
+  } catch {
+    return null;
+  }
+}
+
 async function getHotmartToken(env) {
   const res = await fetch(
     'https://api-sec-vlc.hotmart.com/security/oauth/token?grant_type=client_credentials',
@@ -246,6 +285,15 @@ async function run(env) {
 
   if (!faltantes.length) {
     return { ok: true, message: `0 vendas faltando (${items.length} retornadas, todas já cobertas pelo webhook)` };
+  }
+
+  // Telefone: /sales/history (usado acima) não traz telefone nenhum. Busca
+  // por transação em /sales/users (tem o telefone) e, se não achar, cai no
+  // WhatsApp do quiz — mesmo fallback de duas camadas do webhook em tempo real.
+  for (const v of faltantes) {
+    let telefone = await buscarTelefoneHotmart(token, v.hotmart_transaction_id);
+    if (!telefone) telefone = await buscarWhatsappQuiz(env, v.comprador_email);
+    if (telefone) v.comprador_telefone = telefone;
   }
 
   const count = await upsertVendas(env, faltantes);
