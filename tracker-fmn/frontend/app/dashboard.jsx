@@ -236,12 +236,22 @@ function useDashboardData(period, dateRange) {
           { label: 'Lucro real',                 value: lucro,         color: 'var(--clr-pos)', bold: true, separator: true },
         ];
 
+        /* upsell Blindagem — cross-reference emails (acumulado total, independente do período) */
+        const [{ data: mcvEmailsRaw }, { data: blindEmailsRaw }] = await Promise.all([
+          window.db.from('vendas').select('email').eq('status','aprovada').ilike('produto_nome','%contrato visual%'),
+          window.db.from('vendas').select('email').eq('status','aprovada').ilike('produto_nome','%blindagem%'),
+        ]);
+        const mcvSet      = new Set((mcvEmailsRaw   || []).map(r => r.email).filter(Boolean));
+        const blindSet    = new Set((blindEmailsRaw || []).map(r => r.email).filter(Boolean));
+        const upsellConv  = [...blindSet].filter(e => mcvSet.has(e)).length;
+
         /* funil steps */
         const funnelSteps = totCliques > 0 ? [
           { label: 'Cliques',                value: totCliques, pct: 100 },
           { label: 'Visualizações de Página', value: totLP,      pct: +((totLP/totCliques)*100).toFixed(1) },
           { label: 'Início de Compra',        value: totIC,      pct: +((totIC/totCliques)*100).toFixed(1) },
           { label: 'Vendas Aprovadas',        value: totComp,    pct: +((totComp/totCliques)*100).toFixed(1) },
+          { label: 'Upsell Blindagem',        value: upsellConv, pct: +((upsellConv/totCliques)*100).toFixed(1) },
         ] : null;
 
         /* CPA médio consolidado (blended): investimento total ÷ compras totais do período.
@@ -1989,17 +1999,21 @@ function useUpsellData() {
   useEffect(() => {
     if (!window.db) return;
     async function load() {
+      // Busca emails de quem comprou MCV e de quem comprou Blindagem separadamente
       const [{ data: mcvRows }, { data: blindRows }] = await Promise.all([
-        window.db.from('vendas').select('id').eq('status','aprovada').ilike('produto_nome','%contrato visual%'),
-        window.db.from('vendas').select('id').eq('status','aprovada').ilike('produto_nome','%blindagem%'),
+        window.db.from('vendas').select('id,email').eq('status','aprovada').ilike('produto_nome','%contrato visual%'),
+        window.db.from('vendas').select('id,email').eq('status','aprovada').ilike('produto_nome','%blindagem%'),
       ]);
-      const mcv   = (mcvRows   || []).length;
-      const blind = (blindRows || []).length;
+      const mcvEmails   = new Set((mcvRows   || []).map(r => r.email).filter(Boolean));
+      const blindEmails = new Set((blindRows || []).map(r => r.email).filter(Boolean));
+      // Upsell real = quem tem Blindagem E já tinha MCV
+      const upsellCount = [...blindEmails].filter(e => mcvEmails.has(e)).length;
+      const mcv = mcvEmails.size;
       setUpsell({
         vendasMcv:     mcv,
-        upsells:       blind,
-        taxaConversao: mcv > 0 ? (blind / mcv) * 100 : 0,
-        receitaExtra:  blind * 100,
+        upsells:       upsellCount,
+        taxaConversao: mcv > 0 ? (upsellCount / mcv) * 100 : 0,
+        receitaExtra:  upsellCount * 100,
       });
     }
     load();
@@ -2230,15 +2244,6 @@ function DashboardScreen({ period, onPeriodChange, dateRange, onDateRangeChange,
             </div>
           </SectionCard>
         )}
-
-        {/* Funil Upsell Blindagem */}
-        <SectionCard title="Funil Upsell — Blindagem"
-          headerRight={<span style={{ fontSize:10, fontFamily:'Roboto,sans-serif',
-            color:'var(--text-3)', letterSpacing:'0.04em' }}>acumulado total · todos os períodos</span>}>
-          {upsellData
-            ? <UpsellFunnelCard data={upsellData}/>
-            : <EmptyState icon="zap" label="Carregando..."/>}
-        </SectionCard>
 
         {/* Linhas finais — grid 3×3 com mapa ocupando coluna direita */}
         <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gridTemplateRows:'auto auto auto', gap:12, alignItems:'stretch' }}>

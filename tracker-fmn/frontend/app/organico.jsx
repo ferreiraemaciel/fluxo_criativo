@@ -124,21 +124,25 @@ function ContentCard({ item, col, onOpen, onDragStart }) {
   const platIcon = PLAT_ICON[item.plataforma] || 'file';
   const num      = String(item.numero || 0).padStart(3, '0');
 
-  let thumbUrl = null;
+  // Vídeo (Reels): usa a thumb JPG gerada junto (media_files), nunca o .mp4
+  // direto num <img> — <img> não sabe renderizar vídeo. Isolado em try/catch
+  // próprio porque em posts antigos media_files é uma URL crua (não JSON) —
+  // se isso desse throw, travava o fallback de slides pra todo mundo.
+  let videoThumb = null;
   try {
-    // Vídeo (Reels): usa a thumb JPG gerada junto (media_files), nunca o .mp4
-    // direto num <img> — <img> não sabe renderizar vídeo.
     let mf = item.media_files;
-    if (typeof mf === 'string') mf = JSON.parse(mf || '[]');
-    const videoThumb = Array.isArray(mf) ? mf.find(m => m.tipo === 'video')?.thumb_url : null;
-    if (videoThumb) {
-      thumbUrl = videoThumb;
-    } else {
+    if (typeof mf === 'string') mf = JSON.parse(mf);
+    videoThumb = Array.isArray(mf) ? (mf.find(m => m && m.tipo === 'video')?.thumb_url || null) : null;
+  } catch {}
+
+  let thumbUrl = videoThumb;
+  if (!thumbUrl) {
+    try {
       const slidesArr = JSON.parse(item.slides || '[]');
       thumbUrl = slidesArr.map(s => s.image_url).filter(Boolean)[0] || null;
       if (/\.(mp4|webm|mov|m4v)$/i.test(thumbUrl || '')) thumbUrl = null;
-    }
-  } catch {}
+    } catch {}
+  }
 
   return (
     <div
