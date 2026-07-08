@@ -145,12 +145,10 @@ function IdeaCard({ idea, colCfg, onEdit, onConvert, onDelete }) {
         {idea.desc}
       </div>
 
-      {/* indicador discreto de anexo, sem pré-visualizar a imagem no card */}
+      {/* thumb/player da referência, clicável (abre no local original) */}
       {idea.ref && (
-        <div style={{ display:'flex', alignItems:'center', gap:6, fontSize:11,
-          fontFamily:'Roboto,sans-serif', color:'var(--text-3)' }}>
-          <LucideIcon icon={idea.ref.type==='url' ? 'link' : (idea.ref.mime?.startsWith('video') ? 'play-circle' : 'image')} size={12}/>
-          {idea.ref.type==='url' ? 'Link de referência' : (idea.ref.mime?.startsWith('video') ? 'Vídeo anexado' : 'Imagem anexada')}
+        <div onClick={e => { e.stopPropagation(); window.open(idea.ref.value, '_blank', 'noreferrer'); }}>
+          <RefPreview r={idea.ref}/>
         </div>
       )}
 

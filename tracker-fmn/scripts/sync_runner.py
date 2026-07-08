@@ -46,9 +46,17 @@ def record_status(script, status, message, duration_s):
     except Exception as e:
         print(f"  (não consegui registrar status de {script}: {e})")
 
-# Sincronizar = enxuto: indexa material do Drive e reconcilia vendas Hotmart.
-# O preview (Fluxo A) NÃO roda aqui — ele é gerado no momento em que o criativo
-# é adicionado ao card (por card), não em varredura periódica.
+# Sincronizar = enxuto: só reconcilia vendas Hotmart. A indexação do Drive não
+# roda mais aqui — nenhuma tela do Tracker depende de varredura periódica.
+#
+# drive_sync_pastas.py, drive_organizar.py e sync_drive.py retirados em
+# 2026-07-08: indexavam o Drive pra popular media_files/media_drive_url, mas
+# esse fluxo foi substituído pelo botão "Adicionar criativo" (por card,
+# adicionar-criativo.py / adicionar-criativo-organico.py), que busca a pasta
+# no Drive sob demanda, na hora que o material é anexado. Rodar a indexação
+# periódica de novo não teria efeito prático (nada mais lê o resultado) e só
+# consumia tempo/chamadas ao Drive à toa. Arquivos continuam no repositório,
+# prontos pra rodar manualmente se precisar reindexar tudo de uma vez.
 #
 # sync_insights.py e aplicar_regras.py foram retirados desta lista em
 # 2026-07-05: toda a lógica que ainda rodava aqui (status do Kanban com o Meta,
@@ -63,7 +71,7 @@ def record_status(script, status, message, duration_s):
 # abandono_carrinho) e inteiramente redundante — a mesma informação já chega em
 # tempo real pelo webhook, sem precisar de nenhum sync. Card "Recuperação de
 # Vendas" do painel nunca dependeu deste script.
-for script in ["drive_sync_pastas.py", "drive_organizar.py", "sync_drive.py", "sync_hotmart.py"]:
+for script in ["sync_hotmart.py"]:
     t0 = time.time()
     result = subprocess.run(
         [sys.executable, str(base / script)],
