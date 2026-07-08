@@ -246,6 +246,7 @@ def map_sale(item: dict) -> dict:
 
     return {
         "hotmart_transaction_id": transaction,
+        "hotmart_event":          f"SYNC_LOCAL_{raw_status}",
         "status":                 status,
         "created_at":             created_at,
         "produto_id":             produto_id,
@@ -305,34 +306,38 @@ def upsert_supabase(rows: list):
 # ── Enriquecimento de endereço via API de detalhes ───────────────────────────
 
 def fetch_buyer_details(token: str, transaction: str) -> dict:
-    """Busca detalhes do comprador (incluindo endereço) via endpoint de resumo da Hotmart."""
+    """Busca telefone + endereço do comprador. O endpoint antigo
+    (sales/users/details?transactionCode=) devolve 200 vazio — não funciona.
+    Quem realmente tem esses dados é sales/users?transaction=."""
     url = (
-        "https://developers.hotmart.com/payments/api/v1/sales/users/details"
-        f"?transactionCode={urllib.parse.quote(transaction)}"
+        "https://developers.hotmart.com/payments/api/v1/sales/users"
+        f"?transaction={urllib.parse.quote(transaction)}"
     )
-    req = urllib.request.Request(url, headers={
-        "Authorization": f"Bearer {token}",
-        "Content-Type":  "application/json",
-    })
+    req = urllib.request.Request(url, headers={"Authorization": f"Bearer {token}"})
     try:
         with urllib.request.urlopen(req, timeout=10) as resp:
             body = json.loads(resp.read())
-            items = body.get("items", [])
-            return items[0] if items else {}
+        for item in body.get("items", []):
+            for u in item.get("users", []):
+                if u.get("role") == "BUYER":
+                    return u.get("user") or {}
+        return {}
     except Exception:
         return {}
 
 
 def enrich_estados(token: str, days: int = 90):
-    """Busca na Hotmart o endereço de vendas aprovadas sem estado cadastrado."""
+    """Busca na Hotmart telefone + endereço de vendas aprovadas que ainda não
+    têm. Roda sempre (não é mais opt-in) — os três caminhos que gravam vendas
+    (webhook, hotmart-sync na nuvem e este script local) agora têm o mesmo
+    enriquecimento, pra nenhum ficar sem telefone/estado."""
     import time
 
-    # Buscar transaction IDs sem estado no Supabase
     url = (
         f"{SUPABASE_URL}/rest/v1/vendas"
         f"?select=hotmart_transaction_id"
         f"&status=eq.aprovada"
-        f"&comprador_estado=is.null"
+        f"&or=(comprador_estado.is.null,comprador_telefone.is.null)"
         f"&order=created_at.desc"
         f"&limit=200"
     )
@@ -348,10 +353,10 @@ def enrich_estados(token: str, days: int = 90):
         return
 
     if not pendentes:
-        print("  Nenhuma venda sem estado para enriquecer.")
+        print("  Nenhuma venda pendente de telefone/estado.")
         return
 
-    print(f"  {len(pendentes)} vendas sem estado — buscando detalhes na Hotmart...")
+    print(f"  {len(pendentes)} vendas sem telefone/estado — buscando na Hotmart...")
     atualizados = 0
 
     for item in pendentes:
@@ -359,24 +364,33 @@ def enrich_estados(token: str, days: int = 90):
         if not tid:
             continue
 
-        details = fetch_buyer_details(token, tid)
-        buyer = details.get("buyer") or details.get("data", {}).get("buyer", {})
+        buyer = fetch_buyer_details(token, tid)
         addr  = buyer.get("address") or {}
 
-        estado  = addr.get("state") or addr.get("region") or buyer.get("state") or None
-        cidade  = addr.get("city")  or buyer.get("locality") or None
-        pais    = addr.get("country") or buyer.get("locale", {}).get("country") if isinstance(buyer.get("locale"), dict) else None
+        estado    = addr.get("state") or addr.get("region") or None
+        cidade    = addr.get("city") or None
+        pais      = addr.get("country") or None
+        cep       = addr.get("zip_code") or None
+        bairro    = addr.get("neighborhood") or None
+        endereco  = addr.get("address") or None
+        numero    = addr.get("number") or None
+        telefone  = buyer.get("cellphone") or buyer.get("phone") or None
 
-        if not estado and not cidade:
+        if not any([estado, cidade, telefone]):
             time.sleep(0.2)
             continue
 
-        patch_url  = f"{SUPABASE_URL}/rest/v1/vendas?hotmart_transaction_id=eq.{urllib.parse.quote(tid)}"
         patch_body = {}
-        if estado: patch_body["comprador_estado"] = estado
-        if cidade: patch_body["comprador_cidade"] = cidade
-        if pais:   patch_body["comprador_pais"]   = pais
+        if estado:    patch_body["comprador_estado"]   = estado
+        if cidade:    patch_body["comprador_cidade"]   = cidade
+        if pais:      patch_body["comprador_pais"]     = pais
+        if cep:       patch_body["comprador_cep"]      = cep
+        if bairro:    patch_body["comprador_bairro"]   = bairro
+        if endereco:  patch_body["comprador_end"]      = endereco
+        if numero:    patch_body["comprador_numero"]   = numero
+        if telefone:  patch_body["comprador_telefone"] = str(telefone).strip()
 
+        patch_url = f"{SUPABASE_URL}/rest/v1/vendas?hotmart_transaction_id=eq.{urllib.parse.quote(tid)}"
         patch_req = urllib.request.Request(
             patch_url,
             data=json.dumps(patch_body).encode(),
@@ -392,13 +406,13 @@ def enrich_estados(token: str, days: int = 90):
             with urllib.request.urlopen(patch_req) as r:
                 r.read()
             atualizados += 1
-            print(f"    ✓ {tid[:12]}… → {estado}/{cidade}")
+            print(f"    ✓ {tid[:12]}… → {estado}/{cidade} · tel {telefone}")
         except Exception as e:
             print(f"    ✗ {tid[:12]}… erro: {e}", file=sys.stderr)
 
         time.sleep(0.25)
 
-    print(f"  {atualizados} vendas enriquecidas com endereço.")
+    print(f"  {atualizados} vendas enriquecidas.")
 
 
 # ── Main ─────────────────────────────────────────────────────────────────────
@@ -406,7 +420,6 @@ def enrich_estados(token: str, days: int = 90):
 def main():
     parser = argparse.ArgumentParser(description="Sincroniza vendas Hotmart → Supabase")
     parser.add_argument("--days",   type=int,            default=30,    help="Quantos dias para trás buscar (padrão: 30)")
-    parser.add_argument("--enrich", action="store_true", default=False, help="Enriquecer vendas sem estado via API de detalhes")
     args = parser.parse_args()
 
     end_date   = datetime.now(timezone.utc)
@@ -438,9 +451,12 @@ def main():
             total = sum(r["valor_bruto"] for r in rows if r["status"] == status)
             print(f"  {status}: {count} vendas  |  R$ {total:,.2f}")
 
-    if args.enrich:
-        print("\nEnriquecendo endereços ausentes...")
-        enrich_estados(token, days=args.days)
+    # Enriquecimento roda sempre — não é mais opt-in. sales/history (usado
+    # acima) não traz telefone nem endereço; sem isso toda venda que passa só
+    # por este script (sync local, sem o webhook em tempo real) ficava muda
+    # no card de vendas e sumia do mapa.
+    print("\nEnriquecendo telefone/endereço ausentes...")
+    enrich_estados(token, days=args.days)
 
 
 if __name__ == "__main__":
