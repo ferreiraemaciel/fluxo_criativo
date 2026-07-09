@@ -56,7 +56,12 @@ Quando o usuário disser "lança no Tracker", "adiciona no Tracker", "registra n
 4. Confirmar ao usuário o número do AD lançado e o status ("fazer").
 
 **Campos obrigatórios:** `--titulo`, `--tipo` (imagem/reels/carrossel).
-**Campos opcionais preenchidos automaticamente quando disponíveis:** headline, hook-visual, hook-copy, texto-principal, titulo-ad, descricao-ad, posicionamento, observacoes.
+
+**Reels e Imagem** (estrutura aprovada 2026-07-09, ver `tracker-fmn/CAMPOS-COPY-CRIATIVOS.md`): headline, roteiro, estetica-visual, texto-principal, titulo-ad, descricao-ad, posicionamento, observacoes.
+- `--texto-principal` é SÓ a copy do Meta (o texto que aparece no post/anúncio). NUNCA colar o roteiro/script completo do vídeo ali, isso vai em `--roteiro`.
+- `--estetica-visual` é: em Reels, a descrição de cena/cor/ângulo/som do vídeo; em Imagem, o prompt de geração da imagem.
+
+**Carrossel** (ainda não migrado, campos antigos): headline, hook-visual, hook-copy, desenvolvimento-cta, texto-principal, titulo-ad, descricao-ad, posicionamento, observacoes.
 
 Se algum campo essencial não estiver claro no contexto, perguntar antes de lançar.
 

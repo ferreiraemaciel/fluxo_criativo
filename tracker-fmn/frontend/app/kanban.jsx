@@ -1728,10 +1728,14 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
                 borderRadius:6, padding:'3px 9px', flexShrink:0 }}>
                 ADS {card.num}
               </span>
-              <span style={{ fontSize:14.5, fontFamily:'Roboto,sans-serif', fontWeight:700,
-                color:'var(--text-1)', lineHeight:1.4 }}>
-                {fields.titulo || card.hook || 'Editar criativo'}
-              </span>
+              <input value={fields.titulo} onChange={e => set('titulo', e.target.value)}
+                placeholder="Título do criativo"
+                style={{ fontSize:14.5, fontFamily:'Roboto,sans-serif', fontWeight:700,
+                  color:'var(--text-1)', lineHeight:1.4, background:'transparent',
+                  border:'1px solid transparent', borderRadius:6, padding:'2px 6px',
+                  outline:'none', flex:1, minWidth:120, transition:'border-color 150ms' }}
+                onFocus={e => e.target.style.borderColor='rgba(234,170,65,.4)'}
+                onBlur={e => e.target.style.borderColor='transparent'}/>
             </div>
             <div style={{ display:'flex', gap:8, flexShrink:0, alignItems:'center' }}>
               {saveStatus === 'saved' && (
@@ -2055,7 +2059,7 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
                   <CopyField id="roteiro"    label="Roteiro"                fieldKey="roteiro"           rows={6}
                     hint="Descreva as três partes juntas: Hook, Desenvolvimento e CTA."/>
                   <CopyField id="estetica"   label="Estética Visual"        fieldKey="estetica_visual"   rows={4}
-                    hint="Cenas, ângulo, cor, som — tudo que for da parte estética da gravação e edição do vídeo inteiro."/>
+                    hint="Cenas, ângulo, cor, som: tudo que for da parte estética da gravação e edição do vídeo inteiro."/>
                   <CopyField id="texto-p"    label="Texto Principal"        fieldKey="texto_principal"   rows={3}/>
                   <CopyField id="titulo-ad"  label="Título"                 fieldKey="titulo_ad"         rows={2}/>
                   <CopyField id="descricao"  label="Descrição"              fieldKey="descricao_ad"      rows={2}/>
@@ -2063,11 +2067,11 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
                   <RefBlock value={fields.referencia} onChange={v => set('referencia', v)}/>
                 </>) : fields.tipo === 'imagem' ? (<>
                   <CopyField id="headline"   label="Headline"               fieldKey="headline"          rows={2}
-                    hint="A frase principal/big idea que aparece escrita na imagem — o título, o hook que chama atenção (diferente do Reels, aqui não é falado, é escrito)."/>
+                    hint="A frase principal/big idea que aparece escrita na imagem: o título, o hook que chama atenção (diferente do Reels, aqui não é falado, é escrito)."/>
                   <CopyField id="roteiro"    label="Roteiro"                fieldKey="roteiro"           rows={6}
                     hint="Descreva a imagem: quantos elementos/fotos, quais frases aparecem escritas. Sempre com a ideia do Hook (= Headline), o desenvolvimento (o que mais aparece escrito/visualmente) e um CTA."/>
                   <CopyField id="estetica"   label="Prompt para Gerar Imagem" fieldKey="estetica_visual"  rows={6}
-                    hint="Cole o prompt de geração da imagem. Se ele já tem escrita embutida, cole a escrita aqui também. Se deixa espaço de respiro pra escrita entrar na edição, só mencione o espaço — o texto que vai lá mora no Roteiro."/>
+                    hint="Cole o prompt de geração da imagem. Se ele já tem escrita embutida, cole a escrita aqui também. Se deixa espaço de respiro pra escrita entrar na edição, só mencione o espaço: o texto que vai lá mora no Roteiro."/>
                   <CopyField id="texto-p"    label="Texto Principal"        fieldKey="texto_principal"   rows={3}/>
                   <CopyField id="titulo-ad"  label="Título"                 fieldKey="titulo_ad"         rows={2}/>
                   <CopyField id="descricao"  label="Descrição"              fieldKey="descricao_ad"      rows={2}/>

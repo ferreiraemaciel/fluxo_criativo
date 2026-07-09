@@ -1,18 +1,31 @@
 """
 Tracker FMN — Lançar novo AD via Supabase REST API.
 
-Uso:
+Reels e Imagem usam --roteiro e --estetica-visual (estrutura aprovada
+2026-07-09, ver tracker-fmn/CAMPOS-COPY-CRIATIVOS.md). --hook-visual,
+--hook-copy e --desenvolvimento-cta só devem ser usados pra Carrossel, que
+ainda não migrou. Texto Principal é só a copy do Meta (o texto que aparece
+no post) — nunca o roteiro/script completo do vídeo, isso vai em --roteiro.
+
+Uso (Reels/Imagem):
   python3 scripts/tracker-lancar-ad.py \
     --titulo "1.000 fotógrafos protegidos no Brasil" \
-    --tipo imagem \
+    --tipo reels \
     --headline "1.000 fotógrafos protegidos no Brasil." \
-    --hook-visual "Placar de estádio à noite com câmera no primeiro plano" \
-    --hook-copy "" \
+    --roteiro "Hook: ...\n\nDesenvolvimento: ...\n\nCTA: ..." \
+    --estetica-visual "Placar de estádio à noite com câmera no primeiro plano" \
     --texto-principal "Mais de 1.000 fotógrafos fechando trabalhos com contrato assinado." \
     --titulo-ad "1.000 fotógrafos protegidos" \
     --descricao-ad "Esse é o placar de quem parou de jogar sem árbitro." \
     --posicionamento "Feed Instagram 1080x1350" \
-    --observacoes "Copa/Futebol #9 — Prova. Gerado via criativo-estatico."
+    --observacoes "Copa/Futebol #9. Prova. Gerado via criativo-estatico."
+
+Uso (Carrossel, ainda com os campos antigos):
+  python3 scripts/tracker-lancar-ad.py \
+    --titulo "..." --tipo carrossel \
+    --headline "..." --hook-visual "..." --hook-copy "..." \
+    --desenvolvimento-cta "..." --texto-principal "..." \
+    --titulo-ad "..." --descricao-ad "..."
 """
 
 import argparse
@@ -64,6 +77,8 @@ def _build_payload(args, incluir_numero=None):
         "titulo": args.titulo,
         "tipo": args.tipo,
         "headline": args.headline or None,
+        "roteiro": args.roteiro or None,
+        "estetica_visual": args.estetica_visual or None,
         "hook_visual": args.hook_visual or None,
         "hook_copy": args.hook_copy or None,
         "texto_principal": args.texto_principal or None,
@@ -128,6 +143,8 @@ if __name__ == "__main__":
     parser.add_argument("--titulo", required=True)
     parser.add_argument("--tipo", default="imagem", choices=["reels", "imagem", "carrossel"])
     parser.add_argument("--headline", default="")
+    parser.add_argument("--roteiro", default="")
+    parser.add_argument("--estetica-visual", default="", dest="estetica_visual")
     parser.add_argument("--hook-visual", default="", dest="hook_visual")
     parser.add_argument("--hook-copy", default="", dest="hook_copy")
     parser.add_argument("--texto-principal", default="", dest="texto_principal")
