@@ -1528,7 +1528,7 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
     referencia:       raw.referencia      || '',
     meta_ad_url:      raw.meta_ad_url     || '',
     media_drive_url:  raw.media_drive_url || '',
-    media_tipo:       raw.media_tipo      || '',
+    media_tipo:       raw.media_tipo      || null,
   });
 
   const [showDriveInput, setShowDriveInput] = useState(false);
