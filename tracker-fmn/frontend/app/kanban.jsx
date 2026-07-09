@@ -75,7 +75,7 @@ function useAdsCards() {
     setLoading(true);
     const { data: adsList } = await window.db
       .from('ads')
-      .select('numero,titulo,status,tag,tipo,headline,hook_copy,hook_visual,desenvolvimento_cta,texto_principal,titulo_ad,descricao_ad,posicionamento,media_drive_url,media_tipo,media_files,meta_ad_id,meta_ad_url,vendas_total,cpa_historico,gasto_total,isento_regra,observacoes,thumb_url,media_url,meta_image_hash,meta_video_id,meta_campaign_id,meta_adset_id,meta_publish_status')
+      .select('numero,titulo,status,tag,tipo,headline,hook_copy,hook_visual,desenvolvimento_cta,roteiro,estetica_visual,texto_principal,titulo_ad,descricao_ad,posicionamento,media_drive_url,media_tipo,media_files,meta_ad_id,meta_ad_url,vendas_total,cpa_historico,gasto_total,isento_regra,observacoes,thumb_url,media_url,meta_image_hash,meta_video_id,meta_campaign_id,meta_adset_id,meta_publish_status')
       .order('numero', { ascending: false });
 
     const { data: insights } = await window.db
@@ -1481,10 +1481,12 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
     status:           raw.status          || card.col,
     tipo:             raw.tipo            || 'reels',
     headline:         raw.headline        || '',
+    roteiro:          raw.roteiro         || '',
+    estetica_visual:  raw.estetica_visual || '',
     hook_visual:      raw.hook_visual     || '',
     hook_copy:        raw.hook_copy       || '',
-    texto_principal:  raw.texto_principal || '',
     desenvolvimento_cta: raw.desenvolvimento_cta || '',
+    texto_principal:  raw.texto_principal || '',
     titulo_ad:        raw.titulo_ad       || '',
     descricao_ad:     raw.descricao_ad    || '',
     observacoes:      raw.observacoes     || '',
@@ -1625,7 +1627,7 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
     });
   };
 
-  function CopyField({ id, label, fieldKey, rows = 3 }) {
+  function CopyField({ id, label, fieldKey, rows = 3, hint }) {
     return (
       <div style={{ display:'flex', flexDirection:'column', gap:5 }}>
         <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
@@ -1640,6 +1642,10 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
             {copiedField===id?'Copiado!':'Copiar'}
           </button>
         </div>
+        {hint && (
+          <div style={{ fontSize:11, fontFamily:'Roboto,sans-serif', color:'var(--text-3)',
+            lineHeight:1.5, fontStyle:'italic' }}>{hint}</div>
+        )}
         <textarea value={fields[fieldKey]} onChange={e => set(fieldKey, e.target.value)} rows={rows}
           style={{ width:'100%', padding:'9px 12px', borderRadius:8, resize:'vertical',
             background:'var(--app-surface-2)', border:'1px solid var(--app-border)',
@@ -2043,15 +2049,29 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
                 <span style={{ fontSize:12.5, fontFamily:'Roboto,sans-serif', fontWeight:700, color:'var(--text-1)' }}>Copy</span>
               </div>
               <div style={{ padding:16, display:'flex', flexDirection:'column', gap:14 }}>
-                <CopyField id="headline"     label="Headline"               fieldKey="headline"           rows={2}/>
-                <CopyField id="hook-visual"  label="Hook Visual"            fieldKey="hook_visual"        rows={2}/>
-                <CopyField id="hook-copy"    label="Hook Copy"              fieldKey="hook_copy"          rows={2}/>
-                <CopyField id="texto-p"      label="Texto Principal"        fieldKey="texto_principal"    rows={3}/>
-                <CopyField id="dev-cta"      label="Desenvolvimento + CTA"  fieldKey="desenvolvimento_cta" rows={3}/>
-                <CopyField id="titulo-ad"    label="Título (feed)"          fieldKey="titulo_ad"          rows={2}/>
-                <CopyField id="descricao"    label="Descrição"              fieldKey="descricao_ad"       rows={2}/>
-                <CopyField id="obs"          label="Informações Adicionais" fieldKey="observacoes"        rows={4}/>
-                <RefBlock value={fields.referencia} onChange={v => set('referencia', v)}/>
+                {fields.tipo === 'reels' ? (<>
+                  <CopyField id="headline"   label="Headline"               fieldKey="headline"          rows={2}
+                    hint="Sempre 2 frases nos primeiros segundos: uma de segmentação (ex: 'Fotógrafo e Videomaker') e outra curta que chame muito a atenção."/>
+                  <CopyField id="roteiro"    label="Roteiro"                fieldKey="roteiro"           rows={6}
+                    hint="Descreva as três partes juntas: Hook, Desenvolvimento e CTA."/>
+                  <CopyField id="estetica"   label="Estética Visual"        fieldKey="estetica_visual"   rows={4}
+                    hint="Cenas, ângulo, cor, som — tudo que for da parte estética da gravação e edição do vídeo inteiro."/>
+                  <CopyField id="texto-p"    label="Texto Principal"        fieldKey="texto_principal"   rows={3}/>
+                  <CopyField id="titulo-ad"  label="Título"                 fieldKey="titulo_ad"         rows={2}/>
+                  <CopyField id="descricao"  label="Descrição"              fieldKey="descricao_ad"      rows={2}/>
+                  <CopyField id="obs"        label="Informações Adicionais" fieldKey="observacoes"       rows={4}/>
+                  <RefBlock value={fields.referencia} onChange={v => set('referencia', v)}/>
+                </>) : (<>
+                  <CopyField id="headline"     label="Headline"               fieldKey="headline"           rows={2}/>
+                  <CopyField id="hook-visual"  label="Hook Visual"            fieldKey="hook_visual"        rows={2}/>
+                  <CopyField id="hook-copy"    label="Hook Copy"              fieldKey="hook_copy"          rows={2}/>
+                  <CopyField id="texto-p"      label="Texto Principal"        fieldKey="texto_principal"    rows={3}/>
+                  <CopyField id="dev-cta"      label="Desenvolvimento + CTA"  fieldKey="desenvolvimento_cta" rows={3}/>
+                  <CopyField id="titulo-ad"    label="Título (feed)"          fieldKey="titulo_ad"          rows={2}/>
+                  <CopyField id="descricao"    label="Descrição"              fieldKey="descricao_ad"       rows={2}/>
+                  <CopyField id="obs"          label="Informações Adicionais" fieldKey="observacoes"        rows={4}/>
+                  <RefBlock value={fields.referencia} onChange={v => set('referencia', v)}/>
+                </>)}
               </div>
             </div>
             </div>
@@ -2285,7 +2305,7 @@ function KanbanScreen({ targetAd, onConsumeTarget }) {
     if (tagFilter !== 'Todas' && c.tag !== tagFilter) return false;
     if (searchQuery.trim()) {
       const q = searchQuery.trim().toLowerCase();
-      const haystack = [c.num, c.title, c.raw?.headline, c.raw?.hook_copy, c.raw?.hook_visual]
+      const haystack = [c.num, c.title, c.raw?.headline, c.raw?.roteiro, c.raw?.estetica_visual, c.raw?.hook_copy, c.raw?.hook_visual]
         .filter(Boolean).join(' ').toLowerCase();
       if (!haystack.includes(q)) return false;
     }
