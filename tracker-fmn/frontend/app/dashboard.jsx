@@ -236,13 +236,16 @@ function useDashboardData(period, dateRange) {
           { label: 'Lucro real',                 value: lucro,         color: 'var(--clr-pos)', bold: true, separator: true },
         ];
 
-        /* upsell Blindagem — cross-reference emails (acumulado total, independente do período) */
+        /* upsell Blindagem — cross-reference emails (acumulado total, independente do período).
+           Bug corrigido 2026-07-09: a query pedia a coluna "email", que não
+           existe em vendas (é comprador_email) — vinha sempre vazio, então o
+           card do funil sempre mostrava 0, mesmo com upsells reais fechados. */
         const [{ data: mcvEmailsRaw }, { data: blindEmailsRaw }] = await Promise.all([
-          window.db.from('vendas').select('email').eq('status','aprovada').ilike('produto_nome','%contrato visual%'),
-          window.db.from('vendas').select('email').eq('status','aprovada').ilike('produto_nome','%blindagem%'),
+          window.db.from('vendas').select('comprador_email').eq('status','aprovada').ilike('produto_nome','%contrato visual%'),
+          window.db.from('vendas').select('comprador_email').eq('status','aprovada').ilike('produto_nome','%blindagem%'),
         ]);
-        const mcvSet      = new Set((mcvEmailsRaw   || []).map(r => r.email).filter(Boolean));
-        const blindSet    = new Set((blindEmailsRaw || []).map(r => r.email).filter(Boolean));
+        const mcvSet      = new Set((mcvEmailsRaw   || []).map(r => r.comprador_email).filter(Boolean));
+        const blindSet    = new Set((blindEmailsRaw || []).map(r => r.comprador_email).filter(Boolean));
         const upsellConv  = [...blindSet].filter(e => mcvSet.has(e)).length;
 
         /* funil steps */
