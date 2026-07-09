@@ -1499,13 +1499,45 @@ function SalesByPeriod({ data }) {
   );
 }
 
-/* ── Hook: vendas recentes com atribuição ────────────────────────*/
+/* ── Sino de venda nova ───────────────────────────────────────────
+   Navegador bloqueia áudio disparado sem interação do usuário (política de
+   autoplay do Chrome/Safari) — como o sino toca sozinho ao chegar um evento
+   realtime, sem clique nenhum, ficava mudo e o .catch(()=>{}) escondia o
+   erro. Fix: um único <audio> "destravado" no primeiro clique/tecla da
+   sessão (o navegador libera play() programático depois disso) + log do
+   motivo se ainda assim falhar, pra não ficar invisível de novo. */
+let _bellAudio = null;
+let _bellUnlocked = false;
+
+function _getBellAudio() {
+  if (!_bellAudio) {
+    _bellAudio = new Audio('sounds/sino.m4a');
+    _bellAudio.volume = 0.75;
+  }
+  return _bellAudio;
+}
+
+if (typeof window !== 'undefined' && !window.__bellUnlockBound) {
+  window.__bellUnlockBound = true;
+  const unlock = () => {
+    if (_bellUnlocked) return;
+    const audio = _getBellAudio();
+    audio.play().then(() => {
+      audio.pause();
+      audio.currentTime = 0;
+      _bellUnlocked = true;
+    }).catch(() => {});
+  };
+  ['click', 'keydown', 'touchstart'].forEach(evt =>
+    window.addEventListener(evt, unlock, { once: true, passive: true }));
+}
+
 function playBell() {
   try {
-    const audio = new Audio('sounds/sino.m4a');
-    audio.volume = 0.75;
-    audio.play().catch(() => {});
-  } catch(e) {}
+    const audio = _getBellAudio();
+    audio.currentTime = 0;
+    audio.play().catch(err => console.warn('[sino] bloqueado pelo navegador:', err.message));
+  } catch(e) { console.warn('[sino] erro:', e.message); }
 }
 
 function notifyNewSale(sale) {
