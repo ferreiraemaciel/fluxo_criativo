@@ -1686,7 +1686,7 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
           {/* Header */}
           <div style={{ padding:'14px 20px', borderBottom:'1px solid var(--app-border)',
             display:'flex', alignItems:'center', justifyContent:'space-between', gap:16 }}>
-            <div style={{ display:'flex', alignItems:'center', gap:10, minWidth:0 }}>
+            <div style={{ display:'flex', alignItems:'center', gap:10, minWidth:0, flex:1 }}>
               <button onClick={onClose}
                 style={{ display:'flex', alignItems:'center', gap:5, flexShrink:0,
                   color:'var(--text-2)', cursor:'pointer', fontFamily:'Roboto,sans-serif',
