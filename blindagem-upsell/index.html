@@ -23,6 +23,40 @@ fbq('trackCustom', 'ViuUpsellBlindagem', {value: 397.00, currency: 'BRL', conten
 src="https://www.facebook.com/tr?id=2021111734750468&ev=PageView&noscript=1"/></noscript>
 <!-- Fim Meta Pixel -->
 
+<!-- Registra o pageview no nosso banco tambem (Tracker), em paralelo ao Meta
+     Pixel acima -- nao substitui nada, so alimenta o calculo de conversao
+     "quantos viram vs quantos compraram" no dashboard. -->
+<script>
+(function() {
+  try {
+    var p = new URLSearchParams(location.search);
+    var xcod = p.get('xcod') || '';
+    var metaAdId = null;
+    if (xcod.includes('|')) {
+      var last = xcod.split('|').pop().trim();
+      if (/^\d{10,}$/.test(last)) metaAdId = last;
+    }
+    fetch('https://wntzzzuqoqmfcjebmzul.supabase.co/rest/v1/upsell_pageviews', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': 'sb_publishable_eknjN5BlmwD9_H6kDUtuPw_ejoa8rwx',
+        'Authorization': 'Bearer sb_publishable_eknjN5BlmwD9_H6kDUtuPw_ejoa8rwx',
+        'Prefer': 'return=minimal',
+      },
+      body: JSON.stringify({
+        utm_source:   p.get('utm_source'),
+        utm_medium:   p.get('utm_medium'),
+        utm_campaign: p.get('utm_campaign'),
+        utm_content:  p.get('utm_content'),
+        meta_ad_id:   metaAdId,
+        referrer:     document.referrer || null,
+      }),
+    }).catch(function(){});
+  } catch (e) {}
+})();
+</script>
+
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />

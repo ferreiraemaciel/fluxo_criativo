@@ -248,13 +248,24 @@ function useDashboardData(period, dateRange) {
         const blindSet    = new Set((blindEmailsRaw || []).map(r => r.comprador_email).filter(Boolean));
         const upsellConv  = [...blindSet].filter(e => mcvSet.has(e)).length;
 
+        // Conversão real da página de upsell (quantos viram vs quantos compraram).
+        // upsell_pageviews é alimentado por um beacon na própria página
+        // (blindagem-upsell/index.html), em paralelo ao Meta Pixel.
+        const { count: upsellViews } = await window.db
+          .from('upsell_pageviews').select('id', { count: 'exact', head: true });
+        const upsellPct = upsellViews > 0 ? +((upsellConv / upsellViews) * 100).toFixed(1) : null;
+
         /* funil steps */
         const funnelSteps = totCliques > 0 ? [
           { label: 'Cliques',                value: totCliques, pct: 100 },
           { label: 'Visualizações de Página', value: totLP,      pct: +((totLP/totCliques)*100).toFixed(1) },
           { label: 'Início de Compra',        value: totIC,      pct: +((totIC/totCliques)*100).toFixed(1) },
           { label: 'Vendas Aprovadas',        value: totComp,    pct: +((totComp/totCliques)*100).toFixed(1) },
-          { label: 'Upsell Blindagem',        value: upsellConv, pct: +((upsellConv/totCliques)*100).toFixed(1) },
+          {
+            label: 'Upsell Blindagem', value: upsellConv,
+            pct: +((upsellConv/totCliques)*100).toFixed(1),
+            sub: upsellViews > 0 ? `${upsellPct}% de ${upsellViews} que viram a página de upsell` : 'sem pageview registrado ainda',
+          },
         ] : null;
 
         /* CPA médio consolidado (blended): investimento total ÷ compras totais do período.
@@ -2244,6 +2255,12 @@ function DashboardScreen({ period, onPeriodChange, dateRange, onDateRangeChange,
               fontWeight:700, color:'var(--text-3)', letterSpacing:'0.06em' }}>CVR FINAL · {cvrFinal}</span>}>
             <div style={{ padding:'8px 18px 18px' }}>
               <FlowFunnel steps={funnel}/>
+              {funnel[funnel.length-1]?.sub && (
+                <div style={{ textAlign:'right', marginTop:-4, fontSize:10.5,
+                  fontFamily:'Roboto,sans-serif', color:'var(--text-3)' }}>
+                  Conversão do upsell: {funnel[funnel.length-1].sub}
+                </div>
+              )}
             </div>
           </SectionCard>
         )}
