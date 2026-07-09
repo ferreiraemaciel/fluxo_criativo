@@ -2061,6 +2061,18 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
                   <CopyField id="descricao"  label="Descrição"              fieldKey="descricao_ad"      rows={2}/>
                   <CopyField id="obs"        label="Informações Adicionais" fieldKey="observacoes"       rows={4}/>
                   <RefBlock value={fields.referencia} onChange={v => set('referencia', v)}/>
+                </>) : fields.tipo === 'imagem' ? (<>
+                  <CopyField id="headline"   label="Headline"               fieldKey="headline"          rows={2}
+                    hint="A frase principal/big idea que aparece escrita na imagem — o título, o hook que chama atenção (diferente do Reels, aqui não é falado, é escrito)."/>
+                  <CopyField id="roteiro"    label="Roteiro"                fieldKey="roteiro"           rows={6}
+                    hint="Descreva a imagem: quantos elementos/fotos, quais frases aparecem escritas. Sempre com a ideia do Hook (= Headline), o desenvolvimento (o que mais aparece escrito/visualmente) e um CTA."/>
+                  <CopyField id="estetica"   label="Prompt para Gerar Imagem" fieldKey="estetica_visual"  rows={6}
+                    hint="Cole o prompt de geração da imagem. Se ele já tem escrita embutida, cole a escrita aqui também. Se deixa espaço de respiro pra escrita entrar na edição, só mencione o espaço — o texto que vai lá mora no Roteiro."/>
+                  <CopyField id="texto-p"    label="Texto Principal"        fieldKey="texto_principal"   rows={3}/>
+                  <CopyField id="titulo-ad"  label="Título"                 fieldKey="titulo_ad"         rows={2}/>
+                  <CopyField id="descricao"  label="Descrição"              fieldKey="descricao_ad"      rows={2}/>
+                  <CopyField id="obs"        label="Informações Adicionais" fieldKey="observacoes"       rows={4}/>
+                  <RefBlock value={fields.referencia} onChange={v => set('referencia', v)}/>
                 </>) : (<>
                   <CopyField id="headline"     label="Headline"               fieldKey="headline"           rows={2}/>
                   <CopyField id="hook-visual"  label="Hook Visual"            fieldKey="hook_visual"        rows={2}/>
