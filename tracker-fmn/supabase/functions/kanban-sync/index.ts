@@ -81,7 +81,10 @@ function dateRange(daysBack: number): { since: string; until: string } {
 async function syncMetaAdStatus(): Promise<Set<number>> {
   const qs = new URLSearchParams({
     fields: "id,name,effective_status",
-    effective_status: JSON.stringify(["ACTIVE", "IN_PROCESS", "PENDING_REVIEW"]),
+    // Só ACTIVE conta como "ativo" de verdade. PENDING_REVIEW e IN_PROCESS acontecem
+    // mesmo com o anúncio PAUSADO (revisão de criativo roda independente do estado),
+    // e marcavam o card como ativo no Tracker antes do usuário confirmar em "Ativar tudo".
+    effective_status: JSON.stringify(["ACTIVE"]),
     limit: "500",
     access_token: FB_TOKEN,
   });

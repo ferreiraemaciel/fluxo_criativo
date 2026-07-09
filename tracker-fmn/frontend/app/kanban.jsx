@@ -181,6 +181,7 @@ function KanbanCard({ card, col, onOpen, onDragStart }) {
   const thumb = cardThumb(card.raw);
   const isVideo = ['reels','video'].includes(card.raw?.tipo) || card.raw?.media_tipo === 'video';
   const hasMedia = (() => {
+    if (card.raw?.media_url || card.raw?.thumb_url) return true;
     try {
       const fs = Array.isArray(card.raw?.media_files) ? card.raw.media_files : JSON.parse(card.raw?.media_files || '[]');
       return fs.length > 0 || !!card.raw?.media_drive_url;
@@ -1454,6 +1455,40 @@ function R2UploadSection({ card, onUploadComplete }) {
   );
 }
 
+/* ── CopyField — componente independente (fora do modal) ──────────
+   Precisa ficar fora do AdsDetailModal: um componente definido dentro de
+   outro é recriado a cada render do pai, o que faz o React desmontar e
+   remontar o <textarea> a cada tecla digitada (perde o foco a cada letra). */
+function CopyField({ id, label, fieldKey, rows = 3, hint, fields, set, copiedField, copyToClipboard }) {
+  return (
+    <div style={{ display:'flex', flexDirection:'column', gap:5 }}>
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+        <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700,
+          letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)' }}>{label}</span>
+        <button onClick={() => copyToClipboard(fields[fieldKey], id)}
+          style={{ display:'flex', alignItems:'center', gap:4, padding:'3px 8px', borderRadius:5,
+            background: copiedField===id ? 'rgba(74,222,128,.15)' : 'rgba(255,255,255,.06)',
+            border:'1px solid var(--app-border)', color: copiedField===id ? 'var(--clr-pos)' : 'var(--text-3)',
+            fontSize:10, fontFamily:'Roboto,sans-serif', cursor:'pointer', transition:'all 150ms' }}>
+          <LucideIcon icon={copiedField===id?'check':'copy'} size={11}/>
+          {copiedField===id?'Copiado!':'Copiar'}
+        </button>
+      </div>
+      {hint && (
+        <div style={{ fontSize:11, fontFamily:'Roboto,sans-serif', color:'var(--text-3)',
+          lineHeight:1.5, fontStyle:'italic' }}>{hint}</div>
+      )}
+      <textarea value={fields[fieldKey]} onChange={e => set(fieldKey, e.target.value)} rows={rows}
+        style={{ width:'100%', padding:'9px 12px', borderRadius:8, resize:'vertical',
+          background:'var(--app-surface-2)', border:'1px solid var(--app-border)',
+          color:'var(--text-1)', fontFamily:'Roboto,sans-serif', fontSize:13, lineHeight:1.55,
+          transition:'border-color 150ms' }}
+        onFocus={e=>e.target.style.borderColor='rgba(234,170,65,.4)'}
+        onBlur={e=>e.target.style.borderColor='var(--app-border)'}/>
+    </div>
+  );
+}
+
 /* ── AdsDetailModal ──────────────────────────────────────────────*/
 function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
   const raw = card.raw || {};
@@ -1626,36 +1661,6 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
       setTimeout(() => setCopiedField(null), 1500);
     });
   };
-
-  function CopyField({ id, label, fieldKey, rows = 3, hint }) {
-    return (
-      <div style={{ display:'flex', flexDirection:'column', gap:5 }}>
-        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-          <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700,
-            letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)' }}>{label}</span>
-          <button onClick={() => copyToClipboard(fields[fieldKey], id)}
-            style={{ display:'flex', alignItems:'center', gap:4, padding:'3px 8px', borderRadius:5,
-              background: copiedField===id ? 'rgba(74,222,128,.15)' : 'rgba(255,255,255,.06)',
-              border:'1px solid var(--app-border)', color: copiedField===id ? 'var(--clr-pos)' : 'var(--text-3)',
-              fontSize:10, fontFamily:'Roboto,sans-serif', cursor:'pointer', transition:'all 150ms' }}>
-            <LucideIcon icon={copiedField===id?'check':'copy'} size={11}/>
-            {copiedField===id?'Copiado!':'Copiar'}
-          </button>
-        </div>
-        {hint && (
-          <div style={{ fontSize:11, fontFamily:'Roboto,sans-serif', color:'var(--text-3)',
-            lineHeight:1.5, fontStyle:'italic' }}>{hint}</div>
-        )}
-        <textarea value={fields[fieldKey]} onChange={e => set(fieldKey, e.target.value)} rows={rows}
-          style={{ width:'100%', padding:'9px 12px', borderRadius:8, resize:'vertical',
-            background:'var(--app-surface-2)', border:'1px solid var(--app-border)',
-            color:'var(--text-1)', fontFamily:'Roboto,sans-serif', fontSize:13, lineHeight:1.55,
-            transition:'border-color 150ms' }}
-          onFocus={e=>e.target.style.borderColor='rgba(234,170,65,.4)'}
-          onBlur={e=>e.target.style.borderColor='var(--app-border)'}/>
-      </div>
-    );
-  }
 
   function PropRow({ label, children }) {
     return (
@@ -2054,38 +2059,38 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
               </div>
               <div style={{ padding:16, display:'flex', flexDirection:'column', gap:14 }}>
                 {fields.tipo === 'reels' ? (<>
-                  <CopyField id="headline"   label="Headline"               fieldKey="headline"          rows={2}
+                  <CopyField fields={fields} set={set} copiedField={copiedField} copyToClipboard={copyToClipboard} id="headline"   label="Headline"               fieldKey="headline"          rows={2}
                     hint="Sempre 2 frases nos primeiros segundos: uma de segmentação (ex: 'Fotógrafo e Videomaker') e outra curta que chame muito a atenção."/>
-                  <CopyField id="roteiro"    label="Roteiro"                fieldKey="roteiro"           rows={6}
+                  <CopyField fields={fields} set={set} copiedField={copiedField} copyToClipboard={copyToClipboard} id="roteiro"    label="Roteiro"                fieldKey="roteiro"           rows={6}
                     hint="Descreva as três partes juntas: Hook, Desenvolvimento e CTA."/>
-                  <CopyField id="estetica"   label="Estética Visual"        fieldKey="estetica_visual"   rows={4}
+                  <CopyField fields={fields} set={set} copiedField={copiedField} copyToClipboard={copyToClipboard} id="estetica"   label="Estética Visual"        fieldKey="estetica_visual"   rows={4}
                     hint="Cenas, ângulo, cor, som: tudo que for da parte estética da gravação e edição do vídeo inteiro."/>
-                  <CopyField id="texto-p"    label="Texto Principal"        fieldKey="texto_principal"   rows={3}/>
-                  <CopyField id="titulo-ad"  label="Título"                 fieldKey="titulo_ad"         rows={2}/>
-                  <CopyField id="descricao"  label="Descrição"              fieldKey="descricao_ad"      rows={2}/>
-                  <CopyField id="obs"        label="Informações Adicionais" fieldKey="observacoes"       rows={4}/>
+                  <CopyField fields={fields} set={set} copiedField={copiedField} copyToClipboard={copyToClipboard} id="texto-p"    label="Texto Principal"        fieldKey="texto_principal"   rows={3}/>
+                  <CopyField fields={fields} set={set} copiedField={copiedField} copyToClipboard={copyToClipboard} id="titulo-ad"  label="Título"                 fieldKey="titulo_ad"         rows={2}/>
+                  <CopyField fields={fields} set={set} copiedField={copiedField} copyToClipboard={copyToClipboard} id="descricao"  label="Descrição"              fieldKey="descricao_ad"      rows={2}/>
+                  <CopyField fields={fields} set={set} copiedField={copiedField} copyToClipboard={copyToClipboard} id="obs"        label="Informações Adicionais" fieldKey="observacoes"       rows={4}/>
                   <RefBlock value={fields.referencia} onChange={v => set('referencia', v)}/>
                 </>) : fields.tipo === 'imagem' ? (<>
-                  <CopyField id="headline"   label="Headline"               fieldKey="headline"          rows={2}
+                  <CopyField fields={fields} set={set} copiedField={copiedField} copyToClipboard={copyToClipboard} id="headline"   label="Headline"               fieldKey="headline"          rows={2}
                     hint="A frase principal/big idea que aparece escrita na imagem: o título, o hook que chama atenção (diferente do Reels, aqui não é falado, é escrito)."/>
-                  <CopyField id="roteiro"    label="Roteiro"                fieldKey="roteiro"           rows={6}
+                  <CopyField fields={fields} set={set} copiedField={copiedField} copyToClipboard={copyToClipboard} id="roteiro"    label="Roteiro"                fieldKey="roteiro"           rows={6}
                     hint="Descreva a imagem: quantos elementos/fotos, quais frases aparecem escritas. Sempre com a ideia do Hook (= Headline), o desenvolvimento (o que mais aparece escrito/visualmente) e um CTA."/>
-                  <CopyField id="estetica"   label="Prompt para Gerar Imagem" fieldKey="estetica_visual"  rows={6}
+                  <CopyField fields={fields} set={set} copiedField={copiedField} copyToClipboard={copyToClipboard} id="estetica"   label="Prompt para Gerar Imagem" fieldKey="estetica_visual"  rows={6}
                     hint="Cole o prompt de geração da imagem. Se ele já tem escrita embutida, cole a escrita aqui também. Se deixa espaço de respiro pra escrita entrar na edição, só mencione o espaço: o texto que vai lá mora no Roteiro."/>
-                  <CopyField id="texto-p"    label="Texto Principal"        fieldKey="texto_principal"   rows={3}/>
-                  <CopyField id="titulo-ad"  label="Título"                 fieldKey="titulo_ad"         rows={2}/>
-                  <CopyField id="descricao"  label="Descrição"              fieldKey="descricao_ad"      rows={2}/>
-                  <CopyField id="obs"        label="Informações Adicionais" fieldKey="observacoes"       rows={4}/>
+                  <CopyField fields={fields} set={set} copiedField={copiedField} copyToClipboard={copyToClipboard} id="texto-p"    label="Texto Principal"        fieldKey="texto_principal"   rows={3}/>
+                  <CopyField fields={fields} set={set} copiedField={copiedField} copyToClipboard={copyToClipboard} id="titulo-ad"  label="Título"                 fieldKey="titulo_ad"         rows={2}/>
+                  <CopyField fields={fields} set={set} copiedField={copiedField} copyToClipboard={copyToClipboard} id="descricao"  label="Descrição"              fieldKey="descricao_ad"      rows={2}/>
+                  <CopyField fields={fields} set={set} copiedField={copiedField} copyToClipboard={copyToClipboard} id="obs"        label="Informações Adicionais" fieldKey="observacoes"       rows={4}/>
                   <RefBlock value={fields.referencia} onChange={v => set('referencia', v)}/>
                 </>) : (<>
-                  <CopyField id="headline"     label="Headline"               fieldKey="headline"           rows={2}/>
-                  <CopyField id="hook-visual"  label="Hook Visual"            fieldKey="hook_visual"        rows={2}/>
-                  <CopyField id="hook-copy"    label="Hook Copy"              fieldKey="hook_copy"          rows={2}/>
-                  <CopyField id="texto-p"      label="Texto Principal"        fieldKey="texto_principal"    rows={3}/>
-                  <CopyField id="dev-cta"      label="Desenvolvimento + CTA"  fieldKey="desenvolvimento_cta" rows={3}/>
-                  <CopyField id="titulo-ad"    label="Título (feed)"          fieldKey="titulo_ad"          rows={2}/>
-                  <CopyField id="descricao"    label="Descrição"              fieldKey="descricao_ad"       rows={2}/>
-                  <CopyField id="obs"          label="Informações Adicionais" fieldKey="observacoes"        rows={4}/>
+                  <CopyField fields={fields} set={set} copiedField={copiedField} copyToClipboard={copyToClipboard} id="headline"     label="Headline"               fieldKey="headline"           rows={2}/>
+                  <CopyField fields={fields} set={set} copiedField={copiedField} copyToClipboard={copyToClipboard} id="hook-visual"  label="Hook Visual"            fieldKey="hook_visual"        rows={2}/>
+                  <CopyField fields={fields} set={set} copiedField={copiedField} copyToClipboard={copyToClipboard} id="hook-copy"    label="Hook Copy"              fieldKey="hook_copy"          rows={2}/>
+                  <CopyField fields={fields} set={set} copiedField={copiedField} copyToClipboard={copyToClipboard} id="texto-p"      label="Texto Principal"        fieldKey="texto_principal"    rows={3}/>
+                  <CopyField fields={fields} set={set} copiedField={copiedField} copyToClipboard={copyToClipboard} id="dev-cta"      label="Desenvolvimento + CTA"  fieldKey="desenvolvimento_cta" rows={3}/>
+                  <CopyField fields={fields} set={set} copiedField={copiedField} copyToClipboard={copyToClipboard} id="titulo-ad"    label="Título (feed)"          fieldKey="titulo_ad"          rows={2}/>
+                  <CopyField fields={fields} set={set} copiedField={copiedField} copyToClipboard={copyToClipboard} id="descricao"    label="Descrição"              fieldKey="descricao_ad"       rows={2}/>
+                  <CopyField fields={fields} set={set} copiedField={copiedField} copyToClipboard={copyToClipboard} id="obs"          label="Informações Adicionais" fieldKey="observacoes"        rows={4}/>
                   <RefBlock value={fields.referencia} onChange={v => set('referencia', v)}/>
                 </>)}
               </div>
@@ -2280,8 +2285,9 @@ function KanbanScreen({ targetAd, onConsumeTarget }) {
 
   async function handleActivateAll() {
     if (!pendentesMeta.length || activating) return;
+    const lista = pendentesMeta.map(c => `AD ${c.num} — ${c.raw?.titulo || '(sem título)'}`).join('\n');
     const ok = window.confirm(
-      `Ativar ${pendentesMeta.length} anúncio(s) no Meta?\n\n` +
+      `Ativar ${pendentesMeta.length} anúncio(s) no Meta?\n\n${lista}\n\n` +
       `Isso liga a campanha, o conjunto e o anúncio de cada um. Eles começam a gastar assim que o Meta aprovar.`
     );
     if (!ok) return;
@@ -2397,7 +2403,8 @@ function KanbanScreen({ targetAd, onConsumeTarget }) {
             })()}
             {pendentesMeta.length > 0 && (
               <button onClick={handleActivateAll} disabled={activating}
-                title="Liga campanha, conjunto e anúncio de tudo que o Tracker subiu pausado"
+                title={`Liga campanha, conjunto e anúncio destes ${pendentesMeta.length} rascunhos:\n` +
+                  pendentesMeta.map(c => `AD ${c.num} — ${c.raw?.titulo || '(sem título)'}`).join('\n')}
                 style={{ display:'flex', alignItems:'center', gap:6, padding:'8px 14px',
                   background: activating ? 'rgba(74,222,128,.1)' : 'rgba(74,222,128,.14)',
                   color:'#4ade80', borderRadius:8, border:'1px solid rgba(74,222,128,.35)',
@@ -2489,6 +2496,7 @@ function KanbanScreen({ targetAd, onConsumeTarget }) {
 
       {selectedCard && (
         <AdsDetailModal
+          key={selectedCard.id}
           card={selectedCard}
           onClose={() => setSelectedCard(null)}
           onUpdate={handleUpdate}
