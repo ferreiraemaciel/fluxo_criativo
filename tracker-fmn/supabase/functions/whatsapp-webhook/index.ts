@@ -3,6 +3,7 @@
 // POST /functions/v1/whatsapp-webhook  → mensagens recebidas + status de entrega
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { upsertContato } from "../_shared/whatsapp-contatos.ts";
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
@@ -80,6 +81,10 @@ Deno.serve(async (req) => {
             lida_pelo_time: false,
             raw: msg,
           });
+
+          // Lead respondeu: se ainda estava como "lead novo", promove pra
+          // "em conversa" automaticamente (respeita se já foi movido à mão).
+          await upsertContato(supabase, telefone, nome, "em_conversa", { promoverParaEmConversa: true });
         }
 
         // Atualizações de status (enviado/entregue/lido/falhou) das mensagens que a gente mandou.

@@ -203,13 +203,78 @@ function NovoContatoModal({ onClose, onEnviado, SUPA_URL, SUPA_KEY }) {
   );
 }
 
+const ETAPAS = [
+  { id: 'lead_novo',   label: 'Lead novo',    cor: '#60a5fa' },
+  { id: 'em_conversa', label: 'Em conversa',  cor: '#eaaa41' },
+  { id: 'aluno',       label: 'Aluno',        cor: '#4ade80' },
+  { id: 'perdido',     label: 'Perdido',      cor: '#f87171' },
+];
+
+function KanbanCard({ contato, onAbrir, onMover }) {
+  return (
+    <div style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)', borderRadius: 10, padding: 10, marginBottom: 8 }}>
+      <div onClick={onAbrir} style={{ cursor: 'pointer' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <div title={contato.janelaAberta ? 'Janela de 24h aberta' : 'Janela fechada'} style={{
+            width: 7, height: 7, borderRadius: '50%', flexShrink: 0,
+            background: contato.janelaAberta ? '#4ade80' : 'var(--text-3)',
+          }} />
+          <div style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--text-1)', fontFamily: 'Roboto,sans-serif',
+            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {contato.nome || normalizarTelefoneExibicao(contato.telefone)}
+          </div>
+        </div>
+        <div style={{ fontSize: 10.5, color: 'var(--text-3)', fontFamily: 'Roboto,sans-serif', marginTop: 2 }}>
+          {normalizarTelefoneExibicao(contato.telefone)}
+        </div>
+        <div style={{ fontSize: 11, color: 'var(--text-3)', fontFamily: 'Roboto,sans-serif', marginTop: 5,
+          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {contato.ultimaDirecao === 'saida' ? 'Você: ' : ''}{contato.ultimoCorpo}
+        </div>
+      </div>
+      <select value={contato.etapa} onChange={e => onMover(contato.telefone, e.target.value)}
+        onClick={e => e.stopPropagation()}
+        style={{ marginTop: 8, width: '100%', boxSizing: 'border-box', background: 'rgba(255,255,255,.04)',
+          border: '1px solid var(--app-border)', borderRadius: 6, padding: '4px 6px', fontSize: 10.5,
+          color: 'var(--text-2)', fontFamily: 'Roboto,sans-serif', outline: 'none' }}>
+        {ETAPAS.map(e => <option key={e.id} value={e.id}>{e.label}</option>)}
+      </select>
+    </div>
+  );
+}
+
+function KanbanView({ contatos, onAbrir, onMover }) {
+  return (
+    <div style={{ flex: 1, display: 'flex', gap: 12, padding: 14, overflowX: 'auto' }}>
+      {ETAPAS.map(etapa => {
+        const cards = contatos.filter(c => (c.etapa || 'lead_novo') === etapa.id);
+        return (
+          <div key={etapa.id} style={{ width: 250, flexShrink: 0, display: 'flex', flexDirection: 'column' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10, padding: '0 2px' }}>
+              <div style={{ width: 8, height: 8, borderRadius: '50%', background: etapa.cor }} />
+              <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text-1)', fontFamily: 'Roboto,sans-serif' }}>{etapa.label}</div>
+              <div style={{ fontSize: 11, color: 'var(--text-3)', fontFamily: 'Roboto,sans-serif' }}>({cards.length})</div>
+            </div>
+            <div style={{ flex: 1, overflowY: 'auto' }}>
+              {cards.map(c => <KanbanCard key={c.telefone} contato={c} onAbrir={() => onAbrir(c.telefone)} onMover={onMover} />)}
+              {!cards.length && <div style={{ fontSize: 11, color: 'var(--text-3)', fontFamily: 'Roboto,sans-serif', padding: '8px 2px' }}>Vazio.</div>}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 function ConversasScreen() {
   const [msgs, setMsgs]           = useState([]);
+  const [contatosDb, setContatosDb] = useState([]);
   const [loading, setLoading]     = useState(true);
   const [selecionado, setSelecionado] = useState(null);
   const [texto, setTexto]         = useState('');
   const [enviando, setEnviando]   = useState(false);
   const [busca, setBusca]         = useState('');
+  const [modo, setModo]           = useState('lista'); // lista | kanban
   const [modalNovoContato, setModalNovoContato] = useState(false);
   const [tick, setTick]           = useState(0); // força re-render pro contador de tempo
   const scrollRef = useRef(null);
@@ -220,10 +285,17 @@ function ConversasScreen() {
     if (!window.db) return;
     window.db.from('whatsapp_mensagens').select('*').order('created_at', { ascending: false }).limit(1000)
       .then(({ data, error }) => { if (!error) setMsgs(data || []); setLoading(false); });
+    window.db.from('whatsapp_contatos').select('*')
+      .then(({ data, error }) => { if (!error) setContatosDb(data || []); });
   }
 
   useEffect(() => { carregar(); const t = setInterval(carregar, 15000); return () => clearInterval(t); }, []);
   useEffect(() => { const t = setInterval(() => setTick(x => x + 1), 30000); return () => clearInterval(t); }, []);
+
+  function moverEtapa(telefone, etapa) {
+    setContatosDb(prev => prev.map(c => c.telefone === telefone ? { ...c, etapa } : c));
+    if (window.db) window.db.from('whatsapp_contatos').update({ etapa }).eq('telefone', telefone).then(() => carregar());
+  }
 
   const contatos = useMemo(() => {
     const porTelefone = {};
@@ -231,20 +303,28 @@ function ConversasScreen() {
       if (!porTelefone[m.telefone]) porTelefone[m.telefone] = [];
       porTelefone[m.telefone].push(m);
     }
-    return Object.entries(porTelefone).map(([telefone, lista]) => {
-      const ultima = lista[0]; // já vem desc
+    const contatosPorTelefone = Object.fromEntries(contatosDb.map(c => [c.telefone, c]));
+    // Todo telefone com mensagem OU registrado em whatsapp_contatos aparece.
+    const todosTelefones = new Set([...Object.keys(porTelefone), ...contatosDb.map(c => c.telefone)]);
+    return [...todosTelefones].map(telefone => {
+      const lista = porTelefone[telefone] || [];
+      const ultima = lista[0] || null;
       const ultimaEntrada = lista.find(m => m.direcao === 'entrada');
-      const nome = lista.find(m => m.nome)?.nome || null;
+      const nomeMsg = lista.find(m => m.nome)?.nome || null;
+      const dbRow   = contatosPorTelefone[telefone];
       return {
-        telefone, nome,
-        ultimoCorpo: ultima.corpo, ultimaData: ultima.created_at, ultimaDirecao: ultima.direcao,
+        telefone, nome: dbRow?.nome || nomeMsg,
+        ultimoCorpo: ultima?.corpo || '(sem mensagens ainda)',
+        ultimaData: ultima?.created_at || dbRow?.updated_at,
+        ultimaDirecao: ultima?.direcao || null,
         naoLidas: lista.filter(m => m.direcao === 'entrada' && !m.lida_pelo_time).length,
         ultimaEntradaData: ultimaEntrada?.created_at || null,
         janelaAberta: janelaAberta(ultimaEntrada?.created_at),
+        etapa: dbRow?.etapa || 'lead_novo',
       };
     }).sort((a, b) => new Date(b.ultimaData) - new Date(a.ultimaData))
       .filter(c => !busca || (c.nome || c.telefone).toLowerCase().includes(busca.toLowerCase()));
-  }, [msgs, busca, tick]);
+  }, [msgs, contatosDb, busca, tick]);
 
   const thread = useMemo(() => {
     if (!selecionado) return [];
@@ -286,12 +366,29 @@ function ConversasScreen() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <TopBar title="Conversas" actions={<Btn onClick={() => setModalNovoContato(true)}>+ Novo Contato</Btn>} />
+      <TopBar title="Conversas" actions={
+        <div style={{ display: 'flex', gap: 8 }}>
+          <div style={{ display: 'flex', background: 'rgba(255,255,255,.04)', border: '1px solid var(--app-border)', borderRadius: 8, padding: 3 }}>
+            <button onClick={() => setModo('lista')} style={{
+              border: 'none', cursor: 'pointer', padding: '5px 12px', borderRadius: 6, fontSize: 12, fontFamily: 'Roboto,sans-serif', fontWeight: 700,
+              background: modo === 'lista' ? 'var(--fmn-gold)' : 'transparent', color: modo === 'lista' ? '#1a1a1a' : 'var(--text-2)' }}>Lista</button>
+            <button onClick={() => setModo('kanban')} style={{
+              border: 'none', cursor: 'pointer', padding: '5px 12px', borderRadius: 6, fontSize: 12, fontFamily: 'Roboto,sans-serif', fontWeight: 700,
+              background: modo === 'kanban' ? 'var(--fmn-gold)' : 'transparent', color: modo === 'kanban' ? '#1a1a1a' : 'var(--text-2)' }}>Kanban</button>
+          </div>
+          <Btn onClick={() => setModalNovoContato(true)}>+ Novo Contato</Btn>
+        </div>
+      } />
       {modalNovoContato && (
         <NovoContatoModal SUPA_URL={SUPA_URL} SUPA_KEY={SUPA_KEY}
           onClose={() => setModalNovoContato(false)}
           onEnviado={(telefone) => { setModalNovoContato(false); carregar(); setSelecionado(telefone.replace(/\D/g, '').startsWith('55') ? telefone.replace(/\D/g, '') : '55' + telefone.replace(/\D/g, '')); }} />
       )}
+      {modo === 'kanban' && (
+        <KanbanView contatos={contatos} onMover={moverEtapa}
+          onAbrir={(telefone) => { setSelecionado(telefone); setModo('lista'); }} />
+      )}
+      {modo === 'lista' && (
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
         <div style={{ width: 300, flexShrink: 0, borderRight: '1px solid var(--app-border)', display: 'flex', flexDirection: 'column' }}>
           <div style={{ padding: 10, borderBottom: '1px solid var(--app-border)' }}>
@@ -356,6 +453,7 @@ function ConversasScreen() {
           )}
         </div>
       </div>
+      )}
     </div>
   );
 }

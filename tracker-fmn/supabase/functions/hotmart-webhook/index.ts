@@ -2,6 +2,7 @@
 // Cobre todos os 16 eventos configurados: compras, assinaturas, clube, logística, outros
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { upsertContato } from "../_shared/whatsapp-contatos.ts";
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
@@ -488,6 +489,7 @@ async function enviarBoasVindasMcv(transactionId: string, telefoneRaw: string, n
       raw: d,
     });
     await supabase.from("vendas").update({ whatsapp_boas_vindas_enviado: true }).eq("hotmart_transaction_id", transactionId);
+    await upsertContato(supabase, to, nome, "aluno", { forcarEtapa: true });
     console.log("Boas-vindas MCV enviada:", transactionId, to);
   } catch (err) {
     console.error("Erro ao enviar boas-vindas MCV:", err);

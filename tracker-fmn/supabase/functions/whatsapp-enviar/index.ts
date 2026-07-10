@@ -8,6 +8,7 @@
 // função interna que precise mandar mensagem livre dentro da janela aberta.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { upsertContato } from "../_shared/whatsapp-contatos.ts";
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
@@ -121,6 +122,7 @@ Deno.serve(async (req) => {
         origem: body.origem || null,
         raw: resp,
       });
+      await upsertContato(supabase, to, body.nome ? String(body.nome) : null, "lead_novo");
 
       return json({ ok: true, wa_message_id: resp?.messages?.[0]?.id || null });
     }

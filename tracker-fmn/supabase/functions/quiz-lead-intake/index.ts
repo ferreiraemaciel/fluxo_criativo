@@ -1,6 +1,7 @@
 // Edge Function: recebe o lead da vitrine pública, grava com privilégio de servidor
 // e dispara CAPI Lead para o Meta Pixel quando o lead tem e-mail.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { upsertContato } from "../_shared/whatsapp-contatos.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -94,6 +95,7 @@ async function enviarResultadoQuizWhatsapp(sb: ReturnType<typeof createClient>, 
       wa_message_id: d?.messages?.[0]?.id || null, status: "enviado", origem: "quiz", raw: d,
     });
     await sb.from("quiz_leads").update({ whatsapp_resultado_enviado: true }).eq("funnel_slug", funnelSlug).eq("code", code);
+    await upsertContato(sb, to, nome, "lead_novo");
   } catch (err) {
     console.error("Erro ao enviar resultado do quiz por WhatsApp:", err);
     await sb.from("whatsapp_mensagens").insert({
