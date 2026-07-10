@@ -109,7 +109,7 @@ const abrevContrato = v => {
   return v.split(/[,\s]/)[0];
 };
 
-function LeadsTable({ leads }) {
+function LeadsTable({ leads, adsMap = {} }) {
   const [busca, setBusca] = useState('');
   const [pagina, setPagina] = useState(0);
   const POR_PAG = 50;
@@ -178,6 +178,7 @@ function LeadsTable({ leads }) {
               <TH w={100}>Tipo contrato</TH>
               <TH w={85}>Dispositivo</TH>
               <TH w={130}>Data</TH>
+              <TH w={170}>Criativo</TH>
               <TH>Campanha</TH>
             </tr>
           </thead>
@@ -223,12 +224,39 @@ function LeadsTable({ leads }) {
                   <TD style={{ fontSize:10.5 }}>{abrevContrato(l.tipo_contrato_atual)}</TD>
                   <TD style={{ fontSize:10.5 }}>{l.device_platform || '—'}</TD>
                   <TD style={{ fontSize:10.5 }}>{fmtDate(l.created_at)}</TD>
+                  <TD>
+                    {(() => {
+                      const rawContent = String(l.utm_content || '');
+                      const adKey = rawContent.includes('|') ? rawContent.split('|').pop().trim() : rawContent;
+                      const ad = adsMap[adKey];
+                      if (!ad) return <span style={{ color:'var(--text-3)', fontSize:10.5 }}>—</span>;
+                      const thumbUrl = ad.media_drive_url ? `thumbnails/${ad.numero}.jpg` : null;
+                      return (
+                        <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                          <div style={{ width:36, height:36, borderRadius:6, overflow:'hidden', background:'rgba(255,255,255,.06)', flexShrink:0 }}>
+                            {thumbUrl
+                              ? <img src={thumbUrl} alt="" style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }}
+                                  onError={e => { e.target.style.display='none'; }}/>
+                              : <div style={{ width:'100%', height:'100%', display:'flex', alignItems:'center', justifyContent:'center', fontSize:8, color:'var(--text-3)', fontWeight:700 }}>
+                                  {String(ad.titulo||'').slice(0,3).toUpperCase()}
+                                </div>
+                            }
+                          </div>
+                          <span style={{ fontSize:10.5, fontFamily:'Roboto,sans-serif', color:'var(--text-2)', lineHeight:1.3,
+                            overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', maxWidth:116 }}
+                            title={ad.titulo}>
+                            {ad.titulo || `ADS ${ad.numero}`}
+                          </span>
+                        </div>
+                      );
+                    })()}
+                  </TD>
                   <TD style={{ fontSize:10.5 }}>{l.utm_campaign || <span style={{ color:'var(--text-3)' }}>orgânico</span>}</TD>
                 </tr>
               );
             })}
             {slice.length === 0 && (
-              <tr><td colSpan={11} style={{ padding:'32px 0', textAlign:'center', color:'var(--text-3)', fontFamily:'Roboto,sans-serif', fontSize:12 }}>Nenhum lead encontrado.</td></tr>
+              <tr><td colSpan={12} style={{ padding:'32px 0', textAlign:'center', color:'var(--text-3)', fontFamily:'Roboto,sans-serif', fontSize:12 }}>Nenhum lead encontrado.</td></tr>
             )}
           </tbody>
         </table>
@@ -591,28 +619,42 @@ function FunisScreen({ onNavigate }) {
   const [data, setData]             = useState(null);
   const [leads, setLeads]           = useState([]);
   const [extraAgg, setExtraAgg]     = useState({});
+  const [funnel, setFunnel]         = useState('all');
   const [loadingAnalise, setLoadingAnalise] = useState(true);
   const [loadingLeads, setLoadingLeads]     = useState(false);
+  const [adsMap, setAdsMap]                 = useState({});
 
   const range = rangeFromPeriodo(periodo, customFrom, customTo);
 
   useEffect(() => {
+    if (!window.db) return;
+    window.db.from('ads').select('numero,titulo,meta_ad_id,media_drive_url')
+      .then(({ data }) => {
+        if (!data) return;
+        const m = {};
+        data.forEach(a => { if (a.meta_ad_id) m[String(a.meta_ad_id)] = a; });
+        setAdsMap(m);
+      });
+  }, []);
+
+  useEffect(() => {
     if (!window.db || aba !== 'analise') return;
     setLoadingAnalise(true);
-    window.db.rpc('quiz_funis_dashboard', range)
+    window.db.rpc('quiz_funis_dashboard', { ...range, p_funnel: funnel === 'all' ? null : funnel })
       .then(({ data: d, error }) => { if (!error) setData(d); setLoadingAnalise(false); });
-  }, [periodo, customFrom, customTo, aba]);
+  }, [periodo, customFrom, customTo, aba, funnel]);
 
   useEffect(() => {
     if (!window.db || aba !== 'leads') return;
     setLoadingLeads(true);
     let q = window.db.from('quiz_leads').select(
-      'id,nome,email,whatsapp,area_atuacao,profissionalizacao,tipo_negocio,confianca_clientes,situacoes,custo_processo,usa_contrato,tipo_contrato_atual,foco_artistico,sentimentos,protege_dinheiro,temas_dominados,entende_contrato,quer_modelos,nivel_risco,completou_lead,completou_quiz,utm_source,utm_medium,utm_campaign,created_at,perfil,device_platform'
+      'id,nome,email,whatsapp,area_atuacao,profissionalizacao,tipo_negocio,confianca_clientes,situacoes,custo_processo,usa_contrato,tipo_contrato_atual,foco_artistico,sentimentos,protege_dinheiro,temas_dominados,entende_contrato,quer_modelos,nivel_risco,completou_lead,completou_quiz,utm_source,utm_medium,utm_campaign,utm_content,created_at,perfil,device_platform'
     ).order('created_at', { ascending: false }).limit(5000);
     if (range.p_from) q = q.gte('created_at', range.p_from);
     if (range.p_to)   q = q.lte('created_at', range.p_to + 'T23:59:59Z');
+    if (funnel !== 'all') q = q.eq('funnel_slug', funnel);
     q.then(({ data: rows, error }) => { if (!error) setLeads(rows || []); setLoadingLeads(false); });
-  }, [periodo, customFrom, customTo, aba]);
+  }, [periodo, customFrom, customTo, aba, funnel]);
 
   useEffect(() => {
     if (!window.db || aba !== 'analise') return;
@@ -620,6 +662,7 @@ function FunisScreen({ onNavigate }) {
     let q = window.db.from('quiz_leads').select(EXTRA_FIELDS.join(',')).limit(5000);
     if (range.p_from) q = q.gte('created_at', range.p_from);
     if (range.p_to)   q = q.lte('created_at', range.p_to + 'T23:59:59Z');
+    if (funnel !== 'all') q = q.eq('funnel_slug', funnel);
     q.then(({ data: rows }) => {
       if (!rows) return;
       const agg = {};
@@ -630,7 +673,7 @@ function FunisScreen({ onNavigate }) {
       });
       setExtraAgg(agg);
     });
-  }, [periodo, customFrom, customTo, aba]);
+  }, [periodo, customFrom, customTo, aba, funnel]);
 
   const k = data?.kpis || {};
   const total = k.total || 0;
@@ -639,6 +682,27 @@ function FunisScreen({ onNavigate }) {
   const dTotal = k.prev_total ? total - k.prev_total : undefined;
   const dLeads = k.prev_com_email ? (k.com_email || 0) - k.prev_com_email : undefined;
   const secTitle = t => <div style={{ fontSize: 12.5, fontFamily: 'Roboto,sans-serif', fontWeight: 700, color: 'var(--text-1)', marginTop: 6 }}>{t}</div>;
+
+  const FUNIS = [
+    { id: 'all',                  label: 'Todos' },
+    { id: 'fotografo-protegido',  label: 'Fotógrafo Protegido' },
+    { id: 'blindagem',            label: 'Blindagem' },
+  ];
+
+  const FunnelBar = () => (
+    <div style={{ display:'flex', gap:4, padding:3, borderRadius:8, background:'rgba(255,255,255,.04)', border:'1px solid var(--app-border)' }}>
+      {FUNIS.map(f => (
+        <button key={f.id} onClick={() => setFunnel(f.id)}
+          style={{ padding:'5px 11px', borderRadius:6, cursor:'pointer',
+            background: funnel===f.id ? 'rgba(234,170,65,.15)' : 'transparent',
+            border: `1px solid ${funnel===f.id ? 'rgba(234,170,65,.2)' : 'transparent'}`,
+            color: funnel===f.id ? 'var(--fmn-gold)' : 'rgba(255,255,255,.42)',
+            fontFamily:'Roboto,sans-serif', fontWeight:700, fontSize:11 }}>
+          {f.label}
+        </button>
+      ))}
+    </div>
+  );
 
   const PeriodBar = () => (
     <div style={{ display:'flex', alignItems:'center', gap:6, flexWrap:'wrap' }}>
@@ -668,7 +732,7 @@ function FunisScreen({ onNavigate }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
-      <TopBar title="Funis" actions={<PeriodBar/>}/>
+      <TopBar title="Funis" actions={<div style={{ display:'flex', gap:10, alignItems:'center' }}><FunnelBar/><PeriodBar/></div>}/>
 
       <div style={{ flex: 1, overflowY: 'auto', padding: '18px 24px', display: 'flex', flexDirection: 'column', gap: 0, minHeight: 0 }}>
 
@@ -692,7 +756,7 @@ function FunisScreen({ onNavigate }) {
               ? <div style={{ padding:'60px 0', textAlign:'center', color:'var(--text-3)', fontSize:13 }}>
                   <LucideIcon icon="loader" size={22}/><div style={{ marginTop:8 }}>Carregando leads...</div>
                 </div>
-              : <LeadsTable leads={leads}/>}
+              : <LeadsTable leads={leads} adsMap={adsMap}/>}
           </div>
         )}
 

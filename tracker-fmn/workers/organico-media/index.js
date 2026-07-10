@@ -470,6 +470,142 @@ async function handleDeleteOriginal(key, env) {
   return json({ ok: true });
 }
 
+/* ── Put ──────────────────────────────────────────────────────────────────
+   Usado pela "cozinha" (Cloud Run) para gravar imagens já otimizadas no R2,
+   sob prefixo persistente (organico/media/...), sem token S3. Protegido por
+   IMPORT_TOKEN. Body = bytes crus.                                           */
+async function handlePut(request, env, url) {
+  if (request.headers.get('X-Token') !== env.IMPORT_TOKEN) {
+    return json({ error: 'não autorizado' }, 401);
+  }
+  const key = url.searchParams.get('key');
+  const ct  = url.searchParams.get('ct') || 'application/octet-stream';
+  if (!key) return json({ error: 'key ausente' }, 400);
+  const body = await request.arrayBuffer();
+  await env.BUCKET.put(key, body, { httpMetadata: { contentType: ct } });
+  return json({ ok: true, url: `${R2_PUBLIC}/${key}` });
+}
+
+/* ── Card slides ───────────────────────────────────────────────────────────
+   A cozinha chama aqui pra atualizar os slides (e plataforma) de um card do
+   Tracker (tabela conteudo_organico), usando a chave do Supabase do worker.  */
+async function handleCardSlides(request, env) {
+  if (request.headers.get('X-Token') !== env.IMPORT_TOKEN) {
+    return json({ error: 'não autorizado' }, 401);
+  }
+  let body;
+  try { body = await request.json(); } catch { return json({ error: 'JSON inválido' }, 400); }
+  const { card_id, slides, media_files, plataforma } = body;
+  if (!card_id || slides === undefined) return json({ error: 'card_id e slides são obrigatórios' }, 400);
+
+  const patch = { slides: typeof slides === 'string' ? slides : JSON.stringify(slides) };
+  if (media_files !== undefined) patch.media_files = typeof media_files === 'string' ? media_files : JSON.stringify(media_files);
+  if (plataforma) patch.plataforma = plataforma;
+
+  const res = await fetch(`${env.SUPABASE_URL}/rest/v1/conteudo_organico?id=eq.${card_id}`, {
+    method: 'PATCH',
+    headers: {
+      apikey: env.SUPABASE_SERVICE_KEY,
+      Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`,
+      'Content-Type': 'application/json',
+      Prefer: 'return=minimal',
+    },
+    body: JSON.stringify(patch),
+  });
+  if (!res.ok) return json({ error: 'Supabase ' + res.status + ': ' + (await res.text()).slice(0, 200) }, 500);
+
+  // Card que estava em "Fazer" e recebeu mídia avança sozinho pra "Produção".
+  // Filtro condicional: só afeta a linha se ainda estiver em 'Fazer' (idempotente).
+  await fetch(`${env.SUPABASE_URL}/rest/v1/conteudo_organico?id=eq.${card_id}&status=eq.Fazer`, {
+    method: 'PATCH',
+    headers: {
+      apikey: env.SUPABASE_SERVICE_KEY,
+      Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`,
+      'Content-Type': 'application/json',
+      Prefer: 'return=minimal',
+    },
+    body: JSON.stringify({ status: 'Produção' }),
+  }).catch(() => {});
+
+  return json({ ok: true });
+}
+
+/* ── Import via cozinha (relay p/ o app) ─────────────────────────────────────
+   Orgânico do Tracker: "ORG N" é por POSIÇÃO (a Nª carta criada, ordem por
+   created_at) — mesma lógica do script local. O worker resolve a posição e
+   manda pra cozinha, que acha a pasta "ORG N".                               */
+const COZINHA_URL = 'https://cozinha-296334646934.us-central1.run.app';
+const TRACKER_ORGANICO_ROOT = '1h3cPqEoOnXld-6Sqh3IjsYcsb2bh_PLp';
+
+function parseFolderId(s) { const m = String(s || '').match(/[-\w]{25,}/); return m ? m[0] : null; }
+
+async function cozinha(env, payload) {
+  let r;
+  try {
+    r = await fetch(`${COZINHA_URL}/importar`, {
+      method: 'POST', headers: { 'X-Token': env.IMPORT_TOKEN, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tenant: 'tracker', ...payload }),
+    });
+  } catch {
+    // subrequest estourou a janela (~100s): a cozinha continua e grava o card
+    return { ok: true, processando: true };
+  }
+  if (r.status === 524 || r.status === 522 || r.status === 504) return { ok: true, processando: true };
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok || !d.ok) throw new Error(d.error || `cozinha ${r.status}`);
+  return d;
+}
+
+/* Repassa o andamento do trabalho da cozinha (barra de progresso). */
+async function handleProgresso(request, env, url) {
+  const jobId = url.searchParams.get('job');
+  if (!jobId) return json({ error: 'job ausente' }, 400);
+  try {
+    const r = await fetch(`${COZINHA_URL}/progresso/${jobId}`, { headers: { 'X-Token': env.IMPORT_TOKEN } });
+    const d = await r.json().catch(() => ({}));
+    return json(d, r.ok ? 200 : r.status);
+  } catch { return json({ etapa: 'Processando', pct: 0, done: false, erro: null }); }
+}
+
+async function ordemCards(env) {
+  const res = await fetch(`${env.SUPABASE_URL}/rest/v1/conteudo_organico?select=id&order=created_at.asc`, {
+    headers: { apikey: env.SUPABASE_SERVICE_KEY, Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}` } });
+  return (await res.json().catch(() => [])).map(r => r.id);
+}
+
+async function handleImportLink(request, env) {
+  let body; try { body = await request.json(); } catch { return json({ error: 'JSON inválido' }, 400); }
+  const { card_id, drive_url, plataforma, job_id } = body;
+  if (!card_id || !drive_url) return json({ error: 'card_id e drive_url são obrigatórios' }, 400);
+  const folderId = parseFolderId(drive_url);
+  if (!folderId) return json({ error: 'link de pasta inválido' }, 400);
+  try { const d = await cozinha(env, { drive_folder_id: folderId, card_id, plataforma, job_id }); return json({ ok: true, processando: d.processando, imagens: d.imagens, videos: d.videos }); }
+  catch (e) { return json({ error: e.message }, 500); }
+}
+
+async function handleImportDireto(request, env) {
+  let body; try { body = await request.json(); } catch { return json({ error: 'JSON inválido' }, 400); }
+  const { card_id, plataforma, job_id } = body;
+  if (!card_id) return json({ error: 'card_id é obrigatório' }, 400);
+  const ids = await ordemCards(env);
+  const idx = ids.indexOf(card_id);
+  if (idx < 0) return json({ error: 'card não encontrado' }, 404);
+  try { const d = await cozinha(env, { root_folder_id: TRACKER_ORGANICO_ROOT, numero: idx + 1, card_id, plataforma, job_id }); return json({ ok: true, processando: d.processando, imagens: d.imagens, videos: d.videos }); }
+  catch (e) { return json({ error: e.message }, 500); }
+}
+
+async function handleImportGeral(request, env) {
+  let body; try { body = await request.json(); } catch { body = {}; }
+  const job_id = body.job_id;
+  const ids = await ordemCards(env);
+  let ok = 0, fail = 0; const erros = [];
+  for (let i = 0; i < ids.length; i++) {
+    try { await cozinha(env, { root_folder_id: TRACKER_ORGANICO_ROOT, numero: i + 1, card_id: ids[i], job_id }); ok++; }
+    catch (e) { if (/não encontrada/.test(e.message)) continue; fail++; erros.push({ card: ids[i], erro: e.message }); }
+  }
+  return json({ ok: true, total: ids.length, importados: ok, falhas: fail, erros });
+}
+
 /* ── Router ──────────────────────────────────────────────────────────────── */
 export default {
   async scheduled(event, env) {
@@ -485,10 +621,16 @@ export default {
     }
 
     try {
+      if (method === 'GET'  && url.pathname === '/progresso') return await handleProgresso(request, env, url);
       if (method === 'GET'  && url.pathname === '/auth/exchange') return await handleAuthExchange(request, env);
       if (method === 'POST' && url.pathname === '/schedule') return await handleSchedule(request, env);
       if (method === 'POST' && url.pathname === '/upload')  return await handleUpload(request, env);
       if (method === 'POST' && url.pathname === '/publish') return await handlePublish(request, env);
+      if (method === 'POST' && url.pathname === '/put')     return await handlePut(request, env, url);
+      if (method === 'POST' && url.pathname === '/card-slides') return await handleCardSlides(request, env);
+      if (method === 'POST' && url.pathname === '/import-link')   return await handleImportLink(request, env);
+      if (method === 'POST' && url.pathname === '/import-direto') return await handleImportDireto(request, env);
+      if (method === 'POST' && url.pathname === '/import-geral')  return await handleImportGeral(request, env);
       if (method === 'DELETE' && url.pathname.startsWith('/original/')) {
         const key = decodeURIComponent(url.pathname.replace('/original/', ''));
         return await handleDeleteOriginal(key, env);

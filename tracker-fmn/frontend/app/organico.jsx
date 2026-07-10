@@ -325,31 +325,53 @@ function CopyAllPromptsBtn({ slidesArr }) {
    as imagens (1350px / 1920px stories, JPEG 82%) e sobe pro R2.
    Roda no Mac via serve.py; fora do Mac mostra aviso.
 ─────────────────────────────────────────────────────────────────*/
-function AdicionarCriativoOrganicoBtn({ numero, onDone }) {
+function AdicionarCriativoOrganicoBtn({ numero, cardId, onDone }) {
   const [step, setStep] = useState('idle'); // idle | running | warn
   const [msg, setMsg]   = useState('');
+  const [pct, setPct]   = useState(0);
 
+  // Importa da nuvem (cozinha via worker) — funciona de qualquer lugar, sem Mac.
+  // A cozinha reporta o progresso real; o card é a rede de segurança.
   async function run(pasta) {
-    const isLocal = ['localhost', '127.0.0.1'].includes(location.hostname);
-    if (!isLocal) {
-      setStep('warn'); setMsg('Precisa estar no Mac "Fotografia é o Meu Negócio"');
-      setTimeout(() => { setStep('idle'); setMsg(''); }, 5000); return;
-    }
-    setStep('running'); setMsg('Buscando no Drive…');
-    const qs = `numero=${numero}` + (pasta ? `&pasta=${encodeURIComponent(pasta)}` : '');
-    try { await fetch(`/api/adicionar-criativo-organico?${qs}`, { method: 'POST' }); }
-    catch { setStep('warn'); setMsg('Servidor local não respondeu'); setTimeout(() => { setStep('idle'); setMsg(''); }, 5000); return; }
-    const poll = setInterval(async () => {
+    const jobId = novoJobId();
+    setStep('running'); setPct(0); setMsg('Preparando');
+    const sleep = ms => new Promise(r => setTimeout(r, ms));
+    const falhar = m => { setStep('warn'); setMsg(m); setPct(0); setTimeout(() => { setStep('idle'); setMsg(''); }, 6000); };
+    const concluir = () => { setStep('idle'); setMsg(''); setPct(0); onDone && onDone(); };
+
+    const endpoint = pasta ? '/import-link' : '/import-direto';
+    const bodyObj  = pasta ? { card_id: cardId, drive_url: pasta, job_id: jobId } : { card_id: cardId, job_id: jobId };
+
+    let slidesAntes = null;
+    try {
+      const res = await window.db.from('conteudo_organico').select('slides').eq('id', cardId).single();
+      slidesAntes = JSON.stringify(res.data?.slides ?? null);
+    } catch {}
+
+    let erroRapido = null;
+    fetch(`${WORKER_URL}${endpoint}`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(bodyObj) })
+      .then(async r => { const d = await r.json().catch(() => ({})); if (!r.ok || d.error) erroRapido = d.error || `Erro ${r.status}`; })
+      .catch(() => {});
+
+    for (let i = 0; i < 300; i++) {            // 300 x 2s = 10 min
+      await sleep(2000);
+      if (erroRapido) return falhar(erroRapido);
       try {
-        const s = await (await fetch('/api/adicionar-criativo-organico')).json();
-        if (s.msg) setMsg(s.msg);
-        if (!s.running) {
-          clearInterval(poll);
-          if (s.error) { setStep('warn'); setMsg(s.error); setTimeout(() => { setStep('idle'); setMsg(''); }, 6000); }
-          else { setStep('idle'); setMsg(''); onDone && onDone(); }
-        }
-      } catch { clearInterval(poll); setStep('idle'); setMsg(''); }
-    }, 2000);
+        const p = await (await fetch(`${WORKER_URL}/progresso?job=${jobId}`)).json();
+        if (p.erro) return falhar(p.erro);
+        if (typeof p.pct === 'number') setPct(p.pct);
+        if (p.etapa) setMsg(p.etapa);
+        if (p.done) return concluir();
+      } catch {}
+      if (i % 3 === 0) {
+        try {
+          const res = await window.db.from('conteudo_organico').select('slides').eq('id', cardId).single();
+          if (res.data && JSON.stringify(res.data.slides ?? null) !== slidesAntes) return concluir();
+        } catch {}
+      }
+    }
+    falhar('Demorou demais. Recarregue a página em instantes.');
   }
 
   function manual() {
@@ -358,13 +380,7 @@ function AdicionarCriativoOrganicoBtn({ numero, onDone }) {
   }
 
   if (step === 'running') {
-    return (
-      <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:6, padding:'8px',
-        borderRadius:8, background:'rgba(56,189,248,.1)', border:'1px solid rgba(56,189,248,.3)',
-        color:'#38bdf8', fontFamily:'Roboto,sans-serif', fontWeight:700, fontSize:11.5 }}>
-        <LucideIcon icon="loader" size={13} style={{ animation:'spin 1s linear infinite' }}/>{msg || 'Otimizando…'}
-      </div>
-    );
+    return <BarraProgresso pct={pct} etapa={msg}/>;
   }
   return (
     <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
@@ -373,10 +389,10 @@ function AdicionarCriativoOrganicoBtn({ numero, onDone }) {
           border:'1px solid rgba(248,113,113,.3)', fontSize:11, color:'#f87171', lineHeight:1.4 }}>{msg}</div>
       )}
       <div style={{ display:'flex', gap:8 }}>
-        <Btn variant="secondary" size="sm" icon="image-plus" style={{ flex:1, justifyContent:'center' }}
-          onClick={() => run(null)}>Adicionar criativo</Btn>
-        <Btn variant="ghost" size="sm" icon="folder" style={{ justifyContent:'center' }}
-          onClick={manual} title="Escolher a pasta do Drive manualmente">Pasta</Btn>
+        <Btn variant="secondary" size="sm" icon="folder-down" style={{ flex:1, justifyContent:'center' }}
+          onClick={() => run(null)}>Importar direto</Btn>
+        <Btn variant="ghost" size="sm" icon="link" style={{ justifyContent:'center' }}
+          onClick={manual} title="Colar o link de uma pasta do Drive">Importar com link</Btn>
       </div>
     </div>
   );
@@ -944,7 +960,7 @@ function parseSlides(raw) {
   catch { return [EMPTY_SLIDE()]; }
 }
 
-function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigate, onSave, onClose, onDelete }) {
+function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigate, onSave, onClose, onDelete, onImported }) {
   const isNew = !item?.id;
   const [form, setForm] = useState(item || {
     tema:'', plataforma:'Reels', responsavel:'Felipe',
@@ -1347,7 +1363,7 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
                     <div>
                       {!isNew && item?.numero && (
                         <div style={{ marginBottom:12 }}>
-                          <AdicionarCriativoOrganicoBtn numero={item.numero} onDone={async () => {
+                          <AdicionarCriativoOrganicoBtn numero={item.numero} cardId={item.id} onDone={async () => {
                             if (!window.db) return;
                             const { data } = await window.db.from('conteudo_organico').select('slides').eq('id', item.id).single();
                             if (data?.slides) {
@@ -1355,6 +1371,7 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
                               setSlidesArr(novo);
                               set('slides', data.slides);
                             }
+                            onImported && onImported();
                           }}/>
                         </div>
                       )}
@@ -1395,7 +1412,7 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
                     </div>
                   </>) : (<>
                     {!isNew && item?.numero && ['Imagem','Stories'].includes(form.plataforma) && (
-                      <AdicionarCriativoOrganicoBtn numero={item.numero} onDone={async () => {
+                      <AdicionarCriativoOrganicoBtn numero={item.numero} cardId={item.id} onDone={async () => {
                         if (!window.db) return;
                         const { data } = await window.db.from('conteudo_organico').select('slides').eq('id', item.id).single();
                         if (data?.slides) {
@@ -1403,6 +1420,7 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
                           setSlidesArr(novo);
                           set('slides', data.slides);
                         }
+                        onImported && onImported();
                       }}/>
                     )}
                     <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
@@ -1932,19 +1950,46 @@ function OrganicoScreen() {
     }
   };
 
-  useEffect(() => {
+  const loadItems = React.useCallback(async () => {
     if (!window.db) return;
     setDbAvail(true);
-    window.db.from('conteudo_organico')
-      .select('*').order('created_at', { ascending:true })
-      .then(({ data }) => {
-        if (data) {
-          const withNum = data.map((item,idx) => ({ ...item, numero: item.numero ?? (idx+1) }));
-          setItems(withNum);
-          setNextNum(withNum.length+1);
-        }
-      });
+    const { data } = await window.db.from('conteudo_organico')
+      .select('*').order('created_at', { ascending:true });
+    if (data) {
+      const withNum = data.map((item,idx) => ({ ...item, numero: item.numero ?? (idx+1) }));
+      setItems(withNum);
+      setNextNum(withNum.length+1);
+    }
   }, []);
+  useEffect(() => { loadItems(); }, [loadItems]);
+
+  // Importar arquivos (geral) — puxa o Drive de todos os cards (via cozinha/worker).
+  const [importMsg, setImportMsg] = useState('');
+  async function importarArquivos() {
+    if (!confirm('Buscar imagens/vídeos do Drive para todos os cards do orgânico?')) return;
+    const jobId = novoJobId();
+    const sleep = ms => new Promise(r => setTimeout(r, ms));
+    setImportMsg('Preparando');
+    let terminou = false;
+    const pedido = fetch(`${WORKER_URL}/import-geral`, { method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ job_id: jobId }) }).finally(() => { terminou = true; });
+    (async () => {
+      while (!terminou) {
+        await sleep(2000);
+        try {
+          const p = await (await fetch(`${WORKER_URL}/progresso?job=${jobId}`)).json();
+          if (p.etapa) setImportMsg(`${p.etapa}${p.pct ? ` · ${Math.round(p.pct)}%` : ''}`);
+        } catch {}
+      }
+    })();
+    try {
+      const r = await pedido;
+      const d = await r.json();
+      setImportMsg(d.ok ? `Importados ${d.importados}/${d.total} (falhas: ${d.falhas})` : ('Erro: '+(d.error||'falha')));
+      await loadItems();
+    } catch(e){ setImportMsg('Erro: '+e.message); }
+    setTimeout(()=>setImportMsg(''), 6000);
+  }
 
   // Carrega as métricas orgânicas (desempenho dos posts). Mantém só o snapshot
   // mais recente de cada post, já que a tabela guarda um registro por dia.
@@ -2006,7 +2051,8 @@ function OrganicoScreen() {
           prefillDate={modal.prefillDate||null}
           siblings={modal.siblings||[]}
           onNavigate={newItem => setModal({ item:newItem, siblings: filtered.filter(i=>i.status===newItem.status) })}
-          onSave={handleSave} onDelete={handleDelete} onClose={()=>setModal(null)}/>
+          onSave={handleSave} onDelete={handleDelete} onClose={()=>setModal(null)}
+          onImported={loadItems}/>
       )}
       <TopBar title="Orgânico"
         actions={
@@ -2025,12 +2071,27 @@ function OrganicoScreen() {
                 </button>
               ))}
             </div>
+            <Btn variant="secondary" size="sm" icon="folder-down" onClick={importarArquivos}>
+              Importar arquivos
+            </Btn>
             <Btn variant="primary" size="sm" icon="plus"
               onClick={()=>setModal({ item:null, defaultStatus:'Fazer' })}>
               Novo
             </Btn>
           </div>
         }/>
+
+      {importMsg && (
+        <div style={{ position:'fixed', bottom:24, left:'50%', transform:'translateX(-50%)', zIndex:800,
+          display:'flex', alignItems:'center', gap:8, padding:'12px 18px', borderRadius:10,
+          background:'rgba(56,189,248,.12)', border:'1px solid rgba(56,189,248,.3)',
+          boxShadow:'0 12px 40px rgba(0,0,0,.5)' }}>
+          <LucideIcon icon="folder-down" size={16} color="#38bdf8"/>
+          <span style={{ fontSize:13, fontFamily:'Roboto,sans-serif', fontWeight:700, color:'#38bdf8' }}>
+            {importMsg}
+          </span>
+        </div>
+      )}
 
       {/* Barra de filtros */}
       <div style={{ padding:'8px 24px', borderBottom:'1px solid var(--app-border)',

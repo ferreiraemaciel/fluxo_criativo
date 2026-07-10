@@ -67,6 +67,18 @@ Se algum campo essencial não estiver claro no contexto, perguntar antes de lan�
 
 ---
 
+## KANBAN — CARD EM "FAZER" AVANÇA SOZINHO AO RECEBER MÍDIA (REGRA GLOBAL)
+
+> Aplica-se a qualquer kanban de conteúdo do projeto (Anúncios e Orgânico, Tracker e Khronus), presente e futuro.
+
+Um card na primeira coluna ("Fazer") nunca fica parado lá depois de já ter recebido o arquivo (imagem, carrossel ou vídeo) via importação do Drive. Assim que a mídia é gravada no card, ele avança automaticamente para a próxima coluna ("Fazendo" nos Anúncios do Tracker; "Produção" no Orgânico de ambos os apps).
+
+**Onde implementar:** no endpoint que grava a mídia no card (`/card-slides` de cada worker: `ads-media`, `organico-media`, `khronus-organico`), não no frontend. É o único ponto por onde passam as três formas de importar (Importar direto, Importar com link, Importar arquivos), então a regra vale pra qualquer uma delas sem duplicar lógica. O patch de avanço é condicional (`status=eq.Fazer`/`fazer`), então é seguro rodar sempre: se o card já saiu de "Fazer", o patch não afeta nada.
+
+Se um kanban novo for criado no futuro com sua própria primeira coluna, aplicar o mesmo padrão no endpoint que grava a mídia daquele card.
+
+---
+
 ## GERAÇÃO DE IMAGEM VIA CHATGPT (REGRA GLOBAL)
 
 > Esta regra se aplica a qualquer pedido de imagem no chat, em skills ou em agentes. Sem exceção.

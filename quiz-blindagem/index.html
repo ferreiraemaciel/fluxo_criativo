@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Blindagem</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#0b1629; --cream:#152038; --cream-2:#1e2f4a;
+    --ink:#e8f0fe; --ink-2:#8faecf;
+    --gold:#60a5fa; --gold-deep:#3b82f6; --gold-soft:#1e3a5f;
+    --line:#1e3358; --ok:#34d399; --danger:#f87171;
+    --r:14px; --shadow:0 8px 30px rgba(0,0,0,.40);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Poppins',system-ui,sans-serif;color:var(--ink);
+    -webkit-font-smoothing:antialiased;line-height:1.5;
+    background:
+      radial-gradient(120% 55% at 50% -8%, #1e3a8a 0%, rgba(30,58,138,0) 62%),
+      linear-gradient(180deg, #0b1629 0%, #060e1c 100%);
+    background-attachment:fixed}
+  #app{max-width:560px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;
+    padding:18px 18px 40px}
+  /* topo */
+  .brand{display:flex;justify-content:center;padding:8px 0 6px}
+  .brasao{height:118px;width:auto;max-width:90%;object-fit:contain;display:block;
+    filter:drop-shadow(0 8px 18px rgba(96,165,250,.30))}
+  .progress{height:7px;background:var(--cream-2);border-radius:999px;overflow:hidden;margin:14px 2px 26px}
+  .progress > i{display:block;height:100%;background:linear-gradient(90deg,var(--gold-deep),var(--gold));
+    border-radius:999px;transition:width .4s cubic-bezier(.2,.7,.2,1)}
+  .stage{flex:1;display:flex;flex-direction:column;animation:fade .35s ease}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  h1{font-size:21px;font-weight:700;text-align:center;line-height:1.3;margin-bottom:6px}
+  .sub{text-align:center;color:var(--ink-2);font-size:13.5px;margin-bottom:18px}
+  /* opções */
+  .opts{display:flex;flex-direction:column;gap:11px;margin-top:6px}
+  .opt{display:flex;align-items:center;gap:12px;background:var(--cream);border:1.5px solid var(--line);
+    border-radius:16px;padding:15px 16px;cursor:pointer;text-align:left;font-size:14.5px;font-weight:500;
+    color:var(--ink);width:100%;box-shadow:0 2px 8px rgba(0,0,0,.20);
+    transition:transform .15s,box-shadow .15s,border-color .15s,background .15s}
+  .opt:hover{border-color:var(--gold-soft);background:#1a2f4e}
+  .opt:active{transform:translateY(0) scale(.99)}
+  .opt .em{font-size:23px;flex-shrink:0;line-height:1}
+  .opt.sel{border-color:var(--gold);background:#1e3a6e;animation:sel-pulse .4s ease-out forwards}
+  @keyframes sel-pulse{
+    0%{box-shadow:0 0 0 0 rgba(96,165,250,.50),0 2px 8px rgba(0,0,0,.20)}
+    55%{box-shadow:0 0 0 7px rgba(96,165,250,.0),0 10px 24px rgba(96,165,250,.20)}
+    100%{box-shadow:0 0 0 3px rgba(96,165,250,.20),0 10px 24px rgba(96,165,250,.14)}
+  }
+  .chk{width:20px;height:20px;border-radius:6px;border:2px solid var(--line);flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;font-size:13px;color:#fff}
+  .opt.sel .chk{background:var(--gold);border-color:var(--gold)}
+  /* botão */
+  .btn{display:block;width:100%;background:linear-gradient(180deg,var(--gold),var(--gold-deep));color:#fff;border:none;border-radius:14px;
+    padding:16px;font-family:inherit;font-size:15.5px;font-weight:700;cursor:pointer;margin-top:22px;
+    box-shadow:0 8px 20px rgba(37,99,235,.40);transition:transform .15s,box-shadow .15s,filter .15s}
+  .btn:hover{transform:translateY(-2px);box-shadow:0 12px 26px rgba(37,99,235,.50);filter:saturate(1.06)}
+  .btn:active{transform:translateY(0)}
+  .btn:disabled{background:#2a3a52;box-shadow:none;cursor:default;transform:none;filter:none;color:var(--ink-2)}
+  .btn.ghost{background:transparent;color:var(--gold);border:1.5px solid var(--gold-soft);box-shadow:none}
+  /* conteúdo */
+  .content-h{font-size:24px;font-weight:800;text-align:center;margin:30px 0 14px}
+  .content-img{width:100%;max-width:380px;display:block;margin:4px auto 18px;border-radius:10px}
+  .content-imgs{display:flex;gap:12px;margin:12px 0 16px}
+  .cip-item{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px}
+  .cip-title{font-size:11px;font-weight:700;color:var(--ink);text-align:center;line-height:1.3;min-height:2.6em;display:flex;align-items:center;justify-content:center}
+  .cip-item img{width:100%;border-radius:10px;border:1.5px solid var(--line);object-fit:contain}
+  .cip-caption{font-size:10px;color:var(--ink-2);text-align:center;line-height:1.4}
+  .content-b{font-size:15.5px;color:var(--ink-2);text-align:center;line-height:1.6}
+  .content-h b,.content-b b{color:var(--gold)}
+  /* prova */
+  .case{background:var(--cream);border:1.5px solid var(--line);border-left:4px solid var(--danger);
+    border-radius:12px;padding:16px;margin-top:14px}
+  .case .src{font-size:11px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:.06em}
+  .case .ttl{font-size:14.5px;font-weight:600;margin:6px 0 10px}
+  .case .val{font-size:22px;font-weight:800;color:var(--danger)}
+  .case .nt{font-size:11.5px;color:var(--ink-2)}
+  /* form */
+  .field{margin-top:14px}
+  .field label{display:block;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--ink-2);margin-bottom:6px}
+  .field input{width:100%;border:1.5px solid var(--line);border-radius:11px;padding:14px 15px;font-size:16px;
+    font-family:inherit;background:var(--cream);color:var(--ink)}
+  .field input::placeholder{color:var(--ink-2)}
+  .field input:focus{outline:none;border-color:var(--gold)}
+  .err{color:var(--danger);font-size:12.5px;margin-top:8px;text-align:center;min-height:16px}
+  /* resultado */
+  .badge-status{text-align:center;font-size:26px;font-weight:800;letter-spacing:.04em;margin:8px 0 4px}
+  .gauge{height:14px;border-radius:999px;margin:18px 0 6px;
+    background:linear-gradient(90deg,#34d399,#fbbf24,#f87171)}
+  .gauge-wrap{position:relative}
+  .gauge-mark{position:absolute;top:-6px;width:4px;height:26px;background:#fff;border-radius:2px;
+    transform:translateX(-50%);transition:left .5s}
+  .scale{display:flex;justify-content:space-between;font-size:10.5px;color:var(--ink-2);margin-top:4px}
+  .offer{background:var(--cream);border:2px solid var(--gold);border-radius:16px;padding:20px;margin-top:24px;text-align:center}
+  .offer .nm{font-size:16px;font-weight:700}
+  .offer .de{color:var(--ink-2);text-decoration:line-through;font-size:13px;margin-top:8px}
+  .offer .por{font-size:34px;font-weight:800;color:var(--gold);line-height:1.1}
+  .offer .px{font-size:12.5px;color:var(--ink-2)}
+  .cards{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px}
+  .cards .c{background:var(--cream);border:1px solid var(--line);border-radius:11px;padding:12px;font-size:12.5px;font-weight:600}
+  .foot{font-size:11px;color:var(--ink-2);text-align:center;margin-top:18px}
+  /* consequências */
+  .conseq-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0}
+  .conseq-card{background:var(--cream);border:1.5px solid var(--line);border-top:3px solid var(--danger);border-radius:12px;padding:12px 11px}
+  .conseq-card strong{display:block;font-size:13px;font-weight:700;color:var(--ink);margin-bottom:5px}
+  .conseq-card p{font-size:11.5px;color:var(--ink-2);line-height:1.4;margin:0}
+  /* desejo */
+  .desire-sep{text-align:center;font-size:18px;font-weight:800;color:var(--gold);margin:22px 0 14px;line-height:1.3}
+  .benefit-chips{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:22px}
+  .benefit-chip{background:var(--cream);border:1.5px solid var(--gold-soft);border-radius:10px;padding:10px 12px;font-size:13px;font-weight:600;color:var(--ink);display:flex;align-items:center;gap:7px}
+  /* precheckout */
+  .pco-badge{text-align:center;padding:14px 0 10px}
+  .pco-badge img{height:90px;filter:drop-shadow(0 6px 14px rgba(96,165,250,.25))}
+  .pco-name{font-size:17px;font-weight:700;text-align:center;margin-bottom:2px}
+  .pco-sub{font-size:13px;color:var(--ink-2);text-align:center;margin-bottom:20px}
+  .pco-price{background:var(--cream);border:2px solid var(--gold);border-radius:16px;padding:20px;text-align:center;margin-bottom:18px}
+  .pco-de{color:var(--ink-2);text-decoration:line-through;font-size:13px}
+  .pco-por{font-size:38px;font-weight:800;color:var(--gold);line-height:1.1}
+  .pco-px{font-size:12.5px;color:var(--ink-2);margin-top:4px}
+  /* o que você recebe */
+  .pco-section-title{font-size:18px;font-weight:800;text-align:center;color:var(--ink);margin:28px 0 10px;line-height:1.3}
+  .pco-recebe-label{background:var(--gold-soft);border-radius:10px;padding:10px 14px;font-size:14px;font-weight:700;color:var(--gold);text-align:center;margin-bottom:14px}
+  .recebe-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}
+  .recebe-card{background:var(--cream);border:1.5px solid var(--line);border-radius:12px;overflow:hidden}
+  .recebe-img{width:100%;height:100px;object-fit:cover;display:block}
+  .recebe-card-body{padding:10px}
+  .recebe-card-body strong{display:block;font-size:12px;font-weight:700;margin-bottom:5px;line-height:1.3;color:var(--ink)}
+  .recebe-card-body p{font-size:11px;color:var(--ink-2);line-height:1.4;margin:0}
+  /* quem fez */
+  .autor-img{width:160px;height:160px;object-fit:cover;border-radius:50%;display:block;margin:0 auto 10px;border:3px solid var(--gold)}
+  .autor-checks{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
+  .autor-check{display:flex;gap:8px;font-size:13px;line-height:1.4;align-items:flex-start}
+  /* boas-vindas */
+  .intro{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;gap:14px;padding:6px 4px 20px}
+  .intro .emoji{font-size:50px;line-height:1;filter:drop-shadow(0 6px 12px rgba(96,165,250,.30))}
+  .intro h1{font-size:26px;font-weight:800;line-height:1.25}
+  .intro p{color:var(--ink-2);font-size:15.5px;line-height:1.6;max-width:430px;margin:0 auto}
+  .intro .btn{max-width:340px}
+  .kicker{text-align:center;font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--gold)}
+  .opt-img{width:54px;height:54px;border-radius:50%;object-fit:cover;object-position:top center;flex-shrink:0;border:2px solid var(--gold-soft)}
+  .welcome{text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px;margin:2px 0 18px}
+  .welcome .emoji{font-size:42px;line-height:1;filter:drop-shadow(0 6px 12px rgba(96,165,250,.30))}
+  .welcome-h{font-size:22px;font-weight:800;line-height:1.25}
+  .welcome-b{font-size:14px;color:var(--ink-2);line-height:1.55;max-width:420px}
+  /* loading de resultado */
+  .loading-items{display:flex;flex-direction:column;gap:12px;margin:18px 0 24px;text-align:left}
+  .loading-item{display:flex;gap:10px;align-items:flex-start;font-size:14px}
+  .loading-item .em{font-size:20px;flex-shrink:0;line-height:1.3}
+  .loading-item strong{color:var(--ink)}
+  .loading-bar-wrap{border:1.5px dashed var(--gold-soft);border-radius:8px;padding:3px;margin-bottom:8px;overflow:hidden}
+  .loading-bar-inner{height:10px;background:linear-gradient(90deg,var(--gold-deep),var(--gold));border-radius:5px;width:0%}
+  .loading-meta{display:flex;justify-content:space-between;font-size:12px;color:var(--ink-2);margin-bottom:6px}
+  .loading-status{font-size:12.5px;color:var(--ink-2);text-align:center}
+  /* carrossel jurídico */
+  .carousel-img{width:100%;border-radius:12px;display:block;margin:16px 0 10px;transition:opacity .2s ease}
+  .carousel-timer{width:100%;height:5px;background:var(--cream-2);border-radius:99px;overflow:hidden;margin:10px 0 12px}
+  .carousel-timer-bar{height:100%;background:linear-gradient(90deg,var(--gold-deep),var(--gold));border-radius:99px;width:0%}
+  .carousel-dots{display:flex;justify-content:center;gap:8px;margin-top:8px}
+  .carousel-dots .dot{width:7px;height:7px;border-radius:50%;background:var(--cream-2);transition:background .3s}
+  .carousel-dots .dot.active{background:var(--gold)}
+  /* ── Ajustes mobile ── */
+  @media (max-width:480px){
+    .brasao{height:80px}
+    .progress{margin:10px 2px 20px}
+    h1{font-size:19px}
+    .intro h1{font-size:22px}
+    .content-h{font-size:20px}
+    .benefit-chips{grid-template-columns:1fr}
+    .benefit-chip{padding:10px 14px;font-size:13.5px}
+    .conseq-grid{grid-template-columns:1fr}
+    .conseq-card p{font-size:13px}
+    .cards{grid-template-columns:1fr}
+    .pco-por{font-size:32px}
+    .offer .por{font-size:28px}
+    .opt{padding:13px 14px;font-size:14px}
+    .opt-img{width:48px;height:48px}
+  }
+  @media (max-width:360px){
+    #app{padding:14px 14px 36px}
+    .brasao{height:68px}
+    h1{font-size:17px}
+    .recebe-grid{grid-template-columns:1fr}
+  }
+</style>
+<!-- Meta Pixel — pixel ID é público (fica no JS da página) -->
+<script>
+!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,
+document,'script','https://connect.facebook.net/en_US/fbevents.js');
+fbq('init','2021111734750468');
+fbq('track','PageView');
+</script>
+<noscript><img height="1" width="1" style="display:none"
+src="https://www.facebook.com/tr?id=2021111734750468&ev=PageView&noscript=1"/></noscript>
+</head>
+<body>
+<div id="app">
+  <div class="brand"><img class="brasao" src="assets/brasao.png?v=2" alt="Blindagem · Contrato Visual"></div>
+  <div class="progress"><i id="bar" style="width:4%"></i></div>
+  <div class="stage" id="stage"></div>
+</div>
+
+<script src="quiz-config.js?v=1"></script>
+<script>
+const SUPABASE_URL = 'https://wntzzzuqoqmfcjebmzul.supabase.co';
+const INTAKE_URL = SUPABASE_URL + '/functions/v1/quiz-lead-intake';
+
+const C = window.QUIZ_CONFIG;
+const stage = document.getElementById('stage');
+const bar = document.getElementById('bar');
+
+/* ---- estado ---- */
+const code = Array.from({length:6}, () => 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789'[Math.floor(Math.random()*56)]).join('');
+const answers = {};
+let idx = 0;
+const createdAt = new Date().toISOString();
+
+/* ---- tracking ---- */
+const getFbCookie = n => { const m = document.cookie.match(new RegExp('(^| )' + n + '=([^;]+)')); return m ? m[2] : null; };
+const qp = new URLSearchParams(location.search);
+const tracking = {
+  utm_source: qp.get('utm_source'), utm_medium: qp.get('utm_medium'),
+  utm_campaign: qp.get('utm_campaign'), utm_content: qp.get('utm_content'), utm_term: qp.get('utm_term'),
+  device_platform: navigator.platform || null, ip: null, fbp: null, fbc: null,
+};
+const trackingRaw = () => {
+  const p = [];
+  ['utm_source','utm_medium','utm_campaign','utm_content','utm_term'].forEach(k => { if (tracking[k]) p.push(k+': '+tracking[k]); });
+  p.push('screen: '+screen.width+'x'+screen.height);
+  p.push('viewport: '+innerWidth+'x'+innerHeight);
+  p.push('platform: '+(navigator.platform||''));
+  if (tracking.ip) p.push('ip: '+tracking.ip);
+  if (tracking.fbp) p.push('fbp: '+tracking.fbp);
+  if (tracking.fbc) p.push('fbc: '+tracking.fbc);
+  p.push('userAgent: '+navigator.userAgent);
+  return p.join(' | ');
+};
+// fbp/_fbc ficam disponíveis depois que o Pixel grava o cookie (async, ~300ms)
+setTimeout(() => { tracking.fbp = getFbCookie('_fbp'); tracking.fbc = getFbCookie('_fbc'); }, 600);
+fetch('https://api.ipify.org?format=json').then(r=>r.json()).then(d=>{tracking.ip=d.ip;}).catch(()=>{});
+
+/* ---- resultado calculado ---- */
+function calcPerfil(){
+  const a = {'Fotógrafo(a)':'fotógrafo','Videomaker':'videomaker','Faço os dois (híbrido)':'fotógrafo e videomaker'}[answers.area_atuacao] || 'profissional';
+  const n = {'Empresário/MEI':'empreendedor/MEI','Autônomo':'autônomo','Ainda sou amador':'em começo de jornada'}[answers.tipo_negocio] || '';
+  return (a + (n ? ' ' + n : '')).trim();
+}
+function calcRisco(){
+  let s = 0;
+  if (answers.usa_contrato === 'Nunca, acho que não preciso.') s += 3;
+  else if (answers.usa_contrato === 'Às vezes, quando o cliente pede…') s += 1;
+  if (answers.protege_dinheiro === 'Não ajuda, já perdi dinheiro por não estar protegido.') s += 3;
+  else if (answers.protege_dinheiro === 'Às vezes protege, mas já tive problemas…') s += 1;
+  if (answers.entende_contrato === 'Ainda não uso contrato.' || answers.entende_contrato === 'Não sou capaz de entender sozinho.') s += 2;
+  if ((answers.temas_dominados||[]).includes('Nenhum deles')) s += 2;
+  if (answers.tipo_contrato_atual === 'Na verdade, eu nem uso contrato…') s += 2;
+  else if (answers.tipo_contrato_atual) s += 1;
+  if (s >= 8)  return { nivel:'Altíssimo', status:'DESPROTEGIDO', pos:96 };
+  if (s >= 6)  return { nivel:'Alto',      status:'VULNERÁVEL',   pos:75 };
+  if (s >= 4)  return { nivel:'Médio',     status:'PARCIAL',      pos:50 };
+  if (s >= 2)  return { nivel:'Baixo',     status:'QUASE LÁ',     pos:28 };
+  return { nivel:'Baixíssimo', status:'PROTEGIDO', pos:6 };
+}
+
+/* ---- salvar no Supabase (progressivo) ---- */
+async function save(extra){
+  const p = {
+    funnel_slug: C.funnelSlug, code, created_at: createdAt, origem: 'novo',
+    completou_lead: !!answers.email,
+    area_atuacao: answers.area_atuacao || null,
+    profissionalizacao: answers.profissionalizacao || null,
+    tipo_negocio: answers.tipo_negocio || null,
+    confianca_clientes: answers.confianca_clientes || null,
+    situacoes: answers.situacoes || null,
+    custo_processo: answers.custo_processo || null,
+    usa_contrato: answers.usa_contrato || null,
+    tipo_contrato_atual: answers.tipo_contrato_atual || null,
+    foco_artistico: answers.foco_artistico || null,
+    sentimentos: answers.sentimentos || null,
+    protege_dinheiro: answers.protege_dinheiro || null,
+    temas_dominados: answers.temas_dominados || null,
+    entende_contrato: answers.entende_contrato || null,
+    quer_modelos: answers.quer_modelos || null,
+    nome: answers.nome || null, email: answers.email || null, whatsapp: answers.whatsapp || null,
+    utm_source: tracking.utm_source, utm_medium: tracking.utm_medium, utm_campaign: tracking.utm_campaign,
+    utm_content: tracking.utm_content, utm_term: tracking.utm_term,
+    device_platform: tracking.device_platform, ip: tracking.ip, tracking_raw: trackingRaw(),
+    fbp: tracking.fbp, fbc: tracking.fbc,
+    event_source_url: location.href,
+    respostas: { ...answers }, ...(extra||{}),
+  };
+  try { await fetch(INTAKE_URL, { method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify(p), keepalive:true }); }
+  catch(e){ console.warn('save falhou', e); }
+}
+
+/* ---- checkout com UTMs + email pré-preenchido para o Hotmart ---- */
+function buildCheckoutUrl() {
+  const base = C.checkoutUrl;
+  if (!base || base === '#') return '#';
+  // Repassa TUDO que veio na URL (utm_*, xcod, src, sck...) pro Hotmart.
+  // Sem esses parâmetros a venda chega "direto" (o webhook lê origin.sck).
+  const p = new URLSearchParams(location.search);
+  // O anúncio manda a origem no xcod; o Hotmart popula origin.sck a partir do sck.
+  // Espelha xcod -> sck (se sck ainda não veio) pra garantir a atribuição no webhook.
+  const xcod = p.get('xcod');
+  if (xcod && !p.get('sck')) p.set('sck', xcod);
+  if (answers.email) p.set('email', answers.email);
+  if (answers.nome)  p.set('name',  answers.nome);
+  const qs = p.toString();
+  const sep = base.includes('?') ? '&' : '?';
+  return qs ? base + sep + qs : base;
+}
+
+/* ---- navegação ---- */
+function next(){ idx++; render(); }
+function setProgress(){ bar.style.width = Math.max(4, Math.round(idx/(C.steps.length-1)*100)) + '%'; }
+
+function render(){
+  const step = C.steps[idx];
+  setProgress();
+  window.scrollTo(0,0);
+  stage.innerHTML = '';
+  if (!step) return;
+  bar.parentElement.style.visibility = step.type === 'intro' ? 'hidden' : 'visible';
+  ({ intro:rIntro, single:rSingle, multi:rMulti, content:rContent, proof:rProof, carousel:rCarousel, loading:rLoading, capture:rCapture, result:rResult, precheckout:rPrecheckout })[step.type](step);
+}
+
+function rIntro(step){
+  const w = el('<div class="intro"></div>');
+  w.appendChild(el('<div class="emoji">📸</div>'));
+  w.appendChild(el('<div class="kicker">Quiz do Blindagem</div>'));
+  w.appendChild(el(`<h1>${step.heading}</h1>`));
+  w.appendChild(el(`<p>${step.body}</p>`));
+  const b = el(`<button class="btn">${step.cta||'Começar'}</button>`);
+  b.onclick = next; w.appendChild(b);
+  stage.appendChild(w);
+}
+
+function rSingle(step){
+  if (step.welcome){
+    const w = el('<div class="welcome"></div>');
+    w.innerHTML = (step.welcome.kicker ? `<div class="emoji">📸</div><div class="kicker">${step.welcome.kicker}</div>` : '')+
+      `<div class="welcome-h">${step.welcome.heading}</div><div class="welcome-b">${step.welcome.body}</div>`;
+    stage.appendChild(w);
+  }
+  stage.appendChild(el(`<h1>${step.title}</h1>`));
+  const box = el('<div class="opts"></div>');
+  step.options.forEach(o => {
+    const b = el(`<button class="opt">${o.img?`<img class="opt-img" src="${o.img}" alt="${o.label}">`:o.emoji?`<span class="em">${o.emoji}</span>`:''}<span>${o.label}</span></button>`);
+    b.onclick = () => {
+      if (box.dataset.locked) return;
+      box.dataset.locked = '1';
+      box.querySelectorAll('.opt').forEach(x => x.classList.remove('sel'));
+      b.classList.add('sel');
+      answers[step.key] = o.label; save();
+      setTimeout(next, 240);
+    };
+    box.appendChild(b);
+  });
+  stage.appendChild(box);
+}
+
+function rMulti(step){
+  stage.appendChild(el(`<h1>${step.title}</h1>`));
+  if (step.subtitle) stage.appendChild(el(`<div class="sub">${step.subtitle}</div>`));
+  const sel = new Set();
+  const box = el('<div class="opts"></div>');
+  step.options.forEach(o => {
+    const b = el(`<button class="opt"><span class="chk">✓</span>${o.emoji?`<span class="em">${o.emoji}</span>`:''}<span>${o.label}</span></button>`);
+    b.onclick = () => { if (sel.has(o.label)) { sel.delete(o.label); b.classList.remove('sel'); }
+      else { sel.add(o.label); b.classList.add('sel'); } cont.disabled = sel.size===0; };
+    box.appendChild(b);
+  });
+  stage.appendChild(box);
+  const cont = el('<button class="btn" disabled>Continuar</button>');
+  cont.onclick = () => { answers[step.key] = [...sel]; save(); next(); };
+  stage.appendChild(cont);
+}
+
+function rContent(step){
+  stage.appendChild(el(`<div class="content-h">${step.heading}</div>`));
+  if (step.imgs){
+    const row = el('<div class="content-imgs"></div>');
+    step.imgs.forEach(o => {
+      if (typeof o === 'string'){ row.appendChild(el(`<div class="cip-item"><img src="${o}" alt=""></div>`)); return; }
+      const item = el('<div class="cip-item"></div>');
+      if (o.title) item.appendChild(el(`<div class="cip-title">${o.title}</div>`));
+      item.appendChild(el(`<img src="${o.src}" alt="">`));
+      if (o.caption) item.appendChild(el(`<div class="cip-caption">${o.caption}</div>`));
+      row.appendChild(item);
+    });
+    stage.appendChild(row);
+  } else if (step.img){
+    stage.appendChild(el(`<img class="content-img" src="${step.img}" alt="">`));
+  }
+  stage.appendChild(el(`<div class="content-b">${step.body}</div>`));
+  if (step.options){
+    if (step.question) stage.appendChild(el(`<h1 style="margin-top:18px">${step.question}</h1>`));
+    const box = el('<div class="opts" style="margin-top:12px"></div>');
+    step.options.forEach(o => {
+      const b = el(`<button class="opt">${o.emoji?`<span class="em">${o.emoji}</span>`:''}<span>${o.label}</span></button>`);
+      b.onclick = () => {
+        if (box.dataset.locked) return;
+        box.dataset.locked = '1';
+        box.querySelectorAll('.opt').forEach(x => x.classList.remove('sel'));
+        b.classList.add('sel');
+        if (step.key) { answers[step.key] = o.label; save(); }
+        setTimeout(next, 240);
+      };
+      box.appendChild(b);
+    });
+    stage.appendChild(box);
+  } else {
+    const b = el(`<button class="btn">${step.cta||'Continuar'}</button>`);
+    b.onclick = next; stage.appendChild(b);
+  }
+}
+
+function rProof(step){
+  stage.appendChild(el(`<h1>${step.heading}</h1>`));
+  step.cases.forEach(c => stage.appendChild(el(
+    `<div class="case"><div class="src">${c.fonte}</div><div class="ttl">${c.titulo}</div>`+
+    `<div class="val">${c.valor}</div><div class="nt">${c.nota}</div></div>`)));
+  const b = el(`<button class="btn">${step.cta||'Continuar'}</button>`);
+  b.onclick = next; stage.appendChild(b);
+}
+
+function rCarousel(step){
+  const slides = step.slides;
+  const dur = step.durationPerSlide || 3500;
+  const total = dur * slides.length;
+
+  if (step.subtitle) stage.appendChild(el(`<div class="sub" style="margin-bottom:12px">${step.subtitle}</div>`));
+  stage.appendChild(el(`<div class="content-h" style="margin-top:8px">${step.heading}</div>`));
+
+  const imgEl = el(`<img class="carousel-img" src="${slides[0]}" alt="">`);
+  stage.appendChild(imgEl);
+
+  // barra única que percorre o tempo total
+  const timerWrap = el(`<div class="carousel-timer"><div class="carousel-timer-bar"></div></div>`);
+  stage.appendChild(timerWrap);
+  const ctbar = timerWrap.querySelector('.carousel-timer-bar');
+
+  const dotsEl = el(`<div class="carousel-dots">${slides.map((_,i) => `<span class="dot${i===0?' active':''}"></span>`).join('')}</div>`);
+  stage.appendChild(dotsEl);
+  const dots = dotsEl.querySelectorAll('.dot');
+
+  // dispara a animação contínua
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    ctbar.style.transition = `width ${total}ms linear`;
+    ctbar.style.width = '100%';
+  }));
+
+  // troca de imagem a cada 1/3 do tempo
+  for (let i = 1; i < slides.length; i++) {
+    setTimeout(() => {
+      imgEl.style.opacity = '0';
+      setTimeout(() => {
+        imgEl.src = slides[i];
+        dots.forEach((d,j) => d.classList.toggle('active', j===i));
+        imgEl.style.opacity = '1';
+      }, 220);
+    }, dur * i);
+  }
+
+  setTimeout(next, total);
+}
+
+function rLoading(step){
+  if (step.img) stage.appendChild(el(`<img src="${step.img}" alt="" style="width:70%;max-width:260px;display:block;margin:0 auto 6px">`));
+  stage.appendChild(el(`<h1>${step.heading}</h1>`));
+  const list = el('<div class="loading-items"></div>');
+  step.items.forEach(o => {
+    list.appendChild(el(`<div class="loading-item"><span class="em">${o.emoji}</span><span>${o.body?`<strong>${o.title}</strong> – ${o.body}`:`<strong>${o.title}</strong>`}</span></div>`));
+  });
+  stage.appendChild(list);
+  const pct = el('<span>0%</span>');
+  const meta = el('<div class="loading-meta"></div>');
+  meta.appendChild(el(`<span>Carregando…</span>`));
+  meta.appendChild(pct);
+  stage.appendChild(meta);
+  const wrap = el('<div class="loading-bar-wrap"><div class="loading-bar-inner"></div></div>');
+  stage.appendChild(wrap);
+  const bar = wrap.querySelector('.loading-bar-inner');
+  stage.appendChild(el(`<div class="loading-status">${step.loadingText||''}</div>`));
+  const dur = step.duration || 4000;
+  let start;
+  function tick(ts){
+    if (!start) start = ts;
+    const p = Math.min((ts - start) / dur, 1);
+    const pctVal = Math.round(p * 100);
+    bar.style.width = pctVal + '%';
+    pct.textContent = pctVal + '%';
+    if (p < 1) requestAnimationFrame(tick);
+    else next();
+  }
+  requestAnimationFrame(tick);
+}
+
+function rCapture(step){
+  stage.appendChild(el(`<h1>${step.heading}</h1>`));
+  if (step.img) stage.appendChild(el(`<img src="${step.img}" alt="" style="width:100%;max-width:320px;display:block;margin:14px auto 10px;border-radius:16px;object-fit:cover">`));
+  stage.appendChild(el(`<div class="sub">${step.body}</div>`));
+  const f = el('<div></div>');
+  f.innerHTML =
+    `<div class="field"><label>Seu nome</label><input id="f_nome" placeholder="Como podemos te chamar"></div>`+
+    `<div class="field"><label>Seu melhor e-mail</label><input id="f_email" type="email" placeholder="voce@email.com"></div>`+
+    `<div class="field"><label>WhatsApp</label><input id="f_wpp" inputmode="tel" placeholder="(00) 00000-0000"></div>`+
+    `<div class="err" id="f_err"></div>`;
+  stage.appendChild(f);
+  const b = el(`<button class="btn">${step.cta||'Continuar'}</button>`);
+  b.onclick = async () => {
+    const nome = f_nome.value.trim(), email = f_email.value.trim(), wpp = f_wpp.value.trim();
+    if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { f_err.textContent = 'Informe um e-mail válido.'; return; }
+    answers.nome = nome; answers.email = email; answers.whatsapp = wpp;
+    b.disabled = true; b.textContent = 'Calculando…';
+    await save();
+    // Pixel Lead (após o CAPI já ter disparado pelo Edge Function)
+    if (typeof fbq === 'function') fbq('track','Lead',{content_name:'Quiz Blindagem',value:397.00,currency:'BRL'},{eventID:code+'_lead'});
+    next();
+  };
+  stage.appendChild(b);
+}
+
+function rResult(){
+  const perfil = calcPerfil();
+  const r = calcRisco();
+  save({ perfil, nivel_risco: r.nivel, completou_quiz: true });
+  if (typeof fbq==='function') fbq('track','CompleteRegistration',
+    {content_name:'Quiz Blindagem', status: r.status},
+    {eventID: code+'_complete'});
+  const cor = r.pos > 70 ? 'var(--danger)' : r.pos > 40 ? 'var(--gold-deep)' : 'var(--ok)';
+
+  stage.appendChild(el(`<h1>Seu diagnóstico está pronto</h1>`));
+  stage.appendChild(el(`<div class="sub">Com base nas suas respostas, você é um <b>${perfil}</b>.</div>`));
+  stage.appendChild(el(`<div class="badge-status" style="color:${cor}">${r.status}</div>`));
+  stage.appendChild(el(`<div class="sub">Seu nível de risco hoje é <b>${r.nivel}</b>.</div>`));
+  stage.appendChild(el(
+    `<div class="gauge-wrap"><div class="gauge"></div><div class="gauge-mark" style="left:${r.pos}%"></div></div>`+
+    `<div class="scale"><span>Baixíssimo</span><span>Médio</span><span>Altíssimo</span></div>`));
+
+  // heading personalizado por perfil
+  const riskPhrases = {
+    'DESPROTEGIDO': `O ${perfil} sem contrato está completamente vulnerável, correndo o risco de:`,
+    'VULNERÁVEL':   `O ${perfil} já usa contratos, mas ainda não está protegido como deveria, correndo o risco de:`,
+    'PARCIAL':      `O ${perfil} tem proteção parcial, mas ainda corre o risco de:`,
+    'QUASE LÁ':     `O ${perfil} está quase protegido, mas pode se deparar com:`,
+    'PROTEGIDO':    `Mesmo o ${perfil} bem protegido pode se deparar com:`,
+  };
+  stage.appendChild(el(`<h1 style="margin-top:24px;font-size:18px">${riskPhrases[r.status]||''}</h1>`));
+
+  const conseqs = [
+    { title:'Ser processado',                body:'A falta de um contrato não traz a mínima proteção necessária para ser profissional.' },
+    { title:'Levar calotes',                 body:'A falta de regras sobre pagamentos, inadimplência e rescisão gera danos irreparáveis.' },
+    { title:'Quebrar o negócio',             body:'Além dos danos financeiros, nenhum negócio se sustenta sem a saúde psicológica do profissional.' },
+    { title:'Não evoluir financeiramente',   body:'A falta de gestão de risco impede que seu foco também esteja em empreender.' },
+    { title:'Grande carga de estresse',      body:'Estar sempre apagando incêndios não te permite ir para frente e gera ansiedade.' },
+    { title:'Nunca ser valorizado',          body:'Clientes que pagam bem não contratam quem não tem contrato e credibilidade.' },
+    { title:'Perder o sono',                 body:'Noites em claro pensando nos problemas e se algum deles tem solução. Ninguém merece.' },
+    { title:'Desistir do sonho de viver da arte', body:'Ficar só resolvendo problemas não dá ânimo para criar, fotografar, filmar e fazer o que você ama.' },
+  ];
+  const grid = el('<div class="conseq-grid"></div>');
+  conseqs.forEach(c => grid.appendChild(el(`<div class="conseq-card"><strong>${c.title}</strong><p>${c.body}</p></div>`)));
+  stage.appendChild(grid);
+
+  stage.appendChild(el(`<div class="desire-sep">Quer sair dessa e ter:</div>`));
+  const chips = el('<div class="benefit-chips"></div>');
+  [['🛡️','Segurança jurídica de verdade'],['⚡','Uso imediato'],['😊','Cláusulas fáceis de entender'],['🚀','Rápido de preencher']].forEach(([e,t]) =>
+    chips.appendChild(el(`<div class="benefit-chip"><span>${e}</span><span>${t}</span></div>`)));
+  stage.appendChild(chips);
+
+  const b = el(`<button class="btn">Sim, quero me proteger de verdade →</button>`);
+  b.onclick = next;
+  stage.appendChild(b);
+  bar.style.width = '100%';
+}
+
+function goCheckout(){
+  if (typeof fbq==='function') fbq('track','InitiateCheckout',
+    {content_name:'Blindagem',content_ids:['blindagem'],value:397.00,currency:'BRL',num_items:1},
+    {eventID:code+'_checkout'});
+  const url = buildCheckoutUrl();
+  if (url && url!=='#') setTimeout(()=>{ location.href = url; }, 150);
+}
+
+function rPrecheckout(){
+  // — topo: mockup hero + nome + subtitle + chips
+  stage.appendChild(el(`<img src="assets/papel-enfileirados.png" alt="" style="width:100%;border-radius:12px;margin:0 0 16px">`));
+  stage.appendChild(el(`<div class="pco-name">Blindagem</div>`));
+  stage.appendChild(el(`<div class="pco-sub">Sistema de Gestão de Contratos para Fotógrafos e Videomakers</div>`));
+  const chips = el('<div class="benefit-chips" style="margin-bottom:14px"></div>');
+  [['📝','Gere contratos'],['✍️','Assine digitalmente'],['📁','Organize tudo'],['🔔','Acompanhe em tempo real']].forEach(([e,t]) =>
+    chips.appendChild(el(`<div class="benefit-chip"><span>${e}</span><span>${t}</span></div>`)));
+  stage.appendChild(chips);
+
+  // — 1º botão
+  const b1 = el(`<button class="btn">QUERO O BLINDAGEM AGORA</button>`);
+  b1.onclick = goCheckout;
+  stage.appendChild(b1);
+
+  // — o que você recebe
+  stage.appendChild(el(`<div class="pco-section-title">Proteja seus contratos com o Blindagem!</div>`));
+  stage.appendChild(el(`<div class="pco-recebe-label">Tenha acesso imediato a:</div>`));
+  const recebe = [
+    { img:'assets/recebe-01.jpg', title:'⭐ Geração de Contratos Profissionais', body:'Crie contratos adaptados ao seu nicho em minutos, sem precisar de advogado para cada um.' },
+    { img:'assets/recebe-02.jpg', title:'⭐ Assinatura Digital com Validade Jurídica', body:'Envie para o cliente assinar digitalmente. Sem papel, sem impressora, sem demora.' },
+    { img:'assets/recebe-03.jpg', title:'⭐ Organização por Cliente e Evento', body:'Todos os contratos centralizados e fáceis de encontrar quando o cliente ligar às 23h.' },
+    { img:'assets/recebe-04.jpg', title:'⭐ Acompanhamento de Status em Tempo Real', body:'Saiba quais contratos estão pendentes, assinados ou vencidos, sem precisar ligar pro cliente.' },
+  ];
+  const rgrid = el('<div class="recebe-grid"></div>');
+  recebe.forEach(o => {
+    rgrid.appendChild(el(`<div class="recebe-card"><img class="recebe-img" src="${o.img}" alt=""><div class="recebe-card-body"><strong>${o.title}</strong><p>${o.body}</p></div></div>`));
+  });
+  stage.appendChild(rgrid);
+  stage.appendChild(el(`<img src="assets/mockup-digital.png" alt="" style="width:85%;display:block;margin:18px auto 4px">`));
+  stage.appendChild(el(`<p style="font-size:12px;color:var(--ink-2);text-align:center;margin-bottom:20px">Acesse em qualquer dispositivo, a qualquer hora.</p>`));
+
+  // — quem fez
+  stage.appendChild(el(`<div class="pco-section-title">QUEM CRIOU O BLINDAGEM?</div>`));
+  stage.appendChild(el(`<img class="autor-img" src="assets/felipe.jpg" alt="Felipe Ferreira">`));
+  stage.appendChild(el(`<p style="font-size:14px;text-align:center;margin:8px 0 14px">Eu mesmo, muito prazer, me chamo <b>Felipe Ferreira</b> e ajudei centenas de fotógrafos e videomakers a empreenderem com arte e segurança.</p>`));
+  const chks = el('<div class="autor-checks"></div>');
+  [
+    ['Advogado','especializado em profissionais da imagem'],
+    ['Fotógrafo e videomaker','profissional há 15 anos'],
+    ['Mestre','em Gestão e Inovação pela UFSC e fundador do Fotografia é o Meu Negócio'],
+  ].forEach(([b,r]) => chks.appendChild(el(`<div class="autor-check">✅ <span><b>${b}</b> ${r};</span></div>`)));
+  stage.appendChild(chks);
+  stage.appendChild(el(`<p style="font-size:13px;text-align:center;color:var(--ink-2);margin:14px 0">Criei o Blindagem porque vi centenas de fotógrafos perdendo dinheiro, dormindo mal e levando calote, tudo por falta de um sistema de contratos que funcionasse de verdade. Agora você pode ter isso na palma da mão.</p>`));
+  stage.appendChild(el(`<p style="font-size:14px;font-style:italic;text-align:center;font-weight:700;color:var(--gold-deep);margin-bottom:16px">Você tem duas opções: continuar resolvendo contrato no WhatsApp, ou ter um sistema profissional hoje. Bora comigo?</p>`));
+  const b3 = el(`<button class="btn" style="margin-bottom:28px">QUERO BLINDAR MEUS CONTRATOS</button>`);
+  b3.onclick = goCheckout;
+  stage.appendChild(b3);
+
+  // — depoimentos
+  stage.appendChild(el(`<div class="pco-section-title">A transformação de quem já usa:</div>`));
+  ['assets/depo-01.jpg','assets/depo-02.jpg','assets/depo-03.jpg','assets/depo-04.jpg'].forEach(src =>
+    stage.appendChild(el(`<img src="${src}" alt="" style="width:100%;border-radius:14px;margin-bottom:14px">`)));
+
+  // — preço final + 2º botão
+  stage.appendChild(el(`<img src="assets/mockup-blindagem.png" alt="" style="width:100%;border-radius:12px;margin:0 0 18px">`));
+  stage.appendChild(el(`<div class="pco-price"><div class="pco-de">12x de R$ 41,42</div><div class="pco-por" style="font-size:26px;line-height:1.2">Apenas 12x de R$ 36,12</div><div class="pco-px" style="margin-top:8px;font-size:13.5px">ou apenas <span style="text-decoration:line-through;color:var(--ink-2)">R$ 497,00</span> R$ 397,00 à vista.</div></div>`));
+  const b2 = el(`<button class="btn" style="margin-bottom:32px">QUERO ME PROTEGER AGORA</button>`);
+  b2.onclick = goCheckout;
+  stage.appendChild(b2);
+
+  bar.style.width = '100%';
+}
+
+/* helper */
+function el(html){ const d = document.createElement('div'); d.innerHTML = html.trim(); return d.firstChild; }
+
+const _previewIdx = new URLSearchParams(location.search).get('idx');
+if (_previewIdx !== null) idx = parseInt(_previewIdx, 10);
+render();
+</script>
+</body>
+</html>

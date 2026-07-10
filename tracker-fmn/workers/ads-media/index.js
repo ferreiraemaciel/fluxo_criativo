@@ -436,6 +436,164 @@ async function handleActivateAds(request, env) {
   return json({ ok: true, resultados });
 }
 
+/* ── /ads-status ───────────────────────────────────────────────────────────
+   Confere no Meta se cada ad_id ainda existe e não foi deletado/arquivado
+   manualmente no Gerenciador. Usado antes de listar os "pendentes de ativar",
+   pra não mostrar anúncio que já não existe mais do lado do Meta.           */
+async function handleAdsStatus(request, env, url) {
+  const idsParam = url.searchParams.get('ids') || '';
+  const ids = idsParam.split(',').map(s => s.trim()).filter(Boolean);
+  if (!ids.length) return json({ ok: true, status: {} });
+
+  const { token } = metaAcct(env);
+  const pares = await Promise.all(ids.map(async id => {
+    try {
+      const r = await fetch(`${GRAPH}/${id}?fields=effective_status&access_token=${token}`);
+      const d = await r.json();
+      if (d.error) return [id, { existe: false, motivo: d.error.message }];
+      const sumiu = ['DELETED', 'ARCHIVED'].includes(d.effective_status);
+      return [id, { existe: !sumiu, effective_status: d.effective_status }];
+    } catch (e) {
+      return [id, { existe: false, motivo: e.message }];
+    }
+  }));
+  return json({ ok: true, status: Object.fromEntries(pares) });
+}
+
+/* ── Importação do Drive (cozinha) — TRÁFEGO ────────────────────────────────
+   Mesmo motor do orgânico, mas mapeando o resultado pro formato do ANÚNCIO:
+   media_url (array de URLs), thumb_url, media_tipo. A tabela `ads` tem `numero`
+   real, então direto/geral usam ele. Protegido por IMPORT_TOKEN.             */
+const COZINHA_URL = 'https://cozinha-296334646934.us-central1.run.app';
+const TRACKER_TRAFEGO_ROOT = '1jskuzz85CD-OCDj-ckA4jCRhwgoUVT7J';
+
+function parseFolderId(s) { const m = String(s || '').match(/[-\w]{25,}/); return m ? m[0] : null; }
+
+async function handlePut(request, env, url) {
+  if (request.headers.get('X-Token') !== env.IMPORT_TOKEN) return json({ error: 'não autorizado' }, 401);
+  const key = url.searchParams.get('key');
+  const ct  = url.searchParams.get('ct') || 'application/octet-stream';
+  if (!key) return json({ error: 'key ausente' }, 400);
+  const body = await request.arrayBuffer();
+  await env.BUCKET.put(key, body, { httpMetadata: { contentType: ct } });
+  return json({ ok: true, url: `${R2_PUBLIC}/${key}` });
+}
+
+/* Recebe o formato genérico da cozinha (slides + media_files) e grava no
+   formato do anúncio (media_url array, thumb_url, media_tipo, tipo).          */
+async function handleCardSlides(request, env) {
+  if (request.headers.get('X-Token') !== env.IMPORT_TOKEN) return json({ error: 'não autorizado' }, 401);
+  let body; try { body = await request.json(); } catch { return json({ error: 'JSON inválido' }, 400); }
+  const { card_id } = body;
+  if (!card_id) return json({ error: 'card_id é obrigatório' }, 400);
+  const slides = typeof body.slides === 'string' ? JSON.parse(body.slides || '[]') : (body.slides || []);
+  const mfiles = typeof body.media_files === 'string' ? JSON.parse(body.media_files || '[]') : (body.media_files || []);
+
+  let media_tipo, media_url, thumb_url, tipo;
+  if (mfiles.length && mfiles[0].tipo === 'video') {
+    media_tipo = 'video';
+    media_url  = JSON.stringify([mfiles[0].url_alta]);   // anúncio publica a versão alta
+    thumb_url  = mfiles[0].thumb_url;
+    tipo = 'reels';
+  } else {
+    const urls = slides.map(s => s.image_url);
+    media_tipo = 'imagem';
+    media_url  = JSON.stringify(urls);
+    thumb_url  = urls[0] || null;
+    tipo = urls.length > 1 ? 'carrossel' : 'imagem';
+  }
+  const patch = { media_url, thumb_url, media_tipo, tipo, media_files: JSON.stringify(mfiles) };
+
+  // A tabela `ads` é operada por numero (não pelo uuid). card_id aqui = numero.
+  const res = await fetch(`${env.SUPABASE_URL}/rest/v1/ads?numero=eq.${card_id}`, {
+    method: 'PATCH',
+    headers: { apikey: env.SUPABASE_SERVICE_KEY, Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`,
+      'Content-Type': 'application/json', Prefer: 'return=minimal' },
+    body: JSON.stringify(patch),
+  });
+  if (!res.ok) return json({ error: 'Supabase ' + res.status + ': ' + (await res.text()).slice(0, 200) }, 500);
+
+  // Card que estava em "Fazer" e recebeu mídia avança sozinho pra "Fazendo".
+  // Filtro condicional: só afeta a linha se ainda estiver em 'fazer' (idempotente).
+  await fetch(`${env.SUPABASE_URL}/rest/v1/ads?numero=eq.${card_id}&status=eq.fazer`, {
+    method: 'PATCH',
+    headers: { apikey: env.SUPABASE_SERVICE_KEY, Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`,
+      'Content-Type': 'application/json', Prefer: 'return=minimal' },
+    body: JSON.stringify({ status: 'fazendo' }),
+  }).catch(() => {});
+
+  return json({ ok: true });
+}
+
+async function cozinhaTrafego(env, payload) {
+  let r;
+  try {
+    r = await fetch(`${COZINHA_URL}/importar`, {
+      method: 'POST', headers: { 'X-Token': env.IMPORT_TOKEN, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tenant: 'tracker_trafego', ...payload }),
+    });
+  } catch {
+    // subrequest estourou a janela (~100s): a cozinha continua e grava o card
+    return { ok: true, processando: true };
+  }
+  // Vídeo pesado pode devolver 524, mas a cozinha (gunicorn timeout 600s)
+  // termina e grava o card mesmo assim. Tratamos como "processando".
+  if (r.status === 524 || r.status === 522 || r.status === 504) {
+    return { ok: true, processando: true };
+  }
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok || !d.ok) throw new Error(d.error || `cozinha ${r.status}`);
+  return d;
+}
+
+/* Repassa o andamento do trabalho da cozinha (barra de progresso). */
+async function handleProgresso(request, env, url) {
+  const jobId = url.searchParams.get('job');
+  if (!jobId) return json({ error: 'job ausente' }, 400);
+  try {
+    const r = await fetch(`${COZINHA_URL}/progresso/${jobId}`, { headers: { 'X-Token': env.IMPORT_TOKEN } });
+    const d = await r.json().catch(() => ({}));
+    return json(d, r.ok ? 200 : r.status);
+  } catch { return json({ etapa: 'Processando', pct: 0, done: false, erro: null }); }
+}
+
+async function handleImportLink(request, env) {
+  let body; try { body = await request.json(); } catch { return json({ error: 'JSON inválido' }, 400); }
+  const { numero, drive_url, job_id } = body;
+  if (numero == null || !drive_url) return json({ error: 'numero e drive_url são obrigatórios' }, 400);
+  const folderId = parseFolderId(drive_url);
+  if (!folderId) return json({ error: 'link inválido' }, 400);
+  // guarda o link no card p/ direto/geral
+  await fetch(`${env.SUPABASE_URL}/rest/v1/ads?numero=eq.${numero}`, {
+    method: 'PATCH', headers: { apikey: env.SUPABASE_SERVICE_KEY, Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`,
+      'Content-Type': 'application/json', Prefer: 'return=minimal' }, body: JSON.stringify({ media_drive_url: drive_url }) });
+  try { const d = await cozinhaTrafego(env, { drive_folder_id: folderId, card_id: numero, job_id }); return json({ ok: true, processando: d.processando, imagens: d.imagens, videos: d.videos }); }
+  catch (e) { return json({ error: e.message }, 500); }
+}
+
+async function handleImportDireto(request, env) {
+  let body; try { body = await request.json(); } catch { return json({ error: 'JSON inválido' }, 400); }
+  const { numero, job_id } = body;
+  if (numero == null) return json({ error: 'numero é obrigatório' }, 400);
+  try { const d = await cozinhaTrafego(env, { root_folder_id: TRACKER_TRAFEGO_ROOT, numero, card_id: numero, job_id }); return json({ ok: true, processando: d.processando, imagens: d.imagens, videos: d.videos }); }
+  catch (e) { return json({ error: e.message }, 500); }
+}
+
+async function handleImportGeral(request, env) {
+  let body; try { body = await request.json(); } catch { body = {}; }
+  const job_id = body.job_id;
+  const res = await fetch(`${env.SUPABASE_URL}/rest/v1/ads?select=numero&order=numero.asc`, {
+    headers: { apikey: env.SUPABASE_SERVICE_KEY, Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}` } });
+  const ads = await res.json().catch(() => []);
+  let ok = 0, fail = 0; const erros = [];
+  for (const a of ads) {
+    if (a.numero == null) continue;
+    try { await cozinhaTrafego(env, { root_folder_id: TRACKER_TRAFEGO_ROOT, numero: a.numero, card_id: a.numero, job_id }); ok++; }
+    catch (e) { if (/não encontrada/.test(e.message)) continue; fail++; erros.push({ numero: a.numero, erro: e.message }); }
+  }
+  return json({ ok: true, total: ads.length, importados: ok, falhas: fail, erros });
+}
+
 /* ── Router ──────────────────────────────────────────────────────*/
 export default {
   async fetch(request, env) {
@@ -453,6 +611,11 @@ export default {
         if (url.pathname === '/create-adset')    return await handleCreateAdset(request, env);
         if (url.pathname === '/create-ad')       return await handleCreateAd(request, env);
         if (url.pathname === '/activate-ads')    return await handleActivateAds(request, env);
+        if (url.pathname === '/put')             return await handlePut(request, env, url);
+        if (url.pathname === '/card-slides')     return await handleCardSlides(request, env);
+        if (url.pathname === '/import-link')     return await handleImportLink(request, env);
+        if (url.pathname === '/import-direto')   return await handleImportDireto(request, env);
+        if (url.pathname === '/import-geral')    return await handleImportGeral(request, env);
       }
       if (method === 'DELETE' && url.pathname.startsWith('/original/')) {
         const key = decodeURIComponent(url.pathname.replace('/original/', ''));
@@ -462,6 +625,8 @@ export default {
         if (url.pathname === '/campaigns')    return await handleListCampaigns(request, env);
         if (url.pathname === '/adsets')       return await handleListAdsets(request, env);
         if (url.pathname === '/video-status') return await handleVideoStatus(request, env);
+        if (url.pathname === '/progresso')    return await handleProgresso(request, env, url);
+        if (url.pathname === '/ads-status')    return await handleAdsStatus(request, env, url);
         return json({ ok: true, service: 'ads-media' });
       }
 

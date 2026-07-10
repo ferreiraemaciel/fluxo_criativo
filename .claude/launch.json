@@ -24,6 +24,12 @@
       "port": 4546
     }
     ,{
+      "name": "quiz-blindagem",
+      "runtimeExecutable": "/opt/homebrew/bin/python3",
+      "runtimeArgs": ["-m", "http.server", "4547", "--directory", "/Users/ferreiraemaciel/Documents/fluxo-criativo/quiz-blindagem"],
+      "port": 4547
+    }
+    ,{
       "name": "fem-site",
       "runtimeExecutable": "npx",
       "runtimeArgs": ["serve", "-p", "4321", "/Users/ferreiraemaciel/Documents/fem-site"],

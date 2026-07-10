@@ -34,7 +34,7 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: "code obrigatório" }), { status: 400, headers: { ...cors, "content-type": "application/json" } });
     }
 
-    const row: Record<string, unknown> = { funnel_slug: "fotografo-protegido", origem: "novo" };
+    const row: Record<string, unknown> = { funnel_slug: body.funnel_slug || "fotografo-protegido", origem: "novo" };
     for (const k of COLS) if (k in body) row[k] = body[k];
 
     const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
@@ -62,7 +62,7 @@ Deno.serve(async (req) => {
               client_user_agent: req.headers.get("user-agent") || undefined,
             },
             custom_data: {
-              content_name: "Quiz Fotógrafo Protegido",
+              content_name: body.funnel_slug === "blindagem" ? "Quiz Blindagem" : "Quiz Fotógrafo Protegido",
               ...(body.nivel_risco ? { lead_quality: body.nivel_risco } : {}),
             },
           }],
