@@ -335,6 +335,13 @@ function periodoRapido(dias) {
 function MetricasView({ contatosDb, msgs }) {
   const [from, setFrom] = useState(periodoRapido(30).from);
   const [to, setTo]     = useState(periodoRapido(30).to);
+  const [quizLeads, setQuizLeads] = useState([]);
+
+  useEffect(() => {
+    if (!window.db) return;
+    window.db.from('quiz_leads').select('whatsapp, situacoes').not('whatsapp', 'is', null)
+      .then(({ data, error }) => { if (!error) setQuizLeads(data || []); });
+  }, []);
 
   function aplicarRapido(dias) {
     const p = periodoRapido(dias);
@@ -383,6 +390,41 @@ function MetricasView({ contatosDb, msgs }) {
 
     const conversao = atendidos.length > 0 ? Math.round((fechados.length / atendidos.length) * 100) : 0;
 
+    // Perdidos no período (mesma lógica de "virou etapa X dentro do intervalo" usada em fechados).
+    const perdidos = contatosDb.filter(c => c.etapa === 'perdido' && dentro(c.updated_at));
+    const perdidosPct = atendidos.length > 0 ? Math.round((perdidos.length / atendidos.length) * 100) : 0;
+
+    // Tempo médio até fechar: da primeira mensagem trocada até a etapa virar Aluno (updated_at).
+    let somaHoras = 0, comTempo = 0;
+    for (const c of fechados) {
+      const doContato = msgsPorTelefone[c.telefone] || [];
+      if (!doContato.length) continue;
+      const primeira = doContato.reduce((min, m) => new Date(m.created_at) < new Date(min.created_at) ? m : min, doContato[0]);
+      const horas = (new Date(c.updated_at) - new Date(primeira.created_at)) / 3600000;
+      if (horas >= 0) { somaHoras += horas; comTempo++; }
+    }
+    const tempoMedioHoras = comTempo > 0 ? somaHoras / comTempo : null;
+    const tempoMedioLabel = tempoMedioHoras == null ? '—'
+      : tempoMedioHoras < 24 ? `${Math.round(tempoMedioHoras)}h`
+      : `${Math.round(tempoMedioHoras / 24 * 10) / 10}d`;
+
+    // Dor do quiz que mais aparece entre quem fechou (cruza telefone com quiz_leads.situacoes).
+    const digits = s => String(s || '').replace(/\D/g, '').slice(-8);
+    const situacoesPorTelefoneQuiz = {};
+    for (const l of quizLeads) {
+      const key = digits(l.whatsapp);
+      if (key) situacoesPorTelefoneQuiz[key] = l.situacoes || [];
+    }
+    const dorContagem = {};
+    for (const c of fechados) {
+      const situacoes = situacoesPorTelefoneQuiz[digits(c.telefone)] || [];
+      for (const s of situacoes) dorContagem[s] = (dorContagem[s] || 0) + 1;
+    }
+    const dorConversaoItems = Object.entries(dorContagem)
+      .map(([val, n]) => ({ val, n }))
+      .sort((a, b) => b.n - a.n)
+      .slice(0, 8);
+
     return {
       atendimentos: atendidos.length,
       emAndamento,
@@ -396,8 +438,12 @@ function MetricasView({ contatosDb, msgs }) {
       handoffItems: [{ val: 'IA resolveu sozinha', n: semHandoff }, { val: 'Precisou de humano', n: comHandoff }].filter(x => x.n > 0),
       fechadosPorQuemItems: [{ val: 'Claudinho', n: fechadosIa }, { val: 'Humano', n: fechadosHumano }].filter(x => x.n > 0),
       atendidosPelaIaTotal: atendidosPelaIa.length,
+      perdidos: perdidos.length,
+      perdidosPct,
+      tempoMedioLabel,
+      dorConversaoItems,
     };
-  }, [contatosDb, msgs, from, to]);
+  }, [contatosDb, msgs, from, to, quizLeads]);
 
   const btnRapido = (label, dias) => (
     <button onClick={() => aplicarRapido(dias)} style={{
@@ -428,6 +474,8 @@ function MetricasView({ contatosDb, msgs }) {
         <CardKPI label="Em andamento" value={stats.emAndamento} icon="clock" />
         <CardKPI label="Fechados (viraram aluno)" value={stats.fechados} icon="check-circle" accent />
         <CardKPI label="Taxa de conversão" value={stats.conversao + '%'} icon="target" accent />
+        <CardKPI label="Tempo médio até fechar" value={stats.tempoMedioLabel} icon="hourglass" />
+        <CardKPI label="Perdidos" value={`${stats.perdidos} (${stats.perdidosPct}%)`} icon="x-circle" />
         <CardKPI label="Precisando de humano" value={stats.intervencaoHumana} icon="alert-triangle" />
       </div>
 
@@ -436,10 +484,11 @@ function MetricasView({ contatosDb, msgs }) {
         <VizCard title="Taxa de resposta ao 1º contato" hint="quem respondeu a mensagem inicial" items={stats.respostaItems} total={stats.atendimentos} />
         <VizCard title="Fechados por quem" hint="Claudinho x humano, pelo link de checkout" items={stats.fechadosPorQuemItems} total={stats.fechados} />
         <VizCard title="Taxa de handoff da IA" hint={`de ${nf(stats.atendidosPelaIaTotal)} atendidos pelo Claudinho`} items={stats.handoffItems} total={stats.atendidosPelaIaTotal} />
+        <VizCard title="Dor do quiz que mais converteu" hint="situações marcadas por quem virou aluno" items={stats.dorConversaoItems} total={stats.fechados} />
       </div>
 
       <div style={{ fontSize: 11, color: 'var(--text-3)', fontFamily: 'Roboto,sans-serif', marginTop: 14 }}>
-        "Fechados" considera quem virou etapa Aluno dentro do período (pela data da última mudança). A atribuição Claudinho x humano é baseada em quem mandou o link de checkout por último pra esse contato, é uma aproximação, não é rastreamento direto da venda.
+        "Fechados" considera quem virou etapa Aluno dentro do período (pela data da última mudança). A atribuição Claudinho x humano é baseada em quem mandou o link de checkout por último pra esse contato, é uma aproximação, não é rastreamento direto da venda. "Dor do quiz que mais converteu" cruza o telefone do fechado com as respostas dele no quiz (quando encontrado).
       </div>
     </div>
   );
