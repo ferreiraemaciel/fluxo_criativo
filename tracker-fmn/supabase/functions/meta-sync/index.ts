@@ -38,7 +38,7 @@ function getPeriodosCurtos() {
 }
 
 const CAMPOS_INSIGHTS = [
-  "ad_id", "ad_name", "adset_id", "campaign_id", "campaign_name",
+  "ad_id", "ad_name", "adset_id", "adset_name", "campaign_id", "campaign_name",
   "spend", "impressions", "clicks", "unique_inline_link_clicks",
   "cpm", "ctr", "frequency",
   "actions", "action_values",
@@ -174,6 +174,7 @@ Deno.serve(async (req) => {
               meta_ad_id:         ad.id,
               meta_ad_name:       raw.ad_name,
               meta_adset_id:      raw.adset_id,
+              meta_adset_name:    raw.adset_name,
               meta_campaign_id:   raw.campaign_id,
               meta_campaign_name: raw.campaign_name,
               periodo:            nomePeriodo,
@@ -210,6 +211,7 @@ Deno.serve(async (req) => {
             meta_ad_id:         ad.id,
             meta_ad_name:       raw.ad_name,
             meta_adset_id:      raw.adset_id,
+            meta_adset_name:    raw.adset_name,
             meta_campaign_id:   raw.campaign_id,
             meta_campaign_name: raw.campaign_name,
             periodo:            "maximum",

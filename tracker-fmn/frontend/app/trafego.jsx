@@ -319,13 +319,15 @@ function driveThumb(url) {
   return url;
 }
 
-/* Thumb preferindo imagem do media_files; fallback para driveThumb */
+/* Thumb preferindo imagem do media_files; fallback para driveThumb.
+   media_files tem dois formatos possíveis: R2 novo (thumb_url pronto) e
+   Drive antigo (file_id, monta a URL de thumbnail). Checa R2 primeiro. */
 function bestThumb(mediaFiles, driveUrl) {
   if (mediaFiles && mediaFiles.length > 0) {
     const img = mediaFiles.find(f => f.tipo === 'imagem');
-    if (img) return `https://drive.google.com/thumbnail?id=${img.file_id}&sz=w120`;
+    if (img) return img.thumb_url || (img.file_id ? `https://drive.google.com/thumbnail?id=${img.file_id}&sz=w120` : null);
     const vid = mediaFiles.find(f => f.tipo === 'video' || f.tipo === 'reels');
-    if (vid) return `https://drive.google.com/thumbnail?id=${vid.file_id}&sz=w120`;
+    if (vid) return vid.thumb_url || (vid.file_id ? `https://drive.google.com/thumbnail?id=${vid.file_id}&sz=w120` : null);
   }
   return driveThumb(driveUrl);
 }

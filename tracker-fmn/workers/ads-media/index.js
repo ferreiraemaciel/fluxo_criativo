@@ -22,7 +22,7 @@
  */
 
 const R2_PUBLIC  = 'https://pub-3af414794ad1436281d1d1b3e9feea36.r2.dev';
-const GRAPH      = 'https://graph.facebook.com/v21.0';
+const GRAPH      = 'https://graph.facebook.com/v25.0';
 
 const CORS = {
   'Access-Control-Allow-Origin':  '*',
