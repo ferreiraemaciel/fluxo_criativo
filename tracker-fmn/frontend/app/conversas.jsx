@@ -4,7 +4,7 @@
    serviço de 24h aberta pelo lead. Sem custo por mensagem aqui.
    ================================================================ */
 const { useState, useEffect, useRef, useMemo } = React;
-const { LucideIcon, Btn, TopBar } = window;
+const { LucideIcon, Btn, TopBar, CardKPI } = window;
 
 function normalizarTelefoneExibicao(tel) {
   const d = String(tel || '').replace(/\D/g, '');
@@ -214,46 +214,95 @@ function NovoContatoModal({ onClose, onEnviado, SUPA_URL, SUPA_KEY }) {
   );
 }
 
+/* Mesma paleta e mesmo desenho do Kanban de Anúncios (kanban.jsx). */
 const ETAPAS = [
-  { id: 'lead_novo',   label: 'Lead novo',    cor: '#60a5fa' },
-  { id: 'em_conversa', label: 'Em conversa',  cor: '#eaaa41' },
-  { id: 'aluno',       label: 'Aluno',        cor: '#4ade80' },
-  { id: 'perdido',     label: 'Perdido',      cor: '#f87171' },
+  { id: 'lead_novo',   label: 'Lead novo',   colorDot: '#60a5fa', colorBg: 'rgba(96,165,250,.08)',  colorBorder: 'rgba(96,165,250,.25)' },
+  { id: 'em_conversa', label: 'Em conversa', colorDot: '#fbbf24', colorBg: 'rgba(251,191,36,.08)',  colorBorder: 'rgba(251,191,36,.25)' },
+  { id: 'aluno',       label: 'Aluno',       colorDot: '#4ade80', colorBg: 'rgba(74,222,128,.08)',  colorBorder: 'rgba(74,222,128,.25)' },
+  { id: 'perdido',     label: 'Perdido',     colorDot: '#f87171', colorBg: 'rgba(248,113,113,.06)', colorBorder: 'rgba(248,113,113,.2)' },
 ];
 
-function KanbanCard({ contato, onAbrir, onMover }) {
+function KanbanCard({ contato, col, onAbrir, onDragStart, onDropAntes }) {
+  const [hov, setHov] = useState(false);
+  const [dragOverTopo, setDragOverTopo] = useState(false);
   return (
-    <div style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)', borderRadius: 10, padding: 10, marginBottom: 8 }}>
-      <div onClick={onAbrir} style={{ cursor: 'pointer' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <div title={contato.janelaAberta ? 'Janela de 24h aberta' : 'Janela fechada'} style={{
-            width: 7, height: 7, borderRadius: '50%', flexShrink: 0,
-            background: contato.janelaAberta ? '#4ade80' : 'var(--text-3)',
-          }} />
-          {contato.precisaHumano && (
-            <span title="Precisa de humano" style={{ flexShrink: 0, fontSize: 9, fontWeight: 800, color: '#f87171',
-              background: 'rgba(248,113,113,.14)', border: '1px solid rgba(248,113,113,.3)', borderRadius: 4, padding: '1px 4px' }}>!</span>
-          )}
-          <div style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--text-1)', fontFamily: 'Roboto,sans-serif',
-            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {contato.nome || normalizarTelefoneExibicao(contato.telefone)}
-          </div>
-        </div>
-        <div style={{ fontSize: 10.5, color: 'var(--text-3)', fontFamily: 'Roboto,sans-serif', marginTop: 2 }}>
-          {normalizarTelefoneExibicao(contato.telefone)}
-        </div>
-        <div style={{ fontSize: 11, color: 'var(--text-3)', fontFamily: 'Roboto,sans-serif', marginTop: 5,
+    <div
+      draggable
+      onDragStart={e => { e.dataTransfer.setData('telefone', contato.telefone); e.dataTransfer.setData('fromEtapa', contato.etapa); onDragStart && onDragStart(); }}
+      onDragOver={e => { e.preventDefault(); e.stopPropagation(); setDragOverTopo(true); }}
+      onDragLeave={() => setDragOverTopo(false)}
+      onDrop={e => {
+        e.preventDefault(); e.stopPropagation(); setDragOverTopo(false);
+        const tel = e.dataTransfer.getData('telefone');
+        if (tel && tel !== contato.telefone) onDropAntes && onDropAntes(tel);
+      }}
+      onClick={onAbrir}
+      onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
+      style={{ background: hov ? 'var(--app-surface-3)' : 'var(--app-surface-2)',
+        border: `1px solid ${dragOverTopo ? col.colorDot : hov ? col.colorBorder : 'var(--app-border)'}`,
+        borderTop: dragOverTopo ? `2px solid ${col.colorDot}` : undefined,
+        borderRadius: 10, padding: '12px 12px', display: 'flex', flexDirection: 'column', gap: 6,
+        cursor: 'grab', transition: 'all 160ms var(--ease-out)', transform: hov ? 'translateY(-1px)' : 'none' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
+        <div title={contato.janelaAberta ? 'Janela de 24h aberta' : 'Janela fechada'} style={{
+          width: 7, height: 7, borderRadius: '50%', flexShrink: 0,
+          background: contato.janelaAberta ? '#4ade80' : 'var(--text-3)' }} />
+        {contato.precisaHumano && (
+          <span title="Precisa de humano" style={{ flexShrink: 0, fontSize: 9, fontWeight: 800, color: '#f87171',
+            background: 'rgba(248,113,113,.14)', border: '1px solid rgba(248,113,113,.3)', borderRadius: 4, padding: '1px 4px' }}>!</span>
+        )}
+        <div style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--text-1)', fontFamily: 'Roboto,sans-serif',
           overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-          {contato.ultimaDirecao === 'saida' ? 'Você: ' : ''}{contato.ultimoCorpo}
+          {contato.nome || normalizarTelefoneExibicao(contato.telefone)}
         </div>
       </div>
-      <select value={contato.etapa} onChange={e => onMover(contato.telefone, e.target.value)}
-        onClick={e => e.stopPropagation()}
-        style={{ marginTop: 8, width: '100%', boxSizing: 'border-box', background: 'rgba(255,255,255,.04)',
-          border: '1px solid var(--app-border)', borderRadius: 6, padding: '4px 6px', fontSize: 10.5,
-          color: 'var(--text-2)', fontFamily: 'Roboto,sans-serif', outline: 'none' }}>
-        {ETAPAS.map(e => <option key={e.id} value={e.id}>{e.label}</option>)}
-      </select>
+      <div style={{ fontSize: 10.5, color: 'var(--text-3)', fontFamily: 'Roboto,sans-serif' }}>
+        {normalizarTelefoneExibicao(contato.telefone)}
+      </div>
+      <p style={{ fontSize: 11.5, fontFamily: 'Roboto,sans-serif', lineHeight: 1.4, color: 'var(--text-2)', margin: 0,
+        display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+        {contato.ultimaDirecao === 'saida' ? 'Você: ' : ''}{contato.ultimoCorpo}
+      </p>
+    </div>
+  );
+}
+
+function KanbanColumn({ col, contatos, onAbrir, onDropCard }) {
+  const [dragOver, setDragOver] = useState(false);
+  const cards = contatos.filter(c => (c.etapa || 'lead_novo') === col.id);
+  return (
+    <div
+      onDragOver={e => { e.preventDefault(); setDragOver(true); }}
+      onDragLeave={() => setDragOver(false)}
+      onDrop={e => {
+        e.preventDefault(); setDragOver(false);
+        const tel = e.dataTransfer.getData('telefone');
+        const from = e.dataTransfer.getData('fromEtapa');
+        if (tel && from !== col.id) onDropCard(tel, col.id);
+      }}
+      style={{ width: 250, minWidth: 250, display: 'flex', flexDirection: 'column',
+        background: dragOver ? col.colorBg.replace('.08', '.18').replace('.06', '.16') : col.colorBg,
+        border: `1px solid ${dragOver ? col.colorDot : col.colorBorder}`,
+        borderRadius: 12, overflow: 'hidden', height: '100%', transition: 'border-color 120ms, background 120ms' }}>
+      <div style={{ padding: '10px 12px', borderBottom: `1px solid ${col.colorBorder}`,
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+          <span style={{ width: 7, height: 7, borderRadius: '50%', background: col.colorDot, display: 'block' }} />
+          <span style={{ fontSize: 12, fontFamily: 'Roboto,sans-serif', fontWeight: 700, color: 'var(--text-1)' }}>{col.label}</span>
+        </div>
+        <span style={{ width: 20, height: 20, borderRadius: '50%', background: 'rgba(255,255,255,.07)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10.5,
+          fontFamily: 'Roboto,sans-serif', fontWeight: 900, color: 'var(--text-2)' }}>
+          {cards.length}
+        </span>
+      </div>
+      <div style={{ flex: 1, overflowY: 'auto', padding: '10px 8px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {cards.map(c => (
+          <KanbanCard key={c.telefone} contato={c} col={col} onAbrir={() => onAbrir(c.telefone)}
+            onDropAntes={() => onDropCard(c.telefone, col.id)} />
+        ))}
+        {!cards.length && <div style={{ fontSize: 11, color: 'var(--text-3)', fontFamily: 'Roboto,sans-serif', padding: '8px 2px' }}>Vazio.</div>}
+      </div>
     </div>
   );
 }
@@ -261,22 +310,106 @@ function KanbanCard({ contato, onAbrir, onMover }) {
 function KanbanView({ contatos, onAbrir, onMover }) {
   return (
     <div style={{ flex: 1, display: 'flex', gap: 12, padding: 14, overflowX: 'auto' }}>
-      {ETAPAS.map(etapa => {
-        const cards = contatos.filter(c => (c.etapa || 'lead_novo') === etapa.id);
-        return (
-          <div key={etapa.id} style={{ width: 250, flexShrink: 0, display: 'flex', flexDirection: 'column' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10, padding: '0 2px' }}>
-              <div style={{ width: 8, height: 8, borderRadius: '50%', background: etapa.cor }} />
-              <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text-1)', fontFamily: 'Roboto,sans-serif' }}>{etapa.label}</div>
-              <div style={{ fontSize: 11, color: 'var(--text-3)', fontFamily: 'Roboto,sans-serif' }}>({cards.length})</div>
-            </div>
-            <div style={{ flex: 1, overflowY: 'auto' }}>
-              {cards.map(c => <KanbanCard key={c.telefone} contato={c} onAbrir={() => onAbrir(c.telefone)} onMover={onMover} />)}
-              {!cards.length && <div style={{ fontSize: 11, color: 'var(--text-3)', fontFamily: 'Roboto,sans-serif', padding: '8px 2px' }}>Vazio.</div>}
-            </div>
-          </div>
-        );
-      })}
+      {ETAPAS.map(col => (
+        <KanbanColumn key={col.id} col={col} contatos={contatos} onAbrir={onAbrir}
+          onDropCard={(telefone, etapa) => onMover(telefone, etapa)} />
+      ))}
+    </div>
+  );
+}
+
+/* ── Métricas ────────────────────────────────────────────────────*/
+function periodoRapido(dias) {
+  const to = new Date();
+  const from = new Date();
+  if (dias != null) from.setDate(from.getDate() - dias);
+  const fmt = d => d.toISOString().slice(0, 10);
+  return { from: dias == null ? '2020-01-01' : fmt(from), to: fmt(to) };
+}
+
+function MetricasView({ contatosDb, msgs }) {
+  const [from, setFrom] = useState(periodoRapido(30).from);
+  const [to, setTo]     = useState(periodoRapido(30).to);
+
+  function aplicarRapido(dias) {
+    const p = periodoRapido(dias);
+    setFrom(p.from); setTo(p.to);
+  }
+
+  const stats = useMemo(() => {
+    const fromMs = new Date(from + 'T00:00:00').getTime();
+    const toMs   = new Date(to + 'T23:59:59').getTime();
+    const dentro = iso => { const t = new Date(iso).getTime(); return t >= fromMs && t <= toMs; };
+
+    const msgsPorTelefone = {};
+    for (const m of msgs) (msgsPorTelefone[m.telefone] ||= []).push(m);
+
+    // Atendimentos: contatos com pelo menos 1 mensagem dentro do período.
+    const atendidos = contatosDb.filter(c => (msgsPorTelefone[c.telefone] || []).some(m => dentro(m.created_at)));
+
+    const emAndamento = contatosDb.filter(c => ['lead_novo', 'em_conversa'].includes(c.etapa)).length;
+    const intervencaoHumana = contatosDb.filter(c => c.precisa_humano).length;
+
+    // Fechados no período: virou "aluno" com updated_at dentro do intervalo (aproximação).
+    const fechados = contatosDb.filter(c => c.etapa === 'aluno' && dentro(c.updated_at));
+
+    // Quem mandou o link de checkout por último pra cada fechado, pra atribuir a venda.
+    let fechadosIa = 0, fechadosHumano = 0;
+    for (const c of fechados) {
+      const doContato = (msgsPorTelefone[c.telefone] || []).filter(m => m.corpo && m.corpo.includes('pay.hotmart.com'));
+      const ultimoLink = doContato.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0];
+      if (!ultimoLink) continue;
+      if (ultimoLink.origem === 'ia') fechadosIa++;
+      else fechadosHumano++;
+    }
+
+    return {
+      atendimentos: atendidos.length,
+      emAndamento,
+      fechados: fechados.length,
+      intervencaoHumana,
+      fechadosIa,
+      fechadosHumano,
+    };
+  }, [contatosDb, msgs, from, to]);
+
+  const btnRapido = (label, dias) => (
+    <button onClick={() => aplicarRapido(dias)} style={{
+      border: '1px solid var(--app-border)', background: 'rgba(255,255,255,.04)', color: 'var(--text-2)',
+      borderRadius: 7, padding: '6px 12px', fontSize: 12, fontFamily: 'Roboto,sans-serif', fontWeight: 700, cursor: 'pointer' }}>
+      {label}
+    </button>
+  );
+
+  return (
+    <div style={{ flex: 1, overflowY: 'auto', padding: 18 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 18, flexWrap: 'wrap' }}>
+        {btnRapido('7 dias', 7)}
+        {btnRapido('30 dias', 30)}
+        {btnRapido('90 dias', 90)}
+        {btnRapido('Tudo', null)}
+        <input type="date" value={from} onChange={e => setFrom(e.target.value)}
+          style={{ background: 'rgba(255,255,255,.04)', border: '1px solid var(--app-border)', borderRadius: 7,
+            padding: '6px 10px', fontSize: 12, color: 'var(--text-1)', fontFamily: 'Roboto,sans-serif' }} />
+        <span style={{ color: 'var(--text-3)', fontSize: 12 }}>até</span>
+        <input type="date" value={to} onChange={e => setTo(e.target.value)}
+          style={{ background: 'rgba(255,255,255,.04)', border: '1px solid var(--app-border)', borderRadius: 7,
+            padding: '6px 10px', fontSize: 12, color: 'var(--text-1)', fontFamily: 'Roboto,sans-serif' }} />
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 12 }}>
+        <CardKPI label="Atendimentos" value={stats.atendimentos} icon="message-circle" />
+        <CardKPI label="Em andamento" value={stats.emAndamento} icon="clock" />
+        <CardKPI label="Fechados (viraram aluno)" value={stats.fechados} icon="check-circle" accent />
+        <CardKPI label="Precisando de humano" value={stats.intervencaoHumana} icon="alert-triangle" />
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
+        <CardKPI label="Fechados pelo Claudinho" value={stats.fechadosIa} icon="sparkles" />
+        <CardKPI label="Fechados por humano" value={stats.fechadosHumano} icon="user" />
+      </div>
+      <div style={{ fontSize: 11, color: 'var(--text-3)', fontFamily: 'Roboto,sans-serif', marginTop: 14 }}>
+        "Fechados" considera quem virou etapa Aluno dentro do período (pela data da última mudança). A atribuição Claudinho x humano é baseada em quem mandou o link de checkout por último pra esse contato, é uma aproximação, não é rastreamento direto da venda.
+      </div>
     </div>
   );
 }
@@ -412,6 +545,9 @@ function ConversasScreen() {
             <button onClick={() => setModo('kanban')} style={{
               border: 'none', cursor: 'pointer', padding: '5px 12px', borderRadius: 6, fontSize: 12, fontFamily: 'Roboto,sans-serif', fontWeight: 700,
               background: modo === 'kanban' ? 'var(--fmn-gold)' : 'transparent', color: modo === 'kanban' ? '#1a1a1a' : 'var(--text-2)' }}>Kanban</button>
+            <button onClick={() => setModo('metricas')} style={{
+              border: 'none', cursor: 'pointer', padding: '5px 12px', borderRadius: 6, fontSize: 12, fontFamily: 'Roboto,sans-serif', fontWeight: 700,
+              background: modo === 'metricas' ? 'var(--fmn-gold)' : 'transparent', color: modo === 'metricas' ? '#1a1a1a' : 'var(--text-2)' }}>Métricas</button>
           </div>
           <Btn onClick={() => setModalNovoContato(true)}>+ Novo Contato</Btn>
           <Btn variant={iaAtivaGlobal ? 'primary' : 'ghost'} onClick={alternarIaGlobal}>
@@ -427,6 +563,9 @@ function ConversasScreen() {
       {modo === 'kanban' && (
         <KanbanView contatos={contatos} onMover={moverEtapa}
           onAbrir={(telefone) => { setSelecionado(telefone); setModo('lista'); }} />
+      )}
+      {modo === 'metricas' && (
+        <MetricasView contatosDb={contatosDb} msgs={msgs} />
       )}
       {modo === 'lista' && (
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
