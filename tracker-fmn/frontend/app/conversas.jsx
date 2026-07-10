@@ -25,10 +25,22 @@ function dataCurta(iso) {
   return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
 }
 
+const JANELA_MS = 24 * 60 * 60 * 1000;
+
 /* Janela de 24h: true se a última mensagem de ENTRADA foi há menos de 24h. */
 function janelaAberta(ultimaEntrada) {
   if (!ultimaEntrada) return false;
-  return (Date.now() - new Date(ultimaEntrada).getTime()) < 24 * 60 * 60 * 1000;
+  return (Date.now() - new Date(ultimaEntrada).getTime()) < JANELA_MS;
+}
+
+/* Quanto falta da janela, em texto curto. null se fechada/sem entrada. */
+function tempoRestanteJanela(ultimaEntrada) {
+  if (!ultimaEntrada) return null;
+  const restanteMs = JANELA_MS - (Date.now() - new Date(ultimaEntrada).getTime());
+  if (restanteMs <= 0) return null;
+  const h = Math.floor(restanteMs / 3600000);
+  const m = Math.floor((restanteMs % 3600000) / 60000);
+  return h > 0 ? `${h}h ${m}min restantes` : `${m}min restantes`;
 }
 
 function ContatoItem({ contato, ativo, onClick }) {
@@ -39,12 +51,19 @@ function ContatoItem({ contato, ativo, onClick }) {
       borderLeft: ativo ? '3px solid var(--fmn-gold)' : '3px solid transparent',
       borderBottom: '1px solid var(--app-border)',
     }}>
-      <div style={{
-        width: 38, height: 38, borderRadius: '50%', flexShrink: 0,
-        background: 'rgba(255,255,255,.06)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-        fontSize: 13, fontWeight: 700, color: 'var(--text-2)', fontFamily: 'Roboto,sans-serif',
-      }}>
-        {(contato.nome || '?').slice(0, 1).toUpperCase()}
+      <div style={{ position: 'relative', flexShrink: 0 }}>
+        <div style={{
+          width: 38, height: 38, borderRadius: '50%',
+          background: 'rgba(255,255,255,.06)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: 13, fontWeight: 700, color: 'var(--text-2)', fontFamily: 'Roboto,sans-serif',
+        }}>
+          {(contato.nome || '?').slice(0, 1).toUpperCase()}
+        </div>
+        <div title={contato.janelaAberta ? 'Janela de 24h aberta' : 'Janela fechada'} style={{
+          position: 'absolute', bottom: -1, right: -1, width: 11, height: 11, borderRadius: '50%',
+          background: contato.janelaAberta ? '#4ade80' : 'var(--text-3)',
+          border: '2px solid var(--app-surface, #0f1013)',
+        }} />
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 6 }}>
@@ -101,6 +120,89 @@ function Bolha({ msg }) {
   );
 }
 
+/* Templates aprovados disponíveis pra iniciar contato do zero (fora da janela). */
+const TEMPLATES_DISPONIVEIS = [
+  { nome: 'boas_vindas_mcv', label: 'Boas-vindas MCV', campos: ['Nome do contato', 'Link do grupo'] },
+  { nome: 'resultado_quiz_mcv', label: 'Resultado do quiz', campos: ['Nome do contato', 'Nível de risco', 'Dor prioritária'] },
+];
+
+function NovoContatoModal({ onClose, onEnviado, SUPA_URL, SUPA_KEY }) {
+  const [telefone, setTelefone]   = useState('');
+  const [nome, setNome]           = useState('');
+  const [templateNome, setTemplateNome] = useState(TEMPLATES_DISPONIVEIS[0].nome);
+  const [valores, setValores]     = useState(['', '']);
+  const [enviando, setEnviando]   = useState(false);
+  const template = TEMPLATES_DISPONIVEIS.find(t => t.nome === templateNome);
+
+  function trocarTemplate(nomeNovo) {
+    setTemplateNome(nomeNovo);
+    const t = TEMPLATES_DISPONIVEIS.find(x => x.nome === nomeNovo);
+    setValores(new Array(t.campos.length).fill(''));
+  }
+
+  async function confirmarEnvio() {
+    if (!telefone.trim()) { alert('Telefone é obrigatório.'); return; }
+    if (!window.confirm(`Isso vai custar aproximadamente R$ 0,03 (mensagem de Utilidade), porque é a empresa iniciando contato. Confirma o envio?`)) return;
+    setEnviando(true);
+    try {
+      const r = await fetch(`${SUPA_URL}/functions/v1/whatsapp-enviar`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPA_KEY}` },
+        body: JSON.stringify({ action: 'template', to: telefone, nome: nome || null, template_nome: templateNome, idioma: 'pt_BR', parametros: valores, origem: 'manual' }),
+      });
+      const d = await r.json();
+      if (!r.ok || d.error) throw new Error(d.error || 'falha no envio');
+      onEnviado(telefone);
+    } catch (e) {
+      alert('Erro ao enviar: ' + e.message);
+    } finally {
+      setEnviando(false);
+    }
+  }
+
+  return (
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.55)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div onClick={e => e.stopPropagation()} style={{ width: 380, background: 'var(--app-surface)', border: '1px solid var(--app-border)', borderRadius: 14, padding: 20 }}>
+        <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text-1)', fontFamily: 'Roboto,sans-serif', marginBottom: 4 }}>Novo contato</div>
+        <div style={{ fontSize: 11.5, color: 'var(--text-3)', fontFamily: 'Roboto,sans-serif', marginBottom: 14 }}>
+          Primeiro contato precisa ser um template aprovado. Tem custo por mensagem.
+        </div>
+
+        <label style={{ fontSize: 11, color: 'var(--text-2)', fontFamily: 'Roboto,sans-serif', display: 'block', marginBottom: 4 }}>Telefone (com DDD)</label>
+        <input value={telefone} onChange={e => setTelefone(e.target.value)} placeholder="48996450791"
+          style={{ width: '100%', boxSizing: 'border-box', background: 'rgba(255,255,255,.04)', border: '1px solid var(--app-border)',
+            borderRadius: 8, padding: '8px 10px', fontSize: 13, color: 'var(--text-1)', fontFamily: 'Roboto,sans-serif', outline: 'none', marginBottom: 10 }} />
+
+        <label style={{ fontSize: 11, color: 'var(--text-2)', fontFamily: 'Roboto,sans-serif', display: 'block', marginBottom: 4 }}>Nome do contato</label>
+        <input value={nome} onChange={e => setNome(e.target.value)} placeholder="Camila"
+          style={{ width: '100%', boxSizing: 'border-box', background: 'rgba(255,255,255,.04)', border: '1px solid var(--app-border)',
+            borderRadius: 8, padding: '8px 10px', fontSize: 13, color: 'var(--text-1)', fontFamily: 'Roboto,sans-serif', outline: 'none', marginBottom: 10 }} />
+
+        <label style={{ fontSize: 11, color: 'var(--text-2)', fontFamily: 'Roboto,sans-serif', display: 'block', marginBottom: 4 }}>Template</label>
+        <select value={templateNome} onChange={e => trocarTemplate(e.target.value)}
+          style={{ width: '100%', boxSizing: 'border-box', background: 'rgba(255,255,255,.04)', border: '1px solid var(--app-border)',
+            borderRadius: 8, padding: '8px 10px', fontSize: 13, color: 'var(--text-1)', fontFamily: 'Roboto,sans-serif', outline: 'none', marginBottom: 10 }}>
+          {TEMPLATES_DISPONIVEIS.map(t => <option key={t.nome} value={t.nome}>{t.label}</option>)}
+        </select>
+
+        {template.campos.map((campo, i) => (
+          <div key={i}>
+            <label style={{ fontSize: 11, color: 'var(--text-2)', fontFamily: 'Roboto,sans-serif', display: 'block', marginBottom: 4 }}>{campo}</label>
+            <input value={valores[i] || ''} onChange={e => setValores(v => { const n = [...v]; n[i] = e.target.value; return n; })}
+              style={{ width: '100%', boxSizing: 'border-box', background: 'rgba(255,255,255,.04)', border: '1px solid var(--app-border)',
+                borderRadius: 8, padding: '8px 10px', fontSize: 13, color: 'var(--text-1)', fontFamily: 'Roboto,sans-serif', outline: 'none', marginBottom: 10 }} />
+          </div>
+        ))}
+
+        <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+          <Btn variant="ghost" onClick={onClose} style={{ flex: 1 }}>Cancelar</Btn>
+          <Btn onClick={confirmarEnvio} disabled={enviando} style={{ flex: 1 }}>{enviando ? 'Enviando...' : 'Enviar template'}</Btn>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function ConversasScreen() {
   const [msgs, setMsgs]           = useState([]);
   const [loading, setLoading]     = useState(true);
@@ -108,6 +210,8 @@ function ConversasScreen() {
   const [texto, setTexto]         = useState('');
   const [enviando, setEnviando]   = useState(false);
   const [busca, setBusca]         = useState('');
+  const [modalNovoContato, setModalNovoContato] = useState(false);
+  const [tick, setTick]           = useState(0); // força re-render pro contador de tempo
   const scrollRef = useRef(null);
   const SUPA_URL = window.db?.supabaseUrl || '';
   const SUPA_KEY = window.db?.supabaseKey  || '';
@@ -119,6 +223,7 @@ function ConversasScreen() {
   }
 
   useEffect(() => { carregar(); const t = setInterval(carregar, 15000); return () => clearInterval(t); }, []);
+  useEffect(() => { const t = setInterval(() => setTick(x => x + 1), 30000); return () => clearInterval(t); }, []);
 
   const contatos = useMemo(() => {
     const porTelefone = {};
@@ -134,11 +239,12 @@ function ConversasScreen() {
         telefone, nome,
         ultimoCorpo: ultima.corpo, ultimaData: ultima.created_at, ultimaDirecao: ultima.direcao,
         naoLidas: lista.filter(m => m.direcao === 'entrada' && !m.lida_pelo_time).length,
+        ultimaEntradaData: ultimaEntrada?.created_at || null,
         janelaAberta: janelaAberta(ultimaEntrada?.created_at),
       };
     }).sort((a, b) => new Date(b.ultimaData) - new Date(a.ultimaData))
       .filter(c => !busca || (c.nome || c.telefone).toLowerCase().includes(busca.toLowerCase()));
-  }, [msgs, busca]);
+  }, [msgs, busca, tick]);
 
   const thread = useMemo(() => {
     if (!selecionado) return [];
@@ -180,7 +286,12 @@ function ConversasScreen() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <TopBar title="Conversas" />
+      <TopBar title="Conversas" actions={<Btn onClick={() => setModalNovoContato(true)}>+ Novo Contato</Btn>} />
+      {modalNovoContato && (
+        <NovoContatoModal SUPA_URL={SUPA_URL} SUPA_KEY={SUPA_KEY}
+          onClose={() => setModalNovoContato(false)}
+          onEnviado={(telefone) => { setModalNovoContato(false); carregar(); setSelecionado(telefone.replace(/\D/g, '').startsWith('55') ? telefone.replace(/\D/g, '') : '55' + telefone.replace(/\D/g, '')); }} />
+      )}
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
         <div style={{ width: 300, flexShrink: 0, borderRight: '1px solid var(--app-border)', display: 'flex', flexDirection: 'column' }}>
           <div style={{ padding: 10, borderBottom: '1px solid var(--app-border)' }}>
@@ -220,7 +331,9 @@ function ConversasScreen() {
                   background: contatoAtivo?.janelaAberta ? 'rgba(74,222,128,.12)' : 'rgba(255,255,255,.05)',
                   border: '1px solid ' + (contatoAtivo?.janelaAberta ? 'rgba(74,222,128,.3)' : 'var(--app-border)'),
                 }}>
-                  {contatoAtivo?.janelaAberta ? 'Janela de 24h aberta · grátis' : 'Janela fechada · precisa de template'}
+                  {contatoAtivo?.janelaAberta
+                    ? `Grátis · ${tempoRestanteJanela(contatoAtivo.ultimaEntradaData)}`
+                    : 'Janela fechada · precisa de template'}
                 </div>
               </div>
 
