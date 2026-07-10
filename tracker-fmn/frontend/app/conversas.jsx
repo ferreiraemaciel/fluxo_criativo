@@ -67,9 +67,15 @@ function ContatoItem({ contato, ativo, onClick }) {
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 6 }}>
-          <div style={{ fontSize: 13, fontWeight: contato.naoLidas > 0 ? 800 : 600, color: 'var(--text-1)',
-            fontFamily: 'Roboto,sans-serif', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {contato.nome || normalizarTelefoneExibicao(contato.telefone)}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 5, minWidth: 0 }}>
+            {contato.precisaHumano && (
+              <span title="Precisa de humano" style={{ flexShrink: 0, fontSize: 9, fontWeight: 800, color: '#f87171',
+                background: 'rgba(248,113,113,.14)', border: '1px solid rgba(248,113,113,.3)', borderRadius: 4, padding: '1px 4px' }}>!</span>
+            )}
+            <div style={{ fontSize: 13, fontWeight: contato.naoLidas > 0 ? 800 : 600, color: 'var(--text-1)',
+              fontFamily: 'Roboto,sans-serif', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {contato.nome || normalizarTelefoneExibicao(contato.telefone)}
+            </div>
           </div>
           <div style={{ fontSize: 10, color: 'var(--text-3)', flexShrink: 0 }}>{horaCurta(contato.ultimaData)}</div>
         </div>
@@ -103,6 +109,11 @@ function Bolha({ msg }) {
         {msg.tipo === 'template' && (
           <div style={{ fontSize: 9.5, color: 'var(--text-3)', marginBottom: 3, fontFamily: 'Roboto,sans-serif', textTransform: 'uppercase', letterSpacing: .4 }}>
             modelo: {msg.template_nome}
+          </div>
+        )}
+        {msg.origem === 'ia' && (
+          <div style={{ fontSize: 9.5, color: 'var(--fmn-gold)', marginBottom: 3, fontFamily: 'Roboto,sans-serif', textTransform: 'uppercase', letterSpacing: .4 }}>
+            Claudinho
           </div>
         )}
         <div style={{ fontSize: 13, color: 'var(--text-1)', fontFamily: 'Roboto,sans-serif', lineHeight: 1.4, whiteSpace: 'pre-wrap' }}>
@@ -219,6 +230,10 @@ function KanbanCard({ contato, onAbrir, onMover }) {
             width: 7, height: 7, borderRadius: '50%', flexShrink: 0,
             background: contato.janelaAberta ? '#4ade80' : 'var(--text-3)',
           }} />
+          {contato.precisaHumano && (
+            <span title="Precisa de humano" style={{ flexShrink: 0, fontSize: 9, fontWeight: 800, color: '#f87171',
+              background: 'rgba(248,113,113,.14)', border: '1px solid rgba(248,113,113,.3)', borderRadius: 4, padding: '1px 4px' }}>!</span>
+          )}
           <div style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--text-1)', fontFamily: 'Roboto,sans-serif',
             overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {contato.nome || normalizarTelefoneExibicao(contato.telefone)}
@@ -277,6 +292,7 @@ function ConversasScreen() {
   const [modo, setModo]           = useState('lista'); // lista | kanban
   const [modalNovoContato, setModalNovoContato] = useState(false);
   const [tick, setTick]           = useState(0); // força re-render pro contador de tempo
+  const [iaAtivaGlobal, setIaAtivaGlobal] = useState(false);
   const scrollRef = useRef(null);
   const SUPA_URL = window.db?.supabaseUrl || '';
   const SUPA_KEY = window.db?.supabaseKey  || '';
@@ -287,6 +303,8 @@ function ConversasScreen() {
       .then(({ data, error }) => { if (!error) setMsgs(data || []); setLoading(false); });
     window.db.from('whatsapp_contatos').select('*')
       .then(({ data, error }) => { if (!error) setContatosDb(data || []); });
+    window.db.from('app_config').select('valor').eq('chave', 'whatsapp_ia_ativa').single()
+      .then(({ data }) => { if (data) setIaAtivaGlobal(data.valor === true); });
   }
 
   useEffect(() => { carregar(); const t = setInterval(carregar, 15000); return () => clearInterval(t); }, []);
@@ -295,6 +313,23 @@ function ConversasScreen() {
   function moverEtapa(telefone, etapa) {
     setContatosDb(prev => prev.map(c => c.telefone === telefone ? { ...c, etapa } : c));
     if (window.db) window.db.from('whatsapp_contatos').update({ etapa }).eq('telefone', telefone).then(() => carregar());
+  }
+
+  function alternarIaGlobal() {
+    const novoValor = !iaAtivaGlobal;
+    if (novoValor && !window.confirm('Isso liga a IA vendedora pra TODOS os contatos que não estiverem pausados individualmente. Ela vai responder sozinha no WhatsApp, gastando tokens da API da Anthropic a cada mensagem. Confirma?')) return;
+    setIaAtivaGlobal(novoValor);
+    if (window.db) window.db.from('app_config').update({ valor: novoValor }).eq('chave', 'whatsapp_ia_ativa').then(() => carregar());
+  }
+
+  function alternarIaContato(telefone, pausar) {
+    setContatosDb(prev => prev.map(c => c.telefone === telefone ? { ...c, ia_pausada: pausar } : c));
+    if (window.db) window.db.from('whatsapp_contatos').upsert({ telefone, ia_pausada: pausar }, { onConflict: 'telefone' }).then(() => carregar());
+  }
+
+  function liberarHumano(telefone) {
+    setContatosDb(prev => prev.map(c => c.telefone === telefone ? { ...c, precisa_humano: false } : c));
+    if (window.db) window.db.from('whatsapp_contatos').update({ precisa_humano: false }).eq('telefone', telefone).then(() => carregar());
   }
 
   const contatos = useMemo(() => {
@@ -321,6 +356,8 @@ function ConversasScreen() {
         ultimaEntradaData: ultimaEntrada?.created_at || null,
         janelaAberta: janelaAberta(ultimaEntrada?.created_at),
         etapa: dbRow?.etapa || 'lead_novo',
+        iaPausada: dbRow?.ia_pausada || false,
+        precisaHumano: dbRow?.precisa_humano || false,
       };
     }).sort((a, b) => new Date(b.ultimaData) - new Date(a.ultimaData))
       .filter(c => !busca || (c.nome || c.telefone).toLowerCase().includes(busca.toLowerCase()));
@@ -377,6 +414,9 @@ function ConversasScreen() {
               background: modo === 'kanban' ? 'var(--fmn-gold)' : 'transparent', color: modo === 'kanban' ? '#1a1a1a' : 'var(--text-2)' }}>Kanban</button>
           </div>
           <Btn onClick={() => setModalNovoContato(true)}>+ Novo Contato</Btn>
+          <Btn variant={iaAtivaGlobal ? 'primary' : 'ghost'} onClick={alternarIaGlobal}>
+            {iaAtivaGlobal ? 'Claudinho: Ativo' : 'Claudinho: Pausado'}
+          </Btn>
         </div>
       } />
       {modalNovoContato && (
@@ -422,15 +462,26 @@ function ConversasScreen() {
                     {normalizarTelefoneExibicao(selecionado)}
                   </div>
                 </div>
-                <div style={{
-                  fontSize: 10.5, fontFamily: 'Roboto,sans-serif', padding: '3px 9px', borderRadius: 999,
-                  color: contatoAtivo?.janelaAberta ? '#4ade80' : 'var(--text-3)',
-                  background: contatoAtivo?.janelaAberta ? 'rgba(74,222,128,.12)' : 'rgba(255,255,255,.05)',
-                  border: '1px solid ' + (contatoAtivo?.janelaAberta ? 'rgba(74,222,128,.3)' : 'var(--app-border)'),
-                }}>
-                  {contatoAtivo?.janelaAberta
-                    ? `Grátis · ${tempoRestanteJanela(contatoAtivo.ultimaEntradaData)}`
-                    : 'Janela fechada · precisa de template'}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  {contatoAtivo?.precisaHumano && (
+                    <Btn size="sm" variant="danger" onClick={() => liberarHumano(selecionado)}>Precisa de humano · liberar IA</Btn>
+                  )}
+                  {iaAtivaGlobal && (
+                    <Btn size="sm" variant={contatoAtivo?.iaPausada ? 'ghost' : 'secondary'}
+                      onClick={() => alternarIaContato(selecionado, !contatoAtivo?.iaPausada)}>
+                      {contatoAtivo?.iaPausada ? 'IA pausada aqui' : 'IA ativa aqui'}
+                    </Btn>
+                  )}
+                  <div style={{
+                    fontSize: 10.5, fontFamily: 'Roboto,sans-serif', padding: '3px 9px', borderRadius: 999,
+                    color: contatoAtivo?.janelaAberta ? '#4ade80' : 'var(--text-3)',
+                    background: contatoAtivo?.janelaAberta ? 'rgba(74,222,128,.12)' : 'rgba(255,255,255,.05)',
+                    border: '1px solid ' + (contatoAtivo?.janelaAberta ? 'rgba(74,222,128,.3)' : 'var(--app-border)'),
+                  }}>
+                    {contatoAtivo?.janelaAberta
+                      ? `Grátis · ${tempoRestanteJanela(contatoAtivo.ultimaEntradaData)}`
+                      : 'Janela fechada · precisa de template'}
+                  </div>
                 </div>
               </div>
 

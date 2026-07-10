@@ -4,6 +4,7 @@
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { upsertContato } from "../_shared/whatsapp-contatos.ts";
+import { processarComIA } from "../_shared/whatsapp-ia.ts";
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
@@ -85,6 +86,10 @@ Deno.serve(async (req) => {
           // Lead respondeu: se ainda estava como "lead novo", promove pra
           // "em conversa" automaticamente (respeita se já foi movido à mão).
           await upsertContato(supabase, telefone, nome, "em_conversa", { promoverParaEmConversa: true });
+
+          // IA vendedora: só age se o toggle global estiver ligado e essa
+          // conversa não estiver pausada/precisando de humano (checado lá dentro).
+          await processarComIA(supabase, telefone, nome);
         }
 
         // Atualizações de status (enviado/entregue/lido/falhou) das mensagens que a gente mandou.
