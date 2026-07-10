@@ -5,6 +5,7 @@
 // (é reação a alerta já computado, ex.: regra G5 de CPA) — protege orçamento.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { classificarAd } from "../_shared/classificar.ts";
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
@@ -12,18 +13,6 @@ const supabase = createClient(
 );
 
 const FB_TOKEN = Deno.env.get("FB_ACCESS_TOKEN_PERMANENTE")!;
-
-const TICKET_VAL = 297.0;
-const GASTO_MIN_TEST = 145.53;
-
-function classificarAd(vendas: number | null, cpa: number | null, gasto: number | null): string {
-  const v = vendas || 0;
-  const g = gasto || 0;
-  const c = cpa != null ? cpa : (v > 0 && g > 0 ? g / v : null);
-  if (v === 0) return g >= GASTO_MIN_TEST ? "Testar novamente" : "Ruim";
-  if (v >= 5 && (c === null || c < TICKET_VAL)) return "Ótimo";
-  return "Mediano";
-}
 
 Deno.serve(async (req) => {
   if (req.method !== "POST" && req.method !== "GET") {
@@ -90,9 +79,11 @@ Deno.serve(async (req) => {
       const obsNova = `${obsAtual}\n${notaPausa}`.trim();
 
       // 4. Determina coluna destino no Kanban pela classificação
+      // "Testar novamente" não é coluna própria (removida em 2026-07-10) —
+      // é etiqueta que vive dentro de Arquivados junto com Mediano/Ruim.
       const colDestino: Record<string, string> = {
         "Ótimo": "campeoes",
-        "Testar novamente": "testar-novamente",
+        "Testar novamente": "arquivado",
         "Mediano": "arquivado",
         "Ruim": "arquivado",
       };

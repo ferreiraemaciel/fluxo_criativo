@@ -23,47 +23,85 @@ const { LucideIcon, Btn, Badge, TopBar } = window;
 
 const PRODUCT_TICKET = 297;
 const UTM_GLOBAL = window.UTM_GLOBAL; // fonte única em shared.jsx
+const ADS_MEDIA_WORKER = 'https://ads-media.blindagem-fmn.workers.dev';
 
 const ADS_COLUMNS = [
   { id:'fazer',           label:'Fazer',            colorDot:'#3b82f6', colorBg:'rgba(59,130,246,.08)',  colorBorder:'rgba(59,130,246,.25)' },
   { id:'fazendo',         label:'Fazendo',          colorDot:'#fbbf24', colorBg:'rgba(251,191,36,.08)',  colorBorder:'rgba(251,191,36,.25)' },
   { id:'ativo',           label:'Ativos',           colorDot:'#f97316', colorBg:'rgba(249,115,22,.08)',  colorBorder:'rgba(249,115,22,.3)'  },
   { id:'campeoes',        label:'Campeões',         colorDot:'#4ade80', colorBg:'rgba(74,222,128,.08)',  colorBorder:'rgba(74,222,128,.25)' },
-  { id:'testar-novamente',label:'Testar novamente', colorDot:'#a78bfa', colorBg:'rgba(167,139,250,.08)', colorBorder:'rgba(167,139,250,.25)' },
   { id:'arquivado',       label:'Arquivados',       colorDot:'#94a3b8', colorBg:'rgba(148,163,184,.05)', colorBorder:'rgba(148,163,184,.2)' },
 ];
 
-// Regras de classificação
-// Regras aprovadas em 2026-06-20 — ver tracker-fmn/REGRAS-KANBAN.md
-// Ótimo:           >= 5 vendas E CPA < R$297
-// Mediano:         1 a 4 vendas — OU — >= 5 vendas com CPA >= R$297
-// Ruim:            0 vendas E gasto < R$145,53
-// Testar novamente: 0 vendas E gasto >= R$145,53
+// Regras de classificação — ver tracker-fmn/REGRAS-KANBAN.md
+// Revisadas em 2026-07-10: "Testar novamente" deixou de ser coluna própria
+// (virou etiqueta dentro de Arquivados).
+// Ótimo:            >= 5 vendas E CPA < R$297
+// Testar novamente: (0 vendas E gasto < R$297) OU (vendeu, gasto < R$297 E CPA < R$297)
+// Ruim:             0 vendas E gasto >= R$297
+// Mediano:          tudo o mais
 
-const CPA_LIMITE    = 207.90;
-const TICKET_VAL    = 297;
-const GASTO_MIN_TEST = 145.53; // 70% do CPA limite
+const TICKET_VAL = 297;
 
+// Fonte canônica: supabase/functions/_shared/classificar.ts (usada por
+// kanban-sync e processar-pausas). Este arquivo roda no browser (Babel),
+// runtime diferente do Deno — não dá pra importar de lá. Mudou a regra
+// aqui, muda lá também (e vice-versa).
 function classifyAd(vendas, cpa, gasto) {
   const v = vendas || 0;
   const g = gasto  || 0;
   const c = cpa != null ? cpa : (v > 0 && g > 0 ? g / v : null);
-  if (v === 0) return g >= GASTO_MIN_TEST ? 'Testar novamente' : 'Ruim';
+
   if (v >= 5 && (c == null || c < TICKET_VAL)) return 'Ótimo';
+
+  const semVendaAindaBarato = v === 0 && g < TICKET_VAL;
+  const vendeuMasNaoBateuTicket = v > 0 && g < TICKET_VAL && (c == null || c < TICKET_VAL);
+  if (semVendaAindaBarato || vendeuMasNaoBateuTicket) return 'Testar novamente';
+
+  if (v === 0) return 'Ruim';
   return 'Mediano';
 }
 
 // Resolve a tag correta ao mudar de coluna.
-// Retorna null quando não deve alterar a tag (ex: Fazer, Fazendo).
+// Retorna null quando não deve alterar a tag (ex: Fazer, Fazendo, Ativos).
 function resolveTag(novoStatus, statusAnterior, vendas, cpa, gasto) {
-  if (novoStatus === 'ativo') return statusAnterior === 'campeoes' ? 'Recorrência' : 'Teste';
   if (novoStatus === 'campeoes') return 'Ótimo';
-  if (novoStatus === 'testar-novamente') return 'Testar novamente';
   if (novoStatus === 'arquivado') return classifyAd(vendas, cpa, gasto);
-  return null; // fazer, fazendo: sem tag automática
+  return null; // fazer, fazendo, ativo: sem tag automática
 }
 
-const TAG_TONE = { 'Teste':'info', 'Recorrência':'teal', 'Ótimo':'success', 'Testar novamente':'info', 'Mediano':'warning', 'Ruim':'danger' };
+const TAG_TONE = { 'Ótimo':'success', 'Testar novamente':'info', 'Mediano':'warning', 'Ruim':'danger' };
+
+/* ── Ordenação dos cards dentro de cada coluna ────────────────────
+   'manual' é o padrão: usa ordem_manual quando existe; card nunca
+   arrastado usa -numero como valor implícito, o que preserva o
+   comportamento antigo (número mais recente primeiro) sem precisar
+   de nenhuma migração de dado. Isso também dá "espaço numérico" pra
+   arrastar um card pra o meio de cards nunca reordenados.          */
+function valorOrdem(card) {
+  if (!card) return null;
+  return card.ordemManual != null ? card.ordemManual : -card.numero;
+}
+function calcularOrdemEntre(anterior, seguinte) {
+  const a = valorOrdem(anterior), b = valorOrdem(seguinte);
+  if (a == null && b == null) return 0;
+  if (a == null) return b - 1;
+  if (b == null) return a + 1;
+  return (a + b) / 2;
+}
+function ordenarCards(lista, sortBy) {
+  const arr = [...lista];
+  if (sortBy === 'nome') {
+    arr.sort((a, b) => (a.hook || '').localeCompare(b.hook || '', 'pt-BR'));
+  } else if (sortBy === 'vendas') {
+    arr.sort((a, b) => (b.vendas ?? -Infinity) - (a.vendas ?? -Infinity)); // mais vendas primeiro
+  } else if (sortBy === 'cpa') {
+    arr.sort((a, b) => (a.cpa ?? Infinity) - (b.cpa ?? Infinity)); // menor CPA primeiro (melhor)
+  } else {
+    arr.sort((a, b) => valorOrdem(a) - valorOrdem(b));
+  }
+  return arr;
+}
 
 /* ── Hook: ADS reais do Supabase ─────────────────────────────────*/
 function useAdsCards() {
@@ -75,7 +113,7 @@ function useAdsCards() {
     setLoading(true);
     const { data: adsList } = await window.db
       .from('ads')
-      .select('numero,titulo,status,tag,tipo,headline,hook_copy,hook_visual,desenvolvimento_cta,roteiro,estetica_visual,texto_principal,titulo_ad,descricao_ad,posicionamento,media_drive_url,media_tipo,media_files,meta_ad_id,meta_ad_url,vendas_total,cpa_historico,gasto_total,isento_regra,observacoes,thumb_url,media_url,meta_image_hash,meta_video_id,meta_campaign_id,meta_adset_id,meta_publish_status')
+      .select('numero,titulo,status,tag,tipo,headline,hook_copy,hook_visual,desenvolvimento_cta,roteiro,estetica_visual,texto_principal,titulo_ad,descricao_ad,posicionamento,media_drive_url,media_tipo,media_files,meta_ad_id,meta_ad_url,vendas_total,cpa_historico,gasto_total,isento_regra,observacoes,thumb_url,media_url,meta_image_hash,meta_video_id,meta_campaign_id,meta_adset_id,meta_publish_status,ordem_manual')
       .order('numero', { ascending: false });
 
     const { data: insights } = await window.db
@@ -91,18 +129,20 @@ function useAdsCards() {
       return {
         id:       `ads-${a.numero}`,
         num:      String(a.numero).padStart(3,'0'),
+        numero:   a.numero,
         meta_ad_id: a.meta_ad_id,
         col:      a.status,
+        ordemManual: a.ordem_manual,
         progress: a.status === 'fazendo' ? 50 : 0,
         hook:     a.titulo,
         formats:  [tipoFormatted],
-        // totais agregados (soma de todas as instâncias do criativo) têm prioridade
-        vendas:   a.vendas_total ?? ins?.compras ?? null,
-        cpa:      a.cpa_historico ?? ins?.cpa ?? null,
-        gasto:    a.gasto_total ?? ins?.gasto ?? null,
-        tag:      a.status === 'ativo'
-                    ? (a.tag || 'Teste')
-                : (a.status === 'arquivado' || a.status === 'campeoes' || a.status === 'testar-novamente')
+        // insights_cache é atualizado sozinho a cada poucas horas; os campos locais
+        // (vendas_total/cpa_historico/gasto_total) só existem pra anúncio antigo que
+        // não tem mais linha fresca no insights_cache — por isso entram como fallback.
+        vendas:   ins?.compras ?? a.vendas_total ?? null,
+        cpa:      ins?.cpa     ?? a.cpa_historico ?? null,
+        gasto:    ins?.gasto   ?? a.gasto_total   ?? null,
+        tag:      (a.status === 'arquivado' || a.status === 'campeoes')
                     ? (a.tag || classifyAd(ins?.compras ?? a.vendas_total, ins?.cpa ?? a.cpa_historico, ins?.gasto ?? a.gasto_total))
                 : null,
         raw: a,
@@ -175,8 +215,9 @@ function cardThumb(raw) {
   return null;
 }
 
-function KanbanCard({ card, col, onOpen, onDragStart }) {
+function KanbanCard({ card, col, onOpen, onDragStart, podeArrastar, onDropAntes }) {
   const [hov, setHov] = useState(false);
+  const [dragOverTopo, setDragOverTopo] = useState(false);
   const cpaColor = getCpaColor(card.cpa);
   const thumb = cardThumb(card.raw);
   const isVideo = ['reels','video'].includes(card.raw?.tipo) || card.raw?.media_tipo === 'video';
@@ -196,14 +237,24 @@ function KanbanCard({ card, col, onOpen, onDragStart }) {
   const semPreview = !card.raw?.thumb_url && !['fazer','fazendo'].includes(card.col);
   return (
     <div
-      draggable
+      draggable={podeArrastar}
       onDragStart={e => { e.dataTransfer.setData('cardId', card.id); e.dataTransfer.setData('fromCol', card.col); onDragStart && onDragStart(); }}
+      onDragOver={e => { if (!podeArrastar) return; e.preventDefault(); e.stopPropagation(); setDragOverTopo(true); }}
+      onDragLeave={() => setDragOverTopo(false)}
+      onDrop={e => {
+        if (!podeArrastar) return;
+        e.preventDefault(); e.stopPropagation(); setDragOverTopo(false);
+        const id = e.dataTransfer.getData('cardId');
+        const from = e.dataTransfer.getData('fromCol');
+        if (id && id !== card.id) onDropAntes && onDropAntes(id, from);
+      }}
       onClick={() => onOpen(card)}
       onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
       style={{ background: hov?'var(--app-surface-3)':'var(--app-surface-2)',
-        border:`1px solid ${hov?col.colorBorder:'var(--app-border)'}`,
+        border:`1px solid ${dragOverTopo ? col.colorDot : hov?col.colorBorder:'var(--app-border)'}`,
+        borderTop: dragOverTopo ? `2px solid ${col.colorDot}` : undefined,
         borderRadius:10, padding:'12px 12px', display:'flex', flexDirection:'column', gap:8,
-        cursor:'grab', transition:'all 160ms var(--ease-out)',
+        cursor: podeArrastar ? 'grab' : 'pointer', transition:'all 160ms var(--ease-out)',
         transform: hov?'translateY(-1px)':'none' }}>
 
       {/* Header */}
@@ -285,13 +336,21 @@ function KanbanCard({ card, col, onOpen, onDragStart }) {
 }
 
 /* ── KanbanColumn ────────────────────────────────────────────────*/
-function KanbanColumn({ col, cards, onOpen, onAddNew, onDropCard }) {
+function KanbanColumn({ col, cards, onOpen, onAddNew, onDropCard, sortBy, onReorder }) {
   const [dragOver, setDragOver] = useState(false);
+  const podeArrastar = sortBy === 'manual';
   return (
     <div
       onDragOver={e => { e.preventDefault(); setDragOver(true); }}
       onDragLeave={() => setDragOver(false)}
-      onDrop={e => { e.preventDefault(); setDragOver(false); const id=e.dataTransfer.getData('cardId'); const from=e.dataTransfer.getData('fromCol'); if(id && from !== col.id) onDropCard(id, col.id); }}
+      onDrop={e => {
+        e.preventDefault(); setDragOver(false);
+        const id = e.dataTransfer.getData('cardId');
+        const from = e.dataTransfer.getData('fromCol');
+        if (!id) return;
+        if (from !== col.id) { onDropCard(id, col.id); return; }
+        if (podeArrastar) onReorder(id, null, col.id); // soltou no fundo/vazio da própria coluna
+      }}
       style={{ width:238, minWidth:238, display:'flex', flexDirection:'column',
         background: dragOver ? `${col.colorBg.replace('.08','0.18')}` : col.colorBg,
         border:`1px solid ${dragOver ? col.colorDot : col.colorBorder}`,
@@ -312,7 +371,9 @@ function KanbanColumn({ col, cards, onOpen, onAddNew, onDropCard }) {
       </div>
       <div style={{ flex:1, overflowY:'auto', padding:'10px 8px', display:'flex', flexDirection:'column', gap:8 }}>
         {cards.map(c => (
-          <KanbanCard key={c.id} card={c} col={col} onOpen={onOpen}/>
+          <KanbanCard key={c.id} card={c} col={col} onOpen={onOpen}
+            podeArrastar={podeArrastar}
+            onDropAntes={(draggedId) => onReorder(draggedId, c.id, col.id)}/>
         ))}
       </div>
       <div style={{ padding:'6px 8px 10px', borderTop:`1px solid ${col.colorBorder}`, flexShrink:0 }}>
@@ -537,7 +598,7 @@ function MetaAdModal({ card, onClose }) {
 
   // Resolve a mídia para o criativo.
   // Imagem: usa a URL pública do R2 (preview otimizado) direto no criativo.
-  // Vídeo: usa o video_id se já existe; senão prepara o criativo (Fluxo B, só no Mac).
+  // Vídeo: usa o video_id se já existe; senão sobe a versão em alta do R2 pro Meta agora.
   async function ensureMetaMedia() {
     if (!isVideo) {
       if (r2Url) return { imageUrl: r2Url };
@@ -545,29 +606,18 @@ function MetaAdModal({ card, onClose }) {
       throw new Error('Sem mídia no R2 para o anúncio.');
     }
     if (raw.meta_video_id) return { videoId: raw.meta_video_id };
-    // Vídeo ainda sem criativo no Meta → Fluxo B, que precisa do Mac (ffmpeg + Drive).
-    const isLocal = ['localhost', '127.0.0.1'].includes(location.hostname);
-    if (!isLocal) {
-      throw new Error('Este vídeo ainda não tem criativo no Meta. Prepare no Mac "Fotografia é o Meu Negócio" antes de publicar (é a 1ª vez deste vídeo).');
-    }
-    const videoId = await prepararCriativoMeta(adNum);
+    if (!r2Url) throw new Error('Este anúncio ainda não tem vídeo importado. Use "Importar direto" ou "Importar com link" antes de publicar.');
+    const videoId = await prepararCriativoMeta(r2Url);
     return { videoId };
   }
 
-  // Fluxo B via servidor local: pega o original no Drive, otimiza em alta,
-  // sobe pro Meta, salva o video_id e apaga o temporário. Leva ~1-2 min.
-  async function prepararCriativoMeta(numero) {
-    setLoadingMsg('Preparando o criativo no Meta (1ª vez, ~1-2 min)…');
-    await fetch(`/api/preparar-criativo-meta?numero=${numero}`, { method: 'POST' });
-    for (let i = 0; i < 120; i++) {
-      await new Promise(r => setTimeout(r, 3000));
-      const s = await (await fetch(`/api/preparar-criativo-meta?numero=${numero}`)).json();
-      if (s.msg) setLoadingMsg(s.msg);
-      if (s.video_id) return s.video_id;
-      if (!s.running && s.error) throw new Error(s.error);
-      if (!s.running && !s.video_id) throw new Error('Falha ao preparar o criativo.');
-    }
-    throw new Error('Tempo esgotado preparando o criativo.');
+  // Sobe a versão em alta (já pronta no R2 pela cozinha) direto pro Meta e
+  // guarda o video_id no card, pra próximas publicações reaproveitarem.
+  async function prepararCriativoMeta(origUrl) {
+    setLoadingMsg('Enviando vídeo ao Meta (pode levar 1 min)…');
+    const d = await workerPost('/upload-meta', { tipo: 'video', origUrl });
+    await window.db.from('ads').update({ meta_video_id: d.videoId }).eq('numero', adNum);
+    return d.videoId;
   }
 
   async function handleCreate() {
@@ -1027,34 +1077,64 @@ function MetaIdField({ card, onSaved }) {
 function AdicionarCriativoBtn({ card, onDone }) {
   const [step, setStep] = useState('idle'); // idle | running | warn
   const [msg, setMsg]   = useState('');
-  const cardId = card.raw?.id || card.id;
+  const [pct, setPct]   = useState(0);
+  const numero = card.raw?.numero ?? parseInt(card.num, 10);
 
   async function run(driveUrl) {
-    setStep('running'); setMsg(driveUrl ? 'Importando da pasta…' : 'Buscando no Drive…');
+    const jobId = novoJobId();
+    setStep('running'); setPct(0); setMsg('Preparando');
     const rota = driveUrl ? '/import-link' : '/import-direto';
-    const payload = driveUrl ? { card_id: cardId, drive_url: driveUrl } : { card_id: cardId };
-    try {
-      const r = await fetch(`${ADS_MEDIA_WORKER}${rota}`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-      const d = await r.json().catch(() => ({}));
-      if (!r.ok || d.error) {
-        setStep('warn'); setMsg(d.error || `Erro ${r.status}`);
-        setTimeout(() => { setStep('idle'); setMsg(''); }, 6000); return;
+    const payload = driveUrl ? { numero, drive_url: driveUrl, job_id: jobId } : { numero, job_id: jobId };
+    const sleep = ms => new Promise(r => setTimeout(r, ms));
+    const falhar = m => { setStep('warn'); setMsg(m); setPct(0); setTimeout(() => { setStep('idle'); setMsg(''); }, 6000); };
+    const concluir = async () => {
+      setPct(100);
+      let data = null;
+      try {
+        const res = await window.db.from('ads')
+          .select('thumb_url,media_url,media_tipo,tipo').eq('numero', numero).single();
+        data = res.data;
+      } catch {}
+      setStep('idle'); setMsg(''); setPct(0);
+      onDone && onDone(data);
+    };
+
+    // Miniatura atual: a importação terminou quando ela mudar (rede de segurança).
+    const thumbAntes = card.raw?.thumb_url || null;
+
+    // Dispara a importação, mas NÃO dependemos da resposta: vídeo grande pode
+    // estourar a conexão do navegador enquanto a cozinha segue trabalhando.
+    let erroRapido = null;
+    fetch(`${ADS_MEDIA_WORKER}${rota}`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+      .then(async r => { const d = await r.json().catch(() => ({})); if (!r.ok || d.error) erroRapido = d.error || `Erro ${r.status}`; })
+      .catch(() => {});
+
+    for (let i = 0; i < 300; i++) {            // 300 x 2s = 10 min
+      await sleep(2000);
+      if (erroRapido) return falhar(erroRapido);
+
+      // Progresso real reportado pela cozinha
+      try {
+        const pr = await fetch(`${ADS_MEDIA_WORKER}/progresso?job=${jobId}`);
+        const p  = await pr.json();
+        if (p.erro) return falhar(p.erro);
+        if (typeof p.pct === 'number') setPct(p.pct);
+        if (p.etapa) setMsg(p.etapa);
+        if (p.done) return await concluir();
+      } catch {}
+
+      // Rede de segurança: se o progresso se perder, o card é a fonte da verdade
+      if (i % 3 === 0) {
+        try {
+          const res = await window.db.from('ads').select('thumb_url').eq('numero', numero).single();
+          if (res.data?.thumb_url && res.data.thumb_url !== thumbAntes) return await concluir();
+        } catch {}
       }
-      if (d.processando) {
-        // vídeo pesado: a cozinha ainda está otimizando; recarrega em etapas
-        setMsg('Otimizando o vídeo…');
-        [30000, 60000, 120000].forEach(t => setTimeout(() => onDone && onDone(), t));
-        setTimeout(() => { setStep('idle'); setMsg(''); }, 120000);
-        return;
-      }
-      setStep('idle'); setMsg(''); onDone && onDone();
-    } catch {
-      setStep('warn'); setMsg('Cozinha não respondeu');
-      setTimeout(() => { setStep('idle'); setMsg(''); }, 5000);
     }
+    falhar('Demorou demais. Recarregue a página em instantes.');
   }
 
   function manual() {
@@ -1063,13 +1143,7 @@ function AdicionarCriativoBtn({ card, onDone }) {
   }
 
   if (step === 'running') {
-    return (
-      <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:6, padding:'8px',
-        borderRadius:8, background:'rgba(56,189,248,.1)', border:'1px solid rgba(56,189,248,.3)',
-        color:'#38bdf8', fontFamily:'Roboto,sans-serif', fontWeight:700, fontSize:11.5 }}>
-        <LucideIcon icon="loader" size={13} style={{ animation:'spin 1s linear infinite' }}/>{msg || 'Otimizando…'}
-      </div>
-    );
+    return <BarraProgresso pct={pct} etapa={msg}/>;
   }
   return (
     <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
@@ -1083,372 +1157,6 @@ function AdicionarCriativoBtn({ card, onDone }) {
         <Btn variant="ghost" size="sm" icon="link" style={{ justifyContent:'center' }}
           onClick={manual} title="Colar o link da pasta do Drive">Importar com link</Btn>
       </div>
-    </div>
-  );
-}
-
-/* ── R2UploadSection ─────────────────────────────────────────────*/
-const ADS_MEDIA_WORKER = 'https://ads-media.blindagem-fmn.workers.dev';
-
-function R2UploadSection({ card, onUploadComplete }) {
-  const [step, setStep]         = useState('idle'); // idle|files-ready|compressing|uploading-thumb|uploading-original|uploading-meta|done|error
-  const [progress, setProgress] = useState('');
-  const [errMsg, setErrMsg]     = useState('');
-  const [carouselFiles, setCarouselFiles]     = useState([]); // File[] para carrossel
-  const [carouselPreviews, setCarouselPreviews] = useState([]); // object URLs
-  const fileRef                 = useRef(null);
-
-  const adNum        = parseInt(card.num, 10);
-  const isMigration  = !!card.raw?.media_drive_url && !card.raw?.thumb_url;
-  const isCarrossel  = card.raw?.tipo === 'carrossel';
-
-  async function compressImage(file) {
-    return new Promise((resolve, reject) => {
-      const isPng = file.type === 'image/png';
-      const img   = new Image();
-      const url   = URL.createObjectURL(file);
-      img.onload = () => {
-        URL.revokeObjectURL(url);
-        let w = img.width, h = img.height;
-        if (Math.max(w, h) > 1920) {
-          const r = 1920 / Math.max(w, h);
-          w = Math.round(w * r); h = Math.round(h * r);
-        }
-        const canvas = document.createElement('canvas');
-        canvas.width = w; canvas.height = h;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, w, h);
-
-        // PNG com transparência → mantém PNG; PNG opaco → converte para JPEG 80%
-        let outMime = 'image/jpeg';
-        if (isPng) {
-          const pixels = ctx.getImageData(0, 0, w, h).data;
-          let hasAlpha = false;
-          for (let i = 3; i < pixels.length; i += 4) {
-            if (pixels[i] < 255) { hasAlpha = true; break; }
-          }
-          if (hasAlpha) outMime = 'image/png';
-        }
-
-        canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error('Falha na compressão')),
-          outMime, 0.82);
-      };
-      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Falha ao ler imagem')); };
-      img.src = url;
-    });
-  }
-
-  // Comprime vídeo via Canvas + MediaRecorder (sem SharedArrayBuffer, sem FFmpeg.wasm)
-  // Target: 3 Mbps, máx 1080p. Processa em tempo real (60s de vídeo = 60s de compressão).
-  async function compressVideo(file, onProgress) {
-    return new Promise((resolve, reject) => {
-      const video  = document.createElement('video');
-      const objUrl = URL.createObjectURL(file);
-      video.src = objUrl; video.muted = true; video.playsInline = true;
-
-      video.onloadedmetadata = async () => {
-        const duration = video.duration;
-        let w = video.videoWidth, h = video.videoHeight;
-        if (Math.max(w, h) > 1080) {
-          const r = 1080 / Math.max(w, h);
-          w = Math.round(w * r); h = Math.round(h * r);
-        }
-        w = w % 2 === 0 ? w : w - 1;
-        h = h % 2 === 0 ? h : h - 1;
-
-        const canvas = document.createElement('canvas');
-        canvas.width = w; canvas.height = h;
-        const ctx = canvas.getContext('2d');
-
-        // Combina vídeo do canvas com áudio do elemento original
-        const canvasStream = canvas.captureStream(30);
-        const combined = new MediaStream();
-        canvasStream.getVideoTracks().forEach(t => combined.addTrack(t));
-        const srcStream = video.captureStream ? video.captureStream() : null;
-        if (srcStream) srcStream.getAudioTracks().forEach(t => combined.addTrack(t));
-
-        const mimeType = [
-          'video/webm;codecs=vp9,opus',
-          'video/webm;codecs=vp8,opus',
-          'video/webm;codecs=vp9',
-          'video/webm;codecs=vp8',
-          'video/webm',
-        ].find(m => MediaRecorder.isTypeSupported(m)) || 'video/webm';
-
-        const recorder = new MediaRecorder(combined, { mimeType, videoBitsPerSecond: 3_000_000 });
-        const chunks   = [];
-
-        recorder.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
-        recorder.onstop = () => {
-          URL.revokeObjectURL(objUrl);
-          resolve(new Blob(chunks, { type: 'video/webm' }));
-        };
-        recorder.onerror = () => { URL.revokeObjectURL(objUrl); reject(new Error('Erro ao gravar vídeo')); };
-
-        video.onended = () => {
-          cancelAnimationFrame(video._rafId);
-          setTimeout(() => recorder.stop(), 300);
-        };
-        video.onerror = () => { URL.revokeObjectURL(objUrl); reject(new Error('Falha ao ler vídeo')); };
-
-        function drawLoop() {
-          if (!video.ended && !video.paused) {
-            ctx.drawImage(video, 0, 0, w, h);
-            if (onProgress && duration > 0) onProgress(Math.min(video.currentTime / duration, 1));
-          }
-          if (!video.ended) video._rafId = requestAnimationFrame(drawLoop);
-        }
-
-        recorder.start(200);
-        try { await video.play(); } catch(e) { URL.revokeObjectURL(objUrl); reject(e); return; }
-        drawLoop();
-      };
-      video.onerror = () => { URL.revokeObjectURL(objUrl); reject(new Error('Falha ao ler vídeo')); };
-    });
-  }
-
-  async function captureFrame(videoBlob) {
-    return new Promise(resolve => {
-      const video = document.createElement('video');
-      const url   = URL.createObjectURL(videoBlob);
-      video.src = url; video.muted = true;
-      video.onloadeddata = () => { video.currentTime = 1; };
-      video.onseeked = () => {
-        const c = document.createElement('canvas');
-        c.width = video.videoWidth; c.height = video.videoHeight;
-        c.getContext('2d').drawImage(video, 0, 0);
-        URL.revokeObjectURL(url);
-        c.toBlob(b => resolve(b), 'image/webp', 0.82);
-      };
-      video.onerror = () => { URL.revokeObjectURL(url); resolve(null); };
-    });
-  }
-
-  function fmtBytes(b) {
-    if (b < 1024 * 1024) return `${(b / 1024).toFixed(0)} KB`;
-    return `${(b / (1024 * 1024)).toFixed(1)} MB`;
-  }
-
-  function handleCarouselFilesSelected(files) {
-    const arr = Array.from(files);
-    if (!arr.length) return;
-    // Revoga previews anteriores
-    carouselPreviews.forEach(u => URL.revokeObjectURL(u));
-    const previews = arr.map(f => f.type.startsWith('video/') ? null : URL.createObjectURL(f));
-    setCarouselFiles(arr);
-    setCarouselPreviews(previews);
-    setStep('files-ready');
-    setErrMsg('');
-  }
-
-  async function handleCarouselUpload() {
-    const files = carouselFiles;
-    if (!files.length) return;
-    setErrMsg('');
-    const results = [];
-    try {
-      for (let i = 0; i < files.length; i++) {
-        const file  = files[i];
-        const isVid = file.type.startsWith('video/');
-        const origExt = file.name.split('.').pop().toLowerCase() || (isVid ? 'mp4' : 'jpg');
-
-        setStep('compressing');
-        let lastPct = -1;
-        let optimized, thumbBlob = null;
-        if (isVid) {
-          optimized = await compressVideo(file, pct => {
-            const p = Math.round(pct * 100);
-            if (p - lastPct >= 5) { lastPct = p; setProgress(`${i+1}/${files.length} · ${p}%`); }
-          });
-          thumbBlob = await captureFrame(optimized);
-        } else {
-          optimized = await compressImage(file);
-        }
-
-        setStep('uploading-thumb');
-        setProgress(`${i+1}/${files.length}`);
-        const imgExt = isVid ? 'webm' : (optimized.type === 'image/png' ? 'png' : 'jpg');
-        const tForm = new FormData();
-        tForm.append('file', new File([optimized], `ad${adNum}_s${i+1}.${imgExt}`, { type: isVid?'video/webm':(optimized.type||'image/jpeg') }));
-        tForm.append('ad_num', String(adNum));
-        if (thumbBlob) tForm.append('thumb_frame', new File([thumbBlob], 'thumb.webp', { type:'image/webp' }));
-
-        const tRes = await fetch(`${ADS_MEDIA_WORKER}/upload-thumb`, { method:'POST', body:tForm });
-        if (!tRes.ok) throw new Error(`Arquivo ${i+1}: erro R2 (${tRes.status})`);
-        const { thumbUrl, mediaUrl } = await tRes.json();
-        results.push({ thumbUrl, mediaUrl });
-      }
-
-      carouselPreviews.forEach(u => u && URL.revokeObjectURL(u));
-      const thumbUrl = results[0].thumbUrl;
-      const mediaUrl = JSON.stringify(results.map(r => r.mediaUrl));
-      await window.db.from('ads').update({ thumb_url: thumbUrl, media_url: mediaUrl }).eq('numero', adNum);
-      setProgress('');
-      setStep('done');
-      if (onUploadComplete) onUploadComplete({ thumbUrl, mediaUrl, metaImageHash:null, metaVideoId:null });
-    } catch(err) {
-      setStep('error');
-      setErrMsg(err.message || 'Erro desconhecido');
-    }
-  }
-
-  async function handleFile(file) {
-    setErrMsg('');
-    const isVid  = file.type.startsWith('video/');
-    const fileMB = file.size / (1024 * 1024);
-
-    try {
-      let optimized, thumbBlob = null;
-      const origExt = file.name.split('.').pop().toLowerCase() || (isVid ? 'mp4' : 'jpg');
-
-      setStep('compressing');
-      if (isVid) {
-        setProgress(`0% · ${fmtBytes(file.size)} original`);
-        let lastPct = -1;
-        optimized = await compressVideo(file, pct => {
-          const p = Math.round(pct * 100);
-          if (p - lastPct >= 5) { lastPct = p; setProgress(`${p}%`); }
-        });
-        thumbBlob = await captureFrame(optimized);
-        setProgress('');
-      } else {
-        optimized = await compressImage(file);
-      }
-
-      setStep('uploading-thumb');
-      if (isVid) setProgress(fmtBytes(optimized.size));
-      const tForm = new FormData();
-      const imgExt2 = isVid ? 'webm' : (optimized.type === 'image/png' ? 'png' : 'jpg');
-      const tName = `ad${adNum}.${imgExt2}`;
-      const tType = isVid ? 'video/webm' : (optimized.type || 'image/jpeg');
-      tForm.append('file', new File([optimized], tName, { type: tType }));
-      tForm.append('ad_num', String(adNum));
-      if (thumbBlob) tForm.append('thumb_frame', new File([thumbBlob], 'thumb.webp', { type: 'image/webp' }));
-
-      const tRes  = await fetch(`${ADS_MEDIA_WORKER}/upload-thumb`, { method:'POST', body:tForm });
-      if (!tRes.ok) throw new Error(`Erro ao subir no R2 (${tRes.status})`);
-      setProgress('');
-      const { thumbUrl, mediaUrl } = await tRes.json();
-
-      // R2 upload é apenas para visualização no Tracker.
-      // O envio ao Meta acontece via botão "Publicar", não aqui.
-      await window.db.from('ads').update({ thumb_url: thumbUrl, media_url: mediaUrl }).eq('numero', adNum);
-
-      setStep('done');
-      if (onUploadComplete) onUploadComplete({ thumbUrl, mediaUrl, metaImageHash: null, metaVideoId: null });
-    } catch(err) {
-      setStep('error');
-      setErrMsg(err.message || 'Erro desconhecido');
-    }
-  }
-
-  const STEP_ORDER   = ['compressing','uploading-thumb','done'];
-  const STEP_LABELS  = { compressing:'Comprimindo', 'uploading-thumb':'Subindo no R2', done:'Concluído' };
-  const visibleSteps = ['compressing','uploading-thumb','done'];
-
-  if (step === 'idle' || step === 'files-ready') {
-    if (isCarrossel) {
-      return (
-        <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
-          <input ref={fileRef} type="file" accept="image/*,video/*" multiple style={{ display:'none' }}
-            onChange={e => e.target.files?.length && handleCarouselFilesSelected(e.target.files)}/>
-          <button onClick={() => fileRef.current?.click()}
-            style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'center', gap:6,
-              padding:'7px 12px', borderRadius:8, cursor:'pointer',
-              background:'rgba(234,170,65,.1)', border:'1px solid rgba(234,170,65,.3)',
-              color:'var(--fmn-gold)', fontFamily:'Roboto,sans-serif', fontWeight:700, fontSize:11.5,
-              transition:'all 150ms' }}
-            onMouseEnter={e=>e.currentTarget.style.background='rgba(234,170,65,.18)'}
-            onMouseLeave={e=>e.currentTarget.style.background='rgba(234,170,65,.1)'}>
-            <LucideIcon icon="images" size={13}/>
-            {step === 'files-ready' ? `Trocar arquivos (${carouselFiles.length})` : (isMigration ? 'Migrar slides p/ R2' : 'Selecionar slides')}
-          </button>
-          {step === 'files-ready' && carouselFiles.length > 0 && (
-            <>
-              <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:4 }}>
-                {carouselFiles.map((f, i) => (
-                  <div key={i} style={{ borderRadius:5, overflow:'hidden', background:'rgba(255,255,255,.06)',
-                    border:'1px solid rgba(255,255,255,.1)', aspectRatio:'1', display:'flex',
-                    alignItems:'center', justifyContent:'center' }}>
-                    {carouselPreviews[i]
-                      ? <img src={carouselPreviews[i]} style={{ width:'100%', height:'100%', objectFit:'cover' }}/>
-                      : <LucideIcon icon="film" size={16} style={{ color:'var(--text-3)' }}/>
-                    }
-                  </div>
-                ))}
-              </div>
-              <button onClick={handleCarouselUpload}
-                style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:6,
-                  padding:'8px 12px', borderRadius:8, cursor:'pointer',
-                  background:'rgba(74,222,128,.12)', border:'1px solid rgba(74,222,128,.3)',
-                  color:'#4ade80', fontFamily:'Roboto,sans-serif', fontWeight:700, fontSize:11.5 }}>
-                <LucideIcon icon="upload-cloud" size={13}/>
-                Subir {carouselFiles.length} arquivo{carouselFiles.length > 1 ? 's' : ''} no R2
-              </button>
-            </>
-          )}
-        </div>
-      );
-    }
-    return (
-      <>
-        <input ref={fileRef} type="file" accept="image/*,video/*" style={{ display:'none' }}
-          onChange={e => e.target.files?.[0] && handleFile(e.target.files[0])}/>
-        <button onClick={() => fileRef.current?.click()}
-          style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'center', gap:6,
-            padding:'7px 12px', borderRadius:8, cursor:'pointer',
-            background:'rgba(234,170,65,.1)', border:'1px solid rgba(234,170,65,.3)',
-            color:'var(--fmn-gold)', fontFamily:'Roboto,sans-serif', fontWeight:700, fontSize:11.5,
-            transition:'all 150ms' }}
-          onMouseEnter={e=>e.currentTarget.style.background='rgba(234,170,65,.18)'}
-          onMouseLeave={e=>e.currentTarget.style.background='rgba(234,170,65,.1)'}>
-          <LucideIcon icon="upload" size={13}/>
-          {isMigration ? 'Migrar para R2' : 'Upload R2'}
-        </button>
-      </>
-    );
-  }
-
-  if (step === 'error') {
-    return (
-      <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
-        <div style={{ padding:'8px 12px', borderRadius:8, background:'rgba(248,113,113,.1)',
-          border:'1px solid rgba(248,113,113,.3)', fontSize:11, color:'#f87171', fontFamily:'Roboto,sans-serif' }}>
-          {errMsg}
-        </div>
-        <button onClick={() => { setStep('idle'); setErrMsg(''); }}
-          style={{ padding:'6px 12px', borderRadius:7, background:'rgba(255,255,255,.06)',
-            border:'1px solid var(--app-border)', color:'var(--text-3)',
-            fontFamily:'Roboto,sans-serif', fontSize:11, cursor:'pointer' }}>
-          Tentar novamente
-        </button>
-      </div>
-    );
-  }
-
-  const curIdx = STEP_ORDER.indexOf(step);
-  return (
-    <div style={{ display:'flex', flexDirection:'column', gap:6, padding:'8px 12px', borderRadius:8,
-      background:'rgba(234,170,65,.04)', border:'1px solid rgba(234,170,65,.15)' }}>
-      {visibleSteps.map(s => {
-        const sIdx = STEP_ORDER.indexOf(s);
-        const done   = step === 'done' || curIdx > sIdx;
-        const active = step === s;
-        return (
-          <div key={s} style={{ display:'flex', alignItems:'center', gap:8 }}>
-            <div style={{ width:16, height:16, borderRadius:'50%', flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center',
-              border:`2px solid ${done ? 'var(--clr-pos)' : active ? 'var(--fmn-gold)' : 'rgba(255,255,255,.15)'}`,
-              background: done ? 'var(--clr-pos)' : 'transparent' }}>
-              {done && <LucideIcon icon="check" size={9} style={{ color:'#000' }}/>}
-              {active && !done && <div style={{ width:6, height:6, borderRadius:'50%', background:'var(--fmn-gold)' }}/>}
-            </div>
-            <span style={{ fontSize:11, fontFamily:'Roboto,sans-serif',
-              color: done ? 'var(--clr-pos)' : active ? 'var(--fmn-gold)' : 'rgba(255,255,255,.2)' }}>
-              {STEP_LABELS[s]}{active && progress ? ` ${progress}` : ''}
-            </span>
-          </div>
-        );
-      })}
     </div>
   );
 }
@@ -1540,10 +1248,8 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
   const goPrev  = () => { if (hasPrev) onNavigate?.(siblings[sibIdx - 1]); };
   const goNext  = () => { if (hasNext) onNavigate?.(siblings[sibIdx + 1]); };
 
-  // Arquivos sincronizados do Drive (array JSONB)
+  // Arquivos sincronizados do Drive (array JSONB) — legado, tipicamente vídeo
   const mediaFiles = (() => { try { return Array.isArray(raw.media_files) ? raw.media_files : JSON.parse(raw.media_files || '[]'); } catch { return []; } })();
-  const isCarousel = /carrossel/i.test(fields.tipo) && mediaFiles.length > 1;
-  const currentFile = isCarousel ? mediaFiles[carouselIdx] : mediaFiles[0];
 
   function parseDriveUrl(url) {
     if (!url) return null;
@@ -1559,7 +1265,7 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
     return `https://drive.google.com/thumbnail?id=${fileId}&sz=w800`;
   }
 
-  // URLs R2 do ad (JSON array ou string simples)
+  // URLs R2 do ad (JSON array ou string simples) — imagem/carrossel importado usa isto
   const r2Urls = (() => {
     try {
       const v = raw.media_url;
@@ -1568,6 +1274,12 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
       return Array.isArray(parsed) ? parsed : [parsed];
     } catch { return raw.media_url ? [raw.media_url] : []; }
   })();
+
+  // Carrossel pode vir por dois caminhos: imagens no media_url (import na nuvem)
+  // ou arquivos legado no media_files (Drive). Usa o que tiver mais de 1 item.
+  const carouselCount = Math.max(r2Urls.length, mediaFiles.length);
+  const isCarousel = /carrossel/i.test(fields.tipo) && carouselCount > 1;
+  const currentFile = isCarousel ? mediaFiles[carouselIdx] : mediaFiles[0];
   const r2CurrentUrl = r2Urls[isCarousel ? carouselIdx : 0] || null;
 
   const cardIsVideo = /reels/i.test(raw.tipo) || raw.tipo === 'video';
@@ -1636,14 +1348,6 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
     set('status', novoStatus);
     await window.db.from('ads').update(patch).eq('numero', parseInt(card.num, 10));
     if (onUpdate) onUpdate({ ...card, col: novoStatus, raw: { ...raw, status: novoStatus, tag: patch.tag ?? raw.tag } });
-  }
-
-  async function retirarDoTeste() {
-    const novaTag = classifyAd(card.vendas, card.cpa, card.gasto);
-    const patch = { status: 'arquivado', tag: novaTag };
-    set('status', 'arquivado'); set('tag', novaTag);
-    await window.db.from('ads').update(patch).eq('numero', parseInt(card.num, 10));
-    if (onUpdate) onUpdate({ ...card, col: 'arquivado', raw: { ...raw, status: 'arquivado', tag: novaTag } });
   }
 
   async function deletarAd() {
@@ -1774,16 +1478,6 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
                   <LucideIcon icon="trash-2" size={13}/>
                 </button>
               )}
-              {fields.status === 'testar-novamente' && (
-                <button onClick={retirarDoTeste}
-                  title="Arquivar este AD com tag de performance calculada"
-                  style={{ display:'flex', alignItems:'center', gap:6, padding:'8px 14px',
-                    background:'rgba(167,139,250,.12)', color:'#a78bfa', borderRadius:8,
-                    border:'1px solid rgba(167,139,250,.3)', fontFamily:'Roboto,sans-serif',
-                    fontWeight:700, fontSize:11.5, cursor:'pointer' }}>
-                  <LucideIcon icon="archive" size={14}/>Retirar do teste
-                </button>
-              )}
               <div style={{ position:'relative' }}>
                 <button onClick={() => { const temMidia = r2Urls.length || raw.meta_image_hash || raw.meta_video_id || mediaFiles.length; if (!temMidia) { setNoMediaAlert(true); setTimeout(() => setNoMediaAlert(false), 3500); } else setShowMeta(true); }}
                   style={{ display:'flex', alignItems:'center', gap:6, padding:'8px 14px',
@@ -1834,7 +1528,7 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
                           : <div onClick={() => setVideoPlaying(true)}
                               style={{ width:'100%', height:'100%', position:'relative', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>
                               <img
-                                src={`/thumbnails/${raw.numero}.jpg`}
+                                src={raw.thumb_url || `/thumbnails/${raw.numero}.jpg`}
                                 alt="thumb"
                                 onError={e => { e.currentTarget.style.display='none'; }}
                                 style={{ position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'contain' }}/>
@@ -1859,7 +1553,7 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
                               <LucideIcon icon="chevron-left" size={16}/>
                             </button>
                           )}
-                          {carouselIdx < mediaFiles.length - 1 && (
+                          {carouselIdx < carouselCount - 1 && (
                             <button onClick={() => setCarouselIdx(i => i + 1)}
                               style={{ position:'absolute', right:6, top:'50%', transform:'translateY(-50%)',
                                 width:28, height:28, borderRadius:'50%', border:'none',
@@ -1871,7 +1565,7 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
                           {/* Dots */}
                           <div style={{ position:'absolute', bottom:8, left:0, right:0,
                             display:'flex', justifyContent:'center', gap:5, zIndex:2 }}>
-                            {mediaFiles.map((_, i) => (
+                            {Array.from({ length: carouselCount }).map((_, i) => (
                               <div key={i} onClick={() => setCarouselIdx(i)}
                                 style={{ width: i===carouselIdx ? 16 : 6, height:6, borderRadius:3,
                                   background: i===carouselIdx ? 'var(--fmn-gold)' : 'rgba(255,255,255,.4)',
@@ -1882,7 +1576,7 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
                           <div style={{ position:'absolute', top:8, right:8,
                             background:'rgba(0,0,0,.55)', borderRadius:6, padding:'2px 7px',
                             fontSize:10, fontFamily:'Roboto,sans-serif', color:'#fff', zIndex:2 }}>
-                            {carouselIdx + 1}/{mediaFiles.length}
+                            {carouselIdx + 1}/{carouselCount}
                           </div>
                         </>
                       )}
@@ -1936,23 +1630,17 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
                   </div>
                 ) : (
                   <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
-                    {/* Novo fluxo: puxa do Drive e gera o preview (Fluxo A) */}
+                    {/* Importar do Drive (cozinha na nuvem) */}
                     <AdicionarCriativoBtn card={card} onDone={async () => {
                       const { data } = await window.db.from('ads')
-                        .select('media_url,thumb_url,tipo,media_tipo').eq('numero', parseInt(card.num,10)).single();
-                      if (data && onUpdate) onUpdate({ ...card, raw: { ...raw, ...data } });
+                        .select('media_url,thumb_url,tipo,media_tipo,media_files,media_drive_url,status').eq('numero', parseInt(card.num,10)).single();
+                      if (!data) return;
+                      // Sincroniza a memória do modal, senão o botão Salvar regrava
+                      // os valores antigos por cima do que a importação acabou de gravar.
+                      setFields(f => ({ ...f, tipo: data.tipo, media_tipo: data.media_tipo,
+                        media_drive_url: data.media_drive_url ?? f.media_drive_url, status: data.status }));
+                      if (onUpdate) onUpdate({ ...card, col: data.status, raw: { ...raw, ...data } });
                     }}/>
-                    <div style={{ display:'flex', gap:8 }}>
-                      {previewViewUrl && (
-                        <Btn variant="ghost" size="sm" icon="external-link" style={{ flex:1, justifyContent:'center' }}
-                          onClick={() => window.open(previewViewUrl, '_blank')}>
-                          Drive
-                        </Btn>
-                      )}
-                      <R2UploadSection card={card} onUploadComplete={({ thumbUrl, mediaUrl, metaImageHash, metaVideoId }) => {
-                        if (onUpdate) onUpdate({ ...card, raw: { ...raw, thumb_url: thumbUrl, media_url: mediaUrl, meta_image_hash: metaImageHash, meta_video_id: metaVideoId } });
-                      }}/>
-                    </div>
                   </div>
                 )}
             </div>
@@ -2199,6 +1887,133 @@ function NovoAdsModal({ onClose, onCreated }) {
   );
 }
 
+/* ── AtivarMetaModal ───────────────────────────────────────────────
+   Checklist dos rascunhos já confirmados como existentes no Meta (o
+   chamador já filtrou os que sumiram). O usuário escolhe quais ativar.
+─────────────────────────────────────────────────────────────────*/
+function AtivarMetaModal({ itens, onClose, onDone }) {
+  const [selecionados, setSelecionados] = useState(() => new Set(itens.map(i => i.num)));
+  const [ativando, setAtivando] = useState(false);
+  const [resultado, setResultado] = useState(null); // { okCount, errCount, erros }
+
+  function toggle(num) {
+    setSelecionados(prev => {
+      const next = new Set(prev);
+      next.has(num) ? next.delete(num) : next.add(num);
+      return next;
+    });
+  }
+
+  async function ativarSelecionados() {
+    const alvo = itens.filter(i => selecionados.has(i.num));
+    if (!alvo.length || ativando) return;
+    setAtivando(true);
+    try {
+      const payload = alvo.map(i => ({ campaignId: i.campaignId, adsetId: i.adsetId, adId: i.adId }));
+      const r = await fetch(`${ADS_MEDIA_WORKER}/activate-ads`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ itens: payload }),
+      });
+      const d = await r.json();
+      const resultados = d.resultados || [];
+      const erros = [];
+      for (const res of resultados) {
+        const item = alvo.find(i => i.adId === res.adId);
+        if (res.ok) {
+          // Ativação real no Meta também avança o card pra coluna "Ativos",
+          // com a mesma tag que o app já aplicaria num drag-and-drop manual.
+          const novaTag = resolveTag('ativo', item?.statusAnterior);
+          const patch = { meta_publish_status: 'ativo', status: 'ativo' };
+          if (novaTag !== null) patch.tag = novaTag;
+          await window.db.from('ads').update(patch).eq('numero', parseInt(item.num, 10));
+        } else {
+          erros.push({ num: item?.num, titulo: item?.titulo, erro: res.error });
+        }
+      }
+      setResultado({ okCount: resultados.filter(x => x.ok).length, errCount: erros.length, erros });
+    } catch (e) {
+      setResultado({ okCount: 0, errCount: alvo.length, erros: [{ num: '-', titulo: '-', erro: e.message }] });
+    } finally {
+      setAtivando(false);
+    }
+  }
+
+  return (
+    <div onClick={onClose} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,.75)', zIndex:700,
+      display:'flex', alignItems:'center', justifyContent:'center' }}>
+      <div onClick={e => e.stopPropagation()} style={{ width:480, maxHeight:'80vh', display:'flex', flexDirection:'column',
+        background:'var(--app-surface)', border:'1px solid var(--app-border-2)', borderRadius:16,
+        boxShadow:'0 20px 60px rgba(0,0,0,.6)' }}>
+        <div style={{ padding:'16px 20px', borderBottom:'1px solid var(--app-border)',
+          display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+          <span style={{ fontSize:15, fontFamily:'Roboto,sans-serif', fontWeight:700, color:'var(--text-1)' }}>
+            Ativar no Meta
+          </span>
+          <button onClick={onClose} style={{ width:28, height:28, borderRadius:'50%', background:'rgba(255,255,255,.07)',
+            color:'var(--text-2)', display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', fontSize:16 }}>×</button>
+        </div>
+
+        {resultado ? (
+          <div style={{ padding:20, display:'flex', flexDirection:'column', gap:12 }}>
+            <div style={{ fontSize:13, fontFamily:'Roboto,sans-serif', color:'var(--text-1)' }}>
+              Ativados: <b style={{ color:'#4ade80' }}>{resultado.okCount}</b>
+              {resultado.errCount > 0 && <> · Falharam: <b style={{ color:'#f87171' }}>{resultado.errCount}</b></>}
+            </div>
+            {resultado.erros.length > 0 && (
+              <div style={{ display:'flex', flexDirection:'column', gap:6, maxHeight:220, overflowY:'auto' }}>
+                {resultado.erros.map((e, i) => (
+                  <div key={i} style={{ padding:'8px 10px', borderRadius:8, background:'rgba(248,113,113,.08)',
+                    border:'1px solid rgba(248,113,113,.25)', fontSize:11.5, color:'#f87171', lineHeight:1.4 }}>
+                    <b>AD {e.num}</b> — {e.titulo}<br/>{e.erro}
+                  </div>
+                ))}
+              </div>
+            )}
+            <Btn variant="secondary" size="sm" onClick={onDone} style={{ justifyContent:'center' }}>Fechar</Btn>
+          </div>
+        ) : (
+          <>
+            <div style={{ padding:'10px 20px', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+              <span style={{ fontSize:11, fontFamily:'Roboto,sans-serif', color:'var(--text-3)' }}>
+                {selecionados.size} de {itens.length} selecionado(s)
+              </span>
+              <div style={{ display:'flex', gap:8 }}>
+                <button onClick={() => setSelecionados(new Set(itens.map(i => i.num)))}
+                  style={{ fontSize:11, fontFamily:'Roboto,sans-serif', fontWeight:700, color:'var(--fmn-gold)', cursor:'pointer' }}>
+                  Todos
+                </button>
+                <button onClick={() => setSelecionados(new Set())}
+                  style={{ fontSize:11, fontFamily:'Roboto,sans-serif', fontWeight:700, color:'var(--text-3)', cursor:'pointer' }}>
+                  Nenhum
+                </button>
+              </div>
+            </div>
+            <div style={{ flex:1, overflowY:'auto', padding:'0 20px 12px', display:'flex', flexDirection:'column', gap:6 }}>
+              {itens.map(item => (
+                <label key={item.num} style={{ display:'flex', alignItems:'center', gap:10, padding:'8px 10px',
+                  borderRadius:8, background:'rgba(255,255,255,.03)', border:'1px solid var(--app-border)', cursor:'pointer' }}>
+                  <input type="checkbox" checked={selecionados.has(item.num)} onChange={() => toggle(item.num)}
+                    style={{ width:15, height:15, cursor:'pointer', flexShrink:0 }}/>
+                  <span style={{ fontSize:12.5, fontFamily:'Roboto,sans-serif', color:'var(--text-1)' }}>
+                    <b>AD {item.num}</b> — {item.titulo}
+                  </span>
+                </label>
+              ))}
+            </div>
+            <div style={{ padding:'14px 20px', borderTop:'1px solid var(--app-border)', display:'flex', gap:10 }}>
+              <Btn variant="ghost" size="sm" onClick={onClose} style={{ flex:1, justifyContent:'center' }}>Cancelar</Btn>
+              <Btn variant="primary" size="sm" onClick={ativarSelecionados} disabled={!selecionados.size || ativando}
+                style={{ flex:1, justifyContent:'center' }}>
+                {ativando ? 'Ativando…' : `Ativar selecionados (${selecionados.size})`}
+              </Btn>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 /* ── KanbanScreen ────────────────────────────────────────────────*/
 function KanbanScreen({ targetAd, onConsumeTarget }) {
   const [selectedCard, setSelectedCard] = useState(null);
@@ -2206,72 +2021,42 @@ function KanbanScreen({ targetAd, onConsumeTarget }) {
   const [fmtFilter, setFmtFilter]       = useState('Todos');
   const [tagFilter, setTagFilter]       = useState('Todas');
   const [searchQuery, setSearchQuery]   = useState('');
+  const [sortBy, setSortBy]             = useState('manual'); // manual | nome | vendas | cpa
 
   const { cards: CARDS, loading, reload } = useAdsCards();
-  const [syncing, setSyncing]   = useState(false);
-  const [syncMsg, setSyncMsg]   = useState('');
   const [importando, setImportando] = useState(false);
   const [importMsg, setImportMsg]   = useState('');
+  const [importPct, setImportPct]   = useState(0);
 
   // Importa os criativos de todos os cards que têm pasta ADS no Drive (nuvem)
   async function importarArquivos() {
     if (importando) return;
-    setImportando(true); setImportMsg('Importando…');
-    try {
-      const r = await fetch(`${ADS_MEDIA_WORKER}/import-geral`, { method: 'POST' });
-      const d = await r.json().catch(() => ({}));
-      if (!r.ok || d.error) { setImportMsg(d.error || `Erro ${r.status}`); }
-      else { setImportMsg(`${d.importados} importado(s)${d.falhas ? ` · ${d.falhas} falha(s)` : ''}`); reload(); }
-    } catch { setImportMsg('Cozinha não respondeu'); }
-    setTimeout(() => { setImportando(false); setImportMsg(''); }, 5000);
-  }
-  async function handleSync() {
-    setSyncing(true);
-    const startedAt = new Date().toISOString();
-    const delay = ms => new Promise(r => setTimeout(r, ms));
+    const jobId = novoJobId();
+    const sleep = ms => new Promise(r => setTimeout(r, ms));
+    setImportando(true); setImportMsg('Preparando'); setImportPct(0);
 
-    setSyncMsg('Iniciando…');
-    try { await fetch('/api/sync', { method: 'POST' }); }
-    catch { setSyncing(false); setSyncMsg('Erro ao iniciar sync'); return; }
+    let terminou = false, resposta = null, cortou = false;
+    fetch(`${ADS_MEDIA_WORKER}/import-geral`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ job_id: jobId }),
+    })
+      .then(async r => { resposta = await r.json().catch(() => ({})); terminou = true; })
+      .catch(() => { cortou = true; terminou = true; });
 
-    // Scripts em ordem — poll sync_status para mostrar progresso real
-    const STEPS = [
-      { script: 'drive_sync_pastas.py', label: 'Pastas Drive…' },
-      { script: 'drive_organizar.py',   label: 'Organizando…' },
-      { script: 'sync_drive.py',        label: 'Criativos…' },
-      { script: 'sync_insights.py',     label: 'Métricas Meta…' },
-      { script: 'aplicar_regras.py',    label: 'Regras de coluna…' },
-    ];
-
-    let stepIdx = 0;
-    setSyncMsg(STEPS[0].label);
-
-    // Max 10 min, poll a cada 4s
-    for (let i = 0; i < 150; i++) {
-      await delay(4000);
+    while (!terminou) {
+      await sleep(2000);
       try {
-        const { data } = await window.db.from('sync_status')
-          .select('script,last_run')
-          .in('script', STEPS.map(s => s.script));
-
-        if (data) {
-          // Descobre qual é o próximo script que ainda não concluiu
-          for (let s = stepIdx; s < STEPS.length; s++) {
-            const row = data.find(r => r.script === STEPS[s].script);
-            if (row?.last_run && row.last_run > startedAt) {
-              stepIdx = s + 1;
-            }
-          }
-          if (stepIdx >= STEPS.length) break; // todos concluídos
-          setSyncMsg(STEPS[Math.min(stepIdx, STEPS.length - 1)].label);
-        }
+        const p = await (await fetch(`${ADS_MEDIA_WORKER}/progresso?job=${jobId}`)).json();
+        if (typeof p.pct === 'number') setImportPct(p.pct);
+        if (p.etapa) setImportMsg(p.etapa);
       } catch {}
     }
 
-    setSyncMsg('Concluído!');
-    reload();
-    await delay(3000);
-    setSyncing(false); setSyncMsg('');
+    if (cortou) setImportMsg('Seguindo em segundo plano. Recarregue em instantes.');
+    else if (!resposta || resposta.error) setImportMsg(resposta?.error || 'Falhou');
+    else { setImportMsg(`${resposta.importados} importado(s)${resposta.falhas ? ` · ${resposta.falhas} falha(s)` : ''}`); reload(); }
+    setImportPct(0);
+    setTimeout(() => { setImportando(false); setImportMsg(''); }, 6000);
   }
 
   // Abre automaticamente o card vindo de outra aba (ex: Ranking do Dashboard)
@@ -2292,46 +2077,80 @@ function KanbanScreen({ targetAd, onConsumeTarget }) {
     reload();
   }
 
-  // ── Ativar tudo no Meta (aprovação em massa dos rascunhos) ──
-  const [activating, setActivating] = useState(false);
+  // Arrastar pra reordenar dentro da coluna (ou pra uma posição específica ao
+  // trocar de coluna). targetCardId null = soltou no fim/vazio da coluna.
+  async function handleReorder(draggedId, targetCardId, toColId) {
+    if (!window.db || draggedId === targetCardId) return;
+    const draggedCard = CARDS.find(c => c.id === draggedId);
+    if (!draggedCard) return;
+
+    const colunaCards = ordenarCards(CARDS.filter(c => c.col === toColId && c.id !== draggedId), 'manual');
+    let anterior = null, seguinte = null;
+    if (targetCardId) {
+      const idx = colunaCards.findIndex(c => c.id === targetCardId);
+      if (idx < 0) return;
+      anterior = idx > 0 ? colunaCards[idx - 1] : null;
+      seguinte = colunaCards[idx];
+    } else {
+      anterior = colunaCards[colunaCards.length - 1] || null;
+    }
+
+    const patch = { ordem_manual: calcularOrdemEntre(anterior, seguinte) };
+    if (draggedCard.col !== toColId) {
+      patch.status = toColId;
+      const novaTag = resolveTag(toColId, draggedCard.col, draggedCard.vendas, draggedCard.cpa, draggedCard.gasto);
+      if (novaTag !== null) patch.tag = novaTag;
+    }
+    await window.db.from('ads').update(patch).eq('numero', draggedCard.numero);
+    reload();
+  }
+
+  // ── Ativar no Meta (com checagem de status real + escolha item a item) ──
+  const [checandoMeta, setCheckandoMeta] = useState(false);
+  const [ativarModalItens, setAtivarModalItens] = useState(null); // null = modal fechado
   const pendentesMeta = CARDS.filter(c => c.raw?.meta_publish_status === 'rascunho' && c.raw?.meta_ad_id);
 
-  async function handleActivateAll() {
-    if (!pendentesMeta.length || activating) return;
-    const lista = pendentesMeta.map(c => `AD ${c.num} — ${c.raw?.titulo || '(sem título)'}`).join('\n');
-    const ok = window.confirm(
-      `Ativar ${pendentesMeta.length} anúncio(s) no Meta?\n\n${lista}\n\n` +
-      `Isso liga a campanha, o conjunto e o anúncio de cada um. Eles começam a gastar assim que o Meta aprovar.`
-    );
-    if (!ok) return;
-    setActivating(true);
+  // Antes de listar, confere no Meta se cada anúncio ainda existe. O que já foi
+  // deletado/arquivado manualmente no Gerenciador é limpo daqui (não fica reaparecendo).
+  async function abrirAtivarMeta() {
+    if (!pendentesMeta.length || checandoMeta) return;
+    setCheckandoMeta(true);
     try {
-      const itens = pendentesMeta.map(c => ({
-        campaignId: c.raw.meta_campaign_id,
-        adsetId:    c.raw.meta_adset_id,
-        adId:       c.raw.meta_ad_id,
-      }));
-      const r = await fetch(`${ADS_MEDIA_WORKER}/activate-ads`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ itens }),
-      });
+      const ids = pendentesMeta.map(c => c.raw.meta_ad_id).join(',');
+      const r = await fetch(`${ADS_MEDIA_WORKER}/ads-status?ids=${ids}`);
       const d = await r.json();
-      const resultados = d.resultados || [];
-      // Marca como 'ativo' os que ativaram com sucesso
-      for (const res of resultados) {
-        if (res.ok) {
-          const card = pendentesMeta.find(c => c.raw.meta_ad_id === res.adId);
-          if (card) await window.db.from('ads').update({ meta_publish_status: 'ativo' }).eq('numero', parseInt(card.num, 10));
-        }
+      const status = d.status || {};
+
+      const validos = [], sumidos = [];
+      for (const c of pendentesMeta) {
+        const s = status[c.raw.meta_ad_id];
+        (s && s.existe === false ? sumidos : validos).push(c);
       }
-      const okCount  = resultados.filter(x => x.ok).length;
-      const errCount = resultados.length - okCount;
-      alert(`Ativados: ${okCount}${errCount ? ` · Falharam: ${errCount}` : ''}`);
-      reload();
+
+      // Reconcilia os que já não existem mais no Meta: limpa os IDs locais pra
+      // não continuarem aparecendo como pendentes em toda abertura da tela.
+      for (const c of sumidos) {
+        await window.db.from('ads').update({
+          meta_ad_id: null, meta_campaign_id: null, meta_adset_id: null,
+          meta_publish_status: null, meta_ad_url: null,
+        }).eq('numero', parseInt(c.num, 10));
+      }
+      if (sumidos.length) reload();
+
+      if (!validos.length) {
+        alert(sumidos.length
+          ? `Nenhum anúncio pendente de verdade. ${sumidos.length} card(s) estavam desatualizados (já removidos no Meta) e foram limpos.`
+          : 'Nenhum anúncio pendente.');
+        return;
+      }
+      setAtivarModalItens(validos.map(c => ({
+        num: c.num, titulo: c.raw?.titulo || '(sem título)', statusAnterior: c.raw?.status,
+        campaignId: c.raw.meta_campaign_id, adsetId: c.raw.meta_adset_id, adId: c.raw.meta_ad_id,
+      })));
     } catch (e) {
-      alert(`Erro ao ativar: ${e.message}`);
+      alert(`Erro ao verificar status no Meta: ${e.message}`);
     } finally {
-      setActivating(false);
+      setCheckandoMeta(false);
     }
   }
 
@@ -2397,49 +2216,27 @@ function KanbanScreen({ targetAd, onConsumeTarget }) {
                 letterSpacing:'0.03em', transition:'all 150ms' }}>
               <LucideIcon icon={importando ? 'loader' : 'folder-down'} size={12}
                 style={importando ? { animation:'spin 1s linear infinite' } : {}}/>
-              {importando ? (importMsg || 'Importando…') : 'Importar arquivos'}
+              {importando
+                ? `${importMsg || 'Importando'}${importPct ? ` · ${Math.round(importPct)}%` : ''}`
+                : 'Importar arquivos'}
             </button>
-            {(() => {
-              const isLocal = ['localhost','127.0.0.1'].includes(location.hostname);
-              return isLocal ? (
-            <button onClick={handleSync} disabled={syncing}
-              title="Sincronizar Drive + Meta + Regras"
-              style={{ display:'flex', alignItems:'center', gap:6, padding:'6px 13px',
-                borderRadius:7, cursor: syncing ? 'default' : 'pointer',
-                background: syncing ? 'rgba(74,222,128,.08)' : 'rgba(255,255,255,.06)',
-                border: `1px solid ${syncing ? 'rgba(74,222,128,.25)' : 'var(--app-border)'}`,
-                color: syncing ? '#4ade80' : 'var(--text-2)',
-                fontFamily:'Roboto,sans-serif', fontWeight:700, fontSize:11,
-                letterSpacing:'0.03em', transition:'all 150ms' }}>
-              <LucideIcon icon={syncing ? 'loader' : 'refresh-cw'} size={12}
-                style={syncing ? { animation:'spin 1s linear infinite' } : {}}/>
-              {syncing ? (syncMsg || 'Sincronizando…') : 'Sincronizar'}
-            </button>
-              ) : (
-            <button disabled title="Sync disponível apenas localmente"
-              style={{ display:'flex', alignItems:'center', gap:6, padding:'6px 13px',
-                borderRadius:7, cursor:'not-allowed', opacity:.35,
-                background:'rgba(255,255,255,.04)', border:'1px solid var(--app-border)',
-                color:'var(--text-3)', fontFamily:'Roboto,sans-serif', fontWeight:700,
-                fontSize:11, letterSpacing:'0.03em' }}>
-              <LucideIcon icon="refresh-cw" size={12}/>
-              Sincronizar
-            </button>
-              );
-            })()}
             {pendentesMeta.length > 0 && (
-              <button onClick={handleActivateAll} disabled={activating}
-                title={`Liga campanha, conjunto e anúncio destes ${pendentesMeta.length} rascunhos:\n` +
-                  pendentesMeta.map(c => `AD ${c.num} — ${c.raw?.titulo || '(sem título)'}`).join('\n')}
+              <button onClick={abrirAtivarMeta} disabled={checandoMeta}
+                title="Confere no Meta quais desses rascunhos ainda existem e deixa você escolher quais ativar"
                 style={{ display:'flex', alignItems:'center', gap:6, padding:'8px 14px',
-                  background: activating ? 'rgba(74,222,128,.1)' : 'rgba(74,222,128,.14)',
+                  background: checandoMeta ? 'rgba(74,222,128,.1)' : 'rgba(74,222,128,.14)',
                   color:'#4ade80', borderRadius:8, border:'1px solid rgba(74,222,128,.35)',
                   fontFamily:'Roboto,sans-serif', fontWeight:700, fontSize:12,
-                  cursor: activating ? 'default' : 'pointer' }}>
-                <LucideIcon icon={activating ? 'loader' : 'circle-play'} size={14}
-                  style={activating ? { animation:'spin 1s linear infinite' } : {}}/>
-                {activating ? 'Ativando…' : `Ativar tudo no Meta (${pendentesMeta.length})`}
+                  cursor: checandoMeta ? 'default' : 'pointer' }}>
+                <LucideIcon icon={checandoMeta ? 'loader' : 'circle-play'} size={14}
+                  style={checandoMeta ? { animation:'spin 1s linear infinite' } : {}}/>
+                {checandoMeta ? 'Verificando…' : `Ativar no Meta (${pendentesMeta.length})`}
               </button>
+            )}
+            {ativarModalItens && (
+              <AtivarMetaModal itens={ativarModalItens}
+                onClose={() => setAtivarModalItens(null)}
+                onDone={() => { setAtivarModalItens(null); reload(); }}/>
             )}
             <button onClick={() => setShowNovoAds(true)}
               style={{ display:'flex', alignItems:'center', gap:6, padding:'8px 14px',
@@ -2468,8 +2265,19 @@ function KanbanScreen({ targetAd, onConsumeTarget }) {
           <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700,
             letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)', whiteSpace:'nowrap' }}>Tag</span>
           <div style={{ display:'flex', gap:4 }}>
-            {['Todas','Teste','Recorrência','Ótimo','Testar novamente','Mediano','Ruim'].map(t => (
+            {['Todas','Ótimo','Testar novamente','Mediano','Ruim'].map(t => (
               <FilterPill key={t} label={t} active={tagFilter===t} onClick={()=>setTagFilter(t)}/>
+            ))}
+          </div>
+        </div>
+        <div style={{ width:1, height:16, background:'var(--app-border)' }}/>
+        <div style={{ display:'flex', alignItems:'center', gap:6 }}
+          title={sortBy !== 'manual' ? 'Volte pra "Manual" pra poder arrastar os cards' : 'Arraste os cards pra reordenar'}>
+          <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700,
+            letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)', whiteSpace:'nowrap' }}>Ordenar</span>
+          <div style={{ display:'flex', gap:4 }}>
+            {[['manual','Manual'],['nome','Nome'],['vendas','Vendas'],['cpa','CPA']].map(([val, label]) => (
+              <FilterPill key={val} label={label} active={sortBy===val} onClick={()=>setSortBy(val)}/>
             ))}
           </div>
         </div>
@@ -2513,10 +2321,10 @@ function KanbanScreen({ targetAd, onConsumeTarget }) {
       <div style={{ flex:1, overflowX:'auto', overflowY:'hidden',
         padding:'20px 24px', display:'flex', gap:12, alignItems:'stretch' }}>
         {ADS_COLUMNS.map(col => {
-          const cards = filteredCards.filter(c => c.col === col.id);
+          const cards = ordenarCards(filteredCards.filter(c => c.col === col.id), sortBy);
           return <KanbanColumn key={col.id} col={col} cards={cards}
             onOpen={setSelectedCard} onAddNew={() => setShowNovoAds(true)}
-            onDropCard={handleDropCard}/>;
+            onDropCard={handleDropCard} sortBy={sortBy} onReorder={handleReorder}/>;
         })}
       </div>
 

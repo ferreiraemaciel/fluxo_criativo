@@ -544,4 +544,45 @@ const PLATAFORMAS = ['Reels', 'Carrossel', 'Imagem', 'Stories', 'Artigo', 'Youtu
 const PLAT_COLOR  = { Reels:'#f472b6', Carrossel:'#60a5fa', Imagem:'#a78bfa', Stories:'#fb923c', Artigo:'#34d399', Youtube:'#ef4444' };
 const PLAT_ICON   = { Reels:'clapperboard', Carrossel:'layout-grid', Imagem:'image', Stories:'circle-dot', Artigo:'newspaper', Youtube:'play' };
 
-Object.assign(window, { LucideIcon, Btn, Badge, CardKPI, SectionCard, Divider, Sidebar, TopBar, fmtBRL, RefBlock, UTM_GLOBAL, PLATAFORMAS, PLAT_COLOR, PLAT_ICON, CarouselLightbox });
+/* ── Importação do Drive: id do trabalho + barra de progresso real ──────────
+   A cozinha na nuvem reporta a etapa e a porcentagem de cada trabalho.       */
+function novoJobId() {
+  try { if (crypto && crypto.randomUUID) return crypto.randomUUID(); } catch (e) {}
+  return `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
+function BarraProgresso({ pct = 0, etapa = '' }) {
+  const p = Math.max(0, Math.min(100, Math.round(pct)));
+
+  // Cronômetro próprio, independente das leituras de progresso: em vídeo muito
+  // grande a cozinha pode ficar momentaneamente sem responder (CPU no limite),
+  // e sem isso a tela parece travada nesses instantes. Conta sozinho desde que
+  // este componente aparece na tela, nunca para mesmo se a leitura falhar.
+  const [segundos, setSegundos] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setSegundos(s => s + 1), 1000);
+    return () => clearInterval(id);
+  }, []);
+  const tempo = segundos < 60 ? `${segundos}s` : `${Math.floor(segundos / 60)}m${String(segundos % 60).padStart(2, '0')}s`;
+
+  return (
+    <div style={{ padding:'9px 11px', borderRadius:8, background:'rgba(56,189,248,.08)',
+      border:'1px solid rgba(56,189,248,.28)', display:'flex', flexDirection:'column', gap:7 }}>
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:8 }}>
+        <span style={{ display:'flex', alignItems:'center', gap:6, color:'#38bdf8',
+          fontFamily:'Roboto,sans-serif', fontWeight:700, fontSize:11, lineHeight:1.3 }}>
+          <LucideIcon icon="loader" size={12} style={{ animation:'spin 1s linear infinite', flexShrink:0 }}/>
+          {etapa || 'Otimizando'} · {tempo}
+        </span>
+        <span style={{ color:'#38bdf8', fontFamily:'Roboto,sans-serif', fontWeight:700,
+          fontSize:11, fontVariantNumeric:'tabular-nums', flexShrink:0 }}>{p}%</span>
+      </div>
+      <div style={{ height:5, borderRadius:99, background:'rgba(255,255,255,.08)', overflow:'hidden' }}>
+        <div style={{ width:`${p}%`, height:'100%', borderRadius:99, background:'#38bdf8',
+          transition:'width 350ms cubic-bezier(.2,.7,.2,1)' }}/>
+      </div>
+    </div>
+  );
+}
+
+Object.assign(window, { LucideIcon, Btn, Badge, CardKPI, SectionCard, Divider, Sidebar, TopBar, fmtBRL, RefBlock, UTM_GLOBAL, PLATAFORMAS, PLAT_COLOR, PLAT_ICON, CarouselLightbox, novoJobId, BarraProgresso });

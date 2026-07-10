@@ -3,6 +3,7 @@
 // Agendado via pg_cron: "curtas" a cada 6h, "maximo" 1x/dia de madrugada (ver migração 044).
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { extrairCompras, extrairValorCompras } from "../_shared/metricas.ts";
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
@@ -78,8 +79,8 @@ function calcularMetricas(raw: any) {
   const impressoes = Number(raw?.impressions || 0);
   const linkClicks = Number(raw?.unique_inline_link_clicks || 0);
   const lpViews    = extrairAcao(raw, "landing_page_view");
-  const compras    = extrairAcao(raw, "purchase");
-  const valorComp  = extrairValorAcao(raw, "purchase");
+  const compras    = extrairCompras(raw);
+  const valorComp  = extrairValorCompras(raw);
   const addToCart  = extrairAcao(raw, "add_to_cart");
   const initCheck  = extrairAcao(raw, "initiate_checkout");
   const video3s    = Number(raw?.video_p25_watched_actions?.[0]?.value || 0);

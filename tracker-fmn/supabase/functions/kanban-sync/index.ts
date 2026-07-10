@@ -10,6 +10,8 @@
 // e em seguida aplica as regras de classificação do Kanban (aplicar_regras).
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { classificarAd } from "../_shared/classificar.ts";
+import { extrairCompras } from "../_shared/metricas.ts";
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
@@ -57,19 +59,6 @@ async function fetchAccountAdInsights(params: Record<string, string>): Promise<a
   return rows;
 }
 
-function extractMetric(d: any, actionType: string): number {
-  return Number((d.actions || []).find((a: any) => a.action_type === actionType)?.value || 0);
-}
-function extractValue(d: any, actionType: string): number {
-  return Number((d.action_values || []).find((a: any) => a.action_type === actionType)?.value || 0);
-}
-function purchasesOf(d: any): number {
-  return extractMetric(d, "purchase") || extractMetric(d, "offsite_conversion.fb_pixel_purchase");
-}
-function purchaseValueOf(d: any): number {
-  return extractValue(d, "purchase") || extractValue(d, "offsite_conversion.fb_pixel_purchase");
-}
-
 function dateRange(daysBack: number): { since: string; until: string } {
   const until = new Date();
   const since = new Date(until);
@@ -77,51 +66,85 @@ function dateRange(daysBack: number): { since: string; until: string } {
   return { since: since.toISOString().slice(0, 10), until: until.toISOString().slice(0, 10) };
 }
 
-// ── Sincroniza ads.status com o Meta (fonte da verdade) ──────────────────────
+// ── Sincroniza status com o Meta (fonte da verdade) ──────────────────────────
+// Nunca mexe em titulo/tipo (conteúdo do criativo, não tem nada a ver com
+// status) e nunca escreve um valor de `status` que não existe nas colunas do
+// Kanban (fazer/fazendo/ativo/campeoes/testar-novamente/arquivado) — antes
+// escrevia "pausado", que não é nenhuma delas, e o card sumia da visão.
+// Só PROMOVE (fazer/fazendo → ativo); nunca rebaixa um card sozinho — isso
+// continua sendo decisão manual (arrastar pra Testar novamente/Arquivados).
 async function syncMetaAdStatus(): Promise<Set<number>> {
+  // Sem filtro de effective_status: precisamos ver TODOS os estados (inclusive
+  // PAUSED/ARCHIVED) pra reconciliar corretamente o meta_publish_status.
   const qs = new URLSearchParams({
     fields: "id,name,effective_status",
-    // Só ACTIVE conta como "ativo" de verdade. PENDING_REVIEW e IN_PROCESS acontecem
-    // mesmo com o anúncio PAUSADO (revisão de criativo roda independente do estado),
-    // e marcavam o card como ativo no Tracker antes do usuário confirmar em "Ativar tudo".
-    effective_status: JSON.stringify(["ACTIVE"]),
     limit: "500",
     access_token: FB_TOKEN,
   });
   let url: string | null = `${GRAPH_BASE}/act_${FB_ACCOUNT}/ads?${qs}`;
-  const metaAtivos: any[] = [];
+  const todos: any[] = [];
   while (url) {
     const resp = await graphGet(url);
-    metaAtivos.push(...(resp.data || []));
+    todos.push(...(resp.data || []));
     url = resp.paging?.next || null;
   }
 
-  const novos: Record<number, any> = {};
-  for (const d of metaAtivos) {
-    const nome = d.name || "";
-    const m = ADS_PATTERN.exec(nome);
+  // Mapeia numero (extraído do nome "ADS N") → o status mais relevante achado
+  // (prioriza ACTIVE se houver mais de um ad_id pro mesmo número — recorrência).
+  const statusPorNumero: Record<number, string> = {};
+  for (const d of todos) {
+    const m = ADS_PATTERN.exec(d.name || "");
     if (!m) continue;
     const num = parseInt(m[1], 10);
-    if (novos[num]) continue;
-    const clean = nome.replace(CLEAN_TITLE_RE, "").trim() || nome;
-    novos[num] = { numero: num, meta_ad_id: d.id, titulo: clean, status: "ativo", tipo: "reels" };
-  }
-
-  if (Object.keys(novos).length > 0) {
-    await supabase.from("ads").upsert(Object.values(novos), { onConflict: "numero" });
-  }
-
-  const numsAtivos = new Set(Object.keys(novos).map(Number));
-
-  const { data: ativosLocais } = await supabase
-    .from("ads").select("numero, meta_ad_id").eq("status", "ativo").limit(2000);
-  for (const a of ativosLocais || []) {
-    if (!numsAtivos.has(a.numero)) {
-      await supabase.from("ads").update({ status: "pausado" }).eq("numero", a.numero);
+    if (!statusPorNumero[num] || d.effective_status === "ACTIVE") {
+      statusPorNumero[num] = d.effective_status;
     }
   }
 
-  return numsAtivos;
+  const AINDA_NAO_LIVRE = new Set(["PAUSED", "IN_PROCESS", "PENDING_REVIEW", "DISAPPROVED", "WITH_ISSUES"]);
+  const SUMIU = new Set(["ARCHIVED", "DELETED"]);
+
+  // Só reconcilia ads que a gente já conhece localmente (criados via o app,
+  // que já grava meta_ad_id na criação) — evita reintroduzir o upsert cego
+  // que criava linha nova incompleta (só numero/titulo/status/tipo).
+  const { data: locais } = await supabase
+    .from("ads")
+    .select("numero, status, meta_publish_status")
+    .not("meta_ad_id", "is", null)
+    .limit(2000);
+
+  const ativosDeVerdade = new Set<number>();
+
+  for (const ad of locais || []) {
+    const efStatus = statusPorNumero[ad.numero];
+    if (!efStatus) continue; // não achado nesta varredura — não mexe
+
+    if (efStatus === "ACTIVE") {
+      ativosDeVerdade.add(ad.numero);
+      const patch: Record<string, unknown> = {};
+      if (ad.meta_publish_status !== "ativo") patch.meta_publish_status = "ativo";
+      if (ad.status === "fazer" || ad.status === "fazendo") patch.status = "ativo";
+      if (Object.keys(patch).length) {
+        await supabase.from("ads").update(patch).eq("numero", ad.numero);
+      }
+    } else if (AINDA_NAO_LIVRE.has(efStatus)) {
+      // Só reconcilia "aguardando 1ª ativação" pra quem ainda está em
+      // Fazer/Fazendo. Um anúncio já arquivado ou campeão fica PAUSED no Meta
+      // o tempo todo por decisão do usuário — não é "pendente", é decidido.
+      if ((ad.status === "fazer" || ad.status === "fazendo") && ad.meta_publish_status !== "rascunho") {
+        await supabase.from("ads").update({ meta_publish_status: "rascunho" }).eq("numero", ad.numero);
+      }
+    } else if (SUMIU.has(efStatus)) {
+      if (ad.meta_publish_status !== null) {
+        await supabase.from("ads").update({
+          meta_publish_status: null, meta_ad_id: null,
+          meta_campaign_id: null, meta_adset_id: null, meta_ad_url: null,
+        }).eq("numero", ad.numero);
+      }
+    }
+  }
+
+  return ativosDeVerdade;
 }
 
 // ── Permalinks ────────────────────────────────────────────────────────────────
@@ -137,19 +160,6 @@ async function fetchAdPermalink(metaAdId: string): Promise<string | null> {
   } catch {
     return null;
   }
-}
-
-// ── Regras de classificação do Kanban (espelho de classifyAd() no kanban.jsx) ─
-const TICKET_VAL = 297.0;
-const GASTO_MIN_TEST = 145.53;
-
-function classificarAd(vendas: number | null, cpa: number | null, gasto: number | null): string {
-  const v = vendas || 0;
-  const g = gasto || 0;
-  const c = cpa != null ? cpa : (v > 0 && g > 0 ? g / v : null);
-  if (v === 0) return g >= GASTO_MIN_TEST ? "Testar novamente" : "Ruim";
-  if (v >= 5 && (c === null || c < TICKET_VAL)) return "Ótimo";
-  return "Mediano";
 }
 
 async function aplicarRegrasKanban() {
@@ -183,17 +193,29 @@ async function aplicarRegrasKanban() {
 
     if (status === "fazer" && hasMedia) {
       push("fazendo", null, ad.numero);
+    } else if (status === "ativo") {
+      // CORRIGIDO (2026-07-10): eu tinha entendido errado a regra. Um
+      // anúncio em "Ativos" está rodando de verdade no Meta, gastando
+      // dinheiro agora — não faz sentido mudar a coluna dele sozinho por
+      // performance enquanto ele continua ativo (o usuário corrigiu isso ao
+      // ver 4 anúncios ativos irem parar em Campeões/Arquivados). A saída de
+      // Ativos só deveria acontecer JUNTO com o anúncio parar de rodar de
+      // verdade no Meta — que é exatamente o que processar-pausas já faz
+      // (pausa no Meta + reclassifica, as duas coisas juntas, hoje só
+      // reativo ao alerta de CPA alto G5). Não fazer nada aqui.
     } else if (status === "campeoes") {
       const novaTag = classificarAd(vendas, cpa, gasto);
       if (novaTag !== "Ótimo") push("arquivado", novaTag, ad.numero);
       else if (tag !== "Ótimo") push("campeoes", "Ótimo", ad.numero);
-    } else if (status === "testar-novamente") {
-      const novaTag = classificarAd(vendas, cpa, gasto);
-      if (novaTag !== "Testar novamente") push("arquivado", novaTag, ad.numero);
-      else if (tag !== "Testar novamente") push("testar-novamente", "Testar novamente", ad.numero);
     } else if (status === "arquivado") {
+      // "Testar novamente" não é mais coluna própria (removida em 2026-07-10)
+      // — é só uma etiqueta que convive com Mediano/Ruim dentro de Arquivados.
+      // Só sai de Arquivados quando a tag calculada vira Ótimo (vai pra
+      // Campeões); todo o resto (Mediano/Ruim/Testar novamente) fica aqui,
+      // só atualizando a etiqueta.
       const novaTag = classificarAd(vendas, cpa, gasto);
-      if (novaTag !== tag) push("arquivado", novaTag, ad.numero);
+      if (novaTag === "Ótimo") push("campeoes", "Ótimo", ad.numero);
+      else if (novaTag !== tag) push("arquivado", novaTag, ad.numero);
     }
   }
 
@@ -208,12 +230,79 @@ async function aplicarRegrasKanban() {
   return { alterados, lotes: batches.size };
 }
 
+// Trava contra duas execuções pesadas (scope=maximo) rodando ao mesmo tempo.
+// Descoberto ao vivo: sem isso, execuções concorrentes se sobrescrevem numa
+// mesma linha da tabela ads e a classificação pode decidir em cima de um
+// valor intermediário. Trava expira sozinha em 10 min (caso a função caia
+// no meio e nunca libere).
+async function tentarTravar(): Promise<boolean> {
+  const limite = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+  const { data } = await supabase
+    .from("kanban_sync_lock")
+    .update({ running_since: new Date().toISOString() })
+    .eq("id", 1)
+    .or(`running_since.is.null,running_since.lt.${limite}`)
+    .select();
+  return (data?.length ?? 0) > 0;
+}
+async function destravar() {
+  await supabase.from("kanban_sync_lock").update({ running_since: null }).eq("id", 1);
+}
+
 Deno.serve(async (req) => {
   if (req.method !== "POST" && req.method !== "GET") {
     return new Response("Método não permitido", { status: 405 });
   }
   const url = new URL(req.url);
-  const scope = url.searchParams.get("scope") === "maximo" ? "maximo" : "curtas";
+  const scopeParam = url.searchParams.get("scope");
+  const scope = scopeParam === "maximo" ? "maximo" : scopeParam === "completo" ? "completo" : "curtas";
+
+  // scope=completo: recalcula TODOS os anúncios já cadastrados (ativos ou
+  // não), não só os ativos agora. Corrige o histórico congelado de anúncios
+  // que já saíram do ar antes da fórmula de venda ser unificada (ver
+  // _shared/metricas.ts) — sem isso, um anúncio arquivado fica com o número
+  // errado pra sempre, porque a varredura diária (scope=maximo) só atualiza
+  // quem está ativo agora. Rodar manualmente quando precisar recalcular tudo
+  // de uma vez; não é agendado (o diário continua só nos ativos).
+  if (scope === "completo") {
+    if (!(await tentarTravar())) {
+      return new Response(JSON.stringify({ ok: true, scope, aviso: "já tem uma varredura rodando, pulei esta" }),
+        { headers: { "Content-Type": "application/json" } });
+    }
+    try {
+      const rowsMax = await fetchAccountAdInsights({ date_preset: "maximum" });
+      const agg: Record<number, { gasto: number; vendas: number }> = {};
+      for (const d of rowsMax) {
+        const nome = d.ad_name || "";
+        const m = ADS_PATTERN.exec(nome);
+        if (!m) continue;
+        const num = parseInt(m[1], 10);
+        const gasto = Number(d.spend || 0);
+        const vendas = extrairCompras(d);
+        const slot = agg[num] || (agg[num] = { gasto: 0, vendas: 0 });
+        slot.gasto += gasto;
+        slot.vendas += vendas;
+      }
+
+      let ok = 0;
+      for (const [numStr, slot] of Object.entries(agg)) {
+        const num = Number(numStr);
+        const payload: Record<string, unknown> = {
+          gasto_total: Math.round(slot.gasto * 100) / 100,
+          vendas_total: slot.vendas,
+          cpa_historico: slot.vendas > 0 ? Math.round((slot.gasto / slot.vendas) * 100) / 100 : null,
+        };
+        const { error } = await supabase.from("ads").update(payload).eq("numero", num);
+        if (!error) ok++;
+      }
+
+      const regras = await aplicarRegrasKanban();
+      return new Response(JSON.stringify({ ok: true, scope, ads_encontrados: Object.keys(agg).length, agregados: ok, regras }),
+        { headers: { "Content-Type": "application/json" } });
+    } finally {
+      await destravar();
+    }
+  }
 
   const targetNums = await syncMetaAdStatus();
   if (targetNums.size === 0) {
@@ -240,7 +329,7 @@ Deno.serve(async (req) => {
         const num = parseInt(m[1], 10);
         if (!targetNums.has(num)) continue;
         const gasto = Number(d.spend || 0);
-        const vendas = purchasesOf(d);
+        const vendas = extrairCompras(d);
         const slot = agg[num] || (agg[num] = { g3d: 0, v3d: 0, g5d: 0, v5d: 0 });
         if (key === "3d") { slot.g3d += gasto; slot.v3d += vendas; }
         else { slot.g5d += gasto; slot.v5d += vendas; }
@@ -282,7 +371,15 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({ ok: true, scope, ads_ativos: targetNums.size, agregados_3d5d: ok, permalinks: permalinksOk }),
       { headers: { "Content-Type": "application/json" } });
   } else {
-    // scope=maximo: varredura de vida inteira (pesada) + reclassificação do Kanban
+    // scope=maximo: varredura de vida inteira (pesada) + reclassificação do Kanban.
+    // Trava: se já tiver uma execução rodando, não faz nada (evita corromper
+    // os agregados com uma escrita concorrente — ver comentário da trava acima).
+    if (!(await tentarTravar())) {
+      return new Response(JSON.stringify({ ok: true, scope, aviso: "já tem uma varredura rodando, pulei esta" }),
+        { headers: { "Content-Type": "application/json" } });
+    }
+
+    try {
     const rowsMax = await fetchAccountAdInsights({ date_preset: "maximum" });
 
     const agg: Record<number, { gasto: number; vendas: number }> = {};
@@ -294,7 +391,7 @@ Deno.serve(async (req) => {
       const num = parseInt(m[1], 10);
       if (!targetNums.has(num)) continue;
       const gasto = Number(d.spend || 0);
-      const vendas = purchasesOf(d);
+      const vendas = extrairCompras(d);
       const slot = agg[num] || (agg[num] = { gasto: 0, vendas: 0 });
       slot.gasto += gasto;
       slot.vendas += vendas;
@@ -321,5 +418,8 @@ Deno.serve(async (req) => {
 
     return new Response(JSON.stringify({ ok: true, scope, ads_ativos: targetNums.size, agregados_maximo: ok, regras }),
       { headers: { "Content-Type": "application/json" } });
+    } finally {
+      await destravar();
+    }
   }
 });
