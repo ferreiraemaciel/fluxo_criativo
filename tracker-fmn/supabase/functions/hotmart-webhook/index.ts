@@ -10,6 +10,12 @@ const supabase = createClient(
 
 const HOTMART_TOKEN = Deno.env.get("HOTMART_WEBHOOK_TOKEN");
 
+// WhatsApp Cloud API — boas-vindas automáticas pra quem compra o MCV.
+const WHATSAPP_TOKEN          = Deno.env.get("FB_ACCESS_TOKEN_PERMANENTE");
+const WHATSAPP_PHONE_NUMBER_ID = Deno.env.get("WHATSAPP_PHONE_NUMBER_ID");
+const WHATSAPP_GRUPO_LINK_MCV  = Deno.env.get("WHATSAPP_GRUPO_LINK_MCV");
+const PRODUTO_ID_MCV            = "3400278";
+
 // Mapeamento de evento → status na tabela vendas
 const STATUS_MAP: Record<string, string> = {
   // Compras
@@ -310,8 +316,28 @@ Deno.serve(async (req) => {
   // pode existir lá mesmo sem vir no webhook). Backup 2 = WhatsApp que o
   // comprador preencheu no quiz (quiz_leads, casando por email).
   const telefoneWebhook = comprador?.checkout_phone || comprador?.phone || comprador?.mobile_phone || null;
+  let telefoneFinal = telefoneWebhook;
   if (!telefoneWebhook && status === "aprovada") {
-    await enriquecerTelefone(transactionId, comprador?.email || null);
+    telefoneFinal = await enriquecerTelefone(transactionId, comprador?.email || null);
+  }
+
+  // Boas-vindas automática do MCV: só na aprovação de fato (não em reativação
+  // de assinatura nem em atualização de logística), só produto MCV, só uma vez.
+  const produtoIdStr = String(produto?.id || "");
+  if (
+    status === "aprovada" &&
+    (evento === "PURCHASE_APPROVED" || evento === "PURCHASE_COMPLETE") &&
+    produtoIdStr === PRODUTO_ID_MCV &&
+    telefoneFinal
+  ) {
+    const { data: vendaAtual } = await supabase
+      .from("vendas")
+      .select("whatsapp_boas_vindas_enviado")
+      .eq("hotmart_transaction_id", transactionId)
+      .single();
+    if (!vendaAtual?.whatsapp_boas_vindas_enviado) {
+      await enviarBoasVindasMcv(transactionId, telefoneFinal, comprador?.name || null);
+    }
   }
 
   console.log("Venda salva:", transactionId, status, "ADS:", adsNumero);
@@ -384,7 +410,7 @@ async function buscarWhatsappQuiz(email: string | null): Promise<string | null> 
   }
 }
 
-async function enriquecerTelefone(transactionId: string, email: string | null) {
+async function enriquecerTelefone(transactionId: string, email: string | null): Promise<string | null> {
   let telefone = await buscarTelefoneHotmart(transactionId);
   let fonte = "hotmart_api";
   if (!telefone) {
@@ -393,7 +419,7 @@ async function enriquecerTelefone(transactionId: string, email: string | null) {
   }
   if (!telefone) {
     console.log("Enriquecimento de telefone: nada encontrado (nem Hotmart nem quiz) para", transactionId);
-    return;
+    return null;
   }
   const { error } = await supabase
     .from("vendas")
@@ -403,6 +429,72 @@ async function enriquecerTelefone(transactionId: string, email: string | null) {
     console.error("Erro ao salvar telefone enriquecido:", error.message);
   } else {
     console.log(`Telefone enriquecido (${fonte}):`, transactionId, telefone);
+  }
+  return telefone;
+}
+
+function normalizarTelefoneWhatsapp(raw: string): string {
+  let d = String(raw || "").replace(/\D/g, "");
+  if (d.startsWith("0")) d = d.replace(/^0+/, "");
+  if (!d.startsWith("55")) d = "55" + d;
+  return d;
+}
+
+// Dispara o template boas_vindas_mcv (Utilidade, aprovado no Meta) via
+// Cloud API e registra em whatsapp_mensagens. Idempotente: quem chama já
+// checou vendas.whatsapp_boas_vindas_enviado antes.
+async function enviarBoasVindasMcv(transactionId: string, telefoneRaw: string, nome: string | null) {
+  if (!WHATSAPP_TOKEN || !WHATSAPP_PHONE_NUMBER_ID || !WHATSAPP_GRUPO_LINK_MCV) {
+    console.log("WhatsApp boas-vindas: credenciais ausentes, pulando.");
+    return;
+  }
+  const to = normalizarTelefoneWhatsapp(telefoneRaw);
+  const primeiroNome = (nome || "").trim().split(/\s+/)[0] || "tudo bem";
+
+  try {
+    const r = await fetch(`https://graph.facebook.com/v25.0/${WHATSAPP_PHONE_NUMBER_ID}/messages`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${WHATSAPP_TOKEN}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        messaging_product: "whatsapp",
+        to,
+        type: "template",
+        template: {
+          name: "boas_vindas_mcv",
+          language: { code: "pt_BR" },
+          components: [{
+            type: "body",
+            parameters: [
+              { type: "text", text: primeiroNome },
+              { type: "text", text: WHATSAPP_GRUPO_LINK_MCV },
+            ],
+          }],
+        },
+      }),
+    });
+    const d = await r.json();
+    if (!r.ok || d.error) throw new Error(d.error?.message || `whatsapp ${r.status}`);
+
+    await supabase.from("whatsapp_mensagens").insert({
+      telefone: to,
+      nome,
+      direcao: "saida",
+      tipo: "template",
+      corpo: `[template: boas_vindas_mcv] ${primeiroNome} · ${WHATSAPP_GRUPO_LINK_MCV}`,
+      template_nome: "boas_vindas_mcv",
+      wa_message_id: d?.messages?.[0]?.id || null,
+      status: "enviado",
+      origem: "venda_mcv",
+      raw: d,
+    });
+    await supabase.from("vendas").update({ whatsapp_boas_vindas_enviado: true }).eq("hotmart_transaction_id", transactionId);
+    console.log("Boas-vindas MCV enviada:", transactionId, to);
+  } catch (err) {
+    console.error("Erro ao enviar boas-vindas MCV:", err);
+    await supabase.from("whatsapp_mensagens").insert({
+      telefone: to, nome, direcao: "saida", tipo: "template", corpo: "boas_vindas_mcv",
+      template_nome: "boas_vindas_mcv", status: "falhou", origem: "venda_mcv", raw: { erro: String(err) },
+    });
   }
 }
 

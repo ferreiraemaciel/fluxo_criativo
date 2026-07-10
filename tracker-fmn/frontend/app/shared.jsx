@@ -201,6 +201,7 @@ function Sidebar({ activePage, onNavigate, collapsed = false, onToggle }) {
     { id: 'criativos',  icon: 'clapperboard',      label: 'Anúncios' },
     { id: 'trafego',    icon: 'trending-up',        label: 'Tráfego' },
     { id: 'funis',      icon: 'filter',             label: 'Funis' },
+    { id: 'conversas',  icon: 'message-circle',     label: 'Conversas' },
     { id: 'financeiro', icon: 'wallet',             label: 'Financeiro' },
     { id: 'site',       icon: 'globe',              label: 'Site'       },
   ];

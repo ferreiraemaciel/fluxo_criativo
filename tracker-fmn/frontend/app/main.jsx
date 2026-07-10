@@ -6,7 +6,7 @@
   const DEPS = [
     'LucideIcon','Btn','Badge','CardKPI','SectionCard','Sidebar','TopBar',
     'DashboardScreen','KanbanScreen','FinancialScreen',
-    'IdeiaScreen','OrganicoScreen','TrafficScreen','FunisScreen','SystemScreen','SiteScreen'
+    'IdeiaScreen','OrganicoScreen','TrafficScreen','FunisScreen','SystemScreen','SiteScreen','ConversasScreen'
   ];
   if (DEPS.some(d => !window[d])) { setTimeout(tryMount, 80); return; }
 
@@ -14,7 +14,7 @@
   const {
     Sidebar, TopBar, LucideIcon,
     DashboardScreen, KanbanScreen,
-    FinancialScreen, IdeiaScreen, OrganicoScreen, TrafficScreen, FunisScreen, AutomacaoScreen, SystemScreen, SiteScreen
+    FinancialScreen, IdeiaScreen, OrganicoScreen, TrafficScreen, FunisScreen, AutomacaoScreen, SystemScreen, SiteScreen, ConversasScreen
   } = window;
 
   function PlaceholderScreen({ title, icon }) {
@@ -56,6 +56,7 @@
         case 'criativos':  return <KanbanScreen targetAd={targetAd} onConsumeTarget={() => setTargetAd(null)}/>;
         case 'trafego':    return <TrafficScreen/>;
         case 'funis':      return <FunisScreen onNavigate={navigate}/>;
+        case 'conversas':  return <ConversasScreen/>;
         case 'financeiro': return <FinancialScreen/>;
         case 'site':       return <SiteScreen/>;
         case 'sistema':    return <SystemScreen/>;
