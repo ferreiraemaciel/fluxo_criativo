@@ -224,14 +224,6 @@ function KanbanCard({ card, col, onOpen, onDragStart }) {
           ADS {card.num}
         </span>
         <div style={{ marginLeft:'auto', display:'flex', gap:4, alignItems:'center', flexShrink:0 }}>
-          {card.raw?.meta_video_id && (
-            <div title="Criativo de vídeo já preparado na biblioteca do Meta"
-              style={{ display:'flex', alignItems:'center', gap:2, padding:'1px 5px', borderRadius:999,
-                background:'rgba(56,189,248,.14)', border:'1px solid rgba(56,189,248,.3)', fontSize:9,
-                fontFamily:'Roboto,sans-serif', fontWeight:700, color:'#38bdf8', whiteSpace:'nowrap' }}>
-              Meta ✓
-            </div>
-          )}
           {semPreview && (
             <div title="Sem preview — o criativo ainda não foi otimizado para o R2"
               style={{ display:'flex', alignItems:'center', gap:3, padding:'1px 5px', borderRadius:999,
@@ -1028,39 +1020,45 @@ function MetaIdField({ card, onSaved }) {
 
 
 /* ── AdicionarCriativoBtn ────────────────────────────────────────
-   Fluxo A (preview). Roda o ffmpeg/otimização no Mac via serve.py.
-   Auto: acha a pasta ADS no Drive. Manual: usuário cola a pasta.
+   Importa da pasta do Drive pela cozinha na nuvem (ffmpeg/otimização
+   fora do Mac). "Importar direto" acha a pasta ADS pelo número;
+   "Importar com link" o usuário cola o link da pasta.
 ─────────────────────────────────────────────────────────────────*/
 function AdicionarCriativoBtn({ card, onDone }) {
   const [step, setStep] = useState('idle'); // idle | running | warn
   const [msg, setMsg]   = useState('');
-  const adNum = parseInt(card.num, 10);
+  const cardId = card.raw?.id || card.id;
 
-  async function run(pasta) {
-    const isLocal = ['localhost', '127.0.0.1'].includes(location.hostname);
-    if (!isLocal) {
-      setStep('warn'); setMsg('Precisa estar no Mac "Fotografia é o Meu Negócio"');
-      setTimeout(() => { setStep('idle'); setMsg(''); }, 5000); return;
+  async function run(driveUrl) {
+    setStep('running'); setMsg(driveUrl ? 'Importando da pasta…' : 'Buscando no Drive…');
+    const rota = driveUrl ? '/import-link' : '/import-direto';
+    const payload = driveUrl ? { card_id: cardId, drive_url: driveUrl } : { card_id: cardId };
+    try {
+      const r = await fetch(`${ADS_MEDIA_WORKER}${rota}`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok || d.error) {
+        setStep('warn'); setMsg(d.error || `Erro ${r.status}`);
+        setTimeout(() => { setStep('idle'); setMsg(''); }, 6000); return;
+      }
+      if (d.processando) {
+        // vídeo pesado: a cozinha ainda está otimizando; recarrega em etapas
+        setMsg('Otimizando o vídeo…');
+        [30000, 60000, 120000].forEach(t => setTimeout(() => onDone && onDone(), t));
+        setTimeout(() => { setStep('idle'); setMsg(''); }, 120000);
+        return;
+      }
+      setStep('idle'); setMsg(''); onDone && onDone();
+    } catch {
+      setStep('warn'); setMsg('Cozinha não respondeu');
+      setTimeout(() => { setStep('idle'); setMsg(''); }, 5000);
     }
-    setStep('running'); setMsg('Buscando no Drive…');
-    const qs = `numero=${adNum}` + (pasta ? `&pasta=${encodeURIComponent(pasta)}` : '');
-    try { await fetch(`/api/adicionar-criativo?${qs}`, { method: 'POST' }); }
-    catch { setStep('warn'); setMsg('Servidor local não respondeu'); setTimeout(() => { setStep('idle'); setMsg(''); }, 5000); return; }
-    const poll = setInterval(async () => {
-      try {
-        const s = await (await fetch('/api/adicionar-criativo')).json();
-        if (s.msg) setMsg(s.msg);
-        if (!s.running) {
-          clearInterval(poll);
-          if (s.error) { setStep('warn'); setMsg(s.error); setTimeout(() => { setStep('idle'); setMsg(''); }, 6000); }
-          else { setStep('idle'); setMsg(''); onDone && onDone(); }
-        }
-      } catch { clearInterval(poll); setStep('idle'); setMsg(''); }
-    }, 2000);
   }
 
   function manual() {
-    const p = window.prompt('Cole o link ou ID da pasta do criativo no Drive:');
+    const p = window.prompt('Cole o link da pasta do criativo no Drive:');
     if (p && p.trim()) run(p.trim());
   }
 
@@ -1081,9 +1079,9 @@ function AdicionarCriativoBtn({ card, onDone }) {
       )}
       <div style={{ display:'flex', gap:8 }}>
         <Btn variant="secondary" size="sm" icon="image-plus" style={{ flex:1, justifyContent:'center' }}
-          onClick={() => run(null)}>Adicionar criativo</Btn>
-        <Btn variant="ghost" size="sm" icon="folder" style={{ justifyContent:'center' }}
-          onClick={manual} title="Escolher a pasta do Drive manualmente">Pasta</Btn>
+          onClick={() => run(null)}>Importar direto</Btn>
+        <Btn variant="ghost" size="sm" icon="link" style={{ justifyContent:'center' }}
+          onClick={manual} title="Colar o link da pasta do Drive">Importar com link</Btn>
       </div>
     </div>
   );
@@ -2212,6 +2210,21 @@ function KanbanScreen({ targetAd, onConsumeTarget }) {
   const { cards: CARDS, loading, reload } = useAdsCards();
   const [syncing, setSyncing]   = useState(false);
   const [syncMsg, setSyncMsg]   = useState('');
+  const [importando, setImportando] = useState(false);
+  const [importMsg, setImportMsg]   = useState('');
+
+  // Importa os criativos de todos os cards que têm pasta ADS no Drive (nuvem)
+  async function importarArquivos() {
+    if (importando) return;
+    setImportando(true); setImportMsg('Importando…');
+    try {
+      const r = await fetch(`${ADS_MEDIA_WORKER}/import-geral`, { method: 'POST' });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok || d.error) { setImportMsg(d.error || `Erro ${r.status}`); }
+      else { setImportMsg(`${d.importados} importado(s)${d.falhas ? ` · ${d.falhas} falha(s)` : ''}`); reload(); }
+    } catch { setImportMsg('Cozinha não respondeu'); }
+    setTimeout(() => { setImportando(false); setImportMsg(''); }, 5000);
+  }
   async function handleSync() {
     setSyncing(true);
     const startedAt = new Date().toISOString();
@@ -2372,6 +2385,19 @@ function KanbanScreen({ targetAd, onConsumeTarget }) {
                 justifyContent:'center', background:'rgba(255,255,255,.05)',
                 border:'1px solid var(--app-border)', color:'var(--text-3)', cursor:'pointer' }}>
               <LucideIcon icon="refresh-cw" size={13}/>
+            </button>
+            <button onClick={importarArquivos} disabled={importando}
+              title="Importa os criativos de todos os cards que têm pasta ADS no Drive"
+              style={{ display:'flex', alignItems:'center', gap:6, padding:'6px 13px',
+                borderRadius:7, cursor: importando ? 'default' : 'pointer',
+                background: importando ? 'rgba(56,189,248,.08)' : 'rgba(255,255,255,.06)',
+                border: `1px solid ${importando ? 'rgba(56,189,248,.25)' : 'var(--app-border)'}`,
+                color: importando ? '#38bdf8' : 'var(--text-2)',
+                fontFamily:'Roboto,sans-serif', fontWeight:700, fontSize:11,
+                letterSpacing:'0.03em', transition:'all 150ms' }}>
+              <LucideIcon icon={importando ? 'loader' : 'folder-down'} size={12}
+                style={importando ? { animation:'spin 1s linear infinite' } : {}}/>
+              {importando ? (importMsg || 'Importando…') : 'Importar arquivos'}
             </button>
             {(() => {
               const isLocal = ['localhost','127.0.0.1'].includes(location.hostname);
