@@ -2,6 +2,11 @@
    Tracker FMN — Conversas (caixa de entrada do WhatsApp) v1
    Lista de contatos + thread + resposta manual, dentro da janela de
    serviço de 24h aberta pelo lead. Sem custo por mensagem aqui.
+
+   A aba Métricas reaproveita VizCard/Donut/Bar/PALETTE/nf/SectionCard
+   declarados em funis.jsx (scripts clássicos, mesmo escopo global). Por
+   isso o index.html carrega funis.jsx ANTES de conversas.jsx. Não
+   redeclare esses nomes aqui, senão quebra o Funis.
    ================================================================ */
 const { useState, useEffect, useRef, useMemo } = React;
 const { LucideIcon, Btn, TopBar, CardKPI } = window;
@@ -363,6 +368,21 @@ function MetricasView({ contatosDb, msgs }) {
       else fechadosHumano++;
     }
 
+    // Distribuição por etapa (entre os atendidos no período).
+    const porEtapa = ETAPAS.map(e => ({ val: e.label, n: atendidos.filter(c => (c.etapa || 'lead_novo') === e.id).length }))
+      .filter(x => x.n > 0);
+
+    // Taxa de resposta: dos atendidos, quantos têm pelo menos 1 mensagem de entrada (responderam de volta).
+    const responderam = atendidos.filter(c => (msgsPorTelefone[c.telefone] || []).some(m => m.direcao === 'entrada')).length;
+    const naoResponderam = atendidos.length - responderam;
+
+    // Handoff: entre quem a IA atendeu (tem ao menos 1 mensagem origem=ia), quantos precisaram de humano.
+    const atendidosPelaIa = atendidos.filter(c => (msgsPorTelefone[c.telefone] || []).some(m => m.origem === 'ia'));
+    const comHandoff = atendidosPelaIa.filter(c => c.precisa_humano).length;
+    const semHandoff = atendidosPelaIa.length - comHandoff;
+
+    const conversao = atendidos.length > 0 ? Math.round((fechados.length / atendidos.length) * 100) : 0;
+
     return {
       atendimentos: atendidos.length,
       emAndamento,
@@ -370,6 +390,12 @@ function MetricasView({ contatosDb, msgs }) {
       intervencaoHumana,
       fechadosIa,
       fechadosHumano,
+      conversao,
+      porEtapa,
+      respostaItems: [{ val: 'Respondeu', n: responderam }, { val: 'Não respondeu', n: naoResponderam }].filter(x => x.n > 0),
+      handoffItems: [{ val: 'IA resolveu sozinha', n: semHandoff }, { val: 'Precisou de humano', n: comHandoff }].filter(x => x.n > 0),
+      fechadosPorQuemItems: [{ val: 'Claudinho', n: fechadosIa }, { val: 'Humano', n: fechadosHumano }].filter(x => x.n > 0),
+      atendidosPelaIaTotal: atendidosPelaIa.length,
     };
   }, [contatosDb, msgs, from, to]);
 
@@ -401,12 +427,17 @@ function MetricasView({ contatosDb, msgs }) {
         <CardKPI label="Atendimentos" value={stats.atendimentos} icon="message-circle" />
         <CardKPI label="Em andamento" value={stats.emAndamento} icon="clock" />
         <CardKPI label="Fechados (viraram aluno)" value={stats.fechados} icon="check-circle" accent />
+        <CardKPI label="Taxa de conversão" value={stats.conversao + '%'} icon="target" accent />
         <CardKPI label="Precisando de humano" value={stats.intervencaoHumana} icon="alert-triangle" />
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
-        <CardKPI label="Fechados pelo Claudinho" value={stats.fechadosIa} icon="sparkles" />
-        <CardKPI label="Fechados por humano" value={stats.fechadosHumano} icon="user" />
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 12, marginTop: 12 }}>
+        <VizCard title="Distribuição por etapa" hint="dos atendidos no período" items={stats.porEtapa} total={stats.atendimentos} />
+        <VizCard title="Taxa de resposta ao 1º contato" hint="quem respondeu a mensagem inicial" items={stats.respostaItems} total={stats.atendimentos} />
+        <VizCard title="Fechados por quem" hint="Claudinho x humano, pelo link de checkout" items={stats.fechadosPorQuemItems} total={stats.fechados} />
+        <VizCard title="Taxa de handoff da IA" hint={`de ${nf(stats.atendidosPelaIaTotal)} atendidos pelo Claudinho`} items={stats.handoffItems} total={stats.atendidosPelaIaTotal} />
       </div>
+
       <div style={{ fontSize: 11, color: 'var(--text-3)', fontFamily: 'Roboto,sans-serif', marginTop: 14 }}>
         "Fechados" considera quem virou etapa Aluno dentro do período (pela data da última mudança). A atribuição Claudinho x humano é baseada em quem mandou o link de checkout por último pra esse contato, é uma aproximação, não é rastreamento direto da venda.
       </div>
