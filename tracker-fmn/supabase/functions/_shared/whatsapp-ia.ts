@@ -69,6 +69,9 @@ export async function processarComIA(supabase: any, telefoneRaw: string, nomeLea
 
   const { data: contato } = await supabase.from("whatsapp_contatos").select("*").eq("telefone", telefone).single();
   if (contato?.ia_pausada || contato?.precisa_humano) return;
+  // Por enquanto a IA só atua no fluxo de leads do quiz. Aluno novo (quem
+  // comprou o MCV, etapa forçada por enviarBoasVindasMcv) fica de fora.
+  if (contato?.etapa === "aluno") return;
 
   const { data: historico } = await supabase
     .from("whatsapp_mensagens")
