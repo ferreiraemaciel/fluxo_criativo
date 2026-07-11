@@ -57,7 +57,7 @@ function fmtRef(ref) {
 }
 
 /* ── Mini componentes ────────────────────────────────────────────── */
-function Bar({ pct, color='var(--fmn-gold)', h=3 }) {
+function BarraProgressoSite({ pct, color='var(--fmn-gold)', h=3 }) {
   return (
     <div style={{height:h,borderRadius:2,background:'rgba(255,255,255,.07)',overflow:'hidden'}}>
       <div style={{height:'100%',width:Math.min(pct,100)+'%',borderRadius:2,background:color,transition:'width 350ms'}}/>
@@ -296,7 +296,7 @@ function SiteScreen() {
                           <span style={{fontSize:13,fontFamily:'Roboto,sans-serif',fontWeight:500,
                             color:pg.views>0?'rgba(255,255,255,.85)':'rgba(255,255,255,.3)'}}>{pg.label}</span>
                         </div>
-                        <Bar pct={Math.round((pg.views||0)/maxPageViews*100)}/>
+                        <BarraProgressoSite pct={Math.round((pg.views||0)/maxPageViews*100)}/>
                       </div>
                       <div style={{fontSize:14,fontFamily:'Roboto,sans-serif',fontWeight:700,
                         color:pg.views>0?'var(--fmn-gold)':'rgba(255,255,255,.2)',textAlign:'right'}}>
@@ -372,7 +372,7 @@ function SiteScreen() {
                           <div style={{fontSize:12.5,fontFamily:'Roboto,sans-serif',fontWeight:500,
                             color:'rgba(255,255,255,.82)',whiteSpace:'nowrap',overflow:'hidden',
                             textOverflow:'ellipsis',marginBottom:4}}>{titulo}</div>
-                          <Bar pct={pct}/>
+                          <BarraProgressoSite pct={pct}/>
                         </div>
                         <div style={{fontSize:14,fontFamily:'Roboto,sans-serif',fontWeight:700,
                           color:'var(--fmn-gold)',textAlign:'right'}}>
@@ -421,7 +421,7 @@ function SiteScreen() {
                         <span style={{fontSize:12,fontFamily:'Roboto,sans-serif',color:'rgba(255,255,255,.58)'}}>{l}</span>
                         <span style={{fontSize:12,fontFamily:'Roboto,sans-serif',fontWeight:700,color:c}}>{pct}%</span>
                       </div>
-                      <Bar pct={pct} color={c}/>
+                      <BarraProgressoSite pct={pct} color={c}/>
                     </div>
                   ))}
                 </div>
@@ -449,7 +449,7 @@ function SiteScreen() {
                           </span>
                         </span>
                       </div>
-                      <Bar pct={Math.round(count/maxRef*100)} color="rgba(234,170,65,.5)"/>
+                      <BarraProgressoSite pct={Math.round(count/maxRef*100)} color="rgba(234,170,65,.5)"/>
                     </div>
                   ))}
                 </div>

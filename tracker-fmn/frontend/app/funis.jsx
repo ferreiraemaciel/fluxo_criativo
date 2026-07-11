@@ -368,7 +368,7 @@ function arcPath(cx, cy, R, r, a0, a1) {
   return `M${x0},${y0} A${R},${R} 0 ${large} 1 ${x1},${y1} L${x2},${y2} A${r},${r} 0 ${large} 0 ${x3},${y3} Z`;
 }
 
-function Donut({ items, hov, setHov }) {
+function Donut({ items, hov, setHov, respondentes }) {
   const data = (items || []).slice(0, 8);
   const sum = data.reduce((a, b) => a + b.n, 0) || 1;
   const R = 92, r = 52, cx = 100, cy = 100;
@@ -395,8 +395,8 @@ function Donut({ items, hov, setHov }) {
           {Math.round(s.frac * 100)}%
         </text>
       ))}
-      <text x={cx} y={cy - 6} textAnchor="middle" style={{ fontSize: 17, fontWeight: 900, fontFamily: 'Roboto,sans-serif', fill: 'var(--text-1)' }}>{nf(sum)}</text>
-      <text x={cx} y={cy + 12} textAnchor="middle" style={{ fontSize: 9, fontFamily: 'Roboto,sans-serif', fill: 'var(--text-3)' }}>menções</text>
+      <text x={cx} y={cy - 6} textAnchor="middle" style={{ fontSize: 17, fontWeight: 900, fontFamily: 'Roboto,sans-serif', fill: 'var(--text-1)' }}>{nf(respondentes || sum)}</text>
+      <text x={cx} y={cy + 12} textAnchor="middle" style={{ fontSize: 9, fontFamily: 'Roboto,sans-serif', fill: 'var(--text-3)' }}>respondentes</text>
     </svg>
   );
 }
@@ -425,7 +425,7 @@ function VizCard({ title, hint, items, total }) {
         {!data.length ? <div style={{ padding: '40px 0', textAlign: 'center', color: 'var(--text-3)', fontSize: 11.5 }}>Sem dados no período.</div>
           : view === 'pizza' ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <Donut items={data} hov={hov} setHov={setHov} />
+              <Donut items={data} hov={hov} setHov={setHov} respondentes={base} />
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0 }}>
                 {data.map((it, i) => (
                   <div key={i} onMouseEnter={() => setHov(i)} onMouseLeave={() => setHov(null)}

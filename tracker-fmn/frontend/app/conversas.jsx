@@ -227,7 +227,7 @@ const ETAPAS = [
   { id: 'perdido',     label: 'Perdido',     colorDot: '#f87171', colorBg: 'rgba(248,113,113,.06)', colorBorder: 'rgba(248,113,113,.2)' },
 ];
 
-function KanbanCard({ contato, col, onAbrir, onDragStart, onDropAntes }) {
+function ConvKanbanCard({ contato, col, onAbrir, onDragStart, onDropAntes }) {
   const [hov, setHov] = useState(false);
   const [dragOverTopo, setDragOverTopo] = useState(false);
   return (
@@ -272,7 +272,7 @@ function KanbanCard({ contato, col, onAbrir, onDragStart, onDropAntes }) {
   );
 }
 
-function KanbanColumn({ col, contatos, onAbrir, onDropCard }) {
+function ConvKanbanColumn({ col, contatos, onAbrir, onDropCard }) {
   const [dragOver, setDragOver] = useState(false);
   const cards = contatos.filter(c => (c.etapa || 'lead_novo') === col.id);
   return (
@@ -303,7 +303,7 @@ function KanbanColumn({ col, contatos, onAbrir, onDropCard }) {
       </div>
       <div style={{ flex: 1, overflowY: 'auto', padding: '10px 8px', display: 'flex', flexDirection: 'column', gap: 8 }}>
         {cards.map(c => (
-          <KanbanCard key={c.telefone} contato={c} col={col} onAbrir={() => onAbrir(c.telefone)}
+          <ConvKanbanCard key={c.telefone} contato={c} col={col} onAbrir={() => onAbrir(c.telefone)}
             onDropAntes={() => onDropCard(c.telefone, col.id)} />
         ))}
         {!cards.length && <div style={{ fontSize: 11, color: 'var(--text-3)', fontFamily: 'Roboto,sans-serif', padding: '8px 2px' }}>Vazio.</div>}
@@ -316,7 +316,7 @@ function KanbanView({ contatos, onAbrir, onMover }) {
   return (
     <div style={{ flex: 1, display: 'flex', gap: 12, padding: 14, overflowX: 'auto' }}>
       {ETAPAS.map(col => (
-        <KanbanColumn key={col.id} col={col} contatos={contatos} onAbrir={onAbrir}
+        <ConvKanbanColumn key={col.id} col={col} contatos={contatos} onAbrir={onAbrir}
           onDropCard={(telefone, etapa) => onMover(telefone, etapa)} />
       ))}
     </div>
