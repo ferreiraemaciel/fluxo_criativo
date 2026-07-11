@@ -257,34 +257,50 @@ Deno.serve(async (req) => {
   );
 });
 
+// Antes só gravava "hoje" e nunca revisitava. O Meta revisa o gasto de um
+// dia por alguns dias depois (janela de atribuição), então o valor gravado
+// no primeiro sync ficava congelado, mais baixo que o valor final real —
+// por isso "Vendas Aprovadas" batia (é dado nosso) mas "Gasto do período"
+// não (é uma foto velha do Meta). Agora revisita os últimos 4 dias a cada
+// sync, pra capturar essas revisões automaticamente.
 async function sincronizarGastoDiarioHoje() {
   const hoje = hojeBrt();
+  const desde = (() => {
+    const d = new Date(hoje + "T00:00:00Z");
+    d.setDate(d.getDate() - 3);
+    return d.toISOString().split("T")[0];
+  })();
   const campos = "spend,impressions,clicks,actions";
   const qs = new URLSearchParams({
     fields: campos,
-    time_range: JSON.stringify({ since: hoje, until: hoje }),
+    time_range: JSON.stringify({ since: desde, until: hoje }),
+    time_increment: "1",
     access_token: META_TOKEN,
   });
   try {
     const res  = await fetch(`${GRAPH_BASE}/act_${AD_ACCOUNT_ID}/insights?${qs}`);
     const json = await res.json();
-    const raw  = json?.data?.[0];
-    if (!raw) return;
+    const dias = json?.data || [];
+    if (!dias.length) return;
 
-    const gasto       = Number(raw.spend || 0);
-    const cliques     = Number(raw.clicks || 0);
-    const compras     = Number((raw.actions || []).find((a: any) => a.action_type === "purchase")?.value || 0);
-    const lpViews     = Number((raw.actions || []).find((a: any) => a.action_type === "landing_page_view")?.value || 0);
-    const initCheck   = Number((raw.actions || []).find((a: any) => a.action_type === "initiate_checkout")?.value || 0);
+    for (const raw of dias) {
+      const dataDia    = raw.date_start;
+      if (!dataDia) continue;
+      const gasto       = Number(raw.spend || 0);
+      const cliques     = Number(raw.clicks || 0);
+      const compras     = Number((raw.actions || []).find((a: any) => a.action_type === "purchase")?.value || 0);
+      const lpViews     = Number((raw.actions || []).find((a: any) => a.action_type === "landing_page_view")?.value || 0);
+      const initCheck   = Number((raw.actions || []).find((a: any) => a.action_type === "initiate_checkout")?.value || 0);
 
-    await supabase.from("gasto_diario").upsert({
-      data: hoje,
-      gasto,
-      compras,
-      cliques,
-      lp_views: lpViews,
-      initiate_checkout: initCheck,
-    }, { onConflict: "data" });
+      await supabase.from("gasto_diario").upsert({
+        data: dataDia,
+        gasto,
+        compras,
+        cliques,
+        lp_views: lpViews,
+        initiate_checkout: initCheck,
+      }, { onConflict: "data" });
+    }
   } catch (err) {
     console.error("Erro ao sincronizar gasto_diario:", String(err));
   }

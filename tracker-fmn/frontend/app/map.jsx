@@ -26,6 +26,7 @@ function useMapData(from, to, refreshKey) {
   const [byState, setByState] = React.useState({});
   const [citiesByState, setCitiesByState] = React.useState({});
   const [total, setTotal] = React.useState(0);
+  const [semEstado, setSemEstado] = React.useState(0);
   React.useEffect(() => {
     if (!window.db) return;
     async function load() {
@@ -42,11 +43,12 @@ function useMapData(from, to, refreshKey) {
         setByState(d.byState || {});
         setCitiesByState(d.citiesByState || {});
         setTotal(d.total || 0);
+        setSemEstado(d.semEstado || 0);
       } catch (e) { console.error('mapa-publico', e); }
     }
     load();
   }, [from, to, refreshKey]);
-  return { byState, citiesByState, total };
+  return { byState, citiesByState, total, semEstado };
 }
 
 function BrazilD3Map({ byState, citiesByState, total }) {
@@ -184,11 +186,15 @@ function SalesMapWidget({ from, to }) {
   // estado/cidade já vem automático da Hotmart (webhook em tempo real e o
   // backfill do hotmart-sync), então esse import manual não faz mais sentido.
   var data = useMapData(from, to, 0);
-  var byState = data.byState; var citiesByState = data.citiesByState; var total = data.total;
+  var byState = data.byState; var citiesByState = data.citiesByState; var total = data.total; var semEstado = data.semEstado;
 
   return (
     <div style={{display:'flex', flexDirection:'column', height:'100%', minHeight:360}}>
-      <div style={{display:'flex', alignItems:'center', justifyContent:'flex-end', flexShrink:0}}>
+      <div style={{display:'flex', alignItems:'baseline', justifyContent:'flex-end', gap:8, flexShrink:0}}>
+        {semEstado > 0 && (
+          <span title="Vendas aprovadas sem estado identificado, não entram no mapa" style={{fontSize:10.5,
+            fontFamily:'Roboto,sans-serif', color:'var(--text-3)'}}>+{semEstado} sem estado</span>
+        )}
         <span style={{fontSize:28, fontFamily:'Roboto,sans-serif', fontWeight:900,
           color:'var(--fmn-gold)', lineHeight:1, letterSpacing:'-0.02em'}}>{total}</span>
       </div>

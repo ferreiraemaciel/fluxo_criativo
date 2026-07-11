@@ -6,27 +6,15 @@ const { CardKPI, SectionCard, TopBar, LucideIcon, Badge } = window;
 // FotoMap captured at render time to avoid race with map.jsx loading
 
 /* ── Helpers ─────────────────────────────────────────────────────*/
-// Normaliza utm_source (que às vezes vem com a string UTM inteira concatenada)
-// para um rótulo legível.
+// Simplificado a pedido: só duas fontes possíveis. Qualquer utm_source
+// rastreado (Ads, Instagram, Google, TikTok, WhatsApp/IA etc.) conta como
+// Tráfego. Sem utm_source (venda direta/não rastreada) conta como Orgânico.
 function normalizeSource(raw) {
   if (!raw || !String(raw).trim()) return 'Orgânico';
   const s = String(raw).toLowerCase();
-  if (s.includes('fb') || s.includes('facebook') || s.includes('meta')) return 'Facebook Ads';
-  if (s.includes('ig') || s.includes('instagram'))                       return 'Instagram';
-  if (s.includes('google') || s.includes('gads') || s.includes('adwords')) return 'Google Ads';
-  if (s.includes('youtube') || s.includes('yt'))                          return 'YouTube';
-  if (s.includes('tiktok') || s.includes('tt'))                           return 'TikTok';
-  if (s.includes('whatsapp') || s.includes('wpp') || s.includes('zap'))   return 'WhatsApp';
-  if (s.includes('email') || s.includes('mail'))                          return 'E-mail';
-  if (s.includes('organic') || s.includes('orgânico'))                    return 'Orgânico';
-  // valor curto e limpo: usa como veio (capitalizado); senão, marca como Outros
-  const clean = String(raw).trim();
-  if (clean.length <= 20 && /^[\w\s\-.]+$/.test(clean)) {
-    return clean.charAt(0).toUpperCase() + clean.slice(1);
-  }
-  return 'Outros';
+  if (s.includes('organic') || s.includes('orgânico')) return 'Orgânico';
+  return 'Tráfego';
 }
-
 const fmtCur = window.fmtBRL;
 const fmt = n => window.fmtBRL(n);
 
