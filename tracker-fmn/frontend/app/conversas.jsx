@@ -127,8 +127,10 @@ function Bolha({ msg }) {
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 4, marginTop: 3 }}>
           <span style={{ fontSize: 9.5, color: 'var(--text-3)' }}>{horaCurta(msg.created_at)}</span>
           {isSaida && (
-            <LucideIcon icon={msg.status === 'lido' ? 'check-check' : msg.status === 'falhou' ? 'x' : 'check'}
-              size={11} style={{ color: msg.status === 'lido' ? 'var(--clr-info)' : msg.status === 'falhou' ? 'var(--clr-neg)' : 'var(--text-3)' }} />
+            <LucideIcon
+              icon={msg.status === 'falhou' ? 'x' : (msg.status === 'entregue' || msg.status === 'lido') ? 'check-check' : 'check'}
+              size={11}
+              style={{ color: msg.status === 'falhou' ? 'var(--clr-neg)' : msg.status === 'lido' ? 'var(--fmn-gold)' : 'var(--text-3)' }} />
           )}
         </div>
       </div>
@@ -512,9 +514,9 @@ function ConversasScreen() {
 
   function carregar() {
     if (!window.db) return;
-    window.db.from('whatsapp_mensagens').select('*').order('created_at', { ascending: false }).limit(1000)
+    window.db.from('whatsapp_mensagens').select('*').order('created_at', { ascending: false }).limit(5000)
       .then(({ data, error }) => { if (!error) setMsgs(data || []); setLoading(false); });
-    window.db.from('whatsapp_contatos').select('*')
+    window.db.from('whatsapp_contatos').select('*').order('updated_at', { ascending: false }).limit(5000)
       .then(({ data, error }) => { if (!error) setContatosDb(data || []); });
     window.db.from('app_config').select('valor').eq('chave', 'whatsapp_ia_ativa').single()
       .then(({ data }) => { if (data) setIaAtivaGlobal(data.valor === true); });
@@ -535,14 +537,14 @@ function ConversasScreen() {
     if (window.db) window.db.from('app_config').update({ valor: novoValor }).eq('chave', 'whatsapp_ia_ativa').then(() => carregar());
   }
 
+  // Reativar o Claudinho numa conversa sempre limpa os dois sinais de "parado"
+  // ao mesmo tempo (pausa manual e pedido de humano da IA). O ponto de atenção
+  // só some quando o usuário reativa por aqui, nunca só por mandar uma
+  // resposta manual com o Claudinho ainda pausado.
   function alternarIaContato(telefone, pausar) {
-    setContatosDb(prev => prev.map(c => c.telefone === telefone ? { ...c, ia_pausada: pausar } : c));
-    if (window.db) window.db.from('whatsapp_contatos').upsert({ telefone, ia_pausada: pausar }, { onConflict: 'telefone' }).then(() => carregar());
-  }
-
-  function liberarHumano(telefone) {
-    setContatosDb(prev => prev.map(c => c.telefone === telefone ? { ...c, precisa_humano: false } : c));
-    if (window.db) window.db.from('whatsapp_contatos').update({ precisa_humano: false }).eq('telefone', telefone).then(() => carregar());
+    const patch = pausar ? { ia_pausada: true } : { ia_pausada: false, precisa_humano: false };
+    setContatosDb(prev => prev.map(c => c.telefone === telefone ? { ...c, ...patch } : c));
+    if (window.db) window.db.from('whatsapp_contatos').upsert({ telefone, ...patch }, { onConflict: 'telefone' }).then(() => carregar());
   }
 
   const contatos = useMemo(() => {
@@ -648,14 +650,14 @@ function ConversasScreen() {
         <MetricasView contatosDb={contatosDb} msgs={msgs} />
       )}
       {modo === 'lista' && (
-      <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
-        <div style={{ width: 300, flexShrink: 0, borderRight: '1px solid var(--app-border)', display: 'flex', flexDirection: 'column' }}>
-          <div style={{ padding: 10, borderBottom: '1px solid var(--app-border)' }}>
+      <div style={{ flex: 1, display: 'flex', overflow: 'hidden', minHeight: 0 }}>
+        <div style={{ width: 300, flexShrink: 0, borderRight: '1px solid var(--app-border)', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+          <div style={{ padding: 10, borderBottom: '1px solid var(--app-border)', flexShrink: 0 }}>
             <input value={busca} onChange={e => setBusca(e.target.value)} placeholder="Buscar contato..."
               style={{ width: '100%', boxSizing: 'border-box', background: 'rgba(255,255,255,.04)', border: '1px solid var(--app-border)',
                 borderRadius: 8, padding: '7px 10px', fontSize: 12.5, color: 'var(--text-1)', fontFamily: 'Roboto,sans-serif', outline: 'none' }} />
           </div>
-          <div style={{ flex: 1, overflowY: 'auto' }}>
+          <div style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
             {loading && <div style={{ padding: 20, textAlign: 'center', color: 'var(--text-3)', fontSize: 12 }}>Carregando...</div>}
             {!loading && !contatos.length && <div style={{ padding: 20, textAlign: 'center', color: 'var(--text-3)', fontSize: 12 }}>Nenhuma conversa ainda.</div>}
             {contatos.map(c => (
@@ -683,12 +685,14 @@ function ConversasScreen() {
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   {contatoAtivo?.precisaHumano && (
-                    <Btn size="sm" variant="danger" onClick={() => liberarHumano(selecionado)}>Precisa de humano · liberar IA</Btn>
+                    <span title="A IA pediu ajuda de um humano nessa conversa" style={{ fontSize: 10.5, fontFamily: 'Roboto,sans-serif',
+                      fontWeight: 800, color: '#f87171', background: 'rgba(248,113,113,.14)', border: '1px solid rgba(248,113,113,.3)',
+                      borderRadius: 999, padding: '3px 9px' }}>● precisa de humano</span>
                   )}
                   {iaAtivaGlobal && (
-                    <Btn size="sm" variant={contatoAtivo?.iaPausada ? 'ghost' : 'secondary'}
-                      onClick={() => alternarIaContato(selecionado, !contatoAtivo?.iaPausada)}>
-                      {contatoAtivo?.iaPausada ? 'IA pausada aqui' : 'IA ativa aqui'}
+                    <Btn size="sm" variant={(contatoAtivo?.iaPausada || contatoAtivo?.precisaHumano) ? 'secondary' : 'ghost'}
+                      onClick={() => alternarIaContato(selecionado, !(contatoAtivo?.iaPausada || contatoAtivo?.precisaHumano))}>
+                      {(contatoAtivo?.iaPausada || contatoAtivo?.precisaHumano) ? 'Claudinho pausado aqui' : 'Claudinho ativo aqui'}
                     </Btn>
                   )}
                   <div style={{

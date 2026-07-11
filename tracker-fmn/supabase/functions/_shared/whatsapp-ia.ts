@@ -69,6 +69,10 @@ export async function processarComIA(supabase: any, telefoneRaw: string, nomeLea
 
   const { data: contato } = await supabase.from("whatsapp_contatos").select("*").eq("telefone", telefone).single();
   if (contato?.ia_pausada || contato?.precisa_humano) return;
+  // Escopo fino: só quem foi explicitamente marcado como elegível (hoje, o
+  // lote de teste). O toggle geral liga o motor, isso aqui decide quem
+  // especificamente a IA pode responder — evita repetir o "ligou pra todo mundo".
+  if (!contato?.ia_elegivel) return;
   // Por enquanto a IA só atua no fluxo de leads do quiz. Aluno novo (quem
   // comprou o MCV, etapa forçada por enviarBoasVindasMcv) fica de fora.
   if (contato?.etapa === "aluno") return;
