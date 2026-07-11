@@ -496,6 +496,13 @@ function MetricasView({ contatosDb, msgs }) {
   );
 }
 
+/* Mensagens prontas pro vendedor humano mandar em 1 clique, dentro da janela aberta. */
+const LINK_CHECKOUT_MCV = 'https://pay.hotmart.com/W87258826R?checkoutMode=10&utm_source=whatsapp&utm_medium=manual&utm_campaign=atendimento';
+const MENSAGENS_PRONTAS = [
+  { id: 'checkout', label: 'Link de checkout (MCV)', icone: 'link',
+    texto: `Segue o link pra garantir o seu: ${LINK_CHECKOUT_MCV}` },
+];
+
 function ConversasScreen() {
   const [msgs, setMsgs]           = useState([]);
   const [contatosDb, setContatosDb] = useState([]);
@@ -506,6 +513,8 @@ function ConversasScreen() {
   const [busca, setBusca]         = useState('');
   const [modo, setModo]           = useState('lista'); // lista | kanban
   const [modalNovoContato, setModalNovoContato] = useState(false);
+  const [prontasAberto, setProntasAberto] = useState(false);
+  const [enviandoPronta, setEnviandoPronta] = useState(null);
   const [tick, setTick]           = useState(0); // força re-render pro contador de tempo
   const [iaAtivaGlobal, setIaAtivaGlobal] = useState(false);
   const scrollRef = useRef(null);
@@ -616,6 +625,25 @@ function ConversasScreen() {
     }
   }
 
+  async function enviarPronta(item) {
+    if (!selecionado || enviandoPronta) return;
+    setEnviandoPronta(item.id);
+    try {
+      const r = await fetch(`${SUPA_URL}/functions/v1/whatsapp-enviar`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPA_KEY}` },
+        body: JSON.stringify({ action: 'texto', to: selecionado, nome: contatoAtivo?.nome, texto: item.texto, origem: 'manual' }),
+      });
+      const d = await r.json();
+      if (!r.ok || d.error) throw new Error(d.error || 'falha no envio');
+      carregar();
+    } catch (e) {
+      alert('Erro ao enviar: ' + e.message + (contatoAtivo && !contatoAtivo.janelaAberta ? '\n\nA janela de 24h desse contato está fechada, precisa de um template aprovado pra reabrir.' : ''));
+    } finally {
+      setEnviandoPronta(null);
+    }
+  }
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <TopBar title="Conversas" actions={
@@ -708,8 +736,41 @@ function ConversasScreen() {
                 </div>
               </div>
 
-              <div ref={scrollRef} style={{ flex: 1, overflowY: 'auto', padding: '14px 18px' }}>
-                {thread.map(m => <Bolha key={m.id} msg={m} />)}
+              <div style={{ flex: 1, display: 'flex', overflow: 'hidden', minHeight: 0 }}>
+                <div ref={scrollRef} style={{ flex: 1, overflowY: 'auto', padding: '14px 18px' }}>
+                  {thread.map(m => <Bolha key={m.id} msg={m} />)}
+                </div>
+
+                {prontasAberto && (
+                  <div style={{ width: 260, flexShrink: 0, borderLeft: '1px solid var(--app-border)',
+                    display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                    <div style={{ padding: '10px 14px', borderBottom: '1px solid var(--app-border)', flexShrink: 0 }}>
+                      <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text-1)', fontFamily: 'Roboto,sans-serif' }}>Mensagens prontas</div>
+                      <div style={{ fontSize: 10, color: 'var(--text-3)', fontFamily: 'Roboto,sans-serif', marginTop: 2 }}>1 clique pra mandar</div>
+                    </div>
+                    <div style={{ flex: 1, overflowY: 'auto', padding: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      {MENSAGENS_PRONTAS.map(item => (
+                        <button key={item.id} onClick={() => enviarPronta(item)}
+                          disabled={!contatoAtivo?.janelaAberta || enviandoPronta === item.id}
+                          style={{ textAlign: 'left', cursor: contatoAtivo?.janelaAberta ? 'pointer' : 'not-allowed',
+                            background: 'rgba(255,255,255,.04)', border: '1px solid var(--app-border)', borderRadius: 9,
+                            padding: '9px 10px', display: 'flex', flexDirection: 'column', gap: 4,
+                            opacity: contatoAtivo?.janelaAberta ? 1 : .5 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <LucideIcon icon={item.icone} size={12} style={{ color: 'var(--fmn-gold)' }} />
+                            <span style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--text-1)', fontFamily: 'Roboto,sans-serif' }}>
+                              {enviandoPronta === item.id ? 'Enviando...' : item.label}
+                            </span>
+                          </div>
+                          <span style={{ fontSize: 10, color: 'var(--text-3)', fontFamily: 'Roboto,sans-serif', lineHeight: 1.3,
+                            overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
+                            {item.texto}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div style={{ padding: 12, borderTop: '1px solid var(--app-border)', display: 'flex', gap: 8 }}>
@@ -719,6 +780,10 @@ function ConversasScreen() {
                   disabled={!contatoAtivo?.janelaAberta}
                   style={{ flex: 1, boxSizing: 'border-box', background: 'rgba(255,255,255,.04)', border: '1px solid var(--app-border)',
                     borderRadius: 8, padding: '9px 12px', fontSize: 13, color: 'var(--text-1)', fontFamily: 'Roboto,sans-serif', outline: 'none' }} />
+                <Btn variant={prontasAberto ? 'secondary' : 'ghost'} title="Mensagens prontas"
+                  onClick={() => setProntasAberto(p => !p)}>
+                  <LucideIcon icon="zap" size={14} />
+                </Btn>
                 <Btn onClick={enviar} disabled={!contatoAtivo?.janelaAberta || enviando || !texto.trim()}>
                   {enviando ? 'Enviando...' : 'Enviar'}
                 </Btn>
