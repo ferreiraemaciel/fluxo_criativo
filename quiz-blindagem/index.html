@@ -263,9 +263,7 @@ function calcRisco(){
   else if (answers.tipo_contrato_atual) s += 1;
   if (s >= 8)  return { nivel:'Altíssimo', status:'DESPROTEGIDO', pos:96 };
   if (s >= 6)  return { nivel:'Alto',      status:'VULNERÁVEL',   pos:75 };
-  if (s >= 4)  return { nivel:'Médio',     status:'PARCIAL',      pos:50 };
-  if (s >= 2)  return { nivel:'Baixo',     status:'QUASE LÁ',     pos:28 };
-  return { nivel:'Baixíssimo', status:'PROTEGIDO', pos:6 };
+  return { nivel:'Médio', status:'PARCIAL', pos:50 };
 }
 
 /* ---- salvar no Supabase (progressivo) ---- */
@@ -550,8 +548,6 @@ function rResult(){
     'DESPROTEGIDO': `O ${perfil} sem contrato está completamente vulnerável, correndo o risco de:`,
     'VULNERÁVEL':   `O ${perfil} já usa contratos, mas ainda não está protegido como deveria, correndo o risco de:`,
     'PARCIAL':      `O ${perfil} tem proteção parcial, mas ainda corre o risco de:`,
-    'QUASE LÁ':     `O ${perfil} está quase protegido, mas pode se deparar com:`,
-    'PROTEGIDO':    `Mesmo o ${perfil} bem protegido pode se deparar com:`,
   };
   stage.appendChild(el(`<h1 style="margin-top:24px;font-size:18px">${riskPhrases[r.status]||''}</h1>`));
 

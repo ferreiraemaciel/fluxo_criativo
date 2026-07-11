@@ -9,6 +9,7 @@
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { upsertContato } from "../_shared/whatsapp-contatos.ts";
+import { renderCorpoTemplate } from "../_shared/whatsapp-templates.ts";
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
@@ -79,12 +80,6 @@ async function enviarTexto(to: string, texto: string) {
   });
 }
 
-function montarCorpoLegivel(templateNome: string, parametros: string[]): string {
-  // Guarda um texto legível pra caixa de entrada, sem precisar buscar o
-  // template completo no Meta toda vez que renderiza a lista.
-  return `[template: ${templateNome}] ${parametros.join(" · ")}`;
-}
-
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: CORS });
   if (req.method !== "POST") return json({ error: "método não suportado" }, 405);
@@ -115,7 +110,7 @@ Deno.serve(async (req) => {
         nome: body.nome || null,
         direcao: "saida",
         tipo: "template",
-        corpo: montarCorpoLegivel(templateNome, parametros),
+        corpo: renderCorpoTemplate(templateNome, parametros),
         template_nome: templateNome,
         wa_message_id: resp?.messages?.[0]?.id || null,
         status: "enviado",

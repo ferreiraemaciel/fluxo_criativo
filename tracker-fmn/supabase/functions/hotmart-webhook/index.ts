@@ -3,6 +3,7 @@
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { upsertContato } from "../_shared/whatsapp-contatos.ts";
+import { renderCorpoTemplate } from "../_shared/whatsapp-templates.ts";
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
@@ -481,7 +482,7 @@ async function enviarBoasVindasMcv(transactionId: string, telefoneRaw: string, n
       nome,
       direcao: "saida",
       tipo: "template",
-      corpo: `[template: boas_vindas_mcv] ${primeiroNome} · ${WHATSAPP_GRUPO_LINK_MCV}`,
+      corpo: renderCorpoTemplate("boas_vindas_mcv", [primeiroNome, WHATSAPP_GRUPO_LINK_MCV]),
       template_nome: "boas_vindas_mcv",
       wa_message_id: d?.messages?.[0]?.id || null,
       status: "enviado",
