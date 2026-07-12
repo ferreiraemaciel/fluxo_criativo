@@ -396,8 +396,10 @@ function MCell({ m, col, row, onHover }) {
 function MetricHoverPopover({ hover }) {
   if (!hover) return null;
   const { row, col, rect } = hover;
-  const left = Math.min(rect.left - 40, window.innerWidth - 172);
-  const top  = rect.bottom + 6;
+  const WIDTH = 152, ALTURA_EST = 150, MARGEM = 8;
+  const left = Math.min(Math.max(rect.left - 40, MARGEM), window.innerWidth - WIDTH - MARGEM);
+  const cabeAbaixo = rect.bottom + 6 + ALTURA_EST <= window.innerHeight - MARGEM;
+  const top = cabeAbaixo ? rect.bottom + 6 : Math.max(MARGEM, rect.top - 6 - ALTURA_EST);
   return (
     <div style={{ position:'fixed', left, top, zIndex:850, width:152, pointerEvents:'none',
       background:'var(--app-surface)', border:'1px solid var(--app-border-2)', borderRadius:10,

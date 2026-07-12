@@ -2,6 +2,7 @@
 // de fato, depois de checar se o lead já comprou).
 import { upsertContato } from "./whatsapp-contatos.ts";
 import { renderCorpoTemplate } from "./whatsapp-templates.ts";
+import { custoTemplateUsd } from "./whatsapp-custos.ts";
 
 // Ordem de prioridade das dores (pergunta "situacoes" do quiz) pro {{3}} do
 // template de resultado: mais peso jurídico/financeiro primeiro. Usa a de
@@ -28,7 +29,20 @@ export function normalizarTelefoneWhatsapp(raw: string): string {
   let d = String(raw || "").replace(/\D/g, "");
   if (d.startsWith("0")) d = d.replace(/^0+/, "");
   if (!d.startsWith("55")) d = "55" + d;
+  const resto = d.slice(2);
+  if (resto.length === 10) d = "55" + resto.slice(0, 2) + "9" + resto.slice(2);
   return d;
+}
+
+// Detecta número visivelmente falso: tudo repetido (00000...), sequência
+// (123456...) ou tamanho fora do padrão BR (55 + DDD + 8/9 dígitos = 12/13).
+export function telefonePareceSpam(raw: string): boolean {
+  const d = String(raw || "").replace(/\D/g, "");
+  if (d.length < 10 || d.length > 13) return true;
+  const semDdi = d.startsWith("55") ? d.slice(2) : d;
+  if (/^(\d)\1+$/.test(semDdi)) return true;
+  if (/^0123456789|^1234567890|^9876543210/.test(semDdi)) return true;
+  return false;
 }
 
 export async function enviarResultadoQuizWhatsapp(
@@ -73,11 +87,13 @@ export async function enviarResultadoQuizWhatsapp(
     const d = await r.json();
     if (!r.ok || d.error) throw new Error(d.error?.message || `whatsapp ${r.status}`);
 
+    const custo = await custoTemplateUsd(sb, "utility");
     await sb.from("whatsapp_mensagens").insert({
       telefone: to, nome: nome, direcao: "saida", tipo: "template",
       corpo: renderCorpoTemplate("resultado_quiz_mcv", [primeiroNome, nivelRisco, dor]),
       template_nome: "resultado_quiz_mcv",
       wa_message_id: d?.messages?.[0]?.id || null, status: "enviado", origem: "quiz", raw: d,
+      custo_usd: custo,
     });
     await sb.from("quiz_leads").update({ whatsapp_resultado_enviado: true }).eq("funnel_slug", funnelSlug).eq("code", code);
     await upsertContato(sb, to, nome, "lead_novo");

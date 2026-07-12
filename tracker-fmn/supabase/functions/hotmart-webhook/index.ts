@@ -4,6 +4,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { upsertContato } from "../_shared/whatsapp-contatos.ts";
 import { renderCorpoTemplate } from "../_shared/whatsapp-templates.ts";
+import { custoTemplateUsd } from "../_shared/whatsapp-custos.ts";
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
@@ -477,6 +478,7 @@ async function enviarBoasVindasMcv(transactionId: string, telefoneRaw: string, n
     const d = await r.json();
     if (!r.ok || d.error) throw new Error(d.error?.message || `whatsapp ${r.status}`);
 
+    const custo = await custoTemplateUsd(supabase, "utility");
     await supabase.from("whatsapp_mensagens").insert({
       telefone: to,
       nome,
@@ -488,6 +490,7 @@ async function enviarBoasVindasMcv(transactionId: string, telefoneRaw: string, n
       status: "enviado",
       origem: "venda_mcv",
       raw: d,
+      custo_usd: custo,
     });
     await supabase.from("vendas").update({ whatsapp_boas_vindas_enviado: true }).eq("hotmart_transaction_id", transactionId);
     await upsertContato(supabase, to, nome, "aluno", { forcarEtapa: true });

@@ -38,6 +38,14 @@ function janelaAberta(ultimaEntrada) {
   return (Date.now() - new Date(ultimaEntrada).getTime()) < JANELA_MS;
 }
 
+/* Formata custo em USD junto com a conversão em BRL pela cotação oficial (PTAX/BCB). */
+function fmtUsdBrl(usd, cambio, casas = 2) {
+  const emUsd = 'US$ ' + Number(usd || 0).toFixed(casas);
+  if (!cambio?.usdBrl) return emUsd;
+  const brl = Number(usd || 0) * cambio.usdBrl;
+  return `${emUsd} (R$ ${brl.toFixed(casas)})`;
+}
+
 /* Quanto falta da janela, em texto curto. null se fechada/sem entrada. */
 function tempoRestanteJanela(ultimaEntrada) {
   if (!ultimaEntrada) return null;
@@ -46,6 +54,19 @@ function tempoRestanteJanela(ultimaEntrada) {
   const h = Math.floor(restanteMs / 3600000);
   const m = Math.floor((restanteMs % 3600000) / 60000);
   return h > 0 ? `${h}h ${m}min restantes` : `${m}min restantes`;
+}
+
+/* Quanto falta pra rotina de arquivamento automático marcar como "Perdido"
+   (mesma janela de 24h, mesma referência que o whatsapp-arquivar-perdidos usa
+   no backend). null se já passou (arquivamento é só questão de minutos até o
+   próximo ciclo do cron) ou se não há referência nenhuma. */
+function tempoAteArquivar(referencia) {
+  if (!referencia) return null;
+  const restanteMs = JANELA_MS - (Date.now() - new Date(referencia).getTime());
+  if (restanteMs <= 0) return null;
+  const h = Math.floor(restanteMs / 3600000);
+  const m = Math.floor((restanteMs % 3600000) / 60000);
+  return h > 0 ? `${h}h ${m}min` : `${m}min`;
 }
 
 function ContatoItem({ contato, ativo, onClick }) {
@@ -143,6 +164,42 @@ const TEMPLATES_DISPONIVEIS = [
   { nome: 'boas_vindas_mcv', label: 'Boas-vindas MCV', campos: ['Nome do contato', 'Link do grupo'] },
   { nome: 'resultado_quiz_mcv', label: 'Resultado do quiz', campos: ['Nome do contato', 'Nível de risco', 'Dor prioritária'] },
 ];
+
+function PromptClaudinhoModal({ onClose, SUPA_URL, SUPA_KEY }) {
+  const [prompt, setPrompt] = useState(null);
+  const [erro, setErro] = useState(null);
+
+  useEffect(() => {
+    fetch(`${SUPA_URL}/functions/v1/whatsapp-prompt-atual`, { headers: { Authorization: `Bearer ${SUPA_KEY}` } })
+      .then(r => r.json())
+      .then(d => { if (d.error) setErro(d.error); else setPrompt(d.prompt); })
+      .catch(e => setErro(String(e)));
+  }, []);
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.6)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+      onClick={onClose}>
+      <div onClick={e => e.stopPropagation()} style={{ width: 720, maxWidth: '92vw', maxHeight: '85vh', display: 'flex', flexDirection: 'column',
+        background: 'var(--app-surface)', border: '1px solid var(--app-border)', borderRadius: 12, overflow: 'hidden' }}>
+        <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--app-border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
+          <div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-1)', fontFamily: 'Roboto,sans-serif' }}>Prompt atual do Claudinho</div>
+            <div style={{ fontSize: 11, color: 'var(--text-3)', fontFamily: 'Roboto,sans-serif' }}>Só leitura. Pra mudar, é preciso alterar o código e fazer novo deploy.</div>
+          </div>
+          <Btn variant="ghost" onClick={onClose}><LucideIcon icon="x" size={16} /></Btn>
+        </div>
+        <div style={{ flex: 1, overflowY: 'auto', padding: 18 }}>
+          {erro && <div style={{ color: 'var(--clr-neg)', fontSize: 13, fontFamily: 'Roboto,sans-serif' }}>Erro ao carregar: {erro}</div>}
+          {!erro && !prompt && <div style={{ color: 'var(--text-3)', fontSize: 13, fontFamily: 'Roboto,sans-serif' }}>Carregando...</div>}
+          {prompt && (
+            <pre style={{ margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontSize: 12.5, lineHeight: 1.6,
+              color: 'var(--text-2)', fontFamily: 'monospace' }}>{prompt}</pre>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function NovoContatoModal({ onClose, onEnviado, SUPA_URL, SUPA_KEY }) {
   const [telefone, setTelefone]   = useState('');
@@ -314,10 +371,10 @@ function ConvKanbanColumn({ col, contatos, onAbrir, onDropCard }) {
   );
 }
 
-function KanbanView({ contatos, onAbrir, onMover }) {
+function KanbanView({ contatos, onAbrir, onMover, etapas }) {
   return (
     <div style={{ flex: 1, display: 'flex', gap: 12, padding: 14, overflowX: 'auto' }}>
-      {ETAPAS.map(col => (
+      {(etapas || ETAPAS).map(col => (
         <ConvKanbanColumn key={col.id} col={col} contatos={contatos} onAbrir={onAbrir}
           onDropCard={(telefone, etapa) => onMover(telefone, etapa)} />
       ))}
@@ -338,12 +395,38 @@ function MetricasView({ contatosDb, msgs }) {
   const [from, setFrom] = useState(periodoRapido(30).from);
   const [to, setTo]     = useState(periodoRapido(30).to);
   const [quizLeads, setQuizLeads] = useState([]);
+  const [custoRealMeta, setCustoRealMeta] = useState(null);
+  const [cambio, setCambio] = useState(null);
+
+  // Cotação oficial (PTAX/BCB) pro fim do período selecionado, pra converter
+  // os custos em dólar pra reais.
+  useEffect(() => {
+    const SUPA_URL = window.db?.supabaseUrl || '';
+    const SUPA_KEY = window.db?.supabaseKey  || '';
+    if (!SUPA_URL) return;
+    fetch(`${SUPA_URL}/functions/v1/cambio-usd-brl?ate=${to}`, { headers: { Authorization: `Bearer ${SUPA_KEY}` } })
+      .then(r => r.json())
+      .then(d => { if (!d.error) setCambio(d); })
+      .catch(() => {});
+  }, [to]);
 
   useEffect(() => {
     if (!window.db) return;
     window.db.from('quiz_leads').select('whatsapp, situacoes').not('whatsapp', 'is', null)
       .then(({ data, error }) => { if (!error) setQuizLeads(data || []); });
   }, []);
+
+  // Custo REAL cobrado pela Meta (não estimativa), direto da API de preços.
+  useEffect(() => {
+    const SUPA_URL = window.db?.supabaseUrl || '';
+    const SUPA_KEY = window.db?.supabaseKey  || '';
+    if (!SUPA_URL) return;
+    setCustoRealMeta(null);
+    fetch(`${SUPA_URL}/functions/v1/whatsapp-custo-meta?from=${from}&to=${to}`, { headers: { Authorization: `Bearer ${SUPA_KEY}` } })
+      .then(r => r.json())
+      .then(d => { if (!d.error) setCustoRealMeta(d); })
+      .catch(() => {});
+  }, [from, to]);
 
   function aplicarRapido(dias) {
     const p = periodoRapido(dias);
@@ -391,6 +474,15 @@ function MetricasView({ contatosDb, msgs }) {
     const semHandoff = atendidosPelaIa.length - comHandoff;
 
     const conversao = atendidos.length > 0 ? Math.round((fechados.length / atendidos.length) * 100) : 0;
+
+    // Custos: soma direto de custo_usd gravado em cada mensagem (calculado no
+    // envio, com base nos tokens reais da Anthropic e no preço do template).
+    const msgsNoPeriodo = msgs.filter(m => dentro(m.created_at) && m.custo_usd);
+    const custoMetaUsd      = msgsNoPeriodo.filter(m => m.tipo === 'template').reduce((s, m) => s + Number(m.custo_usd), 0);
+    const custoAnthropicUsd = msgsNoPeriodo.filter(m => m.origem === 'ia' || m.origem === 'ia_retomada').reduce((s, m) => s + Number(m.custo_usd), 0);
+    const custoTotalUsd     = custoMetaUsd + custoAnthropicUsd;
+    const custoPorLead      = atendidos.length > 0 ? custoTotalUsd / atendidos.length : 0;
+    const custoPorVenda     = fechados.length > 0 ? custoTotalUsd / fechados.length : 0;
 
     // Perdidos no período (mesma lógica de "virou etapa X dentro do intervalo" usada em fechados).
     const perdidos = contatosDb.filter(c => c.etapa === 'perdido' && dentro(c.updated_at));
@@ -444,6 +536,7 @@ function MetricasView({ contatosDb, msgs }) {
       perdidosPct,
       tempoMedioLabel,
       dorConversaoItems,
+      custoMetaUsd, custoAnthropicUsd, custoTotalUsd, custoPorLead, custoPorVenda,
     };
   }, [contatosDb, msgs, from, to, quizLeads]);
 
@@ -481,6 +574,21 @@ function MetricasView({ contatosDb, msgs }) {
         <CardKPI label="Precisando de humano" value={stats.intervencaoHumana} icon="alert-triangle" />
       </div>
 
+      <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-3)', margin: '18px 0 2px', fontFamily: 'Roboto,sans-serif', textTransform: 'uppercase', letterSpacing: .4 }}>
+        Custos (estimados, ver/ajustar em custo_precos)
+      </div>
+      <div style={{ fontSize: 10.5, color: 'var(--text-3)', fontFamily: 'Roboto,sans-serif', marginBottom: 8 }}>
+        {cambio ? `Dólar convertido pelo PTAX oficial (Banco Central): R$ ${cambio.usdBrl.toFixed(4)} em ${cambio.dataCotacao.slice(0, 10).split('-').reverse().join('/')}` : 'Buscando cotação oficial...'}
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 12 }}>
+        <CardKPI label="Gasto Meta (templates)" value={fmtUsdBrl(stats.custoMetaUsd, cambio)} icon="message-square" />
+        <CardKPI label="Gasto Anthropic (Claudinho)" value={fmtUsdBrl(stats.custoAnthropicUsd, cambio)} icon="cpu" />
+        <CardKPI label="Custo total" value={fmtUsdBrl(stats.custoTotalUsd, cambio)} icon="dollar-sign" accent />
+        <CardKPI label="Custo por lead" value={fmtUsdBrl(stats.custoPorLead, cambio, 4)} icon="user" />
+        <CardKPI label="Custo por venda" value={stats.custoPorVenda > 0 ? fmtUsdBrl(stats.custoPorVenda, cambio) : '—'} icon="shopping-cart" accent />
+        <CardKPI label="Gasto Meta (real, cobrado)" value={custoRealMeta ? fmtUsdBrl(custoRealMeta.custoTotalUsd, cambio) : '...'} icon="check-check" />
+      </div>
+
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 12, marginTop: 12 }}>
         <VizCard title="Distribuição por etapa" hint="dos atendidos no período" items={stats.porEtapa} total={stats.atendimentos} />
         <VizCard title="Taxa de resposta ao 1º contato" hint="quem respondeu a mensagem inicial" items={stats.respostaItems} total={stats.atendimentos} />
@@ -512,7 +620,10 @@ function ConversasScreen() {
   const [enviando, setEnviando]   = useState(false);
   const [busca, setBusca]         = useState('');
   const [modo, setModo]           = useState('lista'); // lista | kanban
+  const [mostrarArquivados, setMostrarArquivados] = useState(false);
+  const [janelaAbertaPrimeiro, setJanelaAbertaPrimeiro] = useState(false);
   const [modalNovoContato, setModalNovoContato] = useState(false);
+  const [modalPrompt, setModalPrompt] = useState(false);
   const [prontasAberto, setProntasAberto] = useState(false);
   const [enviandoPronta, setEnviandoPronta] = useState(null);
   const [tick, setTick]           = useState(0); // força re-render pro contador de tempo
@@ -523,12 +634,31 @@ function ConversasScreen() {
 
   function carregar() {
     if (!window.db) return;
-    window.db.from('whatsapp_mensagens').select('*').order('created_at', { ascending: false }).limit(5000)
-      .then(({ data, error }) => { if (!error) setMsgs(data || []); setLoading(false); });
+    // Contatos marcados como spam nunca aparecem na Lista, Kanban ou Métricas.
+    // Precisa filtrar também as mensagens desses telefones, senão a conversa
+    // reaparece de volta pela lista de mensagens mesmo com o contato oculto.
     window.db.from('whatsapp_contatos').select('*').order('updated_at', { ascending: false }).limit(5000)
-      .then(({ data, error }) => { if (!error) setContatosDb(data || []); });
+      .then(({ data, error }) => {
+        if (error) return;
+        const todos = data || [];
+        const spamSet = new Set(todos.filter(c => c.is_spam).map(c => c.telefone));
+        setContatosDb(todos.filter(c => !c.is_spam));
+        window.db.from('whatsapp_mensagens').select('*').order('created_at', { ascending: false }).limit(5000)
+          .then(({ data: msgsData, error: msgsError }) => {
+            if (!msgsError) setMsgs((msgsData || []).filter(m => !spamSet.has(m.telefone)));
+            setLoading(false);
+          });
+      });
     window.db.from('app_config').select('valor').eq('chave', 'whatsapp_ia_ativa').single()
       .then(({ data }) => { if (data) setIaAtivaGlobal(data.valor === true); });
+  }
+
+  function marcarSpam(telefone) {
+    if (!window.confirm('Marcar esse contato como spam? Ele some da Lista, Kanban e Métricas.')) return;
+    setContatosDb(prev => prev.filter(c => c.telefone !== telefone));
+    setMsgs(prev => prev.filter(m => m.telefone !== telefone));
+    if (selecionado === telefone) setSelecionado(null);
+    if (window.db) window.db.from('whatsapp_contatos').upsert({ telefone, is_spam: true }, { onConflict: 'telefone' }).then(() => carregar());
   }
 
   useEffect(() => { carregar(); const t = setInterval(carregar, 15000); return () => clearInterval(t); }, []);
@@ -569,6 +699,7 @@ function ConversasScreen() {
       const lista = porTelefone[telefone] || [];
       const ultima = lista[0] || null;
       const ultimaEntrada = lista.find(m => m.direcao === 'entrada');
+      const ultimaSaidaOk = lista.find(m => m.direcao === 'saida' && m.status !== 'falhou');
       const nomeMsg = lista.find(m => m.nome)?.nome || null;
       const dbRow   = contatosPorTelefone[telefone];
       return {
@@ -579,6 +710,10 @@ function ConversasScreen() {
         naoLidas: lista.filter(m => m.direcao === 'entrada' && !m.lida_pelo_time).length,
         ultimaEntradaData: ultimaEntrada?.created_at || null,
         janelaAberta: janelaAberta(ultimaEntrada?.created_at),
+        // Mesma referência usada pela rotina de arquivamento automático (whatsapp-arquivar-perdidos):
+        // se já respondeu alguma vez, conta da última resposta dele; senão, da última mensagem
+        // nossa que realmente foi entregue (nunca uma que falhou).
+        referenciaArquivamento: ultimaEntrada?.created_at || ultimaSaidaOk?.created_at || null,
         etapa: dbRow?.etapa || 'lead_novo',
         iaPausada: dbRow?.ia_pausada || false,
         precisaHumano: dbRow?.precisa_humano || false,
@@ -587,12 +722,24 @@ function ConversasScreen() {
       .filter(c => !busca || (c.nome || c.telefone).toLowerCase().includes(busca.toLowerCase()));
   }, [msgs, contatosDb, busca, tick]);
 
+  // Por padrão só mostra quem está em atendimento (Lead novo / Em conversa).
+  // "Perdido" (janela fechada, nunca respondeu) fica arquivado, some da
+  // visualização até o usuário pedir pra ver.
+  const contatosVisiveis = useMemo(() => {
+    const base = mostrarArquivados ? contatos : contatos.filter(c => c.etapa !== 'perdido');
+    if (!janelaAbertaPrimeiro) return base;
+    // Mantém a ordenação por data mais recente dentro de cada grupo (aberta / fechada).
+    return [...base].sort((a, b) => (b.janelaAberta ? 1 : 0) - (a.janelaAberta ? 1 : 0));
+  }, [contatos, mostrarArquivados, janelaAbertaPrimeiro]);
+  const etapasVisiveis = mostrarArquivados ? ETAPAS : ETAPAS.filter(e => e.id !== 'perdido');
+
   const thread = useMemo(() => {
     if (!selecionado) return [];
     return msgs.filter(m => m.telefone === selecionado).slice().reverse();
   }, [msgs, selecionado]);
 
   const contatoAtivo = contatos.find(c => c.telefone === selecionado);
+  const custoConversaAtiva = thread.reduce((s, m) => s + (Number(m.custo_usd) || 0), 0);
 
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
@@ -651,7 +798,7 @@ function ConversasScreen() {
           <div style={{ display: 'flex', background: 'rgba(255,255,255,.04)', border: '1px solid var(--app-border)', borderRadius: 8, padding: 3 }}>
             <button onClick={() => setModo('lista')} style={{
               border: 'none', cursor: 'pointer', padding: '5px 12px', borderRadius: 6, fontSize: 12, fontFamily: 'Roboto,sans-serif', fontWeight: 700,
-              background: modo === 'lista' ? 'var(--fmn-gold)' : 'transparent', color: modo === 'lista' ? '#1a1a1a' : 'var(--text-2)' }}>Lista</button>
+              background: modo === 'lista' ? 'var(--fmn-gold)' : 'transparent', color: modo === 'lista' ? '#1a1a1a' : 'var(--text-2)' }}>Chat</button>
             <button onClick={() => setModo('kanban')} style={{
               border: 'none', cursor: 'pointer', padding: '5px 12px', borderRadius: 6, fontSize: 12, fontFamily: 'Roboto,sans-serif', fontWeight: 700,
               background: modo === 'kanban' ? 'var(--fmn-gold)' : 'transparent', color: modo === 'kanban' ? '#1a1a1a' : 'var(--text-2)' }}>Kanban</button>
@@ -660,18 +807,22 @@ function ConversasScreen() {
               background: modo === 'metricas' ? 'var(--fmn-gold)' : 'transparent', color: modo === 'metricas' ? '#1a1a1a' : 'var(--text-2)' }}>Métricas</button>
           </div>
           <Btn onClick={() => setModalNovoContato(true)}>+ Novo Contato</Btn>
+          <Btn variant="ghost" onClick={() => setModalPrompt(true)} title="Ver o prompt atual do Claudinho">
+            <LucideIcon icon="file-text" size={14} />
+          </Btn>
           <Btn variant={iaAtivaGlobal ? 'primary' : 'ghost'} onClick={alternarIaGlobal}>
             {iaAtivaGlobal ? 'Claudinho: Ativo' : 'Claudinho: Pausado'}
           </Btn>
         </div>
       } />
+      {modalPrompt && <PromptClaudinhoModal SUPA_URL={SUPA_URL} SUPA_KEY={SUPA_KEY} onClose={() => setModalPrompt(false)} />}
       {modalNovoContato && (
         <NovoContatoModal SUPA_URL={SUPA_URL} SUPA_KEY={SUPA_KEY}
           onClose={() => setModalNovoContato(false)}
           onEnviado={(telefone) => { setModalNovoContato(false); carregar(); setSelecionado(telefone.replace(/\D/g, '').startsWith('55') ? telefone.replace(/\D/g, '') : '55' + telefone.replace(/\D/g, '')); }} />
       )}
       {modo === 'kanban' && (
-        <KanbanView contatos={contatos} onMover={moverEtapa}
+        <KanbanView contatos={contatosVisiveis} etapas={etapasVisiveis} onMover={moverEtapa}
           onAbrir={(telefone) => { setSelecionado(telefone); setModo('lista'); }} />
       )}
       {modo === 'metricas' && (
@@ -680,15 +831,23 @@ function ConversasScreen() {
       {modo === 'lista' && (
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden', minHeight: 0 }}>
         <div style={{ width: 300, flexShrink: 0, borderRight: '1px solid var(--app-border)', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-          <div style={{ padding: 10, borderBottom: '1px solid var(--app-border)', flexShrink: 0 }}>
+          <div style={{ padding: 10, borderBottom: '1px solid var(--app-border)', flexShrink: 0, display: 'flex', gap: 6 }}>
             <input value={busca} onChange={e => setBusca(e.target.value)} placeholder="Buscar contato..."
-              style={{ width: '100%', boxSizing: 'border-box', background: 'rgba(255,255,255,.04)', border: '1px solid var(--app-border)',
+              style={{ flex: 1, boxSizing: 'border-box', background: 'rgba(255,255,255,.04)', border: '1px solid var(--app-border)',
                 borderRadius: 8, padding: '7px 10px', fontSize: 12.5, color: 'var(--text-1)', fontFamily: 'Roboto,sans-serif', outline: 'none' }} />
+            <Btn size="sm" variant={janelaAbertaPrimeiro ? 'secondary' : 'ghost'} title="Mostrar janela aberta primeiro"
+              onClick={() => setJanelaAbertaPrimeiro(v => !v)}>
+              <LucideIcon icon="clock" size={13} />
+            </Btn>
+            <Btn size="sm" variant={mostrarArquivados ? 'secondary' : 'ghost'} title="Contatos perdidos (janela fechada, nunca respondeu)"
+              onClick={() => setMostrarArquivados(v => !v)}>
+              <LucideIcon icon="archive" size={13} />
+            </Btn>
           </div>
           <div style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
             {loading && <div style={{ padding: 20, textAlign: 'center', color: 'var(--text-3)', fontSize: 12 }}>Carregando...</div>}
-            {!loading && !contatos.length && <div style={{ padding: 20, textAlign: 'center', color: 'var(--text-3)', fontSize: 12 }}>Nenhuma conversa ainda.</div>}
-            {contatos.map(c => (
+            {!loading && !contatosVisiveis.length && <div style={{ padding: 20, textAlign: 'center', color: 'var(--text-3)', fontSize: 12 }}>Nenhuma conversa ainda.</div>}
+            {contatosVisiveis.map(c => (
               <ContatoItem key={c.telefone} contato={c} ativo={c.telefone === selecionado} onClick={() => setSelecionado(c.telefone)} />
             ))}
           </div>
@@ -712,13 +871,22 @@ function ConversasScreen() {
                   </div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  {custoConversaAtiva > 0 && (
+                    <span title="Custo estimado dessa conversa (WhatsApp + Anthropic)" style={{ fontSize: 10.5, fontFamily: 'Roboto,sans-serif',
+                      fontWeight: 800, color: 'var(--text-2)', background: 'rgba(255,255,255,.05)', border: '1px solid var(--app-border)',
+                      borderRadius: 999, padding: '3px 9px' }}>US$ {custoConversaAtiva.toFixed(4)}</span>
+                  )}
+                  <Btn size="sm" variant="ghost" title="Marcar como spam (some da Lista, Kanban e Métricas)"
+                    onClick={() => marcarSpam(selecionado)}>
+                    <LucideIcon icon="shield-off" size={13} />
+                  </Btn>
                   {contatoAtivo?.precisaHumano && (
                     <span title="A IA pediu ajuda de um humano nessa conversa" style={{ fontSize: 10.5, fontFamily: 'Roboto,sans-serif',
                       fontWeight: 800, color: '#f87171', background: 'rgba(248,113,113,.14)', border: '1px solid rgba(248,113,113,.3)',
                       borderRadius: 999, padding: '3px 9px' }}>● precisa de humano</span>
                   )}
                   {iaAtivaGlobal && (
-                    <Btn size="sm" variant={(contatoAtivo?.iaPausada || contatoAtivo?.precisaHumano) ? 'secondary' : 'ghost'}
+                    <Btn size="sm" variant={(contatoAtivo?.iaPausada || contatoAtivo?.precisaHumano) ? 'ghost' : 'secondary'}
                       onClick={() => alternarIaContato(selecionado, !(contatoAtivo?.iaPausada || contatoAtivo?.precisaHumano))}>
                       {(contatoAtivo?.iaPausada || contatoAtivo?.precisaHumano) ? 'Claudinho pausado aqui' : 'Claudinho ativo aqui'}
                     </Btn>
@@ -731,7 +899,9 @@ function ConversasScreen() {
                   }}>
                     {contatoAtivo?.janelaAberta
                       ? `Grátis · ${tempoRestanteJanela(contatoAtivo.ultimaEntradaData)}`
-                      : 'Janela fechada · precisa de template'}
+                      : (tempoAteArquivar(contatoAtivo?.referenciaArquivamento)
+                          ? `Será arquivado em ${tempoAteArquivar(contatoAtivo.referenciaArquivamento)}`
+                          : 'Janela fechada · precisa de template')}
                   </div>
                 </div>
               </div>
@@ -774,12 +944,15 @@ function ConversasScreen() {
               </div>
 
               <div style={{ padding: 12, borderTop: '1px solid var(--app-border)', display: 'flex', gap: 8 }}>
-                <input value={texto} onChange={e => setTexto(e.target.value)}
+                <textarea value={texto} onChange={e => setTexto(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); enviar(); } }}
-                  placeholder={contatoAtivo?.janelaAberta ? 'Digite sua mensagem...' : 'Janela fechada, precisa de template pra reabrir'}
+                  placeholder={contatoAtivo?.janelaAberta ? 'Digite sua mensagem... (Shift+Enter pra quebrar linha)' : 'Janela fechada, precisa de template pra reabrir'}
                   disabled={!contatoAtivo?.janelaAberta}
+                  rows={1}
                   style={{ flex: 1, boxSizing: 'border-box', background: 'rgba(255,255,255,.04)', border: '1px solid var(--app-border)',
-                    borderRadius: 8, padding: '9px 12px', fontSize: 13, color: 'var(--text-1)', fontFamily: 'Roboto,sans-serif', outline: 'none' }} />
+                    borderRadius: 8, padding: '9px 12px', fontSize: 13, color: 'var(--text-1)', fontFamily: 'Roboto,sans-serif', outline: 'none',
+                    resize: 'none', maxHeight: 120, lineHeight: 1.4 }}
+                  onInput={e => { e.target.style.height = 'auto'; e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px'; }} />
                 <Btn variant={prontasAberto ? 'secondary' : 'ghost'} title="Mensagens prontas"
                   onClick={() => setProntasAberto(p => !p)}>
                   <LucideIcon icon="zap" size={14} />

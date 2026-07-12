@@ -6,6 +6,7 @@
 // template pago.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { SYSTEM_PROMPT_MCV } from "../_shared/whatsapp-ia-prompt.ts";
+import { custoAnthropicUsd } from "../_shared/whatsapp-custos.ts";
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
@@ -36,7 +37,7 @@ const TOOL_RETOMADA = {
   },
 };
 
-async function gerarRetomada(historico: { role: string; content: string }[]): Promise<string | null> {
+async function gerarRetomada(historico: { role: string; content: string }[]): Promise<{ mensagem: string; tokensEntrada: number; tokensSaida: number } | null> {
   if (!ANTHROPIC_API_KEY) return null;
   const systemPrompt = `${SYSTEM_PROMPT_MCV}
 
@@ -59,7 +60,8 @@ Essa conversa está prestes a fechar a janela de atendimento (o lead não respon
     const d = await r.json();
     if (!r.ok) throw new Error(d.error?.message || `anthropic ${r.status}`);
     const toolUse = (d.content || []).find((c: any) => c.type === "tool_use");
-    return toolUse?.input?.mensagem || null;
+    if (!toolUse?.input?.mensagem) return null;
+    return { mensagem: toolUse.input.mensagem, tokensEntrada: d.usage?.input_tokens || 0, tokensSaida: d.usage?.output_tokens || 0 };
   } catch (err) {
     console.error("[whatsapp-retomada] erro Anthropic:", err);
     return null;
@@ -112,21 +114,23 @@ Deno.serve(async (_req) => {
       const historico = (historicoRaw || []).slice().reverse().filter((m: any) => m.corpo)
         .map((m: any) => ({ role: m.direcao === "entrada" ? "user" : "assistant", content: m.corpo }));
 
-      const mensagem = await gerarRetomada(historico);
-      if (!mensagem) continue;
+      const gerado = await gerarRetomada(historico);
+      if (!gerado) continue;
 
       try {
         const r = await fetch(`https://graph.facebook.com/v25.0/${WHATSAPP_PHONE_NUMBER_ID}/messages`, {
           method: "POST",
           headers: { Authorization: `Bearer ${WHATSAPP_TOKEN}`, "Content-Type": "application/json" },
-          body: JSON.stringify({ messaging_product: "whatsapp", to: contato.telefone, type: "text", text: { body: mensagem } }),
+          body: JSON.stringify({ messaging_product: "whatsapp", to: contato.telefone, type: "text", text: { body: gerado.mensagem } }),
         });
         const d = await r.json();
         if (!r.ok || d.error) throw new Error(d.error?.message || `whatsapp ${r.status}`);
 
+        const custo = await custoAnthropicUsd(supabase, gerado.tokensEntrada, gerado.tokensSaida);
         await supabase.from("whatsapp_mensagens").insert({
-          telefone: contato.telefone, nome: contato.nome, direcao: "saida", tipo: "texto", corpo: mensagem,
+          telefone: contato.telefone, nome: contato.nome, direcao: "saida", tipo: "texto", corpo: gerado.mensagem,
           wa_message_id: d?.messages?.[0]?.id || null, status: "enviado", origem: "ia_retomada",
+          tokens_entrada: gerado.tokensEntrada, tokens_saida: gerado.tokensSaida, custo_usd: custo,
         });
         await supabase.from("whatsapp_contatos")
           .update({ retomada_enviada_para: ultimaEntrada.created_at })

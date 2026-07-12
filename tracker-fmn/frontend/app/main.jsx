@@ -10,7 +10,8 @@
   ];
   if (DEPS.some(d => !window[d])) { setTimeout(tryMount, 80); return; }
 
-  const { useState } = React;
+  const { useState, useEffect } = React;
+  const TELAS_VALIDAS = ['dashboard','ideias','organico','criativos','trafego','funis','conversas','financeiro','site','sistema'];
   const {
     Sidebar, TopBar, LucideIcon,
     DashboardScreen, KanbanScreen,
@@ -40,13 +41,28 @@
   }
 
   function App() {
-    const [screen, setScreen]               = useState('dashboard');
+    const telaInicial = TELAS_VALIDAS.includes(window.location.hash.slice(1)) ? window.location.hash.slice(1) : 'dashboard';
+    const [screen, setScreen]               = useState(telaInicial);
     const [period, setPeriod]               = useState('7d');
     const [dateRange, setDateRange]         = useState({ from:'2026-06-03', to:'2026-06-10' });
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     const [targetAd, setTargetAd]           = useState(null);
 
-    const navigate = (pg, ad = null) => { setScreen(pg); if (ad != null) setTargetAd(ad); };
+    const navigate = (pg, ad = null) => {
+      setScreen(pg);
+      if (ad != null) setTargetAd(ad);
+      if (window.location.hash.slice(1) !== pg) window.location.hash = pg;
+    };
+
+    // Voltar/avançar do navegador (ou editar o link direto) também troca de aba.
+    useEffect(() => {
+      const aoMudarHash = () => {
+        const tela = window.location.hash.slice(1);
+        if (TELAS_VALIDAS.includes(tela)) setScreen(tela);
+      };
+      window.addEventListener('hashchange', aoMudarHash);
+      return () => window.removeEventListener('hashchange', aoMudarHash);
+    }, []);
 
     const currentScreen = (() => {
       switch (screen) {

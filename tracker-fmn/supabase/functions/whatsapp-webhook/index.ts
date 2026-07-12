@@ -26,6 +26,33 @@ const STATUS_MAP: Record<string, string> = {
   sent: "enviado", delivered: "entregue", read: "lido", failed: "falhou",
 };
 
+// Número de celular BR às vezes chega da Meta sem o 9 extra (formato antigo).
+// Normaliza pra sempre 55+DDD+9+8dígitos, senão o mesmo lead vira dois
+// contatos diferentes (um pelo quiz, outro pelo webhook) e a IA se perde.
+function normalizarTelefoneWhatsapp(raw: string): string {
+  let d = String(raw || "").replace(/\D/g, "");
+  if (d.startsWith("0")) d = d.replace(/^0+/, "");
+  if (!d.startsWith("55")) d = "55" + d;
+  const resto = d.slice(2);
+  if (resto.length === 10) d = "55" + resto.slice(0, 2) + "9" + resto.slice(2);
+  return d;
+}
+
+// Evita reprocessar a mesma mensagem quando a Meta reenvia o webhook (ela
+// faz retry se não recebermos 200 rápido o suficiente, e duas entregas quase
+// simultâneas podem chegar aqui ao mesmo tempo). Em vez de checar-e-só-depois-
+// gravar (que tem corrida: as duas passam pela checagem antes de qualquer
+// uma gravar), tenta gravar direto — um índice único no banco (migration 079)
+// garante que a segunda tentativa falha com conflito, sem corrida nenhuma.
+async function gravarEntradaSeNova(row: Record<string, unknown>): Promise<boolean> {
+  const { error } = await supabase.from("whatsapp_mensagens").insert(row);
+  if (error) {
+    if (error.code === "23505") return false; // duplicata pega pelo índice único, ignora.
+    throw error;
+  }
+  return true;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: CORS });
 
@@ -51,6 +78,14 @@ Deno.serve(async (req) => {
     return json({ ok: true }); // Meta não gosta de retry por payload malformado, só engole.
   }
 
+  // A IA (processarComIA) pode demorar até ~1min (atraso humano + typing).
+  // Isso NUNCA pode segurar a resposta HTTP: se a Meta não recebe 200 rápido,
+  // ela reenvia o mesmo webhook, e cada reenvio disparava uma resposta nova
+  // da IA pro mesmo lead (foi o que causou a enxurrada de mensagens). Por
+  // isso: grava tudo que é rápido (mensagem + contato) na hora, e só a parte
+  // lenta (IA) roda em background depois de já termos respondido 200 pra Meta.
+  const tarefasEmBackground: Promise<unknown>[] = [];
+
   try {
     const entries = payload?.entry || [];
     for (const entry of entries) {
@@ -60,8 +95,10 @@ Deno.serve(async (req) => {
 
         // Mensagens recebidas do lead.
         for (const msg of value.messages || []) {
-          const telefone = msg.from;
-          const contato   = (value.contacts || []).find((c: any) => c.wa_id === telefone);
+          const waMessageId = msg.id || null;
+
+          const telefone = normalizarTelefoneWhatsapp(msg.from);
+          const contato   = (value.contacts || []).find((c: any) => c.wa_id === msg.from);
           const nome       = contato?.profile?.name || null;
           let corpo = "";
           let tipo  = "texto";
@@ -70,26 +107,30 @@ Deno.serve(async (req) => {
           else if (msg.type === "interactive") { corpo = msg.interactive?.button_reply?.title || msg.interactive?.list_reply?.title || ""; tipo = "botao"; }
           else corpo = `[${msg.type}]`;
 
-          await supabase.from("whatsapp_mensagens").insert({
+          const gravou = await gravarEntradaSeNova({
             telefone,
             nome,
             direcao: "entrada",
             tipo,
             corpo,
-            wa_message_id: msg.id || null,
+            wa_message_id: waMessageId,
             status: "recebido",
             origem: "resposta_lead",
             lida_pelo_time: false,
             raw: msg,
           });
+          if (!gravou) continue; // duplicata (reenvio da Meta), já tratamos essa mensagem.
 
           // Lead respondeu: se ainda estava como "lead novo", promove pra
           // "em conversa" automaticamente (respeita se já foi movido à mão).
           await upsertContato(supabase, telefone, nome, "em_conversa", { promoverParaEmConversa: true });
 
-          // IA vendedora: só age se o toggle global estiver ligado e essa
-          // conversa não estiver pausada/precisando de humano (checado lá dentro).
-          await processarComIA(supabase, telefone, nome);
+          // IA vendedora: roda em background, não segura a resposta ao Meta.
+          tarefasEmBackground.push(
+            processarComIA(supabase, telefone, nome, waMessageId).catch((err) =>
+              console.error("[whatsapp-webhook] erro na IA em background:", err)
+            )
+          );
         }
 
         // Atualizações de status (enviado/entregue/lido/falhou) das mensagens que a gente mandou.
@@ -105,6 +146,11 @@ Deno.serve(async (req) => {
     }
   } catch (err) {
     console.error("[whatsapp-webhook] erro processando payload:", err);
+  }
+
+  if (tarefasEmBackground.length) {
+    // @ts-ignore — EdgeRuntime existe no runtime do Supabase Edge Functions.
+    EdgeRuntime.waitUntil(Promise.all(tarefasEmBackground));
   }
 
   // Sempre 200, mesmo com erro interno — não queremos que o Meta desative o webhook por retry.
