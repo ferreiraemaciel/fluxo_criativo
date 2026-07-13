@@ -1109,9 +1109,20 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
                   ORG {String(item.numero).padStart(3,'0')}
                 </span>
               )}
-              <span style={{ fontSize:14.5, fontFamily:'Roboto,sans-serif', fontWeight:700, color:'var(--text-1)' }}>
-                {isNew ? 'Novo conteúdo orgânico' : (form.tema || 'Editar conteúdo')}
-              </span>
+              {isNew ? (
+                <span style={{ fontSize:14.5, fontFamily:'Roboto,sans-serif', fontWeight:700, color:'var(--text-1)' }}>
+                  Novo conteúdo orgânico
+                </span>
+              ) : (
+                <input value={form.tema} onChange={e=>set('tema',e.target.value)}
+                  placeholder="Título do conteúdo"
+                  style={{ fontSize:14.5, fontFamily:'Roboto,sans-serif', fontWeight:700,
+                    color:'var(--text-1)', lineHeight:1.4, background:'transparent',
+                    border:'1px solid transparent', borderRadius:6, padding:'2px 6px',
+                    outline:'none', flex:1, minWidth:120, transition:'border-color 150ms' }}
+                  onFocus={e => e.target.style.borderColor='rgba(234,170,65,.4)'}
+                  onBlur={e => e.target.style.borderColor='transparent'}/>
+              )}
             </div>
             <div style={{ display:'flex', gap:8, alignItems:'center' }}>
               {saveStatus === 'saved' && (
