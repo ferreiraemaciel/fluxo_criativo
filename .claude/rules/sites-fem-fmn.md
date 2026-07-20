@@ -114,6 +114,18 @@ fotos.sort((a, b) => {
 
 ---
 
+## Identidade visual — número da foto
+
+O número da foto no canto superior esquerdo **não deve ser exibido** ao passar o mouse. O elemento `.foto-num` existe no HTML mas fica sempre oculto:
+
+```css
+.foto-num { display: none; }
+```
+
+Nunca reativar via hover (`.foto-item:hover .foto-num { opacity: 1 }` é proibido).
+
+---
+
 ## Identidade visual — gap entre fotos
 
 Gap fixo de **3px** em todos os grids de fotos. Nunca usar 2px, 4px ou outro valor.
