@@ -15,8 +15,15 @@
 
 **Deploy nunca é automático via git push.** Sempre rodar:
 ```bash
+# Cloudflare Pages (site e admin)
 npx wrangler pages deploy . --project-name <nome-do-projeto>
+
+# Worker de upload (fem-upload)
+cd ~/Documents/fem-site/scripts
+npx wrangler deploy worker-upload.js --name fem-upload
 ```
+
+> `scripts/` está no `.gitignore` do fem-site propositalmente. O worker é deployado via wrangler, não versionado no git.
 
 ---
 
@@ -110,6 +117,30 @@ fotos.sort((a, b) => {
 ## Identidade visual — gap entre fotos
 
 Gap fixo de **3px** em todos os grids de fotos. Nunca usar 2px, 4px ou outro valor.
+
+---
+
+## R2 — nomenclatura de arquivos (nome original preservado)
+
+> Aprovado em 2026-07-20. Aplica-se a qualquer upload para o R2 via worker `fem-upload`.
+
+**Regra:** ao subir uma foto para o R2, o nome original do arquivo deve ser preservado. Nunca renomear com timestamp ou random. Isso garante que a ordenação A→Z no grid reflita a numeração real das fotos (ex: `DSC_0001.jpg`, `DSC_0002.jpg`...).
+
+**Implementação no worker** (`~/Documents/fem-site/scripts/worker-upload.js`):
+
+```js
+const prefix = (formData.get('prefix') || 'posts').replace(/[^a-z0-9_-]/g, '').slice(0, 40) || 'posts';
+// Preserva nome original, sanitiza caracteres problemáticos
+const rawName = (file.name || 'img').replace(/\\/g, '/').split('/').pop();
+const safeName = rawName.replace(/[^a-zA-Z0-9._-]/g, '_').replace(/_{2,}/g, '_');
+// Evita sobrescrever arquivo existente com o mesmo nome
+const existing = await env.BUCKET.head(`${prefix}/${safeName}`);
+const key = existing
+  ? `${prefix}/${safeName.replace(/(\.[^.]+)?$/, `_${Math.random().toString(36).slice(2,6)}$1`)}`
+  : `${prefix}/${safeName}`;
+```
+
+**Nunca usar** `Date.now()` ou `Math.random()` como base do nome — isso quebra a ordem das fotos.
 
 ---
 
