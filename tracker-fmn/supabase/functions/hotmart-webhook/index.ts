@@ -5,6 +5,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { upsertContato } from "../_shared/whatsapp-contatos.ts";
 import { renderCorpoTemplate } from "../_shared/whatsapp-templates.ts";
 import { custoTemplateUsd } from "../_shared/whatsapp-custos.ts";
+import { janelaAbertaPara } from "../_shared/whatsapp-janela.ts";
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
@@ -453,39 +454,48 @@ async function enviarBoasVindasMcv(transactionId: string, telefoneRaw: string, n
   }
   const to = normalizarTelefoneWhatsapp(telefoneRaw);
   const primeiroNome = (nome || "").trim().split(/\s+/)[0] || "tudo bem";
+  const corpo = renderCorpoTemplate("boas_vindas_mcv", [primeiroNome, WHATSAPP_GRUPO_LINK_MCV]);
+
+  // Janela de 24h já aberta (o lead mandou mensagem recente)? Manda como
+  // texto livre em vez de template: mesmo conteúdo, sem custo nenhum. Template
+  // paga sempre, não importa se a janela já está aberta ou não.
+  const janelaJaAberta = await janelaAbertaPara(supabase, to);
 
   try {
+    const body = janelaJaAberta
+      ? { messaging_product: "whatsapp", to, type: "text", text: { body: corpo } }
+      : {
+          messaging_product: "whatsapp",
+          to,
+          type: "template",
+          template: {
+            name: "boas_vindas_mcv",
+            language: { code: "pt_BR" },
+            components: [{
+              type: "body",
+              parameters: [
+                { type: "text", text: primeiroNome },
+                { type: "text", text: WHATSAPP_GRUPO_LINK_MCV },
+              ],
+            }],
+          },
+        };
     const r = await fetch(`https://graph.facebook.com/v25.0/${WHATSAPP_PHONE_NUMBER_ID}/messages`, {
       method: "POST",
       headers: { Authorization: `Bearer ${WHATSAPP_TOKEN}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        messaging_product: "whatsapp",
-        to,
-        type: "template",
-        template: {
-          name: "boas_vindas_mcv",
-          language: { code: "pt_BR" },
-          components: [{
-            type: "body",
-            parameters: [
-              { type: "text", text: primeiroNome },
-              { type: "text", text: WHATSAPP_GRUPO_LINK_MCV },
-            ],
-          }],
-        },
-      }),
+      body: JSON.stringify(body),
     });
     const d = await r.json();
     if (!r.ok || d.error) throw new Error(d.error?.message || `whatsapp ${r.status}`);
 
-    const custo = await custoTemplateUsd(supabase, "utility");
+    const custo = janelaJaAberta ? 0 : await custoTemplateUsd(supabase, "utility");
     await supabase.from("whatsapp_mensagens").insert({
       telefone: to,
       nome,
       direcao: "saida",
-      tipo: "template",
-      corpo: renderCorpoTemplate("boas_vindas_mcv", [primeiroNome, WHATSAPP_GRUPO_LINK_MCV]),
-      template_nome: "boas_vindas_mcv",
+      tipo: janelaJaAberta ? "texto" : "template",
+      corpo,
+      template_nome: janelaJaAberta ? null : "boas_vindas_mcv",
       wa_message_id: d?.messages?.[0]?.id || null,
       status: "enviado",
       origem: "venda_mcv",
@@ -493,7 +503,15 @@ async function enviarBoasVindasMcv(transactionId: string, telefoneRaw: string, n
       custo_usd: custo,
     });
     await supabase.from("vendas").update({ whatsapp_boas_vindas_enviado: true }).eq("hotmart_transaction_id", transactionId);
-    await upsertContato(supabase, to, nome, "aluno", { forcarEtapa: true });
+    const { data: vendaData } = await supabase
+      .from("vendas")
+      .select("created_at")
+      .eq("hotmart_transaction_id", transactionId)
+      .single();
+    await upsertContato(supabase, to, nome, "aluno", {
+      forcarEtapa: true,
+      tornouAlunoEm: vendaData?.created_at || new Date().toISOString(),
+    });
     console.log("Boas-vindas MCV enviada:", transactionId, to);
   } catch (err) {
     console.error("Erro ao enviar boas-vindas MCV:", err);

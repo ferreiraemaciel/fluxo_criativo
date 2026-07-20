@@ -7,6 +7,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { SYSTEM_PROMPT_MCV } from "../_shared/whatsapp-ia-prompt.ts";
 import { custoAnthropicUsd } from "../_shared/whatsapp-custos.ts";
+import { contatoSoRespondeAutomatico } from "../_shared/whatsapp-automatica.ts";
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
@@ -37,12 +38,26 @@ const TOOL_RETOMADA = {
   },
 };
 
-async function gerarRetomada(historico: { role: string; content: string }[]): Promise<{ mensagem: string; tokensEntrada: number; tokensSaida: number } | null> {
+async function gerarRetomada(historico: { role: string; content: string }[], ultimaFoiDoLead: boolean): Promise<{ mensagem: string; tokensEntrada: number; tokensSaida: number } | null> {
   if (!ANTHROPIC_API_KEY) return null;
+
+  // Quem ficou esperando quem é o que decide se "fiquei no vácuo" faz
+  // sentido. A frase é dita da NOSSA perspectiva: só cabe quando NÓS mandamos
+  // a última mensagem e o lead sumiu depois dela. Se a última mensagem foi
+  // DO LEAD e ninguém da nossa parte respondeu ainda, é ELE que ficou
+  // esperando a gente — dizer "fiquei no vácuo" nesse caso inverte a culpa e
+  // soa estranho. Essa checagem é feita em código (não confia só no modelo
+  // interpretar certo, já teve caso de usar errado).
+  const instrucaoVacuo = ultimaFoiDoLead
+    ? `**NÃO use "fiquei no vácuo" dessa vez.** A última mensagem dessa conversa foi do PRÓPRIO LEAD, e ainda não respondemos ela — quem está esperando resposta é ele, não nós. Escreva uma retomada normal: uma resposta de verdade pro que ele disse por último, dando continuidade à conversa (pode reconhecer que demorou a responder, sem exagerar no pedido de desculpas).`
+    : `**Caso especial "fiquei no vácuo": pode usar aqui, porque a última mensagem da conversa foi NOSSA e o lead não respondeu desde então.** Nesse caso a melhor retomada não é puxar de novo o assunto comercial, é só notar o silêncio, sem pedir nada: "Fiquei no vácuo 😢" (ou variação bem curta equivalente). Só funciona se antes disso o lead já tinha respondido de verdade pelo menos uma vez (não é a primeira mensagem que mandamos pra ele). Use isso NO MÁXIMO uma vez por lead (nunca repita esse mesmo recurso de novo com quem já recebeu, senão vira manipulação óbvia e queima a mão). Se o lead já tinha dado uma objeção clara antes de sumir (preço, "vou pensar", "não quero"), não use esse caminho, aí a retomada deve ser a puxada normal do assunto.`;
+
   const systemPrompt = `${SYSTEM_PROMPT_MCV}
 
 ## Tarefa específica agora
-Essa conversa está prestes a fechar a janela de atendimento (o lead não responde há quase 24h). Escreva UMA mensagem curta de retomada, puxando especificamente o assunto que vocês estavam conversando (use o histórico abaixo), no tom certo pro perfil desse lead (objetivo ou que gosta de conversar, veja como ele respondia antes). Nunca genérica tipo "tudo bem?", sempre amarrada ao que já foi dito. Sem cobrança, sem pressão, só reabrindo a porta.`;
+Essa conversa está prestes a fechar a janela de atendimento. Escreva UMA mensagem curta de retomada, puxando especificamente o assunto que vocês estavam conversando (use o histórico abaixo), no tom certo pro perfil desse lead (objetivo ou que gosta de conversar, veja como ele respondia antes). Nunca genérica tipo "tudo bem?", sempre amarrada ao que já foi dito. Sem cobrança, sem pressão, só reabrindo a porta.
+
+${instrucaoVacuo}`;
 
   try {
     const r = await fetch("https://api.anthropic.com/v1/messages", {
@@ -61,7 +76,11 @@ Essa conversa está prestes a fechar a janela de atendimento (o lead não respon
     if (!r.ok) throw new Error(d.error?.message || `anthropic ${r.status}`);
     const toolUse = (d.content || []).find((c: any) => c.type === "tool_use");
     if (!toolUse?.input?.mensagem) return null;
-    return { mensagem: toolUse.input.mensagem, tokensEntrada: d.usage?.input_tokens || 0, tokensSaida: d.usage?.output_tokens || 0 };
+    // Trava contra travessão vazando pro lead: mesmo proibido no prompt, já
+    // aconteceu do modelo usar "—" numa retomada (grave, entrega "resposta de
+    // IA" na cara). Não confia só na instrução, garante removendo aqui.
+    const mensagem = String(toolUse.input.mensagem).replace(/\s*[—–]\s*/g, ", ").trim();
+    return { mensagem, tokensEntrada: d.usage?.input_tokens || 0, tokensSaida: d.usage?.output_tokens || 0 };
   } catch (err) {
     console.error("[whatsapp-retomada] erro Anthropic:", err);
     return null;
@@ -74,10 +93,14 @@ Deno.serve(async (_req) => {
   }
 
   try {
+    // A retomada de última hora vale pra QUALQUER contato com janela aberta,
+    // não só pra quem está marcado como ia_elegivel: é só uma mensagem única
+    // de reabertura, não é conversa ao vivo, então é segura mesmo durante a
+    // etapa de treinamento do Claudinho (onde a resposta ao vivo fica restrita
+    // a um único número de teste, ver TELEFONE_TESTE_TREINAMENTO em whatsapp-ia.ts).
     const { data: contatos, error } = await supabase
       .from("whatsapp_contatos")
       .select("telefone, nome, retomada_enviada_para")
-      .eq("ia_elegivel", true)
       .eq("ia_pausada", false)
       .eq("precisa_humano", false)
       .not("etapa", "in", "(aluno,perdido)");
@@ -105,6 +128,12 @@ Deno.serve(async (_req) => {
       // Já mandou retomada pra essa mesma janela (mesmo timestamp de entrada)? Pula.
       if (contato.retomada_enviada_para && new Date(contato.retomada_enviada_para).getTime() === entradaMs) continue;
 
+      // As últimas respostas desse número foram só resposta automática do
+      // WhatsApp Business dele (sem nenhuma interação real no meio)? Então
+      // não é a pessoa ali, é só um loop de "em breve iremos te responder" —
+      // não insiste, não gasta retomada em cima disso.
+      if (await contatoSoRespondeAutomatico(supabase, contato.telefone)) continue;
+
       const { data: historicoRaw } = await supabase
         .from("whatsapp_mensagens")
         .select("direcao, corpo, created_at")
@@ -114,7 +143,10 @@ Deno.serve(async (_req) => {
       const historico = (historicoRaw || []).slice().reverse().filter((m: any) => m.corpo)
         .map((m: any) => ({ role: m.direcao === "entrada" ? "user" : "assistant", content: m.corpo }));
 
-      const gerado = await gerarRetomada(historico);
+      // historicoRaw vem mais recente primeiro: [0] é a última mensagem da conversa.
+      const ultimaFoiDoLead = historicoRaw?.[0]?.direcao === "entrada";
+
+      const gerado = await gerarRetomada(historico, ultimaFoiDoLead);
       if (!gerado) continue;
 
       try {

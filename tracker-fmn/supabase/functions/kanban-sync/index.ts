@@ -109,7 +109,7 @@ async function syncMetaAdStatus(): Promise<Set<number>> {
   // que criava linha nova incompleta (só numero/titulo/status/tipo).
   const { data: locais } = await supabase
     .from("ads")
-    .select("numero, status, meta_publish_status")
+    .select("numero, status, meta_publish_status, tag, vendas_total, cpa_historico, gasto_total")
     .not("meta_ad_id", "is", null)
     .limit(2000);
 
@@ -128,18 +128,37 @@ async function syncMetaAdStatus(): Promise<Set<number>> {
         await supabase.from("ads").update(patch).eq("numero", ad.numero);
       }
     } else if (AINDA_NAO_LIVRE.has(efStatus)) {
-      // Só reconcilia "aguardando 1ª ativação" pra quem ainda está em
+      // Reconcilia "aguardando 1ª ativação" pra quem ainda está em
       // Fazer/Fazendo. Um anúncio já arquivado ou campeão fica PAUSED no Meta
       // o tempo todo por decisão do usuário — não é "pendente", é decidido.
       if ((ad.status === "fazer" || ad.status === "fazendo") && ad.meta_publish_status !== "rascunho") {
         await supabase.from("ads").update({ meta_publish_status: "rascunho" }).eq("numero", ad.numero);
       }
+      // Anúncio que estava "Ativo" e foi pausado no Meta (decisão do usuário,
+      // ex: pausou a campanha inteira) não pode ficar preso pra sempre na
+      // coluna Ativos — ele não está rodando de verdade. Move pra Arquivados,
+      // já com a etiqueta calculada a partir do histórico que já temos salvo.
+      if (ad.status === "ativo") {
+        const novaTag = classificarAd(ad.vendas_total, ad.cpa_historico, ad.gasto_total);
+        await supabase.from("ads").update({ status: "arquivado", tag: novaTag }).eq("numero", ad.numero);
+      }
     } else if (SUMIU.has(efStatus)) {
+      const patch: Record<string, unknown> = {};
       if (ad.meta_publish_status !== null) {
-        await supabase.from("ads").update({
-          meta_publish_status: null, meta_ad_id: null,
-          meta_campaign_id: null, meta_adset_id: null, meta_ad_url: null,
-        }).eq("numero", ad.numero);
+        patch.meta_publish_status = null;
+        patch.meta_ad_id = null;
+        patch.meta_campaign_id = null;
+        patch.meta_adset_id = null;
+        patch.meta_ad_url = null;
+      }
+      // Mesma lógica do PAUSED: arquivado/deletado no Meta não pode ficar
+      // preso em Ativos.
+      if (ad.status === "ativo") {
+        patch.status = "arquivado";
+        patch.tag = classificarAd(ad.vendas_total, ad.cpa_historico, ad.gasto_total);
+      }
+      if (Object.keys(patch).length) {
+        await supabase.from("ads").update(patch).eq("numero", ad.numero);
       }
     }
   }

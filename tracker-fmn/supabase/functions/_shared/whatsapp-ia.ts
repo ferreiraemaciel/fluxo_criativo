@@ -5,6 +5,7 @@
 import { SYSTEM_PROMPT_MCV } from "./whatsapp-ia-prompt.ts";
 import { upsertContato } from "./whatsapp-contatos.ts";
 import { custoAnthropicUsd } from "./whatsapp-custos.ts";
+import { pareceMensagemAutomatica, contatoSoRespondeAutomatico } from "./whatsapp-automatica.ts";
 
 const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
 const ANTHROPIC_MODEL   = Deno.env.get("ANTHROPIC_IA_MODEL") || "claude-haiku-4-5-20251001";
@@ -31,6 +32,17 @@ async function iaAtivaGlobalmente(supabase: any): Promise<boolean> {
   return data?.valor === true;
 }
 
+// Etapa de treinamento do Claudinho: enquanto true, nenhuma resposta ao vivo
+// sai sozinha pra ninguém, só a retomada de última hora (ver whatsapp-retomada).
+// Única exceção é o número de teste do Felipe, onde ele mesmo conversa com o
+// Claudinho pra treinar e avaliar as respostas na hora.
+const TELEFONE_TESTE_TREINAMENTO = "5548996981982";
+
+async function modoTreinamentoAtivo(supabase: any): Promise<boolean> {
+  const { data } = await supabase.from("app_config").select("valor").eq("chave", "whatsapp_modo_treinamento").single();
+  return data?.valor === true;
+}
+
 function normalizarTelefoneWhatsapp(raw: string): string {
   let d = String(raw || "").replace(/\D/g, "");
   if (d.startsWith("0")) d = d.replace(/^0+/, "");
@@ -38,25 +50,6 @@ function normalizarTelefoneWhatsapp(raw: string): string {
   const resto = d.slice(2);
   if (resto.length === 10) d = "55" + resto.slice(0, 2) + "9" + resto.slice(2);
   return d;
-}
-
-// Saudação/ausência automática do WhatsApp Business do próprio lead (dispara
-// sozinha, não é ele respondendo de verdade). Padrões comuns de mensagem
-// automática em português.
-const PADROES_MSG_AUTOMATICA = [
-  /no momento (estou|devo estar)/i,
-  /mensagem automática/i,
-  /resposta automática/i,
-  /assim que (eu )?(possível|puder|conseguir)/i,
-  /já (te )?respondo/i,
-  /estou (ausente|fora|indispon[íi]vel)/i,
-  /hor[áa]rio de atendimento/i,
-  /obrigad[oa] pelo contato,? em breve/i,
-  /retorno em breve/i,
-];
-
-function pareceMensagemAutomatica(texto: string): boolean {
-  return PADROES_MSG_AUTOMATICA.some((re) => re.test(texto || ""));
 }
 
 async function buscarContextoLead(supabase: any, telefone: string): Promise<string> {
@@ -87,7 +80,7 @@ async function buscarContextoLead(supabase: any, telefone: string): Promise<stri
   if (Array.isArray(lead.sentimentos) && lead.sentimentos.length) partes.push(`Sentimentos que relatou: ${lead.sentimentos.join("; ")}.`);
   if (Array.isArray(lead.temas_dominados) && lead.temas_dominados.length) partes.push(`Temas jurídicos que já domina: ${lead.temas_dominados.join("; ")}.`);
   if (!partes.length) return "";
-  return `\n\n## O que já sabemos sobre esse lead (nunca pergunte de novo, nunca diga de onde veio essa informação, use isso pra personalizar a conversa e vender melhor)\n${partes.join(" ")}\n\nUse esses dados com naturalidade, do jeito que um vendedor bom faz: puxando o assunto certo, citando a situação como se já soubesse por já estar no meio da conversa, sem soar que está lendo uma ficha e SEM mencionar "quiz", "resultado", "formulário" ou qualquer coisa parecida. Por exemplo, se ele é amador querendo se profissionalizar, fale a língua de quem está começando. Se já é autônomo estabelecido, fale de igual pra igual, sem explicar o óbvio. Se citou medo de o negócio não dar certo, isso é uma abertura emocional real, use com cuidado e sem parecer oportunista.`;
+  return `\n\n## O que já sabemos sobre esse lead (nunca pergunte de novo, nunca diga de onde veio essa informação, use isso pra personalizar a conversa e vender melhor)\n${partes.join(" ")}\n\nUse esses dados com naturalidade, do jeito que um vendedor bom faz: puxando o assunto certo, citando a situação como se já soubesse por já estar no meio da conversa, sem soar que está lendo uma ficha e SEM mencionar "quiz", "resultado", "formulário" ou qualquer coisa parecida.\n\n**Nunca afirme esses dados como fato certo pro lead, mesmo sem citar a fonte.** Frases tipo "você relatou que...", "você disse que...", "você teve..." soam vigilância, mesmo sem a palavra "quiz". **Prefira sempre a suposição empática** ("imagino que já deve ter rolado..., isso é super comum por aqui"), é a forma que soa mais natural, como vendedor lendo a situação, não interrogando. Só use a pergunta de confirmação ("isso não foi parecido com algo que já rolou com você?") como alternativa, quando a suposição direta não couber bem na frase. Errado: "Você relatou que já teve cliente cancelando e pedindo o dinheiro de volta." Certo: "Imagino que já deve ter rolado cliente cancelando de última hora e pedindo o dinheiro de volta, isso é super comum por aqui." A informação entra como intuição de vendedor experiente, não como dado registrado em algum lugar.\n\nPor exemplo, se ele é amador querendo se profissionalizar, fale a língua de quem está começando. Se já é autônomo estabelecido, fale de igual pra igual, sem explicar o óbvio. Se citou medo de o negócio não dar certo, isso é uma abertura emocional real, use com cuidado e sem parecer oportunista.`;
 }
 
 function dormir(ms: number) {
@@ -151,6 +144,13 @@ export async function processarComIA(supabase: any, telefoneRaw: string, nomeLea
 
   const { data: contato } = await supabase.from("whatsapp_contatos").select("*").eq("telefone", telefone).single();
   if (contato?.ia_pausada || contato?.precisa_humano) return;
+
+  // Etapa de treinamento: nenhuma resposta ao vivo automática, exceto no
+  // número de teste do Felipe OU num contato específico que ele liberou à mão
+  // (ia_elegivel = true) pra treinar o Claudinho num caso real também.
+  const treinamento = await modoTreinamentoAtivo(supabase);
+  if (treinamento && telefone !== TELEFONE_TESTE_TREINAMENTO && !contato?.ia_elegivel) return;
+
   // Escopo fino: só quem foi explicitamente marcado como elegível (hoje, o
   // lote de teste). O toggle geral liga o motor, isso aqui decide quem
   // especificamente a IA pode responder — evita repetir o "ligou pra todo mundo".
@@ -159,6 +159,27 @@ export async function processarComIA(supabase: any, telefoneRaw: string, nomeLea
   // comprou o MCV, etapa forçada por enviarBoasVindasMcv) fica de fora.
   if (contato?.etapa === "aluno") return;
 
+  // Trava contra duas mensagens do lead chegando quase juntas: cada uma
+  // dispara seu próprio processarComIA em background, e sem essa trava as
+  // duas rodam em paralelo e o lead recebe resposta duplicada. Só uma por
+  // vez; se já tem uma rodando, essa aqui desiste (a próxima mensagem real
+  // dele já vai puxar o histórico atualizado de qualquer forma).
+  const { data: travou } = await supabase
+    .from("whatsapp_contatos")
+    .update({ ia_processando: true })
+    .eq("telefone", telefone)
+    .eq("ia_processando", false)
+    .select("telefone");
+  if (!travou?.length) return;
+
+  try {
+    await processarComIAInterno(supabase, telefone, nomeLead, mensagemId, contato);
+  } finally {
+    await supabase.from("whatsapp_contatos").update({ ia_processando: false }).eq("telefone", telefone);
+  }
+}
+
+async function processarComIAInterno(supabase: any, telefone: string, nomeLead: string | null, mensagemId: string | null, contato: any) {
   const { data: historico } = await supabase
     .from("whatsapp_mensagens")
     .select("direcao, tipo, corpo, created_at")
@@ -207,7 +228,7 @@ export async function processarComIA(supabase: any, telefoneRaw: string, nomeLea
       },
       body: JSON.stringify({
         model: ANTHROPIC_MODEL,
-        max_tokens: 500,
+        max_tokens: 700,
         system: systemPrompt,
         messages: mensagens,
         tools: [TOOL_RESPONDER],
@@ -219,6 +240,42 @@ export async function processarComIA(supabase: any, telefoneRaw: string, nomeLea
     const toolUse = (d.content || []).find((c: any) => c.type === "tool_use");
     if (!toolUse) throw new Error("Anthropic não devolveu tool_use");
     resposta = toolUse.input;
+
+    // Se o modelo estourou o limite de tokens no meio da resposta, o JSON do
+    // tool_use pode vir com o texto cortado no meio da frase (já vazou pro
+    // lead uma vez, tipo "cliente p"). Nesse caso não manda o texto quebrado:
+    // troca por uma linha curta segura e já sinaliza handoff pra um humano
+    // assumir, em vez de arriscar credibilidade.
+    if (d.stop_reason === "max_tokens") {
+      console.error("[whatsapp-ia] resposta cortada por max_tokens, usando fallback:", telefone);
+      resposta.mensagem = "Deixa eu confirmar uma coisa aqui e já te retorno.";
+      resposta.handoff = true;
+      resposta.motivo_handoff = "resposta da IA foi cortada por limite de tokens";
+    }
+
+    // Rede de segurança: se o modelo devolver "\n" escapado como texto literal
+    // em vez de quebra de linha de verdade, converte antes de mandar pro
+    // WhatsApp (já vazou uma vez pro lead, ficou feio).
+    // Trava também o travessão: mesmo proibido no prompt, o modelo já vazou
+    // um "—" pro lead (grave, é o tipo de coisa que entrega "resposta de IA").
+    // Não confia só na instrução, garante removendo aqui também.
+    if (typeof resposta.mensagem === "string") {
+      resposta.mensagem = resposta.mensagem.replace(/\\n/g, "\n").replace(/\s*[—–]\s*/g, ", ").trim();
+    }
+
+    // Rede de segurança pro handoff: se a própria mensagem promete passar a
+    // conversa pra alguém do time ("vou passar", "vou te encaminhar", "colega
+    // do time", "time de pagamento" etc.) mas o modelo esqueceu de marcar
+    // handoff=true, força aqui. Já aconteceu do texto prometer handoff e o
+    // precisa_humano nunca virar true no banco.
+    const prometeuPassarPraHumano = typeof resposta.mensagem === "string" &&
+      /\b(vou (te )?(passar|encaminhar|repassar)|passo (isso |voc[eê] )?pra|colega do time|time de pagamento|algu[eé]m do time)\b/i.test(resposta.mensagem);
+    if (prometeuPassarPraHumano && !resposta.handoff) {
+      console.log("[whatsapp-ia] handoff forçado: mensagem prometeu passar pra humano mas handoff veio false:", telefone);
+      resposta.handoff = true;
+      resposta.motivo_handoff = resposta.motivo_handoff || "mensagem prometeu encaminhar pra um humano";
+    }
+
     resposta.__tokensEntrada = d.usage?.input_tokens || 0;
     resposta.__tokensSaida   = d.usage?.output_tokens || 0;
   } catch (err) {
@@ -255,6 +312,11 @@ export async function processarComIA(supabase: any, telefoneRaw: string, nomeLea
   const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
   if (resposta.estagio) patch.estagio_venda = resposta.estagio;
   if (resposta.handoff) patch.precisa_humano = true;
+  // Mandou o link de checkout? Marca pra rotina de acompanhamento (30min
+  // depois) checar se deu tudo certo, caso ainda não tenha comprado.
+  if (resposta.mensagem && resposta.mensagem.includes("pay.hotmart.com/W87258826R")) {
+    patch.checkout_enviado_em = new Date().toISOString();
+  }
   await supabase.from("whatsapp_contatos").update(patch).eq("telefone", telefone);
 
   if (resposta.handoff) {

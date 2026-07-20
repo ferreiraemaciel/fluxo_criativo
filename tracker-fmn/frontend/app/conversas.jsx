@@ -32,6 +32,68 @@ function dataCurta(iso) {
 
 const JANELA_MS = 24 * 60 * 60 * 1000;
 
+// Mesma lista usada no backend (whatsapp-ia.ts, PADROES_MSG_AUTOMATICA) pra
+// detectar resposta automática de bot. Duplicada aqui só pra classificação
+// visual (cor do badge), não decide se o Claudinho responde ou não.
+const PADROES_MSG_AUTOMATICA_UI = [
+  /no momento (estou|devo estar)/i, /mensagem automática/i, /resposta automática/i,
+  /assim que (eu )?(possível|puder|conseguir)/i, /já (te )?respondo/i,
+  /estou (ausente|fora|indispon[íi]vel)/i, /n[ãa]o est(ou|amos) dispon[íi]ve(l|is)/i,
+  /hor[áa]rio de atendimento/i, /obrigad[oa] pelo contato,? em breve/i, /retorno em breve/i,
+  /retornaremos assim que/i, /agradece(mos)? (o |seu )?contato/i, /me conta como (você|voce) se chama/i,
+  /como posso (estar )?(lhe |te )?ajud/i, /deixe sua mensagem/i, /demanda de trabalho o tempo de resposta/i,
+  /entre em contato (com|pelo|através)/i, /para (melhor )?atend[êe]-?l[oa]/i, /estamos ansiosos para/i,
+  /fico muito feliz em ter (você|voce) (aqui|por aqui)/i, /capturar momentos especiais/i,
+  /agradece(mos)? (a )?sua mensagem/i, /iremos te responder/i,
+];
+function ehMensagemAutomatica(texto) {
+  return PADROES_MSG_AUTOMATICA_UI.some(re => re.test(texto || ''));
+}
+
+/* Classifica o status de resposta de um contato pra badge colorido e pra
+   ordenação "Precisa responder primeiro":
+   'precisa'    verde   — última msg é do lead, real (não bot), aguardando nós.
+   'respondida' dourado — última msg é nossa, aguardando o lead.
+   'automatica' cinza   — última msg do lead bateu com padrão de bot.
+   'fechada'    vermelho — janela fechada. */
+function statusResposta(contato) {
+  if (!contato.janelaAberta) return 'fechada';
+  if (contato.ultimaDirecao === 'entrada') {
+    return ehMensagemAutomatica(contato.ultimoCorpo) ? 'automatica' : 'precisa';
+  }
+  return 'respondida';
+}
+const STATUS_RESPOSTA_COR = {
+  precisa: '#4ade80', respondida: 'var(--fmn-gold)', automatica: 'var(--text-3)', fechada: '#f87171',
+};
+const STATUS_RESPOSTA_LABEL = {
+  precisa: 'Precisa responder', respondida: 'Já respondida, aguardando lead',
+  automatica: 'Última mensagem foi automática (bot)', fechada: 'Janela fechada',
+};
+
+/* Chave canônica de telefone pra casar whatsapp_contatos (formato 55+DDD+9+8díg)
+   com vendas.comprador_telefone (formato inconsistente: às vezes sem 55, às
+   vezes sem o 9). Sempre reduz pro miolo DDD+8dígitos, sem 55 nem 9 extra. */
+function chaveTelefone(raw) {
+  let d = String(raw || '').replace(/\D/g, '');
+  if (d.startsWith('55') && d.length >= 12) d = d.slice(2);
+  if (d.length === 11) d = d.slice(0, 2) + d.slice(3);
+  return d;
+}
+
+/* Semáforo de produto comprado: uma bolinha por produto principal, aparecem
+   juntas quando a pessoa comprou mais de um. Só os 3 produtos principais,
+   packs/presets/outros não geram bolinha. */
+const PRODUTOS_BOLINHA = [
+  { chave: 'modelos de contrato', label: 'MCV',       cor: '#a78bfa' },
+  { chave: 'blindagem',           label: 'Blindagem', cor: '#fb923c' },
+  { chave: 'mensagens que vendem', label: 'MQV',       cor: '#4ade80' },
+];
+function classificarProdutoBolinha(nomeProduto) {
+  const n = (nomeProduto || '').toLowerCase();
+  return PRODUTOS_BOLINHA.find(p => n.includes(p.chave)) || null;
+}
+
 /* Janela de 24h: true se a última mensagem de ENTRADA foi há menos de 24h. */
 function janelaAberta(ultimaEntrada) {
   if (!ultimaEntrada) return false;
@@ -69,7 +131,7 @@ function tempoAteArquivar(referencia) {
   return h > 0 ? `${h}h ${m}min` : `${m}min`;
 }
 
-function ContatoItem({ contato, ativo, onClick }) {
+function ContatoItem({ contato, ativo, onClick, onDispensarAtencao }) {
   return (
     <div onClick={onClick} style={{
       display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', cursor: 'pointer',
@@ -85,9 +147,9 @@ function ContatoItem({ contato, ativo, onClick }) {
         }}>
           {(contato.nome || '?').slice(0, 1).toUpperCase()}
         </div>
-        <div title={contato.janelaAberta ? 'Janela de 24h aberta' : 'Janela fechada'} style={{
+        <div title={STATUS_RESPOSTA_LABEL[contato.statusResposta]} style={{
           position: 'absolute', bottom: -1, right: -1, width: 11, height: 11, borderRadius: '50%',
-          background: contato.janelaAberta ? '#4ade80' : 'var(--text-3)',
+          background: STATUS_RESPOSTA_COR[contato.statusResposta],
           border: '2px solid var(--app-surface, #0f1013)',
         }} />
       </div>
@@ -95,13 +157,22 @@ function ContatoItem({ contato, ativo, onClick }) {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 6 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 5, minWidth: 0 }}>
             {contato.precisaHumano && (
-              <span title="Precisa de humano" style={{ flexShrink: 0, fontSize: 9, fontWeight: 800, color: '#f87171',
-                background: 'rgba(248,113,113,.14)', border: '1px solid rgba(248,113,113,.3)', borderRadius: 4, padding: '1px 4px' }}>!</span>
+              <span onClick={e => { e.stopPropagation(); onDispensarAtencao && onDispensarAtencao(contato.telefone); }}
+                title="Precisa de humano. Clique pra marcar como já atendido." style={{ flexShrink: 0, fontSize: 9, fontWeight: 800, color: '#f87171',
+                background: 'rgba(248,113,113,.14)', border: '1px solid rgba(248,113,113,.3)', borderRadius: 4, padding: '1px 4px', cursor: 'pointer' }}>!</span>
             )}
             <div style={{ fontSize: 13, fontWeight: contato.naoLidas > 0 ? 800 : 600, color: 'var(--text-1)',
               fontFamily: 'Roboto,sans-serif', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {contato.nome || normalizarTelefoneExibicao(contato.telefone)}
             </div>
+            {contato.produtosComprados.length > 0 && (
+              <span style={{ display: 'flex', alignItems: 'center', gap: 3, flexShrink: 0 }}>
+                {contato.produtosComprados.map(p => (
+                  <span key={p.label} title={`Comprou ${p.label}`}
+                    style={{ width: 8, height: 8, borderRadius: '50%', background: p.cor }} />
+                ))}
+              </span>
+            )}
           </div>
           <div style={{ fontSize: 10, color: 'var(--text-3)', flexShrink: 0 }}>{horaCurta(contato.ultimaData)}</div>
         </div>
@@ -142,9 +213,37 @@ function Bolha({ msg }) {
             Claudinho
           </div>
         )}
-        <div style={{ fontSize: 13, color: 'var(--text-1)', fontFamily: 'Roboto,sans-serif', lineHeight: 1.4, whiteSpace: 'pre-wrap' }}>
-          {msg.corpo}
-        </div>
+        {msg.tipo === 'audio' && msg.midia_url ? (
+          <audio controls src={msg.midia_url} style={{ maxWidth: 220, height: 32 }} />
+        ) : msg.tipo === 'audio' ? (
+          <div style={{ fontSize: 12, color: 'var(--text-3)', fontFamily: 'Roboto,sans-serif', fontStyle: 'italic' }}>
+            🎤 Áudio (carregando...)
+          </div>
+        ) : msg.tipo === 'imagem' && msg.midia_url ? (
+          <a href={msg.midia_url} target="_blank" rel="noreferrer">
+            <img src={msg.midia_url} style={{ maxWidth: 220, maxHeight: 260, borderRadius: 8, display: 'block' }} />
+          </a>
+        ) : msg.tipo === 'video' && msg.midia_url ? (
+          <video controls src={msg.midia_url} style={{ maxWidth: 240, maxHeight: 260, borderRadius: 8, display: 'block' }} />
+        ) : msg.tipo === 'documento' && msg.midia_url ? (
+          <a href={msg.midia_url} target="_blank" rel="noreferrer"
+            style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, color: 'var(--fmn-gold)', fontFamily: 'Roboto,sans-serif' }}>
+            <LucideIcon icon="file-text" size={14} /> Ver arquivo
+          </a>
+        ) : (msg.tipo === 'imagem' || msg.tipo === 'video' || msg.tipo === 'documento') ? (
+          <div style={{ fontSize: 12, color: 'var(--text-3)', fontFamily: 'Roboto,sans-serif', fontStyle: 'italic' }}>
+            {msg.tipo === 'imagem' ? '📷' : msg.tipo === 'video' ? '🎬' : '📎'} Mídia (carregando...)
+          </div>
+        ) : (
+          <div style={{ fontSize: 13, color: 'var(--text-1)', fontFamily: 'Roboto,sans-serif', lineHeight: 1.4, whiteSpace: 'pre-wrap' }}>
+            {msg.corpo}
+          </div>
+        )}
+        {msg.corpo && (msg.tipo === 'imagem' || msg.tipo === 'video' || msg.tipo === 'documento') && (
+          <div style={{ fontSize: 12.5, color: 'var(--text-1)', fontFamily: 'Roboto,sans-serif', lineHeight: 1.4, whiteSpace: 'pre-wrap', marginTop: 5 }}>
+            {msg.corpo}
+          </div>
+        )}
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 4, marginTop: 3 }}>
           <span style={{ fontSize: 9.5, color: 'var(--text-3)' }}>{horaCurta(msg.created_at)}</span>
           {isSaida && (
@@ -383,12 +482,18 @@ function KanbanView({ contatos, onAbrir, onMover, etapas }) {
 }
 
 /* ── Métricas ────────────────────────────────────────────────────*/
+// Data mínima pro período das Métricas: início da operação do Claudinho.
+// Vendas anteriores a essa data (ex: Marco Tulio, 05/07/2026) não entram em
+// "Fechados" pra não contaminar a métrica de conversão pós-IA.
+const METRICAS_DATA_MINIMA = '2026-07-10';
+
 function periodoRapido(dias) {
   const to = new Date();
   const from = new Date();
   if (dias != null) from.setDate(from.getDate() - dias);
   const fmt = d => d.toISOString().slice(0, 10);
-  return { from: dias == null ? '2020-01-01' : fmt(from), to: fmt(to) };
+  const fromStr = dias == null ? METRICAS_DATA_MINIMA : fmt(from);
+  return { from: fromStr < METRICAS_DATA_MINIMA ? METRICAS_DATA_MINIMA : fromStr, to: fmt(to) };
 }
 
 function MetricasView({ contatosDb, msgs }) {
@@ -447,8 +552,18 @@ function MetricasView({ contatosDb, msgs }) {
     const emAndamento = contatosDb.filter(c => ['lead_novo', 'em_conversa'].includes(c.etapa)).length;
     const intervencaoHumana = contatosDb.filter(c => c.precisa_humano).length;
 
-    // Fechados no período: virou "aluno" com updated_at dentro do intervalo (aproximação).
-    const fechados = contatosDb.filter(c => c.etapa === 'aluno' && dentro(c.updated_at));
+    // Fechados no período: virou "aluno" com tornou_aluno_em (data real da venda no
+    // Hotmart) dentro do intervalo. Fallback pra updated_at só em contatos antigos sem
+    // backfill, pra não sumir com histórico. Exige também pelo menos 1 mensagem de
+    // entrada ANTES da venda: prova de que passou pelo nosso funil (quiz/conversa)
+    // antes de comprar, não só comprou fora e recebeu o boas-vindas depois.
+    const fechados = contatosDb.filter(c => {
+      if (c.etapa !== 'aluno') return false;
+      const dataVenda = c.tornou_aluno_em || c.updated_at;
+      if (!dentro(dataVenda)) return false;
+      const vendaMs = new Date(dataVenda).getTime();
+      return (msgsPorTelefone[c.telefone] || []).some(m => m.direcao === 'entrada' && new Date(m.created_at).getTime() < vendaMs);
+    });
 
     // Quem mandou o link de checkout por último pra cada fechado, pra atribuir a venda.
     let fechadosIa = 0, fechadosHumano = 0;
@@ -488,13 +603,13 @@ function MetricasView({ contatosDb, msgs }) {
     const perdidos = contatosDb.filter(c => c.etapa === 'perdido' && dentro(c.updated_at));
     const perdidosPct = atendidos.length > 0 ? Math.round((perdidos.length / atendidos.length) * 100) : 0;
 
-    // Tempo médio até fechar: da primeira mensagem trocada até a etapa virar Aluno (updated_at).
+    // Tempo médio até fechar: da primeira mensagem trocada até a etapa virar Aluno (tornou_aluno_em).
     let somaHoras = 0, comTempo = 0;
     for (const c of fechados) {
       const doContato = msgsPorTelefone[c.telefone] || [];
       if (!doContato.length) continue;
       const primeira = doContato.reduce((min, m) => new Date(m.created_at) < new Date(min.created_at) ? m : min, doContato[0]);
-      const horas = (new Date(c.updated_at) - new Date(primeira.created_at)) / 3600000;
+      const horas = (new Date(c.tornou_aluno_em || c.updated_at) - new Date(primeira.created_at)) / 3600000;
       if (horas >= 0) { somaHoras += horas; comTempo++; }
     }
     const tempoMedioHoras = comTempo > 0 ? somaHoras / comTempo : null;
@@ -555,20 +670,23 @@ function MetricasView({ contatosDb, msgs }) {
         {btnRapido('30 dias', 30)}
         {btnRapido('90 dias', 90)}
         {btnRapido('Tudo', null)}
-        <input type="date" value={from} onChange={e => setFrom(e.target.value)}
+        <input type="date" value={from} min={METRICAS_DATA_MINIMA}
+          onChange={e => setFrom(e.target.value < METRICAS_DATA_MINIMA ? METRICAS_DATA_MINIMA : e.target.value)}
           style={{ background: 'rgba(255,255,255,.04)', border: '1px solid var(--app-border)', borderRadius: 7,
             padding: '6px 10px', fontSize: 12, color: 'var(--text-1)', fontFamily: 'Roboto,sans-serif' }} />
         <span style={{ color: 'var(--text-3)', fontSize: 12 }}>até</span>
-        <input type="date" value={to} onChange={e => setTo(e.target.value)}
+        <input type="date" value={to} min={METRICAS_DATA_MINIMA} onChange={e => setTo(e.target.value)}
           style={{ background: 'rgba(255,255,255,.04)', border: '1px solid var(--app-border)', borderRadius: 7,
             padding: '6px 10px', fontSize: 12, color: 'var(--text-1)', fontFamily: 'Roboto,sans-serif' }} />
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 12 }}>
+      <div style={{ display: 'flex', gap: 12, marginBottom: 12 }}>
         <CardKPI label="Atendimentos" value={stats.atendimentos} icon="message-circle" />
         <CardKPI label="Em andamento" value={stats.emAndamento} icon="clock" />
         <CardKPI label="Fechados (viraram aluno)" value={stats.fechados} icon="check-circle" accent />
         <CardKPI label="Taxa de conversão" value={stats.conversao + '%'} icon="target" accent />
+      </div>
+      <div style={{ display: 'flex', gap: 12, marginBottom: 12 }}>
         <CardKPI label="Tempo médio até fechar" value={stats.tempoMedioLabel} icon="hourglass" />
         <CardKPI label="Perdidos" value={`${stats.perdidos} (${stats.perdidosPct}%)`} icon="x-circle" />
         <CardKPI label="Precisando de humano" value={stats.intervencaoHumana} icon="alert-triangle" />
@@ -580,16 +698,18 @@ function MetricasView({ contatosDb, msgs }) {
       <div style={{ fontSize: 10.5, color: 'var(--text-3)', fontFamily: 'Roboto,sans-serif', marginBottom: 8 }}>
         {cambio ? `Dólar convertido pelo PTAX oficial (Banco Central): R$ ${cambio.usdBrl.toFixed(4)} em ${cambio.dataCotacao.slice(0, 10).split('-').reverse().join('/')}` : 'Buscando cotação oficial...'}
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 12 }}>
+      <div style={{ display: 'flex', gap: 12, marginBottom: 12 }}>
         <CardKPI label="Gasto Meta (templates)" value={fmtUsdBrl(stats.custoMetaUsd, cambio)} icon="message-square" />
         <CardKPI label="Gasto Anthropic (Claudinho)" value={fmtUsdBrl(stats.custoAnthropicUsd, cambio)} icon="cpu" />
         <CardKPI label="Custo total" value={fmtUsdBrl(stats.custoTotalUsd, cambio)} icon="dollar-sign" accent />
+      </div>
+      <div style={{ display: 'flex', gap: 12, marginBottom: 12 }}>
         <CardKPI label="Custo por lead" value={fmtUsdBrl(stats.custoPorLead, cambio, 4)} icon="user" />
         <CardKPI label="Custo por venda" value={stats.custoPorVenda > 0 ? fmtUsdBrl(stats.custoPorVenda, cambio) : '—'} icon="shopping-cart" accent />
         <CardKPI label="Gasto Meta (real, cobrado)" value={custoRealMeta ? fmtUsdBrl(custoRealMeta.custoTotalUsd, cambio) : '...'} icon="check-check" />
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 12, marginTop: 12 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 12 }}>
         <VizCard title="Distribuição por etapa" hint="dos atendidos no período" items={stats.porEtapa} total={stats.atendimentos} />
         <VizCard title="Taxa de resposta ao 1º contato" hint="quem respondeu a mensagem inicial" items={stats.respostaItems} total={stats.atendimentos} />
         <VizCard title="Fechados por quem" hint="Claudinho x humano, pelo link de checkout" items={stats.fechadosPorQuemItems} total={stats.fechados} />
@@ -605,29 +725,64 @@ function MetricasView({ contatosDb, msgs }) {
 }
 
 /* Mensagens prontas pro vendedor humano mandar em 1 clique, dentro da janela aberta. */
-const LINK_CHECKOUT_MCV = 'https://pay.hotmart.com/W87258826R?checkoutMode=10&utm_source=whatsapp&utm_medium=manual&utm_campaign=atendimento';
+// sck (não utm_source genérico) é o único parâmetro que a Hotmart de fato lê
+// e devolve no webhook (parseSck em hotmart-webhook), por isso o link usa sck.
+const LINK_CHECKOUT_MCV = 'https://pay.hotmart.com/W87258826R?checkoutMode=10&sck=whatsapp-manual';
 const MENSAGENS_PRONTAS = [
   { id: 'checkout', label: 'Link de checkout (MCV)', icone: 'link',
     texto: `Segue o link pra garantir o seu: ${LINK_CHECKOUT_MCV}` },
+  { id: 'explicacao', label: 'O que é o MCV', icone: 'info',
+    texto: 'É um arsenal com +200 modelos de contrato editáveis no Canva, pra fotógrafo e videomaker autônomo ou MEI. Contratos em formato visual, não Word genérico, feitos por um advogado especializado em fotografia que também é fotógrafo há 15 anos. 12x de R$ 30,72 (ou R$ 297,00 à vista), acesso vitalício com atualização e suporte.' },
+  { id: 'eca_digital', label: 'ECA Digital / Lei Felca', icone: 'shield-check',
+    texto: 'Sim, pode ficar tranquilo. Os modelos já estão atualizados com o ECA Digital (a lei também conhecida como "Lei Felca"), cobrindo exatamente o que a lei e os decretos atuais exigem sobre proteção de imagem.' },
+  { id: 'objecao_preco', label: 'Objeção de preço', icone: 'scale',
+    texto: 'Um processo simples no Juizado Especial leva em média 14 meses pra resolver. Os 12x de R$ 30,72 cobrem a vida profissional inteira, não é o preço de "um contrato só". Um trabalho perdido por falta de contrato já vale bem mais que isso.' },
+  { id: 'retomar', label: 'Retomar contato', icone: 'message-circle',
+    texto: 'Oi! Passando aqui só pra saber se ficou alguma dúvida ou se posso te ajudar com mais alguma coisa.' },
+  { id: 'mais_tempo', label: 'Pediu mais tempo', icone: 'clock',
+    texto: 'Sem problema, fica à vontade. Só um detalhe: o quanto antes você se proteger, menos chance de passar por algum perrengue sem contrato. Qualquer dúvida, é só chamar.' },
+  { id: 'pos_compra', label: 'Agradecimento pós-compra', icone: 'heart',
+    texto: 'Que alegria te ter com a gente! Agora é só acessar os modelos e começar a proteger cada trabalho novo. Qualquer dúvida no acesso ou nos contratos, é só chamar por aqui.' },
 ];
 
 function ConversasScreen() {
   const [msgs, setMsgs]           = useState([]);
   const [contatosDb, setContatosDb] = useState([]);
+  const [produtosPorTelefone, setProdutosPorTelefone] = useState({}); // chaveTelefone -> [{label,cor}]
   const [loading, setLoading]     = useState(true);
-  const [selecionado, setSelecionado] = useState(null);
+  const [selecionado, setSelecionadoRaw] = useState(null);
   const [texto, setTexto]         = useState('');
+  const rascunhosRef = useRef({}); // telefone -> texto ainda não enviado, um rascunho por conversa (igual WhatsApp)
+
+  // Troca de contato sempre passa por aqui: guarda o que estava sendo
+  // digitado na conversa anterior e recupera o rascunho da nova, em vez de
+  // levar o texto de uma conversa pra outra.
+  function setSelecionado(telefone) {
+    setTexto(prevTexto => {
+      if (selecionado) rascunhosRef.current[selecionado] = prevTexto;
+      return telefone ? (rascunhosRef.current[telefone] || '') : '';
+    });
+    setSelecionadoRaw(telefone);
+  }
   const [enviando, setEnviando]   = useState(false);
   const [busca, setBusca]         = useState('');
   const [modo, setModo]           = useState('lista'); // lista | kanban
-  const [mostrarArquivados, setMostrarArquivados] = useState(false);
-  const [janelaAbertaPrimeiro, setJanelaAbertaPrimeiro] = useState(false);
+  // 'precisa' (padrão, quem precisa de resposta primeiro) | 'janela' | 'recentes'
+  const [ordemLista, setOrdemLista] = useState('precisa');
   const [modalNovoContato, setModalNovoContato] = useState(false);
   const [modalPrompt, setModalPrompt] = useState(false);
   const [prontasAberto, setProntasAberto] = useState(false);
   const [enviandoPronta, setEnviandoPronta] = useState(null);
   const [tick, setTick]           = useState(0); // força re-render pro contador de tempo
   const [iaAtivaGlobal, setIaAtivaGlobal] = useState(false);
+  const [modoTreinamento, setModoTreinamento] = useState(false);
+  const [enviandoMidia, setEnviandoMidia] = useState(false);
+  const [dragOverThread, setDragOverThread] = useState(false);
+  const [menuAnexoAberto, setMenuAnexoAberto] = useState(false);
+  // Mídia escolhida (arquivo ou link) que ainda não foi enviada: fica em
+  // espera até o clique em Enviar, pra dar chance de ver antes e cancelar.
+  const [pendente, setPendente] = useState(null); // { tipo: 'arquivo'|'link', file?, url?, preview, nome }
+  const fileInputRef = useRef(null);
   const scrollRef = useRef(null);
   const SUPA_URL = window.db?.supabaseUrl || '';
   const SUPA_KEY = window.db?.supabaseKey  || '';
@@ -651,6 +806,50 @@ function ConversasScreen() {
       });
     window.db.from('app_config').select('valor').eq('chave', 'whatsapp_ia_ativa').single()
       .then(({ data }) => { if (data) setIaAtivaGlobal(data.valor === true); });
+    window.db.from('app_config').select('valor').eq('chave', 'whatsapp_modo_treinamento').single()
+      .then(({ data }) => setModoTreinamento(data?.valor === true));
+    // Semáforo de produto comprado (só vendas aprovadas): uma bolinha por
+    // produto principal, pra diferenciar de quem só está em contato/suporte.
+    // O Supabase corta em 1000 linhas por página mesmo pedindo limit maior,
+    // então pagina de verdade com .range() até esgotar (hoje são 1130+ vendas
+    // aprovadas, sem paginação metade delas nunca chegava aqui).
+    (async () => {
+      const todasVendas = [];
+      let pagina = 0;
+      while (true) {
+        const de = pagina * 1000, ate = de + 999;
+        const { data, error } = await window.db.from('vendas').select('comprador_telefone, comprador_email, produto_nome')
+          .eq('status', 'aprovada').range(de, ate);
+        if (error || !data) break;
+        todasVendas.push(...data);
+        if (data.length < 1000) break;
+        pagina++;
+      }
+
+      // Nem toda venda vem com telefone da Hotmart (alguns checkouts não
+      // pedem o campo, ex: Blindagem). Quando falta, tenta recuperar pelo
+      // e-mail: se o mesmo comprador tem OUTRA compra com telefone, usa esse.
+      const telefonePorEmail = {};
+      for (const v of todasVendas) {
+        if (v.comprador_telefone && v.comprador_email) {
+          const chave = chaveTelefone(v.comprador_telefone);
+          if (chave) telefonePorEmail[v.comprador_email.toLowerCase()] = chave;
+        }
+      }
+
+      const mapa = {};
+      for (const v of todasVendas) {
+        const prod = classificarProdutoBolinha(v.produto_nome);
+        if (!prod) continue;
+        const chave = v.comprador_telefone
+          ? chaveTelefone(v.comprador_telefone)
+          : (v.comprador_email ? telefonePorEmail[v.comprador_email.toLowerCase()] : null);
+        if (!chave) continue;
+        if (!mapa[chave]) mapa[chave] = [];
+        if (!mapa[chave].some(p => p.label === prod.label)) mapa[chave].push(prod);
+      }
+      setProdutosPorTelefone(mapa);
+    })();
   }
 
   function marcarSpam(telefone) {
@@ -686,6 +885,14 @@ function ConversasScreen() {
     if (window.db) window.db.from('whatsapp_contatos').upsert({ telefone, ...patch }, { onConflict: 'telefone' }).then(() => carregar());
   }
 
+  // Marca "já atendi" sem mexer no estado do Claudinho (pausado ou ativo
+  // continua do jeito que estava). Só limpa o aviso de atenção; se o
+  // Claudinho pedir ajuda de novo depois, o aviso volta a aparecer sozinho.
+  function dispensarAtencaoHumana(telefone) {
+    setContatosDb(prev => prev.map(c => c.telefone === telefone ? { ...c, precisa_humano: false } : c));
+    if (window.db) window.db.from('whatsapp_contatos').upsert({ telefone, precisa_humano: false }, { onConflict: 'telefone' }).then(() => carregar());
+  }
+
   const contatos = useMemo(() => {
     const porTelefone = {};
     for (const m of msgs) {
@@ -702,7 +909,7 @@ function ConversasScreen() {
       const ultimaSaidaOk = lista.find(m => m.direcao === 'saida' && m.status !== 'falhou');
       const nomeMsg = lista.find(m => m.nome)?.nome || null;
       const dbRow   = contatosPorTelefone[telefone];
-      return {
+      const contato = {
         telefone, nome: dbRow?.nome || nomeMsg,
         ultimoCorpo: ultima?.corpo || '(sem mensagens ainda)',
         ultimaData: ultima?.created_at || dbRow?.updated_at,
@@ -718,20 +925,35 @@ function ConversasScreen() {
         iaPausada: dbRow?.ia_pausada || false,
         precisaHumano: dbRow?.precisa_humano || false,
       };
+      contato.statusResposta = statusResposta(contato);
+      contato.produtosComprados = produtosPorTelefone[chaveTelefone(telefone)] || [];
+      return contato;
     }).sort((a, b) => new Date(b.ultimaData) - new Date(a.ultimaData))
       .filter(c => !busca || (c.nome || c.telefone).toLowerCase().includes(busca.toLowerCase()));
-  }, [msgs, contatosDb, busca, tick]);
+  }, [msgs, contatosDb, busca, tick, produtosPorTelefone]);
 
   // Por padrão só mostra quem está em atendimento (Lead novo / Em conversa).
   // "Perdido" (janela fechada, nunca respondeu) fica arquivado, some da
-  // visualização até o usuário pedir pra ver.
+  // visualização. O Chat nunca mostra Perdido (só quem está em atendimento);
+  // o Kanban sempre mostra a coluna Perdido, pra ter visão completa do funil.
+  // Ordem "precisa responder primeiro": 3 blocos, cada um mantém a ordenação
+  // por data mais recente por dentro (contatos já vem ordenado assim).
+  // Bloco 1: lead respondeu de verdade, aguardando nós (statusResposta='precisa').
+  // Bloco 2: já respondemos, aguardando o lead ('respondida') ou mensagem
+  // automática de bot ('automatica', não conta como pendência real).
+  // Bloco 3: janela fechada.
+  const PESO_ORDEM_PRECISA = { precisa: 0, respondida: 1, automatica: 1, fechada: 2 };
   const contatosVisiveis = useMemo(() => {
-    const base = mostrarArquivados ? contatos : contatos.filter(c => c.etapa !== 'perdido');
-    if (!janelaAbertaPrimeiro) return base;
-    // Mantém a ordenação por data mais recente dentro de cada grupo (aberta / fechada).
-    return [...base].sort((a, b) => (b.janelaAberta ? 1 : 0) - (a.janelaAberta ? 1 : 0));
-  }, [contatos, mostrarArquivados, janelaAbertaPrimeiro]);
-  const etapasVisiveis = mostrarArquivados ? ETAPAS : ETAPAS.filter(e => e.id !== 'perdido');
+    const base = contatos.filter(c => c.etapa !== 'perdido');
+    if (ordemLista === 'janela') {
+      return [...base].sort((a, b) => (b.janelaAberta ? 1 : 0) - (a.janelaAberta ? 1 : 0));
+    }
+    if (ordemLista === 'precisa') {
+      return [...base].sort((a, b) => PESO_ORDEM_PRECISA[a.statusResposta] - PESO_ORDEM_PRECISA[b.statusResposta]);
+    }
+    return base; // 'recentes', já vem ordenado por data
+  }, [contatos, ordemLista]);
+  const etapasVisiveis = ETAPAS;
 
   const thread = useMemo(() => {
     if (!selecionado) return [];
@@ -752,7 +974,25 @@ function ConversasScreen() {
     window.db.from('whatsapp_mensagens').update({ lida_pelo_time: true }).in('id', idsNaoLidas).then(() => carregar());
   }, [selecionado, msgs]);
 
+  // Esc: fecha o que estiver mais "em cima" primeiro (modal, anexo pendente,
+  // menu de anexo, painel de mensagens prontas) e só por último sai da
+  // conversa selecionada e volta pra lista.
+  useEffect(() => {
+    function onKeyDown(e) {
+      if (e.key !== 'Escape') return;
+      if (modalNovoContato) { setModalNovoContato(false); return; }
+      if (modalPrompt) { setModalPrompt(false); return; }
+      if (menuAnexoAberto) { setMenuAnexoAberto(false); return; }
+      if (pendente) { cancelarPendente(); return; }
+      if (prontasAberto) { setProntasAberto(false); return; }
+      if (selecionado) { setSelecionado(null); return; }
+    }
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [modalNovoContato, modalPrompt, menuAnexoAberto, pendente, prontasAberto, selecionado]);
+
   async function enviar() {
+    if (pendente) return enviarPendente();
     if (!texto.trim() || !selecionado || enviando) return;
     setEnviando(true);
     try {
@@ -764,6 +1004,7 @@ function ConversasScreen() {
       const d = await r.json();
       if (!r.ok || d.error) throw new Error(d.error || 'falha no envio');
       setTexto('');
+      if (selecionado) delete rascunhosRef.current[selecionado];
       carregar();
     } catch (e) {
       alert('Erro ao enviar: ' + e.message + (contatoAtivo && !contatoAtivo.janelaAberta ? '\n\nA janela de 24h desse contato está fechada, precisa de um template aprovado pra reabrir.' : ''));
@@ -791,6 +1032,62 @@ function ConversasScreen() {
     }
   }
 
+  // Só GUARDA o arquivo escolhido/arrastado pra mostrar a prévia. Não manda
+  // nada ainda, quem manda de verdade é enviarPendente() no clique de Enviar.
+  function selecionarArquivo(file) {
+    if (!file || !selecionado) return;
+    const preview = file.type.startsWith('image/') || file.type.startsWith('video/')
+      ? URL.createObjectURL(file) : null;
+    setPendente({ tipo: 'arquivo', file, preview, nome: file.name, mime: file.type });
+  }
+
+  function colarLinkMidia() {
+    if (!selecionado) return;
+    const url = window.prompt('Cole o link direto do arquivo (imagem, vídeo ou áudio já hospedado):');
+    if (!url || !url.trim()) return;
+    setPendente({ tipo: 'link', url: url.trim(), preview: url.trim(), nome: url.trim() });
+  }
+
+  function cancelarPendente() {
+    if (pendente?.preview && pendente.tipo === 'arquivo') URL.revokeObjectURL(pendente.preview);
+    setPendente(null);
+  }
+
+  async function enviarPendente() {
+    if (!pendente || !selecionado || enviandoMidia) return;
+    setEnviandoMidia(true);
+    try {
+      let r;
+      if (pendente.tipo === 'arquivo') {
+        const form = new FormData();
+        form.append('to', selecionado);
+        if (contatoAtivo?.nome) form.append('nome', contatoAtivo.nome);
+        if (texto.trim()) form.append('legenda', texto.trim());
+        form.append('arquivo', pendente.file);
+        r = await fetch(`${SUPA_URL}/functions/v1/whatsapp-enviar`, {
+          method: 'POST', headers: { 'Authorization': `Bearer ${SUPA_KEY}` }, body: form,
+        });
+      } else {
+        r = await fetch(`${SUPA_URL}/functions/v1/whatsapp-enviar`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPA_KEY}` },
+          body: JSON.stringify({ action: 'midia_link', to: selecionado, nome: contatoAtivo?.nome, url: pendente.url, legenda: texto.trim(), origem: 'manual' }),
+        });
+      }
+      const d = await r.json();
+      if (!r.ok || d.error) throw new Error(d.error || 'falha no envio');
+      if (pendente.preview && pendente.tipo === 'arquivo') URL.revokeObjectURL(pendente.preview);
+      setPendente(null);
+      setTexto('');
+      if (selecionado) delete rascunhosRef.current[selecionado];
+      carregar();
+    } catch (e) {
+      alert('Erro ao enviar mídia: ' + e.message + (contatoAtivo && !contatoAtivo.janelaAberta ? '\n\nA janela de 24h desse contato está fechada, precisa de um template aprovado pra reabrir.' : ''));
+    } finally {
+      setEnviandoMidia(false);
+    }
+  }
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <TopBar title="Conversas" actions={
@@ -815,6 +1112,14 @@ function ConversasScreen() {
           </Btn>
         </div>
       } />
+      {modoTreinamento && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px',
+          background: 'rgba(251,191,36,.1)', borderBottom: '1px solid rgba(251,191,36,.3)',
+          fontSize: 12, fontFamily: 'Roboto,sans-serif', color: '#fbbf24', fontWeight: 700 }}>
+          <LucideIcon icon="graduation-cap" size={14} />
+          Etapa de treinamento do Claudinho: sem resposta automática ao vivo (exceto número de teste do Felipe), só retomada de janela nos últimos minutos antes de fechar.
+        </div>
+      )}
       {modalPrompt && <PromptClaudinhoModal SUPA_URL={SUPA_URL} SUPA_KEY={SUPA_KEY} onClose={() => setModalPrompt(false)} />}
       {modalNovoContato && (
         <NovoContatoModal SUPA_URL={SUPA_URL} SUPA_KEY={SUPA_KEY}
@@ -822,7 +1127,7 @@ function ConversasScreen() {
           onEnviado={(telefone) => { setModalNovoContato(false); carregar(); setSelecionado(telefone.replace(/\D/g, '').startsWith('55') ? telefone.replace(/\D/g, '') : '55' + telefone.replace(/\D/g, '')); }} />
       )}
       {modo === 'kanban' && (
-        <KanbanView contatos={contatosVisiveis} etapas={etapasVisiveis} onMover={moverEtapa}
+        <KanbanView contatos={contatos} etapas={etapasVisiveis} onMover={moverEtapa}
           onAbrir={(telefone) => { setSelecionado(telefone); setModo('lista'); }} />
       )}
       {modo === 'metricas' && (
@@ -835,20 +1140,20 @@ function ConversasScreen() {
             <input value={busca} onChange={e => setBusca(e.target.value)} placeholder="Buscar contato..."
               style={{ flex: 1, boxSizing: 'border-box', background: 'rgba(255,255,255,.04)', border: '1px solid var(--app-border)',
                 borderRadius: 8, padding: '7px 10px', fontSize: 12.5, color: 'var(--text-1)', fontFamily: 'Roboto,sans-serif', outline: 'none' }} />
-            <Btn size="sm" variant={janelaAbertaPrimeiro ? 'secondary' : 'ghost'} title="Mostrar janela aberta primeiro"
-              onClick={() => setJanelaAbertaPrimeiro(v => !v)}>
-              <LucideIcon icon="clock" size={13} />
-            </Btn>
-            <Btn size="sm" variant={mostrarArquivados ? 'secondary' : 'ghost'} title="Contatos perdidos (janela fechada, nunca respondeu)"
-              onClick={() => setMostrarArquivados(v => !v)}>
-              <LucideIcon icon="archive" size={13} />
-            </Btn>
+            <select value={ordemLista} onChange={e => setOrdemLista(e.target.value)}
+              title="Ordem da lista de contatos"
+              style={{ background: 'rgba(255,255,255,.04)', border: '1px solid var(--app-border)', borderRadius: 8,
+                padding: '0 8px', fontSize: 11.5, color: 'var(--text-1)', fontFamily: 'Roboto,sans-serif', outline: 'none', cursor: 'pointer' }}>
+              <option value="precisa">Precisa responder</option>
+              <option value="janela">Janela aberta</option>
+              <option value="recentes">Recentes</option>
+            </select>
           </div>
           <div style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
             {loading && <div style={{ padding: 20, textAlign: 'center', color: 'var(--text-3)', fontSize: 12 }}>Carregando...</div>}
             {!loading && !contatosVisiveis.length && <div style={{ padding: 20, textAlign: 'center', color: 'var(--text-3)', fontSize: 12 }}>Nenhuma conversa ainda.</div>}
             {contatosVisiveis.map(c => (
-              <ContatoItem key={c.telefone} contato={c} ativo={c.telefone === selecionado} onClick={() => setSelecionado(c.telefone)} />
+              <ContatoItem key={c.telefone} contato={c} ativo={c.telefone === selecionado} onClick={() => setSelecionado(c.telefone)} onDispensarAtencao={dispensarAtencaoHumana} />
             ))}
           </div>
         </div>
@@ -881,7 +1186,9 @@ function ConversasScreen() {
                     <LucideIcon icon="shield-off" size={13} />
                   </Btn>
                   {contatoAtivo?.precisaHumano && (
-                    <span title="A IA pediu ajuda de um humano nessa conversa" style={{ fontSize: 10.5, fontFamily: 'Roboto,sans-serif',
+                    <span onClick={() => dispensarAtencaoHumana(selecionado)}
+                      title="A IA pediu ajuda de um humano nessa conversa. Clique pra marcar como já atendido."
+                      style={{ fontSize: 10.5, fontFamily: 'Roboto,sans-serif', cursor: 'pointer',
                       fontWeight: 800, color: '#f87171', background: 'rgba(248,113,113,.14)', border: '1px solid rgba(248,113,113,.3)',
                       borderRadius: 999, padding: '3px 9px' }}>● precisa de humano</span>
                   )}
@@ -899,16 +1206,46 @@ function ConversasScreen() {
                   }}>
                     {contatoAtivo?.janelaAberta
                       ? `Grátis · ${tempoRestanteJanela(contatoAtivo.ultimaEntradaData)}`
-                      : (tempoAteArquivar(contatoAtivo?.referenciaArquivamento)
+                      : (contatoAtivo?.etapa !== 'aluno' && contatoAtivo?.etapa !== 'perdido' && tempoAteArquivar(contatoAtivo?.referenciaArquivamento)
                           ? `Será arquivado em ${tempoAteArquivar(contatoAtivo.referenciaArquivamento)}`
                           : 'Janela fechada · precisa de template')}
                   </div>
+                  {/* Marcação manual de desfecho: some com a retomada automática pra
+                      sempre nesse contato (o whatsapp-retomada já ignora etapa=perdido
+                      e etapa=aluno), evita mandar retomada pra quem já disse não ou já comprou. */}
+                  {contatoAtivo?.etapa !== 'aluno' && (
+                    <Btn size="sm" variant="ghost" title="Marcar como venda fechada (para a retomada automática)"
+                      onClick={() => { if (window.confirm('Marcar essa conversa como venda fechada? Ela sai do fluxo de retomada automática.')) moverEtapa(selecionado, 'aluno'); }}>
+                      <span style={{ color: '#4ade80' }}>✓ Fechada</span>
+                    </Btn>
+                  )}
+                  {contatoAtivo?.etapa !== 'perdido' && (
+                    <Btn size="sm" variant="ghost" title="Marcar como venda perdida (para a retomada automática)"
+                      onClick={() => { if (window.confirm('Marcar essa conversa como venda perdida? Ela sai do fluxo de retomada automática e some do Chat.')) moverEtapa(selecionado, 'perdido'); }}>
+                      <span style={{ color: '#f87171' }}>✕ Perdida</span>
+                    </Btn>
+                  )}
                 </div>
               </div>
 
               <div style={{ flex: 1, display: 'flex', overflow: 'hidden', minHeight: 0 }}>
-                <div ref={scrollRef} style={{ flex: 1, overflowY: 'auto', padding: '14px 18px' }}>
+                <div ref={scrollRef} style={{ flex: 1, overflowY: 'auto', padding: '14px 18px', position: 'relative' }}
+                  onDragOver={e => { if (contatoAtivo?.janelaAberta) { e.preventDefault(); setDragOverThread(true); } }}
+                  onDragLeave={() => setDragOverThread(false)}
+                  onDrop={e => {
+                    e.preventDefault(); setDragOverThread(false);
+                    if (!contatoAtivo?.janelaAberta) return;
+                    const file = e.dataTransfer.files?.[0];
+                    if (file) selecionarArquivo(file);
+                  }}>
                   {thread.map(m => <Bolha key={m.id} msg={m} />)}
+                  {dragOverThread && (
+                    <div style={{ position: 'absolute', inset: 8, borderRadius: 10, border: '2px dashed var(--fmn-gold)',
+                      background: 'rgba(234,170,65,.08)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: 13, fontWeight: 700, color: 'var(--fmn-gold)', fontFamily: 'Roboto,sans-serif', pointerEvents: 'none' }}>
+                      Solte o arquivo pra enviar
+                    </div>
+                  )}
                 </div>
 
                 {prontasAberto && (
@@ -943,22 +1280,79 @@ function ConversasScreen() {
                 )}
               </div>
 
-              <div style={{ padding: 12, borderTop: '1px solid var(--app-border)', display: 'flex', gap: 8 }}>
+              {pendente && (
+                <div style={{ padding: '10px 12px', borderTop: '1px solid var(--app-border)', display: 'flex', alignItems: 'center', gap: 10,
+                  background: 'rgba(234,170,65,.06)' }}>
+                  {pendente.preview && (pendente.mime?.startsWith('image/') || (!pendente.mime && pendente.tipo === 'link')) ? (
+                    <img src={pendente.preview} style={{ width: 52, height: 52, objectFit: 'cover', borderRadius: 8, border: '1px solid var(--app-border)' }}
+                      onError={e => { e.target.style.display = 'none'; }} />
+                  ) : pendente.mime?.startsWith('video/') ? (
+                    <video src={pendente.preview} style={{ width: 52, height: 52, objectFit: 'cover', borderRadius: 8, border: '1px solid var(--app-border)' }} />
+                  ) : (
+                    <div style={{ width: 52, height: 52, borderRadius: 8, border: '1px solid var(--app-border)', display: 'flex',
+                      alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <LucideIcon icon={pendente.tipo === 'link' ? 'link' : 'file'} size={18} style={{ color: 'var(--fmn-gold)' }} />
+                    </div>
+                  )}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--text-1)', fontFamily: 'Roboto,sans-serif' }}>
+                      Pronto pra enviar
+                    </div>
+                    <div style={{ fontSize: 10.5, color: 'var(--text-3)', fontFamily: 'Roboto,sans-serif', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {pendente.nome}
+                    </div>
+                  </div>
+                  <Btn size="sm" variant="ghost" title="Cancelar" onClick={cancelarPendente} disabled={enviandoMidia}>
+                    <LucideIcon icon="x" size={13} />
+                  </Btn>
+                </div>
+              )}
+              <div style={{ padding: 12, borderTop: pendente ? 'none' : '1px solid var(--app-border)', display: 'flex', gap: 8 }}>
                 <textarea value={texto} onChange={e => setTexto(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); enviar(); } }}
-                  placeholder={contatoAtivo?.janelaAberta ? 'Digite sua mensagem... (Shift+Enter pra quebrar linha)' : 'Janela fechada, precisa de template pra reabrir'}
+                  placeholder={pendente ? 'Legenda (opcional)...' : contatoAtivo?.janelaAberta ? 'Digite sua mensagem... (Shift+Enter pra quebrar linha)' : 'Janela fechada, precisa de template pra reabrir'}
                   disabled={!contatoAtivo?.janelaAberta}
                   rows={1}
                   style={{ flex: 1, boxSizing: 'border-box', background: 'rgba(255,255,255,.04)', border: '1px solid var(--app-border)',
                     borderRadius: 8, padding: '9px 12px', fontSize: 13, color: 'var(--text-1)', fontFamily: 'Roboto,sans-serif', outline: 'none',
                     resize: 'none', maxHeight: 120, lineHeight: 1.4 }}
                   onInput={e => { e.target.style.height = 'auto'; e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px'; }} />
+                <input ref={fileInputRef} type="file" accept="image/*,video/*,audio/*" style={{ display: 'none' }}
+                  onChange={e => { const f = e.target.files?.[0]; e.target.value = ''; if (f) selecionarArquivo(f); }} />
+                <div style={{ position: 'relative' }}>
+                  <Btn variant="ghost" title="Anexar foto, vídeo ou áudio"
+                    disabled={!contatoAtivo?.janelaAberta || enviandoMidia}
+                    onClick={() => setMenuAnexoAberto(a => !a)}>
+                    <LucideIcon icon="paperclip" size={14} />
+                  </Btn>
+                  {menuAnexoAberto && (
+                    <>
+                      <div style={{ position: 'fixed', inset: 0, zIndex: 9 }} onClick={() => setMenuAnexoAberto(false)} />
+                      <div style={{ position: 'absolute', bottom: '110%', left: 0, zIndex: 10, minWidth: 190,
+                        background: '#18191c', border: '1px solid var(--app-border)', borderRadius: 9,
+                        boxShadow: '0 8px 24px rgba(0,0,0,.4)', overflow: 'hidden' }}>
+                        <button onClick={() => { setMenuAnexoAberto(false); fileInputRef.current?.click(); }}
+                          style={{ width: '100%', boxSizing: 'border-box', textAlign: 'left', padding: '9px 12px', display: 'flex',
+                            alignItems: 'center', gap: 8, background: 'transparent', border: 'none', cursor: 'pointer',
+                            fontSize: 12.5, color: 'var(--text-1)', fontFamily: 'Roboto,sans-serif' }}>
+                          <LucideIcon icon="upload" size={13} style={{ color: 'var(--fmn-gold)' }} /> Enviar arquivo
+                        </button>
+                        <button onClick={() => { setMenuAnexoAberto(false); colarLinkMidia(); }}
+                          style={{ width: '100%', boxSizing: 'border-box', textAlign: 'left', padding: '9px 12px', display: 'flex',
+                            alignItems: 'center', gap: 8, background: 'transparent', border: 'none', cursor: 'pointer',
+                            fontSize: 12.5, color: 'var(--text-1)', fontFamily: 'Roboto,sans-serif', borderTop: '1px solid var(--app-border)' }}>
+                          <LucideIcon icon="link" size={13} style={{ color: 'var(--fmn-gold)' }} /> Colar link
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
                 <Btn variant={prontasAberto ? 'secondary' : 'ghost'} title="Mensagens prontas"
                   onClick={() => setProntasAberto(p => !p)}>
                   <LucideIcon icon="zap" size={14} />
                 </Btn>
-                <Btn onClick={enviar} disabled={!contatoAtivo?.janelaAberta || enviando || !texto.trim()}>
-                  {enviando ? 'Enviando...' : 'Enviar'}
+                <Btn onClick={enviar} disabled={!contatoAtivo?.janelaAberta || enviando || enviandoMidia || (!pendente && !texto.trim())}>
+                  {enviandoMidia ? 'Enviando mídia...' : enviando ? 'Enviando...' : 'Enviar'}
                 </Btn>
               </div>
             </>

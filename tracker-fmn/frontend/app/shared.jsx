@@ -193,6 +193,21 @@ function Divider({ style = {} }) {
 
 /* ── Sidebar ─────────────────────────────────────────────────────*/
 function Sidebar({ activePage, onNavigate, collapsed = false, onToggle }) {
+  // Alguma conversa precisando de humano? Mostra um alerta na aba Conversas
+  // mesmo quando o usuário está em outra tela, pra nunca passar batido.
+  const [precisaHumano, setPrecisaHumano] = useState(false);
+  useEffect(() => {
+    if (!window.db) return;
+    function checar() {
+      window.db.from('whatsapp_contatos').select('telefone', { count: 'exact', head: true })
+        .eq('precisa_humano', true).eq('is_spam', false)
+        .then(({ count }) => setPrecisaHumano((count || 0) > 0));
+    }
+    checar();
+    const t = setInterval(checar, 20000);
+    return () => clearInterval(t);
+  }, []);
+
   /* Ordem: Visão Geral · Ideias · Orgânico · Anúncios · Tráfego · Financeiro */
   const navMain = [
     { id: 'dashboard',  icon: 'layout-dashboard', label: 'Visão Geral' },
@@ -209,11 +224,13 @@ function Sidebar({ activePage, onNavigate, collapsed = false, onToggle }) {
   function NavItem({ item }) {
     const active = activePage === item.id;
     const [hov, setHov] = useState(false);
+    const alerta = item.id === 'conversas' && precisaHumano;
     return (
       <button onClick={() => onNavigate(item.id)}
         onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
-        title={collapsed ? item.label : undefined}
+        title={collapsed ? (alerta ? `${item.label} · precisa de humano` : item.label) : undefined}
         style={{
+          position: 'relative',
           display: 'flex', alignItems: 'center',
           gap: collapsed ? 0 : 10,
           justifyContent: collapsed ? 'center' : 'flex-start',
@@ -225,7 +242,14 @@ function Sidebar({ activePage, onNavigate, collapsed = false, onToggle }) {
           fontFamily: 'Roboto, sans-serif', fontWeight: active ? 700 : 500,
           fontSize: 13, letterSpacing: '0.01em', cursor: 'pointer', transition: 'all 150ms',
         }}>
-        <LucideIcon icon={item.icon} size={16} />
+        <span style={{ position: 'relative', display: 'inline-flex' }}>
+          <LucideIcon icon={item.icon} size={16} />
+          {alerta && (
+            <span title="Precisa de humano" style={{
+              position: 'absolute', top: -3, right: -3, width: 8, height: 8, borderRadius: '50%',
+              background: '#f87171', border: '1.5px solid var(--app-bg, #0f1013)' }} />
+          )}
+        </span>
         {!collapsed && item.label}
       </button>
     );

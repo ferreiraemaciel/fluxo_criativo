@@ -3,6 +3,7 @@
 import { upsertContato } from "./whatsapp-contatos.ts";
 import { renderCorpoTemplate } from "./whatsapp-templates.ts";
 import { custoTemplateUsd } from "./whatsapp-custos.ts";
+import { janelaAbertaPara } from "./whatsapp-janela.ts";
 
 // Ordem de prioridade das dores (pergunta "situacoes" do quiz) pro {{3}} do
 // template de resultado: mais peso jurídico/financeiro primeiro. Usa a de
@@ -61,37 +62,45 @@ export async function enviarResultadoQuizWhatsapp(
   const to           = normalizarTelefoneWhatsapp(whatsapp);
   const primeiroNome = (nome || "").trim().split(/\s+/)[0] || "tudo bem";
   const dor           = dorPrioritaria(situacoes);
+  const corpo         = renderCorpoTemplate("resultado_quiz_mcv", [primeiroNome, nivelRisco, dor]);
+
+  // Janela já aberta (raro nesse fluxo, mas pode acontecer)? Texto livre em
+  // vez de template, mesmo conteúdo, sem custo.
+  const janelaJaAberta = await janelaAbertaPara(sb, to);
 
   try {
+    const body = janelaJaAberta
+      ? { messaging_product: "whatsapp", to, type: "text", text: { body: corpo } }
+      : {
+          messaging_product: "whatsapp",
+          to,
+          type: "template",
+          template: {
+            name: "resultado_quiz_mcv",
+            language: { code: "pt_BR" },
+            components: [{
+              type: "body",
+              parameters: [
+                { type: "text", text: primeiroNome },
+                { type: "text", text: nivelRisco },
+                { type: "text", text: dor },
+              ],
+            }],
+          },
+        };
     const r = await fetch(`https://graph.facebook.com/v25.0/${phoneNumberId}/messages`, {
       method: "POST",
       headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        messaging_product: "whatsapp",
-        to,
-        type: "template",
-        template: {
-          name: "resultado_quiz_mcv",
-          language: { code: "pt_BR" },
-          components: [{
-            type: "body",
-            parameters: [
-              { type: "text", text: primeiroNome },
-              { type: "text", text: nivelRisco },
-              { type: "text", text: dor },
-            ],
-          }],
-        },
-      }),
+      body: JSON.stringify(body),
     });
     const d = await r.json();
     if (!r.ok || d.error) throw new Error(d.error?.message || `whatsapp ${r.status}`);
 
-    const custo = await custoTemplateUsd(sb, "utility");
+    const custo = janelaJaAberta ? 0 : await custoTemplateUsd(sb, "utility");
     await sb.from("whatsapp_mensagens").insert({
-      telefone: to, nome: nome, direcao: "saida", tipo: "template",
-      corpo: renderCorpoTemplate("resultado_quiz_mcv", [primeiroNome, nivelRisco, dor]),
-      template_nome: "resultado_quiz_mcv",
+      telefone: to, nome: nome, direcao: "saida", tipo: janelaJaAberta ? "texto" : "template",
+      corpo,
+      template_nome: janelaJaAberta ? null : "resultado_quiz_mcv",
       wa_message_id: d?.messages?.[0]?.id || null, status: "enviado", origem: "quiz", raw: d,
       custo_usd: custo,
     });

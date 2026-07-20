@@ -136,14 +136,18 @@ function useAdsCards() {
         progress: a.status === 'fazendo' ? 50 : 0,
         hook:     a.titulo,
         formats:  [tipoFormatted],
-        // insights_cache é atualizado sozinho a cada poucas horas; os campos locais
-        // (vendas_total/cpa_historico/gasto_total) só existem pra anúncio antigo que
-        // não tem mais linha fresca no insights_cache — por isso entram como fallback.
-        vendas:   ins?.compras ?? a.vendas_total ?? null,
-        cpa:      ins?.cpa     ?? a.cpa_historico ?? null,
-        gasto:    ins?.gasto   ?? a.gasto_total   ?? null,
+        // vendas_total/cpa_historico/gasto_total somam TODAS as vezes que o
+        // anúncio rodou (todo relançamento vira um meta_ad_id novo, e o
+        // kanban-sync já agrega todos eles por número de ADS). Isso é sempre
+        // o dado mais completo, por isso é a fonte principal.
+        // insights_cache (periodo='maximum') reflete só o meta_ad_id ATUAL
+        // (o do relançamento mais recente) — usado só como fallback quando
+        // ainda não existe total histórico calculado (anúncio muito novo).
+        vendas:   a.vendas_total ?? ins?.compras ?? null,
+        cpa:      a.cpa_historico ?? ins?.cpa     ?? null,
+        gasto:    a.gasto_total   ?? ins?.gasto   ?? null,
         tag:      (a.status === 'arquivado' || a.status === 'campeoes')
-                    ? (a.tag || classifyAd(ins?.compras ?? a.vendas_total, ins?.cpa ?? a.cpa_historico, ins?.gasto ?? a.gasto_total))
+                    ? (a.tag || classifyAd(a.vendas_total ?? ins?.compras, a.cpa_historico ?? ins?.cpa, a.gasto_total ?? ins?.gasto))
                 : null,
         raw: a,
       };
