@@ -156,6 +156,18 @@ const key = existing
 
 ---
 
+## Capa da galeria — definida pela estrela, sem upload separado
+
+A foto de capa de um evento é sempre uma das fotos já enviadas para a galeria. O admin **não tem campo de upload de capa** — a capa é definida passando o mouse sobre qualquer foto e clicando em ★.
+
+- Capa definida: exibe thumbnail pequeno (80×54px, borda dourada) + botão "Remover"
+- Sem capa: exibe instrução "Passe o mouse sobre uma foto e clique em ★"
+- Nunca reintroduzir botão "Enviar capa" ou "Trocar foto" com upload separado
+
+A `galCapaUrl` continua sendo salva normalmente no campo `capa_url` do Supabase via `salvarEvento()`.
+
+---
+
 ## R2 — exclusão ao remover foto pelo admin
 
 Quando o usuário deleta uma foto pelo painel admin (qualquer site: FeM, FMN), a imagem deve ser excluída do R2 imediatamente via `DELETE` no worker de upload:
