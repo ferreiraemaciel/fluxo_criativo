@@ -52,6 +52,15 @@
             "command": "bash .claude/hooks/gsd-session-state.sh"
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/git-auto-sync.sh",
+            "timeout": 30
+          }
+        ]
       }
     ],
     "PostToolUse": [

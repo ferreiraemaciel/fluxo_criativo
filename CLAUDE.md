@@ -175,6 +175,29 @@ Linha de exemplo em documentação (CLAUDE.md, SKILL.md, README) com placeholder
 
 ---
 
+## SINCRONIZAÇÃO AUTOMÁTICA COM O GITHUB (REGRA GLOBAL)
+
+> Esta regra tem prioridade sobre pedir confirmação de `git push`/`git pull` a cada mudança. Combinada com Felipe em 2026-07-20, pra dar acesso multi-computador (viagem, outro Mac) e compartilhamento com a Amanda, que usa o mesmo login do GitHub dele.
+
+**Repositórios cobertos**, cada um plugado numa conta pessoal privada do GitHub (`ferreiraemaciel`), remote `origin`:
+- `fluxo-criativo` (raiz deste projeto) — **só o remote `origin`, nunca o remote `mentoria`** (espelho compartilhado com alunos da mentoria; nenhum dado pessoal ou de negócio do Felipe pode ir pra lá)
+- `meus-produtos/` — repositório git próprio, aninhado dentro do fluxo-criativo (fica fisicamente onde está porque as skills dependem desse caminho fixo)
+- `khronus` (`~/Documents/khronus`)
+- `fmn-site` (`~/Documents/fmn-site`)
+- Qualquer repositório novo criado seguindo esse mesmo padrão (ex: `Projetos-FeM-FMN`, para projetos futuros sem restrição de caminho)
+
+**Puxar (pull): automático, via hook.** `.claude/hooks/git-auto-sync.sh` roda no início de toda sessão (`SessionStart`) e já puxa a versão mais recente de cada um dos repositórios acima. Nunca sobrescreve trabalho local não commitado, se houver mudança pendente nesse repo, o script pula ele e avisa em vez de arriscar.
+
+**Subir (push): automático, após aprovação, sem precisar pedir de novo.** Sempre que Felipe aprovar uma entrega ou mudança que toque um arquivo dentro de um desses repositórios, faça commit com mensagem curta e descritiva e `git push` pro `origin` (nunca pro `mentoria`) logo em seguida, sem perguntar "posso subir pro GitHub" a cada vez, isso já está autorizado.
+
+**Se der conflito de verdade** (raro, só acontece se alguém mexeu no mesmo trecho sem puxar antes): pare, explique a Felipe as duas versões em linguagem simples, e só decida com a orientação dele. Nunca force push, nunca sobrescreve o lado do Felipe ou da Amanda escondido.
+
+**Segredos nunca entram nisso.** Tokens, `.env`, credenciais de serviço (ex: `google-credentials.json`) continuam de fora de todos esses repositórios, mesmo sendo privados, seguindo a regra "TOKENS E SEGREDOS APENAS NO .env" acima.
+
+**Regras/preferências que hoje só existem na memória do Claude** (ex: tom de voz de artigo, padrões de resposta) devem, quando fizer sentido compartilhar entre computadores ou com a Amanda, virar um arquivo `.md` de verdade dentro do repositório do projeto certo (não ficar só na memória interna, que é local a este Mac).
+
+---
+
 ## MASCARAMENTO DE TOKENS SENSÍVEIS (REGRA GLOBAL)
 
 > Esta regra tem prioridade absoluta sobre qualquer outra diretriz de exibição. Aplica-se a todo comando, log, output ou mensagem mostrada ao usuário em qualquer skill, agente ou resposta direta.
