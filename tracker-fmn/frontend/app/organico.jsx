@@ -1064,14 +1064,14 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
 
           {/* ── Header ── */}
           <div style={{ padding:'14px 20px', borderBottom:'1px solid var(--app-border)',
-            display:'flex', alignItems:'center', justifyContent:'space-between', flexShrink:0 }}>
-            <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+            display:'flex', alignItems:'center', justifyContent:'space-between', gap:16, flexShrink:0 }}>
+            <div style={{ display:'flex', alignItems:'center', gap:10, minWidth:0, flex:1 }}>
               <button onClick={onClose}
                 style={{ display:'flex', alignItems:'center', gap:5, color:'var(--text-2)',
                   cursor:'pointer', fontFamily:'Roboto,sans-serif', fontSize:11, fontWeight:700,
                   letterSpacing:'0.04em', textTransform:'uppercase', padding:'5px 10px',
                   borderRadius:6, background:'rgba(255,255,255,.05)', border:'1px solid var(--app-border)',
-                  transition:'color 150ms' }}
+                  transition:'color 150ms', flexShrink:0 }}
                 onMouseEnter={e=>e.currentTarget.style.color='var(--fmn-gold)'}
                 onMouseLeave={e=>e.currentTarget.style.color='var(--text-2)'}>
                 <LucideIcon icon="chevron-left" size={14}/>Orgânico
@@ -1119,12 +1119,12 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
                   style={{ fontSize:14.5, fontFamily:'Roboto,sans-serif', fontWeight:700,
                     color:'var(--text-1)', lineHeight:1.4, background:'transparent',
                     border:'1px solid transparent', borderRadius:6, padding:'2px 6px',
-                    outline:'none', flex:1, minWidth:120, transition:'border-color 150ms' }}
+                    outline:'none', flex:'1 1 auto', minWidth:0, width:'100%', transition:'border-color 150ms' }}
                   onFocus={e => e.target.style.borderColor='rgba(234,170,65,.4)'}
                   onBlur={e => e.target.style.borderColor='transparent'}/>
               )}
             </div>
-            <div style={{ display:'flex', gap:8, alignItems:'center' }}>
+            <div style={{ display:'flex', gap:8, alignItems:'center', flexShrink:0 }}>
               {saveStatus === 'saved' && (
                 <span style={{ fontSize:11, fontFamily:'Roboto,sans-serif', color:'var(--clr-pos)' }}>Salvo!</span>
               )}
