@@ -2058,7 +2058,7 @@ function OrganicoScreen() {
   return (
     <div style={{ display:'flex', flexDirection:'column', height:'100%', overflow:'hidden' }}>
       {modal && (
-        <ContentModal item={modal.item||null} defaultStatus={modal.defaultStatus}
+        <ContentModal key={modal.item?.id || 'novo'} item={modal.item||null} defaultStatus={modal.defaultStatus}
           prefillDate={modal.prefillDate||null}
           siblings={modal.siblings||[]}
           onNavigate={newItem => setModal({ item:newItem, siblings: filtered.filter(i=>i.status===newItem.status) })}
