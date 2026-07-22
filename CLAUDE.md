@@ -616,6 +616,7 @@ Em seguida, liste os comandos disponíveis organizados por categoria:
 
 **Copy:**
 - `/copy-pagina`. Criar copy e/ou página HTML profissional (vendas, captura ou obrigado)
+- `/copy-artigo-blog-fmn`. Escrever artigo completo para o blog da FMN, na voz e arquitetura já estabelecidas (dissertação + artigo do ECA + livro científico), com visuais gerados e lançado direto como rascunho no Supabase, pronto no admin do FMN
 - `/copy-anuncio`. Criar anúncios para Meta Ads (Mandala da Criatividade, 18 tipos)
 - `/elementos-literarios`. Aplicar 1 a 3 dos 26 elementos literários do Light Copy
 - `/criativo-estatico`. Gerar criativos estáticos para anúncios (prompt para colar em ferramenta externa OU geração automática via API)
