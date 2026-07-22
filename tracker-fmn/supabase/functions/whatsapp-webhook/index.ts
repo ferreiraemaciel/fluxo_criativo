@@ -5,6 +5,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { upsertContato } from "../_shared/whatsapp-contatos.ts";
 import { processarComIA } from "../_shared/whatsapp-ia.ts";
+import { transcreverAudioGroq } from "../_shared/whatsapp-transcricao.ts";
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
@@ -32,7 +33,10 @@ async function baixarEArmazenarMidia(mediaId: string, telefone: string, extensao
     const bytes = await binResp.arrayBuffer();
 
     const mime = info.mime_type || "audio/ogg";
-    const ext = mime.includes("ogg") ? "ogg" : mime.includes("mpeg") ? "mp3" : extensaoFallback;
+    const ext = mime.includes("ogg") ? "ogg" : mime.includes("mpeg") && mime.startsWith("audio") ? "mp3"
+      : mime.includes("png") ? "png" : mime.includes("jpeg") || mime.includes("jpg") ? "jpg"
+      : mime.includes("webp") ? "webp" : mime.includes("pdf") ? "pdf"
+      : mime.includes("mp4") ? "mp4" : extensaoFallback;
     const path = `${telefone}/${mediaId}.${ext}`;
 
     const { error } = await supabase.storage.from("whatsapp-media").upload(path, bytes, {
@@ -142,7 +146,24 @@ Deno.serve(async (req) => {
           else if (msg.type === "button") { corpo = msg.button?.text || ""; tipo = "botao"; }
           else if (msg.type === "interactive") { corpo = msg.interactive?.button_reply?.title || msg.interactive?.list_reply?.title || ""; tipo = "botao"; }
           else if (msg.type === "audio") { corpo = "🎤 Áudio"; tipo = "audio"; }
+          else if (msg.type === "image") { corpo = msg.image?.caption || "📷 Imagem"; tipo = "imagem"; }
+          else if (msg.type === "sticker") { corpo = "🩵 Figurinha"; tipo = "imagem"; }
+          else if (msg.type === "reaction") { corpo = msg.reaction?.emoji || "👍"; }
+          else if (msg.type === "video") { corpo = msg.video?.caption || "🎥 Vídeo"; tipo = "video"; }
+          else if (msg.type === "document") { corpo = msg.document?.caption || msg.document?.filename || "📄 Documento"; tipo = "documento"; }
+          else if (msg.type === "location") {
+            const lat = msg.location?.latitude, lng = msg.location?.longitude;
+            corpo = lat && lng ? `📍 Localização: https://maps.google.com/?q=${lat},${lng}` : "📍 Localização";
+          }
           else corpo = `[${msg.type}]`;
+
+          // Vídeo (a IA não processa vídeo), localização (precisa de julgamento
+          // humano, tipo "isso é perto de onde eu atendo?") e documento que não
+          // é PDF (a IA só lê PDF) sempre viram handoff imediato, sem tentar
+          // resposta automática em cima disso.
+          const documentoEhPdf = msg.type === "document" && (msg.document?.mime_type || "").includes("pdf");
+          const precisaHumanoImediato = msg.type === "video" || msg.type === "location"
+            || (msg.type === "document" && !documentoEhPdf);
 
           const gravou = await gravarEntradaSeNova({
             telefone,
@@ -163,10 +184,63 @@ Deno.serve(async (req) => {
           // esse download (pode demorar alguns segundos).
           if (msg.type === "audio" && msg.audio?.id && waMessageId) {
             tarefasEmBackground.push(
-              baixarEArmazenarMidia(msg.audio.id, telefone, "ogg").then((midiaUrl) => {
+              baixarEArmazenarMidia(msg.audio.id, telefone, "ogg").then(async (midiaUrl) => {
+                if (!midiaUrl) return;
+                // Transcreve em seguida (Groq/Whisper), pro Claudinho conseguir
+                // "ouvir" o que o lead falou, não só saber que mandou áudio.
+                const transcricao = await transcreverAudioGroq(midiaUrl);
+                return supabase.from("whatsapp_mensagens")
+                  .update({ midia_url: midiaUrl, ...(transcricao ? { transcricao } : {}) })
+                  .eq("wa_message_id", waMessageId);
+              }).catch((err) => console.error("[whatsapp-webhook] erro ao processar áudio em background:", err))
+            );
+          }
+
+          // Mesma lógica pra imagem: baixa e guarda a URL própria (a da Meta
+          // expira em minutos), pra o Claudinho poder "ver" a imagem depois
+          // (ver visão em whatsapp-ia.ts) e pra ficar disponível no Conversas.
+          if (msg.type === "image" && msg.image?.id && waMessageId) {
+            tarefasEmBackground.push(
+              baixarEArmazenarMidia(msg.image.id, telefone, "jpg").then((midiaUrl) => {
                 if (!midiaUrl) return;
                 return supabase.from("whatsapp_mensagens").update({ midia_url: midiaUrl }).eq("wa_message_id", waMessageId);
-              }).catch((err) => console.error("[whatsapp-webhook] erro ao processar áudio em background:", err))
+              }).catch((err) => console.error("[whatsapp-webhook] erro ao processar imagem em background:", err))
+            );
+          }
+
+          // Figurinha (sticker) é webp, mesmo download que imagem, só pra
+          // mostrar de verdade no Conversas (não entra na visão da IA, não
+          // tem conteúdo relevante pra responder).
+          if (msg.type === "sticker" && msg.sticker?.id && waMessageId) {
+            tarefasEmBackground.push(
+              baixarEArmazenarMidia(msg.sticker.id, telefone, "webp").then((midiaUrl) => {
+                if (!midiaUrl) return;
+                return supabase.from("whatsapp_mensagens").update({ midia_url: midiaUrl }).eq("wa_message_id", waMessageId);
+              }).catch((err) => console.error("[whatsapp-webhook] erro ao processar figurinha em background:", err))
+            );
+          }
+
+          // Vídeo: baixa só pra guardar (a IA não processa vídeo, humano
+          // assiste depois, ver handoff imediato abaixo).
+          if (msg.type === "video" && msg.video?.id && waMessageId) {
+            tarefasEmBackground.push(
+              baixarEArmazenarMidia(msg.video.id, telefone, "mp4").then((midiaUrl) => {
+                if (!midiaUrl) return;
+                return supabase.from("whatsapp_mensagens").update({ midia_url: midiaUrl }).eq("wa_message_id", waMessageId);
+              }).catch((err) => console.error("[whatsapp-webhook] erro ao processar vídeo em background:", err))
+            );
+          }
+
+          // Documento: baixa sempre. Se for PDF, o Claudinho lê de verdade
+          // (ver whatsapp-ia.ts). Qualquer outro formato (docx, etc) vira
+          // handoff, porque a IA não processa esse tipo de arquivo.
+          if (msg.type === "document" && msg.document?.id && waMessageId) {
+            const extFallback = (msg.document?.filename || "").split(".").pop() || "bin";
+            tarefasEmBackground.push(
+              baixarEArmazenarMidia(msg.document.id, telefone, extFallback).then((midiaUrl) => {
+                if (!midiaUrl) return;
+                return supabase.from("whatsapp_mensagens").update({ midia_url: midiaUrl }).eq("wa_message_id", waMessageId);
+              }).catch((err) => console.error("[whatsapp-webhook] erro ao processar documento em background:", err))
             );
           }
 
@@ -174,10 +248,16 @@ Deno.serve(async (req) => {
           // "em conversa" automaticamente (respeita se já foi movido à mão).
           await upsertContato(supabase, telefone, nome, "em_conversa", { promoverParaEmConversa: true });
 
-          // Reação de emoji, figurinha ou outro tipo sem conteúdo de texto de
-          // verdade não é uma resposta pra IA processar (não é pergunta nem
-          // afirmação, não tem o que responder).
-          if (msg.type === "reaction" || msg.type === "sticker") continue;
+          // Vídeo e localização: handoff imediato, precisa de humano.
+          if (precisaHumanoImediato) {
+            await supabase.from("whatsapp_contatos").update({ precisa_humano: true }).eq("telefone", telefone);
+          }
+
+          // Reação de emoji, figurinha, vídeo, localização ou documento que
+          // não é PDF: nada disso a IA processa (não tem conteúdo de texto
+          // pra responder, ou é um formato que ela não lê).
+          if (msg.type === "reaction" || msg.type === "sticker" || msg.type === "video" || msg.type === "location"
+            || (msg.type === "document" && !documentoEhPdf)) continue;
 
           // IA vendedora: roda em background, não segura a resposta ao Meta.
           tarefasEmBackground.push(

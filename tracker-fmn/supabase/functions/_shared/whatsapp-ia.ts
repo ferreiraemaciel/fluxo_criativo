@@ -6,6 +6,7 @@ import { SYSTEM_PROMPT_MCV } from "./whatsapp-ia-prompt.ts";
 import { upsertContato } from "./whatsapp-contatos.ts";
 import { custoAnthropicUsd } from "./whatsapp-custos.ts";
 import { pareceMensagemAutomatica, contatoSoRespondeAutomatico } from "./whatsapp-automatica.ts";
+import { aplicarCorrecoesAutomaticas } from "./whatsapp-texto-fixes.ts";
 
 const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
 const ANTHROPIC_MODEL   = Deno.env.get("ANTHROPIC_IA_MODEL") || "claude-haiku-4-5-20251001";
@@ -179,31 +180,88 @@ export async function processarComIA(supabase: any, telefoneRaw: string, nomeLea
   }
 }
 
+// Baixa a imagem já guardada no nosso storage e devolve em base64, pro
+// Claude "ver" de verdade (visão nativa da Anthropic, sem precisar de outra
+// API). Só chamado pra ÚLTIMA mensagem do lead quando ela é imagem — o
+// histórico mais antigo continua só como texto placeholder, pra não inflar
+// o tamanho/custo de cada chamada com imagens antigas que já perderam o contexto.
+async function baixarImagemBase64(midiaUrl: string): Promise<{ data: string; mediaType: string } | null> {
+  try {
+    const r = await fetch(midiaUrl);
+    if (!r.ok) return null;
+    const mediaType = r.headers.get("content-type") || "image/jpeg";
+    const bytes = new Uint8Array(await r.arrayBuffer());
+    let binary = "";
+    const CHUNK = 8192;
+    for (let i = 0; i < bytes.length; i += CHUNK) {
+      binary += String.fromCharCode(...bytes.subarray(i, i + CHUNK));
+    }
+    return { data: btoa(binary), mediaType };
+  } catch (err) {
+    console.error("[whatsapp-ia] erro ao baixar imagem pra visão:", err);
+    return null;
+  }
+}
+
 async function processarComIAInterno(supabase: any, telefone: string, nomeLead: string | null, mensagemId: string | null, contato: any) {
   const { data: historico } = await supabase
     .from("whatsapp_mensagens")
-    .select("direcao, tipo, corpo, created_at")
+    .select("direcao, tipo, corpo, midia_url, transcricao, created_at")
     .eq("telefone", telefone)
     .order("created_at", { ascending: false })
     .limit(20);
 
-  const mensagens = (historico || [])
-    .slice()
-    .reverse()
-    .filter((m: any) => m.corpo)
-    .map((m: any) => ({
-      role: m.direcao === "entrada" ? "user" : "assistant",
-      content: m.corpo,
-    }));
+  const linhas = (historico || []).slice().reverse().filter((m: any) => m.corpo);
+
+  // Áudio com transcrição já pronta (Groq/Whisper): usa o texto transcrito
+  // em vez do placeholder "🎤 Áudio", pro Claudinho entender o conteúdo de
+  // verdade. Sem transcrição ainda (corrida rara com o download em background),
+  // fica no placeholder mesmo, melhor que travar a resposta esperando.
+  const mensagens = linhas.map((m: any) => ({
+    role: m.direcao === "entrada" ? "user" : "assistant",
+    content: m.tipo === "audio" && m.transcricao ? `(áudio transcrito) ${m.transcricao}` : m.corpo,
+  }));
 
   if (!mensagens.length) return;
+
+  // Se a última mensagem do lead for uma imagem já baixada, troca o content
+  // por um bloco de visão (texto + imagem), só pra essa última mensagem.
+  const ultimaLinha = linhas[linhas.length - 1];
+  if (ultimaLinha?.direcao === "entrada" && ultimaLinha?.tipo === "imagem" && ultimaLinha?.midia_url) {
+    const img = await baixarImagemBase64(ultimaLinha.midia_url);
+    if (img) {
+      mensagens[mensagens.length - 1] = {
+        role: "user",
+        content: [
+          { type: "image", source: { type: "base64", media_type: img.mediaType, data: img.data } },
+          { type: "text", text: ultimaLinha.corpo === "📷 Imagem" ? "(o lead mandou essa imagem, sem legenda)" : ultimaLinha.corpo },
+        ],
+      };
+    }
+  }
+
+  // Mesma coisa pra PDF (documento que chegou até aqui já é garantido PDF —
+  // o webhook manda qualquer outro formato direto pra handoff, sem chamar a
+  // IA). Visão nativa da Anthropic também lê PDF, mesmo mecanismo da imagem.
+  if (ultimaLinha?.direcao === "entrada" && ultimaLinha?.tipo === "documento" && ultimaLinha?.midia_url) {
+    const doc = await baixarImagemBase64(ultimaLinha.midia_url);
+    if (doc) {
+      mensagens[mensagens.length - 1] = {
+        role: "user",
+        content: [
+          { type: "document", source: { type: "base64", media_type: "application/pdf", data: doc.data } },
+          { type: "text", text: ultimaLinha.corpo === "📄 Documento" ? "(o lead mandou esse PDF, sem legenda)" : ultimaLinha.corpo },
+        ],
+      };
+    }
+  }
 
   // Mensagem automática do próprio WhatsApp Business do lead (saudação ou
   // ausência)? Não é uma resposta de verdade, não vale a pena (nem faz
   // sentido) mandar uma pitch de vendas em cima disso. Não faz nada agora;
   // a retomada (24h) cuida de tentar de novo se ele não responder de fato.
   const ultimaMsg = mensagens[mensagens.length - 1];
-  if (ultimaMsg.role === "user" && pareceMensagemAutomatica(ultimaMsg.content)) {
+  if (ultimaMsg.role === "user" && typeof ultimaMsg.content === "string" && pareceMensagemAutomatica(ultimaMsg.content)) {
     console.log("[whatsapp-ia] mensagem automática detectada, pulando resposta:", telefone);
     return;
   }
@@ -260,7 +318,9 @@ async function processarComIAInterno(supabase: any, telefone: string, nomeLead: 
     // um "—" pro lead (grave, é o tipo de coisa que entrega "resposta de IA").
     // Não confia só na instrução, garante removendo aqui também.
     if (typeof resposta.mensagem === "string") {
-      resposta.mensagem = resposta.mensagem.replace(/\\n/g, "\n").replace(/\s*[—–]\s*/g, ", ").trim();
+      resposta.mensagem = aplicarCorrecoesAutomaticas(
+        resposta.mensagem.replace(/\\n/g, "\n").replace(/\s*[—–]\s*/g, ", ").trim(),
+      );
     }
 
     // Rede de segurança pro handoff: se a própria mensagem promete passar a

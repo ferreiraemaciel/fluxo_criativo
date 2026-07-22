@@ -1213,7 +1213,15 @@ function BellPopover({ problemas, testMode, onConfirmOne, onIgnore, onClose, pos
   const [saving, setSaving] = React.useState({});
   const [confirmed, setConfirmed] = React.useState({});
   const left = Math.max(8, Math.min(posX - 160, window.innerWidth - 360));
-  const top  = Math.min(posY + 14, window.innerHeight - 80);
+  // maxHeight precisa levar em conta o `top` de verdade, senão o popover
+  // continua estourando pra baixo da tela quando abre numa linha mais baixa
+  // (o cap antigo era um valor fixo, ignorava onde ele realmente abria).
+  const MARGEM_INFERIOR = 20, ALTURA_MINIMA = 220;
+  let top = posY + 14;
+  if (window.innerHeight - top - MARGEM_INFERIOR < ALTURA_MINIMA) {
+    top = Math.max(MARGEM_INFERIOR, window.innerHeight - ALTURA_MINIMA - MARGEM_INFERIOR);
+  }
+  const maxHeight = window.innerHeight - top - MARGEM_INFERIOR;
   const adsNum = problemas[0]?.numero;
 
   async function confirmOne(p, idx) {
@@ -1228,7 +1236,7 @@ function BellPopover({ problemas, testMode, onConfirmOne, onIgnore, onClose, pos
       <div onClick={onClose} style={{ position:'fixed', inset:0, zIndex:799 }}/>
       <div onClick={e => e.stopPropagation()}
         style={{ position:'fixed', left, top, zIndex:800, width:340,
-          maxHeight: 'calc(100vh - 40px)', overflowY:'auto',
+          maxHeight, overflowY:'auto',
           background:'var(--app-surface)', border:'1px solid var(--app-border-2)',
           borderRadius:12, boxShadow:'0 16px 48px rgba(0,0,0,.65)', padding:16,
           display:'flex', flexDirection:'column', gap:12 }}>

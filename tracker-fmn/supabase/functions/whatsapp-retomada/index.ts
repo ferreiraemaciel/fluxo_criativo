@@ -8,6 +8,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { SYSTEM_PROMPT_MCV } from "../_shared/whatsapp-ia-prompt.ts";
 import { custoAnthropicUsd } from "../_shared/whatsapp-custos.ts";
 import { contatoSoRespondeAutomatico } from "../_shared/whatsapp-automatica.ts";
+import { aplicarCorrecoesAutomaticas } from "../_shared/whatsapp-texto-fixes.ts";
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
@@ -79,7 +80,9 @@ ${instrucaoVacuo}`;
     // Trava contra travessão vazando pro lead: mesmo proibido no prompt, já
     // aconteceu do modelo usar "—" numa retomada (grave, entrega "resposta de
     // IA" na cara). Não confia só na instrução, garante removendo aqui.
-    const mensagem = String(toolUse.input.mensagem).replace(/\s*[—–]\s*/g, ", ").trim();
+    const mensagem = aplicarCorrecoesAutomaticas(
+      String(toolUse.input.mensagem).replace(/\s*[—–]\s*/g, ", ").trim(),
+    );
     return { mensagem, tokensEntrada: d.usage?.input_tokens || 0, tokensSaida: d.usage?.output_tokens || 0 };
   } catch (err) {
     console.error("[whatsapp-retomada] erro Anthropic:", err);

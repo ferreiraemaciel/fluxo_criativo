@@ -214,7 +214,14 @@ function Bolha({ msg }) {
           </div>
         )}
         {msg.tipo === 'audio' && msg.midia_url ? (
-          <audio controls src={msg.midia_url} style={{ maxWidth: 220, height: 32 }} />
+          <div>
+            <audio controls src={msg.midia_url} style={{ maxWidth: 220, height: 32 }} />
+            {msg.transcricao && (
+              <div style={{ fontSize: 11.5, color: 'var(--text-2)', fontFamily: 'Roboto,sans-serif', lineHeight: 1.4, marginTop: 5, fontStyle: 'italic' }}>
+                "{msg.transcricao}"
+              </div>
+            )}
+          </div>
         ) : msg.tipo === 'audio' ? (
           <div style={{ fontSize: 12, color: 'var(--text-3)', fontFamily: 'Roboto,sans-serif', fontStyle: 'italic' }}>
             🎤 Áudio (carregando...)
@@ -294,6 +301,119 @@ function PromptClaudinhoModal({ onClose, SUPA_URL, SUPA_KEY }) {
             <pre style={{ margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontSize: 12.5, lineHeight: 1.6,
               color: 'var(--text-2)', fontFamily: 'monospace' }}>{prompt}</pre>
           )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Log de erros do Claudinho: histórico temporário (enquanto durar o modo
+// treinamento) de cada erro real encontrado na revisão manual, pra medir se
+// a taxa cai de verdade com o tempo. Não substitui melhorar o prompt, é a
+// camada que mede se as melhorias funcionam (ver claudinho_erros no Supabase).
+function LogErrosClaudinhoModal({ onClose }) {
+  const [erros, setErros] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [aberto, setAberto] = useState(false);
+  const [form, setForm] = useState({ situacao: '', erro: '', correcao: '', telefone: '', status: 'corrigido' });
+  const [salvando, setSalvando] = useState(false);
+
+  function carregar() {
+    setLoading(true);
+    window.db.from('claudinho_erros').select('*').order('data', { ascending: false }).order('created_at', { ascending: false })
+      .then(({ data, error }) => { if (!error) setErros(data || []); setLoading(false); });
+  }
+  useEffect(() => { carregar(); }, []);
+
+  async function salvar() {
+    if (!form.situacao.trim() || !form.erro.trim()) { alert('Situação e erro são obrigatórios.'); return; }
+    setSalvando(true);
+    try {
+      const { error } = await window.db.from('claudinho_erros').insert({
+        situacao: form.situacao.trim(), erro: form.erro.trim(),
+        correcao: form.correcao.trim() || null, telefone: form.telefone.trim() || null,
+        status: form.status,
+      });
+      if (error) throw error;
+      setForm({ situacao: '', erro: '', correcao: '', telefone: '', status: 'corrigido' });
+      setAberto(false);
+      carregar();
+    } catch (e) {
+      alert('Erro ao salvar: ' + e.message);
+    } finally {
+      setSalvando(false);
+    }
+  }
+
+  const STATUS_COR = { corrigido: '#4ade80', pendente: '#fbbf24', reincidencia: '#f87171' };
+  const STATUS_LABEL = { corrigido: 'Corrigido', pendente: 'Pendente', reincidencia: 'Reincidência' };
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.6)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+      onClick={onClose}>
+      <div onClick={e => e.stopPropagation()} style={{ width: 620, maxWidth: '92vw', maxHeight: '85vh', display: 'flex', flexDirection: 'column',
+        background: 'var(--app-surface)', border: '1px solid var(--app-border)', borderRadius: 12, overflow: 'hidden' }}>
+        <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--app-border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
+          <div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-1)', fontFamily: 'Roboto,sans-serif' }}>Log de erros do Claudinho</div>
+            <div style={{ fontSize: 11, color: 'var(--text-3)', fontFamily: 'Roboto,sans-serif' }}>Histórico da etapa de treinamento. Serve pra medir se a taxa de erro cai com o tempo.</div>
+          </div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <Btn size="sm" onClick={() => setAberto(a => !a)}>{aberto ? 'Cancelar' : '+ Registrar erro'}</Btn>
+            <Btn variant="ghost" onClick={onClose}><LucideIcon icon="x" size={16} /></Btn>
+          </div>
+        </div>
+
+        {aberto && (
+          <div style={{ padding: 14, borderBottom: '1px solid var(--app-border)', display: 'flex', flexDirection: 'column', gap: 8, flexShrink: 0 }}>
+            <input value={form.situacao} onChange={e => setForm(f => ({ ...f, situacao: e.target.value }))} placeholder="Situação (ex: Resposta pra Carolina, retomada de janela...)"
+              style={{ boxSizing: 'border-box', background: 'rgba(255,255,255,.04)', border: '1px solid var(--app-border)', borderRadius: 8, padding: '8px 10px', fontSize: 12.5, color: 'var(--text-1)', fontFamily: 'Roboto,sans-serif', outline: 'none' }} />
+            <textarea value={form.erro} onChange={e => setForm(f => ({ ...f, erro: e.target.value }))} placeholder="O que saiu errado" rows={2}
+              style={{ boxSizing: 'border-box', background: 'rgba(255,255,255,.04)', border: '1px solid var(--app-border)', borderRadius: 8, padding: '8px 10px', fontSize: 12.5, color: 'var(--text-1)', fontFamily: 'Roboto,sans-serif', outline: 'none', resize: 'vertical' }} />
+            <textarea value={form.correcao} onChange={e => setForm(f => ({ ...f, correcao: e.target.value }))} placeholder="Como foi corrigido (opcional)" rows={2}
+              style={{ boxSizing: 'border-box', background: 'rgba(255,255,255,.04)', border: '1px solid var(--app-border)', borderRadius: 8, padding: '8px 10px', fontSize: 12.5, color: 'var(--text-1)', fontFamily: 'Roboto,sans-serif', outline: 'none', resize: 'vertical' }} />
+            <div style={{ display: 'flex', gap: 8 }}>
+              <input value={form.telefone} onChange={e => setForm(f => ({ ...f, telefone: e.target.value }))} placeholder="Telefone (opcional)"
+                style={{ flex: 1, boxSizing: 'border-box', background: 'rgba(255,255,255,.04)', border: '1px solid var(--app-border)', borderRadius: 8, padding: '8px 10px', fontSize: 12.5, color: 'var(--text-1)', fontFamily: 'Roboto,sans-serif', outline: 'none' }} />
+              <select value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value }))}
+                style={{ background: 'rgba(255,255,255,.04)', border: '1px solid var(--app-border)', borderRadius: 8, padding: '8px 10px', fontSize: 12.5, color: 'var(--text-1)', fontFamily: 'Roboto,sans-serif', outline: 'none' }}>
+                <option value="corrigido">Corrigido</option>
+                <option value="pendente">Pendente</option>
+                <option value="reincidencia">Reincidência</option>
+              </select>
+              <Btn onClick={salvar} disabled={salvando}>{salvando ? 'Salvando...' : 'Salvar'}</Btn>
+            </div>
+          </div>
+        )}
+
+        <div style={{ flex: 1, overflowY: 'auto', padding: 14 }}>
+          {loading && <div style={{ color: 'var(--text-3)', fontSize: 13, fontFamily: 'Roboto,sans-serif' }}>Carregando...</div>}
+          {!loading && !erros.length && <div style={{ color: 'var(--text-3)', fontSize: 13, fontFamily: 'Roboto,sans-serif' }}>Nenhum erro registrado ainda.</div>}
+          {!loading && erros.length > 0 && (
+            <div style={{ fontSize: 11, color: 'var(--text-3)', fontFamily: 'Roboto,sans-serif', marginBottom: 10 }}>
+              {erros.length} registrado{erros.length > 1 ? 's' : ''} · {erros.filter(e => e.status === 'corrigido').length} corrigidos · {erros.filter(e => e.status === 'reincidencia').length} reincidências
+            </div>
+          )}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {erros.map(e => (
+              <div key={e.id} style={{ padding: 10, borderRadius: 9, border: '1px solid var(--app-border)', background: 'rgba(255,255,255,.02)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5 }}>
+                  <span style={{ fontSize: 10, fontWeight: 800, padding: '2px 7px', borderRadius: 999,
+                    color: STATUS_COR[e.status], background: `${STATUS_COR[e.status]}22`, fontFamily: 'Roboto,sans-serif' }}>
+                    {STATUS_LABEL[e.status] || e.status}
+                  </span>
+                  <span style={{ fontSize: 10.5, color: 'var(--text-3)', fontFamily: 'Roboto,sans-serif' }}>{e.data}</span>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-1)', fontFamily: 'Roboto,sans-serif' }}>{e.situacao}</span>
+                </div>
+                <div style={{ fontSize: 12, color: 'var(--text-2)', fontFamily: 'Roboto,sans-serif', lineHeight: 1.4 }}>{e.erro}</div>
+                {e.correcao && (
+                  <div style={{ fontSize: 11.5, color: 'var(--fmn-gold)', fontFamily: 'Roboto,sans-serif', lineHeight: 1.4, marginTop: 4 }}>
+                    → {e.correcao}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>
@@ -407,9 +527,9 @@ function ConvKanbanCard({ contato, col, onAbrir, onDragStart, onDropAntes }) {
         borderRadius: 10, padding: '12px 12px', display: 'flex', flexDirection: 'column', gap: 6,
         cursor: 'grab', transition: 'all 160ms var(--ease-out)', transform: hov ? 'translateY(-1px)' : 'none' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
-        <div title={contato.janelaAberta ? 'Janela de 24h aberta' : 'Janela fechada'} style={{
+        <div title={STATUS_RESPOSTA_LABEL[contato.statusResposta]} style={{
           width: 7, height: 7, borderRadius: '50%', flexShrink: 0,
-          background: contato.janelaAberta ? '#4ade80' : 'var(--text-3)' }} />
+          background: STATUS_RESPOSTA_COR[contato.statusResposta] }} />
         {contato.precisaHumano && (
           <span title="Precisa de humano" style={{ flexShrink: 0, fontSize: 9, fontWeight: 800, color: '#f87171',
             background: 'rgba(248,113,113,.14)', border: '1px solid rgba(248,113,113,.3)', borderRadius: 4, padding: '1px 4px' }}>!</span>
@@ -727,7 +847,7 @@ function MetricasView({ contatosDb, msgs }) {
 /* Mensagens prontas pro vendedor humano mandar em 1 clique, dentro da janela aberta. */
 // sck (não utm_source genérico) é o único parâmetro que a Hotmart de fato lê
 // e devolve no webhook (parseSck em hotmart-webhook), por isso o link usa sck.
-const LINK_CHECKOUT_MCV = 'https://pay.hotmart.com/W87258826R?checkoutMode=10&sck=whatsapp-manual';
+const LINK_CHECKOUT_MCV = 'https://pay.hotmart.com/W87258826R?checkoutMode=10&sck=whatsapp-ah';
 const MENSAGENS_PRONTAS = [
   { id: 'checkout', label: 'Link de checkout (MCV)', icone: 'link',
     texto: `Segue o link pra garantir o seu: ${LINK_CHECKOUT_MCV}` },
@@ -771,6 +891,7 @@ function ConversasScreen() {
   const [ordemLista, setOrdemLista] = useState('precisa');
   const [modalNovoContato, setModalNovoContato] = useState(false);
   const [modalPrompt, setModalPrompt] = useState(false);
+  const [modalLogErros, setModalLogErros] = useState(false);
   const [prontasAberto, setProntasAberto] = useState(false);
   const [enviandoPronta, setEnviandoPronta] = useState(null);
   const [tick, setTick]           = useState(0); // força re-render pro contador de tempo
@@ -1113,13 +1234,22 @@ function ConversasScreen() {
         </div>
       } />
       {modoTreinamento && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px',
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, padding: '8px 16px',
           background: 'rgba(251,191,36,.1)', borderBottom: '1px solid rgba(251,191,36,.3)',
           fontSize: 12, fontFamily: 'Roboto,sans-serif', color: '#fbbf24', fontWeight: 700 }}>
-          <LucideIcon icon="graduation-cap" size={14} />
-          Etapa de treinamento do Claudinho: sem resposta automática ao vivo (exceto número de teste do Felipe), só retomada de janela nos últimos minutos antes de fechar.
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <LucideIcon icon="graduation-cap" size={14} />
+            Etapa de treinamento do Claudinho: sem resposta automática ao vivo (exceto número de teste do Felipe), só retomada de janela nos últimos minutos antes de fechar.
+          </div>
+          <button onClick={() => setModalLogErros(true)}
+            style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 5, cursor: 'pointer',
+              background: 'rgba(251,191,36,.14)', border: '1px solid rgba(251,191,36,.35)', borderRadius: 7,
+              padding: '4px 10px', fontSize: 11, fontWeight: 800, color: '#fbbf24', fontFamily: 'Roboto,sans-serif' }}>
+            <LucideIcon icon="list-checks" size={12} /> Log de erros
+          </button>
         </div>
       )}
+      {modalLogErros && <LogErrosClaudinhoModal SUPA_URL={SUPA_URL} SUPA_KEY={SUPA_KEY} onClose={() => setModalLogErros(false)} />}
       {modalPrompt && <PromptClaudinhoModal SUPA_URL={SUPA_URL} SUPA_KEY={SUPA_KEY} onClose={() => setModalPrompt(false)} />}
       {modalNovoContato && (
         <NovoContatoModal SUPA_URL={SUPA_URL} SUPA_KEY={SUPA_KEY}

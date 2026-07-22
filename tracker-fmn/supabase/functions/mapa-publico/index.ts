@@ -21,9 +21,13 @@ Deno.serve(async (req) => {
     const to = url.searchParams.get("to");
     const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
+    // "-03:00" explícito: sem isso, o Postgres interpreta o horário como UTC
+    // (fuso da sessão), não como horário de Brasília. Uma venda das 21h30 de
+    // ontem (Brasília) já é 00h30 UTC de hoje, cai do lado errado do corte e
+    // aparece no filtro do dia errado.
     const { data, error } = await sb.rpc("mapa_agregado", {
-      p_from: from ? `${from}T00:00:00` : null,
-      p_to:   to   ? `${to}T23:59:59`   : null,
+      p_from: from ? `${from}T00:00:00-03:00` : null,
+      p_to:   to   ? `${to}T23:59:59-03:00`   : null,
     });
     if (error) throw error;
 
