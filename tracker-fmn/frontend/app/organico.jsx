@@ -1964,8 +1964,12 @@ function OrganicoScreen() {
   const loadItems = React.useCallback(async () => {
     if (!window.db) return;
     setDbAvail(true);
+    // Segundo critério (id) é obrigatório: cards criados em lote podem empatar no
+    // created_at até o microssegundo, e sem desempate o Postgres não garante a
+    // mesma ordem entre uma consulta e outra — o número "ORG XXX" (calculado pela
+    // posição aqui) ficava trocando sozinho de card pra card a cada carregamento.
     const { data } = await window.db.from('conteudo_organico')
-      .select('*').order('created_at', { ascending:true });
+      .select('*').order('created_at', { ascending:true }).order('id', { ascending:true });
     if (data) {
       const withNum = data.map((item,idx) => ({ ...item, numero: item.numero ?? (idx+1) }));
       setItems(withNum);
