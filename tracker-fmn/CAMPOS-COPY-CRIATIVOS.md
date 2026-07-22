@@ -76,6 +76,17 @@ Quando o mesmo tema vira **múltiplos criativos de formatos diferentes** (ex: a 
 
 ---
 
+## Drive: ADS vai em "Criativos", ORG vai em "Organico" (regra fixa, 2026-07-22)
+
+`ADS` (tráfego pago) e `ORG` (conteúdo orgânico) são dois fluxos separados no Tracker, cada um com sua própria pasta raiz no Drive. **Nunca misturar as duas.**
+
+- **ADS (anúncio pago)**: pasta raiz `Criativos`, subpastas nomeadas `ADS {numero} {titulo}` (padrão lido por `scripts/sync_drive.py`, regex `^ADS\s+(\d+)`).
+- **ORG (conteúdo orgânico)**: pasta raiz `Organico`, subpastas nomeadas `ORG {numero} {titulo}`. **Nunca criar pasta `ORG ...` dentro de `Criativos`** — são fluxos e responsáveis de sincronização diferentes.
+
+Se o número do card não deixar claro o fluxo, checar o prefixo antes de criar ou procurar a pasta: `ADS` = tráfego pago, `ORG` = orgânico.
+
+---
+
 ## Conteúdo Orgânico — Imagem: todo prompt "sem texto" precisa listar os textos (regra fixa, 2026-07-14)
 
 A tabela `conteudo_organico` (Conteúdo Orgânico) **não tem campo `roteiro`** como o `ads` (anúncio pago) tem. Isso já causou um card (ORG 015) sair com um `prompt_imagem` que dizia "no text" mas sem nenhum registro em lugar nenhum de qual texto deveria ser escrito depois no Canva/PS. Card inútil na prática: gera a imagem, mas ninguém sabe o que datilografar em cima.

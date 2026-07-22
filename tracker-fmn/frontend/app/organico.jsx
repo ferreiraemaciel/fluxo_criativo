@@ -2017,9 +2017,19 @@ function OrganicoScreen() {
   }, []);
 
   const handleSave = async form => {
+    // Card em "Fazer" que já recebeu mídia avança sozinho pra "Produção" (não fica
+    // esperando o usuário mudar a coluna manualmente). Vale pra qualquer forma de anexar
+    // mídia (upload manual, importar do Drive, etc), já que todo salvamento passa por aqui.
+    let temMidia = false;
+    try {
+      const s = typeof form.slides === 'string' ? JSON.parse(form.slides || '[]') : (form.slides || []);
+      temMidia = Array.isArray(s) && s.some(sl => sl?.image_url || sl?.video_url || sl?.url_alta);
+    } catch {}
+    const status = (form.status === 'Fazer' && temMidia) ? 'Produção' : form.status;
+
     const row = {
       tema:form.tema, plataforma:form.plataforma, responsavel:form.responsavel,
-      status:form.status, gancho:form.gancho, desenvolvimento:form.desenvolvimento,
+      status, gancho:form.gancho, desenvolvimento:form.desenvolvimento,
       slides:form.slides, legenda:form.legenda,
       cta:form.cta, prompt_imagem:form.prompt_imagem||null,
       data_prevista:form.data_prevista||null,
