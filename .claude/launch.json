@@ -31,8 +31,8 @@
     }
     ,{
       "name": "fem-site",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": ["serve", "-p", "4321", "/Users/ferreiraemaciel/Documents/fem-site"],
+      "runtimeExecutable": "/opt/homebrew/bin/python3",
+      "runtimeArgs": ["-m", "http.server", "4321", "--directory", "/Users/felipeferreira/Documents/fem-site"],
       "port": 4321
     }
     ,{
