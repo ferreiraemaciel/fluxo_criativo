@@ -186,7 +186,9 @@ Linha de exemplo em documentação (CLAUDE.md, SKILL.md, README) com placeholder
 - `fmn-site` (`~/Documents/fmn-site`)
 - Qualquer repositório novo criado seguindo esse mesmo padrão (ex: `Projetos-FeM-FMN`, para projetos futuros sem restrição de caminho)
 
-**Puxar (pull): automático, via hook.** `.claude/hooks/git-auto-sync.sh` roda no início de toda sessão (`SessionStart`) e já puxa a versão mais recente de cada um dos repositórios acima. Nunca sobrescreve trabalho local não commitado, se houver mudança pendente nesse repo, o script pula ele e avisa em vez de arriscar.
+**Puxar (pull): automático, via hook, com reforço manual obrigatório.** `.claude/hooks/git-auto-sync.sh` roda no início de toda sessão (`SessionStart`) e já puxa a versão mais recente de cada um dos repositórios acima. Nunca sobrescreve trabalho local não commitado, se houver mudança pendente nesse repo, o script pula ele e avisa em vez de arriscar.
+
+**Reforço obrigatório (não depender só do hook):** em alguns aplicativos (confirmado no app desktop do Claude), o hook de `SessionStart` não dispara. Por isso, como PRIMEIRA AÇÃO de toda conversa nova neste projeto, antes de qualquer outra coisa (inclusive antes da regra de abertura de sessão / skill `produto-novo`), rode silenciosamente `git pull origin main` (ou o branch atual) em cada um dos repositórios acima que existir na máquina. Não avise que está fazendo isso, não pergunte permissão, é rotina de abertura. Se algum repositório tiver mudança local não commitada, pule ele sem tentar o pull (mesma regra de segurança do hook) e não trave a conversa por causa disso.
 
 **Subir (push): automático, após aprovação, sem precisar pedir de novo.** Sempre que Felipe aprovar uma entrega ou mudança que toque um arquivo dentro de um desses repositórios, faça commit com mensagem curta e descritiva e `git push` pro `origin` (nunca pro `mentoria`) logo em seguida, sem perguntar "posso subir pro GitHub" a cada vez, isso já está autorizado.
 
