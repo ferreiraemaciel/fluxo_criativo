@@ -53,3 +53,47 @@ Carrossel continua usando os três campos antigos normalmente (não mudou nada a
 ## O que NUNCA muda nessa reestruturação
 
 `texto_principal`, `titulo_ad`, `descricao_ad` são os campos que alimentam a publicação no Meta (MetaAdModal, worker `ads-media`). Essa reestruturação só mexe em rótulo/posição/dica na tela, nunca no nome da coluna nem na lógica de publicação.
+
+---
+
+## Título nunca leva o formato (regra fixa, 2026-07-13)
+
+O título de qualquer criativo — anúncio pago (`ads.titulo`) ou conteúdo orgânico (`conteudo_organico.tema`) — **nunca** deve conter a palavra do formato ("Imagem", "Carrossel", "Reels", "Vídeo", etc.), nem entre parênteses, nem como sufixo/prefixo.
+
+**Why:** o formato já existe como tag/campo próprio (`tipo` no `ads`, `plataforma` no `conteudo_organico`) e aparece visualmente no card. Repetir no título é redundante e não serve pra nada.
+
+**Errado:**
+- "Parceria SoClick x Blindagem (Imagem)"
+- "ECA Digital — Sua autorização venceu (Carrossel)"
+- "Contrato genérico virou risco (Reels)"
+
+**Certo:**
+- "Parceria SoClick x Blindagem"
+- "ECA Digital — Sua autorização venceu"
+- "Contrato genérico virou risco"
+
+Quando o mesmo tema vira **múltiplos criativos de formatos diferentes** (ex: a mesma parceria em Imagem, Carrossel e Reels), o título de cada card continua idêntico ao tema em si — a distinção entre eles fica só pela tag de formato visível no card, nunca escrita no título.
+
+---
+
+## Conteúdo Orgânico — Imagem: todo prompt "sem texto" precisa listar os textos (regra fixa, 2026-07-14)
+
+A tabela `conteudo_organico` (Conteúdo Orgânico) **não tem campo `roteiro`** como o `ads` (anúncio pago) tem. Isso já causou um card (ORG 015) sair com um `prompt_imagem` que dizia "no text" mas sem nenhum registro em lugar nenhum de qual texto deveria ser escrito depois no Canva/PS. Card inútil na prática: gera a imagem, mas ninguém sabe o que datilografar em cima.
+
+**Regra:** toda vez que um `prompt_imagem` de Imagem orgânica pedir fundo/cena **sem texto** (ou com "espaço de respiro" pra escrita posterior), o próprio campo `prompt_imagem` precisa terminar com uma seção extra, sempre no mesmo formato:
+
+```
+[... prompt de geração da imagem ...]
+
+---
+
+TEXTOS PARA ESCREVER NA IMAGEM (o prompt acima gera só o fundo, sem texto):
+
+1. [posição/zona] : "[texto exato]"
+2. [posição/zona] : "[texto exato]"
+...
+```
+
+Cada item da lista precisa corresponder a uma zona/espaço mencionado explicitamente na parte de geração do prompt (ex: "label acima do caminho da esquerda", "headline no terço inferior"). Nunca deixar a lista genérica ("escreva o título aqui") — sempre com o texto final, pronto pra copiar e colar.
+
+**Aplica-se também a Reels e Carrossel do Conteúdo Orgânico** sempre que o prompt gerar cena sem texto embutido — mesma lógica, mesmo formato, dentro do campo de prompt correspondente (ex: dentro de cada `prompt` de slide, no caso do carrossel).

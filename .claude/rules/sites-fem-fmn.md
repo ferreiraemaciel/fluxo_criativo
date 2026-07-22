@@ -15,15 +15,20 @@
 
 **Deploy nunca é automático via git push.** Sempre rodar:
 ```bash
-# Cloudflare Pages (site e admin)
-npx wrangler pages deploy . --project-name <nome-do-projeto>
+# Site público FeM
+npx wrangler pages deploy . --project-name fem-site
+
+# Admin FeM — SEMPRE via script (nunca deploy direto de .)
+bash scripts/deploy-admin.sh
 
 # Worker de upload (fem-upload)
 cd ~/Documents/fem-site/scripts
 npx wrangler deploy worker-upload.js --name fem-upload
 ```
 
-> `scripts/` está no `.gitignore` do fem-site propositalmente. O worker é deployado via wrangler, não versionado no git.
+**Por que o admin usa script separado:** `fem-site` e `fem-admin` deployam da mesma pasta local. O Cloudflare Pages serve `index.html` por padrão na raiz — que é o site público. O script `deploy-admin.sh` copia `admin.html` → `.admin-deploy/index.html` e deploya `fem-admin` a partir dessa pasta isolada. Sem isso, `admin.ferreiraemaciel.com.br/` abre o site público em vez do painel.
+
+> `scripts/` e `.admin-deploy/` estão no `.gitignore` do fem-site propositalmente.
 
 ---
 

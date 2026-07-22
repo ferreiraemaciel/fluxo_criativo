@@ -262,9 +262,7 @@ function calcRisco(){
   else if (answers.tipo_contrato_atual) s += 1;
   if (s >= 8)  return { nivel:'Altíssimo', status:'DESPROTEGIDO', pos:96 };
   if (s >= 6)  return { nivel:'Alto',      status:'VULNERÁVEL',   pos:75 };
-  if (s >= 4)  return { nivel:'Médio',     status:'PARCIAL',      pos:50 };
-  if (s >= 2)  return { nivel:'Baixo',     status:'QUASE LÁ',     pos:28 };
-  return { nivel:'Baixíssimo', status:'PROTEGIDO', pos:6 };
+  return { nivel:'Médio', status:'PARCIAL', pos:50 };
 }
 
 /* ---- salvar no Supabase (progressivo) ---- */
@@ -309,6 +307,16 @@ function buildCheckoutUrl() {
   // Espelha xcod -> sck (se sck ainda não veio) pra garantir a atribuição no webhook.
   const xcod = p.get('xcod');
   if (xcod && !p.get('sck')) p.set('sck', xcod);
+  // Hotmart NUNCA lê utm_source/utm_medium soltos no link de checkout, só o
+  // parâmetro próprio dela (sck, máx. 30 caracteres, campos separados por "|").
+  // Sem isso a venda cai como "Direto" mesmo vindo de anúncio (o lead já foi
+  // capturado certinho aqui no quiz, mas perdia a atribuição só nessa ponte).
+  if (!p.get('sck')) {
+    const clean = s => (s || '').toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 15);
+    const src = clean(tracking.utm_source);
+    const med = clean(tracking.utm_medium);
+    if (src) p.set('sck', (med ? `${src}|${med}` : src).slice(0, 30));
+  }
   if (answers.email) p.set('email', answers.email);
   if (answers.nome)  p.set('name',  answers.nome);
   const qs = p.toString();
@@ -541,7 +549,7 @@ function rResult(){
   stage.appendChild(el(`<div class="sub">Seu nível de risco hoje é <b>${r.nivel}</b>.</div>`));
   stage.appendChild(el(
     `<div class="gauge-wrap"><div class="gauge"></div><div class="gauge-mark" style="left:${r.pos}%"></div></div>`+
-    `<div class="scale"><span>Baixíssimo</span><span>Médio</span><span>Altíssimo</span></div>`));
+    `<div class="scale"><span>Médio</span><span>Alto</span><span>Altíssimo</span></div>`));
 
   // heading personalizado por perfil
   const riskPhrases = {

@@ -344,7 +344,19 @@ Para cada anúncio, pedir:
 - CTA (botão. `SHOP_NOW`, `LEARN_MORE`, `SIGN_UP`, etc., escolha conforme objetivo)
 - URL de destino (a skill sempre adiciona os parâmetros UTM padrão automaticamente, sem perguntar ao aluno)
 
-**UTMs obrigatórios em todos os anúncios (Sales e Leads):** a skill monta a URL final concatenando a URL de destino com os seguintes parâmetros dinâmicos do Meta:
+**Rastreio obrigatório em todos os anúncios (Sales e Leads), regra CRÍTICA:** o formato do parâmetro de rastreio **depende de pra onde a URL de destino aponta**. Isso não é opcional, é a diferença entre a venda aparecer rastreada ou cair como "Direto" no Tracker (bug real já identificado e corrigido em 2026-07-13, ver `tracker-fmn/frontend/app/dashboard.jsx` classifyOrigin e `quiz-fotografo-protegido/index.html` buildCheckoutUrl).
+
+**Caso A — URL de destino é direto pro checkout da Hotmart** (contém `pay.hotmart.com`): a Hotmart **NUNCA lê parâmetros `utm_*` soltos** no link de checkout, só o parâmetro próprio dela, `sck`. E `sck` tem limite de **30 caracteres no total**, campos separados por `|` (documentação oficial: https://help.hotmart.com/pt-br/article/216441797). Não cabe granularidade de campanha/conjunto/anúncio nesse limite, então usa só fonte + meio, compactos:
+
+```
+sck={{fonte-curta}}|{{meio-curto}}
+```
+Exemplo: `sck=meta|paid` ou `sck=meta-ads`. Regras de montagem:
+- Cada segmento em minúsculo, só `a-z0-9`, sem espaço nem acento.
+- Se a URL já tiver `?`, concatenar com `&sck=...`. Se não tiver, com `?sck=...`.
+- Nunca montar `utm_source=...&utm_campaign=...` etc. numa URL da Hotmart, esses parâmetros são descartados silenciosamente e a venda aparece "Direto" mesmo vindo de anúncio pago.
+
+**Caso B — URL de destino é uma página própria** (quiz, landing page, site do produto, não é `pay.hotmart.com` direto): aí sim usa UTM padrão completo, porque essas páginas leem `utm_*` normalmente (GA4, Meta Pixel):
 
 ```
 utm_source=meta-ads
@@ -356,11 +368,11 @@ utm_source=meta-ads
 
 Exemplo de URL final: `https://meusite.com/pagina?utm_source=meta-ads&utm_campaign={{campaign.name}}|{{campaign.id}}&utm_medium={{adset.name}}|{{adset.id}}&utm_content={{ad.name}}|{{ad.id}}&utm_term={{placement}}`
 
-Regras de montagem:
-- Se a URL de destino já tiver `?`, concatenar com `&utm_source=...`
-- Se não tiver, concatenar com `?utm_source=...`
-- Nunca perguntar ao aluno se quer ou não usar UTMs. São sempre aplicados.
-- Nunca deixar o aluno digitar os UTMs manualmente. A skill monta automaticamente.
+O quiz oficial (`quiz-fotografo-protegido`) já sabe converter esse UTM recebido na URL em `sck` compacto sozinho na hora de montar o link de checkout (`buildCheckoutUrl()` em `index.html`), então uma página própria que aponta pro quiz não precisa se preocupar em virar `sck`, só precisa mandar UTM padrão certinho que o quiz repassa.
+
+Regras gerais de montagem (valem pros dois casos):
+- Nunca perguntar ao aluno se quer ou não usar rastreio. É sempre aplicado.
+- Nunca deixar o aluno digitar os parâmetros manualmente. A skill monta automaticamente, escolhendo o Caso A ou B conforme o destino.
 
 **7.4. Geração de copy por IA**
 Se aluno pedir explicitamente "me ajuda com a copy" ou "gera variações", encaminhar para `/copy-anuncio` (skill especializada em Mandala da Criatividade VTSD com 18 tipos de anúncio). NÃO gerar copy aqui.
