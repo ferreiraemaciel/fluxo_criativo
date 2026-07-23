@@ -87,6 +87,16 @@ Se o número do card não deixar claro o fluxo, checar o prefixo antes de criar 
 
 ---
 
+## Ideias — vira card, vira "Convertido" (regra fixa, 2026-07-23)
+
+Toda ideia da aba Ideias que virar card, seja em Anúncio (`ads`) ou em Orgânico (`conteudo_organico`), tem que ter o `status` da linha em `ideias` atualizado pra `Convertido` (o próprio enum já usado pelo botão de converter em `ideias.jsx`, `STATUS_COLS = ['Ideia', 'Convertido']`). Nunca deixar uma ideia já usada com status `Ideia`, senão ela aparece disponível de novo pra virar outro card por engano.
+
+**Fluxo normal (pelo botão "Converter" na tela):** já cobre isso sozinho, via `handleConvert` em `ideias.jsx` — cria o card (Ads ou Orgânico) e atualiza o status na mesma ação, nenhum passo extra necessário.
+
+**Fluxo manual (Claude criando o card direto via API/SQL, sem passar pelo botão):** sempre atualizar o `status` da ideia de origem pra `Convertido` como parte da mesma operação, nunca só criar o card e esquecer a ideia. Se o Claude não souber o `id` da ideia de origem, perguntar ou localizar antes de finalizar a tarefa.
+
+---
+
 ## Conteúdo Orgânico — Imagem: todo prompt "sem texto" precisa listar os textos (regra fixa, 2026-07-14)
 
 A tabela `conteudo_organico` (Conteúdo Orgânico) **não tem campo `roteiro`** como o `ads` (anúncio pago) tem. Isso já causou um card (ORG 015) sair com um `prompt_imagem` que dizia "no text" mas sem nenhum registro em lugar nenhum de qual texto deveria ser escrito depois no Canva/PS. Card inútil na prática: gera a imagem, mas ninguém sabe o que datilografar em cima.
