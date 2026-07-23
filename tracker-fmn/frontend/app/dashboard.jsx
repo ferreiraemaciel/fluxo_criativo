@@ -224,13 +224,22 @@ function useDashboardData(period, dateRange) {
           { label: 'Lucro real',                 value: lucro,         color: 'var(--clr-pos)', bold: true, separator: true },
         ];
 
-        /* upsell Blindagem — cross-reference emails (acumulado total, independente do período).
+        /* upsell Blindagem — cross-reference emails, DENTRO DO MESMO PERÍODO
+           selecionado (mesmo filtro created_at usado no resto do funil).
            Bug corrigido 2026-07-09: a query pedia a coluna "email", que não
            existe em vendas (é comprador_email) — vinha sempre vazio, então o
-           card do funil sempre mostrava 0, mesmo com upsells reais fechados. */
+           card do funil sempre mostrava 0, mesmo com upsells reais fechados.
+           Bug corrigido 2026-07-22: essa etapa somava TODO O HISTÓRICO
+           (acumulado total, sem filtro de data), enquanto as outras etapas do
+           mesmo funil (Cliques, Vendas Aprovadas etc) já eram filtradas pelo
+           período escolhido. Isso fazia o passo "Upsell Blindagem" mostrar
+           conversão mesmo quando "Vendas Aprovadas" do período era 0 — eram
+           bases de tempo diferentes dentro do mesmo funil. */
         const [{ data: mcvEmailsRaw }, { data: blindEmailsRaw }] = await Promise.all([
-          window.db.from('vendas').select('comprador_email').eq('status','aprovada').ilike('produto_nome','%contrato visual%'),
-          window.db.from('vendas').select('comprador_email').eq('status','aprovada').ilike('produto_nome','%blindagem%'),
+          window.db.from('vendas').select('comprador_email').eq('status','aprovada')
+            .ilike('produto_nome','%contrato visual%').gte('created_at', brt.gte).lte('created_at', brt.lte),
+          window.db.from('vendas').select('comprador_email').eq('status','aprovada')
+            .ilike('produto_nome','%blindagem%').gte('created_at', brt.gte).lte('created_at', brt.lte),
         ]);
         const mcvSet      = new Set((mcvEmailsRaw   || []).map(r => r.comprador_email).filter(Boolean));
         const blindSet    = new Set((blindEmailsRaw || []).map(r => r.comprador_email).filter(Boolean));
@@ -266,7 +275,7 @@ function useDashboardData(period, dateRange) {
         /* ranking de ADs — apenas campeões */
         const { data: adsRaw } = await window.db
           .from('ads')
-          .select('numero, titulo, tipo, status, gasto_total, cpa_historico, vendas_total, meta_ad_id, media_drive_url, media_tipo')
+          .select('numero, titulo, tipo, status, gasto_total, cpa_historico, vendas_total, meta_ad_id, media_drive_url, media_tipo, thumb_url')
           .in('status', ['campeoes', 'ativo'])
           .limit(500);
 
@@ -295,7 +304,7 @@ function useDashboardData(period, dateRange) {
             gasto,
             vendas,
             cpa,
-            thumbUrl: a.media_drive_url ? `thumbnails/${a.numero}.jpg` : null,
+            thumbUrl: window.melhorThumbAd(a.thumb_url, null, a.media_drive_url),
           };
         });
 
@@ -889,6 +898,24 @@ function FlowFunnel({ steps }) {
               fill="rgba(255,255,255,.95)" textAnchor="middle"
               fontFamily="Roboto,sans-serif" fontWeight="700">
               {label}
+            </text>
+          </g>
+        );
+      })}
+
+      {/* Conversão entre etapas (pill sobre o divisor) */}
+      {steps.slice(1).map((s,i) => {
+        const prev = steps[i].value;
+        const stepPct = prev > 0 ? ((s.value / prev) * 100).toFixed(1) : '—';
+        const x = (i+1) * stepW;
+        const pillW = 48;
+        return (
+          <g key={`sp${i}`}>
+            <rect x={x-pillW/2} y={realCy-10} width={pillW} height={18} rx="9"
+              fill="rgba(10,10,12,.82)" stroke="rgba(255,255,255,.2)" strokeWidth="0.8"/>
+            <text x={x} y={realCy+4} fontSize="9.5" fill="rgba(255,255,255,.8)"
+              textAnchor="middle" fontFamily="Roboto,sans-serif" fontWeight="700">
+              {stepPct}%
             </text>
           </g>
         );
@@ -2033,13 +2060,16 @@ function useUpsellData() {
   useEffect(() => {
     if (!window.db) return;
     async function load() {
-      // Busca emails de quem comprou MCV e de quem comprou Blindagem separadamente
+      // Busca emails de quem comprou MCV e de quem comprou Blindagem separadamente.
+      // Bug corrigido 2026-07-22: a query pedia a coluna "email", que não
+      // existe em vendas (é comprador_email) — a query quebrava silenciosamente
+      // e o card sempre mostrava 0 upsells, mesmo com upsells reais fechados.
       const [{ data: mcvRows }, { data: blindRows }] = await Promise.all([
-        window.db.from('vendas').select('id,email').eq('status','aprovada').ilike('produto_nome','%contrato visual%'),
-        window.db.from('vendas').select('id,email').eq('status','aprovada').ilike('produto_nome','%blindagem%'),
+        window.db.from('vendas').select('id,comprador_email').eq('status','aprovada').ilike('produto_nome','%contrato visual%'),
+        window.db.from('vendas').select('id,comprador_email').eq('status','aprovada').ilike('produto_nome','%blindagem%'),
       ]);
-      const mcvEmails   = new Set((mcvRows   || []).map(r => r.email).filter(Boolean));
-      const blindEmails = new Set((blindRows || []).map(r => r.email).filter(Boolean));
+      const mcvEmails   = new Set((mcvRows   || []).map(r => r.comprador_email).filter(Boolean));
+      const blindEmails = new Set((blindRows || []).map(r => r.comprador_email).filter(Boolean));
       // Upsell real = quem tem Blindagem E já tinha MCV
       const upsellCount = [...blindEmails].filter(e => mcvEmails.has(e)).length;
       const mcv = mcvEmails.size;
@@ -2270,17 +2300,9 @@ function DashboardScreen({ period, onPeriodChange, dateRange, onDateRangeChange,
 
         {/* Linha 4 — Funil de Conversão (linha completa, só aparece se tiver dados) */}
         {funnel && (
-          <SectionCard title="Funil de Conversão (Meta Ads)" noPad style={{ flexShrink:0 }}
-            headerRight={<span style={{ fontSize:10.5, fontFamily:'Roboto,sans-serif',
-              fontWeight:700, color:'var(--text-3)', letterSpacing:'0.06em' }}>CVR FINAL · {cvrFinal}</span>}>
+          <SectionCard title="Funil de Conversão (Meta Ads)" noPad style={{ flexShrink:0 }}>
             <div style={{ padding:'8px 18px 18px' }}>
               <FlowFunnel steps={funnel}/>
-              {funnel[funnel.length-1]?.sub && (
-                <div style={{ textAlign:'right', marginTop:-4, fontSize:10.5,
-                  fontFamily:'Roboto,sans-serif', color:'var(--text-3)' }}>
-                  Conversão do upsell: {funnel[funnel.length-1].sub}
-                </div>
-              )}
             </div>
           </SectionCard>
         )}
