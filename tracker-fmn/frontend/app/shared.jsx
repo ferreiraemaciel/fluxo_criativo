@@ -11,6 +11,31 @@ function fmtBRL(n) {
   return _brl.format(Number(n));
 }
 
+/* ── Thumb de anúncio (ÚNICA fonte da verdade) ────────────────────
+   Usada por Kanban, Tráfego e Dashboard. Antes cada tela tinha sua própria
+   lógica pra achar a thumb, e cada uma quebrava de um jeito diferente
+   (Kanban e Tráfego ignoravam ads.thumb_url, Dashboard usava um caminho
+   local antigo "thumbnails/{numero}.jpg" que não existia mais).
+   Bug corrigido 2026-07-22: unificado numa função só, sempre priorizando
+   ads.thumb_url (R2, confiável), com fallback pro Drive só se não tiver. */
+function melhorThumbAd(adThumbUrl, mediaFiles, driveUrl) {
+  if (adThumbUrl) return adThumbUrl;
+  const files = (() => {
+    try { return Array.isArray(mediaFiles) ? mediaFiles : JSON.parse(mediaFiles || '[]'); }
+    catch { return []; }
+  })();
+  if (files.length > 0) {
+    const img = files.find(f => f.tipo === 'imagem');
+    if (img) return img.thumb_url || (img.file_id ? `https://drive.google.com/thumbnail?id=${img.file_id}&sz=w120` : null);
+    const vid = files.find(f => f.tipo === 'video' || f.tipo === 'reels');
+    if (vid) return vid.thumb_url || (vid.file_id ? `https://drive.google.com/thumbnail?id=${vid.file_id}&sz=w120` : null);
+  }
+  if (!driveUrl) return null;
+  if (!driveUrl.includes('drive.google.com')) return driveUrl;
+  const m = driveUrl.match(/\/d\/([a-zA-Z0-9_-]+)/) || driveUrl.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+  return m ? `https://drive.google.com/thumbnail?id=${m[1]}&sz=w120` : driveUrl;
+}
+
 /* ── Icon ──────────────────────────────────────────────────────── */
 function LucideIcon({ icon, size = 18, color, style = {} }) {
   const ref = useRef(null);
@@ -610,4 +635,4 @@ function BarraProgresso({ pct = 0, etapa = '' }) {
   );
 }
 
-Object.assign(window, { LucideIcon, Btn, Badge, CardKPI, SectionCard, Divider, Sidebar, TopBar, fmtBRL, RefBlock, UTM_GLOBAL, PLATAFORMAS, PLAT_COLOR, PLAT_ICON, CarouselLightbox, novoJobId, BarraProgresso });
+Object.assign(window, { LucideIcon, Btn, Badge, CardKPI, SectionCard, Divider, Sidebar, TopBar, fmtBRL, RefBlock, UTM_GLOBAL, PLATAFORMAS, PLAT_COLOR, PLAT_ICON, CarouselLightbox, novoJobId, BarraProgresso, melhorThumbAd });

@@ -136,11 +136,15 @@ async function syncMetaAdStatus(): Promise<Set<number>> {
       }
       // Anúncio que estava "Ativo" e foi pausado no Meta (decisão do usuário,
       // ex: pausou a campanha inteira) não pode ficar preso pra sempre na
-      // coluna Ativos — ele não está rodando de verdade. Move pra Arquivados,
-      // já com a etiqueta calculada a partir do histórico que já temos salvo.
+      // coluna Ativos — ele não está rodando de verdade. Vai pra Campeões se
+      // a etiqueta calculada for Ótimo, senão pra Arquivados (mesma regra do
+      // REGRAS-KANBAN.md: "Anúncio pausado... move pra Campeões (Ótimo) ou
+      // Arquivados"). Bug corrigido 2026-07-22: mandava direto pra Arquivados
+      // sempre, mesmo quando a etiqueta calculada já era Ótimo.
       if (ad.status === "ativo") {
         const novaTag = classificarAd(ad.vendas_total, ad.cpa_historico, ad.gasto_total);
-        await supabase.from("ads").update({ status: "arquivado", tag: novaTag }).eq("numero", ad.numero);
+        const novoStatus = novaTag === "Ótimo" ? "campeoes" : "arquivado";
+        await supabase.from("ads").update({ status: novoStatus, tag: novaTag, meta_publish_status: "pausado" }).eq("numero", ad.numero);
       }
     } else if (SUMIU.has(efStatus)) {
       const patch: Record<string, unknown> = {};
@@ -152,10 +156,11 @@ async function syncMetaAdStatus(): Promise<Set<number>> {
         patch.meta_ad_url = null;
       }
       // Mesma lógica do PAUSED: arquivado/deletado no Meta não pode ficar
-      // preso em Ativos.
+      // preso em Ativos, e vai pra Campeões ou Arquivados conforme a tag.
       if (ad.status === "ativo") {
-        patch.status = "arquivado";
-        patch.tag = classificarAd(ad.vendas_total, ad.cpa_historico, ad.gasto_total);
+        const novaTag = classificarAd(ad.vendas_total, ad.cpa_historico, ad.gasto_total);
+        patch.status = novaTag === "Ótimo" ? "campeoes" : "arquivado";
+        patch.tag = novaTag;
       }
       if (Object.keys(patch).length) {
         await supabase.from("ads").update(patch).eq("numero", ad.numero);

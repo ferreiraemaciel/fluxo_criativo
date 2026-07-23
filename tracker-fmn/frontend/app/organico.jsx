@@ -1588,10 +1588,15 @@ function CalendarioView({ items, onOpen, onNewWithDate, onReschedule, onEditSche
 
   // Agrupa items por data_prevista (YYYY-MM-DD). Posts já publicados (Feito) continuam
   // aparecendo, só mudam de cor pra verde (ver render dos chips abaixo).
+  // Bug corrigido 2026-07-22: post publicado direto (sem agendar) nunca
+  // recebe data_prevista (só ganha published_at), então sumia do calendário
+  // mesmo já tendo uma data real. Cai pra published_at quando não tem
+  // data_prevista.
   const byDate = {};
   items.forEach(item => {
-    if (!item.data_prevista) return;
-    const d = item.data_prevista.slice(0,10);
+    const dataRef = item.data_prevista || item.published_at;
+    if (!dataRef) return;
+    const d = dataRef.slice(0,10);
     if (!byDate[d]) byDate[d] = [];
     byDate[d].push(item);
   });

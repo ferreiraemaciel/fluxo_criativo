@@ -179,6 +179,37 @@ def handoff_curto_em_xingamento(r):
     return (ok, "não acionou handoff em xingamento direcionado" if not ok else "ok")
 
 
+def tom_solto_nao_formal(r):
+    txt = r["mensagem"].lower()
+    formais = ["me conta, o que", "me conta o que está pesando", "gostaria de entender", "poderia me informar"]
+    achou = [f for f in formais if f in txt]
+    return (not achou, f"soou formal demais: {achou}" if achou else "ok")
+
+
+def nao_pula_pra_solucao_sem_implicacao(r):
+    txt = r["mensagem"].lower()
+    cita_produto = bool(re.search(r"\bmodelo|contrato visual|\+?200|advogado especializado", txt))
+    return (not cita_produto, "citou o produto/solução sem antes fazer Implicação" if cita_produto else "ok")
+
+
+def nao_repete_pergunta_quantos(r):
+    txt = r["mensagem"].lower()
+    achou = re.search(r"quantos? (trabalhos?|contratos?) voc[êe]", txt)
+    return (not achou, "repetiu variação de 'quantos trabalhos/contratos você'" if achou else "ok")
+
+
+def nao_pede_esclarecimento_ambiguo(r):
+    txt = r["mensagem"].lower()
+    achou = re.search(r"qual d[ao]s duas|isso [ée] sobre|foi sobre a primeira ou|me confirma qual", txt)
+    return (not achou, "pediu esclarecimento em vez de seguir em frente" if achou else "ok")
+
+
+def foco_beneficio_nao_ferramenta(r):
+    txt = r["mensagem"].lower()
+    achou = re.search(r"quer ver como (funciona|fica)|quer ver um exemplo|posso te mostrar como", txt)
+    return (not achou, "pergunta final focou em mostrar a ferramenta, não no benefício" if achou else "ok")
+
+
 CENARIOS = [
     {
         "nome": "Pergunta jurídica (ECA Digital) não é sinal de compra",
@@ -233,6 +264,40 @@ CENARIOS = [
             {"role": "user", "content": "seu golpista de merda, para de encher meu saco"},
         ],
         "checks": [handoff_curto_em_xingamento],
+    },
+    {
+        "nome": "Tom solto quando lead responde rápido em Fechamento",
+        "historico": [
+            {"role": "assistant", "content": "Sobre o investimento: apenas 12x de R$ 30,72 ou R$ 297,00 à vista, acesso vitalício enquanto o produto existir. https://pay.hotmart.com/W87258826R?checkoutMode=10&sck=whatsapp-cl\n\nJá dá pra fechar hoje, ou ainda ficou alguma dúvida antes?"},
+            {"role": "user", "content": "Ainda estou na dúvida"},
+        ],
+        "checks": [sem_saudacao_periodo, sem_virgula_antes_e_ou, tom_solto_nao_formal, termina_com_pergunta],
+    },
+    {
+        "nome": "Não pula pra Necessidade de solução sem passar por Implicação",
+        "historico": [
+            {"role": "assistant", "content": "Vi que você já passou (ou tem medo de passar) por cliente aparecendo anos depois pedindo uma foto que você nem guardou mais, sem nada assinado que te resguarde. Isso já aconteceu de verdade com você, ou é mais aquele medo de acontecer um dia?"},
+            {"role": "user", "content": "Sim"},
+        ],
+        "checks": [sem_saudacao_periodo, sem_virgula_antes_e_ou, nao_pula_pra_solucao_sem_implicacao, termina_com_pergunta],
+    },
+    {
+        "nome": "Não repete pergunta de fechamento disfarçada",
+        "historico": [
+            {"role": "assistant", "content": "Com o modelo certo assinado antes de cada trabalho, essas situações de crédito e uso indevido da foto ficam resolvidas antes de qualquer dor de cabeça acontecer. Quantos trabalhos você fecha por mês hoje sem nada assinado?"},
+            {"role": "user", "content": "Nenhum, todos faço assinados"},
+            {"role": "assistant", "content": "Entendi, e o contrato atual que usa é aquele textão no formato Word? Você conhece as regras do Código de Defesa do Consumidor quanto à necessidade de clareza nos contratos?"},
+            {"role": "user", "content": "Não, não conheço"},
+        ],
+        "checks": [sem_saudacao_periodo, sem_virgula_antes_e_ou, nao_repete_pergunta_quantos, foco_beneficio_nao_ferramenta, termina_com_pergunta],
+    },
+    {
+        "nome": "Sim/não ambíguo não trava pedindo esclarecimento",
+        "historico": [
+            {"role": "assistant", "content": "Isso já aconteceu de verdade com você, ou é mais aquele medo de acontecer um dia?"},
+            {"role": "user", "content": "Sim"},
+        ],
+        "checks": [sem_saudacao_periodo, sem_virgula_antes_e_ou, nao_pede_esclarecimento_ambiguo, termina_com_pergunta],
     },
 ]
 

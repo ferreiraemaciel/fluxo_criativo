@@ -602,18 +602,24 @@ function KanbanView({ contatos, onAbrir, onMover, etapas }) {
 }
 
 /* ── Métricas ────────────────────────────────────────────────────*/
-// Data mínima pro período das Métricas: início da operação do Claudinho.
-// Vendas anteriores a essa data (ex: Marco Tulio, 05/07/2026) não entram em
-// "Fechados" pra não contaminar a métrica de conversão pós-IA.
-const METRICAS_DATA_MINIMA = '2026-07-10';
+// Início da operação do Claudinho: usado só pra proteger a métrica "Fechados"
+// (conversão pós-IA), não trava o período geral da tela. Vendas anteriores a
+// essa data (ex: Marco Tulio, 05/07/2026) não entram em "Fechados" pra não
+// contaminar a métrica, mas continuam aparecendo normalmente em todo o resto
+// (mensagens, custo, distribuição por etapa etc), que têm histórico migrado
+// bem mais antigo que isso.
+const METRICAS_DATA_MINIMA_FECHADOS = '2026-07-10';
+// Piso real do período "Tudo": bem anterior a qualquer dado migrado, então
+// na prática pega o histórico inteiro.
+const METRICAS_DATA_MINIMA_GERAL = '2020-01-01';
 
 function periodoRapido(dias) {
   const to = new Date();
   const from = new Date();
   if (dias != null) from.setDate(from.getDate() - dias);
   const fmt = d => d.toISOString().slice(0, 10);
-  const fromStr = dias == null ? METRICAS_DATA_MINIMA : fmt(from);
-  return { from: fromStr < METRICAS_DATA_MINIMA ? METRICAS_DATA_MINIMA : fromStr, to: fmt(to) };
+  const fromStr = dias == null ? METRICAS_DATA_MINIMA_GERAL : fmt(from);
+  return { from: fromStr, to: fmt(to) };
 }
 
 function MetricasView({ contatosDb, msgs }) {
@@ -681,6 +687,10 @@ function MetricasView({ contatosDb, msgs }) {
       if (c.etapa !== 'aluno') return false;
       const dataVenda = c.tornou_aluno_em || c.updated_at;
       if (!dentro(dataVenda)) return false;
+      // Trava específica dessa métrica: venda precisa ser depois do Claudinho
+      // entrar no ar, senão contamina a conversão pós-IA com venda antiga
+      // (ex: Marco Tulio, 05/07/2026). Isso não afeta o resto da tela.
+      if (dataVenda < METRICAS_DATA_MINIMA_FECHADOS) return false;
       const vendaMs = new Date(dataVenda).getTime();
       return (msgsPorTelefone[c.telefone] || []).some(m => m.direcao === 'entrada' && new Date(m.created_at).getTime() < vendaMs);
     });
@@ -790,12 +800,12 @@ function MetricasView({ contatosDb, msgs }) {
         {btnRapido('30 dias', 30)}
         {btnRapido('90 dias', 90)}
         {btnRapido('Tudo', null)}
-        <input type="date" value={from} min={METRICAS_DATA_MINIMA}
-          onChange={e => setFrom(e.target.value < METRICAS_DATA_MINIMA ? METRICAS_DATA_MINIMA : e.target.value)}
+        <input type="date" value={from} min={METRICAS_DATA_MINIMA_GERAL}
+          onChange={e => setFrom(e.target.value)}
           style={{ background: 'rgba(255,255,255,.04)', border: '1px solid var(--app-border)', borderRadius: 7,
             padding: '6px 10px', fontSize: 12, color: 'var(--text-1)', fontFamily: 'Roboto,sans-serif' }} />
         <span style={{ color: 'var(--text-3)', fontSize: 12 }}>até</span>
-        <input type="date" value={to} min={METRICAS_DATA_MINIMA} onChange={e => setTo(e.target.value)}
+        <input type="date" value={to} min={METRICAS_DATA_MINIMA_GERAL} onChange={e => setTo(e.target.value)}
           style={{ background: 'rgba(255,255,255,.04)', border: '1px solid var(--app-border)', borderRadius: 7,
             padding: '6px 10px', fontSize: 12, color: 'var(--text-1)', fontFamily: 'Roboto,sans-serif' }} />
       </div>
@@ -1272,9 +1282,9 @@ function ConversasScreen() {
                 borderRadius: 8, padding: '7px 10px', fontSize: 12.5, color: 'var(--text-1)', fontFamily: 'Roboto,sans-serif', outline: 'none' }} />
             <select value={ordemLista} onChange={e => setOrdemLista(e.target.value)}
               title="Ordem da lista de contatos"
-              style={{ background: 'rgba(255,255,255,.04)', border: '1px solid var(--app-border)', borderRadius: 8,
-                padding: '0 8px', fontSize: 11.5, color: 'var(--text-1)', fontFamily: 'Roboto,sans-serif', outline: 'none', cursor: 'pointer' }}>
-              <option value="precisa">Precisa responder</option>
+              style={{ flexShrink: 0, background: 'rgba(255,255,255,.04)', border: '1px solid var(--app-border)', borderRadius: 8,
+                padding: '0 6px', fontSize: 11.5, color: 'var(--text-1)', fontFamily: 'Roboto,sans-serif', outline: 'none', cursor: 'pointer' }}>
+              <option value="precisa">Responder</option>
               <option value="janela">Janela aberta</option>
               <option value="recentes">Recentes</option>
             </select>
@@ -1342,18 +1352,34 @@ function ConversasScreen() {
                   </div>
                   {/* Marcação manual de desfecho: some com a retomada automática pra
                       sempre nesse contato (o whatsapp-retomada já ignora etapa=perdido
-                      e etapa=aluno), evita mandar retomada pra quem já disse não ou já comprou. */}
-                  {contatoAtivo?.etapa !== 'aluno' && (
-                    <Btn size="sm" variant="ghost" title="Marcar como venda fechada (para a retomada automática)"
-                      onClick={() => { if (window.confirm('Marcar essa conversa como venda fechada? Ela sai do fluxo de retomada automática.')) moverEtapa(selecionado, 'aluno'); }}>
+                      e etapa=aluno), evita mandar retomada pra quem já disse não ou já comprou.
+                      Bug corrigido 2026-07-22: o botão Fechada aparecia mesmo quando a
+                      etapa já era "perdido" (condição só excluía "aluno"), então uma
+                      conversa marcada como perdida continuava mostrando "✓ Fechada" no
+                      cabeçalho. Agora só mostra a ação de marcar quando a conversa ainda
+                      não tem nenhum dos dois desfechos; se já tem, mostra o status real
+                      (com opção de reverter clicando). */}
+                  {contatoAtivo?.etapa === 'aluno' ? (
+                    <Btn size="sm" variant="ghost" title="Já marcada como fechada. Clique pra desfazer."
+                      onClick={() => { if (window.confirm('Desfazer a marcação de venda fechada?')) moverEtapa(selecionado, 'em_conversa'); }}>
                       <span style={{ color: '#4ade80' }}>✓ Fechada</span>
                     </Btn>
-                  )}
-                  {contatoAtivo?.etapa !== 'perdido' && (
-                    <Btn size="sm" variant="ghost" title="Marcar como venda perdida (para a retomada automática)"
-                      onClick={() => { if (window.confirm('Marcar essa conversa como venda perdida? Ela sai do fluxo de retomada automática e some do Chat.')) moverEtapa(selecionado, 'perdido'); }}>
+                  ) : contatoAtivo?.etapa === 'perdido' ? (
+                    <Btn size="sm" variant="ghost" title="Já marcada como perdida. Clique pra desfazer."
+                      onClick={() => { if (window.confirm('Desfazer a marcação de venda perdida?')) moverEtapa(selecionado, 'em_conversa'); }}>
                       <span style={{ color: '#f87171' }}>✕ Perdida</span>
                     </Btn>
+                  ) : (
+                    <>
+                      <Btn size="sm" variant="ghost" title="Marcar como venda fechada (para a retomada automática)"
+                        onClick={() => { if (window.confirm('Marcar essa conversa como venda fechada? Ela sai do fluxo de retomada automática.')) moverEtapa(selecionado, 'aluno'); }}>
+                        <span style={{ color: '#4ade80' }}>✓ Fechada</span>
+                      </Btn>
+                      <Btn size="sm" variant="ghost" title="Marcar como venda perdida (para a retomada automática)"
+                        onClick={() => { if (window.confirm('Marcar essa conversa como venda perdida? Ela sai do fluxo de retomada automática e some do Chat.')) moverEtapa(selecionado, 'perdido'); }}>
+                        <span style={{ color: '#f87171' }}>✕ Perdida</span>
+                      </Btn>
+                    </>
                   )}
                 </div>
               </div>
@@ -1437,7 +1463,7 @@ function ConversasScreen() {
                   </Btn>
                 </div>
               )}
-              <div style={{ padding: 12, borderTop: pendente ? 'none' : '1px solid var(--app-border)', display: 'flex', gap: 8 }}>
+              <div style={{ padding: 12, borderTop: pendente ? 'none' : '1px solid var(--app-border)', display: 'flex', gap: 8, alignItems: 'flex-end' }}>
                 <textarea value={texto} onChange={e => setTexto(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); enviar(); } }}
                   placeholder={pendente ? 'Legenda (opcional)...' : contatoAtivo?.janelaAberta ? 'Digite sua mensagem... (Shift+Enter pra quebrar linha)' : 'Janela fechada, precisa de template pra reabrir'}
@@ -1449,7 +1475,7 @@ function ConversasScreen() {
                   onInput={e => { e.target.style.height = 'auto'; e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px'; }} />
                 <input ref={fileInputRef} type="file" accept="image/*,video/*,audio/*" style={{ display: 'none' }}
                   onChange={e => { const f = e.target.files?.[0]; e.target.value = ''; if (f) selecionarArquivo(f); }} />
-                <div style={{ position: 'relative' }}>
+                <div style={{ position: 'relative', flexShrink: 0 }}>
                   <Btn variant="ghost" title="Anexar foto, vídeo ou áudio"
                     disabled={!contatoAtivo?.janelaAberta || enviandoMidia}
                     onClick={() => setMenuAnexoAberto(a => !a)}>

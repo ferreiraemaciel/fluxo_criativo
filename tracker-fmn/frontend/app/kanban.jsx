@@ -201,22 +201,10 @@ function MedalBadge({ rank }) {
 }
 
 /* ── KanbanCard ──────────────────────────────────────────────────*/
+// Thumb de anúncio: ver melhorThumbAd em shared.jsx (única fonte da verdade,
+// usada também por Tráfego e Dashboard).
 function cardThumb(raw) {
-  // R2 thumb tem prioridade
-  if (raw?.thumb_url) return raw.thumb_url;
-  // Legado: Drive
-  try {
-    const files = Array.isArray(raw?.media_files) ? raw.media_files : JSON.parse(raw?.media_files || '[]');
-    const img = files.find(f => f.tipo === 'imagem');
-    if (img?.file_id) return `https://drive.google.com/thumbnail?id=${img.file_id}&sz=w120`;
-    const vid = files.find(f => f.tipo === 'video' || f.tipo === 'reels');
-    if (vid?.file_id) return `https://drive.google.com/thumbnail?id=${vid.file_id}&sz=w120`;
-  } catch {}
-  const m = (raw?.media_drive_url || '').match(/\/d\/([^/]+)/);
-  if (m) return `https://drive.google.com/thumbnail?id=${m[1]}&sz=w120`;
-  const m2 = (raw?.media_drive_url || '').match(/id=([^&]+)/);
-  if (m2) return `https://drive.google.com/thumbnail?id=${m2[1]}&sz=w120`;
-  return null;
+  return window.melhorThumbAd(raw?.thumb_url, raw?.media_files, raw?.media_drive_url);
 }
 
 function KanbanCard({ card, col, onOpen, onDragStart, podeArrastar, onDropAntes }) {

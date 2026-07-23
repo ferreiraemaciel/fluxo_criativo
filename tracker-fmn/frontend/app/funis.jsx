@@ -407,7 +407,10 @@ function VizCard({ title, hint, items, total }) {
   const [hov, setHov] = useState(null);
   const data = (items || []).slice(0, 8);
   const sum = data.reduce((a, b) => a + b.n, 0) || 1;
-  const base = total || sum;
+  // O centro do gráfico deve mostrar quantos responderam ESSA pergunta
+  // específica, não o total geral do quiz (que é igual pra todo card).
+  // sum já é a soma real das respostas dessa pergunta.
+  const base = sum || total;
   const max = Math.max(1, ...data.map(i => i.n));
   const Toggle = ({ id, icon }) => (
     <button onClick={() => setView(id)} title={id === 'pizza' ? 'Pizza' : 'Barras'}

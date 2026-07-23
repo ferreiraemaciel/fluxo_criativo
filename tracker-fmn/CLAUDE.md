@@ -28,3 +28,16 @@ Desde 2026-07-21, imagem e figurinha recebidas do lead são baixadas e guardadas
 ## Claudinho — transcrição de áudio (Groq/Whisper)
 
 Implementado em 2026-07-21. `GROQ_API_KEY` salva no `.env` e como secret do Supabase (`supabase secrets set`). `_shared/whatsapp-transcricao.ts` baixa o áudio já salvo no storage e manda pro endpoint `https://api.groq.com/openai/v1/audio/transcriptions` (modelo `whisper-large-v3-turbo`, compatível com a API da OpenAI). O texto transcrito fica na coluna `whatsapp_mensagens.transcricao`, aparece embaixo do player de áudio no Conversas, e substitui o placeholder "🎤 Áudio" no histórico que a IA lê (`whatsapp-ia.ts`). Corrida rara: se a IA processar antes da transcrição terminar (ambos rodam em paralelo em background), ela usa o placeholder mesmo — não trava a resposta esperando.
+
+## Claudinho — padrões aprendidos no treino de 2026-07-22
+
+> Síntese de uma sessão de treino intensa. Todo detalhe individual já virou regra no prompt (`whatsapp-ia-prompt.ts`) e registro em `claudinho_erros`; isso aqui é o padrão de fundo pra não esquecer o "porquê".
+
+- **Calibrar tom pelo RITMO da conversa, não só pelo conteúdo.** Lead respondendo rápido e solto em tempo real precisa de resposta igualmente solta, mesmo em Fechamento (onde é fácil ficar sério/formal por engano só porque o assunto é preço/decisão).
+- **Resposta ambígua (sim/não seco pra pergunta de 2 opções) nunca trava a conversa pedindo esclarecimento** — isso irrita o lead. Responder de um jeito que sirva pras duas leituras e seguir em frente.
+- **Ordem do SPIN é sequencial de verdade**: Descoberta confirmada → Implicação (afirmar consequência, pergunta final concreta e quantificável, tipo "quanto você gastaria") → só depois Necessidade de solução (benefício/ação pro lead, nunca "quer ver a ferramenta").
+- **Autoridade de verdade cita a lei específica** (CDC, Código Civil sobre clareza contratual) em vez de afirmação genérica de risco.
+- **Nunca repetir a mesma pergunta de fechamento disfarçada duas vezes na mesma conversa** — fácil de cair nisso achando que são perguntas diferentes.
+- **Recusa explícita do lead (principalmente na 2ª vez) se respeita com elegância**, sem re-pitch imediato, mas reforçando valor de forma leve antes de fechar a porta.
+
+No fundo: a lógica de vendas (DEF/SPIN/objeções) já estava correta na maior parte das vezes — o gargalo real era soar mais "gente de verdade" e menos "roteiro".

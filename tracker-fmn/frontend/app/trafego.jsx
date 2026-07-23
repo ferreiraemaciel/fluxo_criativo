@@ -81,7 +81,7 @@ function useTrafficData() {
           .select('meta_ad_id,meta_ad_name,meta_campaign_id,meta_campaign_name,meta_adset_id,meta_adset_name,periodo,gasto,cpa,compras,roas,cpm,ctr_unico,frequencia,connect_rate,link_clicks,landing_page_views,initiate_checkout,hook_rate')
           .in('periodo', ['maximum','7d','5d','3d','hoje']),
         window.db.from('ads')
-          .select('numero,titulo,status,meta_ad_id,media_drive_url,media_files,meta_ad_url,media_tipo')
+          .select('numero,titulo,status,meta_ad_id,media_drive_url,media_files,meta_ad_url,media_tipo,thumb_url')
           .eq('status', 'ativo')
           .not('meta_ad_id', 'is', null),
       ]);
@@ -171,7 +171,7 @@ function useTrafficData() {
               adsetName: as.name,
               name:    info?.titulo || `Ad ${aid.slice(-6)}`,
               status:  info?.status || 'active',
-              thumb:   bestThumb(files, info?.media_drive_url),
+              thumb:   bestThumb(info?.thumb_url, files, info?.media_drive_url),
               files,
               mediaTipo: info?.media_tipo || null,
               metaAdUrl: aid ? `https://adsmanager.facebook.com/adsmanager/manage/ads?selected_ad_ids=${aid}` : null,
@@ -281,7 +281,7 @@ function useAlertas() {
       let adsInfo = {};
       if (nums.length) {
         const { data: adsData } = await window.db.from('ads')
-          .select('numero,titulo,media_drive_url')
+          .select('numero,titulo,media_drive_url,thumb_url')
           .in('numero', nums);
         adsInfo = Object.fromEntries((adsData || []).map(a => [a.numero, a]));
       }
@@ -296,7 +296,7 @@ function useAlertas() {
         dt: fmtAlertDt(r.created_at),
         suggestedAction: RULE_SUGG[r.regra_codigo] || 'watch',
         titulo: adsInfo[r.ads_numero]?.titulo || null,
-        thumb:  driveThumb(adsInfo[r.ads_numero]?.media_drive_url),
+        thumb:  window.melhorThumbAd(adsInfo[r.ads_numero]?.thumb_url, null, adsInfo[r.ads_numero]?.media_drive_url),
       })));
     })();
   }, [alertTick]);
@@ -309,27 +309,10 @@ const INIT_SPECIFIC_RULES = [];
 /* ── Helpers ────────────────────────────────────────────────────*/
 const fR = n => n==null?'—':window.fmtBRL(n);
 
-function driveThumb(url) {
-  if (!url) return null;
-  if (!url.includes('drive.google.com')) return url;
-  const m = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
-  if (m) return `https://drive.google.com/thumbnail?id=${m[1]}&sz=w120`;
-  const m2 = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
-  if (m2) return `https://drive.google.com/thumbnail?id=${m2[1]}&sz=w120`;
-  return url;
-}
-
-/* Thumb preferindo imagem do media_files; fallback para driveThumb.
-   media_files tem dois formatos possíveis: R2 novo (thumb_url pronto) e
-   Drive antigo (file_id, monta a URL de thumbnail). Checa R2 primeiro. */
-function bestThumb(mediaFiles, driveUrl) {
-  if (mediaFiles && mediaFiles.length > 0) {
-    const img = mediaFiles.find(f => f.tipo === 'imagem');
-    if (img) return img.thumb_url || (img.file_id ? `https://drive.google.com/thumbnail?id=${img.file_id}&sz=w120` : null);
-    const vid = mediaFiles.find(f => f.tipo === 'video' || f.tipo === 'reels');
-    if (vid) return vid.thumb_url || (vid.file_id ? `https://drive.google.com/thumbnail?id=${vid.file_id}&sz=w120` : null);
-  }
-  return driveThumb(driveUrl);
+// Thumb de anúncio: ver melhorThumbAd em shared.jsx (única fonte da verdade,
+// usada também por Kanban e Dashboard). bestThumb existe só como atalho local.
+function bestThumb(adThumbUrl, mediaFiles, driveUrl) {
+  return window.melhorThumbAd(adThumbUrl, mediaFiles, driveUrl);
 }
 const cpaCol    = c  => c==null?'var(--text-3)':c/TICKET>=1?'#f87171':c/TICKET>=.7?'#fbbf24':'#4ade80';
 const roasCol   = v  => v==null?'var(--text-3)':v>=3?'#4ade80':v>=2?'#eaaa41':'#f87171';
@@ -1354,7 +1337,7 @@ function SubstituirModal({ adNum, defaultAdsetId, defaultAdsetName, defaultCampI
     if (!window.db) return;
     (async () => {
       const { data } = await window.db.from('ads')
-        .select('numero,titulo,status,meta_ad_id,media_drive_url,media_files,media_tipo')
+        .select('numero,titulo,status,meta_ad_id,media_drive_url,media_files,media_tipo,thumb_url')
         .eq('status', 'ativo')
         .order('numero', { ascending: false });
       setCriativos(data || []);
@@ -1501,7 +1484,7 @@ function SubstituirModal({ adNum, defaultAdsetId, defaultAdsetName, defaultCampI
                   <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:8 }}>
                     {criativos.map(c => {
                       const files = (() => { try { return Array.isArray(c.media_files) ? c.media_files : JSON.parse(c.media_files||'[]'); } catch { return []; } })();
-                      const thumb = bestThumb(files, c.media_drive_url);
+                      const thumb = bestThumb(c.thumb_url, files, c.media_drive_url);
                       const jaNoMeta = !!c.meta_ad_id;
                       const isSel = selected?.numero === c.numero;
                       return (
