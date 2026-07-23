@@ -527,6 +527,26 @@ async function handleCardSlides(request, env) {
     body: JSON.stringify({ status: 'Produção' }),
   }).catch(() => {});
 
+  // Card que já estava em "Produção" e teve TODOS os slides preenchidos com
+  // mídia (imagem ou vídeo) avança sozinho pra "Postagem". Filtro condicional:
+  // só afeta a linha se ainda estiver em 'Produção' (idempotente).
+  let slidesArr;
+  try { slidesArr = typeof slides === 'string' ? JSON.parse(slides) : slides; } catch { slidesArr = null; }
+  const midiaCompleta = Array.isArray(slidesArr) && slidesArr.length > 0 &&
+    slidesArr.every(s => s && (s.image_url || s.video_url));
+  if (midiaCompleta) {
+    await fetch(`${env.SUPABASE_URL}/rest/v1/conteudo_organico?id=eq.${card_id}&status=eq.Produção`, {
+      method: 'PATCH',
+      headers: {
+        apikey: env.SUPABASE_SERVICE_KEY,
+        Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`,
+        'Content-Type': 'application/json',
+        Prefer: 'return=minimal',
+      },
+      body: JSON.stringify({ status: 'Postagem' }),
+    }).catch(() => {});
+  }
+
   return json({ ok: true });
 }
 

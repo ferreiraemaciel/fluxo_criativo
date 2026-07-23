@@ -245,24 +245,13 @@ function useDashboardData(period, dateRange) {
         const blindSet    = new Set((blindEmailsRaw || []).map(r => r.comprador_email).filter(Boolean));
         const upsellConv  = [...blindSet].filter(e => mcvSet.has(e)).length;
 
-        // Conversão real da página de upsell (quantos viram vs quantos compraram).
-        // upsell_pageviews é alimentado por um beacon na própria página
-        // (blindagem-upsell/index.html), em paralelo ao Meta Pixel.
-        const { count: upsellViews } = await window.db
-          .from('upsell_pageviews').select('id', { count: 'exact', head: true });
-        const upsellPct = upsellViews > 0 ? +((upsellConv / upsellViews) * 100).toFixed(1) : null;
-
-        /* funil steps */
+        /* funil steps — badge mostra só o percentual centralizado, igual às demais etapas */
         const funnelSteps = totCliques > 0 ? [
           { label: 'Cliques',                value: totCliques, pct: 100 },
           { label: 'Visualizações de Página', value: totLP,      pct: +((totLP/totCliques)*100).toFixed(1) },
           { label: 'Início de Compra',        value: totIC,      pct: +((totIC/totCliques)*100).toFixed(1) },
           { label: 'Vendas Aprovadas',        value: totComp,    pct: +((totComp/totCliques)*100).toFixed(1) },
-          {
-            label: 'Upsell Blindagem', value: upsellConv,
-            pct: +((upsellConv/totCliques)*100).toFixed(1),
-            sub: upsellViews > 0 ? `${upsellPct}% de ${upsellViews} que viram a página de upsell` : 'sem pageview registrado ainda',
-          },
+          { label: 'Upsell Blindagem',        value: upsellConv, pct: +((upsellConv/totCliques)*100).toFixed(1) },
         ] : null;
 
         /* CPA médio consolidado (blended): investimento total ÷ compras totais do período.

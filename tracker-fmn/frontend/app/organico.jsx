@@ -2030,11 +2030,18 @@ function OrganicoScreen() {
     // esperando o usuário mudar a coluna manualmente). Vale pra qualquer forma de anexar
     // mídia (upload manual, importar do Drive, etc), já que todo salvamento passa por aqui.
     let temMidia = false;
+    let midiaCompleta = false;
     try {
       const s = typeof form.slides === 'string' ? JSON.parse(form.slides || '[]') : (form.slides || []);
       temMidia = Array.isArray(s) && s.some(sl => sl?.image_url || sl?.video_url || sl?.url_alta);
+      midiaCompleta = Array.isArray(s) && s.length > 0 &&
+        s.every(sl => sl?.image_url || sl?.video_url || sl?.url_alta);
     } catch {}
-    const status = (form.status === 'Fazer' && temMidia) ? 'Produção' : form.status;
+    // Card em "Fazer" com pelo menos 1 mídia avança pra "Produção". Card já em
+    // "Produção" com TODOS os slides preenchidos avança pra "Postagem".
+    let status = form.status;
+    if (form.status === 'Fazer' && temMidia) status = 'Produção';
+    else if (form.status === 'Produção' && midiaCompleta) status = 'Postagem';
 
     const row = {
       tema:form.tema, plataforma:form.plataforma, responsavel:form.responsavel,
