@@ -11,12 +11,16 @@
 |---------|------------|-------------------|---------|
 | Site público FeM | `~/Documents/fem-site` | `fem-site` | `site.ferreiraemaciel.com.br` |
 | Admin FeM | `~/Documents/fem-site` | `fem-admin` | `admin.ferreiraemaciel.com.br` |
-| Site público FMN | `~/Documents/fmn-site` | `fmn-site` | (domínio definitivo pendente) |
+| Site público FMN | `~/Documents/fmn-site` | `fmn-site` | `fotografiaeomeunegocio.com.br` |
 
 **Deploy nunca é automático via git push.** Sempre rodar:
 ```bash
 # Site público FeM
 npx wrangler pages deploy . --project-name fem-site
+
+# Site público FMN — SEMPRE a pasta public/, nunca a raiz do repositório
+cd ~/Documents/fmn-site
+npx wrangler pages deploy public --project-name fmn-site
 
 # Admin FeM — SEMPRE via script (nunca deploy direto de .)
 bash scripts/deploy-admin.sh
@@ -29,6 +33,8 @@ npx wrangler deploy worker-upload.js --name fem-upload
 **Por que o admin usa script separado:** `fem-site` e `fem-admin` deployam da mesma pasta local. O Cloudflare Pages serve `index.html` por padrão na raiz — que é o site público. O script `deploy-admin.sh` copia `admin.html` → `.admin-deploy/index.html` e deploya `fem-admin` a partir dessa pasta isolada. Sem isso, `admin.ferreiraemaciel.com.br/` abre o site público em vez do painel.
 
 > `scripts/` e `.admin-deploy/` estão no `.gitignore` do fem-site propositalmente.
+
+**Por que o fmn-site precisa da pasta `public/` explícita:** ao contrário do fem-site (onde os arquivos do site ficam direto na raiz do repositório), o fmn-site guarda o site em `public/` e as Cloudflare Pages Functions em `functions/` na raiz (convenção correta do Pages, uma é sibling da outra). Rodar `wrangler pages deploy .` a partir da raiz do repositório sobe `public/`, `functions/`, `README.md` etc. todos como arquivos estáticos soltos, sem achatar `public/*` para a raiz do site publicado. Resultado: toda página real (`blog.html`, `post.html`, etc.) responde 404 em produção, e só a home continua no ar por cache antigo da Cloudflare até expirar. Incidente real em 2026-07-23, corrigido rodando `wrangler pages deploy public --project-name fmn-site` a partir de `~/Documents/fmn-site`. Sempre usar esse comando exato para o fmn-site, nunca `wrangler pages deploy .`.
 
 ---
 
