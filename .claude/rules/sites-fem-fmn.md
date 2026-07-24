@@ -215,3 +215,15 @@ fetch(`https://fem-upload.blindagem-fmn.workers.dev/?key=${encodeURIComponent(ke
 ```
 
 Isso vale para exclusão individual e exclusão em lote (selecionadas). Ainda não implementado em todos os painéis — backlog no Lembretes.
+
+---
+
+## R2 — CORS liberado no bucket `site-fem`
+
+> Aprovado em 2026-07-24. Necessário para o admin conseguir consultar tamanho de arquivo (HEAD) direto no domínio de imagens, sem baixar o arquivo inteiro.
+
+O bucket `site-fem` tem uma política de CORS configurada via `wrangler r2 bucket cors set site-fem --file <json>`, liberando `GET`/`HEAD` a partir de `https://admin.ferreiraemaciel.com.br` e `https://site.ferreiraemaciel.com.br`, com `Content-Length`, `Content-Type` e `ETag` expostos. Sem isso, `fetch(url, {method:'HEAD'})` no admin falha por CORS (o domínio `imagens.ferreiraemaciel.com.br` não expõe esses headers por padrão).
+
+Ver config atual: `npx wrangler r2 bucket cors list site-fem` (rodar de dentro de `~/Documents/fem-site/scripts`, onde está o `wrangler.toml` do worker `fem-upload` que referencia esse bucket).
+
+Se um novo domínio precisar consultar tamanho de arquivo do R2 (ex: painel do FMN), adicionar o domínio à lista de `AllowedOrigins` em vez de recriar a política do zero.
