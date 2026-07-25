@@ -312,10 +312,22 @@ function buildCheckoutUrl() {
   // Sem isso a venda cai como "Direto" mesmo vindo de anúncio (o lead já foi
   // capturado certinho aqui no quiz, mas perdia a atribuição só nessa ponte).
   if (!p.get('sck')) {
-    const clean = s => (s || '').toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 15);
-    const src = clean(tracking.utm_source);
-    const med = clean(tracking.utm_medium);
-    if (src) p.set('sck', (med ? `${src}|${med}` : src).slice(0, 30));
+    // Prioriza o ID do anúncio sobre fonte/meio: o separador real que o
+    // hotmart-webhook usa pra dividir o sck ("hQwK21wXxR") tem 10 caracteres,
+    // então nunca cabe dentro do limite de 30 do sck da Hotmart pra alcançar
+    // a posição de content (precisaria de 3 separadores = 30 chars sozinhos).
+    // Por isso manda só o ID puro (sem separador nenhum) -- o webhook já
+    // reconhece um sck 100% numérico com 10+ dígitos como meta_ad_id direto.
+    // utm_content vem como "nome|id" (template padrão do Tracker).
+    const contentAdId = /\|(\d{10,})\s*$/.exec(tracking.utm_content || '')?.[1];
+    if (contentAdId) {
+      p.set('sck', contentAdId.slice(0, 30));
+    } else {
+      const clean = s => (s || '').toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 15);
+      const src = clean(tracking.utm_source);
+      const med = clean(tracking.utm_medium);
+      if (src) p.set('sck', (med ? `${src}|${med}` : src).slice(0, 30));
+    }
   }
   if (answers.email) p.set('email', answers.email);
   if (answers.nome)  p.set('name',  answers.nome);

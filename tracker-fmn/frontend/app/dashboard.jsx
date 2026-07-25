@@ -1593,13 +1593,13 @@ function useRecentSales(limit = 10) {
       let adsMap = {};
       if (nums.length) {
         const { data: adsRows } = await window.db
-          .from('ads').select('numero,titulo,media_drive_url').in('numero', nums);
+          .from('ads').select('numero,titulo,media_drive_url,thumb_url,media_files').in('numero', nums);
         adsMap = Object.fromEntries((adsRows||[]).map(a => [a.numero, a]));
       }
       let metaIdMap = {};
       if (metaIds.length) {
         const { data: adsRows } = await window.db
-          .from('ads').select('numero,titulo,media_drive_url,meta_ad_id').in('meta_ad_id', metaIds);
+          .from('ads').select('numero,titulo,media_drive_url,meta_ad_id,thumb_url,media_files').in('meta_ad_id', metaIds);
         metaIdMap = Object.fromEntries((adsRows||[]).map(a => [a.meta_ad_id, a]));
         // Corrige a venda de vez (evita recalcular isso toda hora e ajuda
         // qualquer outra tela que dependa de ads_numero).
@@ -1618,7 +1618,7 @@ function useRecentSales(limit = 10) {
           ...r,
           ads_numero: resolvedNum,
           ads_titulo: resolved?.titulo || null,
-          ads_thumb:  resolved?.media_drive_url ? `thumbnails/${resolvedNum}.jpg` : null,
+          ads_thumb:  resolved ? window.melhorThumbAd(resolved.thumb_url, resolved.media_files, resolved.media_drive_url) : null,
         };
       }));
     }

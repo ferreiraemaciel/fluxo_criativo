@@ -230,7 +230,7 @@ function LeadsTable({ leads, adsMap = {} }) {
                       const adKey = rawContent.includes('|') ? rawContent.split('|').pop().trim() : rawContent;
                       const ad = adsMap[adKey];
                       if (!ad) return <span style={{ color:'var(--text-3)', fontSize:10.5 }}>—</span>;
-                      const thumbUrl = ad.media_drive_url ? `thumbnails/${ad.numero}.jpg` : null;
+                      const thumbUrl = window.melhorThumbAd(ad.thumb_url, ad.media_files, ad.media_drive_url);
                       return (
                         <div style={{ display:'flex', alignItems:'center', gap:8 }}>
                           <div style={{ width:36, height:36, borderRadius:6, overflow:'hidden', background:'rgba(255,255,255,.06)', flexShrink:0 }}>
@@ -631,7 +631,7 @@ function FunisScreen({ onNavigate }) {
 
   useEffect(() => {
     if (!window.db) return;
-    window.db.from('ads').select('numero,titulo,meta_ad_id,media_drive_url')
+    window.db.from('ads').select('numero,titulo,meta_ad_id,media_drive_url,thumb_url,media_files')
       .then(({ data }) => {
         if (!data) return;
         const m = {};

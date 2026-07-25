@@ -308,6 +308,24 @@ function buildCheckoutUrl() {
   // Espelha xcod -> sck (se sck ainda não veio) pra garantir a atribuição no webhook.
   const xcod = p.get('xcod');
   if (xcod && !p.get('sck')) p.set('sck', xcod);
+  // Fallback quando não veio xcod nem sck prontos: prioriza o ID do anúncio
+  // (pra atribuição por criativo no Tracker) sobre fonte/meio, porque o
+  // separador real que o hotmart-webhook usa pra ler o sck tem 10 caracteres
+  // e nunca cabe nos 30 do campo da Hotmart pra alcançar a posição de content.
+  // Por isso manda só o ID puro (sem separador) -- o webhook já reconhece um
+  // sck 100% numérico com 10+ dígitos como meta_ad_id direto. utm_content vem
+  // como "nome|id" (template padrão do Tracker).
+  if (!p.get('sck')) {
+    const contentAdId = /\|(\d{10,})\s*$/.exec(tracking.utm_content || '')?.[1];
+    if (contentAdId) {
+      p.set('sck', contentAdId.slice(0, 30));
+    } else {
+      const clean = s => (s || '').toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 15);
+      const src = clean(tracking.utm_source);
+      const med = clean(tracking.utm_medium);
+      if (src) p.set('sck', (med ? `${src}|${med}` : src).slice(0, 30));
+    }
+  }
   if (answers.email) p.set('email', answers.email);
   if (answers.nome)  p.set('name',  answers.nome);
   const qs = p.toString();

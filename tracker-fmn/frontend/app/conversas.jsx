@@ -858,9 +858,18 @@ function MetricasView({ contatosDb, msgs }) {
 // sck (não utm_source genérico) é o único parâmetro que a Hotmart de fato lê
 // e devolve no webhook (parseSck em hotmart-webhook), por isso o link usa sck.
 const LINK_CHECKOUT_MCV = 'https://pay.hotmart.com/W87258826R?checkoutMode=10&sck=whatsapp-ah';
+// Link personalizado (off=2zbq8e15) que libera a condição de parcelamento
+// nativa da Hotmart (boleto/pix parcelado). Uso restrito: só humano manda,
+// só depois do handoff de "quer parcelar boleto/pix ou não quer usar o
+// cartão" (ver regra em whatsapp-ia-prompt.ts). O Claudinho NUNCA usa esse
+// link — ele não tem acesso a este arquivo (é só do painel de atendimento),
+// mas a restrição vale mesmo assim, documentada aqui e no CLAUDE.md.
+const LINK_CHECKOUT_MCV_PARCELADO = 'https://pay.hotmart.com/W87258826R?off=2zbq8e15&checkoutMode=10&sck=whatsapp-ah';
 const MENSAGENS_PRONTAS = [
   { id: 'checkout', label: 'Link de checkout (MCV)', icone: 'link',
     texto: `Segue o link pra garantir o seu: ${LINK_CHECKOUT_MCV}` },
+  { id: 'checkout_parcelado', label: 'Link com parcelado Hotmart (boleto/pix)', icone: 'credit-card',
+    texto: `Consegui aqui, segue o link com a opção de parcelamento: ${LINK_CHECKOUT_MCV_PARCELADO}` },
   { id: 'explicacao', label: 'O que é o MCV', icone: 'info',
     texto: 'É um arsenal com +200 modelos de contrato editáveis no Canva, pra fotógrafo e videomaker autônomo ou MEI. Contratos em formato visual, não Word genérico, feitos por um advogado especializado em fotografia que também é fotógrafo há 15 anos. 12x de R$ 30,72 (ou R$ 297,00 à vista), acesso vitalício com atualização e suporte.' },
   { id: 'eca_digital', label: 'ECA Digital / Lei Felca', icone: 'shield-check',

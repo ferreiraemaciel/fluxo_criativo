@@ -587,7 +587,11 @@ function CarouselLightbox({ urls, initialIdx, onClose }) {
 
 // UTM padrão do projeto (fonte única). Usada no Meta e no Tracker:
 // modal de publicar, botão copiar UTM, cards e aba Tráfego. Não duplicar.
-const UTM_GLOBAL = 'utm_source=FB&utm_campaign={{campaign.name}}&utm_content={{ad.id}}&utm_medium=paid';
+// utm_content PRECISA vir como "nome|id" (não só o id sozinho): é o formato
+// que o hotmart-webhook, o sync_hotmart.py e o backfill_utms.py esperam pra
+// extrair o meta_ad_id do sck que a Hotmart repassa (ver utm-template.md).
+// Sem o pipe, a venda ainda é rastreada, mas perde a atribuição ao anúncio.
+const UTM_GLOBAL = 'utm_source=FB&utm_campaign={{campaign.name}}&utm_content={{ad.name}}|{{ad.id}}&utm_medium={{adset.name}}|{{adset.id}}&utm_term={{placement}}';
 
 // Plataformas do conteúdo orgânico (fonte única). Ideias reusa esta lista.
 const PLATAFORMAS = ['Reels', 'Carrossel', 'Imagem', 'Stories', 'Artigo', 'Youtube'];

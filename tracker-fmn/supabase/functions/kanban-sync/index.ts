@@ -123,7 +123,16 @@ async function syncMetaAdStatus(): Promise<Set<number>> {
       ativosDeVerdade.add(ad.numero);
       const patch: Record<string, unknown> = {};
       if (ad.meta_publish_status !== "ativo") patch.meta_publish_status = "ativo";
-      if (ad.status === "fazer" || ad.status === "fazendo") patch.status = "ativo";
+      // Bug corrigido 2026-07-23: só movia pra Ativos quem vinha de Fazer/Fazendo
+      // (o caminho normal de 1ª publicação). Quando o anúncio é ativado direto
+      // no Gerenciador do Meta (fora do botão "Ativar no Meta" do Tracker) e o
+      // card já estava em Campeões/Arquivados (ex: reutilizado, republicado),
+      // ficava com meta_publish_status=ativo mas preso na coluna antiga pra
+      // sempre. Mesmo espírito da regra simétrica de PAUSED/SUMIU logo abaixo,
+      // que já tira da coluna Ativos incondicionalmente quando não está mais
+      // ativo — aqui é o inverso: qualquer status vira Ativos quando o Meta
+      // confirma ACTIVE.
+      if (ad.status !== "ativo") patch.status = "ativo";
       if (Object.keys(patch).length) {
         await supabase.from("ads").update(patch).eq("numero", ad.numero);
       }

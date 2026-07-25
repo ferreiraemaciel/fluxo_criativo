@@ -73,11 +73,24 @@ function parseSck(sck: string) {
       utmContent = utmContent.slice(0, idx).trim();
     }
   }
+  // sck só com o ID do anúncio, sem separador nenhum (formato compacto usado
+  // pelo quiz-fotografo-protegido quando o destino é página própria: o
+  // separador real do sck tem 10 caracteres, nunca cabe nos 30 do campo da
+  // Hotmart pra alcançar a posição de content, então o quiz manda só o ID
+  // puro). Se o sck inteiro (sem split nenhum, rawSource) for só dígitos,
+  // 10+, é o ID do anúncio direto, não uma fonte de verdade.
+  const soDigitos = parts.length === 1 && /^\d{10,}$/.test(rawSource);
+  if (!metaAdId && soDigitos) {
+    metaAdId = rawSource;
+  }
   // Limpar sufixo "|id" de medium e campaign também
   const cleanPipe = (s: string | null) => s && s.includes("|") ? s.split("|")[0].trim() : s;
 
   return {
-    utm_source:   utmSource || null,
+    // Quando o sck é só o ID do anúncio (sem separador), a "fonte" não é o
+    // ID em si -- é Meta Ads por construção (só o quiz-fotografo-protegido
+    // manda sck nesse formato, e só pra tráfego pago do Meta).
+    utm_source:   soDigitos ? "fb" : (utmSource || null),
     utm_medium:   cleanPipe(utmMedium),
     utm_campaign: cleanPipe(utmCampaign),
     utm_content:  utmContent,

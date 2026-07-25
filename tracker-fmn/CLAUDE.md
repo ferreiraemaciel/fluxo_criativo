@@ -41,3 +41,11 @@ Implementado em 2026-07-21. `GROQ_API_KEY` salva no `.env` e como secret do Supa
 - **Recusa explícita do lead (principalmente na 2ª vez) se respeita com elegância**, sem re-pitch imediato, mas reforçando valor de forma leve antes de fechar a porta.
 
 No fundo: a lógica de vendas (DEF/SPIN/objeções) já estava correta na maior parte das vezes — o gargalo real era soar mais "gente de verdade" e menos "roteiro".
+
+## Claudinho — handoff obrigatório: boleto/pix parcelado ou recusa do cartão
+
+> Combinado com Amanda em 2026-07-23. Resolve a pendência do Jean Matos (registrada em `claudinho_erros` como `status: pendente`) sobre parcelar no boleto.
+
+Se o lead pedir pra parcelar no boleto, parcelar no Pix, ou disser que não quer usar o limite do cartão, isso é **handoff automático** — o Claudinho não afirma nem nega se isso é possível (não tem essa informação confirmada), só responde algo como "vou confirmar essa informação com o time e te retorno em breve" e sinaliza `handoff=true`. Regra completa em `whatsapp-ia-prompt.ts`, seção "Quando você passa a conversa pra um humano de verdade".
+
+**Link especial de parcelamento (uso exclusivo humano).** Existe um segundo link de checkout do MCV, com o parâmetro `off=2zbq8e15`, que libera a condição de parcelamento nativa da Hotmart (boleto/pix parcelado) — é a resposta pro handoff acima. Esse link **nunca** deve ser enviado pelo Claudinho, só por um humano depois do handoff. Vive em `frontend/app/conversas.jsx` como `LINK_CHECKOUT_MCV_PARCELADO`, com `sck=whatsapp-ah` (mesma tag de rastreio de atendimento humano do link padrão), disponível como mensagem pronta ("Link com parcelado Hotmart") no painel de Conversas. O Claudinho não tem acesso a esse arquivo, mas se um dia esse link precisar aparecer em qualquer lugar que o Claudinho lê (`whatsapp-ia-prompt.ts`, `whatsapp-ia.ts`), a restrição continua valendo.

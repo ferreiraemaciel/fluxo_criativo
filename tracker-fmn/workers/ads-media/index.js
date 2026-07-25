@@ -436,6 +436,36 @@ async function handleActivateAds(request, env) {
   return json({ ok: true, resultados });
 }
 
+/* ── POST /delete-ads ─────────────────────────────────────────────
+   Exclui de verdade (não é pausar) um ou mais anúncios ainda em rascunho.
+   Só faz sentido pra ad que nunca foi ativado — usado pelo botão "Excluir"
+   do modal "Ativar no Meta", pra descartar teste/rascunho que não vai ser
+   lançado. body: { adIds: [...] }
+─────────────────────────────────────────────────────────────────*/
+async function handleDeleteAds(request, env) {
+  const { adIds, adAccountId } = await request.json();
+  const { token } = metaAcct(env, adAccountId);
+  const resultados = [];
+
+  for (const adId of (adIds || [])) {
+    try {
+      const r = await fetch(`${GRAPH}/${adId}?access_token=${token}`, { method: 'DELETE' });
+      const d = await r.json();
+      if (d.error) {
+        // "não existe mais" não é erro pro nosso propósito — o objetivo (não
+        // ter mais o anúncio na conta) já está satisfeito.
+        const jaSumiu = /does not exist|Unsupported get request|nonexisting/i.test(d.error.message || '');
+        resultados.push({ adId, ok: jaSumiu, error: jaSumiu ? undefined : d.error.message });
+      } else {
+        resultados.push({ adId, ok: true });
+      }
+    } catch (err) {
+      resultados.push({ adId, ok: false, error: err.message });
+    }
+  }
+  return json({ ok: true, resultados });
+}
+
 /* ── /ads-status ───────────────────────────────────────────────────────────
    Confere no Meta se cada ad_id ainda existe e não foi deletado/arquivado
    manualmente no Gerenciador. Usado antes de listar os "pendentes de ativar",
@@ -481,6 +511,13 @@ async function handlePut(request, env, url) {
 
 /* Recebe o formato genérico da cozinha (slides + media_files) e grava no
    formato do anúncio (media_url array, thumb_url, media_tipo, tipo).          */
+function r2KeyFromUrl(u) {
+  if (!u) return null;
+  const s = String(u);
+  const i = s.indexOf('/r2.dev/');
+  return i === -1 ? null : s.slice(i + 8);
+}
+
 async function handleCardSlides(request, env) {
   if (request.headers.get('X-Token') !== env.IMPORT_TOKEN) return json({ error: 'não autorizado' }, 401);
   let body; try { body = await request.json(); } catch { return json({ error: 'JSON inválido' }, 400); }
@@ -489,10 +526,20 @@ async function handleCardSlides(request, env) {
   const slides = typeof body.slides === 'string' ? JSON.parse(body.slides || '[]') : (body.slides || []);
   const mfiles = typeof body.media_files === 'string' ? JSON.parse(body.media_files || '[]') : (body.media_files || []);
 
-  let media_tipo, media_url, thumb_url, tipo;
-  if (mfiles.length && mfiles[0].tipo === 'video') {
+  // Busca o que já existe no card ANTES de sobrescrever — reimportar vídeo
+  // substitui (apaga a alta e a prévia antigas do R2), nunca empilha lixo.
+  const antesRes = await fetch(
+    `${env.SUPABASE_URL}/rest/v1/ads?numero=eq.${card_id}&select=media_url,media_preview_url,thumb_url`,
+    { headers: { apikey: env.SUPABASE_SERVICE_KEY, Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}` } },
+  );
+  const antesRow = (await antesRes.json().catch(() => []))[0] || {};
+
+  let media_tipo, media_url, thumb_url, tipo, media_preview_url = null;
+  const isVideoNovo = mfiles.length && mfiles[0].tipo === 'video';
+  if (isVideoNovo) {
     media_tipo = 'video';
-    media_url  = JSON.stringify([mfiles[0].url_alta]);   // anúncio publica a versão alta
+    media_url  = JSON.stringify([mfiles[0].url_alta]);   // vai pro Meta quando publicar
+    media_preview_url = mfiles[0].preview_url || null;   // leve, é o que toca no player do card
     thumb_url  = mfiles[0].thumb_url;
     tipo = 'reels';
   } else {
@@ -503,6 +550,7 @@ async function handleCardSlides(request, env) {
     tipo = urls.length > 1 ? 'carrossel' : 'imagem';
   }
   const patch = { media_url, thumb_url, media_tipo, tipo, media_files: JSON.stringify(mfiles) };
+  if (media_preview_url) patch.media_preview_url = media_preview_url;
 
   // A tabela `ads` é operada por numero (não pelo uuid). card_id aqui = numero.
   const res = await fetch(`${env.SUPABASE_URL}/rest/v1/ads?numero=eq.${card_id}`, {
@@ -512,6 +560,20 @@ async function handleCardSlides(request, env) {
     body: JSON.stringify(patch),
   });
   if (!res.ok) return json({ error: 'Supabase ' + res.status + ': ' + (await res.text()).slice(0, 200) }, 500);
+
+  // Limpeza pós-substituição: só pra vídeo, só se de fato existia algo antes
+  // (nunca apaga em cima de um card que nunca teve mídia). Roda em paralelo,
+  // não bloqueia a resposta se alguma delas falhar.
+  if (isVideoNovo) {
+    const antigoAlta = (() => { try { const p = JSON.parse(antesRow.media_url || '[]'); return Array.isArray(p) ? p[0] : p; } catch { return antesRow.media_url; } })();
+    const antigoPreview = antesRow.media_preview_url;
+    const antigoThumb = antesRow.thumb_url;
+    const novoAlta = mfiles[0].url_alta, novoPreview = mfiles[0].preview_url, novoThumb = mfiles[0].thumb_url;
+    const apagar = [antigoAlta, antigoPreview, antigoThumb]
+      .filter(u => u && ![novoAlta, novoPreview, novoThumb].includes(u))
+      .map(r2KeyFromUrl).filter(Boolean);
+    await Promise.all(apagar.map(k => env.BUCKET.delete(k).catch(() => {})));
+  }
 
   // Card que estava em "Fazer" e recebeu mídia avança sozinho pra "Fazendo".
   // Filtro condicional: só afeta a linha se ainda estiver em 'fazer' (idempotente).
@@ -611,6 +673,7 @@ export default {
         if (url.pathname === '/create-adset')    return await handleCreateAdset(request, env);
         if (url.pathname === '/create-ad')       return await handleCreateAd(request, env);
         if (url.pathname === '/activate-ads')    return await handleActivateAds(request, env);
+        if (url.pathname === '/delete-ads')      return await handleDeleteAds(request, env);
         if (url.pathname === '/put')             return await handlePut(request, env, url);
         if (url.pathname === '/card-slides')     return await handleCardSlides(request, env);
         if (url.pathname === '/import-link')     return await handleImportLink(request, env);

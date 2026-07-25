@@ -113,7 +113,7 @@ function useAdsCards() {
     setLoading(true);
     const { data: adsList } = await window.db
       .from('ads')
-      .select('numero,titulo,status,tag,tipo,headline,hook_copy,hook_visual,desenvolvimento_cta,roteiro,estetica_visual,texto_principal,titulo_ad,descricao_ad,posicionamento,media_drive_url,media_tipo,media_files,meta_ad_id,meta_ad_url,vendas_total,cpa_historico,gasto_total,isento_regra,observacoes,thumb_url,media_url,meta_image_hash,meta_video_id,meta_campaign_id,meta_adset_id,meta_publish_status,ordem_manual')
+      .select('numero,titulo,status,tag,tipo,headline,hook_copy,hook_visual,desenvolvimento_cta,roteiro,estetica_visual,texto_principal,titulo_ad,descricao_ad,posicionamento,media_drive_url,media_tipo,media_files,meta_ad_id,meta_ad_url,vendas_total,cpa_historico,gasto_total,isento_regra,observacoes,thumb_url,media_url,media_preview_url,meta_image_hash,meta_video_id,meta_campaign_id,meta_adset_id,meta_publish_status,ordem_manual')
       .order('numero', { ascending: false });
 
     const { data: insights } = await window.db
@@ -256,7 +256,7 @@ function KanbanCard({ card, col, onOpen, onDragStart, podeArrastar, onDropAntes 
           border:'1px solid rgba(255,255,255,.1)', background:'rgba(255,255,255,.04)',
           display:'flex', alignItems:'center', justifyContent:'center' }}>
           {thumb
-            ? <img src={thumb} alt="" onError={e => { e.currentTarget.style.display='none'; }}
+            ? <img src={thumb} alt="" draggable={false} onError={e => { e.currentTarget.style.display='none'; }}
                 style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }}/>
             : <LucideIcon icon={tipoIcon} size={15}
                 style={{ color: semPreview ? 'var(--clr-warn,#fbbf24)' : 'rgba(255,255,255,.25)' }}/>
@@ -461,6 +461,9 @@ function MetaAdModal({ card, onClose }) {
   const [newAdsetBudget, setNewAdsetBudget] = useState('');    // R$ formato 00,00
   const [creatingAdset, setCreatingAdset]   = useState(false);
 
+  // tags Alta/Prévia (apagar versão individual do R2)
+  const [apagandoVersao, setApagandoVersao] = useState(null); // 'alta' | 'preview' | null
+
   // copy do anúncio (pré-preenchida do card, editável)
   const [msgText, setMsgText]     = useState((card.raw||{}).texto_principal || '');
   const [titleText, setTitleText] = useState((card.raw||{}).titulo_ad || '');
@@ -512,6 +515,10 @@ function MetaAdModal({ card, onClose }) {
     const d = await r.json();
     if (!d.ok) throw new Error(d.error || `Erro HTTP ${r.status}`);
     return d;
+  }
+  async function workerDelete(path) {
+    const r = await fetch(`${ADS_MEDIA_WORKER}${path}`, { method: 'DELETE' });
+    return r.ok;
   }
 
   useEffect(() => {
@@ -595,20 +602,36 @@ function MetaAdModal({ card, onClose }) {
     if (!isVideo) {
       if (r2Url) return { imageUrl: r2Url };
       if (raw.meta_image_hash) return { imageHash: raw.meta_image_hash };
-      throw new Error('Sem mídia no R2 para o anúncio.');
+      throw new Error('Não achei a imagem nem no R2 nem já hospedada no Meta. Use "Importar direto" ou "Importar com link" pra subir a imagem de novo antes de publicar.');
     }
     if (raw.meta_video_id) return { videoId: raw.meta_video_id };
-    if (!r2Url) throw new Error('Este anúncio ainda não tem vídeo importado. Use "Importar direto" ou "Importar com link" antes de publicar.');
+    if (!r2Url) throw new Error('Não achei o vídeo em alta no R2 (foi apagado ou nunca existiu) e esse anúncio ainda não tem vídeo hospedado no Meta. Use "Importar direto" ou "Importar com link" pra fazer o upload de novo antes de publicar.');
     const videoId = await prepararCriativoMeta(r2Url);
     return { videoId };
   }
 
   // Sobe a versão em alta (já pronta no R2 pela cozinha) direto pro Meta e
   // guarda o video_id no card, pra próximas publicações reaproveitarem.
+  // Depois de confirmado no Meta, a versão em alta não faz mais falta (o
+  // vídeo já está hospedado lá via video_id) — deleta do R2 pra não ocupar
+  // espaço à toa. O player do card continua funcionando pela prévia leve
+  // (media_preview_url), que não é tocada aqui.
   async function prepararCriativoMeta(origUrl) {
     setLoadingMsg('Enviando vídeo ao Meta (pode levar 1 min)…');
     const d = await workerPost('/upload-meta', { tipo: 'video', origUrl });
-    await window.db.from('ads').update({ meta_video_id: d.videoId }).eq('numero', adNum);
+    await window.db.from('ads').update({ meta_video_id: d.videoId, media_url: null }).eq('numero', adNum);
+    // DEBUG TEMPORÁRIO — grava em observacoes pra diagnosticar por que a
+    // deleção da alta não estava disparando. Remover depois de confirmar.
+    try {
+      const key = origUrl.split('/r2.dev/')[1];
+      await window.db.from('ads').update({ observacoes: `[DEBUG] origUrl=${origUrl} key=${key}` }).eq('numero', adNum);
+      if (key) {
+        const ok = await workerDelete(`/original/${encodeURIComponent(key)}`);
+        await window.db.from('ads').update({ observacoes: `[DEBUG] delete chamado, ok=${ok}` }).eq('numero', adNum);
+      }
+    } catch (e) {
+      await window.db.from('ads').update({ observacoes: `[DEBUG] ERRO: ${e?.message || String(e)}` }).eq('numero', adNum);
+    }
     return d.videoId;
   }
 
@@ -1084,7 +1107,7 @@ function AdicionarCriativoBtn({ card, onDone }) {
       let data = null;
       try {
         const res = await window.db.from('ads')
-          .select('thumb_url,media_url,media_tipo,tipo').eq('numero', numero).single();
+          .select('thumb_url,media_url,media_preview_url,media_tipo,tipo').eq('numero', numero).single();
         data = res.data;
       } catch {}
       setStep('idle'); setMsg(''); setPct(0);
@@ -1282,7 +1305,18 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
   let previewViewUrl = null;
   let isR2Embed = false;
 
-  if (r2CurrentUrl) {
+  // Vídeo: toca a prévia leve (media_preview_url) se existir — é bem mais
+  // rápida de carregar que a versão alta, e continua existindo mesmo depois
+  // da alta ter sido apagada do R2 (media_url fica null nesse caso, então
+  // não dá pra depender só de r2CurrentUrl aqui).
+  const useLightPreview = cardIsVideo && !isCarousel && raw.media_preview_url;
+
+  if (useLightPreview) {
+    previewEmbed   = raw.media_preview_url;
+    previewIsVideo = true;
+    previewViewUrl = r2CurrentUrl || raw.media_preview_url;
+    isR2Embed      = true;
+  } else if (r2CurrentUrl) {
     previewEmbed   = r2CurrentUrl;
     previewIsVideo = cardIsVideo || /\.(webm|mp4|mov)$/i.test(r2CurrentUrl);
     previewViewUrl = r2CurrentUrl;
@@ -1520,7 +1554,7 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
                           : <div onClick={() => setVideoPlaying(true)}
                               style={{ width:'100%', height:'100%', position:'relative', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>
                               <img
-                                src={raw.thumb_url || `/thumbnails/${raw.numero}.jpg`}
+                                src={window.melhorThumbAd(raw.thumb_url, raw.media_files, raw.media_drive_url)}
                                 alt="thumb"
                                 onError={e => { e.currentTarget.style.display='none'; }}
                                 style={{ position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'contain' }}/>
@@ -1625,7 +1659,7 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
                     {/* Importar do Drive (cozinha na nuvem) */}
                     <AdicionarCriativoBtn card={card} onDone={async () => {
                       const { data } = await window.db.from('ads')
-                        .select('media_url,thumb_url,tipo,media_tipo,media_files,media_drive_url,status').eq('numero', parseInt(card.num,10)).single();
+                        .select('media_url,media_preview_url,thumb_url,tipo,media_tipo,media_files,media_drive_url,status').eq('numero', parseInt(card.num,10)).single();
                       if (!data) return;
                       // Sincroniza a memória do modal, senão o botão Salvar regrava
                       // os valores antigos por cima do que a importação acabou de gravar.
@@ -1635,6 +1669,45 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
                     }}/>
                   </div>
                 )}
+            {/* Tags Alta/Prévia — só pra vídeo. Clique apaga aquela versão do R2
+                sem mexer na outra. Reimportar substitui as duas de novo. */}
+            {isVideo && (raw.media_url || raw.media_preview_url) && (
+              <div style={{ display:'flex', gap:6, flexWrap:'wrap', marginTop:2 }}>
+                {[
+                  raw.media_url && { key:'alta', label:'Alta', url:raw.media_url, field:'media_url' },
+                  raw.media_preview_url && { key:'preview', label:'Prévia', url:raw.media_preview_url, field:'media_preview_url' },
+                ].filter(Boolean).map(v => (
+                  <button key={v.key} disabled={apagandoVersao === v.key}
+                    onClick={async () => {
+                      if (!confirm(`Apagar a versão "${v.label}" do R2? Isso não pode ser desfeito — só reimportando de novo.`)) return;
+                      setApagandoVersao(v.key);
+                      try {
+                        let rawUrl = v.url;
+                        try { const p = JSON.parse(rawUrl); rawUrl = Array.isArray(p) ? p[0] : p; } catch {}
+                        const key = rawUrl.split('/r2.dev/')[1];
+                        if (key) await workerDelete(`/original/${encodeURIComponent(key)}`);
+                        await window.db.from('ads').update({ [v.field]: null }).eq('numero', adNum);
+                        if (onUpdate) onUpdate({ ...card, raw: { ...raw, [v.field]: null } });
+                      } catch (e) {
+                        alert(`Erro ao apagar: ${e.message}`);
+                      } finally {
+                        setApagandoVersao(null);
+                      }
+                    }}
+                    style={{ display:'flex', alignItems:'center', gap:5, padding:'3px 9px', borderRadius:999,
+                      background:'rgba(255,255,255,.05)', border:'1px solid var(--app-border)',
+                      color:'var(--text-2)', fontSize:10.5, fontFamily:'Roboto,sans-serif', fontWeight:700,
+                      cursor: apagandoVersao === v.key ? 'default' : 'pointer', transition:'all 120ms' }}
+                    title={`Apagar a versão "${v.label}" do R2`}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor='rgba(248,113,113,.4)'; e.currentTarget.style.color='#f87171'; }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor='var(--app-border)'; e.currentTarget.style.color='var(--text-2)'; }}>
+                    {v.label}
+                    <LucideIcon icon={apagandoVersao === v.key ? 'loader' : 'x'} size={10}
+                      style={apagandoVersao === v.key ? { animation:'spin 1s linear infinite' } : {}}/>
+                  </button>
+                ))}
+              </div>
+            )}
             </div>
             {/* Painel direito — scrollável */}
             <div style={{ flex:1, minHeight:0, overflowY:'auto', padding:'20px 24px',
@@ -1883,10 +1956,12 @@ function NovoAdsModal({ onClose, onCreated }) {
    Checklist dos rascunhos já confirmados como existentes no Meta (o
    chamador já filtrou os que sumiram). O usuário escolhe quais ativar.
 ─────────────────────────────────────────────────────────────────*/
-function AtivarMetaModal({ itens, onClose, onDone }) {
+function AtivarMetaModal({ itens, onClose, onDone, onEdit }) {
   const [selecionados, setSelecionados] = useState(() => new Set(itens.map(i => i.num)));
   const [ativando, setAtivando] = useState(false);
+  const [excluindo, setExcluindo] = useState(false);
   const [resultado, setResultado] = useState(null); // { okCount, errCount, erros }
+  const [confirmarExcluir, setConfirmarExcluir] = useState(null); // num do item, ou null
 
   function toggle(num) {
     setSelecionados(prev => {
@@ -1894,6 +1969,32 @@ function AtivarMetaModal({ itens, onClose, onDone }) {
       next.has(num) ? next.delete(num) : next.add(num);
       return next;
     });
+  }
+
+  // Exclui de verdade no Meta (não é pausar) — só faz sentido pra rascunho
+  // que ainda não foi ativado, então é seguro. Limpa os campos meta_* do
+  // card localmente também, pra ele sumir da lista de pendentes.
+  async function excluirItem(item) {
+    setExcluindo(true);
+    try {
+      const r = await fetch(`${ADS_MEDIA_WORKER}/delete-ads`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ adIds: [item.adId] }),
+      });
+      const d = await r.json();
+      const res = (d.resultados || [])[0];
+      if (!res?.ok) { alert(`Não consegui excluir no Meta: ${res?.error || 'erro desconhecido'}`); return; }
+      await window.db.from('ads').update({
+        meta_ad_id: null, meta_campaign_id: null, meta_adset_id: null,
+        meta_publish_status: null, meta_ad_url: null,
+      }).eq('numero', parseInt(item.num, 10));
+      onDone(item.num); // avisa o chamador pra recarregar a lista de pendentes
+    } catch (e) {
+      alert(`Erro ao excluir: ${e.message}`);
+    } finally {
+      setExcluindo(false);
+      setConfirmarExcluir(null);
+    }
   }
 
   async function ativarSelecionados() {
@@ -1982,14 +2083,48 @@ function AtivarMetaModal({ itens, onClose, onDone }) {
             </div>
             <div style={{ flex:1, overflowY:'auto', padding:'0 20px 12px', display:'flex', flexDirection:'column', gap:6 }}>
               {itens.map(item => (
-                <label key={item.num} style={{ display:'flex', alignItems:'center', gap:10, padding:'8px 10px',
-                  borderRadius:8, background:'rgba(255,255,255,.03)', border:'1px solid var(--app-border)', cursor:'pointer' }}>
-                  <input type="checkbox" checked={selecionados.has(item.num)} onChange={() => toggle(item.num)}
-                    style={{ width:15, height:15, cursor:'pointer', flexShrink:0 }}/>
-                  <span style={{ fontSize:12.5, fontFamily:'Roboto,sans-serif', color:'var(--text-1)' }}>
-                    <b>AD {item.num}</b> — {item.titulo}
-                  </span>
-                </label>
+                <div key={item.num} style={{ display:'flex', alignItems:'center', gap:10, padding:'8px 10px',
+                  borderRadius:8, background:'rgba(255,255,255,.03)', border:'1px solid var(--app-border)' }}>
+                  <label style={{ display:'flex', alignItems:'center', gap:10, cursor:'pointer', flex:1, minWidth:0 }}>
+                    <input type="checkbox" checked={selecionados.has(item.num)} onChange={() => toggle(item.num)}
+                      style={{ width:15, height:15, cursor:'pointer', flexShrink:0 }}/>
+                    <span style={{ fontSize:12.5, fontFamily:'Roboto,sans-serif', color:'var(--text-1)',
+                      overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+                      <b>AD {item.num}</b> — {item.titulo}
+                    </span>
+                  </label>
+                  {confirmarExcluir === item.num ? (
+                    <div style={{ display:'flex', gap:4, flexShrink:0 }}>
+                      <button onClick={() => excluirItem(item)} disabled={excluindo}
+                        style={{ fontSize:10.5, fontFamily:'Roboto,sans-serif', fontWeight:700, color:'#fff',
+                          background:'#dc2626', border:'none', borderRadius:6, padding:'4px 8px', cursor:'pointer' }}>
+                        {excluindo ? '...' : 'Confirmar'}
+                      </button>
+                      <button onClick={() => setConfirmarExcluir(null)} disabled={excluindo}
+                        style={{ fontSize:10.5, fontFamily:'Roboto,sans-serif', fontWeight:700, color:'var(--text-3)',
+                          background:'transparent', border:'1px solid var(--app-border)', borderRadius:6, padding:'4px 8px', cursor:'pointer' }}>
+                        Não
+                      </button>
+                    </div>
+                  ) : (
+                    <div style={{ display:'flex', gap:4, flexShrink:0 }}>
+                    {onEdit && (
+                      <button onClick={() => onEdit(item.num)} title="Editar o card antes de decidir"
+                        style={{ width:26, height:26, borderRadius:6, display:'flex', alignItems:'center',
+                          justifyContent:'center', background:'rgba(255,255,255,.05)', border:'1px solid var(--app-border)',
+                          color:'var(--text-2)', cursor:'pointer' }}>
+                        <LucideIcon icon="pencil" size={12}/>
+                      </button>
+                    )}
+                    <button onClick={() => setConfirmarExcluir(item.num)} title="Excluir de verdade no Meta (não é pausar)"
+                      style={{ width:26, height:26, borderRadius:6, display:'flex', alignItems:'center',
+                        justifyContent:'center', background:'rgba(248,113,113,.1)', border:'1px solid rgba(248,113,113,.3)',
+                        color:'#f87171', cursor:'pointer' }}>
+                      <LucideIcon icon="trash-2" size={13}/>
+                    </button>
+                    </div>
+                  )}
+                </div>
               ))}
             </div>
             <div style={{ padding:'14px 20px', borderTop:'1px solid var(--app-border)', display:'flex', gap:10 }}>
@@ -2228,7 +2363,11 @@ function KanbanScreen({ targetAd, onConsumeTarget }) {
             {ativarModalItens && (
               <AtivarMetaModal itens={ativarModalItens}
                 onClose={() => setAtivarModalItens(null)}
-                onDone={() => { setAtivarModalItens(null); reload(); }}/>
+                onDone={() => { setAtivarModalItens(null); reload(); }}
+                onEdit={num => {
+                  const alvo = CARDS.find(c => c.num === num);
+                  if (alvo) { setAtivarModalItens(null); setSelectedCard(alvo); }
+                }}/>
             )}
             <button onClick={() => setShowNovoAds(true)}
               style={{ display:'flex', alignItems:'center', gap:6, padding:'8px 14px',

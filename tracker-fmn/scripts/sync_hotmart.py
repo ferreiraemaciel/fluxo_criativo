@@ -152,8 +152,17 @@ def _parse_sck(sck: str) -> dict:
     if utm_campaign and "|" in utm_campaign:
         utm_campaign = utm_campaign.split("|")[0].strip()
 
+    # sck só com o ID do anúncio, sem separador nenhum (formato compacto usado
+    # pelos quizzes quando o destino é página própria: o separador real do
+    # sck tem 10 caracteres, nunca cabe nos 30 do campo da Hotmart pra
+    # alcançar a posição de content). Se o sck inteiro é só dígitos, 10+,
+    # é o ID do anúncio direto, não uma fonte de verdade.
+    so_digitos = len(parts) == 1 and raw_source.isdigit() and len(raw_source) > 10
+    if not meta_ad_id and so_digitos:
+        meta_ad_id = raw_source
+
     return {
-        "utm_source":   utm_source or None,
+        "utm_source":   ("fb" if so_digitos else utm_source) or None,
         "utm_medium":   utm_medium,
         "utm_campaign": utm_campaign,
         "utm_content":  utm_content,
