@@ -38,6 +38,32 @@ npx wrangler deploy worker-upload.js --name fem-upload
 
 ---
 
+## Alinhamento oficial — o título da hero define a margem de todo o conteúdo
+
+> Aprovado em 2026-07-25. Aplica-se a TODA página dos sites FeM e FMN, presente e futura.
+
+**Regra:** o alinhamento oficial das páginas é o mesmo do título da hero. Todo bloco de conteúdo abaixo da hero (seções, grids, colunas, rodapé de ações) começa exatamente na mesma linha vertical em que o `h1` da hero começa. A mesma medida vale do lado direito, deixando os dois lados equilibrados.
+
+**Implementação obrigatória (padrão de dois níveis):**
+
+```css
+:root { --pad: 80px; }
+
+/* nível 1: respiro lateral da janela */
+.hero, .main, .section-block, .cta { padding-left: var(--pad); padding-right: var(--pad); }
+
+/* nível 2: faixa de conteúdo centralizada */
+.hero-inner, .main-inner, .section-inner { width: 100%; max-width: 1280px; margin: 0 auto; }
+
+@media (max-width: 768px) { :root { --pad: 24px; } }
+```
+
+**Erro comum a evitar:** colocar `max-width` e `padding` no MESMO elemento (ex: `.main { max-width:1280px; padding:0 80px }`). Isso reduz a faixa útil para 1120px e desalinha o conteúdo em relação à hero, que usa os dois níveis separados. O `padding` fica sempre no elemento externo e o `max-width` sempre no elemento interno.
+
+**Como conferir:** abrir a página, traçar uma linha vertical descendo da primeira letra do título da hero. Toda a coluna de conteúdo abaixo tem que encostar nessa linha. Se estiver deslocada, é porque o `max-width` e o `padding` estão no mesmo elemento.
+
+---
+
 ## Grid de fotos — galerias e posts
 
 > Aprovado em 2026-07-20. Aplica-se a qualquer grid de fotos nos sites FeM e FMN: galerias públicas, posts (Histórias) e visualização de fotos no admin.
