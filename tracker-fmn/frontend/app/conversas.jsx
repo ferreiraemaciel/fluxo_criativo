@@ -865,9 +865,19 @@ const LINK_CHECKOUT_MCV = 'https://pay.hotmart.com/W87258826R?checkoutMode=10&sc
 // link — ele não tem acesso a este arquivo (é só do painel de atendimento),
 // mas a restrição vale mesmo assim, documentada aqui e no CLAUDE.md.
 const LINK_CHECKOUT_MCV_PARCELADO = 'https://pay.hotmart.com/W87258826R?off=2zbq8e15&checkoutMode=10&sck=whatsapp-ah';
+// Checkout com o cupom já aplicado via URL (offDiscount é o parâmetro oficial
+// da Hotmart pra pré-aplicar cupom). Uso restrito: só humano manda, e só
+// quando o lead PEDE desconto — nunca oferecer de graça pra quem não pediu,
+// senão vira desconto padrão e derruba a margem de todo mundo. O Claudinho
+// não tem acesso a este arquivo e não deve mandar esse link (pedido de
+// desconto é gatilho de handoff, ver whatsapp-ia-prompt.ts).
+const CUPOM_DESCONTO = 'DESCONTOEPRAQUEMPEDE';
+const LINK_CHECKOUT_MCV_CUPOM = `https://pay.hotmart.com/W87258826R?checkoutMode=10&sck=whatsapp-ah&offDiscount=${CUPOM_DESCONTO}`;
 const MENSAGENS_PRONTAS = [
   { id: 'checkout', label: 'Link de checkout (MCV)', icone: 'link',
     texto: `Segue o link pra garantir o seu: ${LINK_CHECKOUT_MCV}` },
+  { id: 'checkout_cupom', label: 'Link com cupom de desconto', icone: 'ticket-percent',
+    texto: `Consegui liberar uma condição especial pra você. Segue o link com o cupom de desconto já, lembrando que é para compra imediata, bora?\n${LINK_CHECKOUT_MCV_CUPOM}\nAssim que fizer, me avisa aqui que confiro se deu tudo certo com seu acesso, ok?` },
   { id: 'checkout_parcelado', label: 'Link com parcelado Hotmart (boleto/pix)', icone: 'credit-card',
     texto: `Consegui aqui, segue o link com a opção de parcelamento: ${LINK_CHECKOUT_MCV_PARCELADO}` },
   { id: 'explicacao', label: 'O que é o MCV', icone: 'info',
@@ -1418,28 +1428,56 @@ function ConversasScreen() {
                     display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
                     <div style={{ padding: '10px 14px', borderBottom: '1px solid var(--app-border)', flexShrink: 0 }}>
                       <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text-1)', fontFamily: 'Roboto,sans-serif' }}>Mensagens prontas</div>
-                      <div style={{ fontSize: 10, color: 'var(--text-3)', fontFamily: 'Roboto,sans-serif', marginTop: 2 }}>1 clique pra mandar</div>
+                      <div style={{ fontSize: 10, color: 'var(--text-3)', fontFamily: 'Roboto,sans-serif', marginTop: 2 }}>Enviar direto ou editar antes</div>
                     </div>
                     <div style={{ flex: 1, overflowY: 'auto', padding: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                      {MENSAGENS_PRONTAS.map(item => (
-                        <button key={item.id} onClick={() => enviarPronta(item)}
-                          disabled={!contatoAtivo?.janelaAberta || enviandoPronta === item.id}
-                          style={{ textAlign: 'left', cursor: contatoAtivo?.janelaAberta ? 'pointer' : 'not-allowed',
-                            background: 'rgba(255,255,255,.04)', border: '1px solid var(--app-border)', borderRadius: 9,
-                            padding: '9px 10px', display: 'flex', flexDirection: 'column', gap: 4,
-                            opacity: contatoAtivo?.janelaAberta ? 1 : .5 }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                            <LucideIcon icon={item.icone} size={12} style={{ color: 'var(--fmn-gold)' }} />
-                            <span style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--text-1)', fontFamily: 'Roboto,sans-serif' }}>
-                              {enviandoPronta === item.id ? 'Enviando...' : item.label}
+                      {MENSAGENS_PRONTAS.map(item => {
+                        const janelaOk = !!contatoAtivo?.janelaAberta;
+                        const enviando = enviandoPronta === item.id;
+                        return (
+                          <div key={item.id}
+                            style={{ background: 'rgba(255,255,255,.04)', border: '1px solid var(--app-border)',
+                              borderRadius: 9, padding: '9px 10px', display: 'flex', flexDirection: 'column', gap: 6,
+                              opacity: janelaOk ? 1 : .5 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                              <LucideIcon icon={item.icone} size={12} style={{ color: 'var(--fmn-gold)' }} />
+                              <span style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--text-1)', fontFamily: 'Roboto,sans-serif' }}>
+                                {item.label}
+                              </span>
+                            </div>
+                            <span style={{ fontSize: 10, color: 'var(--text-3)', fontFamily: 'Roboto,sans-serif', lineHeight: 1.3,
+                              overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
+                              {item.texto}
                             </span>
+                            <div style={{ display: 'flex', gap: 5, marginTop: 1 }}>
+                              {/* Enviar direto (1 clique, sem passar pela barra) */}
+                              <button onClick={() => enviarPronta(item)} disabled={!janelaOk || enviando}
+                                title={janelaOk ? 'Enviar agora, sem editar' : 'Janela de 24h fechada'}
+                                style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
+                                  padding: '5px 6px', borderRadius: 6, border: '1px solid rgba(234,170,65,.35)',
+                                  background: 'rgba(234,170,65,.14)', color: 'var(--fmn-gold)',
+                                  fontSize: 10, fontWeight: 700, fontFamily: 'Roboto,sans-serif',
+                                  cursor: janelaOk && !enviando ? 'pointer' : 'not-allowed' }}>
+                                <LucideIcon icon={enviando ? 'loader' : 'send'} size={10}
+                                  style={enviando ? { animation: 'spin 1s linear infinite' } : {}} />
+                                {enviando ? 'Enviando' : 'Enviar'}
+                              </button>
+                              {/* Colar na barra pra editar antes de mandar */}
+                              <button onClick={() => setTexto(item.texto)}
+                                disabled={enviando}
+                                title="Colar na barra de mensagem pra editar antes de enviar"
+                                style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
+                                  padding: '5px 6px', borderRadius: 6, border: '1px solid var(--app-border)',
+                                  background: 'rgba(255,255,255,.05)', color: 'var(--text-2)',
+                                  fontSize: 10, fontWeight: 700, fontFamily: 'Roboto,sans-serif',
+                                  cursor: enviando ? 'not-allowed' : 'pointer' }}>
+                                <LucideIcon icon="pencil" size={10} />
+                                Editar
+                              </button>
+                            </div>
                           </div>
-                          <span style={{ fontSize: 10, color: 'var(--text-3)', fontFamily: 'Roboto,sans-serif', lineHeight: 1.3,
-                            overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
-                            {item.texto}
-                          </span>
-                        </button>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 )}

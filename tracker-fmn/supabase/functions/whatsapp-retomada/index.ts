@@ -58,6 +58,8 @@ async function gerarRetomada(historico: { role: string; content: string }[], ult
 ## Tarefa específica agora
 Essa conversa está prestes a fechar a janela de atendimento. Escreva UMA mensagem curta de retomada, puxando especificamente o assunto que vocês estavam conversando (use o histórico abaixo), no tom certo pro perfil desse lead (objetivo ou que gosta de conversar, veja como ele respondia antes). Nunca genérica tipo "tudo bem?", sempre amarrada ao que já foi dito. Sem cobrança, sem pressão, só reabrindo a porta.
 
+**NUNCA invente uma pendência que não existe no histórico.** Proibido dizer coisas como "tinha um detalhe que você queria saber mais sobre", "sobre aquela dúvida que você mencionou", "você tinha ficado de me falar" quando o lead nunca disse nada disso — o lead percebe na hora ("qual detalhe?") e a conversa quebra em vez de reaquecer. A retomada se ancora SEMPRE em algo que aconteceu de verdade: se a última mensagem foi uma pergunta NOSSA sem resposta, retome ELA (reformulada mais leve, nunca copiada igual); se foi o lead que falou por último, responda o que ele disse. Nada de assunto fabricado.
+
 ${instrucaoVacuo}`;
 
   try {
