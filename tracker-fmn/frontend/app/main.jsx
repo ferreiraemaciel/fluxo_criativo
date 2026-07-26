@@ -84,7 +84,7 @@
       <div style={{ display:'flex', width:'100%', height:'100vh', overflow:'hidden', background:'var(--app-bg)' }}>
         <Sidebar activePage={screen} onNavigate={navigate}
           collapsed={sidebarCollapsed} onToggle={()=>setSidebarCollapsed(p=>!p)}/>
-        <div style={{ flex:1, display:'flex', flexDirection:'column', overflow:'hidden', minWidth:0 }}>
+        <div style={{ flex:1, display:'flex', flexDirection:'column', overflow:'hidden', minWidth:0, minHeight:0 }}>
           {currentScreen}
         </div>
       </div>
