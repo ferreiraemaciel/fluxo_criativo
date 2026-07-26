@@ -7,12 +7,25 @@ const { useState: useStateSys, useEffect: useEffectSys } = React;
 // Automações que já rodam sozinhas na nuvem (Supabase Edge Functions + pg_cron),
 // não dependem do Mac estar ligado. Ver supabase/functions/ + migrações 044/045/051/060.
 const AUTOMACOES_NUVEM = [
-  { nome: 'meta-sync',           frequencia: 'A cada 6h (+ 1x/dia varredura completa)',      descricao: 'Métricas do Meta Ads (gasto, vendas, CPA)' },
-  { nome: 'kanban-sync (curtas)',frequencia: 'A cada 15 min',                                descricao: 'Status real do Meta, avanço pra Ativos, agregados 3d/5d, permalinks' },
-  { nome: 'kanban-sync (máximo)',frequencia: '1x/dia às 5h (Brasília)',                       descricao: 'Reclassificação Campeões/Arquivados dos anúncios ativos' },
-  { nome: 'kanban-sync (completo)',frequencia: '1x/dia às 6h (Brasília)',                     descricao: 'Recalcula TODOS os anúncios (inclusive arquivados antigos), evita número congelado' },
-  { nome: 'processar-pausas',    frequencia: 'A cada 5 min',                                  descricao: 'Executa pausas automáticas pendentes (alertas)' },
-  { nome: 'drive-manutencao',    frequencia: 'A cada 30 min',                                 descricao: 'Cria pasta no Drive por anúncio, organiza arquivo solto' },
+  // ── Anúncios / Meta Ads ──
+  { grupo:'Anúncios', nome: 'meta-sync',              frequencia: 'A cada 6h (0h, 6h, 12h, 18h)',  descricao: 'Métricas do Meta Ads (gasto, vendas, CPA) nas janelas curtas' },
+  { grupo:'Anúncios', nome: 'meta-sync (máximo)',     frequencia: '1x/dia às 4h',                  descricao: 'Varredura de vida inteira das métricas do Meta' },
+  { grupo:'Anúncios', nome: 'kanban-sync (curtas)',   frequencia: 'A cada 15 min',                 descricao: 'Status real do Meta, avanço pra Ativos, agregados 3d/5d, permalinks' },
+  { grupo:'Anúncios', nome: 'kanban-sync (máximo)',   frequencia: '1x/dia às 5h',                  descricao: 'Reclassificação Campeões/Arquivados dos anúncios ativos' },
+  { grupo:'Anúncios', nome: 'kanban-sync (completo)', frequencia: '1x/dia às 6h',                  descricao: 'Recalcula TODOS os anúncios (inclusive arquivados), evita número congelado' },
+  { grupo:'Anúncios', nome: 'processar-pausas',       frequencia: 'A cada 5 min',                  descricao: 'Executa pausas automáticas pendentes (alertas de CPA)' },
+  { grupo:'Anúncios', nome: 'drive-manutencao',       frequencia: 'A cada 30 min',                 descricao: 'Cria a pasta no Drive de cada anúncio (o "Importar direto" depende dela) e move arquivo solto' },
+  // ── Vendas ──
+  { grupo:'Vendas',   nome: 'hotmart-backfill',       frequencia: 'A cada 15 min, das 6h às 23h',  descricao: 'Plano B do webhook: busca vendas que não chegaram em tempo real' },
+  // ── Orgânico ──
+  { grupo:'Orgânico', nome: 'organico-sync',          frequencia: '1x/dia às 5h30',                descricao: 'Snapshot diário das métricas dos posts do Instagram' },
+  // ── WhatsApp / Claudinho ──
+  { grupo:'WhatsApp', nome: 'whatsapp-fila-quiz',     frequencia: 'A cada 1 min',                  descricao: 'Manda o resultado do quiz 5 min depois (cancela se o lead já comprou)' },
+  { grupo:'WhatsApp', nome: 'whatsapp-followup-checkout', frequencia: 'A cada 5 min',              descricao: 'Acompanha 30 min depois do link de checkout, se ainda não comprou' },
+  { grupo:'WhatsApp', nome: 'whatsapp-retomada',      frequencia: 'A cada 10 min',                 descricao: 'Retoma a conversa antes da janela de 24h fechar (sem custo de template)' },
+  { grupo:'WhatsApp', nome: 'whatsapp-arquivar-perdidos', frequencia: 'A cada 15 min',             descricao: 'Marca como Perdido quem nunca respondeu e a janela de 24h fechou' },
+  // ── Quiz ──
+  { grupo:'Quiz',     nome: 'insight-quiz-diario',    frequencia: '1x/dia às 9h',                  descricao: 'Gera o insight diário a partir das respostas do quiz' },
 ];
 
 // Espelha REGRAS-KANBAN.md — fonte de verdade em texto fica lá, isso aqui é
@@ -144,12 +157,12 @@ function SystemScreen() {
             {/* Automações na nuvem */}
             <SectionCard title="Automações na Nuvem"
               headerRight={<span style={{ fontSize:11, color:'var(--text-3)', fontFamily:'Roboto,sans-serif' }}>
-                Rodam sozinhas, não depende do Mac estar ligado
+                {AUTOMACOES_NUVEM.length} rotinas · rodam sozinhas, não depende do Mac estar ligado
               </span>} noPad style={{ flexShrink:0 }}>
               <table style={{ width:'100%', borderCollapse:'collapse' }}>
                 <thead>
                   <tr style={{ borderBottom:'1px solid var(--app-border)' }}>
-                    {['Automação','Frequência','O que faz'].map((h,i)=>(
+                    {['Automação','Frequência (Brasília)','O que faz'].map((h,i)=>(
                       <th key={i} style={{ padding:'10px 16px', textAlign:'left',
                         fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700,
                         letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)' }}>{h}</th>
@@ -157,18 +170,32 @@ function SystemScreen() {
                   </tr>
                 </thead>
                 <tbody>
-                  {AUTOMACOES_NUVEM.map((a,i) => (
-                    <tr key={a.nome} style={{ borderBottom:i<AUTOMACOES_NUVEM.length-1?'1px solid var(--app-border)':'none' }}>
-                      <td style={{ padding:'12px 16px', fontSize:13, fontFamily:'Roboto,sans-serif',
-                        fontWeight:700, color:'var(--text-1)' }}>{a.nome}</td>
-                      <td style={{ padding:'12px 16px', fontSize:12.5, color:'var(--text-2)', fontFamily:'Roboto,sans-serif' }}>
-                        {a.frequencia}
-                      </td>
-                      <td style={{ padding:'12px 16px', fontSize:12, color:'var(--text-3)', fontFamily:'Roboto,sans-serif' }}>
-                        {a.descricao}
-                      </td>
-                    </tr>
-                  ))}
+                  {AUTOMACOES_NUVEM.map((a,i) => {
+                    const novoGrupo = i === 0 || AUTOMACOES_NUVEM[i-1].grupo !== a.grupo;
+                    return (
+                      <React.Fragment key={a.nome}>
+                        {novoGrupo && (
+                          <tr>
+                            <td colSpan={3} style={{ padding:'10px 16px 4px', fontSize:9.5,
+                              fontFamily:'Roboto,sans-serif', fontWeight:700, letterSpacing:'0.1em',
+                              textTransform:'uppercase', color:'var(--fmn-gold)',
+                              borderTop: i===0 ? 'none' : '1px solid var(--app-border)' }}>{a.grupo}</td>
+                          </tr>
+                        )}
+                        <tr>
+                          <td style={{ padding:'9px 16px', fontSize:12.5, fontFamily:'Roboto,sans-serif',
+                            fontWeight:700, color:'var(--text-1)', whiteSpace:'nowrap' }}>{a.nome}</td>
+                          <td style={{ padding:'9px 16px', fontSize:12, color:'var(--text-2)',
+                            fontFamily:'Roboto,sans-serif', whiteSpace:'nowrap' }}>
+                            {a.frequencia}
+                          </td>
+                          <td style={{ padding:'9px 16px', fontSize:11.5, color:'var(--text-3)', fontFamily:'Roboto,sans-serif' }}>
+                            {a.descricao}
+                          </td>
+                        </tr>
+                      </React.Fragment>
+                    );
+                  })}
                 </tbody>
               </table>
             </SectionCard>
