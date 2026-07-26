@@ -610,28 +610,17 @@ function MetaAdModal({ card, onClose }) {
     return { videoId };
   }
 
-  // Sobe a versão em alta (já pronta no R2 pela cozinha) direto pro Meta e
-  // guarda o video_id no card, pra próximas publicações reaproveitarem.
-  // Depois de confirmado no Meta, a versão em alta não faz mais falta (o
-  // vídeo já está hospedado lá via video_id) — deleta do R2 pra não ocupar
-  // espaço à toa. O player do card continua funcionando pela prévia leve
-  // (media_preview_url), que não é tocada aqui.
+  // Sobe a versão em alta (já pronta no R2 pela cozinha) direto pro Meta.
+  // A limpeza pós-upload (guardar video_id, zerar media_url, apagar a alta
+  // do R2) roda no PRÓPRIO WORKER, dentro da mesma chamada de /upload-meta
+  // -- não depende do navegador terminar uma sequência de chamadas depois
+  // (a versão anterior fazia isso client-side e às vezes a deleção não
+  // disparava, causa nunca confirmada; mover pro servidor elimina a classe
+  // inteira desse problema). O player do card continua funcionando pela
+  // prévia leve (media_preview_url), que não é tocada nesse fluxo.
   async function prepararCriativoMeta(origUrl) {
     setLoadingMsg('Enviando vídeo ao Meta (pode levar 1 min)…');
-    const d = await workerPost('/upload-meta', { tipo: 'video', origUrl });
-    await window.db.from('ads').update({ meta_video_id: d.videoId, media_url: null }).eq('numero', adNum);
-    // DEBUG TEMPORÁRIO — grava em observacoes pra diagnosticar por que a
-    // deleção da alta não estava disparando. Remover depois de confirmar.
-    try {
-      const key = origUrl.split('/r2.dev/')[1];
-      await window.db.from('ads').update({ observacoes: `[DEBUG] origUrl=${origUrl} key=${key}` }).eq('numero', adNum);
-      if (key) {
-        const ok = await workerDelete(`/original/${encodeURIComponent(key)}`);
-        await window.db.from('ads').update({ observacoes: `[DEBUG] delete chamado, ok=${ok}` }).eq('numero', adNum);
-      }
-    } catch (e) {
-      await window.db.from('ads').update({ observacoes: `[DEBUG] ERRO: ${e?.message || String(e)}` }).eq('numero', adNum);
-    }
+    const d = await workerPost('/upload-meta', { tipo: 'video', origUrl, adNumero: adNum });
     return d.videoId;
   }
 

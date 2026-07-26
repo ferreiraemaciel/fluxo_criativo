@@ -135,7 +135,7 @@ async function handleUploadOriginal(request, env) {
    Suporta tipo 'image' e 'video'.
 ─────────────────────────────────────────────────────────────────*/
 async function handleUploadMeta(request, env) {
-  const { tipo, origUrl, adAccountId } = await request.json();
+  const { tipo, origUrl, adAccountId, adNumero } = await request.json();
 
   if (!origUrl) return json({ error: 'origUrl ausente.' }, 400);
 
@@ -150,6 +150,29 @@ async function handleUploadMeta(request, env) {
     const res  = await fetch(`${GRAPH}/${accountId}/advideos`, { method: 'POST', body: params });
     const data = await res.json();
     if (!data.id) throw new Error(`Meta advideos falhou: ${JSON.stringify(data)}`);
+
+    // Limpeza server-side: depois de confirmado no Meta, a alta não faz mais
+    // falta (o Meta já hospeda o vídeo via video_id) -- apaga do R2 e zera
+    // media_url no card aqui mesmo, no worker, em vez de depender do
+    // navegador terminar uma sequência de chamadas depois do upload (era
+    // frágil, às vezes não disparava -- ver CLAUDE.md/histórico do bug).
+    // Roda em best-effort: se falhar, não derruba a resposta do upload
+    // (o vídeo já subiu com sucesso, o resto é limpeza).
+    if (adNumero) {
+      try {
+        await fetch(`${env.SUPABASE_URL}/rest/v1/ads?numero=eq.${adNumero}`, {
+          method: 'PATCH',
+          headers: { apikey: env.SUPABASE_SERVICE_KEY, Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`,
+            'Content-Type': 'application/json', Prefer: 'return=minimal' },
+          body: JSON.stringify({ meta_video_id: data.id, media_url: null }),
+        });
+        const key = origUrl.split('/r2.dev/')[1];
+        if (key) await env.BUCKET.delete(key);
+      } catch (e) {
+        console.error('limpeza pós-upload falhou:', e);
+      }
+    }
+
     return json({ ok: true, videoId: data.id });
 
   } else {
