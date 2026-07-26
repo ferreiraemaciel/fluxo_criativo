@@ -81,7 +81,7 @@ function useTrafficData() {
           .select('meta_ad_id,meta_ad_name,meta_campaign_id,meta_campaign_name,meta_adset_id,meta_adset_name,periodo,gasto,cpa,compras,roas,cpm,ctr_unico,frequencia,connect_rate,link_clicks,landing_page_views,initiate_checkout,hook_rate')
           .in('periodo', ['maximum','7d','5d','3d','hoje']),
         window.db.from('ads')
-          .select('numero,titulo,status,meta_ad_id,media_drive_url,media_files,meta_ad_url,media_tipo,thumb_url')
+          .select('numero,titulo,status,meta_ad_id,media_drive_url,media_files,meta_ad_url,media_tipo,thumb_url,media_preview_url')
           .eq('status', 'ativo')
           .not('meta_ad_id', 'is', null),
       ]);
@@ -174,6 +174,7 @@ function useTrafficData() {
               thumb:   bestThumb(info?.thumb_url, files, info?.media_drive_url),
               files,
               mediaTipo: info?.media_tipo || null,
+              previewUrl: info?.media_preview_url || null,
               metaAdUrl: aid ? `https://adsmanager.facebook.com/adsmanager/manage/ads?selected_ad_ids=${aid}` : null,
               hist:    mkMetrics(periods['maximum']),
               d7:      mkMetrics(periods['7d']),
@@ -410,9 +411,15 @@ function MediaModal({ ad, onClose }) {
   const images = files.filter(f => f.tipo === 'imagem');
   const video = files.find(f => f.tipo === 'video');
 
+  // Vídeo: toca a prévia leve do R2 (media_preview_url) direto no lightbox.
+  // Ela termina em _preview.mp4, então o CarouselLightbox já a reconhece como
+  // vídeo. Sem prévia, cai no box abaixo que manda abrir no Drive (o vídeo em
+  // alta do Drive não tem stream público pra embutir).
+  if (ad.previewUrl) {
+    return <CarouselLightbox urls={[ad.previewUrl]} initialIdx={0} onClose={onClose}/>;
+  }
+
   // Imagem/carrossel: visualização ampliada (mesmo componente do Orgânico).
-  // Vídeo do Drive não dá pra embutir direto (sem stream público), então
-  // esse caso continua abrindo no Drive pelo box abaixo.
   if (images.length > 0) {
     const urls = images.map(f => f.url_embed || `https://drive.google.com/thumbnail?id=${f.file_id}&sz=w1080`);
     return <CarouselLightbox urls={urls} initialIdx={0} onClose={onClose}/>;
@@ -540,13 +547,13 @@ function TrafficRow({ row, depth=0, period, viewMode='periodo', metricCol, onCel
               : <div style={{ width:16, flexShrink:0 }}/>}
 
             {/* Thumb (ads apenas) */}
-            {isAd && (row.thumb || row.files?.length > 0 || row.mediaTipo) && (() => {
-              const hasImg  = row.files?.some(f => f.tipo === 'imagem');
+            {isAd && (row.thumb || row.files?.length > 0 || row.mediaTipo || row.previewUrl) && (() => {
               const hasVid  = row.files?.some(f => f.tipo === 'video')
                            || ['reels','video'].includes(row.mediaTipo);
               const showImg = !!row.thumb;
               return (
-                <div onClick={() => onThumbClick?.(row)} title="Ver mídia"
+                <div onClick={() => onThumbClick?.(row)}
+                  title={row.previewUrl ? 'Ver mídia (toca a prévia)' : 'Ver mídia'}
                   style={{ position:'relative', width:30, height:30, borderRadius:4, flexShrink:0,
                     cursor:'pointer', border:'1px solid rgba(255,255,255,.1)', overflow:'hidden',
                     background:'rgba(255,255,255,.04)', display:'flex', alignItems:'center', justifyContent:'center' }}>
@@ -558,6 +565,13 @@ function TrafficRow({ row, depth=0, period, viewMode='periodo', metricCol, onCel
                       ? <LucideIcon icon="play-circle" size={16} style={{ color:'rgba(255,255,255,.4)' }}/>
                       : <LucideIcon icon="image" size={14} style={{ color:'rgba(255,255,255,.3)' }}/>
                   }
+                  {/* Selo de play sobre a thumb quando a prévia toca inline */}
+                  {showImg && row.previewUrl && (
+                    <div style={{ position:'absolute', inset:0, display:'flex', alignItems:'center',
+                      justifyContent:'center', background:'rgba(0,0,0,.35)', pointerEvents:'none' }}>
+                      <LucideIcon icon="play" size={12} style={{ color:'#fff' }}/>
+                    </div>
+                  )}
                 </div>
               );
             })()}

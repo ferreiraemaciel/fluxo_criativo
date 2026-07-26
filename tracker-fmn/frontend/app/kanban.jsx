@@ -499,6 +499,12 @@ function MetaAdModal({ card, onClose }) {
     } catch { return raw.media_url || ''; }
   })();
   const hasMedia = !!(raw.meta_image_hash || raw.meta_video_id || r2Url);
+  // A alta do R2 é apagada depois que o vídeo sobe pro Meta (e foi apagada em
+  // massa no backfill de 2026-07-23). Quando isso acontece o card fica só com
+  // a prévia leve, mas o arquivo original continua no Drive: o caminho de volta
+  // é reimportar, não é mídia perdida. Distinguir os dois casos evita o alarme
+  // falso de "sem mídia" em card que na prática só precisa de um reimport.
+  const soPreviaComOrigem = !hasMedia && !!raw.media_preview_url && !!raw.media_drive_url;
 
   // ── chamadas ao worker ads-media ──
   async function workerGet(path) {
@@ -869,8 +875,27 @@ function MetaAdModal({ card, onClose }) {
 
             {!hasMedia && (
               <div style={{ padding:'8px 12px', borderRadius:8, background:'rgba(234,170,65,.06)',
-                border:'1px solid rgba(234,170,65,.2)', fontSize:11, color:'var(--fmn-gold)' }}>
-                Sem mídia no R2. Faça o upload do criativo no card antes de publicar no Meta.
+                border:'1px solid rgba(234,170,65,.2)', fontSize:11, color:'var(--fmn-gold)',
+                lineHeight:1.6 }}>
+                {soPreviaComOrigem ? (
+                  <>
+                    A versão em alta foi apagada do R2 depois que a prévia foi gerada, e esse
+                    anúncio ainda não subiu pro Meta. O arquivo original continua no Drive.
+                    Feche esta janela e use "Importar direto" no card para trazer a alta de volta,
+                    depois publique.
+                    {raw.media_drive_url && (
+                      <>
+                        {' '}
+                        <a href={raw.media_drive_url} target="_blank" rel="noopener noreferrer"
+                          style={{ color:'var(--fmn-gold)', textDecoration:'underline' }}>
+                          Abrir a pasta no Drive
+                        </a>
+                      </>
+                    )}
+                  </>
+                ) : (
+                  <>Sem mídia no R2. Faça o upload do criativo no card antes de publicar no Meta.</>
+                )}
               </div>
             )}
 
