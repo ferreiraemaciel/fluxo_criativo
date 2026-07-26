@@ -114,7 +114,7 @@ function SystemScreen() {
         ) : (
           <>
             {/* Conexões */}
-            <SectionCard title="Conexões">
+            <SectionCard title="Conexões" style={{ flexShrink:0 }}>
               <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:12 }}>
                 {conexoes.map(c => (
                   <div key={c.nome} style={{ padding:'14px 16px', borderRadius:10,
@@ -132,7 +132,7 @@ function SystemScreen() {
             </SectionCard>
 
             {/* Contadores */}
-            <div style={{ display:'flex', gap:12, flexWrap:'wrap' }}>
+            <div style={{ display:'flex', gap:12, flexWrap:'wrap', flexShrink:0 }}>
               <CardKPI label="ADs Total"        value={counts.adsTotal}       icon="layout-grid" accent/>
               <CardKPI label="ADs Ativos"        value={counts.adsAtivos}      icon="zap"/>
               <CardKPI label="ADs Vinculados"    value={counts.adsVinculados}  icon="link"/>
@@ -145,7 +145,7 @@ function SystemScreen() {
             <SectionCard title="Automações na Nuvem"
               headerRight={<span style={{ fontSize:11, color:'var(--text-3)', fontFamily:'Roboto,sans-serif' }}>
                 Rodam sozinhas, não depende do Mac estar ligado
-              </span>} noPad>
+              </span>} noPad style={{ flexShrink:0 }}>
               <table style={{ width:'100%', borderCollapse:'collapse' }}>
                 <thead>
                   <tr style={{ borderBottom:'1px solid var(--app-border)' }}>
@@ -177,7 +177,7 @@ function SystemScreen() {
             <SectionCard title="Regras do Kanban de Anúncios"
               headerRight={<span style={{ fontSize:11, color:'var(--text-3)', fontFamily:'Roboto,sans-serif' }}>
                 Ticket de referência: R$ {TICKET_VAL},00 · fonte: REGRAS-KANBAN.md
-              </span>}>
+              </span>} style={{ flexShrink:0 }}>
               <div style={{ display:'flex', flexDirection:'column', gap:20 }}>
 
                 {/* Tags de performance */}
