@@ -897,13 +897,13 @@ function FlowFunnel({ steps }) {
         const prev = steps[i].value;
         const stepPct = prev > 0 ? ((s.value / prev) * 100).toFixed(1) : '—';
         const x = (i+1) * stepW;
-        const pillW = 48;
+        const pillW = 48, pillH = 18;
         return (
           <g key={`sp${i}`}>
-            <rect x={x-pillW/2} y={realCy-10} width={pillW} height={18} rx="9"
+            <rect x={x-pillW/2} y={realCy-pillH/2} width={pillW} height={pillH} rx={pillH/2}
               fill="rgba(10,10,12,.82)" stroke="rgba(255,255,255,.2)" strokeWidth="0.8"/>
-            <text x={x} y={realCy+4} fontSize="9.5" fill="rgba(255,255,255,.8)"
-              textAnchor="middle" fontFamily="Roboto,sans-serif" fontWeight="700">
+            <text x={x} y={realCy} fontSize="9.5" fill="rgba(255,255,255,.8)"
+              textAnchor="middle" dominantBaseline="central" fontFamily="Roboto,sans-serif" fontWeight="700">
               {stepPct}%
             </text>
           </g>
