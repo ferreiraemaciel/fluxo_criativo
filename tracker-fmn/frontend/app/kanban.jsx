@@ -461,9 +461,6 @@ function MetaAdModal({ card, onClose }) {
   const [newAdsetBudget, setNewAdsetBudget] = useState('');    // R$ formato 00,00
   const [creatingAdset, setCreatingAdset]   = useState(false);
 
-  // tags Alta/Prévia (apagar versão individual do R2)
-  const [apagandoVersao, setApagandoVersao] = useState(null); // 'alta' | 'preview' | null
-
   // copy do anúncio (pré-preenchida do card, editável)
   const [msgText, setMsgText]     = useState((card.raw||{}).texto_principal || '');
   const [titleText, setTitleText] = useState((card.raw||{}).titulo_ad || '');
@@ -1237,6 +1234,15 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [videoPlaying, setVideoPlaying] = useState(false);
+  // tags Alta/Prévia (apagar versão individual do R2). Estados PRECISAM viver
+  // aqui (não no MetaAdModal): bug real de 2026-07-27, o estado tinha sido
+  // declarado no modal errado e todo card de vídeo quebrava a tela inteira
+  // ao abrir (ReferenceError no render).
+  const [apagandoVersao, setApagandoVersao] = useState(null); // 'alta' | 'preview' | null
+  async function apagarDoR2(key) {
+    const r = await fetch(`${ADS_MEDIA_WORKER}/original/${encodeURIComponent(key)}`, { method: 'DELETE' });
+    return r.ok;
+  }
 
   // ESC fecha o modal
   React.useEffect(() => {
@@ -1699,7 +1705,7 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
                         let rawUrl = v.url;
                         try { const p = JSON.parse(rawUrl); rawUrl = Array.isArray(p) ? p[0] : p; } catch {}
                         const key = rawUrl.split('/r2.dev/')[1];
-                        if (key) await workerDelete(`/original/${encodeURIComponent(key)}`);
+                        if (key) await apagarDoR2(key);
                         await window.db.from('ads').update({ [v.field]: null }).eq('numero', adNum);
                         if (onUpdate) onUpdate({ ...card, raw: { ...raw, [v.field]: null } });
                       } catch (e) {
