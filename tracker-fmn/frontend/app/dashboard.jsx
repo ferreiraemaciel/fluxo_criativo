@@ -895,7 +895,7 @@ function FlowFunnel({ steps }) {
       {/* Conversão entre etapas (pill sobre o divisor) */}
       {steps.slice(1).map((s,i) => {
         const prev = steps[i].value;
-        const stepPct = prev > 0 ? ((s.value / prev) * 100).toFixed(1) : '—';
+        const stepPct = prev > 0 ? ((s.value / prev) * 100).toFixed(1) : '0';
         const x = (i+1) * stepW;
         const pillW = 48, pillH = 18;
         return (
