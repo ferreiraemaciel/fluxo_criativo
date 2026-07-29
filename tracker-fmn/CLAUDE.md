@@ -2,6 +2,12 @@
 
 > Instruções específicas do Tracker FMN. Complementa o CLAUDE.md da raiz do fluxo-criativo (regras gerais do workshop), mas essas aqui valem só dentro desta pasta.
 
+## Orgânico — pasta padrão do Drive (fonte oficial de mídia)
+
+**A mídia de qualquer card do Orgânico (imagem, carrossel ou vídeo) SEMPRE vem da pasta do Google Drive, nunca de arquivo solto no Downloads, Desktop ou qualquer outro lugar do Mac.** Pasta raiz: `https://drive.google.com/open?id=1h3cPqEoOnXld-6Sqh3IjsYcsb2bh_PLp` (ID `1h3cPqEoOnXld-6Sqh3IjsYcsb2bh_PLp`, já cadastrado como `ORGANICO_FOLDER_ID` em `scripts/adicionar-criativo-organico.py`). Dentro dela, cada card tem sua própria subpasta `ORG <numero>` (ex: `ORG 019`), e o número segue o mesmo índice por `created_at` mostrado na UI do Kanban.
+
+Quando o usuário disser "subi o vídeo/imagem do ORG N, suba pro Tracker" ou equivalente: rodar `python3 scripts/adicionar-criativo-organico.py --numero N --auto` (não pegar arquivo manual do Mac). O script já busca a pasta certa, otimiza (Story → 1920px, resto → 1350px JPEG 82%; vídeo gera preview leve 540p + alta ≤78MB) e atualiza `conteudo_organico` sozinho.
+
 ## Claudinho — log automático de erros (etapa de treinamento)
 
 > Combinado com Amanda em 2026-07-21. Vale enquanto o modo treinamento do Claudinho estiver ativo (`whatsapp_modo_treinamento` em `app_config`). Pode ser removido/arquivado quando ele rodar 100% sozinho.

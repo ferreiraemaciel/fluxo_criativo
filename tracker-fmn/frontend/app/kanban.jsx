@@ -143,11 +143,22 @@ function useAdsCards() {
         // insights_cache (periodo='maximum') reflete só o meta_ad_id ATUAL
         // (o do relançamento mais recente) — usado só como fallback quando
         // ainda não existe total histórico calculado (anúncio muito novo).
+        // vendas_total=0 é um zero REAL (já sincronizado), não "sem dado" — nesse
+        // caso o CPA tem que ficar null também (não dá pra calcular sem venda),
+        // nunca cair no fallback de insights_cache (que é só o meta_ad_id atual,
+        // pode trazer CPA de uma instância antiga e contradizer o 0 vendas real).
+        // O fallback só faz sentido quando vendas_total ainda nem foi calculado
+        // (null de verdade, anúncio muito novo).
         vendas:   a.vendas_total ?? ins?.compras ?? null,
-        cpa:      a.cpa_historico ?? ins?.cpa     ?? null,
+        cpa:      a.vendas_total != null
+                    ? (a.vendas_total > 0 ? (a.cpa_historico ?? ins?.cpa ?? null) : null)
+                    : (ins?.cpa ?? null),
         gasto:    a.gasto_total   ?? ins?.gasto   ?? null,
         tag:      (a.status === 'arquivado' || a.status === 'campeoes')
-                    ? (a.tag || classifyAd(a.vendas_total ?? ins?.compras, a.cpa_historico ?? ins?.cpa, a.gasto_total ?? ins?.gasto))
+                    ? (a.tag || classifyAd(
+                        a.vendas_total ?? ins?.compras,
+                        a.vendas_total != null ? (a.vendas_total > 0 ? (a.cpa_historico ?? ins?.cpa ?? null) : null) : (ins?.cpa ?? null),
+                        a.gasto_total ?? ins?.gasto))
                 : null,
         raw: a,
       };

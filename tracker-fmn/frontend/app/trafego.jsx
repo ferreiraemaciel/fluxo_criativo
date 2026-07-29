@@ -1350,11 +1350,14 @@ function SubstituirModal({ adNum, defaultAdsetId, defaultAdsetName, defaultCampI
   useEffect(() => {
     if (!window.db) return;
     (async () => {
+      // Substituto precisa ser criativo com mídia pronta que NÃO esteja rodando agora:
+      // fazendo (produzido, na fila) ou campeoes/arquivado (já rodou antes, pode voltar).
+      // 'ativo' fica de fora de propósito — já está no ar, não serve de substituto.
       const { data } = await window.db.from('ads')
         .select('numero,titulo,status,meta_ad_id,media_drive_url,media_files,media_tipo,thumb_url')
-        .eq('status', 'ativo')
+        .in('status', ['fazendo','campeoes','arquivado'])
         .order('numero', { ascending: false });
-      setCriativos(data || []);
+      setCriativos((data || []).filter(c => c.media_drive_url || (c.media_files && c.media_files !== '[]' && c.media_files !== 'null')));
       setLoadingC(false);
     })();
   }, []);

@@ -1710,8 +1710,21 @@ function CalendarioView({ items, onOpen, onNewWithDate, onReschedule, onEditSche
                   const isFeito = item.status === 'Feito';
                   const color = isFeito ? '#4ade80' : (PLAT_COLOR[item.plataforma] || '#94a3b8');
                   const num   = String(item.numero||0).padStart(3,'0');
+                  // Vídeo (Reels): thumb JPG vem de media_files, nunca do .mp4 de slides
+                  // (mesma regra do card do Kanban acima) — <img> não renderiza vídeo.
                   let thumb = null;
-                  try { const sa = JSON.parse(item.slides||'[]'); thumb = sa.map(s=>s.image_url).filter(Boolean)[0]||null; } catch {}
+                  try {
+                    let mf = item.media_files;
+                    if (typeof mf === 'string') mf = JSON.parse(mf);
+                    thumb = Array.isArray(mf) ? (mf.find(m => m && m.tipo === 'video')?.thumb_url || null) : null;
+                  } catch {}
+                  if (!thumb) {
+                    try {
+                      const sa = JSON.parse(item.slides||'[]');
+                      thumb = sa.map(s=>s.image_url).filter(Boolean)[0]||null;
+                      if (/\.(mp4|webm|mov|m4v)$/i.test(thumb || '')) thumb = null;
+                    } catch {}
+                  }
                   let horario = null;
                   const horarioSource = isFeito ? item.published_at : item.scheduled_at;
                   if (horarioSource) {
