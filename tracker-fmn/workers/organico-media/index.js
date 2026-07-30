@@ -588,7 +588,10 @@ async function handleProgresso(request, env, url) {
 }
 
 async function ordemCards(env) {
-  const res = await fetch(`${env.SUPABASE_URL}/rest/v1/conteudo_organico?select=id&order=created_at.asc`, {
+  // id como desempate: cards criados em lote podem empatar no created_at até o
+  // microssegundo, e sem desempate o Postgres não garante a mesma ordem entre uma
+  // consulta e outra — o número "ORG N" (calculado pela posição) ficava instável.
+  const res = await fetch(`${env.SUPABASE_URL}/rest/v1/conteudo_organico?select=id&order=created_at.asc,id.asc`, {
     headers: { apikey: env.SUPABASE_SERVICE_KEY, Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}` } });
   return (await res.json().catch(() => [])).map(r => r.id);
 }
