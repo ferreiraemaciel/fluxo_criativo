@@ -197,5 +197,14 @@ Para cada caso:
 ## Passo final
 
 1. Salvar o relatório em `radar-juridico/relatorios/{AAAA-MM-DD}.md`.
-2. Anexar os casos novos em `radar-juridico/historico.md`, uma linha por caso, no formato `- {AAAA-MM-DD} | {título do caso} | {fonte}`. Esse arquivo é o que impede repetição nas próximas rodadas.
-3. Devolver ao orquestrador: caminho do relatório, quantidade de casos novos, e as pautas sugeridas em lista.
+2. **Gerar a versão de leitura em HTML**, rodando:
+
+   ```bash
+   python3 scripts/radar-juridico-html.py radar-juridico/relatorios/{AAAA-MM-DD}.md
+   ```
+
+   O script gera o `.html` irmão, autossuficiente e formatado. O markdown é o arquivo de trabalho, o HTML é o que o Felipe lê. Conferir a saída do script: ela imprime a contagem de casos, pautas e seções encontradas. Se a contagem de casos ou pautas vier zerada e você escreveu casos ou pautas, o formato do markdown saiu do padrão e precisa ser corrigido antes de encerrar.
+3. Anexar os casos novos em `radar-juridico/historico.md`, uma linha por caso, no formato `- {AAAA-MM-DD} | {título do caso} | {fonte}`. Esse arquivo é o que impede repetição nas próximas rodadas.
+4. Devolver ao orquestrador: caminho do HTML, caminho do markdown, quantidade de casos novos, e as pautas sugeridas em lista.
+
+> **Por que o formato do markdown importa.** O conversor faz o parsing pela estrutura fixa deste documento: `## N. Título` para seção, `### Título` para caso, `- **Campo:** valor` para os campos do caso, `**N. Título (prioridade X)**` para pauta, tabela markdown padrão na seção 3. Fugir desse formato não quebra o script, mas faz a seção sair sem formatação no HTML.

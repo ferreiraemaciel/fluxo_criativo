@@ -40,7 +40,7 @@ Quando o agente devolver, mostre no chat, sem despejar o relatório inteiro:
 2. Os casos novos, em lista curta: título, quem ganhou, por que importa.
 3. O dado de tendência dos tribunais em uma frase.
 4. As pautas sugeridas, numeradas.
-5. O caminho absoluto do relatório, como texto copiável.
+5. O caminho absoluto do relatório em HTML, como texto copiável, e em seguida entregue o arquivo `.html` ao usuário via SendUserFile com `display: "render"`, para ele ler formatado sem precisar abrir nada. O `.md` é arquivo de trabalho, não é o que se entrega para leitura.
 
 Depois pergunte:
 
@@ -57,7 +57,7 @@ Depois pergunte:
 ## Passo 4. Confirmação
 
 ```
-✅ Concluído: radar jurídico da semana. Caminho: radar-juridico/relatorios/{AAAA-MM-DD}.md
+✅ Concluído: radar jurídico da semana. Caminho: radar-juridico/relatorios/{AAAA-MM-DD}.html
 ```
 
 ## Observações
