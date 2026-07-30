@@ -99,7 +99,85 @@ def parse_secao(titulo: str, linhas: list) -> dict:
         return {'tipo': 'pautas', 'itens': parse_pautas(linhas)}
     if n == '5':
         return {'tipo': 'vazios', 'itens': parse_lista(linhas)}
-    return {'tipo': 'texto', 'paragrafos': parse_paragrafos(linhas)}
+    return {'tipo': 'blocos', 'blocos': parse_blocos(linhas)}
+
+
+def parse_blocos(linhas: list) -> list:
+    """Parser genérico: parágrafo, tabela, lista e citação, em qualquer ordem.
+
+    Usado em toda seção que não tem tratamento próprio, para que seções novas
+    apareçam formatadas sem precisar mexer no script.
+    """
+    blocos, buffer, tabela, lista, citacao = [], [], [], [], []
+
+    def fechar_paragrafo():
+        nonlocal buffer
+        if buffer:
+            blocos.append({'tipo': 'p', 'texto': ' '.join(buffer)})
+            buffer = []
+
+    def fechar_tabela():
+        nonlocal tabela
+        if tabela:
+            blocos.append({'tipo': 'tabela', 'cabecalho': tabela[0], 'linhas': tabela[1:]})
+            tabela = []
+
+    def fechar_lista():
+        nonlocal lista
+        if lista:
+            blocos.append({'tipo': 'lista', 'itens': lista})
+            lista = []
+
+    def fechar_citacao():
+        nonlocal citacao
+        if citacao:
+            blocos.append({'tipo': 'citacao', 'texto': ' '.join(citacao)})
+            citacao = []
+
+    def fechar_tudo():
+        fechar_paragrafo()
+        fechar_tabela()
+        fechar_lista()
+        fechar_citacao()
+
+    for linha in linhas:
+        seco = linha.strip()
+
+        if not seco or seco == '---':
+            fechar_tudo()
+            continue
+
+        if seco.startswith('|'):
+            fechar_paragrafo()
+            fechar_lista()
+            fechar_citacao()
+            celulas = [c.strip() for c in seco.strip('|').split('|')]
+            if all(re.fullmatch(r':?-{2,}:?', c) for c in celulas):
+                continue
+            tabela.append(celulas)
+            continue
+
+        if seco.startswith('>'):
+            fechar_paragrafo()
+            fechar_tabela()
+            fechar_lista()
+            citacao.append(seco.lstrip('> ').strip())
+            continue
+
+        if seco.startswith('- '):
+            fechar_paragrafo()
+            fechar_tabela()
+            fechar_citacao()
+            lista.append(seco[2:].strip())
+            continue
+
+        fechar_tabela()
+        fechar_lista()
+        fechar_citacao()
+        buffer.append(seco)
+
+    fechar_tudo()
+    return blocos
 
 
 def parse_paragrafos(linhas: list) -> list:
@@ -235,8 +313,15 @@ CAMPO_ICONE = {
     'Quem ganhou': 'placar',
     'Base legal': 'lei',
     'Tribunal e data': 'foro',
+    'Íntegra lida': 'integra',
+    'Íntegra arquivada': 'integra',
+    'Vale aprofundar': 'aprofundar',
+    'Força como precedente': 'precedente',
+    'O que a íntegra revela': 'revela',
+    'Onde a decisão é frágil': 'fragil',
     'Fonte': 'fonte',
     'Por que importa pro fotógrafo': 'importa',
+    'Cuidado ao produzir conteúdo': 'cuidado',
     'Gancho de conteúdo': 'gancho',
 }
 
@@ -345,8 +430,43 @@ def render_vazios(itens: list) -> str:
     )
 
 
-def render_texto(paragrafos: list) -> str:
-    return '\n'.join(f'<p>{inline(p)}</p>' for p in paragrafos)
+def render_blocos(blocos: list) -> str:
+    partes = []
+    for b in blocos:
+        if b['tipo'] == 'p':
+            partes.append(f'<p>{inline(b["texto"])}</p>')
+        elif b['tipo'] == 'lista':
+            lis = ''.join(f'<li>{inline(i)}</li>' for i in b['itens'])
+            partes.append(f'<ul class="lista">{lis}</ul>')
+        elif b['tipo'] == 'citacao':
+            partes.append(f'<blockquote class="citacao">{inline(b["texto"])}</blockquote>')
+        elif b['tipo'] == 'tabela':
+            partes.append(render_tabela(b['cabecalho'], b['linhas']))
+    return '\n'.join(partes)
+
+
+def render_tabela(cabecalho: list, linhas: list) -> str:
+    cab = ''.join(f'<th>{inline(x)}</th>' for x in cabecalho)
+    corpo = []
+    for linha in linhas:
+        celulas = []
+        for idx, cel in enumerate(linha):
+            classe = ''
+            if idx == len(linha) - 1 and '%' in cel:
+                classe = ' class="neg"' if cel.strip().startswith('-') else ' class="pos"'
+            elif idx >= 2 and re.fullmatch(r'[\d.,]+', cel.strip()):
+                classe = ' class="num"'
+            elif idx == 0:
+                classe = ' class="rot"'
+            celulas.append(f'<td{classe}>{inline(cel)}</td>')
+        corpo.append('<tr>' + ''.join(celulas) + '</tr>')
+    return (
+        '<div class="tabela-wrap"><table><thead><tr>'
+        + cab
+        + '</tr></thead><tbody>'
+        + ''.join(corpo)
+        + '</tbody></table></div>'
+    )
 
 
 def render_secao(secao: dict) -> str:
@@ -361,7 +481,7 @@ def render_secao(secao: dict) -> str:
     elif tipo == 'vazios':
         corpo = render_vazios(c['itens'])
     else:
-        corpo = render_texto(c['paragrafos'])
+        corpo = render_blocos(c['blocos'])
 
     titulo = secao['titulo']
     n = numero_secao(titulo)
@@ -485,6 +605,19 @@ h1{font-size:clamp(29px,5vw,42px);line-height:1.14;margin:0 0 22px;letter-spacin
 .campo--importa{background:var(--acento-suave);margin:14px -24px 0;padding:16px 24px;
   border-top:1px solid var(--acento-borda);border-bottom:0}
 .campo--importa .rotulo{color:var(--acento)}
+.campo--revela .valor{color:var(--tinta)}
+.campo--aprofundar{background:var(--acento-suave);margin:0 -24px;padding:14px 24px;
+  border-bottom:0}
+.campo--aprofundar .rotulo{color:var(--acento)}
+.campo--aprofundar .valor{color:var(--tinta)}
+.campo--precedente .valor{color:var(--tinta)}
+.campo--fragil{border-left:3px solid var(--neg);padding-left:14px;
+  margin-left:-17px;background:transparent}
+.campo--fragil .rotulo{color:var(--neg)}
+.campo--fragil .valor{color:var(--tinta)}
+.campo--cuidado{border-left:3px solid var(--neg);padding-left:14px;margin-left:-17px}
+.campo--cuidado .rotulo{color:var(--neg)}
+.campo--cuidado .valor{color:var(--tinta)}
 .campo--gancho{background:var(--acento-suave);margin:0 -24px;padding:16px 24px 18px;
   border-bottom:0}
 .campo--gancho .rotulo{color:var(--acento)}
@@ -512,6 +645,16 @@ tbody tr:hover td{background:var(--acento-suave)}
 td.num,td.neg,td.pos{text-align:right;font-variant-numeric:tabular-nums}
 td.neg{color:var(--neg);font-weight:600}
 td.pos{color:var(--pos);font-weight:600}
+td.rot{color:var(--tinta);font-weight:600}
+
+/* Blocos genéricos */
+.lista{margin:0 0 15px;padding-left:22px;color:var(--tinta-media)}
+.lista li{margin-bottom:8px}
+.citacao{
+  margin:20px 0 0;padding:18px 22px;background:var(--acento-suave);
+  border:1px solid var(--acento-borda);border-radius:var(--raio);
+  color:var(--tinta);font-size:16px;
+}
 
 /* Nota */
 .nota{

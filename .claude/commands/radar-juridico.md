@@ -42,19 +42,50 @@ Quando o agente devolver, mostre no chat, sem despejar o relatório inteiro:
 4. As pautas sugeridas, numeradas.
 5. O caminho absoluto do relatório em HTML, como texto copiável, e em seguida entregue o arquivo `.html` ao usuário via SendUserFile com `display: "render"`, para ele ler formatado sem precisar abrir nada. O `.md` é arquivo de trabalho, não é o que se entrega para leitura.
 
-Depois pergunte:
+## Passo 4. Perguntar o que aprofundar (etapa obrigatória)
+
+A varredura entrega o mapa, não o estudo. Quem decide o que merece leitura de íntegra é o Felipe, sempre. Nunca aprofundar por conta própria.
+
+Liste os casos numerados, com a recomendação do agente ao lado, e pergunte:
+
+```
+Quais casos você quer que eu estude a fundo, lendo a íntegra da decisão?
+
+1. {título do caso 1} (recomendo: sim, porque {motivo})
+2. {título do caso 2} (recomendo: não, decisão de rotina)
+3. {título do caso 3} (recomendo: sim, porque {motivo})
+
+Responda os números, "todos", ou "nenhum".
+```
+
+Aguarde a resposta. Sem ela, não abra nenhum PDF.
+
+## Passo 5. Aprofundar os aprovados
+
+O aprofundamento roda **aqui, na conversa**, não dentro do agente. O motivo é prático: é lendo junto com o Felipe que aparecem as reações que valem ouro ("isso me parece um absurdo jurídico"), e o agente não conversa. Além disso, ler dois ou três PDFs custa pouco contexto, ao contrário da varredura.
+
+Para cada caso aprovado, siga o "Passo de Aprofundamento" descrito em `.claude/agents/radar-juridico-fotografia.md`: abrir o PDF arquivado, ler inteiro, extrair tipo de decisão, quem decidiu, cabimento de recurso, trechos literais, fragilidades confrontadas com a lei e riscos de produzir conteúdo.
+
+Depois:
+
+1. Preencher os quatro campos de aprofundamento no `.md` da rodada.
+2. Se dois casos aprofundados se contradisserem, criar a seção 6 (Confronto entre as decisões).
+3. Rodar `python3 scripts/radar-juridico-html.py radar-juridico/relatorios/{AAAA-MM-DD}.md`.
+4. Entregar o HTML atualizado de novo via SendUserFile.
+
+Em seguida pergunte:
 
 ```
 1. Transformar uma pauta em artigo do blog FMN
-2. Aprofundar um caso específico
+2. Aprofundar mais algum caso
 3. Só arquivar por enquanto
 ```
 
-- Opção 1: acionar `/copy-artigo-blog-fmn` já com o tema, o ângulo e as fontes do caso escolhido em mãos, para o aluno não precisar recontar a história.
-- Opção 2: rodar o agente de novo com `foco` no caso escolhido e escopo `NOTICIA_JURIS`, buscando a íntegra da decisão.
+- Opção 1: acionar `/copy-artigo-blog-fmn` já com o tema, o ângulo, os trechos literais e as fontes em mãos, para o Felipe não precisar recontar a história.
+- Opção 2: voltar ao Passo 5 com os novos casos.
 - Opção 3: encerrar confirmando o caminho do arquivo.
 
-## Passo 4. Confirmação
+## Passo 6. Confirmação
 
 ```
 ✅ Concluído: radar jurídico da semana. Caminho: radar-juridico/relatorios/{AAAA-MM-DD}.html

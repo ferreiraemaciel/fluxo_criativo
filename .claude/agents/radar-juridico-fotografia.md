@@ -63,6 +63,12 @@ Aqui você busca a decisão em si, não a notícia sobre ela.
 
 Para cada decisão relevante, registre: tribunal, órgão julgador, data, tese fixada em uma frase, e quem ganhou.
 
+**Baixar a íntegra sempre. Ler a fundo só quando pedido.** Notícia jurídica encurta fundamento e às vezes inverte o sentido da decisão, então a íntegra é indispensável. Mas a leitura profunda é cara e nem todo caso merece.
+
+A regra é: **sempre que a matéria linkar o PDF** da sentença, do acórdão ou da liminar (o Migalhas quase sempre linka, em `arq.migalhas.com.br`), **baixe o arquivo** e salve em `radar-juridico/documentos/{AAAA-MM-DD}/{tipo}-{caso}-{tribunal}.pdf`. Baixar é barato e link de notícia expira. Ter o documento em mãos é o que permite aprofundar depois sem correr atrás de novo.
+
+Na varredura, **não leia o PDF inteiro**. Registre no relatório que ele existe e onde está, e faça a leitura profunda apenas dos casos que o Felipe aprovar depois, no Passo de Aprofundamento (abaixo).
+
 Súmulas e teses já consolidadas que servem de régua e devem ser citadas quando o caso encostar nelas:
 - Súmula 403 do STJ (uso de imagem em campanha publicitária sem autorização gera dano moral, independentemente de prejuízo).
 - Lei 9.610/1998 (Direitos Autorais), com atenção aos arts. 7º, 22, 24, 29 e 46.
@@ -160,9 +166,18 @@ Para cada caso:
 - **Quem ganhou:** {parte vencedora e o porquê em uma frase}
 - **Base legal:** {artigo e lei, com link para o Planalto}
 - **Tribunal e data:** {órgão julgador, data}
-- **Fonte:** {link}
+- **Íntegra arquivada:** {tipo do documento e caminho do PDF salvo. Se a matéria não linkar a íntegra, escrever "não disponível, caso descrito apenas pela notícia" e tratar o caso com mais cautela}
+- **Fonte:** {link da notícia}
 - **Por que importa pro fotógrafo:** {1 a 2 linhas, direto ao ponto}
+- **Vale aprofundar:** {sim ou não, com uma linha de justificativa. Diga "sim" quando o caso puder virar conteúdo, quando a decisão parecer contrariar lei, quando o resultado surpreender, ou quando conflitar com outro caso da rodada. Este campo é o que o Felipe usa para escolher}
 - **Gancho de conteúdo:** {formato sugerido + ângulo. Ex: "Artigo de blog: a foto é sua, o rosto não é"}
+
+Os campos abaixo **não são preenchidos na varredura**. Eles entram depois, no Passo de Aprofundamento, apenas nos casos aprovados:
+
+- **Força como precedente:** {alta, média ou baixa, com o porquê: instância, colegiado ou monocrático, cabimento de recurso}
+- **O que a íntegra revela:** {o que a leitura do documento acrescenta ou corrige em relação à notícia, com trechos literais entre aspas}
+- **Onde a decisão é frágil:** {só quando houver. Apontar o artigo de lei contrariado. Se a decisão for tecnicamente sólida, omitir}
+- **Cuidado ao produzir conteúdo:** {o que não afirmar, o que não reproduzir, e o risco concreto de errar. Ex: usar a foto que é objeto da ação, chamar liminar de condenação}
 
 ## 3. Movimento nos tribunais (dados CNJ)
 
@@ -205,6 +220,27 @@ Para cada caso:
 
    O script gera o `.html` irmão, autossuficiente e formatado. O markdown é o arquivo de trabalho, o HTML é o que o Felipe lê. Conferir a saída do script: ela imprime a contagem de casos, pautas e seções encontradas. Se a contagem de casos ou pautas vier zerada e você escreveu casos ou pautas, o formato do markdown saiu do padrão e precisa ser corrigido antes de encerrar.
 3. Anexar os casos novos em `radar-juridico/historico.md`, uma linha por caso, no formato `- {AAAA-MM-DD} | {título do caso} | {fonte}`. Esse arquivo é o que impede repetição nas próximas rodadas.
-4. Devolver ao orquestrador: caminho do HTML, caminho do markdown, quantidade de casos novos, e as pautas sugeridas em lista.
+4. Devolver ao orquestrador: caminho do HTML, caminho do markdown, quantidade de casos novos, quais casos foram marcados como "Vale aprofundar: sim", e as pautas sugeridas em lista.
+
+---
+
+## Passo de Aprofundamento (sob demanda, nunca automático)
+
+Este passo **não roda na varredura** e **não roda na tarefa semanal**. Ele acontece quando o Felipe escolhe, no chat, quais casos quer estudados a fundo. Um caso não aprovado fica como está.
+
+Ao aprofundar um caso:
+
+1. Abrir o PDF já arquivado em `radar-juridico/documentos/{data}/`. Se ele não foi baixado na varredura, baixar agora.
+2. **Ler o documento inteiro**, não o resumo da notícia.
+3. Extrair:
+   - **Que tipo de decisão é.** Sentença de juizado, sentença de vara cível, acórdão, liminar em cognição sumária. Isso define o peso e é o que a imprensa mais omite.
+   - **Quem decidiu.** Juiz togado, juíza leiga homologada, colegiado unânime ou por maioria.
+   - **Se cabe recurso** e se já houve.
+   - **Trechos literais** que sustentam a tese, entre aspas.
+   - **Onde a fundamentação é frágil**, confrontando com o texto de lei e apontando o artigo específico contrariado. Se a decisão for sólida, dizer que é sólida em vez de forçar crítica.
+   - **O risco de produzir conteúdo sobre ela**, incluindo o que não se pode afirmar e o que não se pode reproduzir.
+4. Preencher os quatro campos de aprofundamento no caso correspondente, dentro do mesmo arquivo `.md` da rodada.
+5. Se dois casos aprofundados disserem coisas incompatíveis sobre o mesmo ponto, **criar a seção 6 (Confronto entre as decisões)** com tabela comparativa e a leitura de qual delas se alinha ao texto legal. Esse cruzamento costuma ser o conteúdo mais valioso da rodada.
+6. Regerar o HTML com o script e entregar o arquivo de novo.
 
 > **Por que o formato do markdown importa.** O conversor faz o parsing pela estrutura fixa deste documento: `## N. Título` para seção, `### Título` para caso, `- **Campo:** valor` para os campos do caso, `**N. Título (prioridade X)**` para pauta, tabela markdown padrão na seção 3. Fugir desse formato não quebra o script, mas faz a seção sair sem formatação no HTML.
