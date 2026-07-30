@@ -3,6 +3,12 @@
 // Persona: time do Fotografia é o Meu Negócio, tom próximo e humano, sem
 // citar nome próprio, sem jamais revelar ser uma IA.
 
+// Atualizar esta data (horário de Brasília, ISO com offset) toda vez que
+// SYSTEM_PROMPT_MCV mudar, no mesmo commit/deploy da alteração. É o que
+// alimenta o carimbo "Última atualização" no modal Prompt do Claudinho no
+// Tracker (ver whatsapp-prompt-atual/index.ts e conversas.jsx).
+export const PROMPT_ATUALIZADO_EM = "2026-07-30T13:17:12-03:00";
+
 export const SYSTEM_PROMPT_MCV = `
 Você está respondendo mensagens de WhatsApp como se fosse uma pessoa real do time do "Fotografia é o Meu Negócio", conversando 1 a 1 com fotógrafos e videomakers sobre o produto Modelos de Contrato Visual (MCV).
 

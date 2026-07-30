@@ -8,6 +8,24 @@
 
 Quando o usuário disser "subi o vídeo/imagem do ORG N, suba pro Tracker" ou equivalente: rodar `python3 scripts/adicionar-criativo-organico.py --numero N --auto` (não pegar arquivo manual do Mac). O script já busca a pasta certa, otimiza (Story → 1920px, resto → 1350px JPEG 82%; vídeo gera preview leve 540p + alta ≤78MB) e atualiza `conteudo_organico` sozinho.
 
+## Claudinho — treino sem precisar de print (Felipe/Amanda pede "treinar Claudinho" sem anexar nada)
+
+> Combinado em 2026-07-30.
+
+Quando for pedido pra treinar o Claudinho sem vir print nenhum (ex: "treina o Claudinho", "vê se tem gente esperando resposta"), não travar esperando imagem. Em vez disso: consultar direto `whatsapp_mensagens` no Supabase pra achar conversas com mensagem do lead sem resposta nossa depois dela (`ia_pausada=false` ou conforme o campo de handoff/pausa vigente), montar a resposta seguindo a mesma rotina de sempre (contexto em `quiz_leads`, regras do `whatsapp-ia-prompt.ts`), mostrar a sugestão pro usuário aprovar, e seguir. Print continua servindo quando o usuário preferir colar um (não é obrigatório, é só mais uma forma de trazer o caso).
+
+## Claudinho — carimbo de última atualização do prompt (obrigatório em toda edição)
+
+> Combinado em 2026-07-30.
+
+Toda vez que `supabase/functions/_shared/whatsapp-ia-prompt.ts` for editado (regra nova, correção, qualquer mudança no `SYSTEM_PROMPT_MCV`), atualizar também a constante `PROMPT_ATUALIZADO_EM` no topo do mesmo arquivo, com a data/hora atual de Brasília em ISO com offset (ex: `2026-07-30T13:17:12-03:00`). Essa constante alimenta o carimbo "Última atualização" mostrado no modal Prompt do Claudinho (botão na tela Conversas), que renderiza a data formatada antes do botão de fechar (X). Sem atualizar essa constante, o carimbo mostrado fica desatualizado mesmo que o prompt tenha mudado de verdade — nunca esquecer esse passo, ele faz parte do mesmo commit/deploy da alteração de regra.
+
+## Claudinho — aprender com toda conversa (não só a etapa formal de treino), sempre com aprovação antes
+
+> Combinado em 2026-07-30. Reforça e generaliza a seção "log automático de erros" abaixo: vale pra QUALQUER coisa que o Felipe/Amanda ensinar sobre como o Claudinho deve se comportar, não só quando o pedido é explicitamente "treinar Claudinho". **Correção de 2026-07-30 no mesmo dia:** nunca aplicar direto sem avisar — risco real de eu interpretar errado o que foi dito e gravar uma regra que não era bem aquilo.
+
+Sempre que, em qualquer conversa (não só na etapa formal de treino), o Felipe ou a Amanda corrigir, orientar ou ensinar algo sobre como o Claudinho deve responder, se comportar ou o que deve/não deve dizer, isso deve virar regra permanente no `whatsapp-ia-prompt.ts` — nunca fica só como instrução pontual daquela conversa. **Mas antes de mexer no arquivo**, mostrar num resumo curto a regra que pretendo escrever (a frase ou o trecho que vai entrar no prompt) e esperar um "ok"/"pode" explícito. Só depois disso: aplicar a regra no prompt (com exemplo real quando fizer sentido), atualizar `PROMPT_ATUALIZADO_EM`, redeployar `whatsapp-webhook` e `whatsapp-retomada`, e logar em `claudinho_erros` quando for correção de um erro real cometido numa resposta. Isso já era o padrão praticado nas rodadas de treino formais (mostrar a regra, gravar só depois de combinado); a diferença agora é que vale pra qualquer conversa, não só quando o pedido é "treinar Claudinho".
+
 ## Claudinho — log automático de erros (etapa de treinamento)
 
 > Combinado com Amanda em 2026-07-21. Vale enquanto o modo treinamento do Claudinho estiver ativo (`whatsapp_modo_treinamento` em `app_config`). Pode ser removido/arquivado quando ele rodar 100% sozinho.

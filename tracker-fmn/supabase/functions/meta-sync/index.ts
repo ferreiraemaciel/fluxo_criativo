@@ -131,6 +131,30 @@ async function fetchAdsAtivosNoMeta(): Promise<{ id: string; name: string }[]> {
   return ativos;
 }
 
+// Roda `worker` para cada item de `items` com no máximo `concorrencia` em
+// paralelo por vez. Antes o sync processava anúncio por anúncio, 100%
+// sequencial (6 chamadas à Graph API cada, esperando uma terminar pra
+// começar a próxima) — com a conta tendo mais de ~8-10 anúncios ativos ao
+// mesmo tempo, a função estourava o tempo de execução da Edge Function no
+// meio da lista, e os últimos anúncios simplesmente não eram sincronizados
+// (sem erro, sem aviso, silenciosamente ausentes do insights_cache). Rodar
+// em lotes paralelos derruba o tempo total de forma proporcional ao tamanho
+// do lote, então o total de anúncios ativos deixa de ser um teto de risco.
+async function processarEmParalelo<T>(
+  items: T[],
+  worker: (item: T) => Promise<void>,
+  concorrencia = 8,
+) {
+  let cursor = 0;
+  async function consumidor() {
+    while (cursor < items.length) {
+      const item = items[cursor++];
+      await worker(item);
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(concorrencia, items.length) }, consumidor));
+}
+
 Deno.serve(async (req) => {
   if (req.method !== "POST" && req.method !== "GET") {
     return new Response("Método não permitido", { status: 405 });
@@ -158,7 +182,7 @@ Deno.serve(async (req) => {
   if (scope === "curtas") {
     const periodos = getPeriodosCurtos();
 
-    for (const ad of adsAtivos) {
+    await processarEmParalelo(adsAtivos, async (ad) => {
       const numero = numeroPorMetaId[ad.id] ?? null;
 
       for (const [nomePeriodo, params] of Object.entries(periodos)) {
@@ -190,18 +214,18 @@ Deno.serve(async (req) => {
           erros.push({ ads_numero: numero, periodo: nomePeriodo, erro: String(err) });
         }
       }
-    }
+    });
 
     await sincronizarGastoDiarioHoje();
     await verificarRegraG5();
   } else {
     // scope=maximo: só o período de vida inteira, 1x/dia. Atualiza também
     // gasto_total/cpa_historico na tabela ads (usado no Ranking de ADS).
-    for (const ad of adsAtivos) {
+    await processarEmParalelo(adsAtivos, async (ad) => {
       const numero = numeroPorMetaId[ad.id] ?? null;
       try {
         const raw = await fetchInsights(ad.id, { date_preset: "maximum" });
-        if (!raw) continue;
+        if (!raw) return;
 
         const metricas = calcularMetricas(raw);
 
@@ -242,7 +266,7 @@ Deno.serve(async (req) => {
       } catch (err) {
         erros.push({ ads_numero: numero, periodo: "maximum", erro: String(err) });
       }
-    }
+    });
   }
 
   return new Response(
