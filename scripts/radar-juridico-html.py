@@ -90,14 +90,17 @@ def numero_secao(titulo: str) -> str:
 
 
 def parse_secao(titulo: str, linhas: list) -> dict:
-    n = numero_secao(titulo)
-    if n == '2':
+    """Identifica a seção pelo título, não pelo número.
+
+    A numeração muda quando uma seção entra ou sai do relatório, então
+    depender dela quebraria o parser a cada mudança de estrutura.
+    """
+    t = titulo.lower()
+    if 'decis' in t and 'caso' in t:
         return {'tipo': 'casos', 'itens': parse_casos(linhas)}
-    if n == '3':
-        return {'tipo': 'tribunais', **parse_tribunais(linhas)}
-    if n == '4':
+    if 'pauta' in t:
         return {'tipo': 'pautas', 'itens': parse_pautas(linhas)}
-    if n == '5':
+    if 'nada relevante' in t:
         return {'tipo': 'vazios', 'itens': parse_lista(linhas)}
     return {'tipo': 'blocos', 'blocos': parse_blocos(linhas)}
 
@@ -313,6 +316,7 @@ CAMPO_ICONE = {
     'Quem ganhou': 'placar',
     'Base legal': 'lei',
     'Tribunal e data': 'foro',
+    'Potencial de conteúdo': 'potencial',
     'Íntegra lida': 'integra',
     'Íntegra arquivada': 'integra',
     'Vale aprofundar': 'aprofundar',
@@ -606,6 +610,11 @@ h1{font-size:clamp(29px,5vw,42px);line-height:1.14;margin:0 0 22px;letter-spacin
   border-top:1px solid var(--acento-borda);border-bottom:0}
 .campo--importa .rotulo{color:var(--acento)}
 .campo--revela .valor{color:var(--tinta)}
+.campo--potencial{background:var(--acento-suave);margin:0 -24px;padding:16px 24px;
+  border-top:1px solid var(--acento-borda);border-bottom:1px solid var(--acento-borda)}
+.campo--potencial .rotulo{color:var(--acento)}
+.campo--potencial .valor{color:var(--tinta)}
+.campo--potencial .valor strong:first-of-type{font-size:19px;letter-spacing:-.02em}
 .campo--aprofundar{background:var(--acento-suave);margin:0 -24px;padding:14px 24px;
   border-bottom:0}
 .campo--aprofundar .rotulo{color:var(--acento)}

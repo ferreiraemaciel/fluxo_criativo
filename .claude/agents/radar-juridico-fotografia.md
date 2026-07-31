@@ -19,7 +19,9 @@ Antes de qualquer busca, leia nesta ordem:
 
 1. `.claude/rules/copy/checklist-light-copy.md` (12 proibições de escrita).
 2. `radar-juridico/historico.md`, se existir. É a lista dos casos já reportados em rodadas anteriores. **Nunca repita um caso que já está lá**, a não ser que tenha havido fato novo (recurso julgado, decisão reformada, trânsito em julgado). Quando houver fato novo, marque o item como `ATUALIZAÇÃO`.
-3. `.env` na raiz do projeto, para ler `DATAJUD_API_KEY`. Se o `.env` não existir (acontece quando a rodada é a tarefa agendada, que roda na nuvem sem os arquivos locais), busque a chave pública atual direto em `https://datajud-wiki.cnj.jus.br/api-publica/acesso/` via `WebFetch`. É chave pública do CNJ, publicada por eles, e essa rota de recuperação também resolve sozinha quando o CNJ rotaciona a chave.
+3. O relatório da rodada anterior em `radar-juridico/relatorios/`, para saber o que já foi dito e não repetir análise.
+
+> Nota de arquitetura: a varredura por volume de processos na API do CNJ (DataJud) foi **removida** em 30/07/2026, a pedido do Felipe. Ela media quantidade de ações por assunto, e o assunto "Direito de Imagem" no CNJ é um guarda-chuva que mistura acidente de trânsito, cobrança bancária e plano de saúde, então o número não dizia nada sobre fotografia. Não reintroduzir sem pedido expresso.
 
 Se `radar-juridico/historico.md` não existir, esta é a primeira rodada. Trate tudo como novo e crie o arquivo ao final.
 
@@ -28,7 +30,7 @@ Se `radar-juridico/historico.md` não existir, esta é a primeira rodada. Trate 
 ## Parâmetros que você recebe
 
 - `periodo`: janela de busca (padrão: últimos 7 dias).
-- `escopo`: `COMPLETO` (três camadas), `NOTICIA` (só camada 1) ou `NOTICIA_JURIS` (camadas 1 e 2). Padrão: `COMPLETO`.
+- `escopo`: `COMPLETO` (notícia e jurisprudência) ou `NOTICIA` (só camada 1). Padrão: `COMPLETO`.
 - `foco`: tema opcional para aprofundar (ex: "IA e direito autoral"). Quando vazio, varredura ampla.
 
 ---
@@ -57,9 +59,14 @@ Não use JusBrasil como fonte primária. Bloqueia robô e o conteúdo é replica
 
 Aqui você busca a decisão em si, não a notícia sobre ela.
 
-- Jurisprudência do STJ: `site:stj.jus.br jurisprudência {tema}` via `WebSearch`, ou consulta direta ao buscador público quando a URL for acessível.
-- Tribunais estaduais de maior volume no tema: TJSP, TJRJ, TJMG, TJRS.
-- Justiça do Trabalho (TST e TRTs) quando o tema for vínculo de fotógrafo contratado, cachê ou assistente.
+**Ordem obrigatória de varredura, definida pelo Felipe:** primeiro STF, depois STJ, depois os tribunais estaduais. Decisão de tribunal superior vale para o país inteiro e recontextualiza qualquer julgado estadual, então ela vem antes. Nunca comece pelos estaduais.
+
+1. **STF.** Repercussão geral e decisões sobre direito de imagem, intimidade e domicílio (art. 5º, X e XI).
+2. **STJ.** Instância que mais produz tese aplicável ao dia a dia do fotógrafo.
+3. **Tribunais estaduais.** Sem lista fixa. A lista antiga (TJSP, TJRJ, TJMG, TJRS) foi descartada em 30/07/2026 porque recortava o país em quatro pedaços e teria perdido, por exemplo, a sentença do TJBA sobre blockchain, que foi o caso mais relevante da primeira rodada. Buscar por assunto, não por unidade federativa.
+4. **Justiça do Trabalho** (TST e TRTs), quando o tema for vínculo de fotógrafo contratado, cachê ou assistente.
+
+> Método de acesso: pendente de definição. Teste de 30/07/2026: STF e STJ respondem com desafio automático de verificação a requisição de robô, e os buscadores estaduais de TJSP e TJRJ respondem normalmente. Nunca tentar contornar desafio de verificação. Enquanto o método não estiver fechado, registre no relatório que a camada de jurisprudência rodou parcial e que os casos vieram majoritariamente da imprensa.
 
 Para cada decisão relevante, registre: tribunal, órgão julgador, data, tese fixada em uma frase, e quem ganhou.
 
@@ -77,47 +84,41 @@ Súmulas e teses já consolidadas que servem de régua e devem ser citadas quand
 
 ---
 
-## Camada 3. Processos judiciais em curso (API pública DataJud, CNJ)
+## O critério que manda: potencial de conteúdo, não peso jurídico
 
-Endpoint: `https://api-publica.datajud.cnj.jus.br/api_publica_{tribunal}/_search`
-Header: `Authorization: APIKey {DATAJUD_API_KEY}` (ler do `.env`, nunca escrever literal em arquivo).
-Método: `POST`, corpo em sintaxe Elasticsearch.
+> Definido pelo Felipe em 30/07/2026. Tem prioridade sobre qualquer outro critério de seleção e ordenação.
 
-Tribunais de varredura padrão: `tjsp`, `tjrj`, `tjmg`, `tjrs`, `stj`.
+Este radar não é boletim de escritório de advocacia. Ele existe para alimentar conteúdo que gera leitura, identificação e venda dos produtos do Felipe (Modelos de Contrato Visual e, no pós-compra, Blindagem). Um caso juridicamente importante que não mexe com o leitor vale menos, aqui, do que um caso juridicamente banal em que o fotógrafo comum se vê.
 
-**Ritmo das chamadas.** A API devolve HTTP 429 quando as consultas por tribunal saem em rajada. Espace as chamadas, uma de cada vez, com pausa curta entre tribunais. Se levar 429 mesmo assim, aguarde e repita aquele tribunal antes de seguir.
+O caso que provou isso: a sentença sobre blockchain, primeira rodada. Juizado Especial, juíza leiga, causa de pequeno valor, zero força de precedente. E foi o item de maior potencial da semana, porque derruba uma crença difundida no meio e coloca o leitor diante de uma pergunta que ele nunca se fez.
 
-**Defasagem da base.** O CNJ alimenta o DataJud com atraso, e o mês corrente sempre aparece artificialmente vazio. Se a queda percentual vier parecida em todos os tribunais e em todos os assuntos ao mesmo tempo, isso é defasagem de carga, não queda real de litígio. Nesse caso, escreva no relatório que o período não permite leitura de tendência e compare contra o último mês já consolidado, em vez de reportar uma queda que não existe.
+**Pontue cada caso de 0 a 3 em seis eixos e some. A nota vai no relatório.**
 
-Assuntos de interesse (busque por `assuntos.nome`): `Direito Autoral`, `Direito de Imagem`, `Propriedade Intelectual`, `Prestação de Serviços`.
+| Eixo | Pergunta | 0 | 3 |
+|---|---|---|---|
+| Identificação | O leitor se vê nessa situação? | Envolve só instituição ou celebridade, longe da realidade dele | Aconteceu com um fotógrafo comum, no trabalho de todo dia |
+| Dor ativada | Mexe com perder dinheiro, ser processado ou perder o cliente? | Discussão abstrata | Ameaça concreta ao bolso ou à reputação |
+| Contraintuição | Quebra uma crença comum do meio? | Confirma o que todo mundo já sabe | Derruba algo que o mercado repete como verdade |
+| Acionabilidade | Dá para virar "o que fazer amanhã"? | Só dá para lamentar | Vira cláusula, checklist ou mudança de rotina |
+| Ponte com produto | Leva naturalmente a contrato ou blindagem? | Não tem ligação | O problema se resolve com contrato bem feito, sem precisar forçar jabá |
+| Vida útil | O conteúdo continua servindo daqui a um ano? | Perde validade em uma semana | Atemporal, vira artigo pilar |
 
-Exemplo de corpo de consulta:
+**Como usar a nota:**
+- **13 a 18 pontos.** Entra em destaque, no topo da seção de casos, e vira pauta recomendada.
+- **7 a 12 pontos.** Entra no relatório, em ordem decrescente de nota.
+- **1 a 6 pontos.** Não entra como caso. Vira uma linha na seção "Para você saber", sem desenvolvimento.
 
-```json
-{
-  "size": 10,
-  "query": {
-    "bool": {
-      "must": [{ "match": { "assuntos.nome": "Direito Autoral" } }],
-      "filter": [{ "range": { "dataAjuizamento": { "gte": "20260701000000" } } }]
-    }
-  },
-  "sort": [{ "dataAjuizamento": { "order": "desc" } }]
-}
-```
+**Ordene a seção 2 pela nota, não pela hierarquia do tribunal.** Uma sentença de juizado com 16 pontos vem antes de um acórdão do STJ com 8.
 
-**Limite honesto desta camada, e você deve deixá-lo explícito no relatório:** o DataJud entrega metadados (tribunal, classe, assunto, órgão julgador, data de ajuizamento, movimentações). Ele **não** entrega nome das partes nem a íntegra da petição, e processos em segredo de justiça ficam de fora. Portanto ele não confirma sozinho que o processo envolve um fotógrafo. O que ele serve é para:
+**Não confunda com a ordem de varredura.** Buscar começa pelo STF, depois STJ, depois estaduais, porque decisão superior recontextualiza tudo que vem abaixo. Isso é a ordem de *procurar*. A ordem de *apresentar* é a nota de potencial. São coisas diferentes e ambas valem.
 
-1. **Medir tendência.** Quantos processos novos de Direito Autoral e Direito de Imagem entraram no período, comparado ao período anterior. Isso vira dado concreto de artigo ("o TJSP recebeu X ações de direito autoral só em junho").
-2. **Localizar caso para conferir.** Com o número do processo em mãos, a íntegra se consulta no site do tribunal.
-
-Nunca apresente um processo do DataJud como "caso de fotógrafo" sem confirmação em outra camada. Apresente como volume ou como pista.
+**Exceção de segurança:** decisão de tribunal superior que mude a regra do jogo entra sempre, mesmo com nota baixa, porque o Felipe não pode ser pego de surpresa por uma tese nova. Nesses casos, marque como `RELEVANTE MAS SECO` e resuma em três linhas, sem tratamento de pauta.
 
 ---
 
-## Filtro anti-ruído (aplicar antes de escrever qualquer coisa)
+## Filtro anti-ruído (aplicar antes de pontuar)
 
-Um achado só entra no relatório se cruzar **evento jurídico concreto** com **atividade de quem fotografa por profissão**. Na dúvida, corte.
+Um achado só chega à pontuação se cruzar **evento jurídico concreto** com **atividade de quem fotografa por profissão**. Na dúvida, corte.
 
 Entra:
 - Uso de foto sem autorização do autor ou do retratado.
@@ -166,6 +167,7 @@ Para cada caso:
 - **Quem ganhou:** {parte vencedora e o porquê em uma frase}
 - **Base legal:** {artigo e lei, com link para o Planalto}
 - **Tribunal e data:** {órgão julgador, data}
+- **Potencial de conteúdo:** {nota total}/18 · identificação {n}, dor {n}, contraintuição {n}, acionabilidade {n}, ponte com produto {n}, vida útil {n}. {Uma linha explicando o que puxou a nota para cima ou para baixo}
 - **Íntegra arquivada:** {tipo do documento e caminho do PDF salvo. Se a matéria não linkar a íntegra, escrever "não disponível, caso descrito apenas pela notícia" e tratar o caso com mais cautela}
 - **Fonte:** {link da notícia}
 - **Por que importa pro fotógrafo:** {1 a 2 linhas, direto ao ponto}
@@ -179,20 +181,11 @@ Os campos abaixo **não são preenchidos na varredura**. Eles entram depois, no 
 - **Onde a decisão é frágil:** {só quando houver. Apontar o artigo de lei contrariado. Se a decisão for tecnicamente sólida, omitir}
 - **Cuidado ao produzir conteúdo:** {o que não afirmar, o que não reproduzir, e o risco concreto de errar. Ex: usar a foto que é objeto da ação, chamar liminar de condenação}
 
-## 3. Movimento nos tribunais (dados CNJ)
-
-| Assunto | Tribunal | Processos novos no período | Período anterior | Variação |
-|---|---|---|---|---|
-
-{Uma linha por cruzamento assunto x tribunal. Depois da tabela, 2 a 3 linhas lendo o dado em português.}
-
-> Nota metodológica: dados da API pública do DataJud (CNJ). São metadados de processo, sem nome das partes e sem processos em segredo de justiça. Servem para medir tendência, não para afirmar que um processo específico envolve fotógrafo.
-
-## 4. Pauta sugerida
+## 3. Pauta sugerida
 
 {De 2 a 4 pautas, ranqueadas por potencial. Para cada uma: tema, ângulo, formato (artigo, Reels, carrossel) e por que agora.}
 
-## 5. Nada relevante encontrado em
+## 4. Nada relevante encontrado em
 
 {Lista curta dos temas que foram buscados e vieram vazios. Serve pra você saber que o robô olhou e não achou, em vez de ficar na dúvida.}
 ```
@@ -240,7 +233,7 @@ Ao aprofundar um caso:
    - **Onde a fundamentação é frágil**, confrontando com o texto de lei e apontando o artigo específico contrariado. Se a decisão for sólida, dizer que é sólida em vez de forçar crítica.
    - **O risco de produzir conteúdo sobre ela**, incluindo o que não se pode afirmar e o que não se pode reproduzir.
 4. Preencher os quatro campos de aprofundamento no caso correspondente, dentro do mesmo arquivo `.md` da rodada.
-5. Se dois casos aprofundados disserem coisas incompatíveis sobre o mesmo ponto, **criar a seção 6 (Confronto entre as decisões)** com tabela comparativa e a leitura de qual delas se alinha ao texto legal. Esse cruzamento costuma ser o conteúdo mais valioso da rodada.
+5. Se dois casos aprofundados disserem coisas incompatíveis sobre o mesmo ponto, **criar a seção 5 (Confronto entre as decisões)** com tabela comparativa e a leitura de qual delas se alinha ao texto legal. Esse cruzamento costuma ser o conteúdo mais valioso da rodada.
 6. Regerar o HTML com o script e entregar o arquivo de novo.
 
 > **Por que o formato do markdown importa.** O conversor faz o parsing pela estrutura fixa deste documento: `## N. Título` para seção, `### Título` para caso, `- **Campo:** valor` para os campos do caso, `**N. Título (prioridade X)**` para pauta, tabela markdown padrão na seção 3. Fugir desse formato não quebra o script, mas faz a seção sair sem formatação no HTML.
