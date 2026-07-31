@@ -261,6 +261,10 @@ def parse_pautas(linhas: list) -> list:
 # ──────────────────────────────────────────────────────────────
 
 CAMPO_ICONE = {
+    'O que muda na prática': 'pratica',
+    'A história em uma linha': 'historia',
+    'Como terminou': 'placar',
+    'Lastro': 'lastro',
     'O que aconteceu': 'fato',
     'Quem ganhou': 'placar',
     'Base legal': 'lei',
@@ -524,6 +528,13 @@ h1{font-size:clamp(29px,5vw,42px);line-height:1.14;margin:0 0 22px;letter-spacin
   border-top:1px solid var(--acento-borda);border-bottom:0}
 .campo--importa .rotulo{color:var(--acento)}
 .campo--revela .valor{color:var(--tinta)}
+.campo--pratica{background:var(--acento-suave);margin:0 -24px 6px;padding:20px 24px;
+  border-bottom:1px solid var(--acento-borda)}
+.campo--pratica .rotulo{color:var(--acento);font-size:11.5px}
+.campo--pratica .valor{color:var(--tinta);font-size:17.5px;line-height:1.55}
+.campo--historia .valor{color:var(--tinta);font-size:17px}
+.campo--lastro{opacity:.72}
+.campo--lastro .valor{font-size:13.5px}
 .campo--potencial{background:var(--acento-suave);margin:0 -24px;padding:16px 24px;
   border-top:1px solid var(--acento-borda);border-bottom:1px solid var(--acento-borda)}
 .campo--potencial .rotulo{color:var(--acento)}
