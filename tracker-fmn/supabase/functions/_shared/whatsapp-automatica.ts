@@ -28,6 +28,14 @@ export const PADROES_MSG_AUTOMATICA = [
   /capturar momentos especiais/i,
   /agradece(mos)? (a )?sua mensagem/i,
   /iremos te responder/i,
+  // Auto-resposta de catálogo: o WhatsApp Business do próprio lead devolve
+  // uma mensagem descrevendo o serviço/preço dele mesmo (sessão, ensaio,
+  // estúdio, endereço), sem nenhuma relação com o que perguntamos. Achado
+  // no treino de 2026-07-30 (Jota Melo), não batia com nenhum padrão acima
+  // por não usar as palavras clássicas de "ausência".
+  /(sess[ãa]o|ensaio).{0,60}r\$\s?\d/i,
+  /(nosso|nossa) (ensaio|est[úu]dio|sess[ãa]o)/i,
+  /estamos localizad[oa]s?/i,
 ];
 
 export function pareceMensagemAutomatica(texto: string): boolean {

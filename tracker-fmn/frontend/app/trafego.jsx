@@ -14,20 +14,33 @@ function mkMetrics(row) {
   if (!row) return null;
   const gasto      = row.gasto       != null ? +Number(row.gasto).toFixed(2)  : null;
   const linkClicks = row.link_clicks != null ? Number(row.link_clicks)        : null;
+  const vendas     = row.compras            != null ? Number(row.compras)            : null;
+  const lpViews    = row.landing_page_views != null ? Number(row.landing_page_views) : null;
+  const initCheck  = row.initiate_checkout  != null ? Number(row.initiate_checkout)  : null;
   return {
     gasto,
-    vendas:      row.compras            != null ? Number(row.compras)                  : null,
+    vendas,
     cpa:         row.cpa                != null ? +Number(row.cpa).toFixed(2)          : null,
+    // CPA +1: simula o CPA com mais uma venda. Sempre calculável quando há
+    // gasto (mesmo com 0 vendas, aí o divisor é 1) — é justamente o caso em
+    // que mais interessa saber quanto a primeira venda "custaria".
+    cpa_mais1:   (gasto != null && gasto > 0 && vendas != null)
+                   ? +(gasto / (vendas + 1)).toFixed(2) : null,
     roas:        row.roas               != null ? +Number(row.roas).toFixed(2)         : null,
     cpm:         row.cpm                != null ? +Number(row.cpm).toFixed(2)          : null,
     ctr:         row.ctr_unico          != null ? +Number(row.ctr_unico).toFixed(4)    : null,
+    impressoes:  row.impressoes         != null ? Number(row.impressoes)               : null,
     freq:        row.frequencia         != null ? +Number(row.frequencia).toFixed(2)   : null,
     connect:     row.connect_rate       != null ? +Number(row.connect_rate).toFixed(4) : null,
     cpc:         (gasto != null && linkClicks && linkClicks > 0)
                    ? +(gasto / linkClicks).toFixed(2) : null,
     link_clicks: linkClicks,
-    lp_views:    row.landing_page_views != null ? Number(row.landing_page_views)       : null,
-    init_check:  row.initiate_checkout  != null ? Number(row.initiate_checkout)        : null,
+    lp_views:    lpViews,
+    custo_lp:    (gasto != null && lpViews   && lpViews   > 0) ? +(gasto / lpViews).toFixed(2)   : null,
+    init_check:  initCheck,
+    custo_init:  (gasto != null && initCheck && initCheck > 0) ? +(gasto / initCheck).toFixed(2) : null,
+    conv_lp:     (vendas != null && lpViews   && lpViews   > 0) ? +(vendas / lpViews).toFixed(4)   : null,
+    conv_init:   (vendas != null && initCheck && initCheck > 0) ? +(vendas / initCheck).toFixed(4) : null,
     hook_rate:   row.hook_rate          != null ? +Number(row.hook_rate).toFixed(4)    : null,
   };
 }
@@ -46,20 +59,29 @@ function aggregateMetrics(arr) {
   const totalLpViews     = valid.reduce((s,m) => s + (m.lp_views   ||0), 0);
   const totalInitCheck   = valid.reduce((s,m) => s + (m.init_check ||0), 0);
   const totalHookW       = valid.reduce((s,m) => s + (m.hook_rate  != null ? m.hook_rate * m.gasto : 0), 0);
+  const totalImpressoes  = valid.reduce((s,m) => s + (m.impressoes ||0), 0);
   return {
     gasto:      +totalGasto.toFixed(2),
     vendas:     totalVendas,
     cpa:        totalVendas > 0      ? +(totalGasto / totalVendas).toFixed(2)      : null,
+    // Derivadas sempre recalculadas a partir dos TOTAIS do grupo, nunca média
+    // das linhas filhas (média de razão não é a razão do total).
+    cpa_mais1:  totalGasto  > 0      ? +(totalGasto / (totalVendas + 1)).toFixed(2) : null,
     roas:       totalGasto  > 0      ? +(totalRev   / totalGasto).toFixed(2)       : null,
     cpm:        totalGasto  > 0      ? +(totalCpmW  / totalGasto).toFixed(2)       : null,
     ctr:        totalGasto  > 0      ? +(totalCtrW  / totalGasto).toFixed(4)       : null,
+    impressoes: totalImpressoes,
     freq:       totalGasto  > 0      ? +(totalFreqW / totalGasto).toFixed(2)       : null,
     connect:    totalGasto  > 0      ? +(totalConnectW / totalGasto).toFixed(4)    : null,
     cpc:        totalLinkClicks > 0  ? +(totalGasto / totalLinkClicks).toFixed(2)  : null,
     hook_rate:  totalGasto  > 0      ? +(totalHookW / totalGasto).toFixed(4)       : null,
     link_clicks: totalLinkClicks,
     lp_views:    totalLpViews,
+    custo_lp:    totalLpViews   > 0  ? +(totalGasto  / totalLpViews).toFixed(2)    : null,
     init_check:  totalInitCheck,
+    custo_init:  totalInitCheck > 0  ? +(totalGasto  / totalInitCheck).toFixed(2)  : null,
+    conv_lp:     totalLpViews   > 0  ? +(totalVendas / totalLpViews).toFixed(4)    : null,
+    conv_init:   totalInitCheck > 0  ? +(totalVendas / totalInitCheck).toFixed(4)  : null,
   };
 }
 
@@ -78,7 +100,7 @@ function useTrafficData() {
 
       const [{ data: insights, error: e1 }, { data: adsList, error: e2 }] = await Promise.all([
         window.db.from('insights_cache')
-          .select('meta_ad_id,meta_ad_name,meta_campaign_id,meta_campaign_name,meta_adset_id,meta_adset_name,periodo,gasto,cpa,compras,roas,cpm,ctr_unico,frequencia,connect_rate,link_clicks,landing_page_views,initiate_checkout,hook_rate')
+          .select('meta_ad_id,meta_ad_name,meta_campaign_id,meta_campaign_name,meta_adset_id,meta_adset_name,periodo,gasto,cpa,compras,roas,cpm,ctr_unico,impressoes,frequencia,connect_rate,link_clicks,landing_page_views,initiate_checkout,hook_rate')
           .in('periodo', ['maximum','7d','5d','3d','hoje']),
         window.db.from('ads')
           .select('numero,titulo,status,meta_ad_id,media_drive_url,media_files,meta_ad_url,media_tipo,thumb_url,media_preview_url')
@@ -330,15 +352,23 @@ const COLS = [
   { k:'gasto',      head:'Gasto',      fmt: v => fR(v),                        color: () => 'var(--text-1)',  w: 78  },
   { k:'vendas',     head:'Vendas',     fmt: v => v??'—',                        color: () => 'var(--text-1)',  w: 56  },
   { k:'cpa',        head:'CPA',        fmt: v => fR(v),                        color: cpaCol,                  w: 78  },
+  // CPA +1: qual seria o CPA se entrasse mais uma venda agora (gasto / vendas+1).
+  // Serve pra ver o quanto falta pro anúncio entrar no limite aceitável.
+  { k:'cpa_mais1',  head:'CPA +1',     fmt: v => fR(v),                        color: cpaCol,                  w: 78  },
   { k:'cpc',        head:'CPC',        fmt: v => fR(v),                        color: () => 'var(--text-1)',   w: 66  },
   { k:'cpm',        head:'CPM',        fmt: v => fR(v),                        color: cpmCol,                  w: 68  },
   { k:'ctr',        head:'CTR',        fmt: v => pct(v),                       color: ctrCol,                  w: 58  },
+  { k:'impressoes', head:'Impressões', fmt: v => num(v),                       color: () => 'var(--text-2)',   w: 76  },
   { k:'hook_rate',  head:'Hook%',      fmt: v => pct(v),                       color: hookCol,                 w: 58  },
   { k:'lp_views',   head:'LP Views',   fmt: v => num(v),                       color: () => 'var(--text-2)',   w: 64  },
+  { k:'custo_lp',   head:'Custo/LP',   fmt: v => fR(v),                        color: () => 'var(--text-1)',   w: 74  },
   { k:'init_check', head:'Init.',      fmt: v => num(v),                       color: () => 'var(--text-2)',   w: 52  },
+  { k:'custo_init', head:'Custo/Init', fmt: v => fR(v),                        color: () => 'var(--text-1)',   w: 80  },
   { k:'connect',    head:'Connect',    fmt: v => pct(v),                       color: connectCol,              w: 68  },
   { k:'freq',       head:'Freq.',      fmt: v => v!=null?v.toFixed(1):'—',     color: freqCol,                 w: 52  },
   { k:'roas',       head:'ROAS',       fmt: v => v!=null?`${v}x`:'—',          color: roasCol,                 w: 60  },
+  { k:'conv_lp',    head:'Compras/LP', fmt: v => pct(v),                       color: () => 'var(--text-2)',   w: 84  },
+  { k:'conv_init',  head:'Compras/Init', fmt: v => pct(v),                     color: () => 'var(--text-2)',   w: 92  },
 ];
 
 /* Períodos (modo "Por métrica"): chave no row × rótulo da coluna */

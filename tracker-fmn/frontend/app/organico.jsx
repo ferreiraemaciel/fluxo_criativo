@@ -389,7 +389,7 @@ function AdicionarCriativoOrganicoBtn({ numero, cardId, onDone }) {
           border:'1px solid rgba(248,113,113,.3)', fontSize:11, color:'#f87171', lineHeight:1.4 }}>{msg}</div>
       )}
       <div style={{ display:'flex', gap:8 }}>
-        <Btn variant="secondary" size="sm" icon="folder-down" style={{ flex:1, justifyContent:'center' }}
+        <Btn variant="secondary" size="sm" icon="image-plus" style={{ flex:1, justifyContent:'center' }}
           onClick={() => run(null)}>Importar direto</Btn>
         <Btn variant="ghost" size="sm" icon="link" style={{ justifyContent:'center' }}
           onClick={manual} title="Colar o link de uma pasta do Drive">Importar com link</Btn>
@@ -1039,6 +1039,7 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
   const [lightbox, setLightbox]     = useState(null); // índice aberto na visualização ampliada
   const previewUrls = slidesArr.map(s => s.image_url).filter(Boolean);
   const hasPreview  = previewUrls.length > 0;
+  const previewIsVideo = /\.(mp4|webm|mov|m4v)$/i.test(previewUrls[previewIdx] || '');
 
   return (
     <>
@@ -1175,70 +1176,92 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
           {/* ── Body: dois painéis ── */}
           <div style={{ flex:1, display:'flex', overflow:'hidden' }}>
 
-            {/* Painel esquerdo — preview de slides */}
+            {/* Painel esquerdo — prévia da mídia + importar do Drive.
+                Mesma estrutura e números do painel de mídia dos Criativos
+                (kanban.jsx): 340 de largura, caixa de 380 de altura,
+                botões de importar logo abaixo. */}
             <div style={{ width:340, flexShrink:0, borderRight:'1px solid var(--app-border)',
               background:'rgba(0,0,0,.25)', display:'flex', flexDirection:'column',
-              alignItems:'center', justifyContent:'center', padding:24, gap:16 }}>
+              alignItems:'center', justifyContent:'center', padding:24, gap:16, overflowY:'auto' }}>
 
-              {hasPreview ? (<>
-                {/* Imagem principal */}
-                <div style={{ position:'relative', width:'100%', maxWidth:280, borderRadius:10,
-                  overflow:'hidden', background:'rgba(255,255,255,.04)',
-                  border:'1px solid rgba(255,255,255,.08)' }}>
-                  {/\.(mp4|webm|mov|m4v)$/i.test(previewUrls[previewIdx] || '')
+              <div style={{ borderRadius:12, overflow:'hidden', position:'relative',
+                width:'100%', height:380,
+                background: previewIsVideo ? '#000' : 'var(--app-surface-2)',
+                border: previewIsVideo ? 'none' : '1px solid var(--app-border)' }}>
+                {hasPreview ? (<>
+                  {previewIsVideo
                     ? <video src={previewUrls[previewIdx]} muted loop playsInline
                         onClick={() => setLightbox(previewIdx)} title="Clique para ampliar"
                         onMouseEnter={e => e.currentTarget.play()} onMouseLeave={e => e.currentTarget.pause()}
-                        style={{ width:'100%', display:'block', aspectRatio:'4/5', objectFit:'cover', cursor:'zoom-in' }}/>
+                        style={{ width:'100%', height:'100%', display:'block', objectFit:'contain', cursor:'zoom-in' }}/>
                     : <img src={previewUrls[previewIdx]} alt={`Slide ${previewIdx+1}`}
                         onClick={() => setLightbox(previewIdx)} title="Clique para ampliar"
-                        style={{ width:'100%', display:'block', aspectRatio:'4/5', objectFit:'cover', cursor:'zoom-in' }}/>}
+                        style={{ width:'100%', height:'100%', display:'block', objectFit:'contain', cursor:'zoom-in' }}/>}
                   {previewUrls.length > 1 && (<>
-                    <button onClick={()=>setPreviewIdx(i=>(i-1+previewUrls.length)%previewUrls.length)}
-                      style={{ position:'absolute', left:6, top:'50%', transform:'translateY(-50%)',
-                        background:'rgba(0,0,0,.65)', border:'none', borderRadius:'50%',
-                        width:28, height:28, cursor:'pointer', color:'#fff',
-                        display:'flex', alignItems:'center', justifyContent:'center' }}>
-                      <LucideIcon icon="chevron-left" size={14}/>
-                    </button>
-                    <button onClick={()=>setPreviewIdx(i=>(i+1)%previewUrls.length)}
-                      style={{ position:'absolute', right:6, top:'50%', transform:'translateY(-50%)',
-                        background:'rgba(0,0,0,.65)', border:'none', borderRadius:'50%',
-                        width:28, height:28, cursor:'pointer', color:'#fff',
-                        display:'flex', alignItems:'center', justifyContent:'center' }}>
-                      <LucideIcon icon="chevron-right" size={14}/>
-                    </button>
-                  </>)}
-                </div>
-
-                {/* Contador + dots */}
-                <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:8 }}>
-                  <span style={{ fontSize:11, fontFamily:'Roboto,sans-serif', color:'var(--text-3)', fontWeight:700 }}>
-                    {previewIdx+1} / {previewUrls.length}
-                  </span>
-                  {previewUrls.length > 1 && (
-                    <div style={{ display:'flex', gap:5 }}>
+                    {previewIdx > 0 && (
+                      <button onClick={()=>setPreviewIdx(i=>i-1)}
+                        style={{ position:'absolute', left:6, top:'50%', transform:'translateY(-50%)',
+                          width:28, height:28, borderRadius:'50%', border:'none',
+                          background:'rgba(0,0,0,.55)', color:'#fff', cursor:'pointer',
+                          display:'flex', alignItems:'center', justifyContent:'center', zIndex:2 }}>
+                        <LucideIcon icon="chevron-left" size={16}/>
+                      </button>
+                    )}
+                    {previewIdx < previewUrls.length - 1 && (
+                      <button onClick={()=>setPreviewIdx(i=>i+1)}
+                        style={{ position:'absolute', right:6, top:'50%', transform:'translateY(-50%)',
+                          width:28, height:28, borderRadius:'50%', border:'none',
+                          background:'rgba(0,0,0,.55)', color:'#fff', cursor:'pointer',
+                          display:'flex', alignItems:'center', justifyContent:'center', zIndex:2 }}>
+                        <LucideIcon icon="chevron-right" size={16}/>
+                      </button>
+                    )}
+                    <div style={{ position:'absolute', bottom:8, left:0, right:0,
+                      display:'flex', justifyContent:'center', gap:5, zIndex:2 }}>
                       {previewUrls.map((_,i) => (
-                        <button key={i} onClick={()=>setPreviewIdx(i)}
-                          style={{ width: i===previewIdx?18:6, height:6, borderRadius:999,
-                            border:'none', cursor:'pointer', transition:'all 200ms',
-                            background: i===previewIdx?'var(--fmn-gold)':'rgba(255,255,255,.2)' }}/>
+                        <div key={i} onClick={()=>setPreviewIdx(i)}
+                          style={{ width: i===previewIdx ? 16 : 6, height:6, borderRadius:3,
+                            background: i===previewIdx ? 'var(--fmn-gold)' : 'rgba(255,255,255,.4)',
+                            cursor:'pointer', transition:'all 200ms' }}/>
                       ))}
                     </div>
-                  )}
-                </div>
-              </>) : (
-                <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:12,
-                  color:'var(--text-3)', textAlign:'center' }}>
-                  <LucideIcon icon={PLAT_ICON[form.plataforma]||'image'} size={40}
-                    style={{ opacity:0.25 }}/>
-                  <span style={{ fontSize:12, fontFamily:'Roboto,sans-serif', lineHeight:1.5 }}>
-                    {form.plataforma === 'Carrossel'
-                      ? 'Adicione imagens aos slides\npara visualizar aqui'
-                      : 'Sem prévia disponível'}
-                  </span>
+                    <div style={{ position:'absolute', top:8, right:8,
+                      background:'rgba(0,0,0,.55)', borderRadius:6, padding:'2px 7px',
+                      fontSize:10, fontFamily:'Roboto,sans-serif', color:'#fff', zIndex:2 }}>
+                      {previewIdx + 1}/{previewUrls.length}
+                    </div>
+                  </>)}
+                </>) : (
+                  <div style={{ display:'flex', flexDirection:'column', alignItems:'center',
+                    justifyContent:'center', gap:10, height:'100%' }}>
+                    <div style={{ width:52, height:52, borderRadius:12, background:'rgba(255,255,255,.05)',
+                      display:'flex', alignItems:'center', justifyContent:'center' }}>
+                      <LucideIcon icon={PLAT_ICON[form.plataforma]||'image'} size={28} color="rgba(255,255,255,.22)"/>
+                    </div>
+                    <span style={{ fontSize:11, fontFamily:'Roboto,sans-serif', fontWeight:700,
+                      letterSpacing:'0.06em', textTransform:'uppercase', color:'var(--text-3)' }}>Prévia da Mídia</span>
+                    <span style={{ fontSize:11, fontFamily:'Roboto,sans-serif', color:'var(--text-3)',
+                      textAlign:'center', maxWidth:160, lineHeight:1.5 }}>Sincronize a pasta no Drive</span>
+                  </div>
+                )}
+              </div>
+
+              {!isNew && item?.numero && (
+                <div style={{ width:'100%', display:'flex', flexDirection:'column', gap:8 }}>
+                  <AdicionarCriativoOrganicoBtn numero={item.numero} cardId={item.id} onDone={async () => {
+                    if (!window.db) return;
+                    const { data } = await window.db.from('conteudo_organico').select('slides').eq('id', item.id).single();
+                    if (data?.slides) {
+                      const novo = parseSlides(data.slides);
+                      setSlidesArr(novo);
+                      set('slides', data.slides);
+                      setPreviewIdx(0);
+                    }
+                    onImported && onImported();
+                  }}/>
                 </div>
               )}
+
               {lightbox !== null && previewUrls.length > 0 && (
                 <CarouselLightbox urls={previewUrls} initialIdx={lightbox} onClose={() => setLightbox(null)}/>
               )}
@@ -1372,20 +1395,6 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
 
                   {form.plataforma === 'Carrossel' ? (<>
                     <div>
-                      {!isNew && item?.numero && (
-                        <div style={{ marginBottom:12 }}>
-                          <AdicionarCriativoOrganicoBtn numero={item.numero} cardId={item.id} onDone={async () => {
-                            if (!window.db) return;
-                            const { data } = await window.db.from('conteudo_organico').select('slides').eq('id', item.id).single();
-                            if (data?.slides) {
-                              const novo = parseSlides(data.slides);
-                              setSlidesArr(novo);
-                              set('slides', data.slides);
-                            }
-                            onImported && onImported();
-                          }}/>
-                        </div>
-                      )}
                       <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:10 }}>
                         <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)' }}>Slides ({slidesArr.length})</span>
                         <div style={{ display:'flex', gap:6 }}>
@@ -1422,18 +1431,6 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
                         onBlur={e=>e.target.style.borderColor='var(--app-border)'}/>
                     </div>
                   </>) : (<>
-                    {!isNew && item?.numero && ['Imagem','Stories'].includes(form.plataforma) && (
-                      <AdicionarCriativoOrganicoBtn numero={item.numero} cardId={item.id} onDone={async () => {
-                        if (!window.db) return;
-                        const { data } = await window.db.from('conteudo_organico').select('slides').eq('id', item.id).single();
-                        if (data?.slides) {
-                          const novo = parseSlides(data.slides);
-                          setSlidesArr(novo);
-                          set('slides', data.slides);
-                        }
-                        onImported && onImported();
-                      }}/>
-                    )}
                     <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
                       <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
                         <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)' }}>Desenvolvimento</span>
