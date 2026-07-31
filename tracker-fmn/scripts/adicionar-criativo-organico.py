@@ -78,9 +78,31 @@ def parse_folder_id(s):
     m=re.search(r"[-\w]{25,}", s); return m.group(0) if m else s
 
 def cards_por_numero():
-    """Replica a UI: ordena por created_at asc, numero = idx+1."""
-    rows=requests.get(f"{SB}/rest/v1/conteudo_organico?select=id,tema,plataforma,created_at&order=created_at.asc&limit=2000",headers=H).json()
+    """Replica a UI: ordena por created_at asc (id como desempate, mesmo critério
+    do frontend e do worker — evita numero instável quando created_at empata)."""
+    rows=requests.get(f"{SB}/rest/v1/conteudo_organico?select=id,tema,plataforma,created_at,slides&order=created_at.asc,id.asc&limit=2000",headers=H).json()
     return {i+1: r for i,r in enumerate(rows)}
+
+def slides_existentes(card):
+    """Lê os slides já salvos no card (título, subtítulo, prompt etc) pra não
+    perder esse conteúdo quando a mídia nova for importada por cima."""
+    raw = card.get("slides")
+    if not raw: return []
+    try:
+        parsed = json.loads(raw) if isinstance(raw, str) else raw
+        return parsed if isinstance(parsed, list) else []
+    except (json.JSONDecodeError, TypeError):
+        return []
+
+def merge_slides(existentes, urls_novas):
+    """Mescla as novas image_url com os slides já existentes (título, subtítulo,
+    prompt, tag, visual), preservando tudo que não seja a imagem em si."""
+    out = []
+    for i, url in enumerate(urls_novas):
+        base = dict(existentes[i]) if i < len(existentes) else {}
+        base["image_url"] = url
+        out.append(base)
+    return out
 
 def find_org_folder(drv, numero):
     root=ORGANICO_FOLDER_ID; tok=None
@@ -154,7 +176,7 @@ def capture_thumb(src, dst):
                      capture_output=True, text=True)
     if r.returncode!=0: raise RuntimeError(f"thumb falhou: {r.stderr[-300:]}")
 
-def process_video(numero, cid, drv, vid_file, uid):
+def process_video(numero, cid, drv, vid_file, uid, card=None):
     print(f"  📹 vídeo: {vid_file['name']}")
     with tempfile.TemporaryDirectory() as wd:
         orig=str(Path(wd)/"orig.mp4"); prev=str(Path(wd)/"preview.mp4")
@@ -175,7 +197,8 @@ def process_video(numero, cid, drv, vid_file, uid):
         r2_put(high_key, high, "video/mp4")
 
         preview_url=f"{R2_PUBLIC}/{prev_key}"; thumb_url=f"{R2_PUBLIC}/{thumb_key}"; high_url=f"{R2_PUBLIC}/{high_key}"
-        slides=json.dumps([{"image_url":preview_url}])
+        existentes = slides_existentes(card) if card else []
+        slides=json.dumps(merge_slides(existentes, [preview_url]))
         media_files=json.dumps([{"tipo":"video","url_alta":high_url,"thumb_url":thumb_url}])
         sb_patch(cid, {"slides":slides, "media_files":media_files})
         print(f"  ✅ ORG {numero} — vídeo pronto (preview + alta no R2)")
@@ -193,7 +216,7 @@ def process(numero, drv, mapa, pasta=None):
 
     if vids:
         # Reels: um vídeo por card (usa o primeiro se houver mais de um na pasta).
-        process_video(numero, cid, drv, vids[0], uid)
+        process_video(numero, cid, drv, vids[0], uid, card=card)
         return
 
     if not imgs: print(f"  ⏭️ pasta vazia"); print(f"##SKIP {numero}", flush=True); return
@@ -203,7 +226,9 @@ def process(numero, drv, mapa, pasta=None):
             o=str(Path(wd)/f"o{i}"); p=str(Path(wd)/f"p{i}.jpg")
             print(f"  ⬇ imagem {i+1}/{len(imgs)}…"); download(drv,f["id"],o); optimize_image(o,p,maxpx)
             k=f"organico/media/{uid}_{i}.jpg"; r2_put(k,p); urls.append(f"{R2_PUBLIC}/{k}")
-    slides=json.dumps([{"image_url":u} for u in urls])
+    # Mescla com os slides já existentes (título, subtítulo, prompt) em vez de
+    # sobrescrever tudo só com a imagem nova — regra fixa, ver CAMPOS-COPY-CRIATIVOS.md.
+    slides=json.dumps(merge_slides(slides_existentes(card), urls))
     sb_patch(cid, {"slides":slides})
     print(f"  ✅ ORG {numero} — {len(urls)} imagem(ns) no R2")
     print(f"##DONE {numero}", flush=True)

@@ -87,6 +87,16 @@ Se o número do card não deixar claro o fluxo, checar o prefixo antes de criar 
 
 ---
 
+## Orgânico — importar mídia do Drive nunca apaga texto do slide (regra fixa, 2026-08-01)
+
+`scripts/adicionar-criativo-organico.py` sobrescrevia o campo `slides` inteiro só com `{"image_url": ...}` toda vez que importava mídia nova do Drive, apagando título, subtítulo, prompt e tag que já estavam salvos em cada slide. Aconteceu pelo menos 2 vezes (ORG 015/016 e ORG 024), sempre com o mesmo sintoma: "subi a imagem e o texto do card sumiu".
+
+**Corrigido:** o script agora lê os slides já existentes do card (`slides_existentes`) e mescla com as novas `image_url` por índice (`merge_slides`), preservando qualquer outro campo (`titulo`, `subtitulo`, `visual`, `tag`, `prompt`) que já estivesse ali. Só o campo `image_url` é substituído pelo novo valor.
+
+Se outro fluxo de importação de mídia orgânica for criado no futuro (novo script, novo endpoint), seguir o mesmo padrão: nunca sobrescrever `slides` do zero, sempre buscar o valor atual primeiro e mesclar.
+
+---
+
 ## Ideias — vira card, vira "Convertido" (regra fixa, 2026-07-23)
 
 Toda ideia da aba Ideias que virar card, seja em Anúncio (`ads`) ou em Orgânico (`conteudo_organico`), tem que ter o `status` da linha em `ideias` atualizado pra `Convertido` (o próprio enum já usado pelo botão de converter em `ideias.jsx`, `STATUS_COLS = ['Ideia', 'Convertido']`). Nunca deixar uma ideia já usada com status `Ideia`, senão ela aparece disponível de novo pra virar outro card por engano.
