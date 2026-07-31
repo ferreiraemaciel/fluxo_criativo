@@ -273,14 +273,19 @@ const TEMPLATES_DISPONIVEIS = [
 
 function PromptClaudinhoModal({ onClose, SUPA_URL, SUPA_KEY }) {
   const [prompt, setPrompt] = useState(null);
+  const [atualizadoEm, setAtualizadoEm] = useState(null);
   const [erro, setErro] = useState(null);
 
   useEffect(() => {
     fetch(`${SUPA_URL}/functions/v1/whatsapp-prompt-atual`, { headers: { Authorization: `Bearer ${SUPA_KEY}` } })
       .then(r => r.json())
-      .then(d => { if (d.error) setErro(d.error); else setPrompt(d.prompt); })
+      .then(d => { if (d.error) setErro(d.error); else { setPrompt(d.prompt); setAtualizadoEm(d.atualizado_em || null); } })
       .catch(e => setErro(String(e)));
   }, []);
+
+  const atualizadoFmt = atualizadoEm ? new Date(atualizadoEm).toLocaleString('pt-BR', {
+    day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo',
+  }) : null;
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.6)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
@@ -292,7 +297,15 @@ function PromptClaudinhoModal({ onClose, SUPA_URL, SUPA_KEY }) {
             <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-1)', fontFamily: 'Roboto,sans-serif' }}>Prompt atual do Claudinho</div>
             <div style={{ fontSize: 11, color: 'var(--text-3)', fontFamily: 'Roboto,sans-serif' }}>Só leitura. Pra mudar, é preciso alterar o código e fazer novo deploy.</div>
           </div>
-          <Btn variant="ghost" onClick={onClose}><LucideIcon icon="x" size={16} /></Btn>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
+            {atualizadoFmt && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, color: 'var(--text-3)', fontFamily: 'Roboto,sans-serif', whiteSpace: 'nowrap' }}>
+                <LucideIcon icon="clock" size={12} />
+                Última atualização: {atualizadoFmt}
+              </div>
+            )}
+            <Btn variant="ghost" onClick={onClose}><LucideIcon icon="x" size={16} /></Btn>
+          </div>
         </div>
         <div style={{ flex: 1, overflowY: 'auto', padding: 18 }}>
           {erro && <div style={{ color: 'var(--clr-neg)', fontSize: 13, fontFamily: 'Roboto,sans-serif' }}>Erro ao carregar: {erro}</div>}

@@ -1,0 +1,48 @@
+#!/bin/sh
+#
+# Trava de seguranca do Radar Juridico.
+#
+# Os relatorios do radar sobem para o repositorio privado (origin), porque a
+# tarefa semanal roda na nuvem e precisa entregar o arquivo em todas as
+# maquinas do Felipe e da Amanda.
+#
+# O remote "mentoria" e um espelho compartilhado com alunos. Nada do radar
+# pode chegar la. Este hook aborta qualquer push para esse remote que carregue
+# arquivos de radar-juridico/.
+#
+# Ativado por: git config core.hooksPath .githooks
+
+REMOTE_NAME="$1"
+REMOTE_URL="$2"
+
+e_mentoria=0
+case "$REMOTE_NAME" in
+  mentoria) e_mentoria=1 ;;
+esac
+case "$REMOTE_URL" in
+  *ReadyToGo-Education*) e_mentoria=1 ;;
+esac
+
+if [ "$e_mentoria" -eq 0 ]; then
+  exit 0
+fi
+
+# Push para o espelho da mentoria: verificar se o conteudo carrega o radar.
+if git ls-tree -r --name-only HEAD | grep -q '^radar-juridico/'; then
+  echo ""
+  echo "  PUSH BLOQUEADO"
+  echo ""
+  echo "  Destino: $REMOTE_NAME ($REMOTE_URL)"
+  echo "  Motivo: esse remote e o espelho compartilhado com os alunos da"
+  echo "          mentoria, e a arvore contem arquivos de radar-juridico/."
+  echo ""
+  echo "  Os relatorios do radar sao material de negocio do Felipe e so"
+  echo "  podem ir para o remote origin (repositorio privado)."
+  echo ""
+  echo "  Para publicar na mentoria, prepare um branch sem a pasta"
+  echo "  radar-juridico/ e faca o push a partir dele."
+  echo ""
+  exit 1
+fi
+
+exit 0

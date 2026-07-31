@@ -143,11 +143,22 @@ function useAdsCards() {
         // insights_cache (periodo='maximum') reflete só o meta_ad_id ATUAL
         // (o do relançamento mais recente) — usado só como fallback quando
         // ainda não existe total histórico calculado (anúncio muito novo).
+        // vendas_total=0 é um zero REAL (já sincronizado), não "sem dado" — nesse
+        // caso o CPA tem que ficar null também (não dá pra calcular sem venda),
+        // nunca cair no fallback de insights_cache (que é só o meta_ad_id atual,
+        // pode trazer CPA de uma instância antiga e contradizer o 0 vendas real).
+        // O fallback só faz sentido quando vendas_total ainda nem foi calculado
+        // (null de verdade, anúncio muito novo).
         vendas:   a.vendas_total ?? ins?.compras ?? null,
-        cpa:      a.cpa_historico ?? ins?.cpa     ?? null,
+        cpa:      a.vendas_total != null
+                    ? (a.vendas_total > 0 ? (a.cpa_historico ?? ins?.cpa ?? null) : null)
+                    : (ins?.cpa ?? null),
         gasto:    a.gasto_total   ?? ins?.gasto   ?? null,
         tag:      (a.status === 'arquivado' || a.status === 'campeoes')
-                    ? (a.tag || classifyAd(a.vendas_total ?? ins?.compras, a.cpa_historico ?? ins?.cpa, a.gasto_total ?? ins?.gasto))
+                    ? (a.tag || classifyAd(
+                        a.vendas_total ?? ins?.compras,
+                        a.vendas_total != null ? (a.vendas_total > 0 ? (a.cpa_historico ?? ins?.cpa ?? null) : null) : (ins?.cpa ?? null),
+                        a.gasto_total ?? ins?.gasto))
                 : null,
         raw: a,
       };
@@ -460,9 +471,6 @@ function MetaAdModal({ card, onClose }) {
   const [newAdsetName, setNewAdsetName] = useState('');
   const [newAdsetBudget, setNewAdsetBudget] = useState('');    // R$ formato 00,00
   const [creatingAdset, setCreatingAdset]   = useState(false);
-
-  // tags Alta/Prévia (apagar versão individual do R2)
-  const [apagandoVersao, setApagandoVersao] = useState(null); // 'alta' | 'preview' | null
 
   // copy do anúncio (pré-preenchida do card, editável)
   const [msgText, setMsgText]     = useState((card.raw||{}).texto_principal || '');
@@ -1237,6 +1245,15 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [videoPlaying, setVideoPlaying] = useState(false);
+  // tags Alta/Prévia (apagar versão individual do R2). Estados PRECISAM viver
+  // aqui (não no MetaAdModal): bug real de 2026-07-27, o estado tinha sido
+  // declarado no modal errado e todo card de vídeo quebrava a tela inteira
+  // ao abrir (ReferenceError no render).
+  const [apagandoVersao, setApagandoVersao] = useState(null); // 'alta' | 'preview' | null
+  async function apagarDoR2(key) {
+    const r = await fetch(`${ADS_MEDIA_WORKER}/original/${encodeURIComponent(key)}`, { method: 'DELETE' });
+    return r.ok;
+  }
 
   // ESC fecha o modal
   React.useEffect(() => {
@@ -1699,7 +1716,7 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
                         let rawUrl = v.url;
                         try { const p = JSON.parse(rawUrl); rawUrl = Array.isArray(p) ? p[0] : p; } catch {}
                         const key = rawUrl.split('/r2.dev/')[1];
-                        if (key) await workerDelete(`/original/${encodeURIComponent(key)}`);
+                        if (key) await apagarDoR2(key);
                         await window.db.from('ads').update({ [v.field]: null }).eq('numero', adNum);
                         if (onUpdate) onUpdate({ ...card, raw: { ...raw, [v.field]: null } });
                       } catch (e) {

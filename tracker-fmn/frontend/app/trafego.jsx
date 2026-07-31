@@ -14,20 +14,33 @@ function mkMetrics(row) {
   if (!row) return null;
   const gasto      = row.gasto       != null ? +Number(row.gasto).toFixed(2)  : null;
   const linkClicks = row.link_clicks != null ? Number(row.link_clicks)        : null;
+  const vendas     = row.compras            != null ? Number(row.compras)            : null;
+  const lpViews    = row.landing_page_views != null ? Number(row.landing_page_views) : null;
+  const initCheck  = row.initiate_checkout  != null ? Number(row.initiate_checkout)  : null;
   return {
     gasto,
-    vendas:      row.compras            != null ? Number(row.compras)                  : null,
+    vendas,
     cpa:         row.cpa                != null ? +Number(row.cpa).toFixed(2)          : null,
+    // CPA +1: simula o CPA com mais uma venda. Sempre calculável quando há
+    // gasto (mesmo com 0 vendas, aí o divisor é 1) — é justamente o caso em
+    // que mais interessa saber quanto a primeira venda "custaria".
+    cpa_mais1:   (gasto != null && gasto > 0 && vendas != null)
+                   ? +(gasto / (vendas + 1)).toFixed(2) : null,
     roas:        row.roas               != null ? +Number(row.roas).toFixed(2)         : null,
     cpm:         row.cpm                != null ? +Number(row.cpm).toFixed(2)          : null,
     ctr:         row.ctr_unico          != null ? +Number(row.ctr_unico).toFixed(4)    : null,
+    impressoes:  row.impressoes         != null ? Number(row.impressoes)               : null,
     freq:        row.frequencia         != null ? +Number(row.frequencia).toFixed(2)   : null,
     connect:     row.connect_rate       != null ? +Number(row.connect_rate).toFixed(4) : null,
     cpc:         (gasto != null && linkClicks && linkClicks > 0)
                    ? +(gasto / linkClicks).toFixed(2) : null,
     link_clicks: linkClicks,
-    lp_views:    row.landing_page_views != null ? Number(row.landing_page_views)       : null,
-    init_check:  row.initiate_checkout  != null ? Number(row.initiate_checkout)        : null,
+    lp_views:    lpViews,
+    custo_lp:    (gasto != null && lpViews   && lpViews   > 0) ? +(gasto / lpViews).toFixed(2)   : null,
+    init_check:  initCheck,
+    custo_init:  (gasto != null && initCheck && initCheck > 0) ? +(gasto / initCheck).toFixed(2) : null,
+    conv_lp:     (vendas != null && lpViews   && lpViews   > 0) ? +(vendas / lpViews).toFixed(4)   : null,
+    conv_init:   (vendas != null && initCheck && initCheck > 0) ? +(vendas / initCheck).toFixed(4) : null,
     hook_rate:   row.hook_rate          != null ? +Number(row.hook_rate).toFixed(4)    : null,
   };
 }
@@ -46,20 +59,29 @@ function aggregateMetrics(arr) {
   const totalLpViews     = valid.reduce((s,m) => s + (m.lp_views   ||0), 0);
   const totalInitCheck   = valid.reduce((s,m) => s + (m.init_check ||0), 0);
   const totalHookW       = valid.reduce((s,m) => s + (m.hook_rate  != null ? m.hook_rate * m.gasto : 0), 0);
+  const totalImpressoes  = valid.reduce((s,m) => s + (m.impressoes ||0), 0);
   return {
     gasto:      +totalGasto.toFixed(2),
     vendas:     totalVendas,
     cpa:        totalVendas > 0      ? +(totalGasto / totalVendas).toFixed(2)      : null,
+    // Derivadas sempre recalculadas a partir dos TOTAIS do grupo, nunca média
+    // das linhas filhas (média de razão não é a razão do total).
+    cpa_mais1:  totalGasto  > 0      ? +(totalGasto / (totalVendas + 1)).toFixed(2) : null,
     roas:       totalGasto  > 0      ? +(totalRev   / totalGasto).toFixed(2)       : null,
     cpm:        totalGasto  > 0      ? +(totalCpmW  / totalGasto).toFixed(2)       : null,
     ctr:        totalGasto  > 0      ? +(totalCtrW  / totalGasto).toFixed(4)       : null,
+    impressoes: totalImpressoes,
     freq:       totalGasto  > 0      ? +(totalFreqW / totalGasto).toFixed(2)       : null,
     connect:    totalGasto  > 0      ? +(totalConnectW / totalGasto).toFixed(4)    : null,
     cpc:        totalLinkClicks > 0  ? +(totalGasto / totalLinkClicks).toFixed(2)  : null,
     hook_rate:  totalGasto  > 0      ? +(totalHookW / totalGasto).toFixed(4)       : null,
     link_clicks: totalLinkClicks,
     lp_views:    totalLpViews,
+    custo_lp:    totalLpViews   > 0  ? +(totalGasto  / totalLpViews).toFixed(2)    : null,
     init_check:  totalInitCheck,
+    custo_init:  totalInitCheck > 0  ? +(totalGasto  / totalInitCheck).toFixed(2)  : null,
+    conv_lp:     totalLpViews   > 0  ? +(totalVendas / totalLpViews).toFixed(4)    : null,
+    conv_init:   totalInitCheck > 0  ? +(totalVendas / totalInitCheck).toFixed(4)  : null,
   };
 }
 
@@ -78,7 +100,7 @@ function useTrafficData() {
 
       const [{ data: insights, error: e1 }, { data: adsList, error: e2 }] = await Promise.all([
         window.db.from('insights_cache')
-          .select('meta_ad_id,meta_ad_name,meta_campaign_id,meta_campaign_name,meta_adset_id,meta_adset_name,periodo,gasto,cpa,compras,roas,cpm,ctr_unico,frequencia,connect_rate,link_clicks,landing_page_views,initiate_checkout,hook_rate')
+          .select('meta_ad_id,meta_ad_name,meta_campaign_id,meta_campaign_name,meta_adset_id,meta_adset_name,periodo,gasto,cpa,compras,roas,cpm,ctr_unico,impressoes,frequencia,connect_rate,link_clicks,landing_page_views,initiate_checkout,hook_rate')
           .in('periodo', ['maximum','7d','5d','3d','hoje']),
         window.db.from('ads')
           .select('numero,titulo,status,meta_ad_id,media_drive_url,media_files,meta_ad_url,media_tipo,thumb_url,media_preview_url')
@@ -327,18 +349,26 @@ const num       = v  => v==null||v===0?'—':v.toLocaleString('pt-BR');
 
 /* Todas as colunas da aba selecionada */
 const COLS = [
-  { k:'gasto',      head:'Gasto',      fmt: v => fR(v),                        color: () => 'var(--text-1)',  w: 78  },
-  { k:'vendas',     head:'Vendas',     fmt: v => v??'—',                        color: () => 'var(--text-1)',  w: 56  },
-  { k:'cpa',        head:'CPA',        fmt: v => fR(v),                        color: cpaCol,                  w: 78  },
-  { k:'cpc',        head:'CPC',        fmt: v => fR(v),                        color: () => 'var(--text-1)',   w: 66  },
-  { k:'cpm',        head:'CPM',        fmt: v => fR(v),                        color: cpmCol,                  w: 68  },
-  { k:'ctr',        head:'CTR',        fmt: v => pct(v),                       color: ctrCol,                  w: 58  },
-  { k:'hook_rate',  head:'Hook%',      fmt: v => pct(v),                       color: hookCol,                 w: 58  },
-  { k:'lp_views',   head:'LP Views',   fmt: v => num(v),                       color: () => 'var(--text-2)',   w: 64  },
-  { k:'init_check', head:'Init.',      fmt: v => num(v),                       color: () => 'var(--text-2)',   w: 52  },
-  { k:'connect',    head:'Connect',    fmt: v => pct(v),                       color: connectCol,              w: 68  },
-  { k:'freq',       head:'Freq.',      fmt: v => v!=null?v.toFixed(1):'—',     color: freqCol,                 w: 52  },
-  { k:'roas',       head:'ROAS',       fmt: v => v!=null?`${v}x`:'—',          color: roasCol,                 w: 60  },
+  { k:'gasto',      head:'Gasto',      fmt: v => fR(v),                        color: () => 'var(--text-1)',  w: 70  },
+  { k:'vendas',     head:'Vendas',     fmt: v => v??'—',                        color: () => 'var(--text-1)',  w: 50  },
+  { k:'cpa',        head:'CPA',        fmt: v => fR(v),                        color: cpaCol,                  w: 66  },
+  // CPA +1: qual seria o CPA se entrasse mais uma venda agora (gasto / vendas+1).
+  // Serve pra ver o quanto falta pro anúncio entrar no limite aceitável.
+  { k:'cpa_mais1',  head:'CPA +1',     fmt: v => fR(v),                        color: cpaCol,                  w: 66  },
+  { k:'cpc',        head:'CPC',        fmt: v => fR(v),                        color: () => 'var(--text-1)',   w: 56  },
+  { k:'cpm',        head:'CPM',        fmt: v => fR(v),                        color: cpmCol,                  w: 58  },
+  { k:'ctr',        head:'CTR',        fmt: v => pct(v),                       color: ctrCol,                  w: 50  },
+  { k:'impressoes', head:'Impr.',      fmt: v => num(v),                       color: () => 'var(--text-2)',   w: 62  },
+  { k:'hook_rate',  head:'Hook%',      fmt: v => pct(v),                       color: hookCol,                 w: 52  },
+  { k:'lp_views',   head:'LP Views',   fmt: v => num(v),                       color: () => 'var(--text-2)',   w: 58  },
+  { k:'custo_lp',   head:'Custo/LP',   fmt: v => fR(v),                        color: () => 'var(--text-1)',   w: 62  },
+  { k:'init_check', head:'Init.',      fmt: v => num(v),                       color: () => 'var(--text-2)',   w: 46  },
+  { k:'custo_init', head:'Custo/Init', fmt: v => fR(v),                        color: () => 'var(--text-1)',   w: 68  },
+  { k:'connect',    head:'Connect',    fmt: v => pct(v),                       color: connectCol,              w: 58  },
+  { k:'freq',       head:'Freq.',      fmt: v => v!=null?v.toFixed(1):'—',     color: freqCol,                 w: 46  },
+  { k:'roas',       head:'ROAS',       fmt: v => v!=null?`${v}x`:'—',          color: roasCol,                 w: 50  },
+  { k:'conv_lp',    head:'Vd/LP',      fmt: v => pct(v),                       color: () => 'var(--text-2)',   w: 54  },
+  { k:'conv_init',  head:'Vd/Init',    fmt: v => pct(v),                       color: () => 'var(--text-2)',   w: 58  },
 ];
 
 /* Períodos (modo "Por métrica"): chave no row × rótulo da coluna */
@@ -367,7 +397,7 @@ function MCell({ m, col, row, onHover }) {
     onMouseLeave: () => { setHv(false); onHover(null); },
   } : {};
   return (
-    <td {...handlers} style={{ padding:'0 10px', textAlign:'right', fontSize:12.5, width: col.w,
+    <td {...handlers} style={{ padding:'0 6px', textAlign:'right', fontSize:12.5, width: col.w,
       fontFamily:'Roboto,sans-serif', fontWeight:700, color:col.color(v), whiteSpace:'nowrap',
       boxShadow: hv ? 'inset 0 0 0 1px rgba(234,170,65,.45), inset 0 0 0 60px rgba(234,170,65,.12)' : 'none',
       transition:'box-shadow 120ms' }}>
@@ -494,7 +524,7 @@ function MediaModal({ ad, onClose }) {
 /* ── TrafficRow ─────────────────────────────────────────────────*/
 function TrafficRow({ row, depth=0, period, viewMode='periodo', metricCol, onCellHover, specificRules, pausedIds, pausingIds, focusIds, setFocusIds, onThumbClick, onAddRule, adAlerts, onBellClick, onPauseDirect }) {
   const [open, setOpen]   = useState(depth <= 1);
-  const indent  = depth * 20;
+  const indent  = depth * 13;   // recuo menor: sobra largura pro nome do anúncio
   const isAd    = depth === 2;
   const hasSub  = !isAd && (row.adsets||row.ads||[]).length > 0;
   const isPaused= pausedIds.includes(row.id) || row.status === 'paused';
@@ -521,9 +551,9 @@ function TrafficRow({ row, depth=0, period, viewMode='periodo', metricCol, onCel
         onMouseLeave={e => { e.currentTarget.style.background=focusBg; e.currentTarget.querySelectorAll('.pause-direct-btn').forEach(b => b.style.opacity='0'); }}>
 
         {/* ── Nome ── */}
-        <td style={{ padding:'9px 12px', paddingLeft: 14+indent,
+        <td style={{ padding:'9px 8px', paddingLeft: 10+indent, overflow:'hidden',
           borderLeft: adCpaColor ? `3px solid ${adCpaColor}` : '3px solid transparent' }}>
-          <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+          <div style={{ display:'flex', alignItems:'center', gap:5, minWidth:0 }}>
 
             {/* Foco */}
             <button onClick={e => { e.stopPropagation(); setFocusIds(prev => { const s = new Set(prev); isFocused ? s.delete(row.id) : s.add(row.id); return s; }); }}
@@ -536,7 +566,8 @@ function TrafficRow({ row, depth=0, period, viewMode='periodo', metricCol, onCel
               <LucideIcon icon="eye" size={10}/>
             </button>
 
-            {/* Expand */}
+            {/* Expand. Em anúncio (que nunca tem filho) não reservamos o espaço
+                vazio do botão: a thumb encosta no olho e sobra largura pro nome. */}
             {hasSub
               ? <button onClick={() => setOpen(!open)}
                   style={{ width:16,height:16,borderRadius:3,background:'rgba(255,255,255,.07)',
@@ -544,7 +575,7 @@ function TrafficRow({ row, depth=0, period, viewMode='periodo', metricCol, onCel
                     justifyContent:'center',cursor:'pointer',flexShrink:0 }}>
                   <LucideIcon icon={open?'chevron-down':'chevron-right'} size={11}/>
                 </button>
-              : <div style={{ width:16, flexShrink:0 }}/>}
+              : !isAd ? <div style={{ width:16, flexShrink:0 }}/> : null}
 
             {/* Thumb (ads apenas) */}
             {isAd && (row.thumb || row.files?.length > 0 || row.mediaTipo || row.previewUrl) && (() => {
@@ -582,10 +613,18 @@ function TrafficRow({ row, depth=0, period, viewMode='periodo', metricCol, onCel
                 color:'var(--clr-teal)', letterSpacing:'0.08em', flexShrink:0 }}>{row.num}</span>
             )}
 
-            {/* Nome */}
-            <span style={{ fontSize:isAd?12:12.5, fontFamily:'Roboto,sans-serif',
-              fontWeight:depth===0?700:600, color:'var(--text-1)', lineHeight:1.3,
-              overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', minWidth:0 }}>
+            {/* Nome. Corte por PALAVRA inteira, não no meio dela: line-clamp
+                trunca por linha (o texto quebra nos espaços normalmente e a
+                reticência entra depois da última palavra que coube), diferente
+                do text-overflow:ellipsis, que corta no meio da palavra.
+                O nome completo aparece ao passar o mouse (title nativo), junto
+                com o botão Pausar que também só surge no hover da linha. */}
+            <span title={row.name}
+              style={{ fontSize:isAd?12:12.5, fontFamily:'Roboto,sans-serif',
+                fontWeight:depth===0?700:600, color:'var(--text-1)', lineHeight:1.3,
+                display:'-webkit-box', WebkitLineClamp:1, WebkitBoxOrient:'vertical',
+                overflow:'hidden', wordBreak:'normal',
+                flex:'1 1 auto', minWidth:0 }}>
               {row.name}
             </span>
 
@@ -1350,11 +1389,14 @@ function SubstituirModal({ adNum, defaultAdsetId, defaultAdsetName, defaultCampI
   useEffect(() => {
     if (!window.db) return;
     (async () => {
+      // Substituto precisa ser criativo com mídia pronta que NÃO esteja rodando agora:
+      // fazendo (produzido, na fila) ou campeoes/arquivado (já rodou antes, pode voltar).
+      // 'ativo' fica de fora de propósito — já está no ar, não serve de substituto.
       const { data } = await window.db.from('ads')
         .select('numero,titulo,status,meta_ad_id,media_drive_url,media_files,media_tipo,thumb_url')
-        .eq('status', 'ativo')
+        .in('status', ['fazendo','campeoes','arquivado'])
         .order('numero', { ascending: false });
-      setCriativos(data || []);
+      setCriativos((data || []).filter(c => c.media_drive_url || (c.media_files && c.media_files !== '[]' && c.media_files !== 'null')));
       setLoadingC(false);
     })();
   }, []);
@@ -2085,12 +2127,20 @@ function TrafficScreen() {
         </div>
 
         {/* ── Tabela ── */}
-        <div style={{ background:'var(--app-surface)',border:'1px solid var(--app-border)',borderRadius:14 }}>
-          <table style={{ width:'100%',borderCollapse:'collapse' }}>
+        {/* overflowX é rede de segurança: em tela larga tudo cabe (a coluna de
+            nome tem largura fixa e as métricas são estreitas); em tela menor
+            vira rolagem lateral em vez de dado cortado fora da borda. */}
+        <div style={{ background:'var(--app-surface)',border:'1px solid var(--app-border)',borderRadius:14, overflowX:'auto' }}>
+          {/* minWidth = soma das larguras das colunas. Sem ele, width:100% com
+              tableLayout:fixed espremeria as colunas abaixo do tamanho pedido
+              numa tela estreita e o texto vazaria da célula; com ele, a tabela
+              para de encolher e o container rola de lado. */}
+          <table style={{ width:'100%', minWidth:1546, borderCollapse:'collapse', tableLayout:'fixed' }}>
             <thead>
               <tr style={{ borderBottom:'1px solid var(--app-border)' }}>
-                <th style={{ padding:'8px 14px', textAlign:'left', fontSize:10, fontFamily:'Roboto,sans-serif',
-                  fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)' }}>
+                <th style={{ width: viewMode==='metrica' ? undefined : 300, minWidth: 300,
+                  padding:'8px 12px', textAlign:'left', fontSize:10, fontFamily:'Roboto,sans-serif',
+                  fontWeight:700, letterSpacing:'0.08em', textTransform:'uppercase', color:'var(--text-3)' }}>
                   Campanha / Conjunto / Anúncio
                   {viewMode === 'metrica' && (
                     <span style={{ marginLeft:8, color:'var(--fmn-gold)', letterSpacing:'0.08em' }}>· {metricCol.head}</span>
@@ -2098,8 +2148,8 @@ function TrafficScreen() {
                 </th>
                 {(viewMode === 'metrica' ? PERIOD_COLS : COLS).map(col => (
                   <th key={col.pk || col.k} style={{ width: viewMode==='metrica' ? 84 : col.w,
-                    padding:'8px 10px', textAlign:'right', fontSize:9.5,
-                    fontFamily:'Roboto,sans-serif', fontWeight:700, letterSpacing:'0.08em',
+                    padding:'8px 6px', textAlign:'right', fontSize:9.5,
+                    fontFamily:'Roboto,sans-serif', fontWeight:700, letterSpacing:'0.04em',
                     textTransform:'uppercase', color:'var(--text-3)', whiteSpace:'nowrap' }}>
                     {col.head}
                   </th>

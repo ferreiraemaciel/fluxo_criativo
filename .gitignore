@@ -152,3 +152,11 @@ package.json
 supabase/.temp/
 .installed
 *.dmg
+
+# ══════════════════════════════════════════
+# Radar Juridico
+# Os relatorios SOBEM para o repositorio privado (origin), para que a
+# tarefa semanal que roda na nuvem entregue o arquivo em todas as maquinas.
+# NUNCA podem ir para o remote "mentoria" (espelho compartilhado com alunos).
+# A trava esta no hook .githooks/pre-push.
+# ══════════════════════════════════════════

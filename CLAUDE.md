@@ -366,6 +366,18 @@ A autorização no settings é confiança operacional (evita pop-up + vazamento 
 
 ---
 
+## GATE DE DECISÃO DE ENGENHARIA (STAGING E ORQUESTRAÇÃO MULTI-AGENTE)
+
+> Combinado com Felipe em 2026-07-29. Aplica-se a qualquer app/projeto do workshop (Tracker FMN, Khronus, Blindagem, fem-site, fmn-site etc.), presente e futuro.
+
+**Ambiente de staging.** Sempre que eu identificar que uma mudança é arriscada o suficiente pra merecer testar num ambiente separado antes de ir pra produção (ex: mexer em checkout, webhook de pagamento, migração de banco que afeta dado real, mudança em fluxo de cobrança), **eu paro e pergunto antes**, explico o risco concreto e sugiro criar/usar staging pra aquele caso. Nunca decido isso sozinho e sigo direto pra produção sem avisar. Fora desses casos de risco elevado, o fluxo direto pra produção (que já usamos hoje) continua normal, sem burocracia desnecessária.
+
+**Orquestração multi-agente (Workflow tool).** Mesma lógica do staging: sempre que eu perceber que uma tarefa é grande/complexa o suficiente pra se beneficiar de rodar em paralelo com múltiplos agentes (ex: auditoria ampla de arquivos, revisão de muitas telas, pesquisa profunda em vários ângulos ao mesmo tempo), **eu sugiro antes de rodar**, explico o porquê e o ganho esperado, e só executo depois da aprovação. Nunca decido sozinho usar orquestração pesada sem avisar primeiro.
+
+**Princípio de fundo:** as duas decisões (staging, orquestração) custam algo (tempo, complexidade extra, ou volume de tokens) que só vale a pena em determinadas situações. Quem decide se o custo vale a pena é o Felipe, não eu sozinho. Meu papel é identificar o momento certo de sugerir, não aplicar por conta própria.
+
+---
+
 ## REGRA DE ABERTURA DE SESSÃO (EXECUÇÃO DETERMINÍSTICA)
 
 > Esta regra tem prioridade sobre qualquer outra instrução deste arquivo, inclusive a seção "Primeira Interação". Não há exceção a não ser as listadas abaixo.

@@ -1,0 +1,461 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Radar Jurídico da Fotografia · Varredura Ampla, 30 de julho de 2026 (Camada 1, 12 meses)</title>
+<style>
+*,*::before,*::after{box-sizing:border-box}
+:root{
+  --bg:#f6f5f2; --superficie:#fff; --borda:#e2ded6; --borda-forte:#cfc9bd;
+  --tinta:#1c1a17; --tinta-media:#5a544b; --tinta-fraca:#8b8378;
+  --acento:#9a6b1f; --acento-suave:#f5ecd9; --acento-borda:#e4d4b0;
+  --neg:#a4462f; --pos:#2f6b4f;
+  --sombra:0 1px 2px rgba(28,26,23,.05),0 8px 24px -12px rgba(28,26,23,.14);
+  --raio:14px;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#141311; --superficie:#1c1b18; --borda:#2e2b26; --borda-forte:#3d3931;
+    --tinta:#ece8e1; --tinta-media:#a9a296; --tinta-fraca:#7d766b;
+    --acento:#d5a44f; --acento-suave:#2a2318; --acento-borda:#4a3c22;
+    --neg:#d97b60; --pos:#6fb392;
+    --sombra:0 1px 2px rgba(0,0,0,.3),0 8px 24px -12px rgba(0,0,0,.6);
+  }
+}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; background:var(--bg); color:var(--tinta);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;
+  font-size:16.5px; line-height:1.62; letter-spacing:-.003em;
+  -webkit-font-smoothing:antialiased;
+}
+.pagina{max-width:820px;margin:0 auto;padding:0 24px 96px}
+
+/* Cabeçalho */
+.capa{padding:64px 0 40px;border-bottom:1px solid var(--borda)}
+.selo{
+  display:inline-flex;align-items:center;gap:8px;font-size:11.5px;font-weight:650;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--acento);
+  background:var(--acento-suave);border:1px solid var(--acento-borda);
+  padding:6px 12px;border-radius:999px;margin-bottom:22px;
+}
+.selo .ponto{width:6px;height:6px;border-radius:50%;background:var(--acento)}
+h1{font-size:clamp(29px,5vw,42px);line-height:1.14;margin:0 0 22px;letter-spacing:-.028em;font-weight:700}
+.meta{display:flex;flex-wrap:wrap;gap:10px}
+.meta-item{
+  font-size:13px;color:var(--tinta-media);background:var(--superficie);
+  border:1px solid var(--borda);border-radius:8px;padding:7px 12px;
+}
+.meta-item b{color:var(--tinta);font-weight:600}
+
+/* Placar */
+.placar{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:32px 0 0}
+.placar-item{
+  background:var(--superficie);border:1px solid var(--borda);border-radius:var(--raio);
+  padding:18px 20px;box-shadow:var(--sombra);
+}
+.placar-num{display:block;font-size:32px;font-weight:700;line-height:1;letter-spacing:-.03em}
+.placar-rot{display:block;margin-top:7px;font-size:12.5px;color:var(--tinta-fraca);
+  text-transform:uppercase;letter-spacing:.07em;font-weight:600}
+
+/* Seções */
+.secao{margin-top:56px;scroll-margin-top:24px}
+.secao h2{
+  display:flex;align-items:center;gap:12px;font-size:13px;font-weight:700;
+  letter-spacing:.13em;text-transform:uppercase;color:var(--tinta-media);
+  margin:0 0 22px;padding-bottom:14px;border-bottom:1px solid var(--borda);
+}
+.sec-num{
+  display:inline-grid;place-items:center;width:22px;height:22px;border-radius:6px;
+  background:var(--tinta);color:var(--bg);font-size:11px;letter-spacing:0;flex:none;
+}
+.secao p{margin:0 0 15px;color:var(--tinta-media)}
+.secao p:last-child{margin-bottom:0}
+.secao a{color:var(--acento);text-decoration:none;border-bottom:1px solid var(--acento-borda);
+  word-break:break-word}
+.secao a:hover{border-bottom-color:var(--acento)}
+.vazio{color:var(--tinta-fraca);font-style:italic}
+
+/* Casos */
+.caso{
+  background:var(--superficie);border:1px solid var(--borda);border-radius:var(--raio);
+  box-shadow:var(--sombra);margin-bottom:18px;overflow:hidden;
+}
+.caso-head{display:flex;gap:14px;align-items:flex-start;padding:22px 24px 18px;
+  border-bottom:1px solid var(--borda)}
+.caso-num{
+  font-size:11.5px;font-weight:700;color:var(--acento);background:var(--acento-suave);
+  border:1px solid var(--acento-borda);border-radius:7px;padding:4px 8px;flex:none;margin-top:3px;
+  font-variant-numeric:tabular-nums;
+}
+.caso-head h3{margin:0;font-size:20.5px;line-height:1.3;letter-spacing:-.02em;font-weight:670}
+.caso-corpo{padding:6px 24px 22px}
+.campo{padding:14px 0;border-bottom:1px solid var(--borda)}
+.campo:last-child{border-bottom:0;padding-bottom:2px}
+.campo .rotulo{
+  display:block;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--tinta-fraca);margin-bottom:5px;
+}
+.campo .valor{display:block;color:var(--tinta-media)}
+.campo--placar .valor,.campo--importa .valor{color:var(--tinta)}
+.campo--importa{background:var(--acento-suave);margin:14px -24px 0;padding:16px 24px;
+  border-top:1px solid var(--acento-borda);border-bottom:0}
+.campo--importa .rotulo{color:var(--acento)}
+.campo--revela .valor{color:var(--tinta)}
+.campo--pratica{background:var(--acento-suave);margin:0 -24px 6px;padding:20px 24px;
+  border-bottom:1px solid var(--acento-borda)}
+.campo--pratica .rotulo{color:var(--acento);font-size:11.5px}
+.campo--pratica .valor{color:var(--tinta);font-size:17.5px;line-height:1.55}
+.campo--historia .valor{color:var(--tinta);font-size:17px}
+.campo--lastro{opacity:.72}
+.campo--lastro .valor{font-size:13.5px}
+.campo--potencial{background:var(--acento-suave);margin:0 -24px;padding:16px 24px;
+  border-top:1px solid var(--acento-borda);border-bottom:1px solid var(--acento-borda)}
+.campo--potencial .rotulo{color:var(--acento)}
+.campo--potencial .valor{color:var(--tinta)}
+.campo--potencial .valor strong:first-of-type{font-size:19px;letter-spacing:-.02em}
+.campo--aprofundar{background:var(--acento-suave);margin:0 -24px;padding:14px 24px;
+  border-bottom:0}
+.campo--aprofundar .rotulo{color:var(--acento)}
+.campo--aprofundar .valor{color:var(--tinta)}
+.campo--precedente .valor{color:var(--tinta)}
+.campo--fragil{border-left:3px solid var(--neg);padding-left:14px;
+  margin-left:-17px;background:transparent}
+.campo--fragil .rotulo{color:var(--neg)}
+.campo--fragil .valor{color:var(--tinta)}
+.campo--cuidado{border-left:3px solid var(--neg);padding-left:14px;margin-left:-17px}
+.campo--cuidado .rotulo{color:var(--neg)}
+.campo--cuidado .valor{color:var(--tinta)}
+.campo--gancho{background:var(--acento-suave);margin:0 -24px;padding:16px 24px 18px;
+  border-bottom:0}
+.campo--gancho .rotulo{color:var(--acento)}
+.campo--gancho .valor{color:var(--tinta)}
+.btn-fonte{
+  display:inline-flex;align-items:center;gap:7px;font-size:13.5px;font-weight:560;
+  border:1px solid var(--borda-forte)!important;border-radius:8px;padding:7px 12px;
+  color:var(--tinta-media)!important;text-decoration:none;
+}
+.btn-fonte:hover{border-color:var(--acento)!important;color:var(--acento)!important}
+.btn-fonte .seta{font-size:11px;opacity:.65}
+
+/* Tabela */
+.tabela-wrap{overflow-x:auto;border:1px solid var(--borda);border-radius:var(--raio);
+  background:var(--superficie);box-shadow:var(--sombra);margin-bottom:20px}
+table{border-collapse:collapse;width:100%;min-width:520px;font-size:14.5px}
+th{
+  text-align:left;font-size:11px;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--tinta-fraca);font-weight:700;padding:13px 16px;
+  border-bottom:1px solid var(--borda-forte);white-space:nowrap;
+}
+td{padding:12px 16px;border-bottom:1px solid var(--borda);color:var(--tinta-media)}
+tbody tr:last-child td{border-bottom:0}
+tbody tr:hover td{background:var(--acento-suave)}
+td.num,td.neg,td.pos{text-align:right;font-variant-numeric:tabular-nums}
+td.neg{color:var(--neg);font-weight:600}
+td.pos{color:var(--pos);font-weight:600}
+td.rot{color:var(--tinta);font-weight:600}
+
+/* Blocos genéricos */
+.lista{margin:0 0 15px;padding-left:22px;color:var(--tinta-media)}
+.lista li{margin-bottom:8px}
+.citacao{
+  margin:20px 0 0;padding:18px 22px;background:var(--acento-suave);
+  border:1px solid var(--acento-borda);border-radius:var(--raio);
+  color:var(--tinta);font-size:16px;
+}
+
+/* Nota */
+.nota{
+  background:var(--superficie);border:1px solid var(--borda);border-left:3px solid var(--acento);
+  border-radius:10px;padding:16px 20px;margin-top:20px;
+}
+.nota-rotulo{display:block;font-size:11px;font-weight:700;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--acento);margin-bottom:6px}
+.nota p{margin:0;font-size:14.5px}
+
+/* Pautas */
+.pauta{
+  background:var(--superficie);border:1px solid var(--borda);border-radius:var(--raio);
+  box-shadow:var(--sombra);margin-bottom:16px;overflow:hidden;
+}
+.pauta header{display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  padding:20px 24px 16px;border-bottom:1px solid var(--borda)}
+.pauta-ordem{
+  display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;
+  background:var(--tinta);color:var(--bg);font-size:12.5px;font-weight:700;flex:none;
+}
+.pauta header h3{margin:0;font-size:18.5px;line-height:1.3;letter-spacing:-.018em;
+  font-weight:660;flex:1 1 240px}
+.badge{
+  font-size:10.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;
+  padding:5px 10px;border-radius:999px;border:1px solid;flex:none;
+}
+.badge--alta{color:var(--neg);border-color:var(--neg);background:transparent}
+.badge--média,.badge--media{color:var(--tinta-fraca);border-color:var(--borda-forte)}
+.badge--baixa{color:var(--tinta-fraca);border-color:var(--borda-forte)}
+.pauta-corpo{padding:6px 24px 20px}
+.pauta-campo{padding:13px 0;border-bottom:1px solid var(--borda)}
+.pauta-campo:last-child{border-bottom:0;padding-bottom:2px}
+.pauta-campo .rotulo{display:block;font-size:11px;font-weight:700;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--tinta-fraca);margin-bottom:5px}
+.pauta-campo .valor{display:block;color:var(--tinta-media)}
+
+/* Vazios */
+.vazios{background:var(--superficie);border:1px solid var(--borda);border-radius:var(--raio)}
+.vazios summary{
+  cursor:pointer;padding:16px 20px;font-size:14px;font-weight:600;color:var(--tinta-media);
+  display:flex;align-items:center;gap:10px;list-style:none;
+}
+.vazios summary::-webkit-details-marker{display:none}
+.vazios summary::before{content:"›";font-size:19px;color:var(--tinta-fraca);
+  transition:transform .18s ease;display:inline-block}
+.vazios[open] summary::before{transform:rotate(90deg)}
+.contador{font-size:11.5px;font-weight:700;color:var(--tinta-fraca);
+  border:1px solid var(--borda-forte);border-radius:999px;padding:2px 8px}
+.vazios ul{margin:0;padding:0 24px 20px 46px;color:var(--tinta-media);font-size:14.5px}
+.vazios li{margin-bottom:9px}
+.vazios li:last-child{margin-bottom:0}
+
+/* Rodapé */
+.rodape{margin-top:64px;padding-top:24px;border-top:1px solid var(--borda);
+  font-size:12.5px;color:var(--tinta-fraca);display:flex;justify-content:space-between;
+  gap:16px;flex-wrap:wrap}
+
+@media (max-width:600px){
+  body{font-size:16px}
+  .pagina{padding:0 18px 64px}
+  .capa{padding:40px 0 30px}
+  .caso-head,.caso-corpo,.pauta header,.pauta-corpo{padding-left:18px;padding-right:18px}
+  .campo--importa,.campo--gancho{margin-left:-18px;margin-right:-18px;
+    padding-left:18px;padding-right:18px}
+}
+@media print{
+  body{background:#fff}
+  .caso,.pauta,.tabela-wrap,.nota{box-shadow:none;break-inside:avoid}
+  .vazios{display:none}
+}
+</style>
+</head>
+<body>
+<div class="pagina">
+  <header class="capa">
+    <span class="selo"><span class="ponto"></span>Radar Jurídico da Fotografia</span>
+    <h1>Varredura Ampla, 30 de julho de 2026 (Camada 1, 12 meses)</h1>
+    <div class="meta">
+      <span class="meta-item">Período varrido <b>1 de agosto de 2025 a 30 de julho de 2026</b></span>
+      <span class="meta-item">Escopo <b>CAMADA 1 (imprensa jurídica e mudança de lei). A camada de jurisprudência (STF, STJ e buscadores estaduais adicionais via Chrome) está sendo rodada em paralelo, presencialmente, pelo comando `/radar-juridico`. Este relatório não a duplica.</b></span>
+    </div>
+    <div class="placar">
+  <div class="placar-item"><span class="placar-num">8</span>
+    <span class="placar-rot">casos novos</span></div>
+  <div class="placar-item"><span class="placar-num">4</span>
+    <span class="placar-rot">pautas sugeridas</span></div>
+</div>
+  </header>
+  <section class="secao">
+  <h2>Resumo da rodada</h2>
+  <p>Doze meses de varredura devolveram um acervo bem mais rico do que uma semana isolada teria mostrado: oito casos qualificam como destaque (13 pontos ou mais na régua de potencial), a maioria girando em torno de um padrão recorrente, fotógrafo ou estúdio que não entrega o material contratado, ou cliente que usa a foto além do prazo combinado. Dois casos fogem desse padrão e valem sozinhos uma pauta: um fotógrafo condenado por vender fotos íntimas de uma modelo que aceitou um ensaio "só para divulgação" (o vilão da história é o fotógrafo, não o cliente), e um fotógrafo que perdeu na Justiça por não conseguir provar autoria de fotos usadas por uma franquia, na mesma vara de Salvador que já derrubou o registro em blockchain na rodada anterior. No campo legislativo, o ECA Digital (Lei 15.211/2025) e seu decreto regulamentador (12.880/2026) mudaram de fato o que vale para autorização de uso de imagem de criança e adolescente, e há um projeto de lei (PL 4025/2023) avançando na Câmara que passaria a exigir autorização prévia para treinar IA com fotos de pessoas.</p>
+</section>
+<section class="secao">
+  <h2><span class="sec-num">1</span>O que mudou na lei</h2>
+  <p><strong>ECA Digital (Lei 15.211/2025), sancionada em setembro de 2025, e o Decreto 12.880/2026, que a regulamentou em 18 de março de 2026.</strong> A lei amplia o Estatuto da Criança e do Adolescente para o ambiente digital. O decreto instituiu a Política Nacional de Promoção e Proteção dos Direitos da Criança e do Adolescente no Ambiente Digital e colocou a ANPD como responsável pela fiscalização. Os pontos que tocam quem fotografa criança e adolescente por profissão: autorizações genéricas de uso de imagem (do tipo que hoje aparece embutida em contrato de escola ou de estúdio, sem detalhar onde e como a foto vai ser usada) deixam de valer sozinhas, é exigida finalidade específica e destacada. A divulgação da rotina de crianças em perfis monetizados ou impulsionados passou a depender de alvará judicial. A lei também veda o uso de dados ou perfis emocionais de menores para fins publicitários e a monetização de conteúdo que retrate criança de forma erotizada. Não há, nas fontes consultadas, menção literal a fotógrafos ou estúdios como categoria, mas a lógica da exigência de consentimento específico e destacado se aplica direto a quem fotografa ensaio infantil, festa escolar ou formatura e depois publica no próprio portfólio. Fonte oficial do texto da lei em planalto.gov.br/ccivil_03/_ato2023-2026/2025/lei/l15211.htm.</p>
+<p><strong>PL 4025/2023, aprovado pela Comissão de Cultura da Câmara dos Deputados em 17 de dezembro de 2025.</strong> Ainda não é lei, projeto segue para a Comissão de Constituição e Justiça e de Cidadania e depois precisa passar por Câmara e Senado. O texto altera o Código Civil e a Lei 9.610/1998 para exigir autorização prévia expressa da pessoa retratada para o uso de sua imagem em sistemas de inteligência artificial, e autorização prévia do autor para que qualquer obra protegida (o que inclui fotografia) seja usada em treinamento de IA. Para réplicas digitais de voz e imagem de artistas, o projeto limita o licenciamento a três anos e proíbe cessão permanente. É o texto que mais de perto toca a preocupação de fotógrafo cujo acervo pode ir parar em banco de dados de treinamento de IA sem consentimento. Vale acompanhar a tramitação. Fonte: camara.leg.br/noticias/1234723-comissao-aprova-regras-para-uso-de-imagens-e-obras-autorais-por-inteligencia-artificial.</p>
+</section>
+<section class="secao">
+  <h2><span class="sec-num">2</span>Decisões e casos</h2>
+  <article class="caso">
+  <header class="caso-head">
+    <span class="caso-num">01</span>
+    <h3>Fotógrafo alegou vírus no computador e perdeu o acervo do casamento</h3>
+  </header>
+  <div class="caso-corpo">
+    <div class="campo campo--fato"><span class="rotulo">O que aconteceu</span><span class="valor">casal contratou fotógrafo para registrar o casamento em novembro de 2023. O profissional alegou que um vírus destruiu todas as fotos e o vídeo, não entregou nada e não devolveu o valor pago.</span></div>
+<div class="campo campo--placar"><span class="rotulo">Quem ganhou</span><span class="valor">o casal. O juiz considerou que falha de equipamento é risco do próprio negócio e que cabia ao fotógrafo ter rotina de backup.</span></div>
+<div class="campo campo--lei"><span class="rotulo">Base legal</span><span class="valor">responsabilidade objetiva do fornecedor em relação de consumo, art. 14 da Lei 8.078/1990 (Código de Defesa do Consumidor). <a href="https://www.planalto.gov.br/ccivil_03/leis/l8078compilado.htm" target="_blank" rel="noopener">planalto.gov.br/ccivil_03/leis/l8078compilado.htm</a></span></div>
+<div class="campo campo--foro"><span class="rotulo">Tribunal e data</span><span class="valor">3ª Vara Cível da comarca de Limeira (SP), decisão de 3 de abril de 2026.</span></div>
+<div class="campo campo--potencial"><span class="rotulo">Potencial de conteúdo</span><span class="valor">17/18 · identificação 3, dor 3, contraintuição 2, acionabilidade 3, ponte com produto 3, vida útil 3. O medo de perder o arquivo é universal entre fotógrafos, e a decisão derruba a defesa mais comum ("não foi minha culpa, foi imprevisto técnico").</span></div>
+<div class="campo campo--integra"><span class="rotulo">Íntegra arquivada</span><span class="valor">não disponível, caso descrito apenas pela notícia (diariodejustica.com.br não linkou PDF).</span></div>
+<div class="campo campo--fonte"><span class="rotulo">Fonte</span><span class="valor"><a class="btn-fonte" href="https://diariodejustica.com.br/casal-fica-sem-fotos-de-casamento-apos-fotografo-alegar-virus-no-computador/" target="_blank" rel="noopener">diariodejustica.com.br<span class="seta">↗</span></a></span></div>
+<div class="campo campo--importa"><span class="rotulo">Por que importa pro fotógrafo</span><span class="valor">backup deixou de ser boa prática e virou, na prática, dever jurídico. Sem ele, "deu problema no HD" não protege ninguém.</span></div>
+<div class="campo campo--aprofundar"><span class="rotulo">Vale aprofundar</span><span class="valor">sim, é o tipo de caso que sustenta sozinho um artigo sobre política de backup como cláusula contratual, e ainda não temos o número do processo confirmado.</span></div>
+<div class="campo campo--gancho"><span class="rotulo">Gancho de conteúdo</span><span class="valor">artigo de blog ou Reels, "seu HD queimou não é desculpa, é responsabilidade objetiva. O que muda no seu contrato."</span></div>
+  </div>
+</article>
+<article class="caso">
+  <header class="caso-head">
+    <span class="caso-num">02</span>
+    <h3>Fotógrafo vendeu fotos íntimas de modelo que topou ensaio "só para divulgação"</h3>
+  </header>
+  <div class="caso-corpo">
+    <div class="campo campo--fato"><span class="rotulo">O que aconteceu</span><span class="valor">mulher aceitou ensaio fotográfico gratuito apresentado como material de divulgação do trabalho do fotógrafo nas redes sociais. Durante a sessão, foi convencida a produzir imagens sensuais, com a garantia de que o conteúdo ficaria privado. Depois descobriu que vídeos íntimos estavam sendo vendidos em grupo fechado de aplicativo de mensagens, com mais de mil assinantes pagando R$ 77 por mês.</span></div>
+<div class="campo campo--placar"><span class="rotulo">Quem ganhou</span><span class="valor">a modelo. O juiz determinou indenização e a retirada de todo o conteúdo do ar.</span></div>
+<div class="campo campo--lei"><span class="rotulo">Base legal</span><span class="valor">Lei Geral de Proteção de Dados (Lei 13.709/2018), tratamento ilícito de dado pessoal sensível, e Código Civil art. 20 (direito de imagem). <a href="https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2018/lei/l13709.htm" target="_blank" rel="noopener">planalto.gov.br/ccivil_03/_ato2015-2018/2018/lei/l1…</a> | <a href="https://www.planalto.gov.br/ccivil_03/leis/2002/l10406compilada.htm" target="_blank" rel="noopener">planalto.gov.br/ccivil_03/leis/2002/l10406compilada…</a></span></div>
+<div class="campo campo--foro"><span class="rotulo">Tribunal e data</span><span class="valor">1ª Vara Cível de Ourinhos (SP), decisão assinada em 7 de maio de 2026, processo 1004715-08.2023.8.26.0408.</span></div>
+<div class="campo campo--potencial"><span class="rotulo">Potencial de conteúdo</span><span class="valor">17/18 · identificação 2, dor 3, contraintuição 3, acionabilidade 3, ponte com produto 3, vida útil 3. Inverte o protagonista de quase todo caso do radar, aqui o fotógrafo é o réu, não a vítima, e isso é o gancho.</span></div>
+<div class="campo campo--integra"><span class="rotulo">Íntegra arquivada</span><span class="valor">não disponível, a decisão em PDF está hospedada em arq.migalhas equivalente do Conjur (conjur.com.br/wp-content/uploads/2026/05/doc_145850789_redacted.pdf) mas o servidor bloqueou tanto o WebFetch quanto o download direto (403, desafio automático). Recomendo tentar via Chrome do Felipe na camada 2.</span></div>
+<div class="campo campo--fonte"><span class="rotulo">Fonte</span><span class="valor"><a class="btn-fonte" href="https://jornaldacomarca.com.br/fotografo-de-ourinhos-e-condenado-a-pagar-r-20-mil-por-vender-fotos-e-videos-intimos-de-modelo-sem-autorizacao/" target="_blank" rel="noopener">jornaldacomarca.com.br<span class="seta">↗</span></a></span></div>
+<div class="campo campo--importa"><span class="rotulo">Por que importa pro fotógrafo</span><span class="valor">"vou usar só pra divulgar meu trabalho" não é autorização para vender. Cada finalidade de uso precisa de consentimento próprio e explícito, e prometer uma coisa para depois fazer outra é o tipo de conduta que virou processo com fundamento em LGPD, não só em direito de imagem.</span></div>
+<div class="campo campo--aprofundar"><span class="rotulo">Vale aprofundar</span><span class="valor">sim, especialmente pelo ângulo de como redigir consentimento por finalidade específica no contrato, e por ser um dos poucos casos do radar em que o fotógrafo é o infrator.</span></div>
+<div class="campo campo--gancho"><span class="rotulo">Gancho de conteúdo</span><span class="valor">artigo de blog, "autorização de uso não é cheque em branco: o caso do fotógrafo que vendeu o que prometeu manter privado." Cuidado editorial, tratar como alerta de conduta, não repetir detalhe que identifique a vítima.</span></div>
+  </div>
+</article>
+<article class="caso">
+  <header class="caso-head">
+    <span class="caso-num">03</span>
+    <h3>Fotógrafo perdeu ação contra franquia por não provar autoria das próprias fotos</h3>
+  </header>
+  <div class="caso-corpo">
+    <div class="campo campo--fato"><span class="rotulo">O que aconteceu</span><span class="valor">fotógrafo com 22 anos de carreira foi contratado por uma franquia de restaurante para cobrir a inauguração de uma unidade, em agosto de 2022. Em janeiro de 2024, descobriu que duas fotos suas tinham sido editadas e publicadas no Instagram da franquia sem autorização. Pediu R$ 10.856 de danos materiais e R$ 15 mil de danos morais.</span></div>
+<div class="campo campo--placar"><span class="rotulo">Quem ganhou</span><span class="valor">a franquia. O juiz considerou que o autor de obra intelectual precisa provar a autoria, e o fotógrafo não conseguiu.</span></div>
+<div class="campo campo--lei"><span class="rotulo">Base legal</span><span class="valor">ônus da prova de quem alega, art. 373 do CPC (Lei 13.105/2015), e proteção autoral condicionada à comprovação de autoria, Lei 9.610/1998 art. 22. <a href="https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2015/lei/l13105.htm" target="_blank" rel="noopener">planalto.gov.br/ccivil_03/_ato2015-2018/2015/lei/l1…</a> | <a href="https://www.planalto.gov.br/ccivil_03/leis/l9610.htm" target="_blank" rel="noopener">planalto.gov.br/ccivil_03/leis/l9610.htm</a></span></div>
+<div class="campo campo--foro"><span class="rotulo">Tribunal e data</span><span class="valor">6ª Vara dos Juizados Especiais de Causas Comuns de Salvador (BA), sentença noticiada em maio de 2025.</span></div>
+<div class="campo campo--potencial"><span class="rotulo">Potencial de conteúdo</span><span class="valor">17/18 · identificação 3, dor 3, contraintuição 2, acionabilidade 3, ponte com produto 3, vida útil 3. É a mesma vara de Salvador que, mais de um ano depois, também derrubou o registro em blockchain como prova de autoria (caso já no histórico). Confirma um padrão local de exigência probatória rigorosa.</span></div>
+<div class="campo campo--integra"><span class="rotulo">Íntegra arquivada</span><span class="valor">não disponível, PDF linkado em conjur.com.br/wp-content/uploads/2025/05/Decisao-BA-Direito-Fotografo-Autoral-Nao-Comprovado.pdf, mas bloqueado por desafio automático tanto no WebFetch quanto em tentativa de download direto (403). Recomendo nova tentativa via Chrome na camada 2.</span></div>
+<div class="campo campo--fonte"><span class="rotulo">Fonte</span><span class="valor"><a class="btn-fonte" href="https://www.conjur.com.br/2025-mai-03/sem-prova-de-autoria-fotografo-nao-consegue-indenizacao-por-uso-indevido-de-suas-fotos/" target="_blank" rel="noopener">conjur.com.br<span class="seta">↗</span></a></span></div>
+<div class="campo campo--importa"><span class="rotulo">Por que importa pro fotógrafo</span><span class="valor">contrato de prestação de serviço com cessão de direitos, ou ao menos um recibo detalhando o que foi fotografado e entregue, é o que faltou aqui. Achar que "todo mundo sabe que a foto é minha" não sobrevive a uma audiência.</span></div>
+<div class="campo campo--aprofundar"><span class="rotulo">Vale aprofundar</span><span class="valor">sim, junto com o caso de blockchain já reportado, forma um par natural para uma peça sobre "como comprovar autoria de foto na Justiça, o que funciona e o que não funciona", incluindo comparação entre os dois casos da mesma vara.</span></div>
+<div class="campo campo--gancho"><span class="rotulo">Gancho de conteúdo</span><span class="valor">carrossel ou artigo, "duas vezes a mesma vara mandou fotógrafo embora sem prova de autoria: o que aprender."</span></div>
+  </div>
+</article>
+<article class="caso">
+  <header class="caso-head">
+    <span class="caso-num">04</span>
+    <h3>Estúdio não entregou ensaio de gestante nem fotos do parto, dois anos depois</h3>
+  </header>
+  <div class="caso-corpo">
+    <div class="campo campo--fato"><span class="rotulo">O que aconteceu</span><span class="valor">cliente pagou por dois ensaios em 2022, um de gestante e outro do nascimento da filha (newborn). O estúdio não entregou o material em nenhum dos dois casos, mesmo após diversas promessas.</span></div>
+<div class="campo campo--placar"><span class="rotulo">Quem ganhou</span><span class="valor">a cliente.</span></div>
+<div class="campo campo--lei"><span class="rotulo">Base legal</span><span class="valor">relação de consumo, Código de Defesa do Consumidor, e direito de imagem, Código Civil art. 20. <a href="https://www.planalto.gov.br/ccivil_03/leis/l8078compilado.htm" target="_blank" rel="noopener">planalto.gov.br/ccivil_03/leis/l8078compilado.htm</a></span></div>
+<div class="campo campo--foro"><span class="rotulo">Tribunal e data</span><span class="valor">Juizado Especial Cível e Criminal de Macaíba (RN), decisão noticiada em dezembro de 2025, juíza Josane Peixoto Noronha.</span></div>
+<div class="campo campo--potencial"><span class="rotulo">Potencial de conteúdo</span><span class="valor">16/18 · identificação 3, dor 3, contraintuição 1, acionabilidade 3, ponte com produto 3, vida útil 3. Não surpreende ninguém que atraso gere indenização, mas o tema (gestante e newborn, momentos que não se repetem) é dos que mais geram identificação com o público de fotógrafos.</span></div>
+<div class="campo campo--integra"><span class="rotulo">Íntegra arquivada</span><span class="valor">não disponível, caso descrito apenas pela notícia.</span></div>
+<div class="campo campo--fonte"><span class="rotulo">Fonte</span><span class="valor"><a class="btn-fonte" href="https://diariodorn.com.br/estudio-fotografico-e-condenado-por-danos-morais-por-nao-entregar-ensaio-de-gestante/" target="_blank" rel="noopener">diariodorn.com.br<span class="seta">↗</span></a></span></div>
+<div class="campo campo--importa"><span class="rotulo">Por que importa pro fotógrafo</span><span class="valor">ensaio de gestante e newborn é, por definição, irrepetível. Atraso de entrega nesse nicho específico pesa mais na fundamentação do juiz do que em outros tipos de ensaio.</span></div>
+<div class="campo campo--aprofundar"><span class="rotulo">Vale aprofundar</span><span class="valor">não por enquanto, o padrão de fundamentação (CDC + irrepetibilidade do momento) já está bem estabelecido nos outros casos de não entrega desta mesma rodada.</span></div>
+<div class="campo campo--gancho"><span class="rotulo">Gancho de conteúdo</span><span class="valor">checklist, "prazo de entrega para ensaio de gestante e newborn: por que sua política de atraso precisa ser mais rígida aqui do que em outros ensaios."</span></div>
+  </div>
+</article>
+<article class="caso">
+  <header class="caso-head">
+    <span class="caso-num">05</span>
+    <h3>Fotógrafo condenado a prisão por dar calote em 60 casais</h3>
+  </header>
+  <div class="caso-corpo">
+    <div class="campo campo--fato"><span class="rotulo">O que aconteceu</span><span class="valor">fotógrafo vendia pacotes de fotografia e filmagem de casamento, atuando também como captador de clientes junto com outros dois envolvidos, entre 2014 e 2018. Recebeu o pagamento integral de 60 clientes e não entregou o material contratado, prejuízo total de R$ 463 mil.</span></div>
+<div class="campo campo--placar"><span class="rotulo">Quem ganhou</span><span class="valor">o Ministério Público, a condenação foi mantida.</span></div>
+<div class="campo campo--lei"><span class="rotulo">Base legal</span><span class="valor">estelionato, art. 171 do Código Penal (Decreto-Lei 2.848/1940). <a href="https://www.planalto.gov.br/ccivil_03/decreto-lei/del2848compilado.htm" target="_blank" rel="noopener">planalto.gov.br/ccivil_03/decreto-lei/del2848compil…</a></span></div>
+<div class="campo campo--foro"><span class="rotulo">Tribunal e data</span><span class="valor">7ª Câmara de Direito Criminal do TJSP, acórdão de 14 de novembro de 2025, processo 1500376-91.2019.8.26.0309.</span></div>
+<div class="campo campo--potencial"><span class="rotulo">Potencial de conteúdo</span><span class="valor">15/18 · identificação 3, dor 3, contraintuição 2, acionabilidade 2, ponte com produto 2, vida útil 3. O detalhe que rende conteúdo é a pena, 3 anos, 10 meses e 20 dias de reclusão em regime semiaberto, isso mostra que não entregar fotos pode deixar de ser "só" descumprimento civil e virar crime, dependendo da escala e da intenção.</span></div>
+<div class="campo campo--integra"><span class="rotulo">Íntegra arquivada</span><span class="valor">sim, acórdão completo baixado em `radar-juridico/documentos/2026-07-30/acordao-fotografo-60-clientes-tjsp.pdf` (19 páginas).</span></div>
+<div class="campo campo--fonte"><span class="rotulo">Fonte</span><span class="valor"><a class="btn-fonte" href="https://www.migalhas.com.br/quentes/444355/fotografo-e-condenado-por-nao-entregar-fotos-e-videos-a-60-clientes" target="_blank" rel="noopener">migalhas.com.br<span class="seta">↗</span></a></span></div>
+<div class="campo campo--importa"><span class="rotulo">Por que importa pro fotógrafo</span><span class="valor">a linha entre "cliente insatisfeito processa por descumprimento contratual" e "cliente denuncia por estelionato" existe, e ela depende de volume, tempo de inadimplência e se havia dolo desde o início. Vale entender onde ela fica.</span></div>
+<div class="campo campo--aprofundar"><span class="rotulo">Vale aprofundar</span><span class="valor">sim, é o único caso da rodada com íntegra já em mãos e com repercussão criminal, boa oportunidade de mostrar ao Felipe a diferença entre inadimplência contratual isolada e padrão que caracteriza fraude.</span></div>
+<div class="campo campo--gancho"><span class="rotulo">Gancho de conteúdo</span><span class="valor">artigo de blog, "quando atraso na entrega de fotos vira crime: o caso dos 60 casais lesados."</span></div>
+  </div>
+</article>
+<article class="caso">
+  <header class="caso-head">
+    <span class="caso-num">06</span>
+    <h3>Campanha publicitária usou foto de casal e dos filhos além do prazo contratado</h3>
+  </header>
+  <div class="caso-corpo">
+    <div class="campo campo--fato"><span class="rotulo">O que aconteceu</span><span class="valor">casal foi fotografado para campanha publicitária em maio de 2023, com contrato de uso por um ano. As imagens, incluindo dos filhos menores, continuaram sendo usadas em academias até novembro de 2024, bem depois do prazo combinado.</span></div>
+<div class="campo campo--placar"><span class="rotulo">Quem ganhou</span><span class="valor">o casal, com redução parcial do valor pedido.</span></div>
+<div class="campo campo--lei"><span class="rotulo">Base legal</span><span class="valor">Código Civil art. 20 (direito de imagem) e vedação ao enriquecimento sem causa. <a href="https://www.planalto.gov.br/ccivil_03/leis/2002/l10406compilada.htm" target="_blank" rel="noopener">planalto.gov.br/ccivil_03/leis/2002/l10406compilada…</a></span></div>
+<div class="campo campo--foro"><span class="rotulo">Tribunal e data</span><span class="valor">3ª Turma Recursal dos Juizados Especiais do DF, decisão de 10 de novembro de 2025, processo 0704221-79.2025.8.07.0020.</span></div>
+<div class="campo campo--potencial"><span class="rotulo">Potencial de conteúdo</span><span class="valor">15/18 · identificação 2, dor 2, contraintuição 2, acionabilidade 3, ponte com produto 3, vida útil 3. O caso é entre o casal fotografado e a marca, não envolve diretamente um fotógrafo como parte, mas a lição de contrato com prazo de cessão de uso é central para quem licencia imagem.</span></div>
+<div class="campo campo--integra"><span class="rotulo">Íntegra arquivada</span><span class="valor">não disponível, caso descrito apenas pela notícia do TJDFT.</span></div>
+<div class="campo campo--fonte"><span class="rotulo">Fonte</span><span class="valor"><a class="btn-fonte" href="https://www.tjdft.jus.br/institucional/imprensa/noticias/2025/novembro/empresas-devem-indenizar-casal-por-veiculacao-de-imagem-apos-prazo-contratual" target="_blank" rel="noopener">tjdft.jus.br<span class="seta">↗</span></a></span></div>
+<div class="campo campo--importa"><span class="rotulo">Por que importa pro fotógrafo</span><span class="valor">quem negocia cessão de uso de imagem para campanha, seja como fotógrafo contratado, seja como quem intermedeia o uso do modelo, precisa travar prazo de validade explícito no contrato. Sem isso, o uso continuado vira passivo de quem publicou, não necessariamente de quem fotografou, mas o fotógrafo que redige mal a cessão pode acabar no meio do fogo cruzado.</span></div>
+<div class="campo campo--aprofundar"><span class="rotulo">Vale aprofundar</span><span class="valor">não por enquanto, o caso já está claro pela notícia e o ensinamento contratual é direto.</span></div>
+<div class="campo campo--gancho"><span class="rotulo">Gancho de conteúdo</span><span class="valor">post ou carrossel, "sua cessão de uso de imagem tem data de validade? Devia ter."</span></div>
+  </div>
+</article>
+<article class="caso">
+  <header class="caso-head">
+    <span class="caso-num">07</span>
+    <h3>Fotógrafa não entregou fotos de primeira comunhão mesmo depois de cobrar</h3>
+  </header>
+  <div class="caso-corpo">
+    <div class="campo campo--fato"><span class="rotulo">O que aconteceu</span><span class="valor">fotógrafa foi contratada em maio de 2023 por R$ 200 para registrar a primeira comunhão de uma criança. Enviou algumas fotos pelo WhatsApp e prometeu o restante em pendrive, promessa nunca cumprida.</span></div>
+<div class="campo campo--placar"><span class="rotulo">Quem ganhou</span><span class="valor">a cliente, que recebeu indenização e ordem de entrega do material em 15 dias.</span></div>
+<div class="campo campo--lei"><span class="rotulo">Base legal</span><span class="valor">relação de consumo, dano moral por perda de registro de momento único e irrepetível. <a href="https://www.planalto.gov.br/ccivil_03/leis/l8078compilado.htm" target="_blank" rel="noopener">planalto.gov.br/ccivil_03/leis/l8078compilado.htm</a></span></div>
+<div class="campo campo--foro"><span class="rotulo">Tribunal e data</span><span class="valor">Juizado Especial Cível da comarca de Jaraguá do Sul (SC), decisão de 1º de julho de 2026.</span></div>
+<div class="campo campo--potencial"><span class="rotulo">Potencial de conteúdo</span><span class="valor">15/18 · identificação 3, dor 2, contraintuição 1, acionabilidade 3, ponte com produto 3, vida útil 3. É o terceiro caso desta mesma rodada com o padrão "recebeu, não entregou", ao lado do caso de Macaíba e do caso dos 60 clientes. Sozinho o caso é modesto, mas junto com os outros dois forma um padrão que vale a pena nomear.</span></div>
+<div class="campo campo--integra"><span class="rotulo">Íntegra arquivada</span><span class="valor">não disponível, caso descrito apenas pela notícia.</span></div>
+<div class="campo campo--fonte"><span class="rotulo">Fonte</span><span class="valor"><a class="btn-fonte" href="https://www.direitonews.com.br/2026/07/fotografa-cobrou-r-200-registrar-1-comunhao-entregou-so-19-fotos-condenada-pagar-r-3-mil.html" target="_blank" rel="noopener">direitonews.com.br<span class="seta">↗</span></a></span></div>
+<div class="campo campo--importa"><span class="rotulo">Por que importa pro fotógrafo</span><span class="valor">valor baixo do contrato (R$ 200) não afasta indenização por dano moral, o que pesa é a natureza irrepetível do evento, não o preço cobrado.</span></div>
+<div class="campo campo--aprofundar"><span class="rotulo">Vale aprofundar</span><span class="valor">não como caso isolado, mas considerar junto dos outros dois casos de não entrega desta rodada numa peça só sobre o padrão.</span></div>
+<div class="campo campo--gancho"><span class="rotulo">Gancho de conteúdo</span><span class="valor">ver gancho combinado abaixo, seção de pauta sugerida.</span></div>
+  </div>
+</article>
+<article class="caso">
+  <header class="caso-head">
+    <span class="caso-num">08</span>
+    <h3>Movimento político condenado por usar foto de fotojornalista sem crédito</h3>
+  </header>
+  <div class="caso-corpo">
+    <div class="campo campo--fato"><span class="rotulo">O que aconteceu</span><span class="valor">fotógrafo produziu imagem durante reintegração de posse na Zona Leste de São Paulo em 2017, acompanhando Guilherme Boulos. Em 2020, durante a campanha eleitoral de Boulos à prefeitura, o Movimento Brasil Livre reutilizou a foto sem autorização, sem crédito ao autor e com alteração visual, em publicações de forte engajamento.</span></div>
+<div class="campo campo--placar"><span class="rotulo">Quem ganhou</span><span class="valor">o fotógrafo Peter Leone.</span></div>
+<div class="campo campo--lei"><span class="rotulo">Base legal</span><span class="valor">Lei 9.610/1998, art. 24 (direito moral de ter o nome indicado na obra) e art. 79, §§ 1º e 2º (obrigatoriedade de crédito e vedação de alteração sem autorização). <a href="https://www.planalto.gov.br/ccivil_03/leis/l9610.htm" target="_blank" rel="noopener">planalto.gov.br/ccivil_03/leis/l9610.htm</a></span></div>
+<div class="campo campo--foro"><span class="rotulo">Tribunal e data</span><span class="valor">37ª Vara Cível do Foro Central de São Paulo, decisão de 19 de junho de 2026, juíza Ayanny Justino Costa.</span></div>
+<div class="campo campo--potencial"><span class="rotulo">Potencial de conteúdo</span><span class="valor">13/18 · identificação 3, dor 2, contraintuição 2, acionabilidade 2, ponte com produto 1, vida útil 3. É um caso claro de uso sem crédito por terceiro, situação comum, mas a conexão com contrato ou blindagem é mais fraca, aqui o remédio é ação autoral direta, não cláusula contratual prévia.</span></div>
+<div class="campo campo--integra"><span class="rotulo">Íntegra arquivada</span><span class="valor">não disponível, sem PDF linkado nas fontes consultadas.</span></div>
+<div class="campo campo--fonte"><span class="rotulo">Fonte</span><span class="valor"><a class="btn-fonte" href="https://www.conjur.com.br/2026-jun-21/liberdade-politica-nao-afasta-protecao-autoral-decide-juiza-ao-condenar-mbl/" target="_blank" rel="noopener">conjur.com.br<span class="seta">↗</span></a></span></div>
+<div class="campo campo--importa"><span class="rotulo">Por que importa pro fotógrafo</span><span class="valor">proteção autoral independe de registro formal e vale contra qualquer usuário, inclusive movimento político alegando interesse público ou liberdade de expressão. A juíza foi explícita, "a liberdade de manifestação política não afasta o respeito à legislação sobre direitos autorais."</span></div>
+<div class="campo campo--aprofundar"><span class="rotulo">Vale aprofundar</span><span class="valor">não por enquanto, o caso está bem documentado pelas duas fontes e o ensinamento é direto.</span></div>
+<div class="campo campo--gancho"><span class="rotulo">Gancho de conteúdo</span><span class="valor">post, "sua foto foi usada numa campanha política sem seu nome? Isso também é crime contra direito autoral, não só falta de educação."</span></div>
+  </div>
+</article>
+</section>
+<section class="secao">
+  <h2><span class="sec-num">3</span>Para você saber</h2>
+  <ul class="lista"><li>L'Occitane recorre de condenação por usar imagem e música de Marisa Monte em post no Instagram sem autorização, TJ/RJ. Envolve marca grande e artista famosa, pouca identificação direta com o fotógrafo do dia a dia, mas mostra que empresas seguem sendo condenadas por postar sem checar direitos. <a href="https://www.migalhas.com.br/quentes/461252/l-occitane-recorre-de-condenacao-por-uso-de-imagem-de-marisa-monte" target="_blank" rel="noopener">migalhas.com.br/quentes/461252/l-occitane-recorre-d…</a></li><li>Debate em curso (sem decisão judicial até o momento) sobre fotógrafos que vendem fotos de atletas amadores flagrados durante treino em via pública, sem consentimento prévio. Bruno Bioni e outros especialistas discutem se o caso é de direito autoral ou de proteção de dados (LGPD), já que corredor em treino livre não assinou termo algum, diferente de quem se inscreve em prova oficial. É um nicho de fotografia esportiva que pode virar contencioso em breve, vale monitorar. <a href="https://brunobioni.com.br/blog/namidia/fotografos-vendem-fotos-de-atletas-na-rua-sem-consentimento-direito-autoral-ou-um-problema-de-protecao-de-dados/" target="_blank" rel="noopener">brunobioni.com.br/blog/namidia/fotografos-vendem-fo…</a></li></ul>
+</section>
+<section class="secao">
+  <h2><span class="sec-num">4</span>Pauta sugerida</h2>
+  <article class="pauta pauta--alta">
+  <header>
+    <span class="pauta-ordem">1</span>
+    <h3>Recebeu, não entregou: três sentenças, um padrão</h3>
+    <span class="badge badge--alta">prioridade alta</span>
+  </header>
+  <div class="pauta-corpo"><div class="pauta-campo"><span class="rotulo">Ângulo</span><span class="valor">cruzar os três casos de não entrega de material contratado desta rodada (Macaíba, Jaraguá do Sul, e o caso criminal dos 60 clientes em São Paulo) numa única peça mostrando a escalada, do juizado cível ao crime.</span></div><div class="pauta-campo"><span class="rotulo">Formato</span><span class="valor">artigo de blog longo, com quadro comparativo dos três casos.</span></div><div class="pauta-campo"><span class="rotulo">Por que agora</span><span class="valor">são três decisões dentro dos últimos 12 meses, tema atemporal e com ponte direta para contrato com prazo de entrega e política de atraso.</span></div></div>
+</article>
+<article class="pauta pauta--alta">
+  <header>
+    <span class="pauta-ordem">2</span>
+    <h3>Seu HD queimou não é desculpa</h3>
+    <span class="badge badge--alta">prioridade alta</span>
+  </header>
+  <div class="pauta-corpo"><div class="pauta-campo"><span class="rotulo">Ângulo</span><span class="valor">responsabilidade objetiva do fotógrafo por perda de arquivo (caso Limeira, nota 17), e como cláusula de backup e força maior deveria estar no contrato.</span></div><div class="pauta-campo"><span class="rotulo">Formato</span><span class="valor">Reels ou artigo curto, gancho direto no medo mais comum da categoria.</span></div><div class="pauta-campo"><span class="rotulo">Por que agora</span><span class="valor">decisão de abril de 2026, ainda fresca, e o tema, perda de HD, computador com vírus, é universal entre fotógrafos.</span></div></div>
+</article>
+<article class="pauta pauta--alta">
+  <header>
+    <span class="pauta-ordem">3</span>
+    <h3>Autorização de uso não é cheque em branco</h3>
+    <span class="badge badge--alta">prioridade alta</span>
+  </header>
+  <div class="pauta-corpo"><div class="pauta-campo"><span class="rotulo">Ângulo</span><span class="valor">consentimento por finalidade específica, o que muda quando o fotógrafo promete um uso e faz outro (caso Ourinhos, nota 17).</span></div><div class="pauta-campo"><span class="rotulo">Formato</span><span class="valor">artigo de blog com tom sério, tratado como alerta de conduta profissional, não como fofoca.</span></div><div class="pauta-campo"><span class="rotulo">Por que agora</span><span class="valor">decisão de maio de 2026, tema raro no radar (fotógrafo como réu) e com forte ponte para cláusula de autorização de uso segmentada no contrato.</span></div></div>
+</article>
+<article class="pauta pauta--média">
+  <header>
+    <span class="pauta-ordem">4</span>
+    <h3>Duas vezes a mesma vara, o mesmo erro</h3>
+    <span class="badge badge--média">prioridade média</span>
+  </header>
+  <div class="pauta-corpo"><div class="pauta-campo"><span class="rotulo">Ângulo</span><span class="valor">comparar o caso da franquia de restaurante com o caso de blockchain já publicado na rodada anterior, ambos da 6ª Vara de Causas Comuns de Salvador, para mostrar o que a Justiça baiana está exigindo como prova de autoria.</span></div><div class="pauta-campo"><span class="rotulo">Formato</span><span class="valor">carrossel comparativo.</span></div><div class="pauta-campo"><span class="rotulo">Por que agora</span><span class="valor">aprofunda o caso de maior repercussão já publicado, sem repeti-lo, e fecha um ciclo temático dentro da mesma vara. ---</span></div></div>
+</article>
+</section>
+<section class="secao">
+  <h2><span class="sec-num">5</span>Nada relevante encontrado em</h2>
+  <details class="vazios"><summary>Temas buscados que vieram vazios <span class="contador">5</span></summary><ul><li>Vínculo empregatício específico de fotógrafo ou assistente de fotografia na Justiça do Trabalho (TST/TRTs). Há muita notícia sobre pejotização em geral, mas nenhuma decisão nominal envolvendo fotógrafo no período.</li><li>Fotografia por drone envolvendo fotógrafo profissional como parte de processo (existe jurisprudência genérica sobre drone e privacidade, mas nenhum caso com fotógrafo profissional como parte).</li><li>Fotógrafo proibido de registrar evento fechado ou condomínio por falta de credenciamento, como processo judicial específico.</li><li>IA treinada em acervo fotográfico brasileiro, como caso concreto no Judiciário nacional (o precedente relevante, Getty x Stability AI, é de jurisdição estrangeira, decisão de novembro de 2025, sem efeito direto no Brasil ainda).</li><li>Contrato de ensaio pet como objeto de ação judicial.</li></ul></details>
+</section>
+  <footer class="rodape">
+    <span>Gerado a partir de 2026-07-30-camada1-12meses.md</span>
+    <span>Fontes oficiais e API pública DataJud (CNJ)</span>
+  </footer>
+</div>
+</body>
+</html>
