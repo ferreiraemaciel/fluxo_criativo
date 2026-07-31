@@ -5,11 +5,11 @@ Escopo: COMPLETO
 
 ## Resumo da rodada
 
-Doze meses varridos, treze casos que valem sua atenção, e um padrão que atravessa quase tudo: **quase nenhum fotógrafo perde processo por falta de razão. Perde por falta de papel.**
+Doze meses varridos, dez casos aprovados para virar conteúdo, e uma frase que resume tudo: **quase nenhum fotógrafo perde processo por falta de razão. Perde por falta de papel.**
 
-Três casos são a mesma história em cidades diferentes, o profissional recebeu e não entregou. Um deles escalou tanto que virou prisão. Dois casos mostram fotógrafo indo embora do tribunal de mãos vazias porque não conseguiu provar que a foto era dele, e os dois saíram da mesma vara de Salvador. E um caso inverte tudo, com o fotógrafo no banco dos réus por vender o que prometeu manter privado.
+O caso mais forte da rodada é o da franquia de restaurante, e ele ficou forte depois que li a sentença inteira. A juíza escreveu qual documento teria mudado o resultado, e o documento era o contrato de prestação de serviço. Não foi falta de registro, não foi falta de tecnologia. Foi falta do papel mais básico da profissão.
 
-Do lado bom, os tribunais superiores já disseram, faz tempo e com todas as letras, quase tudo que você precisa para se defender. O problema nunca foi a lei, foi ninguém traduzir.
+Do outro lado, os tribunais superiores já disseram, faz tempo e com todas as letras, quase tudo que você precisa para se defender. O problema nunca foi a lei, foi ninguém traduzir.
 
 > De onde vieram os casos: imprensa jurídica especializada, mais busca direta no STF e no STJ. Os buscadores dos tribunais estaduais ainda não estão acessíveis por automação, então o que veio dos estados chegou pela imprensa.
 
@@ -27,6 +27,9 @@ Ordenados pelo que rende conteúdo, não pelo tamanho do tribunal.
 
 ### O fotógrafo tinha registro em blockchain e mesmo assim perdeu
 
+- **Decisão:** standby
+- **Formatos:** artigo, reels
+
 - **O que muda na prática:** blockchain sozinho não te salva. O que ganha causa é a corrente completa: o arquivo original com os dados de câmera, o histórico de quando você publicou, o contrato assinado e o rastro de entrega ao cliente. E tem um agravante novo: quando a imagem circula pela internet e alguém a modifica com inteligência artificial, provar que a peça final saiu da sua foto fica muito mais difícil. Guarde o RAW. Guarde a data. Guarde o contrato.
 - **A história em uma linha:** um fotógrafo que vende pelo Instagram viu a foto dele estampada numa camiseta à venda, processou a empresa e perdeu.
 - **Como terminou:** a empresa ganhou. Ela provou que pegou a imagem no Pinterest, já marcada como modificada por IA, sem nome de autor. O juiz entendeu que faltou prova de que a estampa vendida veio da foto original dele.
@@ -41,6 +44,9 @@ Ordenados pelo que rende conteúdo, não pelo tamanho do tribunal.
 
 ### Disse que pegou vírus e perdeu as fotos do casamento
 
+- **Decisão:** aceito
+- **Formatos:** artigo, reels, carrossel
+
 - **O que muda na prática:** backup deixou de ser boa prática e virou obrigação. "Deu problema no HD" não é defesa, é confissão. O juiz tratou falha de equipamento como risco do seu negócio, não do cliente. Coloque no contrato como você guarda o material, por quanto tempo, e em quantas cópias. Isso protege os dois lados e mostra profissionalismo antes de qualquer briga.
 - **A história em uma linha:** um casal se casou em novembro de 2023, o fotógrafo alegou que um vírus destruiu tudo, e não entregou nem devolveu o dinheiro.
 - **Como terminou:** o casal ganhou.
@@ -51,32 +57,26 @@ Ordenados pelo que rende conteúdo, não pelo tamanho do tribunal.
 - **Íntegra arquivada:** não disponível, caso descrito apenas pela notícia.
 - **Fonte:** https://diariodejustica.com.br/casal-fica-sem-fotos-de-casamento-apos-fotografo-alegar-virus-no-computador/
 
-### Ofereceu ensaio de graça "só para divulgação" e vendeu o material íntimo
+### A juíza disse qual papel faltava, e era o contrato
 
-- **O que muda na prática:** autorização não é cheque em branco. Cada uso precisa estar escrito separadamente. Postar no seu perfil é um uso. Vender é outro. Licenciar para terceiro é outro. Um texto genérico dizendo "autorizo o uso das imagens" não cobre nada disso com segurança, nem para você nem para quem você fotografa. E quando o material é sensível, a conversa deixa de ser só direito de imagem e entra na lei de proteção de dados, que é bem menos tolerante.
-- **A história em uma linha:** uma mulher aceitou um ensaio gratuito apresentado como divulgação do trabalho do fotógrafo, foi convencida a fazer imagens sensuais com promessa de privacidade, e depois descobriu que estavam sendo vendidas em grupo fechado com mais de mil assinantes.
-- **Como terminou:** ela ganhou. Indenização e ordem de retirada de todo o conteúdo do ar.
-- **Potencial de conteúdo:** 17/18 · identificação 2, dor 3, contraintuição 3, acionabilidade 3, ponte com produto 3, vida útil 3. Inverte o protagonista, aqui o fotógrafo é o infrator, e isso é justamente o gancho.
-- **Gancho de conteúdo:** artigo de blog sobre consentimento por finalidade específica, usando o caso como alerta de conduta.
-- **Cuidado ao produzir conteúdo:** trate como alerta profissional, nunca como fofoca. Não repita detalhe que identifique a vítima, não use imagem alguma do caso, e não faça piada. Esse é o tipo de conteúdo em que o tom errado destrói a autoridade em vez de construir.
-- **Vale aprofundar:** sim, pelo ângulo de como redigir autorização por finalidade.
-- **Lastro:** 1ª Vara Cível de Ourinhos (SP), processo 1004715-08.2023.8.26.0408, decisão de 07/05/2026. Fundamentos: LGPD (Lei 13.709/2018) e art. 20 do Código Civil.
-- **Íntegra arquivada:** não disponível, PDF bloqueado no servidor da fonte.
-- **Fonte:** https://www.conjur.com.br/2026-mai-19/exposicao-nao-autorizada-de-imagens-intimas-viola-direitos-da-personalidade/
+- **Decisão:** aceito
+- **Formatos:** artigo, carrossel
 
-### Vinte e dois anos de carreira e não conseguiu provar que a foto era dele
-
-- **O que muda na prática:** é o mesmo recado do caso do blockchain, e vem da mesma vara, um ano antes. Se o seu único argumento é "todo mundo sabe que essa foto é minha", você perde. Contrato de prestação de serviço com cessão escrita, ou pelo menos um recibo detalhando o que foi fotografado e entregue, é o que separa você de sair do tribunal sem nada. Duas vezes seguidas, o mesmo juízo mandou fotógrafo embora pelo mesmo motivo.
-- **A história em uma linha:** um fotógrafo cobriu a inauguração de uma franquia de restaurante e, um ano e meio depois, achou duas fotos dele editadas no Instagram da marca, sem autorização.
-- **Como terminou:** a franquia ganhou. O juiz entendeu que faltou prova de autoria. O pedido era de vinte e cinco mil reais somando danos materiais e morais.
-- **Potencial de conteúdo:** 17/18 · identificação 3, dor 3, contraintuição 2, acionabilidade 3, ponte com produto 3, vida útil 3. Sozinho já é forte, e junto com o caso do blockchain vira padrão nomeável.
-- **Gancho de conteúdo:** carrossel ou artigo. Abertura pronta: "Duas vezes, a mesma vara de Salvador mandou fotógrafo embora sem indenização. O motivo foi o mesmo nas duas."
-- **Vale aprofundar:** sim, é o par natural do caso do blockchain.
-- **Lastro:** 6ª Vara dos Juizados Especiais de Causas Comuns de Salvador (BA), sentença noticiada em maio de 2025. Fundamentos: art. 373 do CPC e art. 22 da Lei 9.610/1998.
-- **Íntegra arquivada:** não disponível, PDF bloqueado no servidor da fonte. Dá para tentar de novo pelo navegador.
+- **O que muda na prática:** este é o caso mais útil da rodada inteira, porque a juíza escreveu, em português claro, o que teria mudado o resultado. Faltou o contrato de prestação de serviço. Ela registrou que o documento "seria fundamental para comprovação de pagamento do trabalho e dos detalhes acerca do direito autoral e de imagem". Ou seja, não foi falta de razão nem falta de registro em cartório. Foi falta do papel que qualquer fotógrafo pode ter antes mesmo de apertar o botão. Print de Instagram e arquivo solto não bastam, porque não amarram você àquele trabalho, àquele cliente e àquelas imagens.
+- **A história em uma linha:** um fotógrafo com vinte e dois anos de carreira cobriu a inauguração de uma franquia de restaurante e, tempos depois, achou fotos dele publicadas no Instagram da marca sem autorização.
+- **Como terminou:** a franquia ganhou. Os documentos que ele juntou, sozinhos, não provaram que as fotos eram dele, e o contrato do trabalho não estava nos autos.
+- **Detalhe que muda a leitura do caso do blockchain:** esta sentença é da **mesma vara de Salvador**, um ano e meio antes, e aqui a juíza acertou a lei. Ela escreveu que a obra fotográfica é protegida "independente de registro", citando o artigo certo. Isso mostra que a confusão da sentença de julho de 2026, que tratou registro oficial como fonte de autoria, não é entendimento da vara, é escorregão de um caso específico. O que a vara cobra, nos dois casos, é prova organizada. E prova organizada começa em contrato.
+- **Potencial de conteúdo:** 18/18 · identificação 3, dor 3, contraintuição 3, acionabilidade 3, ponte com produto 3, vida útil 3. Subiu para nota máxima depois da leitura da íntegra. É o único caso em que o próprio Judiciário diz qual documento faltava, e esse documento é exatamente o que você vende.
+- **Gancho de conteúdo:** artigo de blog. Abertura pronta: "A juíza disse, na sentença, qual papel teria salvado o fotógrafo. Ele não tinha esse papel." Desdobra em carrossel com a lista do que o contrato precisa registrar para servir de prova.
+- **Cuidado ao produzir conteúdo:** o nome do autor e o da empresa estão na sentença, que é pública, mas não há necessidade de expor ninguém. Conte o caso sem nomear as partes, o valor da lição está no que faltou, não em quem perdeu.
+- **Vale aprofundar:** já aprofundado, íntegra lida.
+- **Lastro:** 6ª Vara de Causas Comuns de Salvador (BA), processo 0040459-89.2024.8.05.0001, sentença da juíza leiga Camilla Lucena Martins, homologada pela juíza Marcela Moura Franca Pamponet em 28/01/2025, noticiada em maio de 2025. Fundamentos: art. 373 do CPC, arts. 186 e 927 do Código Civil, e Lei 9.610/1998, arts. 7º VII, 18, 28 e 29. https://www.planalto.gov.br/ccivil_03/leis/l9610.htm
+- **Íntegra arquivada:** radar-juridico/documentos/2026-07-30/sentenca-franquia-autoria-tjba.pdf
 - **Fonte:** https://www.conjur.com.br/2025-mai-03/sem-prova-de-autoria-fotografo-nao-consegue-indenizacao-por-uso-indevido-de-suas-fotos/
-
 ### A CBF publicou foto de 1970 creditando o próprio acervo e pagou por isso
+
+- **Decisão:** aceito
+- **Formatos:** carrossel, imagem
 
 - **O que muda na prática:** três coisas. Primeira, foto antiga continua tendo dono, e "herdei esse acervo" não protege quem publica. Segunda, creditar "acervo da empresa" no lugar do nome do autor é, sozinho, motivo de condenação, mesmo sem uso comercial. Terceira, e essa é a mais útil pra você cobrar: quando alguém usa sua foto sem autorizar, o valor a receber é o que teria custado a licença que a pessoa não comprou. Você não precisa inventar número, precisa ter tabela.
 - **A história em uma linha:** o filho de um fotógrafo já falecido processou a CBF por publicar no site oficial a foto histórica do tri de 1970 sem autorização, creditando "acervo CBF".
@@ -91,6 +91,9 @@ Ordenados pelo que rende conteúdo, não pelo tamanho do tribunal.
 
 ### O que o STJ já decidiu e quase ninguém do ramo sabe
 
+- **Decisão:** aceito
+- **Formatos:** artigo, carrossel, imagem, reels
+
 - **O que muda na prática:** três decisões antigas resolvem três brigas que você tem todo mês. Primeira: **a foto é sua, o rosto é dele.** Quem cria é o fotógrafo, então quem tem direito autoral é você. A pessoa fotografada tem outro direito, o de imagem, e são coisas separadas. Segunda: **o cliente pagou o serviço, não comprou a foto.** Mesmo com contrato, mesmo com vínculo de emprego, a imagem continua sua, e a transferência de direitos só existe se estiver escrita. Sem cláusula, o uso fica limitado ao que era indispensável para aquilo que foi contratado. Terceira: **publicar sua foto sem seu nome já é dano moral**, sem precisar provar prejuízo nenhum.
 - **A história em uma linha:** não é um caso, é o conjunto de decisões do tribunal que dá a palavra final sobre o assunto no Brasil.
 - **Como terminou:** o fotógrafo ganhou na maioria delas. Em um caso, quinze mil de indenização só pela falta de crédito. Em outro, vinte e seis mil.
@@ -103,6 +106,9 @@ Ordenados pelo que rende conteúdo, não pelo tamanho do tribunal.
 
 ### Não entregou o ensaio de gestante nem as fotos do parto
 
+- **Decisão:** standby
+- **Formatos:** carrossel
+
 - **O que muda na prática:** existe um grupo de ensaios em que o atraso pesa muito mais: gestante, parto, primeiro ano, formatura, casamento. São momentos que não voltam, e o juiz leva isso em conta na hora de calcular a indenização. Se você trabalha com esses nichos, sua política de prazo precisa ser mais rígida do que a dos outros, e o prazo precisa estar no contrato, com o que acontece se você atrasar.
 - **A história em uma linha:** uma cliente pagou por dois ensaios em 2022, gestante e recém-nascida, e dois anos depois ainda não tinha recebido nada.
 - **Como terminou:** a cliente ganhou.
@@ -113,20 +119,10 @@ Ordenados pelo que rende conteúdo, não pelo tamanho do tribunal.
 - **Íntegra arquivada:** não disponível, caso descrito apenas pela notícia.
 - **Fonte:** https://diariodorn.com.br/estudio-fotografico-e-condenado-por-danos-morais-por-nao-entregar-ensaio-de-gestante/
 
-### Recebeu de sessenta casais, não entregou, e foi preso
-
-- **O que muda na prática:** existe uma linha entre atrasar e cometer crime, e ela depende de três coisas: quantos clientes, quanto tempo sem entregar, e se você já recebeu sabendo que não ia entregar. Um caso isolado é briga de contrato. Um padrão vira estelionato. Quem está com a agenda estourada e continua vendendo pacote sem conseguir entregar o que já vendeu precisa parar e olhar para esse número.
-- **A história em uma linha:** um fotógrafo vendeu pacotes de casamento para sessenta casais entre 2014 e 2018, recebeu tudo e não entregou nada, somando quatrocentos e sessenta e três mil reais.
-- **Como terminou:** condenação criminal mantida. Três anos, dez meses e vinte dias de reclusão, em regime semiaberto.
-- **Potencial de conteúdo:** 15/18 · identificação 3, dor 3, contraintuição 2, acionabilidade 2, ponte com produto 2, vida útil 3. O que rende é a pena, que mostra até onde a coisa pode ir.
-- **Gancho de conteúdo:** artigo de blog. Abertura pronta: "Todo fotógrafo já atrasou uma entrega. Esse aqui atrasou sessenta e foi preso."
-- **Cuidado ao produzir conteúdo:** não transforme em sensacionalismo nem em ameaça ao leitor. O tom é de fronteira, mostrar onde fica a linha, não assustar quem está com duas entregas atrasadas.
-- **Vale aprofundar:** sim, é o único desta leva com íntegra em mãos.
-- **Lastro:** 7ª Câmara de Direito Criminal do TJSP, processo 1500376-91.2019.8.26.0309, acórdão de 14/11/2025. Fundamento: art. 171 do Código Penal.
-- **Íntegra arquivada:** radar-juridico/documentos/2026-07-30/acordao-fotografo-60-clientes-tjsp.pdf
-- **Fonte:** https://www.migalhas.com.br/quentes/444355/fotografo-e-condenado-por-nao-entregar-fotos-e-videos-a-60-clientes
-
 ### A campanha contratou por um ano e usou por dois e meio
+
+- **Decisão:** aceito
+- **Formatos:** carrossel, imagem
 
 - **O que muda na prática:** cessão de uso precisa de data de validade escrita. Quando o prazo vence e a imagem continua no ar, quem publicou paga. Se você é quem fotografa e quem intermedeia o modelo, cuidado dobrado: um contrato mal redigido coloca você no meio do fogo cruzado entre a marca e a pessoa fotografada. Coloque prazo, coloque onde pode ser usada, e coloque o que acontece quando o prazo acaba.
 - **A história em uma linha:** um casal foi fotografado para uma campanha publicitária com contrato de um ano, e as imagens, incluindo as dos filhos, seguiram em academias por mais um ano e meio.
@@ -138,19 +134,10 @@ Ordenados pelo que rende conteúdo, não pelo tamanho do tribunal.
 - **Íntegra arquivada:** não disponível, caso descrito pela notícia do próprio tribunal.
 - **Fonte:** https://www.tjdft.jus.br/institucional/imprensa/noticias/2025/novembro/empresas-devem-indenizar-casal-por-veiculacao-de-imagem-apos-prazo-contratual
 
-### Cobrou duzentos reais e pagou três mil
-
-- **O que muda na prática:** preço baixo não reduz sua responsabilidade. Trabalho pequeno tem o mesmo dever de entrega que trabalho grande, e o que pesa na conta do juiz é a natureza do evento, não o valor do contrato. Se você faz jobs de ticket baixo em volume, o risco não é proporcionalmente menor, é proporcionalmente maior, porque são mais clientes.
-- **A história em uma linha:** uma fotógrafa cobrou duzentos reais para registrar uma primeira comunhão, mandou dezenove fotos pelo WhatsApp, prometeu o resto num pendrive e nunca entregou.
-- **Como terminou:** a cliente ganhou três mil de indenização e ordem de entrega em quinze dias.
-- **Potencial de conteúdo:** 15/18 · identificação 3, dor 2, contraintuição 1, acionabilidade 3, ponte com produto 3, vida útil 3. Sozinho é modesto, mas fecha o padrão com os outros dois casos de não entrega.
-- **Gancho de conteúdo:** entra na peça do padrão de não entrega, com o contraste entre os duzentos cobrados e os três mil pagos.
-- **Vale aprofundar:** não isoladamente.
-- **Lastro:** Juizado Especial Cível de Jaraguá do Sul (SC), decisão de 01/07/2026. Fundamento: Código de Defesa do Consumidor.
-- **Íntegra arquivada:** não disponível, caso descrito apenas pela notícia.
-- **Fonte:** https://www.direitonews.com.br/2026/07/fotografa-cobrou-r-200-registrar-1-comunhao-entregou-so-19-fotos-condenada-pagar-r-3-mil.html
-
 ### O Supremo já disse, desde 2002, que não precisa vender para dar problema
+
+- **Decisão:** aceito
+- **Formatos:** artigo, reels, imagem
 
 - **O que muda na prática:** aquela ideia de que só existe risco quando você lucra com a imagem está errada, e está errada faz mais de vinte anos. Publicar a foto de alguém sem autorização, **com intenção comercial ou não**, já basta para gerar dano moral. Isso alcança seu portfólio, seu Instagram profissional, seu site e sua apresentação de orçamento. A solução não é parar de mostrar trabalho, é ter autorização assinada antes de mostrar.
 - **A história em uma linha:** o tribunal mais alto do país fixou, num julgamento de 2002 e em outros dois dos anos 1980, que usar a imagem de alguém sem consentimento gera dever de indenizar.
@@ -164,6 +151,9 @@ Ordenados pelo que rende conteúdo, não pelo tamanho do tribunal.
 
 ### Movimento político usou foto de fotojornalista sem crédito e foi condenado
 
+- **Decisão:** aceito
+- **Formatos:** reels, imagem
+
 - **O que muda na prática:** causa política, engajamento e "interesse público" não são passe livre para usar sua foto. Se alguém pegou seu trabalho, tirou seu nome e ainda alterou a imagem, isso é problema de quem publicou, independentemente da bandeira. E vale lembrar que você não precisa ter registrado nada em lugar nenhum para cobrar.
 - **A história em uma linha:** um fotojornalista fotografou uma reintegração de posse em São Paulo em 2017, e três anos depois um movimento político usou a imagem em campanha eleitoral, sem crédito e com alteração visual.
 - **Como terminou:** o fotógrafo ganhou. A juíza escreveu que liberdade de manifestação política não afasta o respeito à lei de direitos autorais.
@@ -176,6 +166,9 @@ Ordenados pelo que rende conteúdo, não pelo tamanho do tribunal.
 - **Fonte:** https://www.conjur.com.br/2026-jun-21/liberdade-politica-nao-afasta-protecao-autoral-decide-juiza-ao-condenar-mbl/
 
 ### Fotografou de fora para dentro do apartamento e a Justiça mandou tirar do ar
+
+- **Decisão:** aceito
+- **Formatos:** reels, imagem
 
 - **O que muda na prática:** estar em local público não te autoriza a registrar o que está dentro da casa de alguém, e teleobjetiva não muda isso. A decisão deixou uma régua de três perguntas que serve para qualquer registro de pessoa sem autorização: existe expectativa razoável de privacidade naquele lugar, existe consentimento, existe interesse público de verdade. Faltando as três ao mesmo tempo, você não pode explorar aquela imagem. Vale para fotografia de rua, cobertura em condomínio e drone sobre área residencial.
 - **A história em uma linha:** um fotógrafo captou imagens do interior do apartamento de uma atriz a partir da rua, com equipamento de alta capacidade óptica, e o material foi publicado.
@@ -199,10 +192,10 @@ Ordenados pelo que rende conteúdo, não pelo tamanho do tribunal.
 Formato: artigo de blog longo, desdobrado em Reels de 45 segundos.
 Por que agora: os dois casos são recentes, ninguém no nicho fez o cruzamento, e a sentença do blockchain ainda pode ser reformada, o que torna o ângulo perecível.
 
-**2. Recebeu e não entregou: onde fica a linha do crime (prioridade alta)**
-Ângulo: quatro casos reais de não entrega nesta rodada, do ensaio de duzentos reais até o fotógrafo preso por lesar sessenta casais. Mostrar a escala e o que separa o atraso honesto da fraude, e o que colocar no contrato sobre prazo, backup e o que acontece quando algo dá errado.
-Formato: artigo de blog com régua visual da escala, mais carrossel.
-Por que agora: é o padrão mais forte dos doze meses e conecta direto com contrato.
+**2. O papel que a juíza disse que faltava (prioridade alta)**
+Ângulo: em duas sentenças da mesma vara de Salvador, dois fotógrafos perderam por não conseguir provar autoria. Num deles, a juíza apontou exatamente o que faltava, o contrato de prestação de serviço. Montar a lista do que um contrato precisa registrar para servir de prova em juízo: quem contratou, o que foi fotografado, quando, o que foi entregue, e o que o cliente pode e não pode fazer com o material.
+Formato: artigo de blog longo, desdobrado em carrossel com a lista.
+Por que agora: é o caso com a ponte mais direta e mais honesta com o produto, porque quem diz que o contrato era fundamental é a sentença, não a gente.
 
 **3. O cliente pagou o ensaio, mas não comprou a foto (prioridade alta)**
 Ângulo: o STJ decidiu, mais de uma vez, que pagar pelo trabalho não transfere direito autoral, e que a cessão precisa estar escrita. Sem cláusula, o uso fica limitado ao que era indispensável para o que foi contratado.

@@ -43,7 +43,8 @@ Antes de qualquer busca, leia nesta ordem:
 
 1. `.claude/rules/copy/checklist-light-copy.md` (12 proibições de escrita).
 2. `radar-juridico/historico.md`, se existir. É a lista dos casos já reportados em rodadas anteriores. **Nunca repita um caso que já está lá**, a não ser que tenha havido fato novo (recurso julgado, decisão reformada, trânsito em julgado). Quando houver fato novo, marque o item como `ATUALIZAÇÃO`.
-3. O relatório da rodada anterior em `radar-juridico/relatorios/`, para saber o que já foi dito e não repetir análise.
+3. `radar-juridico/descartados.md`. **Lista de veto.** Caso que o Felipe já recusou nunca mais volta a aparecer, em nenhuma rodada. Antes de escrever qualquer caso, confira se ele já está lá. E leia também a seção "Motivos recorrentes de descarte" desse arquivo: ela é filtro prévio, não só histórico. Hoje ela veta dois padrões, má-fé escancarada do fotógrafo (crime deliberado, que nenhum contrato evitaria e que só rende sensacionalismo) e assunto sobre o qual o Felipe já publicou.
+4. O relatório da rodada anterior em `radar-juridico/relatorios/`, para saber o que já foi dito e não repetir análise.
 
 > Nota de arquitetura: a varredura por volume de processos na API do CNJ (DataJud) foi **removida** em 30/07/2026, a pedido do Felipe. Ela media quantidade de ações por assunto, e o assunto "Direito de Imagem" no CNJ é um guarda-chuva que mistura acidente de trânsito, cobrança bancária e plano de saúde, então o número não dizia nada sobre fotografia. Não reintroduzir sem pedido expresso.
 

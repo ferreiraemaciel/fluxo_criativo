@@ -224,6 +224,22 @@ def parse_casos(linhas: list) -> list:
             campo = None
     if atual:
         casos.append(atual)
+
+    for caso in casos:
+        caso['decisao'] = ''
+        caso['formatos'] = []
+        restantes = []
+        for c in caso['campos']:
+            rot = c['rotulo'].lower()
+            if rot == 'decisão':
+                caso['decisao'] = c['valor'].strip().lower()
+            elif rot == 'formatos':
+                caso['formatos'] = [
+                    f.strip().lower() for f in c['valor'].split(',') if f.strip()
+                ]
+            else:
+                restantes.append(c)
+        caso['campos'] = restantes
     return casos
 
 
@@ -304,17 +320,75 @@ def render_campos(campos: list) -> str:
     return '\n'.join(linhas)
 
 
+_SVG = {
+    'artigo': '<path d="M5 3h11l3 3v15H5z" fill="none" stroke="currentColor" stroke-width="1.7"/>'
+              '<path d="M8 9h8M8 13h8M8 17h5" stroke="currentColor" stroke-width="1.7"/>',
+    'carrossel': '<rect x="8" y="4" width="8" height="16" rx="1.5" fill="none" '
+                 'stroke="currentColor" stroke-width="1.7"/>'
+                 '<path d="M5 7v10M19 7v10" stroke="currentColor" stroke-width="1.7"/>',
+    'imagem': '<rect x="3" y="5" width="18" height="14" rx="2" fill="none" '
+              'stroke="currentColor" stroke-width="1.7"/>'
+              '<circle cx="8.5" cy="10" r="1.6" fill="currentColor"/>'
+              '<path d="M4 17l5-5 4 4 3-2 4 4" fill="none" stroke="currentColor" stroke-width="1.7"/>',
+    'reels': '<rect x="3" y="4" width="18" height="16" rx="3" fill="none" '
+             'stroke="currentColor" stroke-width="1.7"/>'
+             '<path d="M10 9.5l5 2.5-5 2.5z" fill="currentColor"/>',
+    'youtube': '<rect x="2.5" y="6" width="19" height="12" rx="3.5" fill="none" '
+               'stroke="currentColor" stroke-width="1.7"/>'
+               '<path d="M10.5 9.5l4.5 2.5-4.5 2.5z" fill="currentColor"/>',
+}
+
+FORMATOS = [
+    ('artigo', 'Artigo'),
+    ('carrossel', 'Carrossel'),
+    ('imagem', 'Imagem'),
+    ('reels', 'Reels'),
+    ('youtube', 'YouTube'),
+]
+
+
+def icone(chave: str) -> str:
+    return (f'<svg class="mi" viewBox="0 0 24 24" width="15" height="15" '
+            f'aria-hidden="true">{_SVG[chave]}</svg>')
+
+DECISOES = [
+    ('aceito', 'Aceito'),
+    ('standby', 'Standby'),
+    ('descartado', 'Descartado'),
+]
+
+
+def slug(texto: str) -> str:
+    s = re.sub(r'[^a-z0-9]+', '-', texto.lower())
+    return s.strip('-')[:48]
+
+
 def render_casos(itens: list) -> str:
     if not itens:
         return '<p class="vazio">Nenhum caso no período.</p>'
     partes = []
     for i, caso in enumerate(itens, 1):
+        cid = f'{i:02d}-{slug(caso["titulo"])}'
+        chips = ''.join(
+            f'<button class="chip{" on" if k in caso["formatos"] else ""}" '
+            f'data-fmt="{k}" title="{rot}" aria-label="{rot}" aria-pressed="'
+            f'{"true" if k in caso["formatos"] else "false"}">'
+            f'{icone(k)}<span class="chip-txt">{rot}</span></button>'
+            for k, rot in FORMATOS
+        )
+        decs = ''.join(
+            f'<button class="dec dec--{k}{" on" if caso["decisao"] == k else ""}" '
+            f'data-dec="{k}">{rot}</button>'
+            for k, rot in DECISOES
+        )
         partes.append(
-            f'''<article class="caso">
+            f'''<article class="caso" data-caso="{cid}" data-titulo="{html.escape(caso["titulo"], quote=True)}">
   <header class="caso-head">
     <span class="caso-num">{i:02d}</span>
     <h3>{inline(caso["titulo"])}</h3>
+    <div class="formatos">{chips}</div>
   </header>
+  <div class="decisao-barra">{decs}</div>
   <div class="caso-corpo">
     {render_campos(caso["campos"])}
   </div>
@@ -642,6 +716,57 @@ td.rot{color:var(--tinta);font-weight:600}
 .vazios li{margin-bottom:9px}
 .vazios li:last-child{margin-bottom:0}
 
+/* Formatos e decisão */
+.caso-head{flex-wrap:wrap}
+.formatos{display:flex;gap:6px;margin-left:auto;flex-wrap:wrap}
+.chip{
+  display:inline-flex;align-items:center;gap:5px;cursor:pointer;
+  font:inherit;font-size:11.5px;font-weight:600;letter-spacing:.02em;
+  color:var(--tinta-fraca);background:transparent;
+  border:1px solid var(--borda-forte);border-radius:999px;padding:5px 10px;
+  transition:all .15s ease;
+}
+.chip:hover{border-color:var(--acento);color:var(--acento)}
+.chip.on{background:var(--acento);border-color:var(--acento);color:#fff}
+@media (prefers-color-scheme:dark){.chip.on{color:#17140d}}
+:root[data-theme="dark"] .chip.on{color:#17140d}
+.chip .mi{display:block;flex:none}
+@media (max-width:620px){.chip-txt{display:none}.chip{padding:6px 8px}}
+.decisao-barra{display:flex;gap:8px;padding:12px 24px;border-bottom:1px solid var(--borda);
+  background:color-mix(in srgb, var(--borda) 22%, transparent)}
+.dec{
+  cursor:pointer;font:inherit;font-size:11.5px;font-weight:700;letter-spacing:.06em;
+  text-transform:uppercase;padding:6px 14px;border-radius:8px;
+  border:1px solid var(--borda-forte);background:transparent;color:var(--tinta-fraca);
+  transition:all .15s ease;
+}
+.dec:hover{border-color:var(--tinta-media);color:var(--tinta-media)}
+.dec--aceito.on{background:var(--pos);border-color:var(--pos);color:#fff}
+.dec--standby.on{background:var(--acento);border-color:var(--acento);color:#fff}
+.dec--descartado.on{background:var(--neg);border-color:var(--neg);color:#fff}
+.caso[data-estado="descartado"]{opacity:.5}
+.caso[data-estado="descartado"] .caso-corpo{display:none}
+
+/* Barra de exportação */
+.barra-exportar{
+  position:sticky;bottom:0;z-index:9;margin:32px -24px -96px;padding:14px 24px 20px;
+  background:color-mix(in srgb, var(--bg) 92%, transparent);
+  backdrop-filter:blur(8px);border-top:1px solid var(--borda);
+  display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+}
+.barra-exportar .contagem{font-size:13px;color:var(--tinta-media)}
+.barra-exportar .contagem b{color:var(--tinta)}
+.btn-exportar{
+  cursor:pointer;font:inherit;font-size:13.5px;font-weight:650;margin-left:auto;
+  background:var(--tinta);color:var(--bg);border:0;border-radius:9px;padding:10px 18px;
+}
+.btn-exportar:hover{opacity:.86}
+.btn-limpar{
+  cursor:pointer;font:inherit;font-size:13px;background:transparent;color:var(--tinta-fraca);
+  border:1px solid var(--borda-forte);border-radius:9px;padding:9px 14px;
+}
+@media print{.formatos,.decisao-barra,.barra-exportar{display:none}}
+
 /* Rodapé */
 .rodape{margin-top:64px;padding-top:24px;border-top:1px solid var(--borda);
   font-size:12.5px;color:var(--tinta-fraca);display:flex;justify-content:space-between;
@@ -662,6 +787,109 @@ td.rot{color:var(--tinta);font-weight:600}
 }
 """
 
+
+JS = """
+(function () {
+  var chave = 'radar-juridico:' + (document.body.dataset.relatorio || 'sem-nome');
+  var estado = {};
+  try { estado = JSON.parse(localStorage.getItem(chave) || '{}'); } catch (e) { estado = {}; }
+
+  var casos = Array.prototype.slice.call(document.querySelectorAll('.caso'));
+
+  function lerDoDom(art) {
+    var fmts = [];
+    art.querySelectorAll('.chip.on').forEach(function (c) { fmts.push(c.dataset.fmt); });
+    var dec = art.querySelector('.dec.on');
+    return { titulo: art.dataset.titulo, decisao: dec ? dec.dataset.dec : '', formatos: fmts };
+  }
+
+  function aplicar(art, dados) {
+    art.querySelectorAll('.chip').forEach(function (c) {
+      var on = dados.formatos.indexOf(c.dataset.fmt) !== -1;
+      c.classList.toggle('on', on);
+      c.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+    art.querySelectorAll('.dec').forEach(function (d) {
+      d.classList.toggle('on', d.dataset.dec === dados.decisao);
+    });
+    art.dataset.estado = dados.decisao || '';
+  }
+
+  function salvar() {
+    casos.forEach(function (art) { estado[art.dataset.caso] = lerDoDom(art); });
+    try { localStorage.setItem(chave, JSON.stringify(estado)); } catch (e) {}
+    contar();
+  }
+
+  function contar() {
+    var n = { aceito: 0, standby: 0, descartado: 0 };
+    casos.forEach(function (art) {
+      var d = art.dataset.estado;
+      if (n[d] !== undefined) n[d]++;
+    });
+    var alvo = document.getElementById('contagem');
+    if (alvo) {
+      alvo.innerHTML = '<b>' + n.aceito + '</b> aceitos, <b>' + n.standby +
+        '</b> em standby, <b>' + n.descartado + '</b> descartados';
+    }
+  }
+
+  casos.forEach(function (art) {
+    if (estado[art.dataset.caso]) aplicar(art, estado[art.dataset.caso]);
+    else art.dataset.estado = (art.querySelector('.dec.on') || {}).dataset
+      ? art.querySelector('.dec.on').dataset.dec : '';
+
+    art.querySelectorAll('.chip').forEach(function (c) {
+      c.addEventListener('click', function () {
+        var on = !c.classList.contains('on');
+        c.classList.toggle('on', on);
+        c.setAttribute('aria-pressed', on ? 'true' : 'false');
+        salvar();
+      });
+    });
+
+    art.querySelectorAll('.dec').forEach(function (d) {
+      d.addEventListener('click', function () {
+        var jaEra = d.classList.contains('on');
+        art.querySelectorAll('.dec').forEach(function (o) { o.classList.remove('on'); });
+        if (!jaEra) d.classList.add('on');
+        art.dataset.estado = jaEra ? '' : d.dataset.dec;
+        salvar();
+      });
+    });
+  });
+
+  contar();
+
+  var btn = document.getElementById('exportar');
+  if (btn) {
+    btn.addEventListener('click', function () {
+      var saida = { relatorio: document.body.dataset.relatorio, casos: [] };
+      casos.forEach(function (art) {
+        var d = lerDoDom(art);
+        saida.casos.push({
+          id: art.dataset.caso, titulo: d.titulo,
+          decisao: d.decisao || 'sem decisao', formatos: d.formatos
+        });
+      });
+      var blob = new Blob([JSON.stringify(saida, null, 2)], { type: 'application/json' });
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'radar-decisoes-' + saida.relatorio + '.json';
+      a.click();
+      URL.revokeObjectURL(a.href);
+    });
+  }
+
+  var limpar = document.getElementById('limpar');
+  if (limpar) {
+    limpar.addEventListener('click', function () {
+      try { localStorage.removeItem(chave); } catch (e) {}
+      location.reload();
+    });
+  }
+})();
+"""
 
 def render(doc: dict, origem: Path) -> str:
     secoes = '\n'.join(render_secao(s) for s in doc['secoes'])
@@ -687,7 +915,7 @@ def render(doc: dict, origem: Path) -> str:
 <title>{html.escape(titulo_limpo)}</title>
 <style>{CSS}</style>
 </head>
-<body>
+<body data-relatorio="{origem.stem}">
 <div class="pagina">
   <header class="capa">
     <span class="selo"><span class="ponto"></span>Radar Jurídico da Fotografia</span>
@@ -699,11 +927,17 @@ def render(doc: dict, origem: Path) -> str:
     {placar}
   </header>
   {secoes}
+  <div class="barra-exportar">
+    <span class="contagem" id="contagem"></span>
+    <button class="btn-limpar" id="limpar">Restaurar sugestões</button>
+    <button class="btn-exportar" id="exportar">Baixar minhas decisões</button>
+  </div>
   <footer class="rodape">
     <span>Gerado a partir de {html.escape(origem.name)}</span>
     <span>Fontes oficiais e API pública DataJud (CNJ)</span>
   </footer>
 </div>
+<script>{JS}</script>
 </body>
 </html>'''
 
