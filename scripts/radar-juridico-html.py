@@ -183,21 +183,6 @@ def parse_blocos(linhas: list) -> list:
     return blocos
 
 
-def parse_paragrafos(linhas: list) -> list:
-    blocos, buffer = [], []
-    for linha in linhas:
-        seco = linha.strip()
-        if not seco or seco == '---':
-            if buffer:
-                blocos.append(' '.join(buffer))
-                buffer = []
-            continue
-        buffer.append(seco)
-    if buffer:
-        blocos.append(' '.join(buffer))
-    return blocos
-
-
 def parse_lista(linhas: list) -> list:
     itens, atual = [], None
     for linha in linhas:
@@ -240,42 +225,6 @@ def parse_casos(linhas: list) -> list:
     if atual:
         casos.append(atual)
     return casos
-
-
-def parse_tribunais(linhas: list) -> dict:
-    cabecalho, linhas_tab, paragrafos, nota = [], [], [], ''
-    buffer = []
-
-    for linha in linhas:
-        seco = linha.strip()
-        if seco.startswith('|'):
-            celulas = [c.strip() for c in seco.strip('|').split('|')]
-            if all(re.fullmatch(r':?-{2,}:?', c) for c in celulas):
-                continue
-            if not cabecalho:
-                cabecalho = celulas
-            else:
-                linhas_tab.append(celulas)
-            continue
-        if seco.startswith('>'):
-            nota += (' ' if nota else '') + seco.lstrip('> ').strip()
-            continue
-        if not seco:
-            if buffer:
-                paragrafos.append(' '.join(buffer))
-                buffer = []
-            continue
-        buffer.append(seco)
-
-    if buffer:
-        paragrafos.append(' '.join(buffer))
-
-    return {
-        'cabecalho': cabecalho,
-        'linhas': linhas_tab,
-        'paragrafos': paragrafos,
-        'nota': nota,
-    }
 
 
 def parse_pautas(linhas: list) -> list:
@@ -370,39 +319,6 @@ def render_casos(itens: list) -> str:
     return '\n'.join(partes)
 
 
-def render_tribunais(c: dict) -> str:
-    partes = []
-    if c.get('cabecalho'):
-        cab = ''.join(f'<th>{html.escape(x)}</th>' for x in c['cabecalho'])
-        corpo = []
-        for linha in c['linhas']:
-            celulas = []
-            for idx, cel in enumerate(linha):
-                classe = ''
-                if idx == len(linha) - 1 and '%' in cel:
-                    classe = ' class="neg"' if cel.strip().startswith('-') else ' class="pos"'
-                elif idx >= 2:
-                    classe = ' class="num"'
-                celulas.append(f'<td{classe}>{html.escape(cel)}</td>')
-            corpo.append('<tr>' + ''.join(celulas) + '</tr>')
-        partes.append(
-            '<div class="tabela-wrap"><table><thead><tr>'
-            + cab
-            + '</tr></thead><tbody>'
-            + ''.join(corpo)
-            + '</tbody></table></div>'
-        )
-    for p in c.get('paragrafos', []):
-        partes.append(f'<p>{inline(p)}</p>')
-    if c.get('nota'):
-        texto = re.sub(r'^Nota metodológica:\s*', '', c['nota'])
-        partes.append(
-            f'<aside class="nota"><span class="nota-rotulo">Nota metodológica</span>'
-            f'<p>{inline(texto)}</p></aside>'
-        )
-    return '\n'.join(partes)
-
-
 def render_pautas(itens: list) -> str:
     if not itens:
         return '<p class="vazio">Nenhuma pauta sugerida.</p>'
@@ -478,8 +394,6 @@ def render_secao(secao: dict) -> str:
     tipo = c['tipo']
     if tipo == 'casos':
         corpo = render_casos(c['itens'])
-    elif tipo == 'tribunais':
-        corpo = render_tribunais(c)
     elif tipo == 'pautas':
         corpo = render_pautas(c['itens'])
     elif tipo == 'vazios':

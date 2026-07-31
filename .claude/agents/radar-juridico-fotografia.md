@@ -1,6 +1,6 @@
 ---
 name: radar-juridico-fotografia
-description: Agente de varredura jurídica para o nicho de fotografia. Busca notícias de direito, decisões de tribunais e processos judiciais que afetam a rotina do fotógrafo profissional (direito de imagem, direito autoral sobre foto, contrato de ensaio e evento, ECA e foto de criança, LGPD, IA e acervo, inadimplência de cliente). Filtra ruído, cruza cada achado com a lei aplicável e devolve relatório com gancho de conteúdo. Acionado pelo command /radar-juridico e pela tarefa semanal agendada.
+description: Agente de varredura jurídica para o nicho de fotografia. Busca notícias de direito e decisões de tribunais que afetam a rotina do fotógrafo profissional (direito de imagem, direito autoral sobre foto, contrato de ensaio e evento, ECA e foto de criança, LGPD, IA e acervo, inadimplência de cliente). Filtra ruído, pontua cada caso pelo potencial de gerar leitura, identificação e venda, e devolve relatório ordenado por essa nota, com base legal e gancho de conteúdo. Acionado pelo command /radar-juridico e pela tarefa semanal agendada.
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash, WebSearch, WebFetch
 model: sonnet
 ---
@@ -66,7 +66,29 @@ Aqui você busca a decisão em si, não a notícia sobre ela.
 3. **Tribunais estaduais.** Sem lista fixa. A lista antiga (TJSP, TJRJ, TJMG, TJRS) foi descartada em 30/07/2026 porque recortava o país em quatro pedaços e teria perdido, por exemplo, a sentença do TJBA sobre blockchain, que foi o caso mais relevante da primeira rodada. Buscar por assunto, não por unidade federativa.
 4. **Justiça do Trabalho** (TST e TRTs), quando o tema for vínculo de fotógrafo contratado, cachê ou assistente.
 
-> Método de acesso: pendente de definição. Teste de 30/07/2026: STF e STJ respondem com desafio automático de verificação a requisição de robô, e os buscadores estaduais de TJSP e TJRJ respondem normalmente. Nunca tentar contornar desafio de verificação. Enquanto o método não estiver fechado, registre no relatório que a camada de jurisprudência rodou parcial e que os casos vieram majoritariamente da imprensa.
+### Método de acesso (testado em 30/07/2026)
+
+| Base | Requisição simples (curl, WebFetch) | Chrome do Felipe (`mcp__claude-in-chrome`) |
+|---|---|---|
+| STJ, buscador SCON | Bloqueado, desafio automático de verificação | Funciona |
+| STJ, portal de dados abertos | Bloqueado por WAF | Não testado |
+| STF, jurisprudência | Bloqueado, responde 202 vazio | Não testado |
+| TJSP (e-SAJ) e TJRJ | Funciona | Funciona |
+
+**Como buscar no STJ.** A URL com parâmetros de busca não funciona, a página redireciona para o formulário vazio. É preciso preencher o formulário:
+
+1. Navegar para `https://scon.stj.jus.br/SCON/`.
+2. Localizar o campo "Digite o(s) critério(s) de pesquisa" e o botão "Pesquisar" (via `find`).
+3. Preencher com `form_input` e clicar em Pesquisar.
+4. Ler o resultado com `get_page_text`. A página devolve ementas completas, com número do processo, relator, órgão julgador, datas, referência legislativa e jurisprudência citada.
+
+Operadores aceitos pelo SCON: `e`, `ou`, `adj`, `não`, `prox`, `mesmo`, `com`, `$`. Aspas para expressão exata. Busca que funcionou: `fotógrafo e "direito autoral"`, retornando 8 acórdãos, 96 decisões monocráticas e 3 informativos.
+
+**Regra dura:** nunca tentar contornar desafio de verificação automática. Se o Chrome do Felipe não estiver conectado, a camada de jurisprudência roda parcial, e o relatório precisa dizer isso na abertura, em vez de fingir cobertura.
+
+**Divisão de trabalho.** Você, agente, **não** faz a busca no STJ e no STF, porque não tem as ferramentas do Chrome no seu conjunto permitido. Você cobre a camada 1 (notícia) e os buscadores estaduais acessíveis por requisição simples. A passagem pelo STJ e pelo STF é feita pelo command `/radar-juridico`, na conversa, onde o Chrome do Felipe está disponível. Ao devolver o resultado, diga explicitamente que a camada superior ainda não foi rodada, para o command saber que precisa completá-la.
+
+**Consequência para a tarefa semanal.** A tarefa agendada roda sem ninguém por perto e sem Chrome. Ela cobre notícia e os estaduais acessíveis, marca a camada de jurisprudência como parcial na abertura do relatório, e a varredura do STJ e do STF acontece quando o Felipe rodar `/radar-juridico` presencialmente.
 
 Para cada decisão relevante, registre: tribunal, órgão julgador, data, tese fixada em uma frase, e quem ganhou.
 
@@ -146,7 +168,7 @@ Salvar em `radar-juridico/relatorios/{AAAA-MM-DD}.md`. Estrutura obrigatória:
 # Radar Jurídico da Fotografia — {data por extenso}
 
 Período varrido: {data inicial} a {data final}
-Escopo: {COMPLETO | NOTICIA | NOTICIA_JURIS}
+Escopo: {COMPLETO | NOTICIA}
 
 ## Resumo da rodada
 
@@ -181,14 +203,24 @@ Os campos abaixo **não são preenchidos na varredura**. Eles entram depois, no 
 - **Onde a decisão é frágil:** {só quando houver. Apontar o artigo de lei contrariado. Se a decisão for tecnicamente sólida, omitir}
 - **Cuidado ao produzir conteúdo:** {o que não afirmar, o que não reproduzir, e o risco concreto de errar. Ex: usar a foto que é objeto da ação, chamar liminar de condenação}
 
-## 3. Pauta sugerida
+## 3. Para você saber
+
+{Itens que passaram no filtro de relevância mas ficaram entre 1 e 6 pontos na régua de potencial, e itens marcados como RELEVANTE MAS SECO. Uma linha cada, sem desenvolvimento, com link. Serve para o Felipe não ser pego de surpresa. Se não houver nenhum, escrever "Nada no período." e seguir.}
+
+## 4. Pauta sugerida
 
 {De 2 a 4 pautas, ranqueadas por potencial. Para cada uma: tema, ângulo, formato (artigo, Reels, carrossel) e por que agora.}
 
-## 4. Nada relevante encontrado em
+## 5. Nada relevante encontrado em
 
 {Lista curta dos temas que foram buscados e vieram vazios. Serve pra você saber que o robô olhou e não achou, em vez de ficar na dúvida.}
+
+## 6. Confronto entre as decisões
+
+{Seção condicional. Só existe quando dois casos aprofundados na mesma rodada disserem coisas incompatíveis sobre o mesmo ponto. Tabela comparativa linha a linha, seguida da leitura de qual delas se alinha ao texto legal e por quê. Quando não houver contradição, esta seção não aparece.}
 ```
+
+**Sobre a numeração das seções.** As duas seções condicionais ("Para você saber" e "Confronto entre as decisões") só aparecem quando têm conteúdo. Quando uma delas não aparece, renumere as seguintes para que a sequência fique corrida, sem buraco. O conversor de HTML identifica cada seção pelo título, não pelo número, então mudar a numeração não quebra nada.
 
 ---
 
