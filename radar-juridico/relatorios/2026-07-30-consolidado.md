@@ -60,7 +60,7 @@ Ordenados pelo que rende conteúdo, não pelo tamanho do tribunal.
 ### A juíza disse qual papel faltava, e era o contrato
 
 - **Decisão:** aceito
-- **Formatos:** artigo, carrossel
+- **Formatos:** artigo, carrossel, imagem, reels
 
 - **O que muda na prática:** este é o caso mais útil da rodada inteira, porque a juíza escreveu, em português claro, o que teria mudado o resultado. Faltou o contrato de prestação de serviço. Ela registrou que o documento "seria fundamental para comprovação de pagamento do trabalho e dos detalhes acerca do direito autoral e de imagem". Ou seja, não foi falta de razão nem falta de registro em cartório. Foi falta do papel que qualquer fotógrafo pode ter antes mesmo de apertar o botão. Print de Instagram e arquivo solto não bastam, porque não amarram você àquele trabalho, àquele cliente e àquelas imagens.
 - **A história em uma linha:** um fotógrafo com vinte e dois anos de carreira cobriu a inauguração de uma franquia de restaurante e, tempos depois, achou fotos dele publicadas no Instagram da marca sem autorização.
