@@ -19,6 +19,24 @@ A decupagem (o julgamento editorial) é feita pelo modelo. A conformação (vira
 frame exato) é feita pelos scripts determinísticos desta pasta. O aluno não faz
 decupagem: recebe o corte e revisa o mapa, ajustando por número de trecho.
 
+## PASSO 0 OBRIGATÓRIO — ao ser chamada, sempre repasse os 4 passos fixos
+
+Toda vez que o comando `/corte-premiere` for acionado, a PRIMEIRA coisa a fazer,
+antes de qualquer outra ação, é exibir ao usuário o bloco abaixo, sem alterar.
+Serve para o Felipe e a Amanda seguirem com facilidade, sem depender de decorar.
+Só depois de mostrar o bloco é que se pede/verifica o material e segue o fluxo.
+
+```
+📋 Os 4 passos fixos (você faz no Premiere):
+
+1. Montar a sequência bruta da entrevista.
+2. Transcrever a SEQUÊNCIA montada, não os clipes soltos. Regra de ouro: é isso que faz o corte bater no frame certo.
+3. Exportar a sequência: Arquivo > Exportar > Final Cut Pro XML.
+4. Me mandar o XML + a transcrição + o objetivo do vídeo em uma frase, e dizer "monta o corte".
+
+A partir daí é comigo: eu faço a decupagem, corto no frame certo e devolvo o XML pronto pra importar + o mapa de conferência.
+```
+
 ## Regra de ouro (o aluno precisa seguir)
 
 **A transcrição tem que ser da SEQUÊNCIA MONTADA, não dos clipes crus.** Só
