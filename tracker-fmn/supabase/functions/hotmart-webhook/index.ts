@@ -142,31 +142,140 @@ Deno.serve(async (req) => {
 
   console.log("Evento recebido:", evento, isWrapped ? "(wrapped)" : "(flat)");
 
-  // Abandono de carrinho — salva em tabela própria
-  if (evento === "PURCHASE_CART_ABANDONMENT") {
+  // Abandono de carrinho — salva em tabela própria.
+  // O nome oficial do evento no Webhook 2.0 da Hotmart é
+  // PURCHASE_OUT_OF_SHOPPING_CART. O código antes checava só
+  // "PURCHASE_CART_ABANDONMENT", que NÃO existe na Hotmart — por isso nenhum
+  // abandono jamais caiu nesta tabela pelo webhook (os 189 registros que
+  // existiam vieram de importação de CSV em 2026-06-17). Corrigido em
+  // 2026-07-31 aceitando os três nomes possíveis.
+  const EVENTOS_ABANDONO = new Set([
+    "PURCHASE_OUT_OF_SHOPPING_CART", // oficial (Webhook 2.0)
+    "PURCHASE_CART_ABANDONMENT",     // nome antigo checado aqui, mantido por segurança
+    "PURCHASE_ABANDONED",            // derivado de purchase.status=ABANDONED (formato flat)
+  ]);
+  if (EVENTOS_ABANDONO.has(evento)) {
     const comprador = root?.buyer;
     const produto   = root?.product;
     const compra    = root?.purchase;
-    const phoneCode = comprador?.checkout_phone_code || "";
-    const phone     = comprador?.checkout_phone || comprador?.phone || "";
-    const telefone  = phone ? (phoneCode ? `+55${phoneCode}${phone}` : phone) : null;
-    const sckRaw    = compra?.origin?.sck || compra?.tracking?.source_sck || "";
+    // Telefone no abandono: a Hotmart não usa sempre o mesmo nome de campo, e
+    // os 4 abandonos reais de 2026-07-31 chegaram sem telefone nos campos que
+    // o código lia. Aqui tentamos os nomes conhecidos e, se nenhum bater,
+    // varremos o payload atrás de qualquer chave com cara de telefone — assim
+    // não perdemos o contato (sem telefone não existe recuperação por WhatsApp).
+    const phoneCode = comprador?.checkout_phone_code || comprador?.phone_code
+                   || comprador?.ddd || "";
+    let   phone     = comprador?.checkout_phone || comprador?.phone
+                   || comprador?.cellphone || comprador?.mobile || "";
+    if (!phone) {
+      const acharTelefone = (obj: unknown, prof = 0): string => {
+        if (!obj || typeof obj !== "object" || prof > 4) return "";
+        for (const [k, v] of Object.entries(obj as Record<string, unknown>)) {
+          if (typeof v === "string" || typeof v === "number") {
+            const digitos = String(v).replace(/\D/g, "");
+            if (/phone|fone|celular|cell|mobile|whats/i.test(k) && digitos.length >= 8) return String(v);
+          } else if (typeof v === "object") {
+            const achou = acharTelefone(v, prof + 1);
+            if (achou) return achou;
+          }
+        }
+        return "";
+      };
+      phone = acharTelefone(root);
+    }
+    // Normaliza: se já vier com DDI, respeita; senão monta com DDD e +55.
+    let telefone: string | null = null;
+    if (phone) {
+      const so = String(phone).replace(/\D/g, "");
+      telefone = so.startsWith("55") && so.length >= 12 ? `+${so}`
+               : phoneCode ? `+55${String(phoneCode).replace(/\D/g, "")}${so}`
+               : so.length >= 10 ? `+55${so}` : so;
+    }
+    // Log do formato real recebido, pra ajustar o mapeamento com precisão
+    // quando aparecer um payload novo (não loga valores, só a estrutura).
+    if (!telefone) {
+      console.log("Abandono SEM telefone. Chaves do payload:",
+        JSON.stringify({ raiz: Object.keys(root || {}), buyer: Object.keys(comprador || {}) }));
+    }
+    // No payload de abandono não existe o objeto `purchase`: oferta e origem
+    // vêm na raiz. Lemos as duas formas pra funcionar nos dois formatos.
+    const sckRaw    = compra?.origin?.sck || compra?.tracking?.source_sck
+                   || root?.origin?.sck   || root?.tracking?.source_sck || "";
     const sckP      = parseSck(sckRaw);
+    const email     = comprador?.email || null;
+
+    // Hotmart reenvia webhook quando não recebe 200. Sem trava, o mesmo lead
+    // entraria várias vezes e receberia a campanha de recuperação repetida.
+    if (email) {
+      const desde24h = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+      const { data: jaExiste } = await supabase
+        .from("abandono_carrinho")
+        .select("id")
+        .eq("email", email)
+        .gte("created_at", desde24h)
+        .limit(1);
+      if (jaExiste && jaExiste.length) {
+        console.log("Abandono duplicado ignorado:", email);
+        return new Response(JSON.stringify({ ok: true, evento, duplicado: true }), {
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+    }
+
     await supabase.from("abandono_carrinho").insert({
       produto_nome:  produto?.name || null,
       produto_id:    produto?.id   ? String(produto.id) : null,
-      oferta_codigo: compra?.offer?.code || null,
+      oferta_codigo: compra?.offer?.code || root?.offer?.code || null,
       nome:          comprador?.name  || null,
-      email:         comprador?.email || null,
+      email,
       telefone,
       documento:     comprador?.document || null,
-      pais:          comprador?.address?.country_iso || "BR",
+      // No abandono o país vem em checkout_country (campo próprio do evento),
+      // não em address como nas compras.
+      pais:          comprador?.address?.country_iso
+                  || root?.checkout_country?.iso || "BR",
       sck:           sckRaw || null,
       utm_source:    sckP.utm_source   || null,
       utm_campaign:  sckP.utm_campaign || null,
       meta_ad_id:    sckP.meta_ad_id   || null,
       created_at:    compra?.order_date ? new Date(compra.order_date).toISOString() : new Date().toISOString(),
     });
+
+    // Cria o contato na aba Conversas marcado como recuperação de carrinho,
+    // pra virar ação de WhatsApp com o Claudinho. A marca `origem` é o que
+    // diferencia visualmente esse contato dos leads que vieram do quiz.
+    // Só cria se ainda não existe: quem já conversa com a gente mantém o
+    // histórico e a origem original (não vira "abandono" retroativamente).
+    // Sem telefone não há como abrir conversa no WhatsApp, então o contato só
+    // é criado quando ele existe. O abandono em si continua registrado e
+    // aparece na aba Carrinho (dá pra recuperar por e-mail).
+    if (telefone) {
+      const fone = telefone.replace(/\D/g, "");
+      const { data: jaTem } = await supabase
+        .from("whatsapp_contatos")
+        .select("telefone")
+        .eq("telefone", fone)
+        .limit(1);
+      if (!jaTem || !jaTem.length) {
+        const { error: errContato } = await supabase.from("whatsapp_contatos").insert({
+          telefone:      fone,
+          nome:          comprador?.name || null,
+          origem:        "abandono_carrinho",
+          // 'lead_novo' é o único valor aceito pra contato novo (há CHECK na
+          // tabela: lead_novo | em_conversa | aluno | perdido).
+          etapa:         "lead_novo",
+          estagio_venda: "descoberta",
+          // Não entra na fila da IA sozinho: o disparo depende de modelo
+          // aprovado pela Meta e da decisão de quando acionar.
+          ia_elegivel:   false,
+        });
+        // Falha aqui não pode passar silenciosa: o abandono já foi gravado, mas
+        // sem o contato ele não vira ação de recuperação nenhuma.
+        if (errContato) console.error("ERRO ao criar contato de abandono:", fone, errContato.message);
+        else console.log("Contato de abandono criado:", fone);
+      }
+    }
+
     return new Response(JSON.stringify({ ok: true, evento }), {
       headers: { "Content-Type": "application/json" },
     });

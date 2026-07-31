@@ -497,15 +497,19 @@ function MetaAdModal({ card, onClose }) {
   const adNum   = parseInt(card.num, 10);
   const isVideo = /reels|video/i.test(raw.tipo || '') || raw.media_tipo === 'video';
 
-  // Mídia no R2 (primeiro item se for JSON array)
-  const r2Url = (() => {
+  // Mídia no R2. Carrossel guarda TODAS as URLs num array — antes só o
+  // primeiro item era lido aqui, e por isso o carrossel subia pro Meta como
+  // imagem única (o resto dos slides era descartado antes de sair do Tracker).
+  const r2Urls = (() => {
     try {
       const v = raw.media_url;
-      if (!v) return '';
+      if (!v) return [];
       const p = JSON.parse(v);
-      return Array.isArray(p) ? (p[0] || '') : p;
-    } catch { return raw.media_url || ''; }
+      return (Array.isArray(p) ? p : [p]).filter(Boolean);
+    } catch { return raw.media_url ? [raw.media_url] : []; }
   })();
+  const r2Url = r2Urls[0] || '';
+  const isCarousel = /carrossel/i.test(raw.tipo || '') && r2Urls.length > 1;
   const hasMedia = !!(raw.meta_image_hash || raw.meta_video_id || r2Url);
   // A alta do R2 é apagada depois que o vídeo sobe pro Meta (e foi apagada em
   // massa no backfill de 2026-07-23). Quando isso acontece o card fica só com
@@ -614,6 +618,8 @@ function MetaAdModal({ card, onClose }) {
   // Vídeo: usa o video_id se já existe; senão sobe a versão em alta do R2 pro Meta agora.
   async function ensureMetaMedia() {
     if (!isVideo) {
+      // Carrossel: manda o array inteiro; o worker monta um cartão por slide.
+      if (isCarousel) return { imageUrls: r2Urls };
       if (r2Url) return { imageUrl: r2Url };
       if (raw.meta_image_hash) return { imageHash: raw.meta_image_hash };
       throw new Error('Não achei a imagem nem no R2 nem já hospedada no Meta. Use "Importar direto" ou "Importar com link" pra subir a imagem de novo antes de publicar.');
@@ -648,6 +654,7 @@ function MetaAdModal({ card, onClose }) {
         nome:      `ADS ${card.num} - ${raw.titulo || ''}`.trim().slice(0, 200),
         adsetId,
         imageUrl:  media.imageUrl,
+        imageUrls: media.imageUrls,
         imageHash: media.imageHash,
         videoId:   media.videoId,
         thumbUrl:  raw.thumb_url || '',

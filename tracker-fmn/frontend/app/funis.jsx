@@ -476,6 +476,105 @@ function Bar({ label, n, max, pctVal, color, sub }) {
   );
 }
 
+/* ── Carrinho abandonado ────────────────────────────────────────
+   Quem chegou no checkout da Hotmart e não concluiu. Chega pelo webhook
+   (evento PURCHASE_OUT_OF_SHOPPING_CART) e é a base da ação de recuperação
+   por WhatsApp. "Recuperado" = essa mesma pessoa aparece depois na tabela
+   de vendas, casando por e-mail.                                          */
+function CarrinhoTable({ itens, recuperados }) {
+  const [busca, setBusca] = useState('');
+  const [filtro, setFiltro] = useState('todos'); // todos | pendente | recuperado
+
+  const fmtData = d => d ? new Date(d).toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit', year:'2-digit' }) : '—';
+  const diasAtras = d => {
+    if (!d) return null;
+    return Math.floor((Date.now() - new Date(d).getTime()) / 86400000);
+  };
+
+  const lista = itens.filter(it => {
+    const rec = recuperados.has((it.email || '').trim().toLowerCase());
+    if (filtro === 'pendente'   && rec) return false;
+    if (filtro === 'recuperado' && !rec) return false;
+    if (!busca.trim()) return true;
+    const t = busca.trim().toLowerCase();
+    return (it.nome || '').toLowerCase().includes(t) || (it.email || '').toLowerCase().includes(t);
+  });
+
+  const th = { padding:'8px 10px', textAlign:'left', fontSize:9.5, fontFamily:'Roboto,sans-serif',
+    fontWeight:700, letterSpacing:'0.06em', textTransform:'uppercase', color:'var(--text-3)', whiteSpace:'nowrap' };
+  const td = { padding:'9px 10px', fontSize:12.5, fontFamily:'Roboto,sans-serif', color:'var(--text-2)' };
+
+  return (
+    <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
+      <div style={{ display:'flex', gap:8, alignItems:'center', flexWrap:'wrap' }}>
+        <input value={busca} onChange={e => setBusca(e.target.value)} placeholder="Buscar por nome ou e-mail..."
+          style={{ flex:1, minWidth:200, padding:'8px 12px', borderRadius:8, background:'var(--app-surface-2)',
+            border:'1px solid var(--app-border)', color:'var(--text-1)', fontFamily:'Roboto,sans-serif',
+            fontSize:12.5, outline:'none' }}/>
+        {[['todos','Todos'],['pendente','Não recuperados'],['recuperado','Recuperados']].map(([id,label]) => (
+          <button key={id} onClick={() => setFiltro(id)}
+            style={{ padding:'7px 14px', borderRadius:999, cursor:'pointer', fontSize:11.5,
+              fontFamily:'Roboto,sans-serif', fontWeight:700,
+              border: filtro===id ? '1px solid rgba(234,170,65,.5)' : '1px solid var(--app-border)',
+              background: filtro===id ? 'rgba(234,170,65,.12)' : 'rgba(255,255,255,.04)',
+              color: filtro===id ? 'var(--fmn-gold)' : 'var(--text-2)' }}>
+            {label}
+          </button>
+        ))}
+      </div>
+
+      <div style={{ background:'var(--app-surface)', border:'1px solid var(--app-border)', borderRadius:14, overflow:'hidden' }}>
+        <table style={{ width:'100%', borderCollapse:'collapse' }}>
+          <thead>
+            <tr style={{ borderBottom:'1px solid var(--app-border)' }}>
+              <th style={th}>Pessoa</th>
+              <th style={th}>Contato</th>
+              <th style={{ ...th, width:110 }}>Abandonou</th>
+              <th style={{ ...th, width:90 }}>Há</th>
+              <th style={{ ...th, width:120 }}>Situação</th>
+            </tr>
+          </thead>
+          <tbody>
+            {lista.length === 0 && (
+              <tr><td colSpan={5} style={{ ...td, textAlign:'center', padding:'40px 0', color:'var(--text-3)' }}>
+                Nenhum carrinho abandonado nesse filtro.
+              </td></tr>
+            )}
+            {lista.map(it => {
+              const rec  = recuperados.has((it.email || '').trim().toLowerCase());
+              const dias = diasAtras(it.created_at);
+              // Abandono esfria rápido: até 7 dias ainda é quente pra recuperar.
+              const quente = dias != null && dias <= 7;
+              return (
+                <tr key={it.id} style={{ borderBottom:'1px solid rgba(255,255,255,.04)' }}>
+                  <td style={{ ...td, color:'var(--text-1)', fontWeight:600 }}>{it.nome || '—'}</td>
+                  <td style={td}>
+                    <div style={{ fontSize:12 }}>{it.email || '—'}</div>
+                    {it.telefone && <div style={{ fontSize:11, color:'var(--text-3)' }}>{it.telefone}</div>}
+                  </td>
+                  <td style={td}>{fmtData(it.created_at)}</td>
+                  <td style={{ ...td, color: quente ? 'var(--fmn-gold)' : 'var(--text-3)', fontWeight: quente ? 700 : 400 }}>
+                    {dias != null ? `${dias}d` : '—'}
+                  </td>
+                  <td style={td}>
+                    <span style={{ padding:'2px 9px', borderRadius:999, fontSize:10.5, fontWeight:700,
+                      fontFamily:'Roboto,sans-serif',
+                      background: rec ? 'rgba(74,222,128,.12)' : 'rgba(248,113,113,.1)',
+                      border: `1px solid ${rec ? 'rgba(74,222,128,.35)' : 'rgba(248,113,113,.25)'}`,
+                      color: rec ? '#4ade80' : '#f87171' }}>
+                      {rec ? 'Comprou depois' : 'Não recuperado'}
+                    </span>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
 /* ── abandono refeito ── */
 function FunnelRow({ it, prev, max, biggest }) {
   const [hov, setHov] = useState(false);
@@ -621,6 +720,9 @@ function FunisScreen({ onNavigate }) {
   const [aba, setAba]               = useState('analise');
   const [data, setData]             = useState(null);
   const [leads, setLeads]           = useState([]);
+  const [carrinho, setCarrinho]           = useState([]);
+  const [recuperados, setRecuperados]     = useState(new Set());
+  const [loadingCarrinho, setLoadingCarrinho] = useState(false);
   const [extraAgg, setExtraAgg]     = useState({});
   const [funnel, setFunnel]         = useState('all');
   const [loadingAnalise, setLoadingAnalise] = useState(true);
@@ -658,6 +760,34 @@ function FunisScreen({ onNavigate }) {
     if (funnel !== 'all') q = q.eq('funnel_slug', funnel);
     q.then(({ data: rows, error }) => { if (!error) setLeads(rows || []); setLoadingLeads(false); });
   }, [periodo, customFrom, customTo, aba, funnel]);
+
+  // Carrinhos abandonados + quem comprou depois (casa por e-mail).
+  useEffect(() => {
+    if (!window.db || aba !== 'carrinho') return;
+    setLoadingCarrinho(true);
+    let q = window.db.from('abandono_carrinho')
+      .select('id,nome,email,telefone,produto_nome,created_at,utm_source,meta_ad_id')
+      .order('created_at', { ascending: false }).limit(5000);
+    if (range.p_from) q = q.gte('created_at', range.p_from);
+    if (range.p_to)   q = q.lte('created_at', range.p_to + 'T23:59:59Z');
+    q.then(async ({ data: rows, error }) => {
+      const itens = error ? [] : (rows || []);
+      setCarrinho(itens);
+      // Marca como recuperado quem abandonou e depois aparece em vendas.
+      const emails = [...new Set(itens.map(i => (i.email || '').trim().toLowerCase()).filter(Boolean))];
+      const rec = new Set();
+      if (emails.length) {
+        // Em lotes: lista muito grande estoura o tamanho da URL do filtro `in`.
+        for (let i = 0; i < emails.length; i += 200) {
+          const { data: v } = await window.db.from('vendas')
+            .select('email').in('email', emails.slice(i, i + 200));
+          (v || []).forEach(r => r.email && rec.add(r.email.trim().toLowerCase()));
+        }
+      }
+      setRecuperados(rec);
+      setLoadingCarrinho(false);
+    });
+  }, [periodo, customFrom, customTo, aba]);
 
   useEffect(() => {
     if (!window.db || aba !== 'analise') return;
@@ -741,7 +871,7 @@ function FunisScreen({ onNavigate }) {
 
         {/* Tabs */}
         <div style={{ display:'flex', gap:2, borderBottom:'1px solid var(--app-border)', marginBottom:18 }}>
-          {[['analise','bar-chart-2','Análise'],['leads','users','Leads']].map(([id,icon,label]) => (
+          {[['analise','bar-chart-2','Análise'],['leads','users','Leads'],['carrinho','shopping-cart','Carrinho abandonado']].map(([id,icon,label]) => (
             <button key={id} onClick={() => setAba(id)}
               style={{ display:'flex', alignItems:'center', gap:6, padding:'10px 18px', cursor:'pointer',
                 background:'transparent', border:'none', borderBottom:`2px solid ${aba===id?'var(--fmn-gold)':'transparent'}`,
@@ -760,6 +890,31 @@ function FunisScreen({ onNavigate }) {
                   <LucideIcon icon="loader" size={22}/><div style={{ marginTop:8 }}>Carregando leads...</div>
                 </div>
               : <LeadsTable leads={leads} adsMap={adsMap}/>}
+          </div>
+        )}
+
+        {/* ABA CARRINHO ABANDONADO */}
+        {aba === 'carrinho' && (
+          <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
+            {loadingCarrinho
+              ? <div style={{ padding:'60px 0', textAlign:'center', color:'var(--text-3)', fontSize:13 }}>
+                  <LucideIcon icon="loader" size={22}/><div style={{ marginTop:8 }}>Carregando carrinhos...</div>
+                </div>
+              : (() => {
+                  const total = carrinho.length;
+                  const rec   = carrinho.filter(i => recuperados.has((i.email || '').trim().toLowerCase())).length;
+                  const quentes = carrinho.filter(i => i.created_at && (Date.now() - new Date(i.created_at)) / 86400000 <= 7).length;
+                  const taxa = total ? Math.round(rec / total * 100) : 0;
+                  return (<>
+                    <div style={{ display:'flex', gap:12 }}>
+                      <CardKPI label="Carrinhos abandonados" value={nf(total)} icon="shopping-cart" accent/>
+                      <CardKPI label="Compraram depois"      value={nf(rec)}   icon="check-circle"/>
+                      <CardKPI label="Taxa de recuperação"   value={taxa + '%'} icon="trending-up"/>
+                      <CardKPI label="Quentes (até 7 dias)"  value={nf(quentes)} icon="flame"/>
+                    </div>
+                    <CarrinhoTable itens={carrinho} recuperados={recuperados}/>
+                  </>);
+                })()}
           </div>
         )}
 

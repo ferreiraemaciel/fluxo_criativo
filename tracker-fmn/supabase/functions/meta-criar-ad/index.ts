@@ -143,6 +143,54 @@ async function createAdFromImage(adsetId: string, card: Record<string, unknown>,
   return createAd(adsetId, card, adCreative.id);
 }
 
+// ── Criar anúncio (carrossel) ─────────────────────────────────────────────────
+// Um cartão por slide (child_attachments, formato oficial de carrossel do Meta).
+// Antes o carrossel caía em createAdFromImage e subia como imagem única, porque
+// só o primeiro arquivo era considerado (bug de 2026-07-30).
+async function createAdFromCarousel(adsetId: string, card: Record<string, unknown>, utm: string) {
+  const fileIds = ((card.file_ids as string[]) || []).filter(Boolean).slice(0, 10);
+  if (fileIds.length < 2) throw new Error("Carrossel precisa de pelo menos 2 imagens");
+
+  // 1. Subir cada imagem e guardar o hash, mantendo a ordem dos slides
+  const hashes: string[] = [];
+  for (const fid of fileIds) {
+    const up = await graphPost(`/act_${AD_ACCOUNT_ID}/adimages`, {
+      url: `https://drive.google.com/uc?export=download&id=${fid}`,
+    });
+    if (up.error) throw new Error(`Upload imagem do carrossel: ${up.error.message}`);
+    const h = Object.values(up.images as Record<string, {hash: string}>)[0]?.hash;
+    if (!h) throw new Error("Hash de uma das imagens do carrossel não retornado pelo Meta");
+    hashes.push(h);
+  }
+
+  // 2. Criar creative com um cartão por imagem
+  const link = buildLink(card, utm);
+  const linkData: Record<string, unknown> = {
+    link,
+    message: card.texto_principal || card.hook || "",
+    call_to_action: { type: "LEARN_MORE" },
+    // false preserva a ordem montada no Tracker (true deixa o Meta reordenar
+    // por performance) e evita o cartão final automático da página.
+    multi_share_optimized: false,
+    multi_share_end_card: false,
+    child_attachments: hashes.map((h) => ({
+      link,
+      image_hash: h,
+      name: (card.titulo_ad as string) || "",
+      description: (card.descricao_ad as string) || "",
+    })),
+  };
+
+  const adCreative = await graphPost(`/act_${AD_ACCOUNT_ID}/adcreatives`, {
+    name: `ADS ${card.num}`,
+    object_story_spec: JSON.stringify({ page_id: PAGE_ID, link_data: linkData }),
+  });
+  if (adCreative.error) throw new Error(`Creative carrossel: ${adCreative.error.message} | code:${adCreative.error.code} | user:${adCreative.error.error_user_msg}`);
+
+  // 3. Criar ad
+  return createAd(adsetId, card, adCreative.id);
+}
+
 // ── Abrir stream do Drive (dois passos para arquivos grandes) ─────────────────
 async function openDriveStream(id: string): Promise<{ response: Response; fileSize: number }> {
   const ua = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36";
@@ -366,10 +414,16 @@ Deno.serve(async (req) => {
 
       const mediaType = (card.media_tipo as string) || "";
       const isVideo   = ["reels", "video"].includes(mediaType);
+      // Carrossel se o card é do tipo carrossel E veio mais de um arquivo.
+      // Sem esse ramo o carrossel caía no de imagem e subia como imagem única.
+      const isCarousel = /carrossel/i.test((card.tipo as string) || "")
+                      && ((card.file_ids as string[]) || []).filter(Boolean).length > 1;
 
       let result;
       if (isVideo) {
         result = await createAdFromVideo(adset_id, card, utm);
+      } else if (isCarousel) {
+        result = await createAdFromCarousel(adset_id, card, utm);
       } else {
         result = await createAdFromImage(adset_id, card, utm);
       }
