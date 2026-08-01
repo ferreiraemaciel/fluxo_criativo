@@ -180,7 +180,13 @@ Deno.serve(async (req) => {
   const erros:      any[] = [];
 
   if (scope === "curtas") {
-    const periodos = getPeriodosCurtos();
+    // "maximum" entra JUNTO com os períodos curtos. Antes ele só era atualizado
+    // 1x/dia (scope=maximo, 4h da manhã), então uma venda que entrasse durante
+    // o dia aparecia em Hoje/3D/5D/7D mas não no Máximo — o Máximo chegava a
+    // mostrar MENOS vendas que o Hoje, o que é impossível e confundia a leitura
+    // (achado real no ADS 233 em 2026-08-01). Custa 1 chamada a mais por
+    // anúncio, o que é irrelevante perto do estrago de mostrar número errado.
+    const periodos = { ...getPeriodosCurtos(), maximum: { date_preset: "maximum" } };
 
     await processarEmParalelo(adsAtivos, async (ad) => {
       const numero = numeroPorMetaId[ad.id] ?? null;
