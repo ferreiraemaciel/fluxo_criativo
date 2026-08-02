@@ -626,7 +626,9 @@ async function handleCardSlides(request, env) {
     await Promise.all(apagar.map(k => env.BUCKET.delete(k).catch(() => {})));
   }
 
-  // Card que estava em "Fazer" e recebeu mídia avança sozinho pra "Fazendo".
+  // Card em "Fazendo" (id fazer) que recebeu mídia avança sozinho pra "Feito"
+  // (id fazendo). Opção B da mesclagem Fazer+Fazendo de 2026-08-02: mantém a
+  // mesma automação de antes, só o rótulo do destino mudou de significado.
   // Filtro condicional: só afeta a linha se ainda estiver em 'fazer' (idempotente).
   await fetch(`${env.SUPABASE_URL}/rest/v1/ads?numero=eq.${card_id}&status=eq.fazer`, {
     method: 'PATCH',

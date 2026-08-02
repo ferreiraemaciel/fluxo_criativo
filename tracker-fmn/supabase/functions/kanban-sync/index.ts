@@ -138,8 +138,9 @@ async function syncMetaAdStatus(): Promise<Set<number>> {
       }
     } else if (AINDA_NAO_LIVRE.has(efStatus)) {
       // Reconcilia "aguardando 1ª ativação" pra quem ainda está em
-      // Fazer/Fazendo. Um anúncio já arquivado ou campeão fica PAUSED no Meta
-      // o tempo todo por decisão do usuário — não é "pendente", é decidido.
+      // Fazendo/Feito (ids fazer/fazendo — mesclagem de 2026-08-02, ver
+      // ADS_COLUMNS em kanban.jsx). Um anúncio já arquivado ou campeão fica
+      // PAUSED no Meta o tempo todo por decisão do usuário — não é "pendente", é decidido.
       if ((ad.status === "fazer" || ad.status === "fazendo") && ad.meta_publish_status !== "rascunho") {
         await supabase.from("ads").update({ meta_publish_status: "rascunho" }).eq("numero", ad.numero);
       }
@@ -224,6 +225,8 @@ async function aplicarRegrasKanban() {
       hasMedia = !!ad.media_drive_url;
     }
 
+      // Card em "Fazendo" (id fazer) com mídia pronta avança sozinho pra
+      // "Feito" (id fazendo). Opção B da mesclagem Fazer+Fazendo de 2026-08-02.
     if (status === "fazer" && hasMedia) {
       push("fazendo", null, ad.numero);
     } else if (status === "ativo") {

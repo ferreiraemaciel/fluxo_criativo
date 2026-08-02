@@ -25,9 +25,15 @@ const PRODUCT_TICKET = 297;
 const UTM_GLOBAL = window.UTM_GLOBAL; // fonte única em shared.jsx
 const ADS_MEDIA_WORKER = 'https://ads-media.blindagem-fmn.workers.dev';
 
+// Fazer + Fazendo mesclados em 2026-08-02: "fazer" (id no banco) agora é o
+// balde único de produção (rótulo "Fazendo", recebe tudo que antes ia pra
+// Fazer OU Fazendo — migração de dados já feita, "fazendo" está vazio).
+// "fazendo" (id no banco) virou "Feito" — pronto, só falta ativar no Meta.
+// Trocar só os rótulos evita migrar dado nenhum a mais: os ids do banco
+// continuam os mesmos, só o significado exibido inverteu.
 const ADS_COLUMNS = [
-  { id:'fazer',           label:'Fazer',            colorDot:'#3b82f6', colorBg:'rgba(59,130,246,.08)',  colorBorder:'rgba(59,130,246,.25)' },
-  { id:'fazendo',         label:'Fazendo',          colorDot:'#fbbf24', colorBg:'rgba(251,191,36,.08)',  colorBorder:'rgba(251,191,36,.25)' },
+  { id:'fazer',           label:'Fazendo',          colorDot:'#3b82f6', colorBg:'rgba(59,130,246,.08)',  colorBorder:'rgba(59,130,246,.25)' },
+  { id:'fazendo',         label:'Feito',            colorDot:'#fbbf24', colorBg:'rgba(251,191,36,.08)',  colorBorder:'rgba(251,191,36,.25)' },
   { id:'ativo',           label:'Ativos',           colorDot:'#f97316', colorBg:'rgba(249,115,22,.08)',  colorBorder:'rgba(249,115,22,.3)'  },
   { id:'campeoes',        label:'Campeões',         colorDot:'#4ade80', colorBg:'rgba(74,222,128,.08)',  colorBorder:'rgba(74,222,128,.25)' },
   { id:'arquivado',       label:'Arquivados',       colorDot:'#94a3b8', colorBg:'rgba(148,163,184,.05)', colorBorder:'rgba(148,163,184,.2)' },
@@ -133,7 +139,7 @@ function useAdsCards() {
         meta_ad_id: a.meta_ad_id,
         col:      a.status,
         ordemManual: a.ordem_manual,
-        progress: a.status === 'fazendo' ? 50 : 0,
+        progress: a.status === 'fazendo' ? 100 : a.status === 'fazer' ? 50 : 0,
         hook:     a.titulo,
         formats:  [tipoFormatted],
         // vendas_total/cpa_historico/gasto_total somam TODAS as vezes que o
@@ -237,7 +243,9 @@ function KanbanCard({ card, col, onOpen, onDragStart, podeArrastar, onDropAntes 
   const tipoIcon = card.raw?.tipo === 'carrossel' ? 'layout-grid'
                  : card.raw?.tipo === 'imagem'    ? 'image' : 'clapperboard';
   // Sem preview no R2. Aceitável em Fazer/Fazendo; nas outras colunas, sinaliza.
-  const semPreview = !card.raw?.thumb_url && !['fazer','fazendo'].includes(card.col);
+  // Só "Fazendo" (id fazer, em produção) fica isento do aviso — "Feito" (id
+  // fazendo) já devia ter mídia pronta, se não tiver preview é sinal real de problema.
+  const semPreview = !card.raw?.thumb_url && card.col !== 'fazer';
   return (
     <div
       draggable={podeArrastar}
