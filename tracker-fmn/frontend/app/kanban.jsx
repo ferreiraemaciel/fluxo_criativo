@@ -1905,8 +1905,12 @@ function NovoAdsModal({ onClose, onCreated }) {
 
   useEffect(() => {
     async function fetchNext() {
-      const { data } = await window.db.from('ads').select('numero').order('numero', { ascending: false }).limit(1);
-      const n = ((data?.[0]?.numero) || 0) + 1;
+      // Preenche buraco na numeração primeiro (ex: ADS 349 deletado), só cai pro
+      // max+1 se a sequência estiver inteira. Pedido explícito do usuário em 2026-08-01.
+      const { data } = await window.db.from('ads').select('numero').order('numero', { ascending: true });
+      const usados = new Set((data || []).map(r => r.numero));
+      let n = 1;
+      while (usados.has(n)) n++;
       setNextNum(n);
       setTitulo(`ADS ${String(n).padStart(3,'0')} - `);
     }
