@@ -119,7 +119,7 @@ function useAdsCards() {
     setLoading(true);
     const { data: adsList } = await window.db
       .from('ads')
-      .select('numero,titulo,status,tag,tipo,headline,hook_copy,hook_visual,desenvolvimento_cta,roteiro,estetica_visual,texto_principal,titulo_ad,descricao_ad,posicionamento,media_drive_url,media_tipo,media_files,meta_ad_id,meta_ad_url,vendas_total,cpa_historico,gasto_total,isento_regra,observacoes,referencia,thumb_url,media_url,media_preview_url,meta_image_hash,meta_video_id,meta_campaign_id,meta_adset_id,meta_publish_status,ordem_manual')
+      .select('numero,titulo,status,tag,tipo,headline,hook_copy,hook_visual,desenvolvimento_cta,roteiro,estetica_visual,prompt,slides,texto_principal,titulo_ad,descricao_ad,posicionamento,media_drive_url,media_tipo,media_files,meta_ad_id,meta_ad_url,vendas_total,cpa_historico,gasto_total,isento_regra,observacoes,referencia,thumb_url,media_url,media_preview_url,meta_image_hash,meta_video_id,meta_campaign_id,meta_adset_id,meta_publish_status,ordem_manual')
       .order('numero', { ascending: false });
 
     const { data: insights } = await window.db
@@ -1247,6 +1247,72 @@ function CopyField({ id, label, fieldKey, rows = 3, hint, fields, set, copiedFie
   );
 }
 
+/* ── AdsSlidesBlock — Carrossel: Headline no topo já é campo à parte,
+   aqui só os slides (Roteiro, Estética Visual, Prompt cada um) ──────*/
+function AdsSlidesBlock({ fields, set }) {
+  const slidesArr = (() => {
+    if (!fields.slides) return [{ roteiro:'', estetica_visual:'', prompt:'' }];
+    try { const a = JSON.parse(fields.slides); return Array.isArray(a) && a.length ? a : [{ roteiro:'', estetica_visual:'', prompt:'' }]; }
+    catch { return [{ roteiro:'', estetica_visual:'', prompt:'' }]; }
+  })();
+
+  const save = arr => set('slides', JSON.stringify(arr));
+  const updateSlide = (i, patch) => save(slidesArr.map((s, idx) => idx===i ? { ...s, ...patch } : s));
+  const addSlide     = () => save([...slidesArr, { roteiro:'', estetica_visual:'', prompt:'' }]);
+  const removeSlide  = i  => save(slidesArr.filter((_, idx) => idx!==i));
+
+  const fieldStyle = { width:'100%', boxSizing:'border-box', padding:'8px 10px', borderRadius:7, resize:'vertical',
+    background:'var(--app-surface-2)', border:'1px solid var(--app-border)',
+    color:'var(--text-1)', fontFamily:'Roboto,sans-serif', fontSize:12.5, outline:'none', lineHeight:1.5 };
+  const labelStyle = { fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700,
+    letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)', display:'block', marginBottom:5 };
+
+  return (
+    <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+        <span style={labelStyle}>Slides ({slidesArr.length})</span>
+        <button onClick={addSlide}
+          style={{ display:'flex', alignItems:'center', gap:5, padding:'5px 12px',
+            borderRadius:7, border:'1px solid rgba(96,165,250,.35)', background:'rgba(96,165,250,.1)',
+            color:'#60a5fa', fontSize:11, fontFamily:'Roboto,sans-serif', fontWeight:700, cursor:'pointer' }}>
+          <LucideIcon icon="plus" size={12}/>Novo slide
+        </button>
+      </div>
+      {slidesArr.map((slide, idx) => (
+        <div key={idx} style={{ border:'1px solid rgba(255,255,255,.1)', borderRadius:10,
+          background:'rgba(255,255,255,.03)', padding:12, display:'flex', flexDirection:'column', gap:10 }}>
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+            <span style={{ fontSize:12, fontFamily:'Roboto,sans-serif', fontWeight:700, color:'var(--text-1)' }}>Slide {idx+1}</span>
+            {slidesArr.length > 1 && (
+              <button onClick={()=>removeSlide(idx)}
+                style={{ border:'none', background:'rgba(248,113,113,.12)', color:'#f87171',
+                  borderRadius:5, width:22, height:22, cursor:'pointer',
+                  display:'flex', alignItems:'center', justifyContent:'center' }}>
+                <LucideIcon icon="trash-2" size={11}/>
+              </button>
+            )}
+          </div>
+          <div>
+            <label style={labelStyle}>Roteiro</label>
+            <textarea value={slide.roteiro||''} onChange={e=>updateSlide(idx,{roteiro:e.target.value})}
+              rows={3} placeholder="O que vai escrito neste slide..." style={fieldStyle}/>
+          </div>
+          <div>
+            <label style={labelStyle}>Estética Visual</label>
+            <textarea value={slide.estetica_visual||''} onChange={e=>updateSlide(idx,{estetica_visual:e.target.value})}
+              rows={2} placeholder="Descrição da cena, fundo, composição..." style={fieldStyle}/>
+          </div>
+          <div>
+            <label style={labelStyle}>Prompt</label>
+            <textarea value={slide.prompt||''} onChange={e=>updateSlide(idx,{prompt:e.target.value})}
+              rows={3} placeholder="Prompt para gerar a imagem deste slide..." style={fieldStyle}/>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 /* ── AdsDetailModal ──────────────────────────────────────────────*/
 function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
   const raw = card.raw || {};
@@ -1285,6 +1351,8 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
     headline:         raw.headline        || '',
     roteiro:          raw.roteiro         || '',
     estetica_visual:  raw.estetica_visual || '',
+    prompt:           raw.prompt          || '',
+    slides:           raw.slides          || '',
     hook_visual:      raw.hook_visual     || '',
     hook_copy:        raw.hook_copy       || '',
     desenvolvimento_cta: raw.desenvolvimento_cta || '',
@@ -1872,7 +1940,9 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
                     hint="A frase principal/big idea que aparece escrita na imagem: o título, o hook que chama atenção (diferente do Reels, aqui não é falado, é escrito)."/>
                   <CopyField fields={fields} set={set} copiedField={copiedField} copyToClipboard={copyToClipboard} id="roteiro"    label="Roteiro"                fieldKey="roteiro"           rows={6}
                     hint="Descreva a imagem: quantos elementos/fotos, quais frases aparecem escritas. Sempre com a ideia do Hook (= Headline), o desenvolvimento (o que mais aparece escrito/visualmente) e um CTA."/>
-                  <CopyField fields={fields} set={set} copiedField={copiedField} copyToClipboard={copyToClipboard} id="estetica"   label="Prompt para Gerar Imagem" fieldKey="estetica_visual"  rows={6}
+                  <CopyField fields={fields} set={set} copiedField={copiedField} copyToClipboard={copyToClipboard} id="estetica"   label="Estética Visual"        fieldKey="estetica_visual"  rows={4}
+                    hint="Descrição da cena/composição (o prompt de geração vai no campo abaixo)."/>
+                  <CopyField fields={fields} set={set} copiedField={copiedField} copyToClipboard={copyToClipboard} id="prompt"     label="Prompt"                 fieldKey="prompt"           rows={6}
                     hint="Cole o prompt de geração da imagem. Se ele já tem escrita embutida, cole a escrita aqui também. Se deixa espaço de respiro pra escrita entrar na edição, só mencione o espaço: o texto que vai lá mora no Roteiro."/>
                   <CopyField fields={fields} set={set} copiedField={copiedField} copyToClipboard={copyToClipboard} id="texto-p"    label="Texto Principal"        fieldKey="texto_principal"   rows={3}/>
                   <CopyField fields={fields} set={set} copiedField={copiedField} copyToClipboard={copyToClipboard} id="titulo-ad"  label="Título"                 fieldKey="titulo_ad"         rows={2}/>
@@ -1880,14 +1950,12 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
                   <CopyField fields={fields} set={set} copiedField={copiedField} copyToClipboard={copyToClipboard} id="obs"        label="Informações Adicionais" fieldKey="observacoes"       rows={4}/>
                   <RefBlock value={fields.referencia} onChange={v => set('referencia', v)}/>
                 </>) : (<>
-                  <CopyField fields={fields} set={set} copiedField={copiedField} copyToClipboard={copyToClipboard} id="headline"     label="Headline"               fieldKey="headline"           rows={2}/>
-                  <CopyField fields={fields} set={set} copiedField={copiedField} copyToClipboard={copyToClipboard} id="hook-visual"  label="Hook Visual"            fieldKey="hook_visual"        rows={2}/>
-                  <CopyField fields={fields} set={set} copiedField={copiedField} copyToClipboard={copyToClipboard} id="hook-copy"    label="Hook Copy"              fieldKey="hook_copy"          rows={2}/>
-                  <CopyField fields={fields} set={set} copiedField={copiedField} copyToClipboard={copyToClipboard} id="texto-p"      label="Texto Principal"        fieldKey="texto_principal"    rows={3}/>
-                  <CopyField fields={fields} set={set} copiedField={copiedField} copyToClipboard={copyToClipboard} id="dev-cta"      label="Desenvolvimento + CTA"  fieldKey="desenvolvimento_cta" rows={3}/>
-                  <CopyField fields={fields} set={set} copiedField={copiedField} copyToClipboard={copyToClipboard} id="titulo-ad"    label="Título (feed)"          fieldKey="titulo_ad"          rows={2}/>
-                  <CopyField fields={fields} set={set} copiedField={copiedField} copyToClipboard={copyToClipboard} id="descricao"    label="Descrição"              fieldKey="descricao_ad"       rows={2}/>
-                  <CopyField fields={fields} set={set} copiedField={copiedField} copyToClipboard={copyToClipboard} id="obs"          label="Informações Adicionais" fieldKey="observacoes"        rows={4}/>
+                  <CopyField fields={fields} set={set} copiedField={copiedField} copyToClipboard={copyToClipboard} id="headline"   label="Headline"               fieldKey="headline"           rows={2}/>
+                  <AdsSlidesBlock fields={fields} set={set}/>
+                  <CopyField fields={fields} set={set} copiedField={copiedField} copyToClipboard={copyToClipboard} id="texto-p"    label="Texto Principal"        fieldKey="texto_principal"    rows={3}/>
+                  <CopyField fields={fields} set={set} copiedField={copiedField} copyToClipboard={copyToClipboard} id="titulo-ad"  label="Título"                 fieldKey="titulo_ad"          rows={2}/>
+                  <CopyField fields={fields} set={set} copiedField={copiedField} copyToClipboard={copyToClipboard} id="descricao"  label="Descrição"              fieldKey="descricao_ad"       rows={2}/>
+                  <CopyField fields={fields} set={set} copiedField={copiedField} copyToClipboard={copyToClipboard} id="obs"        label="Informações Adicionais" fieldKey="observacoes"        rows={4}/>
                   <RefBlock value={fields.referencia} onChange={v => set('referencia', v)}/>
                 </>)}
               </div>

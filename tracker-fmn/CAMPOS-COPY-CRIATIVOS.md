@@ -1,17 +1,23 @@
 # Campos de Copy dos Criativos - Tracker FMN
-> Aprovado em 2026-07-09. Fonte de verdade pra estrutura de campos do bloco "Copy" no card de anúncio (kanban.jsx), por tipo de criativo.
+> Aprovado em 2026-07-09. Revisado em 2026-08-03 (estrutura unificada Roteiro/Estética Visual/Prompt, aplicada também ao Orgânico). Fonte de verdade pra estrutura de campos do bloco "Copy" no card de anúncio (`kanban.jsx`) e no card orgânico (`organico.jsx`), por tipo/plataforma de criativo.
 
-Cada card de anúncio (`ads`) tem um bloco "Copy" cujos campos mudam de acordo com `tipo` (`reels`, `imagem`, `carrossel`). As colunas do banco são compartilhadas entre os tipos, só o **rótulo** e a **dica** exibidos na tela mudam.
+## Regra geral (ADS e Orgânico)
+
+O campo **Roteiro** sempre contém as 3 partes — Gancho, Desenvolvimento e CTA — não necessariamente rotuladas separadamente no texto, mas as 3 precisam estar presentes. Vale pra todo material gerado, tanto Anúncio quanto Orgânico.
+
+**Imagem** (ADS e Orgânico) sempre tem **Estética Visual** (descrição de cena/composição) e **Prompt** (o prompt de geração em si) como campos separados. **Reels** não tem Prompt (não se gera vídeo por prompt de imagem), só Estética Visual (direção de filmagem).
+
+**Informações Adicionais** é o nome único (rótulo e coluna `observacoes`) pro catch-all, tanto em `ads` quanto em `conteudo_organico`.
 
 ---
 
-## Reels
+## ADS — Reels
 
 | Ordem | Campo na tela | Coluna no banco | O que vai ali |
 |---|---|---|---|
 | 1 | Headline | `headline` | Sempre 2 frases nos primeiros segundos do vídeo: uma de segmentação (ex: "Fotógrafo e Videomaker") e outra curta que chame muito a atenção. |
 | 2 | Roteiro | `roteiro` | As três partes narradas juntas: Hook, Desenvolvimento e CTA (é falado no vídeo). |
-| 3 | Estética Visual | `estetica_visual` | Cenas, ângulo, cor, som: a parte estética da gravação e edição do vídeo inteiro (não só do hook). |
+| 3 | Estética Visual | `estetica_visual` | Cenas, ângulo, cor, som: a parte estética da gravação e edição do vídeo inteiro (não só do hook). Reels não tem Prompt. |
 | 4 | Texto Principal | `texto_principal` | Campo do Meta, vai no corpo do anúncio. |
 | 5 | Título | `titulo_ad` | Campo do Meta. |
 | 6 | Descrição | `descricao_ad` | Campo do Meta. |
@@ -20,35 +26,61 @@ Cada card de anúncio (`ads`) tem um bloco "Copy" cujos campos mudam de acordo c
 
 ---
 
-## Imagem
+## ADS — Imagem
 
 | Ordem | Campo na tela | Coluna no banco | O que vai ali |
 |---|---|---|---|
 | 1 | Headline | `headline` | A frase principal / big idea que aparece **escrita na própria imagem** - o título, o hook que chama atenção (diferente do Reels: aqui não é falado, é escrito na imagem). |
 | 2 | Roteiro | `roteiro` | Descreve a imagem: quantos elementos/fotos vão ter, quais frases aparecem escritas nela. Sempre mantendo a ideia do Hook (= a Headline), o desenvolvimento (o que mais aparece escrito ou visualmente) e um CTA. |
-| 3 | Prompt para Gerar Imagem | `estetica_visual` | Cola o prompt de geração da imagem. Se o prompt já tem escrita embutida, cola a escrita aqui também. Se o prompt deixa espaço de respiro pra escrita entrar na edição posterior, só menciona que existe esse espaço: o texto que vai lá mora no Roteiro, não aqui. |
-| 4 | Texto Principal | `texto_principal` | Campo do Meta. |
-| 5 | Título | `titulo_ad` | Campo do Meta. |
-| 6 | Descrição | `descricao_ad` | Campo do Meta. |
-| 7 | Informações Adicionais | `observacoes` | Igual ao Reels. |
-| 8 | Referência | `referencia` | Igual ao Reels. |
+| 3 | Estética Visual | `estetica_visual` | Descrição de cena/composição (o que a imagem mostra), separado do prompt final. |
+| 4 | Prompt | `prompt` | O prompt de geração de imagem em si, pronto pra colar no ChatGPT/Midjourney. Se o prompt deixa espaço de respiro pra escrita entrar na edição posterior, só menciona que existe esse espaço: o texto que vai lá mora no Roteiro, não aqui. |
+| 5 | Texto Principal | `texto_principal` | Campo do Meta. |
+| 6 | Título | `titulo_ad` | Campo do Meta. |
+| 7 | Descrição | `descricao_ad` | Campo do Meta. |
+| 8 | Informações Adicionais | `observacoes` | Igual ao Reels. |
+| 9 | Referência | `referencia` | Igual ao Reels. |
 
 ---
 
-## Carrossel
+## ADS — Carrossel (migrado em 2026-08-03)
 
-**Ainda não migrado**, continua com o layout antigo (Headline, Hook Visual, Hook Copy, Texto Principal, Desenvolvimento + CTA, Título (feed), Descrição, Informações Adicionais, Referência). Mudança fica pra uma próxima rodada, por pedido explícito do usuário.
+| Ordem | Campo na tela | Coluna no banco | O que vai ali |
+|---|---|---|---|
+| 1 | Headline | `headline` | Único, no topo do card (não repete por slide). |
+| 2 | Slides | `slides` (JSON) | Array de slides, cada um com `roteiro` (o que vai escrito naquele slide), `estetica_visual` (descrição de cena) e `prompt` (prompt de geração), além de `image_url` quando a mídia já foi importada. |
+| 3 | Texto Principal | `texto_principal` | Campo do Meta. |
+| 4 | Título | `titulo_ad` | Campo do Meta. |
+| 5 | Descrição | `descricao_ad` | Campo do Meta. |
+| 6 | Informações Adicionais | `observacoes` | Igual aos demais. |
+| 7 | Referência | `referencia` | Igual aos demais. |
+
+Cards antigos de Carrossel (campos soltos `hook_visual`/`hook_copy`/`desenvolvimento_cta`) foram migrados automaticamente pra um único slide inicial (`roteiro` = `hook_copy`+`desenvolvimento_cta`, `estetica_visual` = `hook_visual`, `prompt` vazio) — revisar e quebrar em mais slides quando fizer sentido.
 
 ---
 
-## Campos antigos (Hook Visual / Hook Copy / Desenvolvimento + CTA)
+## Orgânico (`conteudo_organico`) — Reels, Carrossel e Imagem
 
-Pra Reels e Imagem, esses três campos **saíram da tela**, mas as colunas (`hook_visual`, `hook_copy`, `desenvolvimento_cta`) **não foram apagadas do banco**, ficam como histórico/backup. Migração automática rodada uma vez (migrations 058 e 059):
-- `roteiro` = `hook_copy` + `desenvolvimento_cta` (concatenados), só se `roteiro` ainda estivesse vazio.
-- Reels: `estetica_visual` = `hook_visual` (copiado direto).
-- Imagem: `hook_visual` **não** foi migrado pra `estetica_visual`, porque descrição visual antiga não é a mesma coisa que um prompt de geração de imagem pronto pra colar. O campo começa em branco pro usuário preencher de verdade.
+Mesma lógica dos ADS, campos compartilhados entre `conteudo_organico` e `ads` (mesmo nome de coluna nas duas tabelas: `headline`, `roteiro`, `estetica_visual`, `prompt`, `observacoes`, `referencia`).
 
-Carrossel continua usando os três campos antigos normalmente (não mudou nada ali ainda).
+| Campo | Reels | Carrossel | Imagem |
+|---|---|---|---|
+| Headline | ✅ | ✅ (único, topo) | ✅ |
+| Roteiro | ✅ | dentro de cada slide | ✅ |
+| Estética Visual | ✅ (sem Prompt) | dentro de cada slide | ✅ (com Prompt) |
+| Prompt | ❌ não existe | dentro de cada slide | ✅ |
+| Slides (`roteiro`, `estetica_visual`, `prompt`, `image_url` por item) | — | ✅ só aqui | — |
+| Legenda da postagem (`legenda`) | ✅ | ✅ | ✅ |
+| Informações Adicionais (`observacoes`) | ✅ | ✅ | ✅ |
+| Referência (`referencia`) | ✅ | ✅ | ✅ |
+
+Sem Título nem Descrição no Orgânico — só fazem sentido nos ADS (campos do Meta Ads Manager). `tema` continua existindo à parte, é só o nome interno do card no board (nunca aparece pro público).
+
+---
+
+## Campos antigos (histórico, nunca apagados)
+
+- **ADS** — `hook_visual`, `hook_copy`, `desenvolvimento_cta`: saíram da tela pra Reels/Imagem desde a migração 058/059. Pra Carrossel, foram a fonte da migração automática de 2026-08-03 (ver acima), colunas continuam existindo como backup.
+- **Orgânico** — `gancho`, `desenvolvimento`, `cta`, `prompt_imagem`: saíram da tela na reestruturação de 2026-08-03. Migração automática: `roteiro` = `gancho`+`desenvolvimento`+`cta` (concatenados, só se `roteiro` estivesse vazio), `headline` = `gancho` (melhor candidato disponível), `prompt` (Imagem) = `prompt_imagem`. Nos slides de Carrossel, `titulo`+`subtitulo` viraram `roteiro` do slide, `visual` virou `estetica_visual`, `prompt` manteve. Os campos `tipo` (Capa/Contexto/...) e `tag` ("Slide N") dos slides **somem de vez**, não viram nem organização interna.
 
 ## O que NUNCA muda nessa reestruturação
 
