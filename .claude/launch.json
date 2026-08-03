@@ -67,5 +67,11 @@
       "runtimeArgs": ["-m", "http.server", "3040", "--directory", "/Users/ferreiraemaciel/Documents/khronus/frontend"],
       "port": 3040
     }
+    ,{
+      "name": "leh-haus-ep03",
+      "runtimeExecutable": "/opt/homebrew/bin/python3",
+      "runtimeArgs": ["-m", "http.server", "8765", "--directory", "/Users/felipeferreira/Desktop/Trabalhando/Vídeo/Leh Haus - Ep 03/Objetos"],
+      "port": 8765
+    }
   ]
 }

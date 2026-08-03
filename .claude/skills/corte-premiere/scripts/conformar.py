@@ -10,6 +10,14 @@ importa e relinka sozinho, com marcadores de b-roll. Gera tambem um mapa .md.
 Generico: detecta fps/timebase/ntsc, numero de arquivos e numero de trilhas de
 audio sozinho. Nao e preso a nenhum projeto.
 
+Suporta N trilhas de video em paralelo (multicam bruto, ex: 2 cameras
+sincronizadas cobrindo o mesmo periodo). Cada trilha de video e cada trilha de
+audio mantem seu proprio tiling (cobertura real no arquivo fonte); se uma
+camera nao cobriu um trecho do segmento escolhido (gap de gravacao), essa
+trilha simplesmente fica sem clipe ali (nao força continuidade artificial).
+Com trilha de video unica, o comportamento e identico ao anterior, incluindo
+os <link> entre video e audio.
+
 Uso:
     python3 conformar.py --edl caminho/edl.json
 
@@ -19,13 +27,14 @@ Formato da EDL (JSON):
   "out_xml":    "/.../Entrevista 01 - CORTE FMN v1.xml",
   "out_mapa":   "/.../MAPA_CORTE_FMN_v1.md",
   "sequence_name": "Entrevista 01 - CORTE FMN v1",
-  "abertura": {"name": "ABERTURA · b-roll", "nota": "estrada/cafe..."},   # opcional
+  "abertura": {"name": "ABERTURA · b-roll", "nota": "estrada/cafe...", "duracao": 8},  # opcional, duracao em segundos = espaco reservado em branco no inicio
   "blocks": [
     {"name": "BLOCO 1 · ...", "segments": [
        {"id":"S35", "in":"00:23:06,518", "out":"00:24:26,448",
         "uso":"FILME + REEL", "nota":"..."},
        ...
-    ]},
+     ],
+     "transicao_apos": {"duracao": 3, "nota": "b-roll de textura..."}},  # opcional, espaco em branco reservado depois deste bloco
     ...
   ],
   "excluidos": [ {"id":"S09","in":"...","out":"...","uso":"...","nota":"..."} ]  # opcional
@@ -82,50 +91,52 @@ def main():
     def sec_to_frame(s):
         return int(round(s * FPS))
 
-    # --- trilha de video de referencia (primeira nao vazia) ---
-    vtracks = media.find('video').findall('track')
-    ref = None
-    for tr in vtracks:
-        if tr.findall('clipitem'):
-            ref = tr; break
-    if ref is None:
+    file_def_xml, masterclip = {}, {}
+
+    def collect_layers(tracks_el):
+        """Le cada trilha nao vazia mantendo seu proprio tiling (cobertura real
+        no arquivo fonte). Registra a def completa de cada arquivo na primeira
+        vez que ele aparece (em qualquer trilha)."""
+        layers = []
+        for tr in tracks_el.findall('track'):
+            cis = tr.findall('clipitem')
+            if not cis:
+                continue
+            st = cis[0].find('sourcetrack')
+            sidx = int(st.findtext('trackindex')) if st is not None else (len(layers) + 1)
+            tiling = []
+            for ci in cis:
+                fe = ci.find('file'); fid = fe.get('id')
+                if len(list(fe)) > 0 and fid not in file_def_xml:
+                    file_def_xml[fid] = ET.tostring(fe, encoding='unicode')
+                    masterclip[fid] = ci.findtext('masterclipid') or ('masterclip-' + fid)
+                tiling.append(dict(start=int(ci.findtext('start')), end=int(ci.findtext('end')),
+                                   in_=int(ci.findtext('in')), out=int(ci.findtext('out')),
+                                   fid=fid, name=ci.findtext('name')))
+            for c in tiling:
+                masterclip.setdefault(c['fid'], 'masterclip-' + c['fid'])
+            layers.append(dict(tiling=tiling, idx=sidx))
+        return layers
+
+    # --- trilhas de video (cada uma = um angulo/camera, tiling proprio) ---
+    video_layers = collect_layers(media.find('video'))
+    if not video_layers:
         sys.exit('ERRO: nenhuma trilha de video com clipes no XML fonte.')
 
-    tiling, file_def_xml, masterclip = [], {}, {}
-    for ci in ref.findall('clipitem'):
-        fe = ci.find('file'); fid = fe.get('id')
-        if len(list(fe)) > 0 and fid not in file_def_xml:
-            file_def_xml[fid] = ET.tostring(fe, encoding='unicode')
-            masterclip[fid] = ci.findtext('masterclipid') or ('masterclip-' + fid)
-        tiling.append(dict(start=int(ci.findtext('start')), end=int(ci.findtext('end')),
-                           in_=int(ci.findtext('in')), out=int(ci.findtext('out')),
-                           fid=fid, name=ci.findtext('name')))
-    # garante que todo fid usado tem def e masterclip
-    for c in tiling:
-        masterclip.setdefault(c['fid'], 'masterclip-' + c['fid'])
-    TOTAL_SRC = tiling[-1]['end']
+    # --- trilhas de audio (tiling proprio, nao inferido do video) ---
+    audio_layers = collect_layers(media.find('audio'))
+    if not audio_layers:
+        audio_layers = [dict(tiling=[], idx=1)]
 
-    # --- trilhas de audio populadas + seus sourcetrack index ---
-    atracks_src = media.find('audio').findall('track')
-    audio_idx = []   # lista de trackindex de audio a espelhar (ex: [1,2])
-    for tr in atracks_src:
-        cis = tr.findall('clipitem')
-        if not cis:
-            continue
-        st = cis[0].find('sourcetrack')
-        ti = int(st.findtext('trackindex')) if st is not None else (len(audio_idx) + 1)
-        audio_idx.append(ti)
-    if not audio_idx:
-        audio_idx = [1]
+    SINGLE_CAM = len(video_layers) == 1
 
     vformat = ET.tostring(media.find('video').find('format'), encoding='unicode') \
         if media.find('video').find('format') is not None else ''
     aformat_el = media.find('audio').find('format')
     aformat = ET.tostring(aformat_el, encoding='unicode') if aformat_el is not None else ''
 
-    # --- reconstruir pedacos por segmento ---
-    def pieces_for(a, b):
-        ti, to = max(0, sec_to_frame(a)), min(TOTAL_SRC, sec_to_frame(b))
+    # --- reconstruir pedacos por segmento, numa trilha (tiling) qualquer ---
+    def pieces_for(tiling, ti, to):
         out = []
         for c in tiling:
             s, e = max(c['start'], ti), min(c['end'], to)
@@ -134,7 +145,7 @@ def main():
             out.append(dict(fid=c['fid'], name=c['name'],
                             src_in=c['in_'] + (s - c['start']),
                             src_out=c['in_'] + (e - c['start']),
-                            length=e - s))
+                            length=e - s, local=s - ti))
         return out
 
     # --- emitir clipitems ---
@@ -167,8 +178,8 @@ def main():
         p.append('</clipitem>')
         return ''.join(p)
 
-    v_clips = []
-    a_clips = [[] for _ in audio_idx]
+    v_clips = [[] for _ in video_layers]
+    a_clips = [[] for _ in audio_layers]
     markers = []
     seen = set()
     pos = 0
@@ -177,34 +188,71 @@ def main():
 
     if edl.get('abertura'):
         ab = edl['abertura']
-        markers.append((ab.get('name', 'ABERTURA'), ab.get('nota', ''), 0, -1))
+        dur_fr = sec_to_frame(to_seconds(ab.get('duracao', 0)))
+        markers.append((ab.get('name', 'ABERTURA'), ab.get('nota', ''), 0, dur_fr if dur_fr else -1))
+        pos = dur_fr
 
     for blk in edl['blocks']:
         for seg in blk['segments']:
             a, b = to_seconds(seg['in']), to_seconds(seg['out'])
+            ti_frame, to_frame = sec_to_frame(a), sec_to_frame(b)
+            nominal_len = to_frame - ti_frame
             seg_start = pos
-            for pc in pieces_for(a, b):
-                n += 1
-                first = pc['fid'] not in seen
-                vid = 'ci-v%d' % n
-                aids = ['ci-a%d_%d' % (ti, n) for ti in audio_idx]
-                links = [(vid, 'video', 1, n)]
-                for k, ti in enumerate(audio_idx):
-                    links.append((aids[k], 'audio', ti, n))
-                v_clips.append(clip(vid, pc['name'], masterclip[pc['fid']], pc['length'],
-                                    pc['src_in'], pc['src_out'], pc['fid'], first, pos,
-                                    'video', None, links))
-                seen.add(pc['fid'])
-                for k, ti in enumerate(audio_idx):
-                    a_clips[k].append(clip(aids[k], pc['name'], masterclip[pc['fid']],
-                                           pc['length'], pc['src_in'], pc['src_out'],
-                                           pc['fid'], False, pos, 'audio', ti, links))
-                pos += pc['length']
+
+            if SINGLE_CAM:
+                # comportamento original: 1 trilha de video, com <link> para o audio
+                layer = video_layers[0]
+                for pc in pieces_for(layer['tiling'], ti_frame, to_frame):
+                    n += 1
+                    first = pc['fid'] not in seen
+                    vid = 'ci-v%d' % n
+                    aids = ['ci-a%d_%d' % (al['idx'], n) for al in audio_layers]
+                    links = [(vid, 'video', 1, n)]
+                    for k, al in enumerate(audio_layers):
+                        links.append((aids[k], 'audio', al['idx'], n))
+                    v_clips[0].append(clip(vid, pc['name'], masterclip[pc['fid']], pc['length'],
+                                        pc['src_in'], pc['src_out'], pc['fid'], first,
+                                        pos + pc['local'], 'video', None, links))
+                    seen.add(pc['fid'])
+                    for k, al in enumerate(audio_layers):
+                        a_clips[k].append(clip(aids[k], pc['name'], masterclip[pc['fid']],
+                                               pc['length'], pc['src_in'], pc['src_out'],
+                                               pc['fid'], False, pos + pc['local'], 'audio',
+                                               al['idx'], links))
+            else:
+                # multicam: cada trilha de video/audio anda com seu proprio tiling;
+                # se uma camera nao cobriu o trecho, fica sem clipe ali (sem link).
+                for li, layer in enumerate(video_layers):
+                    for pc in pieces_for(layer['tiling'], ti_frame, to_frame):
+                        n += 1
+                        first = pc['fid'] not in seen
+                        vid = 'ci-v%d_%d' % (li, n)
+                        v_clips[li].append(clip(vid, pc['name'], masterclip[pc['fid']], pc['length'],
+                                            pc['src_in'], pc['src_out'], pc['fid'], first,
+                                            pos + pc['local'], 'video', None, []))
+                        seen.add(pc['fid'])
+                for ai, layer in enumerate(audio_layers):
+                    for pc in pieces_for(layer['tiling'], ti_frame, to_frame):
+                        n += 1
+                        first = pc['fid'] not in seen
+                        aid = 'ci-a%d_%d' % (ai, n)
+                        a_clips[ai].append(clip(aid, pc['name'], masterclip[pc['fid']], pc['length'],
+                                            pc['src_in'], pc['src_out'], pc['fid'], first,
+                                            pos + pc['local'], 'audio', layer['idx'], []))
+                        seen.add(pc['fid'])
+
+            pos = seg_start + nominal_len
             markers.append(('%s · %s' % (blk['name'], seg.get('id', '')),
                             seg.get('nota', ''), seg_start, pos))
             mapa_rows.append(dict(block=blk['name'], id=seg.get('id', ''),
                                   IN=seg['in'], OUT=seg['out'], uso=seg.get('uso', ''),
                                   nota=seg.get('nota', ''), ts=seg_start, te=pos))
+        if blk.get('transicao_apos'):
+            tr = blk['transicao_apos']
+            dur_fr = sec_to_frame(to_seconds(tr.get('duracao', 0)))
+            if dur_fr:
+                markers.append(('TRANSIÇÃO · b-roll', tr.get('nota', ''), pos, pos + dur_fr))
+                pos += dur_fr
     TOTAL = pos
 
     # --- montar XML ---
@@ -218,11 +266,12 @@ def main():
     x.append(ratexml(TB, NTSC))
     x.append('<media><video>')
     if vformat: x.append(vformat)
-    x.append(track(v_clips))
-    x.append('<track></track><track></track>')  # V2,V3 vazias p/ b-roll
+    for vc in v_clips:
+        x.append(track(vc))
+    x.append('<track></track><track></track>')  # trilhas vazias extras p/ b-roll
     x.append('</video><audio>')
     if aformat: x.append(aformat)
-    for k, ti in enumerate(audio_idx):
+    for k, al in enumerate(audio_layers):
         x.append(track(a_clips[k], '<outputchannelindex>%d</outputchannelindex>' % (k + 1)))
     x.append('</audio></media>')
     for name, comment, mi, mo in markers:
@@ -259,8 +308,9 @@ def main():
                                                 e.get('uso', ''), str(e.get('nota', '')).replace('|', '/')))
     io.open(edl['out_mapa'], 'w', encoding='utf-8').write('\n'.join(md))
 
-    print('OK | fps=%.3f tpf=%d | clips_video=%d | trilhas_audio=%s | duracao=%d quadros (%s) | marcadores=%d'
-          % (FPS, TPF, len(v_clips), audio_idx, TOTAL, f2tc(TOTAL), len(markers)))
+    print('OK | fps=%.3f tpf=%d | trilhas_video=%d (clips: %s) | trilhas_audio=%d | duracao=%d quadros (%s) | marcadores=%d'
+          % (FPS, TPF, len(v_clips), [len(vc) for vc in v_clips], len(a_clips),
+             TOTAL, f2tc(TOTAL), len(markers)))
     print('XML :', edl['out_xml'])
     print('MAPA:', edl['out_mapa'])
 
