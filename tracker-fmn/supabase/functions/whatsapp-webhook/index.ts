@@ -253,10 +253,15 @@ Deno.serve(async (req) => {
             await supabase.from("whatsapp_contatos").update({ precisa_humano: true }).eq("telefone", telefone);
           }
 
-          // Reação de emoji, figurinha, vídeo, localização ou documento que
-          // não é PDF: nada disso a IA processa (não tem conteúdo de texto
-          // pra responder, ou é um formato que ela não lê).
-          if (msg.type === "reaction" || msg.type === "sticker" || msg.type === "video" || msg.type === "location"
+          // Figurinha, vídeo, localização ou documento que não é PDF: a IA
+          // não processa (é formato que ela não lê, ou não tem conteúdo de
+          // texto pra responder). Reação de emoji SAI dessa lista desde
+          // 2026-08-04 (combinado com o Felipe): mesmo sem conteúdo real,
+          // é sinal de engajamento e vale a pena a IA seguir a conversa em
+          // vez de ficar muda. O prompt tem regra própria pra tratar
+          // mensagem só de emoji (reação ou texto) como sinal leve, sem
+          // tentar interpretar o emoji como afirmação de conteúdo.
+          if (msg.type === "sticker" || msg.type === "video" || msg.type === "location"
             || (msg.type === "document" && !documentoEhPdf)) continue;
 
           // IA vendedora: roda em background, não segura a resposta ao Meta.
