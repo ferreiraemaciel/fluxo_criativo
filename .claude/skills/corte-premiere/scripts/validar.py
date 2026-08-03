@@ -2,10 +2,12 @@
 """
 validar.py — Confere a integridade do XML de corte antes de entregar.
 
-Checa: XML bem formado; continuidade sem furos em cada trilha; alinhamento
+Checa: XML bem formado; sem sobreposição/retrocesso em cada trilha (furos sao
+tolerados: cortes multicam podem ter uma camera sem cobertura num trecho, e
+abertura/transicao reservam espaco em branco de proposito); alinhamento
 video x audio; end-start == out-in em cada clipe; cada arquivo definido 1 vez;
 quadros dentro da duracao real do arquivo (se o XML fonte for passado);
-marcadores dentro do range.
+marcadores dentro do range; nenhum clipe ultrapassa a duracao total da sequencia.
 
 Uso: python3 validar.py --xml "/.../CORTE.xml" [--source "/.../Sequencia.xml"]
 """
@@ -27,6 +29,7 @@ def main():
     seq = ET.parse(a.xml).getroot().find('sequence')   # levanta erro se malformado
     media = seq.find('media')
     prob = []
+    TOTAL = int(seq.findtext('duration'))
 
     def check(clips, label):
         pos = None
@@ -36,8 +39,10 @@ def main():
             fid = c.find('file').get('id')
             if en - st != oo - ii:
                 prob.append('%s clipe %d: len timeline != source' % (label, i))
-            if pos is not None and st != pos:
-                prob.append('%s clipe %d: furo/sobreposição (start %d != %d)' % (label, i, st, pos))
+            if pos is not None and st < pos:
+                prob.append('%s clipe %d: sobreposição/retrocesso (start %d < %d)' % (label, i, st, pos))
+            if en > TOTAL:
+                prob.append('%s clipe %d: end %d > duração total %d' % (label, i, en, TOTAL))
             pos = en
             if ii < 0:
                 prob.append('%s clipe %d: in negativo' % (label, i))
@@ -45,15 +50,17 @@ def main():
                 prob.append('%s clipe %d: out %d > dur arquivo %d' % (label, i, oo, filedur[fid]))
         return pos
 
-    vt = media.find('video').findall('track')
+    vt = [tr for tr in media.find('video').findall('track') if tr.findall('clipitem')]
     at = media.find('audio').findall('track')
     ends = []
-    ends.append(check(vt[0].findall('clipitem'), 'V1'))
+    for k, tr in enumerate(vt):
+        ends.append(check(tr.findall('clipitem'), 'V%d' % (k + 1)))
     for k, tr in enumerate(at):
         if tr.findall('clipitem'):
             ends.append(check(tr.findall('clipitem'), 'A%d' % (k+1)))
-    if len(set(ends)) > 1:
-        prob.append('trilhas terminam em quadros diferentes: %s' % ends)
+    for e in ends:
+        if e is not None and e > TOTAL:
+            prob.append('trilha termina depois da duração total: %d > %d' % (e, TOTAL))
 
     defs = {}
     for f in seq.iter('file'):
@@ -64,21 +71,20 @@ def main():
         if full != 1:
             prob.append('arquivo %s definido %d vezes (esperado 1)' % (fid, full))
 
-    TOTAL = int(seq.findtext('duration'))
     for m in seq.findall('marker'):
         mi, mo = int(m.findtext('in')), int(m.findtext('out'))
         if mi < 0 or mi > TOTAL or (mo != -1 and (mo < mi or mo > TOTAL)):
             prob.append('marcador fora do range: %s' % m.findtext('name'))
 
-    nclips = len(vt[0].findall('clipitem'))
-    print('clipes V1=%d | fim das trilhas=%s | duração=%d | marcadores=%d'
-          % (nclips, ends, TOTAL, len(seq.findall('marker'))))
+    nclips = [len(tr.findall('clipitem')) for tr in vt]
+    print('trilhas de vídeo=%d (clipes: %s) | fim das trilhas=%s | duração=%d | marcadores=%d'
+          % (len(vt), nclips, ends, TOTAL, len(seq.findall('marker'))))
     if prob:
         print('PROBLEMAS (%d):' % len(prob))
         for p in prob[:40]:
             print('  -', p)
         raise SystemExit(1)
-    print('SEM PROBLEMAS. Continuidade, A/V, defs de arquivo e marcadores OK.')
+    print('SEM PROBLEMAS. Sem sobreposições, A/V, defs de arquivo e marcadores OK.')
 
 if __name__ == '__main__':
     main()
