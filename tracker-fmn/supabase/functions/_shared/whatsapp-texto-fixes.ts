@@ -26,10 +26,37 @@ function completarAcessoVitalicio(texto: string): string {
   );
 }
 
+// 4) Vírgula artificial entre interjeição curta e "então" no início da
+// mensagem: "Bora, então, Carlos." tem pausa que ninguém fala assim. Remove
+// só a vírgula entre a interjeição e "então" (mantém a vírgula antes do
+// nome, se houver, que aí sim pode ser uma pausa real).
+function removerVirgulaVocativoCurto(texto: string): string {
+  return texto.replace(/^(\p{L}+),\s*então,/iu, "$1 então,");
+}
+
+// 5) Palavra de reunião/apresentação ao retomar assunto já falado
+// ("recapitulando", "resumindo", "voltando ao que discutimos") soa
+// apresentação formal, não continuação de papo de WhatsApp.
+function removerTransicaoDeReuniao(texto: string): string {
+  return texto.replace(/\b(recapitulando|resumindo|voltando ao que discutimos)\b[,:]?\s*/gi, "").trim();
+}
+
+// 6) "Faz sentido"/"Faz todo sentido" como abertura de mensagem é proibido
+// (vira muleta repetida). Remove só quando está no INÍCIO da mensagem, e
+// recapitaliza a primeira letra do que sobrar.
+function removerFazSentidoAbertura(texto: string): string {
+  const semAbertura = texto.replace(/^faz (todo )?sentido[,.]?\s*/i, "");
+  if (semAbertura === texto || !semAbertura) return texto;
+  return semAbertura.charAt(0).toUpperCase() + semAbertura.slice(1);
+}
+
 export function aplicarCorrecoesAutomaticas(texto: string): string {
   let t = texto;
   t = removerSaudacaoPeriodo(t);
   t = removerVirgulaAntesDeEOu(t);
   t = completarAcessoVitalicio(t);
+  t = removerVirgulaVocativoCurto(t);
+  t = removerTransicaoDeReuniao(t);
+  t = removerFazSentidoAbertura(t);
   return t;
 }
