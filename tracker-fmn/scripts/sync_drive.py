@@ -228,11 +228,13 @@ def update_supabase(numero, media_files, dry_run=False):
     if auto_tipo:
         payload["tipo"] = auto_tipo
 
-    # Regra: se AD está em "fazer" e agora tem criativo → move para "fazendo"
+    # Regra: se AD está em "fazer" (rótulo "Fazendo") e agora tem criativo →
+    # move para "fazendo" (rótulo "Feito"). Mesclagem Fazer+Fazendo de 2026-08-02,
+    # ids do banco continuam os mesmos, só o rótulo exibido mudou de sentido.
     status_atual = get_status_atual(numero)
     if status_atual == "fazer":
         payload["status"] = "fazendo"
-        print(f"    ↪ Status: fazer → fazendo (criativo detectado)")
+        print(f"    ↪ Status: Fazendo → Feito (criativo detectado)")
 
     if dry_run:
         print(f"    [dry-run] Supabase UPDATE ads SET media_files={len(media_files)} arquivo(s), tipo={auto_tipo}, status={payload.get('status','—')} WHERE numero={numero}")

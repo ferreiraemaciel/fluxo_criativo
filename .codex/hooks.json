@@ -1,0 +1,143 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node '/Users/ferreiraemaciel/Documents/fluxo-criativo/.codex/hooks/no-emdash-guard.js'",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node '/Users/ferreiraemaciel/Documents/fluxo-criativo/.codex/hooks/gsd-prompt-guard.js'",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node '/Users/ferreiraemaciel/Documents/fluxo-criativo/.codex/hooks/gsd-read-guard.js'",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node '/Users/ferreiraemaciel/Documents/fluxo-criativo/.codex/hooks/gsd-workflow-guard.js'",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash '/Users/ferreiraemaciel/Documents/fluxo-criativo/.codex/hooks/gsd-validate-commit.sh'",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Bash|Edit|Write|MultiEdit|Agent|Task",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node '/Users/ferreiraemaciel/Documents/fluxo-criativo/.codex/hooks/gsd-context-monitor.js'",
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash '/Users/ferreiraemaciel/Documents/fluxo-criativo/.codex/hooks/gsd-phase-boundary.sh'",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node '/Users/ferreiraemaciel/Documents/fluxo-criativo/.codex/hooks/copy-review.js'",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node '/Users/ferreiraemaciel/Documents/fluxo-criativo/.codex/hooks/painel-validar.js'",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "Write|Edit|Bash|Agent|Task|WebFetch|WebSearch",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node '/Users/ferreiraemaciel/Documents/fluxo-criativo/.codex/hooks/agent-status-writer.js'",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash '/Users/ferreiraemaciel/Documents/fluxo-criativo/.codex/hooks/setup-node.sh'"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node '/Users/ferreiraemaciel/Documents/fluxo-criativo/.codex/hooks/gsd-check-update.js'"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash '/Users/ferreiraemaciel/Documents/fluxo-criativo/.codex/hooks/gsd-session-state.sh'"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash '/Users/ferreiraemaciel/Documents/fluxo-criativo/.codex/hooks/git-auto-sync.sh'",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  }
+}

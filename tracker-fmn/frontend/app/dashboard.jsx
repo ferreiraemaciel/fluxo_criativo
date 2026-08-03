@@ -1243,14 +1243,15 @@ const RANKING_ORDER_KEY = 'fmn-ranking-order';
 
 function AdsRanking({ ads, onNavigate }) {
   const CPA_LIMIT = 207.90;
+  // Ids reais do Kanban hoje (ver ADS_COLUMNS em kanban.jsx). Mapa antigo
+  // (fazendo-teste, feito-otimo etc) era de uma nomenclatura que não existe
+  // mais — corrigido junto da mesclagem Fazer+Fazendo de 2026-08-02.
   const statusColor = {
-    'fazendo-teste':       '#3b82f6',
-    'fazendo-recorrencia': '#8b5cf6',
-    'fazendo-producao':    '#22c55e',
-    'feito-otimo':         '#f59e0b',
-    'feito-mediano':       '#94a3b8',
-    'feito-ruim':          '#ef4444',
-    'fazer':               '#475569',
+    'fazer':     '#3b82f6', // Fazendo (produção)
+    'fazendo':   '#eaaa41', // Feito (pronto, falta ativar)
+    'ativo':     '#fb923c',
+    'campeoes':  '#4ade80',
+    'arquivado': '#94a3b8',
   };
   const cpaColor = cpa => !cpa ? 'var(--text-3)' : cpa <= CPA_LIMIT * 0.7 ? 'var(--clr-pos)' : cpa <= CPA_LIMIT ? 'var(--fmn-gold)' : 'var(--clr-neg)';
 

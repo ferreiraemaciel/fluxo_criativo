@@ -1,6 +1,10 @@
 # Regras do Kanban — Tracker FMN
 > Aprovadas em 2026-06-20. Revisadas em 2026-07-10 (remoção de Teste/Recorrência,
-> saída de Ativos só reativa, remoção da coluna Testar novamente).
+> saída de Ativos só reativa, remoção da coluna Testar novamente). Revisadas em
+> 2026-08-02: colunas Fazer e Fazendo mescladas numa só ("Fazendo", id `fazer`
+> no banco); a antiga "Fazendo" (id `fazendo`) virou "Feito" (pronto, falta só
+> ativar no Meta). Os ids do banco não mudaram, só o rótulo exibido — ver
+> `ADS_COLUMNS` em `frontend/app/kanban.jsx`.
 > Fonte de verdade para implementação e futuras revisões.
 > Fórmula implementada em `supabase/functions/_shared/classificar.ts`
 > (compartilhada por `kanban-sync` e `processar-pausas`) e espelhada em
@@ -31,14 +35,15 @@ Campeões (sempre Ótimo) e Arquivados (Testar novamente / Mediano / Ruim).
 
 ## Colunas — Regras de Entrada e Saída
 
-### Fazer
-- **Entra:** card criado (padrão)
+### Fazendo (id `fazer` no banco)
+- **Entra:** card criado (padrão) — mescla o que antes eram as colunas separadas
+  Fazer e Fazendo
 - **Tag:** sem tag
-- **Sai para:** Fazendo (automático ao receber mídia via importação do Drive — regra
+- **Sai para:** Feito (automático ao receber mídia via importação do Drive — regra
   vale para qualquer forma de importar, ver seção "KANBAN" do CLAUDE.md raiz)
 
-### Fazendo
-- **Entra:** sync detecta arquivo de mídia gravado no card
+### Feito (id `fazendo` no banco)
+- **Entra:** sync detecta arquivo de mídia gravado no card (pronto, só falta ativar)
 - **Tag:** sem tag
 - **Sai para:** Ativos (automático quando o anúncio é publicado e fica ACTIVE no Meta)
 
@@ -75,7 +80,7 @@ Campeões (sempre Ótimo) e Arquivados (Testar novamente / Mediano / Ruim).
 
 | Trigger | Ação |
 |---|---|
-| Mídia gravada no card em "Fazer" | Move para "Fazendo" automaticamente |
+| Mídia gravada no card em "Fazendo" | Move para "Feito" automaticamente |
 | Anúncio publicado e vira ACTIVE no Meta | Move para "Ativos", sem tag |
 | Anúncio pausado no Meta (via `processar-pausas`, reagindo a alerta G5) | Recalcula tag e move para Campeões (Ótimo) ou Arquivados (Testar novamente/Mediano/Ruim) |
 | Card em Campeões recalculado e deixa de ser Ótimo | Move para Arquivados com a nova tag |

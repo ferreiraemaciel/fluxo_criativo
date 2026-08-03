@@ -1393,7 +1393,7 @@ function SubstituirModal({ adNum, defaultAdsetId, defaultAdsetName, defaultCampI
       // fazendo (produzido, na fila) ou campeoes/arquivado (já rodou antes, pode voltar).
       // 'ativo' fica de fora de propósito — já está no ar, não serve de substituto.
       const { data } = await window.db.from('ads')
-        .select('numero,titulo,status,meta_ad_id,media_drive_url,media_files,media_tipo,thumb_url')
+        .select('numero,titulo,status,meta_ad_id,media_drive_url,media_files,media_tipo,tipo,thumb_url')
         .in('status', ['fazendo','campeoes','arquivado'])
         .order('numero', { ascending: false });
       setCriativos((data || []).filter(c => c.media_drive_url || (c.media_files && c.media_files !== '[]' && c.media_files !== 'null')));
@@ -1456,6 +1456,9 @@ function SubstituirModal({ adNum, defaultAdsetId, defaultAdsetName, defaultCampI
     setUploading(true); setErrorMsg('');
     const files = (() => { try { return Array.isArray(selected.media_files) ? selected.media_files : JSON.parse(selected.media_files || '[]'); } catch { return []; } })();
     const firstFile = files[0] || null;
+    // file_ids (todos, na ordem) além do file_id: carrossel precisa de todos os
+    // slides, senão sobe como imagem única.
+    const fileIds = files.map(f => f?.file_id).filter(Boolean);
     const d = await callFn({
       action: 'create',
       adset_id: adsetId,
@@ -1466,8 +1469,10 @@ function SubstituirModal({ adNum, defaultAdsetId, defaultAdsetName, defaultCampI
         texto_principal: '',
         titulo_ad: selected.titulo || '',
         descricao_ad: '',
+        tipo: selected.tipo || '',
         media_tipo: selected.media_tipo || 'imagem',
         file_id: firstFile?.file_id || '',
+        file_ids: fileIds,
       },
       utm: UTM_GLOBAL,
     });

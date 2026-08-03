@@ -400,10 +400,38 @@ async function handleCreateAd(request, env) {
         video_data:        videoData,
       }),
     };
+  } else if (Array.isArray(b.imageUrls) && b.imageUrls.length > 1) {
+    // Criativo de CARROSSEL. Cada imagem vira um cartão (child_attachment).
+    // Sem isso o Meta recebia só uma picture e publicava imagem única, mesmo
+    // o card sendo carrossel no Tracker (bug de 2026-07-30).
+    // multi_share_optimized=false preserva a ordem dos slides montada aqui
+    // (com true o Meta reordena sozinho por performance);
+    // multi_share_end_card=false evita o cartão final automático da página.
+    linkData.child_attachments = b.imageUrls.slice(0, 10).map(url => ({
+      link:        b.link,
+      picture:     url,
+      name:        b.titulo || '',
+      description: b.descricao || '',
+    }));
+    linkData.multi_share_optimized = false;
+    linkData.multi_share_end_card  = false;
+    // Título e descrição vivem em cada cartão no carrossel; no nível de cima
+    // o Meta rejeita a combinação.
+    delete linkData.name;
+    delete linkData.description;
+    creativeParams = {
+      name:              `Criativo ${b.nome}`,
+      object_story_spec: JSON.stringify({
+        page_id:           pageId,
+        instagram_user_id: b.instagramUserId || env.FB_INSTAGRAM_ACTOR_ID || undefined,
+        link_data:         linkData,
+      }),
+    };
   } else {
-    // Criativo de imagem. Preferir picture (URL R2); image_hash como fallback.
-    if (b.imageUrl)       linkData.picture = b.imageUrl;
-    else if (b.imageHash) linkData.image_hash = b.imageHash;
+    // Criativo de imagem única. Preferir picture (URL R2); image_hash como fallback.
+    if (b.imageUrl)            linkData.picture = b.imageUrl;
+    else if (b.imageUrls?.[0]) linkData.picture = b.imageUrls[0];
+    else if (b.imageHash)      linkData.image_hash = b.imageHash;
     creativeParams = {
       name:              `Criativo ${b.nome}`,
       object_story_spec: JSON.stringify({
@@ -598,7 +626,9 @@ async function handleCardSlides(request, env) {
     await Promise.all(apagar.map(k => env.BUCKET.delete(k).catch(() => {})));
   }
 
-  // Card que estava em "Fazer" e recebeu mídia avança sozinho pra "Fazendo".
+  // Card em "Fazendo" (id fazer) que recebeu mídia avança sozinho pra "Feito"
+  // (id fazendo). Opção B da mesclagem Fazer+Fazendo de 2026-08-02: mantém a
+  // mesma automação de antes, só o rótulo do destino mudou de significado.
   // Filtro condicional: só afeta a linha se ainda estiver em 'fazer' (idempotente).
   await fetch(`${env.SUPABASE_URL}/rest/v1/ads?numero=eq.${card_id}&status=eq.fazer`, {
     method: 'PATCH',

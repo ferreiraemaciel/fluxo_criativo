@@ -3,7 +3,9 @@
 Aplica as regras do REGRAS-KANBAN.md em todos os ADs do Supabase.
 
 O que faz:
-  - fazer   + tem mídia no Drive  → move para "fazendo"
+  - fazer   + tem mídia no Drive  → move para "fazendo" (rótulos "Fazendo"→"Feito"
+                                    desde a mesclagem Fazer+Fazendo de 2026-08-02,
+                                    ids do banco continuam os mesmos)
   - campeoes que não atendem mais → move para "arquivado" com tag recalculada
   - campeoes sem tag correta      → corrige tag para "Ótimo"
   - testar-novamente inválido     → move para "arquivado" com tag recalculada
@@ -115,7 +117,7 @@ def main():
         except Exception:
             has_media = bool(ad.get("media_drive_url"))
 
-        # Regra 1: fazer + mídia → fazendo
+        # Regra 1: fazer (Fazendo) + mídia → fazendo (Feito)
         if status == "fazer" and has_media:
             batches[("fazendo", None)].append(num)
 

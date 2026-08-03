@@ -38,9 +38,9 @@ const TAGS_PERFORMANCE = [
   { tag: 'Ruim',             cor: '#f87171', condicao: '0 vendas E gasto ≥ R$297' },
 ];
 const COLUNAS_KANBAN = [
-  { nome: 'Fazer',      cor: '#60a5fa', entra: 'Card criado (padrão)', tag: 'Sem tag',
-    sai: 'Automático pra Fazendo, ao receber mídia via importação do Drive' },
-  { nome: 'Fazendo',    cor: '#eaaa41', entra: 'Sync detecta arquivo de mídia gravado no card', tag: 'Sem tag',
+  { nome: 'Fazendo',    cor: '#60a5fa', entra: 'Card criado (padrão) — mescla as antigas Fazer e Fazendo', tag: 'Sem tag',
+    sai: 'Automático pra Feito, ao receber mídia via importação do Drive' },
+  { nome: 'Feito',      cor: '#eaaa41', entra: 'Sync detecta arquivo de mídia gravado no card, pronto pra ativar', tag: 'Sem tag',
     sai: 'Automático pra Ativos, quando o anúncio publica e vira ACTIVE no Meta' },
   { nome: 'Ativos',     cor: '#fb923c', entra: 'meta_ad_id preenchido + ACTIVE no Meta', tag: 'Nenhuma (nunca recebe tag enquanto ativo)',
     sai: 'Só quando o anúncio para de rodar de verdade no Meta (pausa via processar-pausas). Nunca sai só por performance enquanto ainda está gastando.' },
@@ -262,7 +262,7 @@ function SystemScreen() {
                   <div style={{ display:'flex', flexDirection:'column', gap:6, fontSize:11.5,
                     fontFamily:'Roboto,sans-serif', color:'var(--text-3)' }}>
                     {[
-                      ['Mídia gravada no card em "Fazer"', 'Move para "Fazendo" automaticamente'],
+                      ['Mídia gravada no card em "Fazendo"', 'Move para "Feito" automaticamente'],
                       ['Anúncio publicado e vira ACTIVE no Meta', 'Move para "Ativos", sem tag'],
                       ['Anúncio pausado no Meta (alerta G5, via processar-pausas)', 'Recalcula tag e move pra Campeões (Ótimo) ou Arquivados'],
                       ['Card em Campeões recalculado e deixa de ser Ótimo', 'Move para Arquivados com a nova tag'],

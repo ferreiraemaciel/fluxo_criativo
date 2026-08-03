@@ -25,9 +25,15 @@ const PRODUCT_TICKET = 297;
 const UTM_GLOBAL = window.UTM_GLOBAL; // fonte única em shared.jsx
 const ADS_MEDIA_WORKER = 'https://ads-media.blindagem-fmn.workers.dev';
 
+// Fazer + Fazendo mesclados em 2026-08-02: "fazer" (id no banco) agora é o
+// balde único de produção (rótulo "Fazendo", recebe tudo que antes ia pra
+// Fazer OU Fazendo — migração de dados já feita, "fazendo" está vazio).
+// "fazendo" (id no banco) virou "Feito" — pronto, só falta ativar no Meta.
+// Trocar só os rótulos evita migrar dado nenhum a mais: os ids do banco
+// continuam os mesmos, só o significado exibido inverteu.
 const ADS_COLUMNS = [
-  { id:'fazer',           label:'Fazer',            colorDot:'#3b82f6', colorBg:'rgba(59,130,246,.08)',  colorBorder:'rgba(59,130,246,.25)' },
-  { id:'fazendo',         label:'Fazendo',          colorDot:'#fbbf24', colorBg:'rgba(251,191,36,.08)',  colorBorder:'rgba(251,191,36,.25)' },
+  { id:'fazer',           label:'Fazendo',          colorDot:'#3b82f6', colorBg:'rgba(59,130,246,.08)',  colorBorder:'rgba(59,130,246,.25)' },
+  { id:'fazendo',         label:'Feito',            colorDot:'#fbbf24', colorBg:'rgba(251,191,36,.08)',  colorBorder:'rgba(251,191,36,.25)' },
   { id:'ativo',           label:'Ativos',           colorDot:'#f97316', colorBg:'rgba(249,115,22,.08)',  colorBorder:'rgba(249,115,22,.3)'  },
   { id:'campeoes',        label:'Campeões',         colorDot:'#4ade80', colorBg:'rgba(74,222,128,.08)',  colorBorder:'rgba(74,222,128,.25)' },
   { id:'arquivado',       label:'Arquivados',       colorDot:'#94a3b8', colorBg:'rgba(148,163,184,.05)', colorBorder:'rgba(148,163,184,.2)' },
@@ -113,7 +119,7 @@ function useAdsCards() {
     setLoading(true);
     const { data: adsList } = await window.db
       .from('ads')
-      .select('numero,titulo,status,tag,tipo,headline,hook_copy,hook_visual,desenvolvimento_cta,roteiro,estetica_visual,texto_principal,titulo_ad,descricao_ad,posicionamento,media_drive_url,media_tipo,media_files,meta_ad_id,meta_ad_url,vendas_total,cpa_historico,gasto_total,isento_regra,observacoes,thumb_url,media_url,media_preview_url,meta_image_hash,meta_video_id,meta_campaign_id,meta_adset_id,meta_publish_status,ordem_manual')
+      .select('numero,titulo,status,tag,tipo,headline,hook_copy,hook_visual,desenvolvimento_cta,roteiro,estetica_visual,texto_principal,titulo_ad,descricao_ad,posicionamento,media_drive_url,media_tipo,media_files,meta_ad_id,meta_ad_url,vendas_total,cpa_historico,gasto_total,isento_regra,observacoes,referencia,thumb_url,media_url,media_preview_url,meta_image_hash,meta_video_id,meta_campaign_id,meta_adset_id,meta_publish_status,ordem_manual')
       .order('numero', { ascending: false });
 
     const { data: insights } = await window.db
@@ -133,7 +139,7 @@ function useAdsCards() {
         meta_ad_id: a.meta_ad_id,
         col:      a.status,
         ordemManual: a.ordem_manual,
-        progress: a.status === 'fazendo' ? 50 : 0,
+        progress: a.status === 'fazendo' ? 100 : a.status === 'fazer' ? 50 : 0,
         hook:     a.titulo,
         formats:  [tipoFormatted],
         // vendas_total/cpa_historico/gasto_total somam TODAS as vezes que o
@@ -237,7 +243,9 @@ function KanbanCard({ card, col, onOpen, onDragStart, podeArrastar, onDropAntes 
   const tipoIcon = card.raw?.tipo === 'carrossel' ? 'layout-grid'
                  : card.raw?.tipo === 'imagem'    ? 'image' : 'clapperboard';
   // Sem preview no R2. Aceitável em Fazer/Fazendo; nas outras colunas, sinaliza.
-  const semPreview = !card.raw?.thumb_url && !['fazer','fazendo'].includes(card.col);
+  // Só "Fazendo" (id fazer, em produção) fica isento do aviso — "Feito" (id
+  // fazendo) já devia ter mídia pronta, se não tiver preview é sinal real de problema.
+  const semPreview = !card.raw?.thumb_url && card.col !== 'fazer';
   return (
     <div
       draggable={podeArrastar}
@@ -497,15 +505,19 @@ function MetaAdModal({ card, onClose }) {
   const adNum   = parseInt(card.num, 10);
   const isVideo = /reels|video/i.test(raw.tipo || '') || raw.media_tipo === 'video';
 
-  // Mídia no R2 (primeiro item se for JSON array)
-  const r2Url = (() => {
+  // Mídia no R2. Carrossel guarda TODAS as URLs num array — antes só o
+  // primeiro item era lido aqui, e por isso o carrossel subia pro Meta como
+  // imagem única (o resto dos slides era descartado antes de sair do Tracker).
+  const r2Urls = (() => {
     try {
       const v = raw.media_url;
-      if (!v) return '';
+      if (!v) return [];
       const p = JSON.parse(v);
-      return Array.isArray(p) ? (p[0] || '') : p;
-    } catch { return raw.media_url || ''; }
+      return (Array.isArray(p) ? p : [p]).filter(Boolean);
+    } catch { return raw.media_url ? [raw.media_url] : []; }
   })();
+  const r2Url = r2Urls[0] || '';
+  const isCarousel = /carrossel/i.test(raw.tipo || '') && r2Urls.length > 1;
   const hasMedia = !!(raw.meta_image_hash || raw.meta_video_id || r2Url);
   // A alta do R2 é apagada depois que o vídeo sobe pro Meta (e foi apagada em
   // massa no backfill de 2026-07-23). Quando isso acontece o card fica só com
@@ -614,6 +626,8 @@ function MetaAdModal({ card, onClose }) {
   // Vídeo: usa o video_id se já existe; senão sobe a versão em alta do R2 pro Meta agora.
   async function ensureMetaMedia() {
     if (!isVideo) {
+      // Carrossel: manda o array inteiro; o worker monta um cartão por slide.
+      if (isCarousel) return { imageUrls: r2Urls };
       if (r2Url) return { imageUrl: r2Url };
       if (raw.meta_image_hash) return { imageHash: raw.meta_image_hash };
       throw new Error('Não achei a imagem nem no R2 nem já hospedada no Meta. Use "Importar direto" ou "Importar com link" pra subir a imagem de novo antes de publicar.');
@@ -648,6 +662,7 @@ function MetaAdModal({ card, onClose }) {
         nome:      `ADS ${card.num} - ${raw.titulo || ''}`.trim().slice(0, 200),
         adsetId,
         imageUrl:  media.imageUrl,
+        imageUrls: media.imageUrls,
         imageHash: media.imageHash,
         videoId:   media.videoId,
         thumbUrl:  raw.thumb_url || '',
@@ -1898,8 +1913,12 @@ function NovoAdsModal({ onClose, onCreated }) {
 
   useEffect(() => {
     async function fetchNext() {
-      const { data } = await window.db.from('ads').select('numero').order('numero', { ascending: false }).limit(1);
-      const n = ((data?.[0]?.numero) || 0) + 1;
+      // Preenche buraco na numeração primeiro (ex: ADS 349 deletado), só cai pro
+      // max+1 se a sequência estiver inteira. Pedido explícito do usuário em 2026-08-01.
+      const { data } = await window.db.from('ads').select('numero').order('numero', { ascending: true });
+      const usados = new Set((data || []).map(r => r.numero));
+      let n = 1;
+      while (usados.has(n)) n++;
       setNextNum(n);
       setTitulo(`ADS ${String(n).padStart(3,'0')} - `);
     }

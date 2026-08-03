@@ -1,0 +1,529 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Radar Jurídico da Fotografia · 3 de agosto de 2026</title>
+<style>
+*,*::before,*::after{box-sizing:border-box}
+:root{
+  --bg:#f6f5f2; --superficie:#fff; --borda:#e2ded6; --borda-forte:#cfc9bd;
+  --tinta:#1c1a17; --tinta-media:#5a544b; --tinta-fraca:#8b8378;
+  --acento:#9a6b1f; --acento-suave:#f5ecd9; --acento-borda:#e4d4b0;
+  --neg:#a4462f; --pos:#2f6b4f;
+  --sombra:0 1px 2px rgba(28,26,23,.05),0 8px 24px -12px rgba(28,26,23,.14);
+  --raio:14px;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#141311; --superficie:#1c1b18; --borda:#2e2b26; --borda-forte:#3d3931;
+    --tinta:#ece8e1; --tinta-media:#a9a296; --tinta-fraca:#7d766b;
+    --acento:#d5a44f; --acento-suave:#2a2318; --acento-borda:#4a3c22;
+    --neg:#d97b60; --pos:#6fb392;
+    --sombra:0 1px 2px rgba(0,0,0,.3),0 8px 24px -12px rgba(0,0,0,.6);
+  }
+}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; background:var(--bg); color:var(--tinta);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;
+  font-size:16.5px; line-height:1.62; letter-spacing:-.003em;
+  -webkit-font-smoothing:antialiased;
+}
+.pagina{max-width:820px;margin:0 auto;padding:0 24px 96px}
+
+/* Cabeçalho */
+.capa{padding:64px 0 40px;border-bottom:1px solid var(--borda)}
+.selo{
+  display:inline-flex;align-items:center;gap:8px;font-size:11.5px;font-weight:650;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--acento);
+  background:var(--acento-suave);border:1px solid var(--acento-borda);
+  padding:6px 12px;border-radius:999px;margin-bottom:22px;
+}
+.selo .ponto{width:6px;height:6px;border-radius:50%;background:var(--acento)}
+h1{font-size:clamp(29px,5vw,42px);line-height:1.14;margin:0 0 22px;letter-spacing:-.028em;font-weight:700}
+.meta{display:flex;flex-wrap:wrap;gap:10px}
+.meta-item{
+  font-size:13px;color:var(--tinta-media);background:var(--superficie);
+  border:1px solid var(--borda);border-radius:8px;padding:7px 12px;
+}
+.meta-item b{color:var(--tinta);font-weight:600}
+
+/* Placar */
+.placar{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:32px 0 0}
+.placar-item{
+  background:var(--superficie);border:1px solid var(--borda);border-radius:var(--raio);
+  padding:18px 20px;box-shadow:var(--sombra);
+}
+.placar-num{display:block;font-size:32px;font-weight:700;line-height:1;letter-spacing:-.03em}
+.placar-rot{display:block;margin-top:7px;font-size:12.5px;color:var(--tinta-fraca);
+  text-transform:uppercase;letter-spacing:.07em;font-weight:600}
+
+/* Seções */
+.secao{margin-top:56px;scroll-margin-top:24px}
+.secao h2{
+  display:flex;align-items:center;gap:12px;font-size:13px;font-weight:700;
+  letter-spacing:.13em;text-transform:uppercase;color:var(--tinta-media);
+  margin:0 0 22px;padding-bottom:14px;border-bottom:1px solid var(--borda);
+}
+.sec-num{
+  display:inline-grid;place-items:center;width:22px;height:22px;border-radius:6px;
+  background:var(--tinta);color:var(--bg);font-size:11px;letter-spacing:0;flex:none;
+}
+.secao p{margin:0 0 15px;color:var(--tinta-media)}
+.secao p:last-child{margin-bottom:0}
+.secao a{color:var(--acento);text-decoration:none;border-bottom:1px solid var(--acento-borda);
+  word-break:break-word}
+.secao a:hover{border-bottom-color:var(--acento)}
+.vazio{color:var(--tinta-fraca);font-style:italic}
+
+/* Casos */
+.caso{
+  background:var(--superficie);border:1px solid var(--borda);border-radius:var(--raio);
+  box-shadow:var(--sombra);margin-bottom:18px;overflow:hidden;
+}
+.caso-head{display:flex;gap:14px;align-items:flex-start;padding:22px 24px 18px;
+  border-bottom:1px solid var(--borda)}
+.caso-num{
+  font-size:11.5px;font-weight:700;color:var(--acento);background:var(--acento-suave);
+  border:1px solid var(--acento-borda);border-radius:7px;padding:4px 8px;flex:none;margin-top:3px;
+  font-variant-numeric:tabular-nums;
+}
+.caso-head h3{margin:0;font-size:20.5px;line-height:1.3;letter-spacing:-.02em;font-weight:670}
+.caso-corpo{padding:6px 24px 22px}
+.campo{padding:14px 0;border-bottom:1px solid var(--borda)}
+.campo:last-child{border-bottom:0;padding-bottom:2px}
+.campo .rotulo{
+  display:block;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--tinta-fraca);margin-bottom:5px;
+}
+.campo .valor{display:block;color:var(--tinta-media)}
+.campo--placar .valor,.campo--importa .valor{color:var(--tinta)}
+.campo--importa{background:var(--acento-suave);margin:14px -24px 0;padding:16px 24px;
+  border-top:1px solid var(--acento-borda);border-bottom:0}
+.campo--importa .rotulo{color:var(--acento)}
+.campo--revela .valor{color:var(--tinta)}
+.campo--pratica{background:var(--acento-suave);margin:0 -24px 6px;padding:20px 24px;
+  border-bottom:1px solid var(--acento-borda)}
+.campo--pratica .rotulo{color:var(--acento);font-size:11.5px}
+.campo--pratica .valor{color:var(--tinta);font-size:17.5px;line-height:1.55}
+.campo--historia .valor{color:var(--tinta);font-size:17px}
+.campo--lastro{opacity:.72}
+.campo--lastro .valor{font-size:13.5px}
+.campo--potencial{background:var(--acento-suave);margin:0 -24px;padding:16px 24px;
+  border-top:1px solid var(--acento-borda);border-bottom:1px solid var(--acento-borda)}
+.campo--potencial .rotulo{color:var(--acento)}
+.campo--potencial .valor{color:var(--tinta)}
+.campo--potencial .valor strong:first-of-type{font-size:19px;letter-spacing:-.02em}
+.campo--aprofundar{background:var(--acento-suave);margin:0 -24px;padding:14px 24px;
+  border-bottom:0}
+.campo--aprofundar .rotulo{color:var(--acento)}
+.campo--aprofundar .valor{color:var(--tinta)}
+.campo--precedente .valor{color:var(--tinta)}
+.campo--fragil{border-left:3px solid var(--neg);padding-left:14px;
+  margin-left:-17px;background:transparent}
+.campo--fragil .rotulo{color:var(--neg)}
+.campo--fragil .valor{color:var(--tinta)}
+.campo--cuidado{border-left:3px solid var(--neg);padding-left:14px;margin-left:-17px}
+.campo--cuidado .rotulo{color:var(--neg)}
+.campo--cuidado .valor{color:var(--tinta)}
+.campo--gancho{background:var(--acento-suave);margin:0 -24px;padding:16px 24px 18px;
+  border-bottom:0}
+.campo--gancho .rotulo{color:var(--acento)}
+.campo--gancho .valor{color:var(--tinta)}
+.btn-fonte{
+  display:inline-flex;align-items:center;gap:7px;font-size:13.5px;font-weight:560;
+  border:1px solid var(--borda-forte)!important;border-radius:8px;padding:7px 12px;
+  color:var(--tinta-media)!important;text-decoration:none;
+}
+.btn-fonte:hover{border-color:var(--acento)!important;color:var(--acento)!important}
+.btn-fonte .seta{font-size:11px;opacity:.65}
+
+/* Tabela */
+.tabela-wrap{overflow-x:auto;border:1px solid var(--borda);border-radius:var(--raio);
+  background:var(--superficie);box-shadow:var(--sombra);margin-bottom:20px}
+table{border-collapse:collapse;width:100%;min-width:520px;font-size:14.5px}
+th{
+  text-align:left;font-size:11px;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--tinta-fraca);font-weight:700;padding:13px 16px;
+  border-bottom:1px solid var(--borda-forte);white-space:nowrap;
+}
+td{padding:12px 16px;border-bottom:1px solid var(--borda);color:var(--tinta-media)}
+tbody tr:last-child td{border-bottom:0}
+tbody tr:hover td{background:var(--acento-suave)}
+td.num,td.neg,td.pos{text-align:right;font-variant-numeric:tabular-nums}
+td.neg{color:var(--neg);font-weight:600}
+td.pos{color:var(--pos);font-weight:600}
+td.rot{color:var(--tinta);font-weight:600}
+
+/* Blocos genéricos */
+.lista{margin:0 0 15px;padding-left:22px;color:var(--tinta-media)}
+.lista li{margin-bottom:8px}
+.citacao{
+  margin:20px 0 0;padding:18px 22px;background:var(--acento-suave);
+  border:1px solid var(--acento-borda);border-radius:var(--raio);
+  color:var(--tinta);font-size:16px;
+}
+
+/* Nota */
+.nota{
+  background:var(--superficie);border:1px solid var(--borda);border-left:3px solid var(--acento);
+  border-radius:10px;padding:16px 20px;margin-top:20px;
+}
+.nota-rotulo{display:block;font-size:11px;font-weight:700;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--acento);margin-bottom:6px}
+.nota p{margin:0;font-size:14.5px}
+
+/* Pautas */
+.pauta{
+  background:var(--superficie);border:1px solid var(--borda);border-radius:var(--raio);
+  box-shadow:var(--sombra);margin-bottom:16px;overflow:hidden;
+}
+.pauta header{display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  padding:20px 24px 16px;border-bottom:1px solid var(--borda)}
+.pauta-ordem{
+  display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;
+  background:var(--tinta);color:var(--bg);font-size:12.5px;font-weight:700;flex:none;
+}
+.pauta header h3{margin:0;font-size:18.5px;line-height:1.3;letter-spacing:-.018em;
+  font-weight:660;flex:1 1 240px}
+.badge{
+  font-size:10.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;
+  padding:5px 10px;border-radius:999px;border:1px solid;flex:none;
+}
+.badge--alta{color:var(--neg);border-color:var(--neg);background:transparent}
+.badge--média,.badge--media{color:var(--tinta-fraca);border-color:var(--borda-forte)}
+.badge--baixa{color:var(--tinta-fraca);border-color:var(--borda-forte)}
+.pauta-corpo{padding:6px 24px 20px}
+.pauta-campo{padding:13px 0;border-bottom:1px solid var(--borda)}
+.pauta-campo:last-child{border-bottom:0;padding-bottom:2px}
+.pauta-campo .rotulo{display:block;font-size:11px;font-weight:700;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--tinta-fraca);margin-bottom:5px}
+.pauta-campo .valor{display:block;color:var(--tinta-media)}
+
+/* Vazios */
+.vazios{background:var(--superficie);border:1px solid var(--borda);border-radius:var(--raio)}
+.vazios summary{
+  cursor:pointer;padding:16px 20px;font-size:14px;font-weight:600;color:var(--tinta-media);
+  display:flex;align-items:center;gap:10px;list-style:none;
+}
+.vazios summary::-webkit-details-marker{display:none}
+.vazios summary::before{content:"›";font-size:19px;color:var(--tinta-fraca);
+  transition:transform .18s ease;display:inline-block}
+.vazios[open] summary::before{transform:rotate(90deg)}
+.contador{font-size:11.5px;font-weight:700;color:var(--tinta-fraca);
+  border:1px solid var(--borda-forte);border-radius:999px;padding:2px 8px}
+.vazios ul{margin:0;padding:0 24px 20px 46px;color:var(--tinta-media);font-size:14.5px}
+.vazios li{margin-bottom:9px}
+.vazios li:last-child{margin-bottom:0}
+
+/* Formatos e decisão */
+.caso-head{flex-wrap:wrap}
+.formatos{display:flex;gap:6px;margin-left:auto;flex-wrap:wrap}
+.chip{
+  display:inline-flex;align-items:center;gap:5px;cursor:pointer;
+  font:inherit;font-size:11.5px;font-weight:600;letter-spacing:.02em;
+  color:var(--tinta-fraca);background:transparent;
+  border:1px solid var(--borda-forte);border-radius:999px;padding:5px 10px;
+  transition:all .15s ease;
+}
+.chip:hover{border-color:var(--acento);color:var(--acento)}
+.chip.on{background:var(--acento);border-color:var(--acento);color:#fff}
+@media (prefers-color-scheme:dark){.chip.on{color:#17140d}}
+:root[data-theme="dark"] .chip.on{color:#17140d}
+.chip .mi{display:block;flex:none}
+@media (max-width:620px){.chip-txt{display:none}.chip{padding:6px 8px}}
+.decisao-barra{display:flex;gap:8px;padding:12px 24px;border-bottom:1px solid var(--borda);
+  background:color-mix(in srgb, var(--borda) 22%, transparent)}
+.dec{
+  cursor:pointer;font:inherit;font-size:11.5px;font-weight:700;letter-spacing:.06em;
+  text-transform:uppercase;padding:6px 14px;border-radius:8px;
+  border:1px solid var(--borda-forte);background:transparent;color:var(--tinta-fraca);
+  transition:all .15s ease;
+}
+.dec:hover{border-color:var(--tinta-media);color:var(--tinta-media)}
+.dec--aceito.on{background:var(--pos);border-color:var(--pos);color:#fff}
+.dec--standby.on{background:var(--acento);border-color:var(--acento);color:#fff}
+.dec--descartado.on{background:var(--neg);border-color:var(--neg);color:#fff}
+.caso[data-estado="descartado"]{opacity:.5}
+.caso[data-estado="descartado"] .caso-corpo{display:none}
+
+/* Barra de exportação */
+.barra-exportar{
+  position:sticky;bottom:0;z-index:9;margin:32px -24px -96px;padding:14px 24px 20px;
+  background:color-mix(in srgb, var(--bg) 92%, transparent);
+  backdrop-filter:blur(8px);border-top:1px solid var(--borda);
+  display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+}
+.barra-exportar .contagem{font-size:13px;color:var(--tinta-media)}
+.barra-exportar .contagem b{color:var(--tinta)}
+.btn-exportar{
+  cursor:pointer;font:inherit;font-size:13.5px;font-weight:650;margin-left:auto;
+  background:var(--tinta);color:var(--bg);border:0;border-radius:9px;padding:10px 18px;
+}
+.btn-exportar:hover{opacity:.86}
+.btn-limpar{
+  cursor:pointer;font:inherit;font-size:13px;background:transparent;color:var(--tinta-fraca);
+  border:1px solid var(--borda-forte);border-radius:9px;padding:9px 14px;
+}
+@media print{.formatos,.decisao-barra,.barra-exportar{display:none}}
+
+/* Rodapé */
+.rodape{margin-top:64px;padding-top:24px;border-top:1px solid var(--borda);
+  font-size:12.5px;color:var(--tinta-fraca);display:flex;justify-content:space-between;
+  gap:16px;flex-wrap:wrap}
+
+@media (max-width:600px){
+  body{font-size:16px}
+  .pagina{padding:0 18px 64px}
+  .capa{padding:40px 0 30px}
+  .caso-head,.caso-corpo,.pauta header,.pauta-corpo{padding-left:18px;padding-right:18px}
+  .campo--importa,.campo--gancho{margin-left:-18px;margin-right:-18px;
+    padding-left:18px;padding-right:18px}
+}
+@media print{
+  body{background:#fff}
+  .caso,.pauta,.tabela-wrap,.nota{box-shadow:none;break-inside:avoid}
+  .vazios{display:none}
+}
+</style>
+</head>
+<body data-relatorio="2026-08-03">
+<div class="pagina">
+  <header class="capa">
+    <span class="selo"><span class="ponto"></span>Radar Jurídico da Fotografia</span>
+    <h1>3 de agosto de 2026</h1>
+    <div class="meta">
+      <span class="meta-item">Período varrido <b>27 de julho a 3 de agosto de 2026</b></span>
+      <span class="meta-item">Escopo <b>COMPLETO</b></span>
+    </div>
+    <div class="placar">
+  <div class="placar-item"><span class="placar-num">3</span>
+    <span class="placar-rot">casos novos</span></div>
+  <div class="placar-item"><span class="placar-num">3</span>
+    <span class="placar-rot">pautas sugeridas</span></div>
+</div>
+  </header>
+  <section class="secao">
+  <h2>Resumo da rodada</h2>
+  <p>A semana em si veio vazia. Entre 27 de julho e 3 de agosto não saiu, na imprensa jurídica brasileira, nenhuma decisão nova sobre fotografia, direito de imagem ou direito autoral de foto. Isso tem explicação de calendário: os prazos processuais ficaram suspensos entre 2 e 31 de julho, então a máquina passou o mês desacelerada e ainda não voltou a produzir notícia.</p>
+<p>Como a janela veio seca, a varredura foi para trás e trouxe três coisas de 2026 que nunca apareceram aqui e que ninguém do nicho traduziu. A melhor delas é um acórdão de fevereiro, de Minas, que responde a pergunta que todo fotógrafo já fez: se o cliente publica a sua foto no perfil dele e um portal pega de lá, quem paga.</p>
+<blockquote class="citacao">De onde vieram os casos: busca aberta na imprensa jurídica (Migalhas, ConJur, portais de tribunais) e leitura direta da íntegra do acórdão no buscador do TJMG. A camada superior, STF e STJ, não foi rodada nesta execução, porque os buscadores dos dois tribunais respondem a robô com desafio automático de verificação e só funcionam pelo Chrome do Felipe, que não está disponível numa tarefa agendada. Essa parte fica para quando ele rodar `/radar-juridico` presencialmente.</blockquote>
+</section>
+<section class="secao">
+  <h2><span class="sec-num">1</span>O que mudou na lei</h2>
+  <p>Nada no período. Nenhuma lei nova, alteração ou regulamentação sobre imagem, foto ou direito autoral entrou em vigor entre 27 de julho e 3 de agosto.</p>
+<p>O marco legal da inteligência artificial (PL 2338/2023) continua tramitando, e o ponto de direitos autorais, que é o que interessa a quem tem acervo, segue sem acordo fechado. Não houve votação confirmada no período. Como o texto do ano passado já foi tratado na rodada anterior, aqui fica só o registro de que nada andou.</p>
+</section>
+<section class="secao">
+  <h2><span class="sec-num">2</span>Decisões e casos</h2>
+  <article class="caso" data-caso="01-o-jogador-postou-a-foto-no-instagram-dele-e-o-po" data-titulo="O jogador postou a foto no Instagram dele e o portal achou que podia usar">
+  <header class="caso-head">
+    <span class="caso-num">01</span>
+    <h3>O jogador postou a foto no Instagram dele e o portal achou que podia usar</h3>
+    <div class="formatos"><button class="chip" data-fmt="artigo" title="Artigo" aria-label="Artigo" aria-pressed="false"><svg class="mi" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="M5 3h11l3 3v15H5z" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M8 9h8M8 13h8M8 17h5" stroke="currentColor" stroke-width="1.7"/></svg><span class="chip-txt">Artigo</span></button><button class="chip" data-fmt="carrossel" title="Carrossel" aria-label="Carrossel" aria-pressed="false"><svg class="mi" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><rect x="8" y="4" width="8" height="16" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M5 7v10M19 7v10" stroke="currentColor" stroke-width="1.7"/></svg><span class="chip-txt">Carrossel</span></button><button class="chip" data-fmt="imagem" title="Imagem" aria-label="Imagem" aria-pressed="false"><svg class="mi" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="8.5" cy="10" r="1.6" fill="currentColor"/><path d="M4 17l5-5 4 4 3-2 4 4" fill="none" stroke="currentColor" stroke-width="1.7"/></svg><span class="chip-txt">Imagem</span></button><button class="chip" data-fmt="reels" title="Reels" aria-label="Reels" aria-pressed="false"><svg class="mi" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M10 9.5l5 2.5-5 2.5z" fill="currentColor"/></svg><span class="chip-txt">Reels</span></button><button class="chip" data-fmt="youtube" title="YouTube" aria-label="YouTube" aria-pressed="false"><svg class="mi" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><rect x="2.5" y="6" width="19" height="12" rx="3.5" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M10.5 9.5l4.5 2.5-4.5 2.5z" fill="currentColor"/></svg><span class="chip-txt">YouTube</span></button></div>
+  </header>
+  <div class="decisao-barra"><button class="dec dec--aceito" data-dec="aceito">Aceito</button><button class="dec dec--standby" data-dec="standby">Standby</button><button class="dec dec--descartado" data-dec="descartado">Descartado</button></div>
+  <div class="caso-corpo">
+    <div class="campo campo--pratica"><span class="rotulo">O que muda na prática</span><span class="valor">quando o cliente republica a sua foto no perfil dele, isso não passa o direito da foto para ele, e muito menos para quem pegar de lá depois. Continua sua. Dois movimentos práticos saem daí. Primeiro: deixe escrito no contrato o que o cliente pode fazer ao republicar, e que o crédito vai junto, porque foi justamente a ausência do seu nome no post dele que deu ao portal a desculpa de achar que a foto era do atleta. Segundo: quando encontrar sua foto publicada por terceiro sem crédito, saiba que colocar o crédito depois não apaga o que já aconteceu, o portal fez exatamente isso e a condenação ficou de pé.</span></div>
+<div class="campo campo--historia"><span class="rotulo">A história em uma linha</span><span class="valor">um fotógrafo de futebol registrou o Endrick erguendo a taça no Mineirão, o jogador postou a imagem no Instagram, um dos maiores portais de esporte do país pegou de lá e publicou numa matéria sem crédito e sem pagar nada.</span></div>
+<div class="campo campo--placar"><span class="rotulo">Como terminou</span><span class="valor">o fotógrafo ganhou, e o portal perdeu duas vezes. Na primeira instância saiu R$ 2.500 por dano moral mais R$ 579,50 de dano material. Os dois lados recorreram, o fotógrafo querendo subir para R$ 15 mil e o portal querendo zerar tudo, e o tribunal negou os dois recursos, mantendo os valores. A defesa do portal foi que a foto estava num perfil público, sem indicação de autor, que o uso era só ilustrativo dentro de uma matéria jornalística, e que ele incluiu os créditos assim que soube do processo. Nenhum desses três argumentos funcionou.</span></div>
+<div class="campo campo--potencial"><span class="rotulo">Potencial de conteúdo</span><span class="valor">17/18 · identificação 3, dor 2, contraintuição 3, acionabilidade 3, ponte com produto 3, vida útil 3. A contraintuição é o que puxa a nota. "Está no perfil público, então posso usar" é a frase mais repetida do mercado, e quem acreditou nela aqui foi uma empresa grande, com departamento jurídico.</span></div>
+<div class="campo campo--gancho"><span class="rotulo">Gancho de conteúdo</span><span class="valor">artigo de blog, desdobrado em Reels. Abertura pronta: "O jogador publicou a foto no Instagram dele. Um portal pegou de lá, publicou sem crédito, e disse na Justiça que podia. Perdeu."</span></div>
+<div class="campo campo--cuidado"><span class="rotulo">Cuidado ao produzir conteúdo</span><span class="valor">não diga que "o STJ decidiu", porque isso é decisão de tribunal estadual e ainda comporta recurso. Não diga que a condenação foi de R$ 15 mil, esse era o pedido do fotógrafo e foi negado, o valor mantido é R$ 2.500 mais R$ 579,50. E não reproduza a fotografia que é objeto da ação, que é justamente o erro que gerou o processo.</span></div>
+<div class="campo campo--aprofundar"><span class="rotulo">Vale aprofundar</span><span class="valor">sim. A íntegra já está arquivada e vale ler o voto inteiro, porque o tribunal enfrenta um por um os argumentos que qualquer cliente usa quando republica foto sua.</span></div>
+<div class="campo campo--lastro"><span class="rotulo">Lastro</span><span class="valor">Tribunal de Justiça de Minas Gerais, 20ª Câmara Cível, Apelação Cível 1.0000.25.119331-4/001, relatora desembargadora Lílian Maciel, julgado e publicado em 12/02/2026, recursos não providos. Origem: 13ª Vara Cível da Comarca de Belo Horizonte. Partes: Yuri de Castro Laurindo (fotógrafo) e Universo Online S.A. Foto feita em 06/12/2023, no Mineirão, publicada pelo portal em 10/01/2024. Fundamentos: arts. 7º, VII, 28 e 50 da Lei 9.610/1998, e art. 944 do Código Civil. Texto da lei em <a href="https://www.planalto.gov.br/ccivil_03/leis/l9610.htm" target="_blank" rel="noopener">planalto.gov.br/ccivil_03/leis/l9610.htm</a></span></div>
+<div class="campo campo--integra"><span class="rotulo">Íntegra arquivada</span><span class="valor">acórdão completo em radar-juridico/documentos/2026-08-03/acordao-foto-instagram-publico-tjmg.pdf</span></div>
+<div class="campo campo--fonte"><span class="rotulo">Fonte</span><span class="valor"><a class="btn-fonte" href="https://www5.tjmg.jus.br/jurisprudencia/relatorioEspelhoAcordao.do?inteiroTeor=true&ano=25&ttriCodigo=1&codigoOrigem=0000&numero=119331&sequencial=001&sequencialAcordao=0" target="_blank" rel="noopener">www5.tjmg.jus.br<span class="seta">↗</span></a></span></div>
+  </div>
+</article>
+<article class="caso" data-caso="02-a-prestadora-de-servi-o-postou-a-foto-do-filho-d" data-titulo="A prestadora de serviço postou a foto do filho da cliente e pagou R$ 5 mil">
+  <header class="caso-head">
+    <span class="caso-num">02</span>
+    <h3>A prestadora de serviço postou a foto do filho da cliente e pagou R$ 5 mil</h3>
+    <div class="formatos"><button class="chip" data-fmt="artigo" title="Artigo" aria-label="Artigo" aria-pressed="false"><svg class="mi" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="M5 3h11l3 3v15H5z" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M8 9h8M8 13h8M8 17h5" stroke="currentColor" stroke-width="1.7"/></svg><span class="chip-txt">Artigo</span></button><button class="chip" data-fmt="carrossel" title="Carrossel" aria-label="Carrossel" aria-pressed="false"><svg class="mi" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><rect x="8" y="4" width="8" height="16" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M5 7v10M19 7v10" stroke="currentColor" stroke-width="1.7"/></svg><span class="chip-txt">Carrossel</span></button><button class="chip" data-fmt="imagem" title="Imagem" aria-label="Imagem" aria-pressed="false"><svg class="mi" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="8.5" cy="10" r="1.6" fill="currentColor"/><path d="M4 17l5-5 4 4 3-2 4 4" fill="none" stroke="currentColor" stroke-width="1.7"/></svg><span class="chip-txt">Imagem</span></button><button class="chip" data-fmt="reels" title="Reels" aria-label="Reels" aria-pressed="false"><svg class="mi" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M10 9.5l5 2.5-5 2.5z" fill="currentColor"/></svg><span class="chip-txt">Reels</span></button><button class="chip" data-fmt="youtube" title="YouTube" aria-label="YouTube" aria-pressed="false"><svg class="mi" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><rect x="2.5" y="6" width="19" height="12" rx="3.5" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M10.5 9.5l4.5 2.5-4.5 2.5z" fill="currentColor"/></svg><span class="chip-txt">YouTube</span></button></div>
+  </header>
+  <div class="decisao-barra"><button class="dec dec--aceito" data-dec="aceito">Aceito</button><button class="dec dec--standby" data-dec="standby">Standby</button><button class="dec dec--descartado" data-dec="descartado">Descartado</button></div>
+  <div class="caso-corpo">
+    <div class="campo campo--pratica"><span class="rotulo">O que muda na prática</span><span class="valor">quem entra na casa e na vida de um cliente não leva junto o direito de postar. A ré aqui é babá, mas a conduta é exatamente a de quem fotografa criança e usa o material como portfólio. Duas coisas mudam. A primeira: autorização para fotografar não é autorização para publicar, são dois pedidos diferentes e o segundo precisa estar escrito. A segunda: o juiz aplicou o entendimento de que divulgar imagem sem autorização já é dano moral por si, sem a família precisar provar que sofreu prejuízo, então não adianta argumentar que a foto era bonita ou que ninguém se ofendeu. Se você fotografa festa infantil, ensaio de família ou parto, o contrato precisa dizer, em item separado e específico, onde a foto vai aparecer e por quanto tempo.</span></div>
+<div class="campo campo--historia"><span class="rotulo">A história em uma linha</span><span class="valor">uma mãe contratou uma babá, descobriu que a profissional vinha fotografando a filha bebê e ela mesma e publicando nas redes, e processou.</span></div>
+<div class="campo campo--placar"><span class="rotulo">Como terminou</span><span class="valor">a mãe ganhou. Pediu R$ 20 mil e o juiz fixou R$ 5 mil. Cabe recurso.</span></div>
+<div class="campo campo--potencial"><span class="rotulo">Potencial de conteúdo</span><span class="valor">16/18 · identificação 2, dor 3, contraintuição 2, acionabilidade 3, ponte com produto 3, vida útil 3. Perde em identificação porque a ré não é fotógrafa, e ganha em tudo o mais porque a situação é a rotina de quem vive de fotografar criança.</span></div>
+<div class="campo campo--gancho"><span class="rotulo">Gancho de conteúdo</span><span class="valor">carrossel, desdobrado em artigo. Abertura pronta: "Ela foi contratada para cuidar da criança. Postou uma foto da menina no perfil dela e pagou R$ 5 mil."</span></div>
+<div class="campo campo--cuidado"><span class="rotulo">Cuidado ao produzir conteúdo</span><span class="valor">a ré não foi encontrada para ser citada pessoalmente, o processo correu por edital e quem a defendeu foi a Defensoria como curadora especial. Ou seja, não houve defesa de verdade, e isso enfraquece a decisão como referência. Diga que é sentença de primeiro grau, que cabe recurso, e não transforme em "a Justiça decidiu que". Não use imagem de criança real na peça.</span></div>
+<div class="campo campo--aprofundar"><span class="rotulo">Vale aprofundar</span><span class="valor">sim, mas com uma ressalva. A íntegra ainda não foi obtida, e ela é o que vai dizer se o juiz tratou o caso como direito de imagem puro ou se aplicou também as regras específicas de criança e adolescente. Essa diferença muda o conteúdo.</span></div>
+<div class="campo campo--lastro"><span class="rotulo">Lastro</span><span class="valor">2ª Vara Cível de Ceilândia, Tribunal de Justiça do Distrito Federal e dos Territórios, processo 0733087-85.2024.8.07.0003, sentença de 17/06/2026, divulgada em 22/06/2026. Fundamentos: art. 5º, X, da Constituição, direito de imagem como direito da personalidade, e o entendimento do STJ de que a divulgação não autorizada gera dano moral independentemente de prova de prejuízo. Para quem fotografa criança, encostam aqui os arts. 17 e 18 do ECA e o art. 14 da LGPD. Constituição em <a href="https://www.planalto.gov.br/ccivil_03/constituicao/constituicao.htm" target="_blank" rel="noopener">planalto.gov.br/ccivil_03/constituicao/constituicao…</a></span></div>
+<div class="campo campo--integra"><span class="rotulo">Íntegra arquivada</span><span class="valor">não disponível. A notícia oferece um link para a decisão, mas o arquivo entregue por ele é de outro processo, uma apelação sobre erro médico da 3ª Turma Cível do mesmo tribunal. O documento correto precisa ser buscado na consulta pública pelo número do processo.</span></div>
+<div class="campo campo--fonte"><span class="rotulo">Fonte</span><span class="valor"><a class="btn-fonte" href="https://www.conjur.com.br/2026-jun-24/baba-e-condenada-por-publicar-fotos-de-crianca-sem-autorizacao/" target="_blank" rel="noopener">conjur.com.br<span class="seta">↗</span></a></span></div>
+  </div>
+</article>
+<article class="caso" data-caso="03-licenciar-imagem-n-o-prestar-servi-o-e-isso-mexe" data-titulo="Licenciar imagem não é prestar serviço, e isso mexe no imposto">
+  <header class="caso-head">
+    <span class="caso-num">03</span>
+    <h3>Licenciar imagem não é prestar serviço, e isso mexe no imposto</h3>
+    <div class="formatos"><button class="chip" data-fmt="artigo" title="Artigo" aria-label="Artigo" aria-pressed="false"><svg class="mi" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="M5 3h11l3 3v15H5z" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M8 9h8M8 13h8M8 17h5" stroke="currentColor" stroke-width="1.7"/></svg><span class="chip-txt">Artigo</span></button><button class="chip" data-fmt="carrossel" title="Carrossel" aria-label="Carrossel" aria-pressed="false"><svg class="mi" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><rect x="8" y="4" width="8" height="16" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M5 7v10M19 7v10" stroke="currentColor" stroke-width="1.7"/></svg><span class="chip-txt">Carrossel</span></button><button class="chip" data-fmt="imagem" title="Imagem" aria-label="Imagem" aria-pressed="false"><svg class="mi" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="8.5" cy="10" r="1.6" fill="currentColor"/><path d="M4 17l5-5 4 4 3-2 4 4" fill="none" stroke="currentColor" stroke-width="1.7"/></svg><span class="chip-txt">Imagem</span></button><button class="chip" data-fmt="reels" title="Reels" aria-label="Reels" aria-pressed="false"><svg class="mi" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M10 9.5l5 2.5-5 2.5z" fill="currentColor"/></svg><span class="chip-txt">Reels</span></button><button class="chip" data-fmt="youtube" title="YouTube" aria-label="YouTube" aria-pressed="false"><svg class="mi" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><rect x="2.5" y="6" width="19" height="12" rx="3.5" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M10.5 9.5l4.5 2.5-4.5 2.5z" fill="currentColor"/></svg><span class="chip-txt">YouTube</span></button></div>
+  </header>
+  <div class="decisao-barra"><button class="dec dec--aceito" data-dec="aceito">Aceito</button><button class="dec dec--standby" data-dec="standby">Standby</button><button class="dec dec--descartado" data-dec="descartado">Descartado</button></div>
+  <div class="caso-corpo">
+    <div class="campo campo--pratica"><span class="rotulo">O que muda na prática</span><span class="valor">os tribunais estão dizendo que ceder o direito de usar uma imagem é uma coisa, e prestar um serviço é outra, e que só a segunda entra na conta do imposto municipal. Para você, isso não vira ação amanhã, vira uma pergunta para o seu contador: no seu contrato e na sua nota, o valor da cobertura fotográfica está separado do valor do licenciamento de uso das imagens? Se está tudo num montante só, descrito como serviço, a discussão nem começa. Não saia refazendo nota fiscal por conta disso, porque o caminho aqui passa por contador e advogado, e um erro nessa área custa mais caro que o imposto.</span></div>
+<div class="campo campo--historia"><span class="rotulo">A história em uma linha</span><span class="valor">um município cobrou imposto sobre contratos de cessão de direito de imagem de jogadores e comissão técnica, a empresa brigou, e o município perdeu.</span></div>
+<div class="campo campo--placar"><span class="rotulo">Como terminou</span><span class="valor">o contribuinte ganhou. O tribunal de São Paulo já tinha dito que ceder imagem é obrigação de dar, e não prestação de serviço, então não cabe na lista de atividades que o imposto municipal alcança. O município tentou levar o caso ao tribunal superior, que não chegou a julgar o mérito, e por isso a decisão paulista ficou de pé. A imprensa noticiou como se o tribunal superior tivesse decidido, e não foi bem isso.</span></div>
+<div class="campo campo--potencial"><span class="rotulo">Potencial de conteúdo</span><span class="valor">9/18 · identificação 1, dor 1, contraintuição 2, acionabilidade 1, ponte com produto 1, vida útil 3. Nota baixa e honesta. É assunto de tributo, o caso concreto é de clube de futebol, e a distância até o fotógrafo de casamento é grande. Entra porque toca o coração da profissão, que é licenciar imagem, e porque a lógica de separar serviço e licenciamento é a mesma que sustenta a cláusula de cessão do contrato.</span></div>
+<div class="campo campo--gancho"><span class="rotulo">Gancho de conteúdo</span><span class="valor">post curto ou trecho dentro de um artigo maior sobre contrato, nunca peça própria. Ângulo: a Justiça trata fotografar e licenciar como duas coisas diferentes, e o seu contrato deveria tratar também.</span></div>
+<div class="campo campo--cuidado"><span class="rotulo">Cuidado ao produzir conteúdo</span><span class="valor">este é o caso mais perigoso da rodada. Não diga que "fotógrafo não paga imposto sobre licenciamento", porque isso não foi decidido e depende do que está escrito em cada contrato. Não diga que o tribunal superior firmou tese, ele não julgou o mérito. Não prometa devolução de valores pagos. Se for produzir, produza como pergunta a levar ao contador, não como orientação.</span></div>
+<div class="campo campo--aprofundar"><span class="rotulo">Vale aprofundar</span><span class="valor">não nesta forma. Só vale se o objetivo for escrever sobre a diferença entre serviço e licenciamento no contrato, e aí o caso entra como nota de rodapé, não como assunto.</span></div>
+<div class="campo campo--lastro"><span class="rotulo">Lastro</span><span class="valor">Superior Tribunal de Justiça, Primeira Turma, relator ministro Benedito Gonçalves, recurso não conhecido, decisão noticiada em abril de 2026 e repercutida na imprensa em julho de 2026. Número do recurso especial não confirmado nas fontes acessadas. Origem: Tribunal de Justiça de São Paulo. Fundamentos citados: Lei Complementar 116/2003 e art. 110 do Código Tributário Nacional.</span></div>
+<div class="campo campo--integra"><span class="rotulo">Íntegra arquivada</span><span class="valor">não disponível, caso descrito apenas pela notícia. Nenhuma das fontes acessadas publica o acórdão.</span></div>
+<div class="campo campo--fonte"><span class="rotulo">Fonte</span><span class="valor"><a class="btn-fonte" href="https://www.conjur.com.br/2026-abr-06/stj-afasta-iss-sobre-receitas-de-cessao-de-direitos-de-imagem-de-jogador/" target="_blank" rel="noopener">conjur.com.br<span class="seta">↗</span></a></span></div>
+  </div>
+</article>
+</section>
+<section class="secao">
+  <h2><span class="sec-num">3</span>Para você saber</h2>
+  <ul class="lista"><li>Um tribunal alemão decidiu, em abril de 2026, que transformar a foto de outra pessoa em desenho estilo história em quadrinhos usando inteligência artificial não é, por si só, violação de direito autoral. A corte entendeu que o que a lei protege são as escolhas do fotógrafo, enquadramento, ângulo, luz e profundidade de campo, e que a imagem gerada trocou todas elas. O motivo da cena, no caso um cachorro mergulhando atrás de um brinquedo, foi tratado como ideia, e ideia não tem dono. Não é lei brasileira e não vale aqui, mas é o raciocínio que os tribunais estão começando a usar quando o assunto é IA em cima de foto. Notícia de 22/07/2026 em <a href="https://petapixel.com/2026/07/22/dog-photographer-loses-copyright-case-over-ai-generated-comic-version-of-her-image/" target="_blank" rel="noopener">petapixel.com/2026/07/22/dog-photographer-loses-cop…</a></li><li>Os prazos processuais no Superior Tribunal de Justiça ficaram suspensos entre 2 e 31 de julho. É a razão prática de a semana ter vindo vazia, e serve de aviso: a próxima rodada tende a vir mais cheia, com o acúmulo de julho saindo em agosto. <a href="https://www.stj.jus.br/sites/portalp/paginas/comunicacao/noticias/2026/29062026-prazos-processuais-ficam-suspensos-entre-os-dias-2-e-31-de-julho.aspx" target="_blank" rel="noopener">stj.jus.br/sites/portalp/paginas/comunicacao/notici…</a></li></ul>
+</section>
+<section class="secao">
+  <h2><span class="sec-num">4</span>Pauta sugerida</h2>
+  <article class="pauta pauta--alta">
+  <header>
+    <span class="pauta-ordem">1</span>
+    <h3>Seu cliente postou a foto e o mundo achou que podia usar</h3>
+    <span class="badge badge--alta">prioridade alta</span>
+  </header>
+  <div class="pauta-corpo"><div class="pauta-campo"><span class="rotulo">Ângulo</span><span class="valor">o acórdão de Minas responde, com um caso concreto e um portal grande do outro lado, a pergunta que todo fotógrafo faz. Publicar a foto no perfil do cliente não transfere nada, e quem pega de lá responde. Desenvolver os três argumentos que o portal usou e que foram derrubados: estava em perfil público, era só ilustração numa matéria, e colocamos o crédito depois. Fechar com o que a cláusula de republicação precisa dizer.</span></div><div class="pauta-campo"><span class="rotulo">Formato</span><span class="valor">artigo de blog longo, desdobrado em Reels de 45 segundos com os três argumentos derrubados.</span></div><div class="pauta-campo"><span class="rotulo">Por que agora</span><span class="valor">a decisão é de fevereiro deste ano, ninguém no nicho a traduziu, e a íntegra já está em mãos, o que permite citar trecho literal em vez de resumo de notícia.</span></div></div>
+</article>
+<article class="pauta pauta--alta">
+  <header>
+    <span class="pauta-ordem">2</span>
+    <h3>Autorização para fotografar não é autorização para postar</h3>
+    <span class="badge badge--alta">prioridade alta</span>
+  </header>
+  <div class="pauta-corpo"><div class="pauta-campo"><span class="rotulo">Ângulo</span><span class="valor">partir do caso da babá, que é uma prestadora de serviço que fotografou a criança do cliente e publicou, e trazer para a rotina de quem fotografa festa infantil, ensaio de família e parto. O ponto central é que são duas permissões distintas e a segunda precisa estar escrita, com destino e prazo. Amarrar com o que o ECA Digital passou a exigir para perfil monetizado.</span></div><div class="pauta-campo"><span class="rotulo">Formato</span><span class="valor">carrossel com o quadro do que pode e do que não pode, desdobrado em artigo.</span></div><div class="pauta-campo"><span class="rotulo">Por que agora</span><span class="valor">é o item da rodada com a ponte mais direta e mais honesta com contrato, e o valor da condenação é pequeno o bastante para o leitor entender que isso acontece com gente comum, não só com empresa grande.</span></div></div>
+</article>
+<article class="pauta pauta--média">
+  <header>
+    <span class="pauta-ordem">3</span>
+    <h3>O que a lei protege numa foto sua</h3>
+    <span class="badge badge--média">prioridade média</span>
+  </header>
+  <div class="pauta-corpo"><div class="pauta-campo"><span class="rotulo">Ângulo</span><span class="valor">a decisão alemã sobre a versão em quadrinhos gerada por IA obriga a responder uma pergunta que ninguém do nicho respondeu ainda: o que exatamente é seu numa fotografia. Não é o assunto, não é o cachorro, não é o casal. É o enquadramento, o ângulo, a luz e a profundidade de campo. Explicar isso muda a forma como o leitor entende o próprio trabalho, e prepara o terreno para a discussão de IA que vem por aí.</span></div><div class="pauta-campo"><span class="rotulo">Formato</span><span class="valor">artigo de blog com facilitação visual, uma imagem comparando o que é protegido e o que não é.</span></div><div class="pauta-campo"><span class="rotulo">Por que agora</span><span class="valor">é conteúdo de conceito, não de notícia, então não perde validade. Precisa de framing firme, porque é decisão estrangeira e não vale no Brasil.</span></div></div>
+</article>
+</section>
+<section class="secao">
+  <h2><span class="sec-num">5</span>Nada relevante encontrado em</h2>
+  <details class="vazios"><summary>Temas buscados que vieram vazios <span class="contador">6</span></summary><ul><li>Notícia jurídica brasileira sobre fotografia entre 27 de julho e 3 de agosto de 2026. Migalhas, ConJur e o portal do TJSP foram varridos no período e não publicaram nada no tema.</li><li>Superior Tribunal de Justiça e Supremo Tribunal Federal. Camada não executada nesta rodada, por falta do Chrome do Felipe. Os dois buscadores respondem a robô com desafio automático de verificação.</li><li>Decisão brasileira sobre inteligência artificial treinada em acervo fotográfico. Nenhuma localizada. O que existe continua sendo projeto de lei em tramitação.</li><li>Sanção da autoridade de proteção de dados envolvendo acervo, backup ou compartilhamento de imagem de cliente. Nenhuma confirmada.</li><li>Justiça do Trabalho, sobre vínculo, cachê e rescisão de fotógrafo e assistente. Buscada e sem resultado novo no período.</li><li>Novidade sobre o ECA Digital aplicado a fotógrafo. O que circula é repercussão do decreto de março, já tratado na rodada anterior.</li></ul></details>
+</section>
+  <div class="barra-exportar">
+    <span class="contagem" id="contagem"></span>
+    <button class="btn-limpar" id="limpar">Restaurar sugestões</button>
+    <button class="btn-exportar" id="exportar">Baixar minhas decisões</button>
+  </div>
+  <footer class="rodape">
+    <span>Gerado a partir de 2026-08-03.md</span>
+    <span>Fontes oficiais e API pública DataJud (CNJ)</span>
+  </footer>
+</div>
+<script>
+(function () {
+  var chave = 'radar-juridico:' + (document.body.dataset.relatorio || 'sem-nome');
+  var estado = {};
+  try { estado = JSON.parse(localStorage.getItem(chave) || '{}'); } catch (e) { estado = {}; }
+
+  var casos = Array.prototype.slice.call(document.querySelectorAll('.caso'));
+
+  function lerDoDom(art) {
+    var fmts = [];
+    art.querySelectorAll('.chip.on').forEach(function (c) { fmts.push(c.dataset.fmt); });
+    var dec = art.querySelector('.dec.on');
+    return { titulo: art.dataset.titulo, decisao: dec ? dec.dataset.dec : '', formatos: fmts };
+  }
+
+  function aplicar(art, dados) {
+    art.querySelectorAll('.chip').forEach(function (c) {
+      var on = dados.formatos.indexOf(c.dataset.fmt) !== -1;
+      c.classList.toggle('on', on);
+      c.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+    art.querySelectorAll('.dec').forEach(function (d) {
+      d.classList.toggle('on', d.dataset.dec === dados.decisao);
+    });
+    art.dataset.estado = dados.decisao || '';
+  }
+
+  function salvar() {
+    casos.forEach(function (art) { estado[art.dataset.caso] = lerDoDom(art); });
+    try { localStorage.setItem(chave, JSON.stringify(estado)); } catch (e) {}
+    contar();
+  }
+
+  function contar() {
+    var n = { aceito: 0, standby: 0, descartado: 0 };
+    casos.forEach(function (art) {
+      var d = art.dataset.estado;
+      if (n[d] !== undefined) n[d]++;
+    });
+    var alvo = document.getElementById('contagem');
+    if (alvo) {
+      alvo.innerHTML = '<b>' + n.aceito + '</b> aceitos, <b>' + n.standby +
+        '</b> em standby, <b>' + n.descartado + '</b> descartados';
+    }
+  }
+
+  casos.forEach(function (art) {
+    if (estado[art.dataset.caso]) aplicar(art, estado[art.dataset.caso]);
+    else art.dataset.estado = (art.querySelector('.dec.on') || {}).dataset
+      ? art.querySelector('.dec.on').dataset.dec : '';
+
+    art.querySelectorAll('.chip').forEach(function (c) {
+      c.addEventListener('click', function () {
+        var on = !c.classList.contains('on');
+        c.classList.toggle('on', on);
+        c.setAttribute('aria-pressed', on ? 'true' : 'false');
+        salvar();
+      });
+    });
+
+    art.querySelectorAll('.dec').forEach(function (d) {
+      d.addEventListener('click', function () {
+        var jaEra = d.classList.contains('on');
+        art.querySelectorAll('.dec').forEach(function (o) { o.classList.remove('on'); });
+        if (!jaEra) d.classList.add('on');
+        art.dataset.estado = jaEra ? '' : d.dataset.dec;
+        salvar();
+      });
+    });
+  });
+
+  contar();
+
+  var btn = document.getElementById('exportar');
+  if (btn) {
+    btn.addEventListener('click', function () {
+      var saida = { relatorio: document.body.dataset.relatorio, casos: [] };
+      casos.forEach(function (art) {
+        var d = lerDoDom(art);
+        saida.casos.push({
+          id: art.dataset.caso, titulo: d.titulo,
+          decisao: d.decisao || 'sem decisao', formatos: d.formatos
+        });
+      });
+      var blob = new Blob([JSON.stringify(saida, null, 2)], { type: 'application/json' });
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'radar-decisoes-' + saida.relatorio + '.json';
+      a.click();
+      URL.revokeObjectURL(a.href);
+    });
+  }
+
+  var limpar = document.getElementById('limpar');
+  if (limpar) {
+    limpar.addEventListener('click', function () {
+      try { localStorage.removeItem(chave); } catch (e) {}
+      location.reload();
+    });
+  }
+})();
+</script>
+</body>
+</html>
