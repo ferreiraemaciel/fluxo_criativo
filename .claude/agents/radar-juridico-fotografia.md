@@ -308,6 +308,8 @@ Este passo **não roda na varredura** e **não roda na tarefa semanal**. Ele aco
 Ao aprofundar um caso:
 
 1. Abrir o PDF já arquivado e verificado em `radar-juridico/documentos/{data}/`. Se ele não foi baixado na varredura, baixar e verificar agora.
+
+   **Caso especial do STJ, testado em 03/08/2026.** O download direto do inteiro teor (`GetInteiroTeorDoAcordao` e as URLs de `processo.stj.jus.br/processo/julgamento/eletronico/documento/`) é bloqueado por WAF em requisição simples, e o navegador embutido não expõe texto de PDF renderizado por plugin via `get_page_text`. O caminho que funciona: navegar até a URL do inteiro teor pelo navegador, depois usar `mcp__Claude_Browser__javascript_tool` para, dentro da própria página, `fetch()` o mesmo endereço com `credentials: 'include'` (as cookies da sessão que já passou o desafio valem), carregar a biblioteca `pdf.js` via `<script>` injetado (CDN `cdnjs.cloudflare.com/ajax/libs/pdf.js`), e extrair o texto de cada página com `getTextContent()`. Devolve o texto integral, ementa, relatório e voto, em um único retorno. Como o PDF original não fica salvo em disco por esse caminho, arquive o texto extraído em `.txt` no lugar do `.pdf`, com a URL de origem na primeira linha, e registre isso no campo Íntegra arquivada.
 2. **Ler o documento inteiro**, não o resumo da notícia.
 3. Extrair:
    - **Que tipo de decisão é.** Sentença de juizado, sentença de vara cível, acórdão, liminar em cognição sumária. Isso define o peso e é o que a imprensa mais omite.
