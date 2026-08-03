@@ -36,13 +36,15 @@ Operadores aceitos: `e`, `ou`, `adj`, `não`, `prox`, `mesmo`, `com`, `$`. Aspas
 
 Portais de imprensa. Publicam o caso já mastigado para jornalista, que é exatamente o formato que o radar aproveita.
 
-### Respondem a requisição simples
+Os 27 estão localizados e testados. O que muda de um para outro é **como** se lê, não se dá para ler.
+
+### Entregam a notícia por requisição simples (12)
+
+Servem o conteúdo já montado no HTML. Consulta barata.
 
 | UF | Endereço |
 |---|---|
-| AC | https://www.tjac.jus.br/noticias/ |
 | AP | https://www.tjap.jus.br/portal/publicacoes/noticias.html |
-| AM | https://www.tjam.jus.br/index.php/noticias |
 | CE | https://www.tjce.jus.br/noticias/ |
 | DF | https://www.tjdft.jus.br/institucional/imprensa/noticias |
 | MA | https://www.tjma.jus.br/midia/tj/noticias |
@@ -53,36 +55,41 @@ Portais de imprensa. Publicam o caso já mastigado para jornalista, que é exata
 | PI | https://www.tjpi.jus.br/portaltjpi/ |
 | PR | https://www.tjpr.jus.br/noticias |
 | RJ | https://www.tjrj.jus.br/noticias |
-| RO | https://www.tjro.jus.br/ |
-| RR | https://www.tjrr.jus.br/index.php/noticias |
-| SC | https://www.tjsc.jus.br/web/imprensa |
 | SP | https://www.tjsp.jus.br/Noticias |
-| SE | https://www.tjse.jus.br/portal/ |
 
-18 de 27. Em PE, PI, RO e SE o endereço que responde é a home do portal, que lista as notícias recentes, e não uma página dedicada. Funciona, mas rende menos itens por consulta.
+Em PE e PI o endereço que funciona é a home do portal, que lista as recentes, e não uma página dedicada.
 
-### Recusam requisição simples, provável que respondam ao navegador
+### Precisam do navegador (15)
 
-| UF | Endereço candidato | O que aconteceu |
+Aqui a requisição simples devolve só o menu do site, ou é barrada por filtro de robô. A lista de notícias é montada por script no lado do leitor. Todos os 15 foram abertos e confirmados no navegador embutido do app.
+
+| UF | Endereço | Por que precisa |
 |---|---|---|
-| GO | https://www.tjgo.jus.br/index.php/institucional/centro-de-comunicacao-social | HTTP 403 |
-| PB | https://www.tjpb.jus.br/noticias | HTTP 403 |
-| RN | https://www.tjrn.jus.br/index.php/comunicacao/noticias | HTTP 403 |
+| AC | https://www.tjac.jus.br/noticias/ | Montada por script |
+| AL | https://www.tjal.jus.br/noticias | Montada por script |
+| AM | https://www.tjam.jus.br/index.php/noticias | Montada por script |
+| BA | https://www.tjba.jus.br/portal/agencia-de-noticias/ | Montada por script |
+| ES | https://www.tjes.jus.br/category/s1-front-page/ultimasnoticias/ | Montada por script |
+| GO | https://www.tjgo.jus.br/index.php/institucional/centro-de-comunicacao-social | Filtro de robô, HTTP 403 |
+| PA | https://www.tjpa.jus.br/PortalExterno/index-noticias.xhtml | Montada por script |
+| PB | https://www.tjpb.jus.br/noticias | Filtro de robô, HTTP 403 |
+| RN | https://www.tjrn.jus.br/noticias/ | Filtro de robô, HTTP 403 |
+| RO | https://www.tjro.jus.br/ | Montada por script |
+| RR | https://www.tjrr.jus.br/index.php/noticias | Montada por script |
+| RS | https://www.tjrs.jus.br/novo/comunicacao/noticias-do-tjrs/noticias/ | Montada por script |
+| SC | https://www.tjsc.jus.br/web/imprensa | Montada por script |
+| SE | https://www.tjse.jus.br/portal/ | Montada por script |
+| TO | https://www.tjto.jus.br/comunicacao/noticias | Montada por script |
 
-O 403 aqui é filtro de robô, não ausência de página. O STJ fazia o mesmo e cedeu ao navegador do app, então o caminho provável é o mesmo. Confirmar na primeira execução.
+**Consequência de arquitetura:** 15 dos 27 tribunais só se leem com navegador. Somado ao buscador do STJ, que também só cede ao navegador, o navegador deixa de ser recurso extra e passa a ser requisito da rotina. Sem ele, a camada dos estados perde mais da metade do país.
 
-### Endereço ainda não localizado, levantar manualmente
+### Portais que ajudam mais que os outros
 
-| UF | O que foi tentado |
-|---|---|
-| AL | `/noticias`, `/index.php?tmp=noticias` e `/noticiaListar.php` devolvem uma página de 1,7 KB, sem conteúdo. Provável aplicação que monta a lista por script |
-| BA | O portal responde, mas os caminhos testados caem em seções erradas (teletrabalho, memória). Falta o endereço da listagem geral |
-| ES | `/noticias/` redireciona para a área do PJe, que é notícia de sistema, não de julgamento |
-| PA | `/PortalExterno/imprensa/noticias` devolve 404 |
-| RS | `/novo/noticia/` redireciona para uma matéria específica em vez da listagem. A listagem existe, falta o endereço certo |
-| TO | A home responde, mas nenhum caminho de notícia testado respondeu |
+Três têm filtro próprio e valem consulta dirigida em vez de leitura da lista inteira:
 
-6 pendentes. Felipe levanta manualmente e registra aqui.
+- **RS.** Filtra por palavra-chave e por intervalo de datas, e classifica cada item entre Decisão e Institucional.
+- **RN.** Separa uma categoria só de Decisões Judiciais.
+- **BA.** Tem busca de notícias dentro da própria agência.
 
 ### Complemento que cobre o que os portais perderem
 
