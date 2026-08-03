@@ -234,6 +234,7 @@ def update_supabase(numero, media_files, dry_run=False):
     status_atual = get_status_atual(numero)
     if status_atual == "fazer":
         payload["status"] = "fazendo"
+        payload["etapa"] = None  # só faz sentido em Fazendo, some ao sair de lá
         print(f"    ↪ Status: Fazendo → Feito (criativo detectado)")
 
     if dry_run:

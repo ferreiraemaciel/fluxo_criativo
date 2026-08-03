@@ -119,7 +119,7 @@ function useAdsCards() {
     setLoading(true);
     const { data: adsList } = await window.db
       .from('ads')
-      .select('numero,titulo,status,tag,tipo,headline,hook_copy,hook_visual,desenvolvimento_cta,roteiro,estetica_visual,prompt,slides,texto_principal,titulo_ad,descricao_ad,posicionamento,media_drive_url,media_tipo,media_files,meta_ad_id,meta_ad_url,vendas_total,cpa_historico,gasto_total,isento_regra,observacoes,referencia,thumb_url,media_url,media_preview_url,meta_image_hash,meta_video_id,meta_campaign_id,meta_adset_id,meta_publish_status,ordem_manual')
+      .select('numero,titulo,status,tag,etapa,tipo,headline,hook_copy,hook_visual,desenvolvimento_cta,roteiro,estetica_visual,prompt,slides,texto_principal,titulo_ad,descricao_ad,posicionamento,media_drive_url,media_tipo,media_files,meta_ad_id,meta_ad_url,vendas_total,cpa_historico,gasto_total,isento_regra,observacoes,referencia,thumb_url,media_url,media_preview_url,meta_image_hash,meta_video_id,meta_campaign_id,meta_adset_id,meta_publish_status,ordem_manual')
       .order('numero', { ascending: false });
 
     const { data: insights } = await window.db
@@ -224,7 +224,7 @@ function cardThumb(raw) {
   return window.melhorThumbAd(raw?.thumb_url, raw?.media_files, raw?.media_drive_url);
 }
 
-function KanbanCard({ card, col, onOpen, onDragStart, podeArrastar, onDropAntes }) {
+function KanbanCard({ card, col, onOpen, onDragStart, podeArrastar, onDropAntes, onEtapaToggle }) {
   const [hov, setHov] = useState(false);
   const [dragOverTopo, setDragOverTopo] = useState(false);
   const cpaColor = getCpaColor(card.cpa);
@@ -286,6 +286,20 @@ function KanbanCard({ card, col, onOpen, onDragStart, podeArrastar, onDropAntes 
           ADS {card.num}
         </span>
         <div style={{ marginLeft:'auto', display:'flex', gap:4, alignItems:'center', flexShrink:0 }}>
+          {card.col === 'fazer' && (
+            <button
+              onClick={e => { e.stopPropagation(); onEtapaToggle && onEtapaToggle(card); }}
+              title={card.raw?.etapa === 'copy' ? 'Etapa: Copy (clique pra passar pra Produção)'
+                   : card.raw?.etapa === 'producao' ? 'Etapa: Produção (clique pra limpar)'
+                   : 'Sem etapa definida (clique pra marcar Copy)'}
+              style={{ display:'flex', alignItems:'center', justifyContent:'center', width:18, height:18,
+                padding:0, borderRadius:5, cursor:'pointer', flexShrink:0,
+                background: card.raw?.etapa ? 'rgba(234,170,65,.15)' : 'rgba(255,255,255,.06)',
+                border: card.raw?.etapa ? '1px solid rgba(234,170,65,.35)' : '1px solid var(--app-border)' }}>
+              <LucideIcon icon={card.raw?.etapa === 'producao' ? 'clapperboard' : card.raw?.etapa === 'copy' ? 'pencil' : 'circle-dashed'}
+                size={10} style={{ color: card.raw?.etapa ? 'var(--fmn-gold)' : 'var(--text-3)' }}/>
+            </button>
+          )}
           {semPreview && (
             <div title="Sem preview — o criativo ainda não foi otimizado para o R2"
               style={{ display:'flex', alignItems:'center', gap:3, padding:'1px 5px', borderRadius:999,
@@ -347,7 +361,7 @@ function KanbanCard({ card, col, onOpen, onDragStart, podeArrastar, onDropAntes 
 }
 
 /* ── KanbanColumn ────────────────────────────────────────────────*/
-function KanbanColumn({ col, cards, onOpen, onAddNew, onDropCard, sortBy, onReorder }) {
+function KanbanColumn({ col, cards, onOpen, onAddNew, onDropCard, sortBy, onReorder, onEtapaToggle }) {
   const [dragOver, setDragOver] = useState(false);
   const podeArrastar = sortBy === 'manual';
   return (
@@ -384,7 +398,8 @@ function KanbanColumn({ col, cards, onOpen, onAddNew, onDropCard, sortBy, onReor
         {cards.map(c => (
           <KanbanCard key={c.id} card={c} col={col} onOpen={onOpen}
             podeArrastar={podeArrastar}
-            onDropAntes={(draggedId) => onReorder(draggedId, c.id, col.id)}/>
+            onDropAntes={(draggedId) => onReorder(draggedId, c.id, col.id)}
+            onEtapaToggle={onEtapaToggle}/>
         ))}
       </div>
       <div style={{ padding:'6px 8px 10px', borderTop:`1px solid ${col.colorBorder}`, flexShrink:0 }}>
@@ -1326,6 +1341,7 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [videoPlaying, setVideoPlaying] = useState(false);
+  const [mediaFullscreen, setMediaFullscreen] = useState(false);
   // tags Alta/Prévia (apagar versão individual do R2). Estados PRECISAM viver
   // aqui (não no MetaAdModal): bug real de 2026-07-27, o estado tinha sido
   // declarado no modal errado e todo card de vídeo quebrava a tela inteira
@@ -1353,6 +1369,7 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
     estetica_visual:  raw.estetica_visual || '',
     prompt:           raw.prompt          || '',
     slides:           raw.slides          || '',
+    etapa:            raw.etapa           || null,
     hook_visual:      raw.hook_visual     || '',
     hook_copy:        raw.hook_copy       || '',
     desenvolvimento_cta: raw.desenvolvimento_cta || '',
@@ -1485,9 +1502,11 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
     const patch = { status: novoStatus };
     const novaTag = resolveTag(novoStatus, fields.status, card.vendas, card.cpa, card.gasto);
     if (novaTag !== null) { patch.tag = novaTag; set('tag', novaTag); }
+    // "etapa" (Copy/Produção) só faz sentido dentro de Fazendo — some sozinho ao sair de lá.
+    if (novoStatus !== 'fazer') { patch.etapa = null; set('etapa', null); }
     set('status', novoStatus);
     await window.db.from('ads').update(patch).eq('numero', parseInt(card.num, 10));
-    if (onUpdate) onUpdate({ ...card, col: novoStatus, raw: { ...raw, status: novoStatus, tag: patch.tag ?? raw.tag } });
+    if (onUpdate) onUpdate({ ...card, col: novoStatus, raw: { ...raw, status: novoStatus, tag: patch.tag ?? raw.tag, etapa: patch.etapa !== undefined ? patch.etapa : raw.etapa } });
   }
 
   async function deletarAd() {
@@ -1658,6 +1677,15 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
                   border: previewIsVideo ? 'none' : '1px solid var(--app-border)' }}>
                   {previewEmbed ? (
                     <>
+                      {/* Ampliar em tela cheia — imagem única, carrossel (com navegação) ou vídeo */}
+                      <button onClick={e => { e.stopPropagation(); setMediaFullscreen(true); }}
+                        title="Ver em tela cheia"
+                        style={{ position:'absolute', top:8, right:8, zIndex:3, width:28, height:28,
+                          borderRadius:'50%', border:'1px solid rgba(255,255,255,.25)',
+                          background:'rgba(0,0,0,.55)', color:'#fff', cursor:'pointer',
+                          display:'flex', alignItems:'center', justifyContent:'center', backdropFilter:'blur(4px)' }}>
+                        <LucideIcon icon="maximize-2" size={13}/>
+                      </button>
                       {previewIsVideo
                         ? videoPlaying
                           ? isR2Embed
@@ -1857,6 +1885,30 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
                     </div>
                   </div>
 
+                  {/* Etapa — só dentro de Fazendo (status=fazer) */}
+                  {fields.status === 'fazer' && (
+                    <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+                      <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700,
+                        letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)' }}>Etapa</span>
+                      <div style={{ display:'flex', gap:5, flexWrap:'wrap' }}>
+                        {[{ id:'copy', label:'Copy', icon:'pencil' }, { id:'producao', label:'Produção', icon:'clapperboard' }].map(e => {
+                          const active = fields.etapa === e.id;
+                          return (
+                            <button key={e.id}
+                              onClick={() => { const novo = active ? null : e.id; set('etapa', novo); }}
+                              style={{ display:'flex', alignItems:'center', gap:5, padding:'4px 10px', borderRadius:999, fontSize:11, cursor:'pointer',
+                                fontFamily:'Roboto,sans-serif', fontWeight:700, transition:'all 120ms',
+                                background: active ? 'rgba(234,170,65,.15)' : 'rgba(255,255,255,.04)',
+                                border: active ? '1px solid rgba(234,170,65,.4)' : '1px solid var(--app-border)',
+                                color: active ? 'var(--fmn-gold)' : 'var(--text-3)' }}>
+                              <LucideIcon icon={e.icon} size={11}/>{e.label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Tipo — chips com ícone */}
                   <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
                     <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700,
@@ -1966,6 +2018,12 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
       </div>
 
       {showMeta && <MetaAdModal card={card} onClose={() => setShowMeta(false)}/>}
+      {mediaFullscreen && (
+        <CarouselLightbox
+          urls={isCarousel ? (r2Urls.length ? r2Urls : mediaFiles.map(f => f.url_view)) : [previewViewUrl || previewEmbed]}
+          initialIdx={isCarousel ? carouselIdx : 0}
+          onClose={() => setMediaFullscreen(false)}/>
+      )}
     </>
   );
 }
@@ -2134,7 +2192,7 @@ function AtivarMetaModal({ itens, onClose, onDone, onEdit }) {
           // Ativação real no Meta também avança o card pra coluna "Ativos",
           // com a mesma tag que o app já aplicaria num drag-and-drop manual.
           const novaTag = resolveTag('ativo', item?.statusAnterior);
-          const patch = { meta_publish_status: 'ativo', status: 'ativo' };
+          const patch = { meta_publish_status: 'ativo', status: 'ativo', etapa: null };
           if (novaTag !== null) patch.tag = novaTag;
           await window.db.from('ads').update(patch).eq('numero', parseInt(item.num, 10));
         } else {
@@ -2318,7 +2376,17 @@ function KanbanScreen({ targetAd, onConsumeTarget }) {
     const patch = { status: newColId };
     const novaTag = resolveTag(newColId, card.col, card.vendas, card.cpa, card.gasto);
     if (novaTag !== null) patch.tag = novaTag;
+    if (newColId !== 'fazer') patch.etapa = null;
     await window.db.from('ads').update(patch).eq('numero', parseInt(card.num, 10));
+    reload();
+  }
+
+  // Alterna a sub-etapa dentro de Fazendo: null → copy → producao → null.
+  // Só chamado em cards com card.col === 'fazer' (o ícone não aparece fora dali).
+  async function handleEtapaToggle(card) {
+    if (!window.db) return;
+    const proxima = card.raw?.etapa === 'copy' ? 'producao' : card.raw?.etapa === 'producao' ? null : 'copy';
+    await window.db.from('ads').update({ etapa: proxima }).eq('numero', parseInt(card.num, 10));
     reload();
   }
 
@@ -2345,6 +2413,7 @@ function KanbanScreen({ targetAd, onConsumeTarget }) {
       patch.status = toColId;
       const novaTag = resolveTag(toColId, draggedCard.col, draggedCard.vendas, draggedCard.cpa, draggedCard.gasto);
       if (novaTag !== null) patch.tag = novaTag;
+      if (toColId !== 'fazer') patch.etapa = null;
     }
     await window.db.from('ads').update(patch).eq('numero', draggedCard.numero);
     reload();
@@ -2573,7 +2642,8 @@ function KanbanScreen({ targetAd, onConsumeTarget }) {
           const cards = ordenarCards(filteredCards.filter(c => c.col === col.id), sortBy);
           return <KanbanColumn key={col.id} col={col} cards={cards}
             onOpen={setSelectedCard} onAddNew={() => setShowNovoAds(true)}
-            onDropCard={handleDropCard} sortBy={sortBy} onReorder={handleReorder}/>;
+            onDropCard={handleDropCard} sortBy={sortBy} onReorder={handleReorder}
+            onEtapaToggle={handleEtapaToggle}/>;
         })}
       </div>
 
