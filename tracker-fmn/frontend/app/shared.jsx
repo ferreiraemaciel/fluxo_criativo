@@ -403,6 +403,7 @@ function TopBar({ title, period, onPeriodChange, actions, backButton }) {
 function RefBlock({ value, onChange }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft]     = useState(value || '');
+  const [fullscreen, setFullscreen] = useState(false);
 
   // Tenta detectar o tipo do valor armazenado
   const parsed = (() => {
@@ -445,12 +446,16 @@ function RefBlock({ value, onChange }) {
       )}
       {!editing && parsed?.type === 'image' && (
         <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
-          <div style={{ borderRadius:8, overflow:'hidden', border:'1px solid var(--app-border)',
-            background:'rgba(0,0,0,.25)', display:'flex', justifyContent:'center' }}>
+          <div onClick={() => setFullscreen(true)}
+            style={{ borderRadius:8, overflow:'hidden', border:'1px solid var(--app-border)',
+              background:'rgba(0,0,0,.25)', display:'flex', justifyContent:'center', cursor:'zoom-in' }}>
             <img src={parsed.value} alt="ref"
               style={{ maxWidth:'100%', maxHeight:220, objectFit:'contain', display:'block' }}/>
           </div>
         </div>
+      )}
+      {fullscreen && parsed?.type === 'image' && (
+        <CarouselLightbox urls={[parsed.value]} initialIdx={0} onClose={() => setFullscreen(false)}/>
       )}
       {!editing && parsed?.type === 'text' && (
         <div style={{ padding:'9px 12px', borderRadius:8, background:'var(--app-surface-2)',
