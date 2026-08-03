@@ -294,10 +294,12 @@ function KanbanCard({ card, col, onOpen, onDragStart, podeArrastar, onDropAntes,
                    : 'Sem etapa definida (clique pra marcar Copy)'}
               style={{ display:'flex', alignItems:'center', justifyContent:'center', width:18, height:18,
                 padding:0, borderRadius:5, cursor:'pointer', flexShrink:0,
-                background: card.raw?.etapa ? 'rgba(234,170,65,.15)' : 'rgba(255,255,255,.06)',
-                border: card.raw?.etapa ? '1px solid rgba(234,170,65,.35)' : '1px solid var(--app-border)' }}>
+                background: card.raw?.etapa === 'copy' ? 'rgba(167,139,250,.15)'
+                          : card.raw?.etapa === 'producao' ? 'rgba(74,222,128,.15)' : 'rgba(255,255,255,.06)',
+                border: card.raw?.etapa === 'copy' ? '1px solid rgba(167,139,250,.4)'
+                      : card.raw?.etapa === 'producao' ? '1px solid rgba(74,222,128,.4)' : '1px solid var(--app-border)' }}>
               <LucideIcon icon={card.raw?.etapa === 'producao' ? 'clapperboard' : card.raw?.etapa === 'copy' ? 'pencil' : 'circle-dashed'}
-                size={10} style={{ color: card.raw?.etapa ? 'var(--fmn-gold)' : 'var(--text-3)' }}/>
+                size={10} style={{ color: card.raw?.etapa === 'copy' ? '#a78bfa' : card.raw?.etapa === 'producao' ? '#4ade80' : 'var(--text-3)' }}/>
             </button>
           )}
           {semPreview && (
@@ -1891,16 +1893,16 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
                       <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700,
                         letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)' }}>Etapa</span>
                       <div style={{ display:'flex', gap:5, flexWrap:'wrap' }}>
-                        {[{ id:'copy', label:'Copy', icon:'pencil' }, { id:'producao', label:'Produção', icon:'clapperboard' }].map(e => {
+                        {[{ id:'copy', label:'Copy', icon:'pencil', cor:'#a78bfa' }, { id:'producao', label:'Produção', icon:'clapperboard', cor:'#4ade80' }].map(e => {
                           const active = fields.etapa === e.id;
                           return (
                             <button key={e.id}
                               onClick={() => { const novo = active ? null : e.id; set('etapa', novo); }}
                               style={{ display:'flex', alignItems:'center', gap:5, padding:'4px 10px', borderRadius:999, fontSize:11, cursor:'pointer',
                                 fontFamily:'Roboto,sans-serif', fontWeight:700, transition:'all 120ms',
-                                background: active ? 'rgba(234,170,65,.15)' : 'rgba(255,255,255,.04)',
-                                border: active ? '1px solid rgba(234,170,65,.4)' : '1px solid var(--app-border)',
-                                color: active ? 'var(--fmn-gold)' : 'var(--text-3)' }}>
+                                background: active ? `${e.cor}26` : 'rgba(255,255,255,.04)',
+                                border: active ? `1px solid ${e.cor}66` : '1px solid var(--app-border)',
+                                color: active ? e.cor : 'var(--text-3)' }}>
                               <LucideIcon icon={e.icon} size={11}/>{e.label}
                             </button>
                           );
