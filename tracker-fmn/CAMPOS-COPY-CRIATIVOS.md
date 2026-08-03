@@ -9,6 +9,8 @@ O campo **Roteiro** sempre contém as 3 partes — Gancho, Desenvolvimento e CTA
 
 **Informações Adicionais** é o nome único (rótulo e coluna `observacoes`) pro catch-all, tanto em `ads` quanto em `conteudo_organico`.
 
+**Texto Principal e Descrição (ADS) sempre terminam com CTA de clique.** Todo `texto_principal` de anúncio precisa fechar chamando pra clicar em SAIBA MAIS — a linguagem pode ser adaptada pro tom de cada ADS específico (ex: "Clique em Saiba Mais", "Clica ali embaixo", "Saiba mais agora"), mas o chamado pra clicar sempre precisa estar presente. **A `descricao_ad` segue a mesma regra**, sempre com uma chamada de clique no fechamento, não só o `texto_principal`.
+
 ---
 
 ## ADS — Reels
