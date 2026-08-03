@@ -119,7 +119,7 @@ function useAdsCards() {
     setLoading(true);
     const { data: adsList } = await window.db
       .from('ads')
-      .select('numero,titulo,status,tag,tipo,headline,hook_copy,hook_visual,desenvolvimento_cta,roteiro,estetica_visual,texto_principal,titulo_ad,descricao_ad,posicionamento,media_drive_url,media_tipo,media_files,meta_ad_id,meta_ad_url,vendas_total,cpa_historico,gasto_total,isento_regra,observacoes,thumb_url,media_url,media_preview_url,meta_image_hash,meta_video_id,meta_campaign_id,meta_adset_id,meta_publish_status,ordem_manual')
+      .select('numero,titulo,status,tag,tipo,headline,hook_copy,hook_visual,desenvolvimento_cta,roteiro,estetica_visual,texto_principal,titulo_ad,descricao_ad,posicionamento,media_drive_url,media_tipo,media_files,meta_ad_id,meta_ad_url,vendas_total,cpa_historico,gasto_total,isento_regra,observacoes,referencia,thumb_url,media_url,media_preview_url,meta_image_hash,meta_video_id,meta_campaign_id,meta_adset_id,meta_publish_status,ordem_manual')
       .order('numero', { ascending: false });
 
     const { data: insights } = await window.db
