@@ -97,14 +97,34 @@ Busca restrita ao domínio dos tribunais (`jus.br`), com os termos do radar. Foi
 
 ---
 
-## Camada 4. Imprensa jurídica especializada
+## Camada 4. Imprensa e busca aberta na internet
+
+Esta lista **não é uma cerca**. Ela garante o piso da varredura, não o teto. A busca aberta na web continua sendo obrigatória em toda rodada, e qualquer fonte que apareça por ela é válida, desde que a página tenha sido efetivamente aberta e o conteúdo confirmado. Regra definida pelo Felipe em 03/08/2026.
+
+### Imprensa jurídica especializada
 
 | Fonte | Endereço | Observação |
 |---|---|---|
 | Migalhas | https://www.migalhas.com.br/quentes | Costuma linkar o PDF da decisão em `arq.migalhas.com.br` |
 | ConJur | https://www.conjur.com.br | Também linka a decisão. **Conferir sempre se o PDF é do processo citado.** Em 03/08/2026 o link rotulado "acórdão" entregou decisão de outro processo |
 
-JusBrasil é proibido como fonte primária. Bloqueia robô e replica conteúdo de origem que já se alcança direto.
+### Busca aberta, obrigatória em toda rodada
+
+As sete buscas fixas, com o mês e o ano trocados a cada rodada:
+
+- direito de imagem fotógrafo decisão justiça
+- direito autoral fotografia uso indevido indenização
+- contrato fotografia evento casamento ação judicial
+- foto de criança redes sociais ECA Digital
+- LGPD imagem cliente fotógrafo
+- inteligência artificial direito autoral imagem banco de imagens
+- fotógrafo condenado indenizar entrega de fotos
+
+Além delas, busca livre sobre o que estiver em pauta no período, e busca restrita ao domínio dos tribunais. Imprensa comum, portal regional, veículo de nicho e imprensa estrangeira entram normalmente quando trouxerem caso que passe no filtro, com a ressalva de que decisão de fora do Brasil não vale aqui e precisa ser apresentada assim.
+
+**A única fonte proibida é o JusBrasil como fonte primária.** Bloqueia robô e replica conteúdo de origem que já se alcança direto. Quando um resultado do JusBrasil apontar para algo interessante, ir atrás da origem e citar a origem.
+
+**Nunca citar link que não foi aberto.** Resultado de busca não é fonte, é pista.
 
 ---
 

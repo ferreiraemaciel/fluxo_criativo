@@ -16,3 +16,4 @@ Um caso só volta a aparecer no relatório quando houver fato novo (recurso julg
 - 2026-08-03 | Contrato sem finalidade escrita fez o fotógrafo perder o uso exclusivo (Terceira Turma do STJ, REsp 2191048/MG) | https://scon.stj.jus.br/SCON/
 - 2026-08-03 | Pessoa retratada usou a foto sem autorização nem crédito e foi condenada (Terceira Turma do STJ, AREsp 2688250/RS) | https://scon.stj.jus.br/SCON/
 - 2026-08-03 | Incorporar publicação e copiar arquivo tratados de formas diferentes em matéria jornalística (Terceira Turma do STJ, EDcl no AREsp 2745723/RS) | https://scon.stj.jus.br/SCON/
+- 2026-08-03 | Vídeo de chá revelação viralizou e o tribunal negou indenização e retirada do ar (9ª Câmara Cível do TJ/RS, comarca de Ibirubá) | https://www.tjrs.jus.br/novo/?post_type=noticia&p=217144
