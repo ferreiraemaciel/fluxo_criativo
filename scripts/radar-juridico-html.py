@@ -489,18 +489,27 @@ def render_secao(secao: dict) -> str:
 </section>'''
 
 
+def contar_por_tipo(doc: dict, tipo: str) -> int:
+    """Soma todas as seções daquele tipo.
+
+    Uma rodada pode ter mais de uma seção de casos (por exemplo, a varredura
+    inicial e uma camada que rodou depois). Contar só a primeira faria o
+    script relatar menos do que ele de fato converteu, que é justamente o
+    tipo de silêncio que a conferência deveria pegar.
+    """
+    return sum(
+        len(s['conteudo']['itens'])
+        for s in doc['secoes']
+        if s['conteudo']['tipo'] == tipo
+    )
+
+
 def contar_casos(doc: dict) -> int:
-    for s in doc['secoes']:
-        if s['conteudo']['tipo'] == 'casos':
-            return len(s['conteudo']['itens'])
-    return 0
+    return contar_por_tipo(doc, 'casos')
 
 
 def contar_pautas(doc: dict) -> int:
-    for s in doc['secoes']:
-        if s['conteudo']['tipo'] == 'pautas':
-            return len(s['conteudo']['itens'])
-    return 0
+    return contar_por_tipo(doc, 'pautas')
 
 
 CSS = """
