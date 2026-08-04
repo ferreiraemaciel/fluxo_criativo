@@ -51,8 +51,8 @@
     100%{box-shadow:0 0 0 3px rgba(96,165,250,.20),0 10px 24px rgba(96,165,250,.14)}
   }
   .chk{width:20px;height:20px;border-radius:6px;border:2px solid var(--line);flex-shrink:0;
-    display:flex;align-items:center;justify-content:center;font-size:13px;color:#fff}
-  .opt.sel .chk{background:var(--gold);border-color:var(--gold)}
+    display:flex;align-items:center;justify-content:center;font-size:13px;color:transparent}
+  .opt.sel .chk{background:var(--gold);border-color:var(--gold);color:#0d1f3c}
   /* botão */
   .btn{display:block;width:100%;background:linear-gradient(180deg,var(--gold),var(--gold-deep));color:#fff;border:none;border-radius:14px;
     padding:16px;font-family:inherit;font-size:15.5px;font-weight:700;cursor:pointer;margin-top:22px;
@@ -253,12 +253,16 @@ function calcPerfil(){
 }
 function calcRisco(){
   let s = 0;
+  if (answers.confianca_clientes === 'Mando pelo WhatsApp e peço uma foto dele assinado.') s += 2;
+  else if (answers.confianca_clientes === 'Imprimo todos os contratos e assinamos manuscrito.') s += 1;
   if (answers.usa_contrato === 'Nunca, acho que não preciso.') s += 3;
   else if (answers.usa_contrato === 'Às vezes, quando o cliente pede…') s += 1;
   if (answers.protege_dinheiro === 'Não ajuda, já perdi dinheiro por não estar protegido.') s += 3;
   else if (answers.protege_dinheiro === 'Às vezes protege, mas já tive problemas…') s += 1;
-  if (answers.entende_contrato === 'Ainda não uso contrato.' || answers.entende_contrato === 'Não sou capaz de entender sozinho.') s += 2;
-  if ((answers.temas_dominados||[]).includes('Nenhum deles')) s += 2;
+  if (answers.entende_contrato === 'Mando o arquivo por WhatsApp e espero o cliente responder.' || answers.entende_contrato === 'Não tenho processo. Cada fechamento é um improviso.') s += 2;
+  else if (answers.entende_contrato === 'Peço pra assinar em papel e fico com uma via.') s += 1;
+  if (answers.temas_dominados === 'Peço para o cliente me mandar de volta porque não sei onde guardei.') s += 2;
+  else if (answers.temas_dominados === 'Fico procurando em e-mails, pastas e WhatsApp por vários minutos.' || answers.temas_dominados === 'Tenho uma pasta no computador, mas é difícil navegar.') s += 1;
   if (answers.tipo_contrato_atual === 'Na verdade, eu nem uso contrato…') s += 2;
   else if (answers.tipo_contrato_atual) s += 1;
   if (s >= 8)  return { nivel:'Altíssimo', status:'DESPROTEGIDO', pos:96 };
@@ -585,7 +589,7 @@ function rResult(){
 
   stage.appendChild(el(`<div class="desire-sep">Quer sair dessa e ter:</div>`));
   const chips = el('<div class="benefit-chips"></div>');
-  [['🛡️','Segurança jurídica de verdade'],['⚡','Uso imediato'],['😊','Cláusulas fáceis de entender'],['🚀','Rápido de preencher']].forEach(([e,t]) =>
+  [['🛡️','Segurança jurídica de verdade'],['📱','Tudo no celular ou no computador'],['✍️','Assinatura digital incluída'],['🚀','Contrato gerado em minutos']].forEach(([e,t]) =>
     chips.appendChild(el(`<div class="benefit-chip"><span>${e}</span><span>${t}</span></div>`)));
   stage.appendChild(chips);
 
