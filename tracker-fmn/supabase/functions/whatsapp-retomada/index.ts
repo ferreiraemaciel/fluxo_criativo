@@ -71,6 +71,8 @@ Essa conversa está prestes a fechar a janela de atendimento. Escreva UMA mensag
 
 **A retomada segue as MESMAS regras de fechamento do resto da conversa: termina sempre em pergunta (a única exceção de verdade é handoff) e nunca promete mostrar/explicar algo sem entregar o conteúdo na mesma mensagem.** Erro real que já aconteceu: a retomada escreveu "Deixa eu te mostrar qual é a blindagem certa pra isso" e parou por aí, sem nenhuma pergunta e sem entregar a blindagem de verdade — isso não dá ao lead nada concreto pra reagir, ele fica sem saber o que responder. Se for reconectar prometendo mostrar algo, já mostre/afirme o conteúdo ali mesmo (nome do produto, o que resolve, atributo concreto) e só depois feche com a pergunta que mantém a conversa aberta.
 
+**NUNCA use a frase reservada de handoff "Um segundo, já te retorno" (ou qualquer variação dela) nessa tarefa, mesmo que pareça um jeito curto e seguro de reabrir a conversa.** Essa frase só existe no prompt principal pra um cenário MUITO específico (lead desconfiando pela 2ª vez que fala com IA), e a retomada não tem esse contexto nem decide handoff sozinha. Erro real que já aconteceu: a retomada usou "Juan, fica comigo só um segundo que já te retorno" sem nenhuma pergunta de identidade ter rolado na conversa, criando uma promessa de retorno vazia que ninguém cumpriu, sem reconectar com nada real do histórico. A retomada escreve sempre puxando o assunto de verdade da conversa (ver regra acima), nunca uma frase-atalho genérica emprestada de outra parte do prompt.
+
 ${instrucaoVacuo}`;
 
   try {
