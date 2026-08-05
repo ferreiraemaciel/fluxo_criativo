@@ -186,15 +186,11 @@ function SalesMapWidget({ from, to }) {
   // estado/cidade já vem automático da Hotmart (webhook em tempo real e o
   // backfill do hotmart-sync), então esse import manual não faz mais sentido.
   var data = useMapData(from, to, 0);
-  var byState = data.byState; var citiesByState = data.citiesByState; var total = data.total; var semEstado = data.semEstado;
+  var byState = data.byState; var citiesByState = data.citiesByState; var total = data.total;
 
   return (
     <div style={{display:'flex', flexDirection:'column', height:'100%', minHeight:360}}>
       <div style={{display:'flex', alignItems:'baseline', justifyContent:'flex-end', gap:8, flexShrink:0}}>
-        {semEstado > 0 && (
-          <span title="Vendas aprovadas sem estado identificado, não entram no mapa" style={{fontSize:10.5,
-            fontFamily:'Roboto,sans-serif', color:'var(--text-3)'}}>+{semEstado} sem estado</span>
-        )}
         <span style={{fontSize:28, fontFamily:'Roboto,sans-serif', fontWeight:900,
           color:'var(--fmn-gold)', lineHeight:1, letterSpacing:'-0.02em'}}>{total}</span>
       </div>
