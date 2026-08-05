@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body { width:1080px; height:1350px; }
+  body {
+    background:#0E1013;
+    font-family:"Avenir Next","Helvetica Neue",Helvetica,Arial,sans-serif;
+    color:#F2F1EE;
+    display:flex; flex-direction:column;
+    padding:72px 68px 60px;
+    position:relative;
+    overflow:hidden;
+  }
+  .glow {
+    position:absolute; top:-260px; right:-200px;
+    width:700px; height:700px; border-radius:50%;
+    background:radial-gradient(circle, rgba(201,162,39,.16) 0%, rgba(201,162,39,0) 68%);
+  }
+  .kicker {
+    font-size:21px; letter-spacing:.24em; text-transform:uppercase;
+    color:#C9A227; font-weight:600; margin-bottom:26px;
+  }
+  h1 {
+    font-size:62px; line-height:1.12; font-weight:600;
+    letter-spacing:-.015em; max-width:900px;
+  }
+  h1 em { font-style:normal; color:#C9A227; }
+  .cols { display:flex; gap:34px; margin-top:64px; }
+  .col { flex:1; border-radius:22px; padding:34px 30px 30px; background:#16191E; border:1px solid #23272E; }
+  .col.right { background:#151A18; border-color:#274036; }
+  .tag { display:flex; align-items:center; gap:12px; margin-bottom:30px; }
+  .mark {
+    width:42px; height:42px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-size:24px; font-weight:700; line-height:1; flex:none;
+  }
+  .mark.bad { background:rgba(224,91,75,.15); color:#E05B4B; }
+  .mark.good { background:rgba(63,182,139,.15); color:#3FB68B; }
+  .tag span {
+    font-size:17px; letter-spacing:.13em; text-transform:uppercase; font-weight:600; line-height:1.25;
+  }
+  .tag .bad-t { color:#E05B4B; }
+  .tag .good-t { color:#3FB68B; }
+  .step {
+    display:flex; align-items:baseline; gap:16px;
+    padding:19px 0; border-bottom:1px solid #23272E;
+  }
+  .col.right .step { border-bottom-color:#22322B; }
+  .step:last-of-type { border-bottom:none; }
+  .num { font-size:19px; color:#6B7280; font-weight:600; width:26px; flex:none; }
+  .price { font-size:47px; font-weight:600; letter-spacing:-.02em; }
+  .col.right .step:first-of-type .price { color:#C9A227; }
+  .note {
+    margin-top:26px; font-size:25px; line-height:1.4; color:#A8ADB6; font-weight:400;
+  }
+  .note b { color:#F2F1EE; font-weight:600; }
+  .footer {
+    margin-top:auto; padding-top:44px; border-top:1px solid #23272E;
+    display:flex; align-items:flex-end; justify-content:space-between; gap:30px;
+  }
+  .close { font-size:34px; line-height:1.32; font-weight:600; max-width:700px; letter-spacing:-.01em; }
+  .close span { color:#C9A227; }
+  .handle { font-size:21px; color:#8A9099; letter-spacing:.05em; white-space:nowrap; padding-bottom:6px; }
+</style>
+</head>
+<body>
+  <div class="glow"></div>
+
+  <div class="kicker">Precificação</div>
+  <h1>A ordem em que você mostra os pacotes decide <em>qual deles o cliente escolhe</em>.</h1>
+
+  <div class="cols">
+    <div class="col">
+      <div class="tag">
+        <div class="mark bad">✕</div>
+        <span class="bad-t">Como a maioria<br>apresenta</span>
+      </div>
+      <div class="step"><div class="num">1º</div><div class="price">R$ 800</div></div>
+      <div class="step"><div class="num">2º</div><div class="price">R$ 1.500</div></div>
+      <div class="step"><div class="num">3º</div><div class="price">R$ 2.500</div></div>
+      <div class="note">O de <b>R$ 2.500</b> soa como absurdo.</div>
+    </div>
+
+    <div class="col right">
+      <div class="tag">
+        <div class="mark good">✓</div>
+        <span class="good-t">Como o cliente<br>compra melhor</span>
+      </div>
+      <div class="step"><div class="num">1º</div><div class="price">R$ 2.500</div></div>
+      <div class="step"><div class="num">2º</div><div class="price">R$ 1.500</div></div>
+      <div class="step"><div class="num">3º</div><div class="price">R$ 800</div></div>
+      <div class="note">O de <b>R$ 1.500</b> vira o equilíbrio.</div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <div class="close">Mesma tabela. Mesma entrega.<br><span>Só a ordem mudou.</span></div>
+    <div class="handle">@felipeferreirafotografo</div>
+  </div>
+</body>
+</html>
