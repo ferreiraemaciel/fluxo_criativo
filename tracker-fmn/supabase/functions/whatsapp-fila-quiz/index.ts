@@ -11,6 +11,7 @@ const supabase = createClient(
 );
 
 const PRODUTO_ID_MCV = "3400278";
+const PRODUTO_ID_BLINDAGEM = "7963090";
 
 Deno.serve(async (_req) => {
   try {
@@ -18,7 +19,7 @@ Deno.serve(async (_req) => {
     const { data: pendentes, error } = await supabase
       .from("quiz_leads")
       .select("code, funnel_slug, email, nome, whatsapp, nivel_risco, situacoes")
-      .eq("funnel_slug", "fotografo-protegido")
+      .in("funnel_slug", ["fotografo-protegido", "blindagem"])
       .eq("completou_quiz", true)
       .eq("whatsapp_resultado_enviado", false)
       .not("resultado_agendado_para", "is", null)
@@ -64,14 +65,15 @@ Deno.serve(async (_req) => {
         .maybeSingle();
       if (jaRecebeu) { cancelados++; continue; }
 
-      // Já comprou o MCV? Cancela o envio do resultado, ele já está no
+      // Já comprou o produto do funil? Cancela o envio — ele já está no
       // fluxo de boas-vindas de aluno.
       if (lead.email) {
+        const produtoId = lead.funnel_slug === "blindagem" ? PRODUTO_ID_BLINDAGEM : PRODUTO_ID_MCV;
         const { data: compra } = await supabase
           .from("vendas")
           .select("id")
           .eq("status", "aprovada")
-          .eq("produto_id", PRODUTO_ID_MCV)
+          .eq("produto_id", produtoId)
           .ilike("comprador_email", lead.email)
           .limit(1)
           .maybeSingle();

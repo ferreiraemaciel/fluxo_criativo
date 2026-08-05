@@ -43,12 +43,12 @@ Deno.serve(async (req) => {
 
     // Resultado do quiz por WhatsApp — não manda na hora. Agenda pra daqui a
     // 5 minutos; quem envia de fato é o whatsapp-fila-quiz (cron de 1 em 1
-    // minuto), que antes de mandar checa se o lead já comprou o MCV nesse
-    // intervalo. Se comprou, cancela o envio (ele já vai receber o boas-vindas
-    // de aluno). Só no funil Fotógrafo Protegido, só quando o quiz foi
+    // minuto), que antes de mandar checa se o lead já comprou o produto desse
+    // funil nesse intervalo. Se comprou, cancela o envio. Vale pra todos os
+    // funis ativos (fotografo-protegido e blindagem), só quando o quiz foi
     // concluído de fato, só uma vez (não reagenda se já tem agendamento).
     const funnelSlug = String(body.funnel_slug || "fotografo-protegido");
-    if (body.completou_quiz && body.whatsapp && funnelSlug === "fotografo-protegido") {
+    if (body.completou_quiz && body.whatsapp && (funnelSlug === "fotografo-protegido" || funnelSlug === "blindagem")) {
       const { data: leadAtual } = await sb
         .from("quiz_leads")
         .select("whatsapp_resultado_enviado, resultado_agendado_para")

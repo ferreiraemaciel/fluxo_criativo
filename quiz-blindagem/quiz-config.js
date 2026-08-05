@@ -7,7 +7,7 @@
 window.QUIZ_CONFIG = {
   funnelSlug: 'blindagem',
   checkoutUrl: 'https://pay.hotmart.com/C106394543X?checkoutMode=10',
-  preco: { de: 'R$ 497,00', por: 'R$ 397,00', parcelas: '12x R$ 36,12' },
+  preco: { de: 'R$ 697,00', por: 'R$ 397,00', parcelas: '12x R$ 41,42' },
 
   steps: [
     { type: 'single', key: 'area_atuacao',
@@ -122,11 +122,11 @@ window.QUIZ_CONFIG = {
       ] },
 
     { type: 'single', key: 'protege_dinheiro',
-      title: 'Esse contrato te protege de calote e cancelamento?',
+      title: 'Se um cliente cancelar o serviço e pedir o dinheiro de volta, o que acontece?',
       options: [
-        { emoji: '😖', label: 'Não ajuda, já perdi dinheiro por não estar protegido.' },
-        { emoji: '😐', label: 'Às vezes protege, mas já tive problemas…' },
-        { emoji: '🛡️', label: 'Sim, sempre me protege dessas situações.' },
+        { emoji: '😖', label: 'Já passei por isso e perdi dinheiro, não tinha proteção nenhuma.' },
+        { emoji: '😐', label: 'Depende do caso, já tive problema mas consegui resolver de algum jeito.' },
+        { emoji: '🛡️', label: 'Tenho cláusulas claras de cancelamento, me sinto protegido.' },
       ] },
 
     { type: 'single', key: 'temas_dominados',
@@ -147,14 +147,11 @@ window.QUIZ_CONFIG = {
         { emoji: '📊', label: 'Tenho processo, mas não consigo acompanhar o status de cada contrato.' },
       ] },
 
-    { type: 'content',
+    { type: 'comparison',
       key: 'quer_modelos',
       heading: 'Contrato não é papel. É sistema.',
-      imgs: [
-        { src: 'assets/clausula-01.jpg', title: 'Contrato em Word ou no WhatsApp', caption: 'Difícil de acompanhar, fácil de perder.' },
-        { src: 'assets/clausula-02.jpg', title: 'Contrato no Blindagem', caption: 'Gerado, assinado, organizado e rastreado em um lugar só.' },
-      ],
-      body: 'O <b>Blindagem</b> é um sistema completo para fotógrafos e videomakers gerirem contratos do início ao fim: gere, assine digitalmente, organize por cliente e acompanhe o status em tempo real.',
+      afterImg: 'assets/clausula-02.jpg',
+      body: 'O <b>Blindagem</b> é um sistema completo para fotógrafos e videomakers gerirem contratos do início ao fim: gere, assine digitalmente, organize por cliente e acompanhe o status em tempo real. Os contratos continuam visuais e personalizados, como os Modelos de Contrato Visual, agora com assinatura digital e gestão completa.',
       question: 'Quer um sistema para gerar, assinar, organizar e acompanhar seus contratos?',
       options: [
         { emoji: '✅', label: 'Sim, preciso disso agora. Estou sem controle.' },
@@ -165,7 +162,7 @@ window.QUIZ_CONFIG = {
     { type: 'capture',
       heading: 'Falta pouco para o seu diagnóstico.',
       img: 'assets/foto-checkout.jpg',
-      body: 'Sou Felipe Ferreira, advogado especializado em profissionais da imagem, fotógrafo e videomaker há 15 anos e fundador do Fotografia é o Meu Negócio. Criei o Blindagem para acabar de vez com o caos dos contratos no WhatsApp. Deixe seus dados para ver o seu diagnóstico.',
+      body: 'Sou Felipe Ferreira, advogado especializado em profissionais da imagem, fotógrafo e videomaker há 15 anos, Mestre em Gestão e Inovação pela UFSC e fundador do Fotografia é o Meu Negócio. Criei o Blindagem para acabar de vez com o caos dos contratos no WhatsApp. Deixe seus dados para ver o seu diagnóstico.',
       cta: 'Ver o meu diagnóstico' },
 
     { type: 'loading',
@@ -177,7 +174,8 @@ window.QUIZ_CONFIG = {
         { emoji: '✍️', title: 'Assinatura Digital', body: 'Assine e receba assinaturas sem papel ou impressora.' },
         { emoji: '📁', title: 'Organização Total', body: 'Todos os contratos centralizados e fáceis de encontrar.' },
         { emoji: '🔔', title: 'Acompanhamento em Tempo Real', body: 'Saiba o status de cada contrato sem precisar ligar pro cliente.' },
-        { emoji: '🛡️', title: 'Proteção Jurídica Garantida!' },
+        { emoji: '🎨', title: 'Contratos Visuais', body: 'Seus contratos continuam visuais e personalizados, como nos Modelos de Contrato Visual.' },
+        { emoji: '🛡️', title: 'Muito mais proteção jurídica para o seu negócio.' },
       ],
       loadingText: 'Analisando perfil e gerando relatório…' },
 
