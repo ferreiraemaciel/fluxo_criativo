@@ -96,7 +96,7 @@ def parse_secao(titulo: str, linhas: list) -> dict:
     depender dela quebraria o parser a cada mudança de estrutura.
     """
     t = titulo.lower()
-    if 'decis' in t and 'caso' in t:
+    if ('decis' in t and 'caso' in t) or 'achado' in t:
         return {'tipo': 'casos', 'itens': parse_casos(linhas)}
     if 'pauta' in t:
         return {'tipo': 'pautas', 'itens': parse_pautas(linhas)}
@@ -296,6 +296,9 @@ CAMPO_ICONE = {
     'Por que importa pro fotógrafo': 'importa',
     'Cuidado ao produzir conteúdo': 'cuidado',
     'Gancho de conteúdo': 'gancho',
+    'O que muda no negócio': 'pratica',
+    'O achado em uma linha': 'historia',
+    'O dado por trás': 'fato',
 }
 
 
