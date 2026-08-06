@@ -501,9 +501,11 @@ function SlideBlock({ slide, index, total, onChange, onRemove, file, onFileChang
 }
 
 /* ── PublishModal ────────────────────────────────────────────────*/
-function PublishModal({ form, slidesArr, slideFiles, onClose, onSuccess }) {
-  const [modo, setModo]           = useState('agora');
-  const [schedDate, setDate]      = useState('');
+function PublishModal({ form, slidesArr, slideFiles, onClose, onSuccess, initialDate, initialModo }) {
+  // initialModo/initialDate: quando vem do calendário, já abre em "Agendar"
+  // com o dia clicado preenchido, faltando só o horário.
+  const [modo, setModo]           = useState(initialModo || 'agora');
+  const [schedDate, setDate]      = useState(initialDate || '');
   const [schedTime, setTime]      = useState('09:00');
   const [phase, setPhase]         = useState('idle');
   const [msg, setMsg]             = useState('');
@@ -931,7 +933,7 @@ function parseSlides(raw) {
   catch { return [EMPTY_SLIDE()]; }
 }
 
-function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigate, onSave, onClose, onDelete, onImported }) {
+function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigate, onSave, onClose, onDelete, onImported, abrirPublicar, prefillSchedDate }) {
   const isNew = !item?.id;
   const [form, setForm] = useState(item || {
     tema:'', plataforma:'Reels', responsavel:'Felipe',
@@ -944,7 +946,8 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
 
   const [slidesArr, setSlidesArr]     = useState(() => parseSlides(form.slides));
   const [slideFiles, setSlideFiles]   = useState({});
-  const [showPublish, setShowPublish] = useState(false);
+  // Aberto direto quando o card veio do calendário (clique numa data).
+  const [showPublish, setShowPublish] = useState(!!abrirPublicar);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [saveStatus, setSaveStatus]   = useState('idle');
 
@@ -1020,6 +1023,8 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
           slidesArr={slidesArr}
           slideFiles={slideFiles}
           onClose={() => setShowPublish(false)}
+          initialDate={prefillSchedDate || null}
+          initialModo={prefillSchedDate ? 'agendar' : null}
           onSuccess={handlePublishSuccess}/>
       )}
 
@@ -2249,6 +2254,8 @@ function OrganicoScreen() {
       {modal && (
         <ContentModal key={modal.item?.id || 'novo'} item={modal.item||null} defaultStatus={modal.defaultStatus}
           prefillDate={modal.prefillDate||null}
+          abrirPublicar={modal.abrirPublicar||false}
+          prefillSchedDate={modal.prefillSchedDate||null}
           siblings={modal.siblings||[]}
           onNavigate={newItem => setModal({ item:newItem, siblings: filtered.filter(i=>i.status===newItem.status) })}
           onSave={handleSave} onDelete={handleDelete} onClose={()=>setModal(null)}
@@ -2258,11 +2265,19 @@ function OrganicoScreen() {
         <ProgramarModal
           dateStr={programarData}
           items={items}
-          onEscolher={async it => {
-            // Reaproveita o mesmo caminho do arrastar-e-soltar no calendário:
-            // move a data e mantém o horário, se já houver um definido.
-            await handleReschedule(it.id, programarData);
+          onEscolher={it => {
+            // Abre o card já no modal de publicar, em "Agendar", com o dia
+            // clicado preenchido. É o mesmo fluxo do botão Publicar de dentro
+            // do card (agendamento de verdade, com mídia e horário), só que
+            // entrando pelo calendário. Falta o usuário só escolher a hora.
+            const data = programarData;
             setProgramarData(null);
+            setModal({
+              item: it,
+              siblings: filtered.filter(i => i.status === it.status),
+              abrirPublicar: true,
+              prefillSchedDate: data,
+            });
           }}
           onCriarNovo={() => {
             setModal({ item:null, defaultStatus:'Fazer', prefillDate: programarData });
