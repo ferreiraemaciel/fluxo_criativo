@@ -36,6 +36,17 @@ export const PADROES_MSG_AUTOMATICA = [
   /(sess[ãa]o|ensaio).{0,60}r\$\s?\d/i,
   /(nosso|nossa) (ensaio|est[úu]dio|sess[ãa]o)/i,
   /estamos localizad[oa]s?/i,
+  // Auto-resposta tipo "cartão de visita" do WhatsApp Business do lead:
+  // mensagem longa se autoapresentando e já oferecendo o próprio serviço
+  // (ensaio, gravação) pra quem mandou mensagem, formatação em negrito
+  // (asterisco) por padrão de catálogo. Achado no treino de 2026-08-02
+  // (Camila - SB), mensagem bem mais longa e elaborada que os padrões
+  // anteriores, mas mesma lógica: descreve o serviço dela, nada a ver com
+  // o que perguntamos.
+  /prazer,? sou [a-zà-ãéêíóôõúç]+/i,
+  /vamos agendar (o seu|seu) (ensaio|grava[çc][ãa]o|sess[ãa]o)/i,
+  /voc[êe] [ée] empreendedor/i,
+  /vem comigo e vamos ter o melhor resultado/i,
 ];
 
 export function pareceMensagemAutomatica(texto: string): boolean {

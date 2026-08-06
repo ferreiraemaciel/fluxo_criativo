@@ -132,7 +132,7 @@ async function syncMetaAdStatus(): Promise<Set<number>> {
       // que já tira da coluna Ativos incondicionalmente quando não está mais
       // ativo — aqui é o inverso: qualquer status vira Ativos quando o Meta
       // confirma ACTIVE.
-      if (ad.status !== "ativo") patch.status = "ativo";
+      if (ad.status !== "ativo") { patch.status = "ativo"; patch.etapa = null; }
       if (Object.keys(patch).length) {
         await supabase.from("ads").update(patch).eq("numero", ad.numero);
       }
@@ -260,6 +260,9 @@ async function aplicarRegrasKanban() {
     const [status, tag] = key.split("::");
     const payload: Record<string, unknown> = { status };
     if (tag) payload.tag = tag;
+    // "etapa" (Copy/Produção) só faz sentido em Fazendo (status=fazer) — some
+    // sozinho em qualquer transição automática pra fora dali.
+    if (status !== "fazer") payload.etapa = null;
     await supabase.from("ads").update(payload).in("numero", numeros);
     alterados += numeros.length;
   }

@@ -634,7 +634,7 @@ async function handleCardSlides(request, env) {
     method: 'PATCH',
     headers: { apikey: env.SUPABASE_SERVICE_KEY, Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`,
       'Content-Type': 'application/json', Prefer: 'return=minimal' },
-    body: JSON.stringify({ status: 'fazendo' }),
+    body: JSON.stringify({ status: 'fazendo', etapa: null }),
   }).catch(() => {});
 
   return json({ ok: true });

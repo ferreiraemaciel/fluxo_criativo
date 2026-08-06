@@ -2,7 +2,7 @@
 // Chamada pelo whatsapp-webhook toda vez que um lead responde. Verifica os
 // dois interruptores (global e por conversa) antes de gastar um token sequer.
 
-import { SYSTEM_PROMPT_MCV } from "./whatsapp-ia-prompt.ts";
+import { SYSTEM_PROMPT_MCV, BLINDAGEM_PRODUTO_OVERRIDE } from "./whatsapp-ia-prompt.ts";
 import { upsertContato } from "./whatsapp-contatos.ts";
 import { custoAnthropicUsd } from "./whatsapp-custos.ts";
 import { pareceMensagemAutomatica, contatoSoRespondeAutomatico } from "./whatsapp-automatica.ts";
@@ -51,6 +51,17 @@ function normalizarTelefoneWhatsapp(raw: string): string {
   const resto = d.slice(2);
   if (resto.length === 10) d = "55" + resto.slice(0, 2) + "9" + resto.slice(2);
   return d;
+}
+
+async function buscarFunnelSlug(supabase: any, telefone: string): Promise<string> {
+  const semDDI = telefone.startsWith("55") ? telefone.slice(2) : telefone;
+  const { data: leads } = await supabase
+    .from("quiz_leads")
+    .select("funnel_slug")
+    .or(`whatsapp.ilike.%${semDDI}%`)
+    .order("created_at", { ascending: false })
+    .limit(1);
+  return leads?.[0]?.funnel_slug || "fotografo-protegido";
 }
 
 async function buscarContextoLead(supabase: any, telefone: string): Promise<string> {
@@ -272,8 +283,10 @@ async function processarComIAInterno(supabase: any, telefone: string, nomeLead: 
   await marcarLidoEDigitando(mensagemId);
 
   const contextoLead = await buscarContextoLead(supabase, telefone);
+  const funnelSlug = await buscarFunnelSlug(supabase, telefone);
   const estagioAtual = contato?.estagio_venda || "descoberta";
-  const systemPrompt = `${SYSTEM_PROMPT_MCV}${contextoLead}\n\n## Estágio atual da conversa\n${estagioAtual}`;
+  const produtoOverride = funnelSlug === "blindagem" ? `\n\n${BLINDAGEM_PRODUTO_OVERRIDE}` : "";
+  const systemPrompt = `${SYSTEM_PROMPT_MCV}${produtoOverride}${contextoLead}\n\n## Estágio atual da conversa\n${estagioAtual}`;
 
   let resposta: any;
   try {
@@ -374,7 +387,7 @@ async function processarComIAInterno(supabase: any, telefone: string, nomeLead: 
   if (resposta.handoff) patch.precisa_humano = true;
   // Mandou o link de checkout? Marca pra rotina de acompanhamento (30min
   // depois) checar se deu tudo certo, caso ainda não tenha comprado.
-  if (resposta.mensagem && resposta.mensagem.includes("pay.hotmart.com/W87258826R")) {
+  if (resposta.mensagem && (resposta.mensagem.includes("pay.hotmart.com/W87258826R") || resposta.mensagem.includes("pay.hotmart.com/C106394543X"))) {
     patch.checkout_enviado_em = new Date().toISOString();
   }
   await supabase.from("whatsapp_contatos").update(patch).eq("telefone", telefone);

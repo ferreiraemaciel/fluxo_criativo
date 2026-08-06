@@ -1,0 +1,59 @@
+FONTE: https://processo.stj.jus.br/processo/julgamento/eletronico/documento/?documento_tipo=integra&documento_sequencial=367026264&registro_numero=202403462595&peticao_numero=202501031312&publicacao_data=20260407&O=JT
+Baixado em 03/08/2026 pelo navegador embutido do app, texto extraído do PDF oficial via pdf.js. Este é o texto integral, não um resumo.
+
+EDcl no AGRAVO EM RECURSO ESPECIAL Nº 2745723 - RS (2024/0346259-5)
+RELATOR: MINISTRO MOURA RIBEIRO
+EMBARGANTE: DIEGO EVANGELISTA DA VARA (o fotógrafo, mesmo autor do caso AREsp 2688250/RS)
+ADVOGADOS: FREDERICO CARBONERA BOSCHIN - RS054843, LUCAS SARETTA FERRARI - RS065755, JUAN FELIPE NUNES SANCHEZ - RS132060
+EMBARGADO: RADIO PROGRESSO DE IJUI LTDA
+ADVOGADOS: FABIO MILMAN - RS024161, MARIA LUÍZA BAILLO TARGA - RS089847B
+
+NOTA IMPORTANTE: mesmo fotógrafo do caso AREsp 2688250/RS (pessoa retratada usou a foto). Aqui o fotógrafo processa uma rádio por usar fotos dele do jogador D'Alessandro numa matéria jornalística.
+
+EMENTA
+
+PROCESSUAL CIVIL E DIREITO AUTORAL. EMBARGOS DE DECLARAÇÃO NO AGRAVO EM RECURSO ESPECIAL. AÇÃO INDENIZATÓRIA E INIBITÓRIA. USO DE FOTOGRAFIAS EM MATÉRIA JORNALÍSTICA. TÉCNICA DE EMBEDDING. ART. 1.022 DO CPC. OMISSÃO, CONTRADIÇÃO OU OBSCURIDADE. INEXISTÊNCIA. NECESSIDADE DE REVOLVIMENTO FÁTICO-PROBATÓRIO PARA AFERIR ILICITUDE E ALCANCE DE AUTORIZAÇÃO. SÚMULA 7/STJ. SÚMULA 284/STF. DEFICIÊNCIA DE FUNDAMENTAÇÃO. DANOS MORAIS. MANUTENÇÃO DO QUANTUM. EMBARGOS REJEITADOS.
+
+1. Embargos de declaração opostos contra acórdão que, em agravo em recurso especial, conheceu do agravo para não conhecer do recurso especial, em controvérsia sobre violação de direitos autorais por uso de fotografias, inclusive via técnica de embedding, em matéria jornalística.
+2. Não se caracteriza omissão, contradição ou obscuridade quando a decisão afasta as teses recursais por demandarem revolvimento do conjunto fático-probatório, especialmente quanto ao modo de utilização das imagens, ao alcance da autorização inicial e ao caráter informativo e acessório das fotografias incorporadas. A revisão dessas premissas atrai a Súmula 7/STJ.
+3. A falta de fundamentação, por ausência de demonstração analítica de violação dos dispositivos legais sem desconsiderar a base fática firmada, legitima a aplicação da Súmula 284/STF.
+4. A majoração do valor dos danos morais, condicionada ao reconhecimento de nova ilicitude associada a fotografias incorporadas, fica prejudicada diante da manutenção da barreira fático-probatória. Para a única fotografia reconhecida como ilicitamente copiada (upload), o valor fixado revela-se adequado à razoabilidade e proporcionalidade.
+5. Embargos de declaração rejeitados.
+
+ACÓRDÃO: Terceira Turma, Sessão Virtual de 24/03/2026 a 30/03/2026, por unanimidade, rejeitar os embargos, nos termos do voto do Relator. Votaram com o Relator: Daniela Teixeira, Humberto Martins e Ricardo Villas Bôas Cueva. Não participou Nancy Andrighi. Brasília, 31 de março de 2026.
+
+RELATÓRIO
+
+Trata-se de embargos de declaração opostos por DIEGO contra acórdão da Terceira Turma que, em agravo em recurso especial, conheceu do agravo para não conhecer do recurso especial, assim ementado no acórdão embargado:
+
+"PROCESSUAL CIVIL E DIREITO AUTORAL. AGRAVO EM RECURSO ESPECIAL. AÇÃO INDENIZATÓRIA. UTILIZAÇÃO DE FOTOGRAFIAS SEM AUTORIZAÇÃO. VIOLAÇÃO AOS ARTS. 4º, 22, 24, II, 28, 29, I, 49, VI, 79, §1º, E 108 DA LEI N. 9.610/98. SÚMULAS 7/STJ, 284/STF E 211/STJ. VALOR DOS DANOS MORAIS. PRINCÍPIOS DA RAZOABILIDADE E PROPORCIONALIDADE. AGRAVO CONHECIDO PARA NÃO CONHECER DO RECURSO ESPECIAL.
+1. Trata-se de agravo em recurso especial (...) na qual se discute a violação de direitos autorais decorrente da reprodução não autorizada de fotografias em matéria jornalística.
+2. O objetivo recursal é decidir se: (i) a técnica de embedding configura reprodução ilícita de fotografias protegidas por direitos autorais; (ii) a autorização concedida pelo autor a terceiros para utilização das fotografias em redes sociais se estende a outros usuários; (iii) o valor fixado a título de danos morais é irrisório e deve ser majorado.
+3. A pretensão de reexame do conjunto fático-probatório, especialmente quanto à quantidade de fotografias reproduzidas sem autorização e à técnica de embedding, encontra óbice na Súmula 7/STJ.
+4. A ausência de demonstração concreta de violação aos dispositivos legais indicados atrai a incidência da Súmula 284/STF.
+5. A revisão do valor fixado a título de danos morais somente é possível em casos excepcionais, quando o montante se mostrar irrisório ou exorbitante, o que não se verifica no caso concreto, em que o valor de R$ 3.000,00 foi arbitrado com base nos princípios da razoabilidade e proporcionalidade.
+6. Agravo conhecido para não conhecer do recurso especial." (e-STJ, fls. 432/433)
+
+Nas razões dos aclaratórios, DIEGO apontou:
+(1) omissão e contradição sobre a premissa de que o exame da quantidade de fotografias reproduzidas sem autorização e a técnica de embedding demandaria reexame de provas, porque o TJRS já teria delimitado suficientemente o quadro fático: uma fotografia carregada no post da recorrida (upload direto) e três fotografias incorporadas via embedding do site de terceiro (Twitter/X), sendo a controvérsia jurídica sobre a extensão da autorização e o enquadramento no art. 46 da LDA;
+(2) omissão e contradição na referência do acórdão ao art. 46 da LDA para afastar ilicitude do embedding;
+(3) omissão sobre a inaplicabilidade da Súmula 284/STF;
+(4) omissão quanto ao pedido de majoração dos danos morais.
+
+VOTO
+
+"O Tribunal de origem [TJRS], soberano na análise das provas, concluiu que a incorporação de posts do Twitter (onde as fotos foram licitamente publicadas pelo autor ou com sua anuência) em matéria jornalística de caráter informativo não ensejou violação dos direitos autorais, dadas as peculiaridades daquela publicação específica.
+
+Para que esta Corte Superior pudesse reverter a conclusão do TJRS e reconhecer a ilicitude da técnica de embedding na hipótese dos autos, não bastaria saber quantas fotos foram usadas, mas sim como e sob quais condições foram utilizadas. O acórdão recorrido assentou premissas fáticas que vão além da mera contagem, e cuja revisão é inviável nesta instância.
+
+O Tribunal de origem consignou que as fotos estavam hospedadas legitimamente em perfil de rede social de terceiro (atleta D'Alessandro), com autorização do autor. Verificar se essa autorização inicial abrangia ou vedava a incorporação por terceiros demandaria reexame de provas (Súmula 7/STJ).
+
+Rever as conclusões sobre o caráter informativo e acessório das fotografias também implicaria reexame de provas. O TJRS concluiu faticamente que as imagens incorporadas (embedded) não foram exploradas economicamente de forma direta ou individualizada, servindo apenas como referência visual ao post de terceiro na matéria jornalística, e não como conteúdo autônomo apropriado pela Rádio.
+
+O acórdão recorrido diferenciou o upload (cópia ilícita no servidor, pela qual a ré foi condenada) do embedding (janela de visualização). Aferir se, no caso concreto, a implementação técnica do embedding realizada pelo site da recorrida constituiu nova comunicação ao público ou apenas um link de visualização (framing) envolve nuances técnicas do design web da página da recorrida que escapam à moldura fática estrita do acórdão.
+
+(...) sobre a alegação de que o valor de R$ 3.000,00 é irrisório e deveria ser majorado considerando as três fotografias extras: tal argumento é dependente do acolhimento da tese anterior (ilicitude do embedding). Uma vez mantida a conclusão de que a análise da ilicitude das fotos incorporadas encontra óbice na Súmula 7/STJ, a premissa fática que resta é a de violação de apenas uma fotografia. Para essa única violação, o valor arbitrado não se mostra exorbitante nem irrisório."
+
+Origem do processo: comarca de Ijuí, RS (número de origem 50023514020208216001). Fotografado nas fotos em disputa: o jogador de futebol D'Alessandro (ex-Internacional).
+
+Resumo: quatro fotos do fotógrafo Diego apareceram numa matéria da Rádio Progresso de Ijuí sobre o jogador D'Alessandro. Uma foi copiada e hospedada direto no servidor da rádio (upload) e gerou condenação de R$ 3.000,00 de dano moral. As outras três foram incorporadas via embedding a partir de posts do Twitter/X do próprio jogador, onde as fotos já estavam publicadas com autorização do fotógrafo, e para essas o TJRS não reconheceu violação, entendimento que o STJ manteve por não poder reexaminar os fatos.

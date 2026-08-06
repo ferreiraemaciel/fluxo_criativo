@@ -119,7 +119,7 @@ function useAdsCards() {
     setLoading(true);
     const { data: adsList } = await window.db
       .from('ads')
-      .select('numero,titulo,status,tag,tipo,headline,hook_copy,hook_visual,desenvolvimento_cta,roteiro,estetica_visual,texto_principal,titulo_ad,descricao_ad,posicionamento,media_drive_url,media_tipo,media_files,meta_ad_id,meta_ad_url,vendas_total,cpa_historico,gasto_total,isento_regra,observacoes,referencia,thumb_url,media_url,media_preview_url,meta_image_hash,meta_video_id,meta_campaign_id,meta_adset_id,meta_publish_status,ordem_manual')
+      .select('numero,titulo,status,tag,etapa,tipo,headline,hook_copy,hook_visual,desenvolvimento_cta,roteiro,estetica_visual,prompt,slides,texto_principal,titulo_ad,descricao_ad,posicionamento,media_drive_url,media_tipo,media_files,meta_ad_id,meta_ad_url,vendas_total,cpa_historico,gasto_total,isento_regra,observacoes,referencia,thumb_url,media_url,media_preview_url,meta_image_hash,meta_video_id,meta_campaign_id,meta_adset_id,meta_publish_status,ordem_manual')
       .order('numero', { ascending: false });
 
     const { data: insights } = await window.db
@@ -224,7 +224,7 @@ function cardThumb(raw) {
   return window.melhorThumbAd(raw?.thumb_url, raw?.media_files, raw?.media_drive_url);
 }
 
-function KanbanCard({ card, col, onOpen, onDragStart, podeArrastar, onDropAntes }) {
+function KanbanCard({ card, col, onOpen, onDragStart, podeArrastar, onDropAntes, onEtapaToggle }) {
   const [hov, setHov] = useState(false);
   const [dragOverTopo, setDragOverTopo] = useState(false);
   const cpaColor = getCpaColor(card.cpa);
@@ -286,6 +286,22 @@ function KanbanCard({ card, col, onOpen, onDragStart, podeArrastar, onDropAntes 
           ADS {card.num}
         </span>
         <div style={{ marginLeft:'auto', display:'flex', gap:4, alignItems:'center', flexShrink:0 }}>
+          {card.col === 'fazer' && (
+            <button
+              onClick={e => { e.stopPropagation(); onEtapaToggle && onEtapaToggle(card); }}
+              title={card.raw?.etapa === 'copy' ? 'Etapa: Copy (clique pra passar pra Produção)'
+                   : card.raw?.etapa === 'producao' ? 'Etapa: Produção (clique pra limpar)'
+                   : 'Sem etapa definida (clique pra marcar Copy)'}
+              style={{ display:'flex', alignItems:'center', justifyContent:'center', width:18, height:18,
+                padding:0, borderRadius:5, cursor:'pointer', flexShrink:0,
+                background: card.raw?.etapa === 'copy' ? 'rgba(167,139,250,.15)'
+                          : card.raw?.etapa === 'producao' ? 'rgba(74,222,128,.15)' : 'rgba(255,255,255,.06)',
+                border: card.raw?.etapa === 'copy' ? '1px solid rgba(167,139,250,.4)'
+                      : card.raw?.etapa === 'producao' ? '1px solid rgba(74,222,128,.4)' : '1px solid var(--app-border)' }}>
+              <LucideIcon icon={card.raw?.etapa === 'producao' ? 'clapperboard' : card.raw?.etapa === 'copy' ? 'pencil' : 'circle-dashed'}
+                size={10} style={{ color: card.raw?.etapa === 'copy' ? '#a78bfa' : card.raw?.etapa === 'producao' ? '#4ade80' : 'var(--text-3)' }}/>
+            </button>
+          )}
           {semPreview && (
             <div title="Sem preview — o criativo ainda não foi otimizado para o R2"
               style={{ display:'flex', alignItems:'center', gap:3, padding:'1px 5px', borderRadius:999,
@@ -347,7 +363,7 @@ function KanbanCard({ card, col, onOpen, onDragStart, podeArrastar, onDropAntes 
 }
 
 /* ── KanbanColumn ────────────────────────────────────────────────*/
-function KanbanColumn({ col, cards, onOpen, onAddNew, onDropCard, sortBy, onReorder }) {
+function KanbanColumn({ col, cards, onOpen, onAddNew, onDropCard, sortBy, onReorder, onEtapaToggle }) {
   const [dragOver, setDragOver] = useState(false);
   const podeArrastar = sortBy === 'manual';
   return (
@@ -384,7 +400,8 @@ function KanbanColumn({ col, cards, onOpen, onAddNew, onDropCard, sortBy, onReor
         {cards.map(c => (
           <KanbanCard key={c.id} card={c} col={col} onOpen={onOpen}
             podeArrastar={podeArrastar}
-            onDropAntes={(draggedId) => onReorder(draggedId, c.id, col.id)}/>
+            onDropAntes={(draggedId) => onReorder(draggedId, c.id, col.id)}
+            onEtapaToggle={onEtapaToggle}/>
         ))}
       </div>
       <div style={{ padding:'6px 8px 10px', borderTop:`1px solid ${col.colorBorder}`, flexShrink:0 }}>
@@ -1247,6 +1264,72 @@ function CopyField({ id, label, fieldKey, rows = 3, hint, fields, set, copiedFie
   );
 }
 
+/* ── AdsSlidesBlock — Carrossel: Headline no topo já é campo à parte,
+   aqui só os slides (Roteiro, Estética Visual, Prompt cada um) ──────*/
+function AdsSlidesBlock({ fields, set }) {
+  const slidesArr = (() => {
+    if (!fields.slides) return [{ roteiro:'', estetica_visual:'', prompt:'' }];
+    try { const a = JSON.parse(fields.slides); return Array.isArray(a) && a.length ? a : [{ roteiro:'', estetica_visual:'', prompt:'' }]; }
+    catch { return [{ roteiro:'', estetica_visual:'', prompt:'' }]; }
+  })();
+
+  const save = arr => set('slides', JSON.stringify(arr));
+  const updateSlide = (i, patch) => save(slidesArr.map((s, idx) => idx===i ? { ...s, ...patch } : s));
+  const addSlide     = () => save([...slidesArr, { roteiro:'', estetica_visual:'', prompt:'' }]);
+  const removeSlide  = i  => save(slidesArr.filter((_, idx) => idx!==i));
+
+  const fieldStyle = { width:'100%', boxSizing:'border-box', padding:'8px 10px', borderRadius:7, resize:'vertical',
+    background:'var(--app-surface-2)', border:'1px solid var(--app-border)',
+    color:'var(--text-1)', fontFamily:'Roboto,sans-serif', fontSize:12.5, outline:'none', lineHeight:1.5 };
+  const labelStyle = { fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700,
+    letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)', display:'block', marginBottom:5 };
+
+  return (
+    <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+        <span style={labelStyle}>Slides ({slidesArr.length})</span>
+        <button onClick={addSlide}
+          style={{ display:'flex', alignItems:'center', gap:5, padding:'5px 12px',
+            borderRadius:7, border:'1px solid rgba(96,165,250,.35)', background:'rgba(96,165,250,.1)',
+            color:'#60a5fa', fontSize:11, fontFamily:'Roboto,sans-serif', fontWeight:700, cursor:'pointer' }}>
+          <LucideIcon icon="plus" size={12}/>Novo slide
+        </button>
+      </div>
+      {slidesArr.map((slide, idx) => (
+        <div key={idx} style={{ border:'1px solid rgba(255,255,255,.1)', borderRadius:10,
+          background:'rgba(255,255,255,.03)', padding:12, display:'flex', flexDirection:'column', gap:10 }}>
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+            <span style={{ fontSize:12, fontFamily:'Roboto,sans-serif', fontWeight:700, color:'var(--text-1)' }}>Slide {idx+1}</span>
+            {slidesArr.length > 1 && (
+              <button onClick={()=>removeSlide(idx)}
+                style={{ border:'none', background:'rgba(248,113,113,.12)', color:'#f87171',
+                  borderRadius:5, width:22, height:22, cursor:'pointer',
+                  display:'flex', alignItems:'center', justifyContent:'center' }}>
+                <LucideIcon icon="trash-2" size={11}/>
+              </button>
+            )}
+          </div>
+          <div>
+            <label style={labelStyle}>Roteiro</label>
+            <textarea value={slide.roteiro||''} onChange={e=>updateSlide(idx,{roteiro:e.target.value})}
+              rows={3} placeholder="O que vai escrito neste slide..." style={fieldStyle}/>
+          </div>
+          <div>
+            <label style={labelStyle}>Estética Visual</label>
+            <textarea value={slide.estetica_visual||''} onChange={e=>updateSlide(idx,{estetica_visual:e.target.value})}
+              rows={2} placeholder="Descrição da cena, fundo, composição..." style={fieldStyle}/>
+          </div>
+          <div>
+            <label style={labelStyle}>Prompt</label>
+            <textarea value={slide.prompt||''} onChange={e=>updateSlide(idx,{prompt:e.target.value})}
+              rows={3} placeholder="Prompt para gerar a imagem deste slide..." style={fieldStyle}/>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 /* ── AdsDetailModal ──────────────────────────────────────────────*/
 function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
   const raw = card.raw || {};
@@ -1260,6 +1343,7 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [videoPlaying, setVideoPlaying] = useState(false);
+  const [mediaFullscreen, setMediaFullscreen] = useState(false);
   // tags Alta/Prévia (apagar versão individual do R2). Estados PRECISAM viver
   // aqui (não no MetaAdModal): bug real de 2026-07-27, o estado tinha sido
   // declarado no modal errado e todo card de vídeo quebrava a tela inteira
@@ -1285,6 +1369,9 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
     headline:         raw.headline        || '',
     roteiro:          raw.roteiro         || '',
     estetica_visual:  raw.estetica_visual || '',
+    prompt:           raw.prompt          || '',
+    slides:           raw.slides          || '',
+    etapa:            raw.etapa           || null,
     hook_visual:      raw.hook_visual     || '',
     hook_copy:        raw.hook_copy       || '',
     desenvolvimento_cta: raw.desenvolvimento_cta || '',
@@ -1417,9 +1504,11 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
     const patch = { status: novoStatus };
     const novaTag = resolveTag(novoStatus, fields.status, card.vendas, card.cpa, card.gasto);
     if (novaTag !== null) { patch.tag = novaTag; set('tag', novaTag); }
+    // "etapa" (Copy/Produção) só faz sentido dentro de Fazendo — some sozinho ao sair de lá.
+    if (novoStatus !== 'fazer') { patch.etapa = null; set('etapa', null); }
     set('status', novoStatus);
     await window.db.from('ads').update(patch).eq('numero', parseInt(card.num, 10));
-    if (onUpdate) onUpdate({ ...card, col: novoStatus, raw: { ...raw, status: novoStatus, tag: patch.tag ?? raw.tag } });
+    if (onUpdate) onUpdate({ ...card, col: novoStatus, raw: { ...raw, status: novoStatus, tag: patch.tag ?? raw.tag, etapa: patch.etapa !== undefined ? patch.etapa : raw.etapa } });
   }
 
   async function deletarAd() {
@@ -1590,6 +1679,15 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
                   border: previewIsVideo ? 'none' : '1px solid var(--app-border)' }}>
                   {previewEmbed ? (
                     <>
+                      {/* Ampliar em tela cheia — imagem única, carrossel (com navegação) ou vídeo */}
+                      <button onClick={e => { e.stopPropagation(); setMediaFullscreen(true); }}
+                        title="Ver em tela cheia"
+                        style={{ position:'absolute', top:8, right:8, zIndex:3, width:28, height:28,
+                          borderRadius:'50%', border:'1px solid rgba(255,255,255,.25)',
+                          background:'rgba(0,0,0,.55)', color:'#fff', cursor:'pointer',
+                          display:'flex', alignItems:'center', justifyContent:'center', backdropFilter:'blur(4px)' }}>
+                        <LucideIcon icon="maximize-2" size={13}/>
+                      </button>
                       {previewIsVideo
                         ? videoPlaying
                           ? isR2Embed
@@ -1789,6 +1887,30 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
                     </div>
                   </div>
 
+                  {/* Etapa — só dentro de Fazendo (status=fazer) */}
+                  {fields.status === 'fazer' && (
+                    <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+                      <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700,
+                        letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)' }}>Etapa</span>
+                      <div style={{ display:'flex', gap:5, flexWrap:'wrap' }}>
+                        {[{ id:'copy', label:'Copy', icon:'pencil', cor:'#a78bfa' }, { id:'producao', label:'Produção', icon:'clapperboard', cor:'#4ade80' }].map(e => {
+                          const active = fields.etapa === e.id;
+                          return (
+                            <button key={e.id}
+                              onClick={() => { const novo = active ? null : e.id; set('etapa', novo); }}
+                              style={{ display:'flex', alignItems:'center', gap:5, padding:'4px 10px', borderRadius:999, fontSize:11, cursor:'pointer',
+                                fontFamily:'Roboto,sans-serif', fontWeight:700, transition:'all 120ms',
+                                background: active ? `${e.cor}26` : 'rgba(255,255,255,.04)',
+                                border: active ? `1px solid ${e.cor}66` : '1px solid var(--app-border)',
+                                color: active ? e.cor : 'var(--text-3)' }}>
+                              <LucideIcon icon={e.icon} size={11}/>{e.label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Tipo — chips com ícone */}
                   <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
                     <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700,
@@ -1872,7 +1994,9 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
                     hint="A frase principal/big idea que aparece escrita na imagem: o título, o hook que chama atenção (diferente do Reels, aqui não é falado, é escrito)."/>
                   <CopyField fields={fields} set={set} copiedField={copiedField} copyToClipboard={copyToClipboard} id="roteiro"    label="Roteiro"                fieldKey="roteiro"           rows={6}
                     hint="Descreva a imagem: quantos elementos/fotos, quais frases aparecem escritas. Sempre com a ideia do Hook (= Headline), o desenvolvimento (o que mais aparece escrito/visualmente) e um CTA."/>
-                  <CopyField fields={fields} set={set} copiedField={copiedField} copyToClipboard={copyToClipboard} id="estetica"   label="Prompt para Gerar Imagem" fieldKey="estetica_visual"  rows={6}
+                  <CopyField fields={fields} set={set} copiedField={copiedField} copyToClipboard={copyToClipboard} id="estetica"   label="Estética Visual"        fieldKey="estetica_visual"  rows={4}
+                    hint="Descrição da cena/composição (o prompt de geração vai no campo abaixo)."/>
+                  <CopyField fields={fields} set={set} copiedField={copiedField} copyToClipboard={copyToClipboard} id="prompt"     label="Prompt"                 fieldKey="prompt"           rows={6}
                     hint="Cole o prompt de geração da imagem. Se ele já tem escrita embutida, cole a escrita aqui também. Se deixa espaço de respiro pra escrita entrar na edição, só mencione o espaço: o texto que vai lá mora no Roteiro."/>
                   <CopyField fields={fields} set={set} copiedField={copiedField} copyToClipboard={copyToClipboard} id="texto-p"    label="Texto Principal"        fieldKey="texto_principal"   rows={3}/>
                   <CopyField fields={fields} set={set} copiedField={copiedField} copyToClipboard={copyToClipboard} id="titulo-ad"  label="Título"                 fieldKey="titulo_ad"         rows={2}/>
@@ -1880,14 +2004,12 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
                   <CopyField fields={fields} set={set} copiedField={copiedField} copyToClipboard={copyToClipboard} id="obs"        label="Informações Adicionais" fieldKey="observacoes"       rows={4}/>
                   <RefBlock value={fields.referencia} onChange={v => set('referencia', v)}/>
                 </>) : (<>
-                  <CopyField fields={fields} set={set} copiedField={copiedField} copyToClipboard={copyToClipboard} id="headline"     label="Headline"               fieldKey="headline"           rows={2}/>
-                  <CopyField fields={fields} set={set} copiedField={copiedField} copyToClipboard={copyToClipboard} id="hook-visual"  label="Hook Visual"            fieldKey="hook_visual"        rows={2}/>
-                  <CopyField fields={fields} set={set} copiedField={copiedField} copyToClipboard={copyToClipboard} id="hook-copy"    label="Hook Copy"              fieldKey="hook_copy"          rows={2}/>
-                  <CopyField fields={fields} set={set} copiedField={copiedField} copyToClipboard={copyToClipboard} id="texto-p"      label="Texto Principal"        fieldKey="texto_principal"    rows={3}/>
-                  <CopyField fields={fields} set={set} copiedField={copiedField} copyToClipboard={copyToClipboard} id="dev-cta"      label="Desenvolvimento + CTA"  fieldKey="desenvolvimento_cta" rows={3}/>
-                  <CopyField fields={fields} set={set} copiedField={copiedField} copyToClipboard={copyToClipboard} id="titulo-ad"    label="Título (feed)"          fieldKey="titulo_ad"          rows={2}/>
-                  <CopyField fields={fields} set={set} copiedField={copiedField} copyToClipboard={copyToClipboard} id="descricao"    label="Descrição"              fieldKey="descricao_ad"       rows={2}/>
-                  <CopyField fields={fields} set={set} copiedField={copiedField} copyToClipboard={copyToClipboard} id="obs"          label="Informações Adicionais" fieldKey="observacoes"        rows={4}/>
+                  <CopyField fields={fields} set={set} copiedField={copiedField} copyToClipboard={copyToClipboard} id="headline"   label="Headline"               fieldKey="headline"           rows={2}/>
+                  <AdsSlidesBlock fields={fields} set={set}/>
+                  <CopyField fields={fields} set={set} copiedField={copiedField} copyToClipboard={copyToClipboard} id="texto-p"    label="Texto Principal"        fieldKey="texto_principal"    rows={3}/>
+                  <CopyField fields={fields} set={set} copiedField={copiedField} copyToClipboard={copyToClipboard} id="titulo-ad"  label="Título"                 fieldKey="titulo_ad"          rows={2}/>
+                  <CopyField fields={fields} set={set} copiedField={copiedField} copyToClipboard={copyToClipboard} id="descricao"  label="Descrição"              fieldKey="descricao_ad"       rows={2}/>
+                  <CopyField fields={fields} set={set} copiedField={copiedField} copyToClipboard={copyToClipboard} id="obs"        label="Informações Adicionais" fieldKey="observacoes"        rows={4}/>
                   <RefBlock value={fields.referencia} onChange={v => set('referencia', v)}/>
                 </>)}
               </div>
@@ -1898,6 +2020,12 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
       </div>
 
       {showMeta && <MetaAdModal card={card} onClose={() => setShowMeta(false)}/>}
+      {mediaFullscreen && (
+        <CarouselLightbox
+          urls={isCarousel ? (r2Urls.length ? r2Urls : mediaFiles.map(f => f.url_view)) : [previewViewUrl || previewEmbed]}
+          initialIdx={isCarousel ? carouselIdx : 0}
+          onClose={() => setMediaFullscreen(false)}/>
+      )}
     </>
   );
 }
@@ -2066,7 +2194,7 @@ function AtivarMetaModal({ itens, onClose, onDone, onEdit }) {
           // Ativação real no Meta também avança o card pra coluna "Ativos",
           // com a mesma tag que o app já aplicaria num drag-and-drop manual.
           const novaTag = resolveTag('ativo', item?.statusAnterior);
-          const patch = { meta_publish_status: 'ativo', status: 'ativo' };
+          const patch = { meta_publish_status: 'ativo', status: 'ativo', etapa: null };
           if (novaTag !== null) patch.tag = novaTag;
           await window.db.from('ads').update(patch).eq('numero', parseInt(item.num, 10));
         } else {
@@ -2250,7 +2378,17 @@ function KanbanScreen({ targetAd, onConsumeTarget }) {
     const patch = { status: newColId };
     const novaTag = resolveTag(newColId, card.col, card.vendas, card.cpa, card.gasto);
     if (novaTag !== null) patch.tag = novaTag;
+    if (newColId !== 'fazer') patch.etapa = null;
     await window.db.from('ads').update(patch).eq('numero', parseInt(card.num, 10));
+    reload();
+  }
+
+  // Alterna a sub-etapa dentro de Fazendo: null → copy → producao → null.
+  // Só chamado em cards com card.col === 'fazer' (o ícone não aparece fora dali).
+  async function handleEtapaToggle(card) {
+    if (!window.db) return;
+    const proxima = card.raw?.etapa === 'copy' ? 'producao' : card.raw?.etapa === 'producao' ? null : 'copy';
+    await window.db.from('ads').update({ etapa: proxima }).eq('numero', parseInt(card.num, 10));
     reload();
   }
 
@@ -2277,6 +2415,7 @@ function KanbanScreen({ targetAd, onConsumeTarget }) {
       patch.status = toColId;
       const novaTag = resolveTag(toColId, draggedCard.col, draggedCard.vendas, draggedCard.cpa, draggedCard.gasto);
       if (novaTag !== null) patch.tag = novaTag;
+      if (toColId !== 'fazer') patch.etapa = null;
     }
     await window.db.from('ads').update(patch).eq('numero', draggedCard.numero);
     reload();
@@ -2505,7 +2644,8 @@ function KanbanScreen({ targetAd, onConsumeTarget }) {
           const cards = ordenarCards(filteredCards.filter(c => c.col === col.id), sortBy);
           return <KanbanColumn key={col.id} col={col} cards={cards}
             onOpen={setSelectedCard} onAddNew={() => setShowNovoAds(true)}
-            onDropCard={handleDropCard} sortBy={sortBy} onReorder={handleReorder}/>;
+            onDropCard={handleDropCard} sortBy={sortBy} onReorder={handleReorder}
+            onEtapaToggle={handleEtapaToggle}/>;
         })}
       </div>
 

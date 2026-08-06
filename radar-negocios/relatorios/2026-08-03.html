@@ -1,0 +1,635 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Radar de Negócios da Fotografia · 3 de agosto de 2026</title>
+<style>
+*,*::before,*::after{box-sizing:border-box}
+:root{
+  --bg:#f6f5f2; --superficie:#fff; --borda:#e2ded6; --borda-forte:#cfc9bd;
+  --tinta:#1c1a17; --tinta-media:#5a544b; --tinta-fraca:#8b8378;
+  --acento:#9a6b1f; --acento-suave:#f5ecd9; --acento-borda:#e4d4b0;
+  --neg:#a4462f; --pos:#2f6b4f;
+  --sombra:0 1px 2px rgba(28,26,23,.05),0 8px 24px -12px rgba(28,26,23,.14);
+  --raio:14px;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#141311; --superficie:#1c1b18; --borda:#2e2b26; --borda-forte:#3d3931;
+    --tinta:#ece8e1; --tinta-media:#a9a296; --tinta-fraca:#7d766b;
+    --acento:#d5a44f; --acento-suave:#2a2318; --acento-borda:#4a3c22;
+    --neg:#d97b60; --pos:#6fb392;
+    --sombra:0 1px 2px rgba(0,0,0,.3),0 8px 24px -12px rgba(0,0,0,.6);
+  }
+}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; background:var(--bg); color:var(--tinta);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;
+  font-size:16.5px; line-height:1.62; letter-spacing:-.003em;
+  -webkit-font-smoothing:antialiased;
+}
+.pagina{max-width:820px;margin:0 auto;padding:0 24px 96px}
+
+/* Cabeçalho */
+.capa{padding:64px 0 40px;border-bottom:1px solid var(--borda)}
+.selo{
+  display:inline-flex;align-items:center;gap:8px;font-size:11.5px;font-weight:650;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--acento);
+  background:var(--acento-suave);border:1px solid var(--acento-borda);
+  padding:6px 12px;border-radius:999px;margin-bottom:22px;
+}
+.selo .ponto{width:6px;height:6px;border-radius:50%;background:var(--acento)}
+h1{font-size:clamp(29px,5vw,42px);line-height:1.14;margin:0 0 22px;letter-spacing:-.028em;font-weight:700}
+.meta{display:flex;flex-wrap:wrap;gap:10px}
+.meta-item{
+  font-size:13px;color:var(--tinta-media);background:var(--superficie);
+  border:1px solid var(--borda);border-radius:8px;padding:7px 12px;
+}
+.meta-item b{color:var(--tinta);font-weight:600}
+
+/* Placar */
+.placar{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:32px 0 0}
+.placar-item{
+  background:var(--superficie);border:1px solid var(--borda);border-radius:var(--raio);
+  padding:18px 20px;box-shadow:var(--sombra);
+}
+.placar-num{display:block;font-size:32px;font-weight:700;line-height:1;letter-spacing:-.03em}
+.placar-rot{display:block;margin-top:7px;font-size:12.5px;color:var(--tinta-fraca);
+  text-transform:uppercase;letter-spacing:.07em;font-weight:600}
+
+/* Seções */
+.secao{margin-top:56px;scroll-margin-top:24px}
+.secao h2{
+  display:flex;align-items:center;gap:12px;font-size:13px;font-weight:700;
+  letter-spacing:.13em;text-transform:uppercase;color:var(--tinta-media);
+  margin:0 0 22px;padding-bottom:14px;border-bottom:1px solid var(--borda);
+}
+.sec-num{
+  display:inline-grid;place-items:center;width:22px;height:22px;border-radius:6px;
+  background:var(--tinta);color:var(--bg);font-size:11px;letter-spacing:0;flex:none;
+}
+.secao p{margin:0 0 15px;color:var(--tinta-media)}
+.secao p:last-child{margin-bottom:0}
+.secao a{color:var(--acento);text-decoration:none;border-bottom:1px solid var(--acento-borda);
+  word-break:break-word}
+.secao a:hover{border-bottom-color:var(--acento)}
+.vazio{color:var(--tinta-fraca);font-style:italic}
+
+/* Casos */
+.caso{
+  background:var(--superficie);border:1px solid var(--borda);border-radius:var(--raio);
+  box-shadow:var(--sombra);margin-bottom:18px;overflow:hidden;
+}
+.caso-head{display:flex;gap:14px;align-items:flex-start;padding:22px 24px 18px;
+  border-bottom:1px solid var(--borda)}
+.caso-num{
+  font-size:11.5px;font-weight:700;color:var(--acento);background:var(--acento-suave);
+  border:1px solid var(--acento-borda);border-radius:7px;padding:4px 8px;flex:none;margin-top:3px;
+  font-variant-numeric:tabular-nums;
+}
+.caso-head h3{margin:0;font-size:20.5px;line-height:1.3;letter-spacing:-.02em;font-weight:670}
+.caso-corpo{padding:6px 24px 22px}
+.campo{padding:14px 0;border-bottom:1px solid var(--borda)}
+.campo:last-child{border-bottom:0;padding-bottom:2px}
+.campo .rotulo{
+  display:block;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--tinta-fraca);margin-bottom:5px;
+}
+.campo .valor{display:block;color:var(--tinta-media)}
+.campo--placar .valor,.campo--importa .valor{color:var(--tinta)}
+.campo--importa{background:var(--acento-suave);margin:14px -24px 0;padding:16px 24px;
+  border-top:1px solid var(--acento-borda);border-bottom:0}
+.campo--importa .rotulo{color:var(--acento)}
+.campo--revela .valor{color:var(--tinta)}
+.campo--pratica{background:var(--acento-suave);margin:0 -24px 6px;padding:20px 24px;
+  border-bottom:1px solid var(--acento-borda)}
+.campo--pratica .rotulo{color:var(--acento);font-size:11.5px}
+.campo--pratica .valor{color:var(--tinta);font-size:17.5px;line-height:1.55}
+.campo--historia .valor{color:var(--tinta);font-size:17px}
+.campo--lastro{opacity:.72}
+.campo--lastro .valor{font-size:13.5px}
+.campo--potencial{background:var(--acento-suave);margin:0 -24px;padding:16px 24px;
+  border-top:1px solid var(--acento-borda);border-bottom:1px solid var(--acento-borda)}
+.campo--potencial .rotulo{color:var(--acento)}
+.campo--potencial .valor{color:var(--tinta)}
+.campo--potencial .valor strong:first-of-type{font-size:19px;letter-spacing:-.02em}
+.campo--aprofundar{background:var(--acento-suave);margin:0 -24px;padding:14px 24px;
+  border-bottom:0}
+.campo--aprofundar .rotulo{color:var(--acento)}
+.campo--aprofundar .valor{color:var(--tinta)}
+.campo--precedente .valor{color:var(--tinta)}
+.campo--fragil{border-left:3px solid var(--neg);padding-left:14px;
+  margin-left:-17px;background:transparent}
+.campo--fragil .rotulo{color:var(--neg)}
+.campo--fragil .valor{color:var(--tinta)}
+.campo--cuidado{border-left:3px solid var(--neg);padding-left:14px;margin-left:-17px}
+.campo--cuidado .rotulo{color:var(--neg)}
+.campo--cuidado .valor{color:var(--tinta)}
+.campo--gancho{background:var(--acento-suave);margin:0 -24px;padding:16px 24px 18px;
+  border-bottom:0}
+.campo--gancho .rotulo{color:var(--acento)}
+.campo--gancho .valor{color:var(--tinta)}
+.btn-fonte{
+  display:inline-flex;align-items:center;gap:7px;font-size:13.5px;font-weight:560;
+  border:1px solid var(--borda-forte)!important;border-radius:8px;padding:7px 12px;
+  color:var(--tinta-media)!important;text-decoration:none;
+}
+.btn-fonte:hover{border-color:var(--acento)!important;color:var(--acento)!important}
+.btn-fonte .seta{font-size:11px;opacity:.65}
+
+/* Tabela */
+.tabela-wrap{overflow-x:auto;border:1px solid var(--borda);border-radius:var(--raio);
+  background:var(--superficie);box-shadow:var(--sombra);margin-bottom:20px}
+table{border-collapse:collapse;width:100%;min-width:520px;font-size:14.5px}
+th{
+  text-align:left;font-size:11px;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--tinta-fraca);font-weight:700;padding:13px 16px;
+  border-bottom:1px solid var(--borda-forte);white-space:nowrap;
+}
+td{padding:12px 16px;border-bottom:1px solid var(--borda);color:var(--tinta-media)}
+tbody tr:last-child td{border-bottom:0}
+tbody tr:hover td{background:var(--acento-suave)}
+td.num,td.neg,td.pos{text-align:right;font-variant-numeric:tabular-nums}
+td.neg{color:var(--neg);font-weight:600}
+td.pos{color:var(--pos);font-weight:600}
+td.rot{color:var(--tinta);font-weight:600}
+
+/* Blocos genéricos */
+.lista{margin:0 0 15px;padding-left:22px;color:var(--tinta-media)}
+.lista li{margin-bottom:8px}
+.citacao{
+  margin:20px 0 0;padding:18px 22px;background:var(--acento-suave);
+  border:1px solid var(--acento-borda);border-radius:var(--raio);
+  color:var(--tinta);font-size:16px;
+}
+
+/* Nota */
+.nota{
+  background:var(--superficie);border:1px solid var(--borda);border-left:3px solid var(--acento);
+  border-radius:10px;padding:16px 20px;margin-top:20px;
+}
+.nota-rotulo{display:block;font-size:11px;font-weight:700;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--acento);margin-bottom:6px}
+.nota p{margin:0;font-size:14.5px}
+
+/* Pautas */
+.pauta{
+  background:var(--superficie);border:1px solid var(--borda);border-radius:var(--raio);
+  box-shadow:var(--sombra);margin-bottom:16px;overflow:hidden;
+}
+.pauta header{display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  padding:20px 24px 16px;border-bottom:1px solid var(--borda)}
+.pauta-ordem{
+  display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;
+  background:var(--tinta);color:var(--bg);font-size:12.5px;font-weight:700;flex:none;
+}
+.pauta header h3{margin:0;font-size:18.5px;line-height:1.3;letter-spacing:-.018em;
+  font-weight:660;flex:1 1 240px}
+.badge{
+  font-size:10.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;
+  padding:5px 10px;border-radius:999px;border:1px solid;flex:none;
+}
+.badge--alta{color:var(--neg);border-color:var(--neg);background:transparent}
+.badge--média,.badge--media{color:var(--tinta-fraca);border-color:var(--borda-forte)}
+.badge--baixa{color:var(--tinta-fraca);border-color:var(--borda-forte)}
+.pauta-corpo{padding:6px 24px 20px}
+.pauta-campo{padding:13px 0;border-bottom:1px solid var(--borda)}
+.pauta-campo:last-child{border-bottom:0;padding-bottom:2px}
+.pauta-campo .rotulo{display:block;font-size:11px;font-weight:700;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--tinta-fraca);margin-bottom:5px}
+.pauta-campo .valor{display:block;color:var(--tinta-media)}
+
+/* Vazios */
+.vazios{background:var(--superficie);border:1px solid var(--borda);border-radius:var(--raio)}
+.vazios summary{
+  cursor:pointer;padding:16px 20px;font-size:14px;font-weight:600;color:var(--tinta-media);
+  display:flex;align-items:center;gap:10px;list-style:none;
+}
+.vazios summary::-webkit-details-marker{display:none}
+.vazios summary::before{content:"›";font-size:19px;color:var(--tinta-fraca);
+  transition:transform .18s ease;display:inline-block}
+.vazios[open] summary::before{transform:rotate(90deg)}
+.contador{font-size:11.5px;font-weight:700;color:var(--tinta-fraca);
+  border:1px solid var(--borda-forte);border-radius:999px;padding:2px 8px}
+.vazios ul{margin:0;padding:0 24px 20px 46px;color:var(--tinta-media);font-size:14.5px}
+.vazios li{margin-bottom:9px}
+.vazios li:last-child{margin-bottom:0}
+
+/* Formatos e decisão */
+.caso-head{flex-wrap:wrap}
+.formatos{display:flex;gap:6px;margin-left:auto;flex-wrap:wrap}
+.chip{
+  display:inline-flex;align-items:center;gap:5px;cursor:pointer;
+  font:inherit;font-size:11.5px;font-weight:600;letter-spacing:.02em;
+  color:var(--tinta-fraca);background:transparent;
+  border:1px solid var(--borda-forte);border-radius:999px;padding:5px 10px;
+  transition:all .15s ease;
+}
+.chip:hover{border-color:var(--acento);color:var(--acento)}
+.chip.on{background:var(--acento);border-color:var(--acento);color:#fff}
+@media (prefers-color-scheme:dark){.chip.on{color:#17140d}}
+:root[data-theme="dark"] .chip.on{color:#17140d}
+.chip .mi{display:block;flex:none}
+@media (max-width:620px){.chip-txt{display:none}.chip{padding:6px 8px}}
+.decisao-barra{display:flex;gap:8px;padding:12px 24px;border-bottom:1px solid var(--borda);
+  background:color-mix(in srgb, var(--borda) 22%, transparent)}
+.dec{
+  cursor:pointer;font:inherit;font-size:11.5px;font-weight:700;letter-spacing:.06em;
+  text-transform:uppercase;padding:6px 14px;border-radius:8px;
+  border:1px solid var(--borda-forte);background:transparent;color:var(--tinta-fraca);
+  transition:all .15s ease;
+}
+.dec:hover{border-color:var(--tinta-media);color:var(--tinta-media)}
+.dec--aceito.on{background:var(--pos);border-color:var(--pos);color:#fff}
+.dec--standby.on{background:var(--acento);border-color:var(--acento);color:#fff}
+.dec--descartado.on{background:var(--neg);border-color:var(--neg);color:#fff}
+.caso[data-estado="descartado"]{opacity:.5}
+.caso[data-estado="descartado"] .caso-corpo{display:none}
+
+/* Barra de exportação */
+.barra-exportar{
+  position:sticky;bottom:0;z-index:9;margin:32px -24px -96px;padding:14px 24px 20px;
+  background:color-mix(in srgb, var(--bg) 92%, transparent);
+  backdrop-filter:blur(8px);border-top:1px solid var(--borda);
+  display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+}
+.barra-exportar .contagem{font-size:13px;color:var(--tinta-media)}
+.barra-exportar .contagem b{color:var(--tinta)}
+.btn-exportar{
+  cursor:pointer;font:inherit;font-size:13.5px;font-weight:650;margin-left:auto;
+  background:var(--tinta);color:var(--bg);border:0;border-radius:9px;padding:10px 18px;
+}
+.btn-exportar:hover{opacity:.86}
+.btn-limpar{
+  cursor:pointer;font:inherit;font-size:13px;background:transparent;color:var(--tinta-fraca);
+  border:1px solid var(--borda-forte);border-radius:9px;padding:9px 14px;
+}
+@media print{.formatos,.decisao-barra,.barra-exportar{display:none}}
+
+/* Rodapé */
+.rodape{margin-top:64px;padding-top:24px;border-top:1px solid var(--borda);
+  font-size:12.5px;color:var(--tinta-fraca);display:flex;justify-content:space-between;
+  gap:16px;flex-wrap:wrap}
+
+@media (max-width:600px){
+  body{font-size:16px}
+  .pagina{padding:0 18px 64px}
+  .capa{padding:40px 0 30px}
+  .caso-head,.caso-corpo,.pauta header,.pauta-corpo{padding-left:18px;padding-right:18px}
+  .campo--importa,.campo--gancho{margin-left:-18px;margin-right:-18px;
+    padding-left:18px;padding-right:18px}
+}
+@media print{
+  body{background:#fff}
+  .caso,.pauta,.tabela-wrap,.nota{box-shadow:none;break-inside:avoid}
+  .vazios{display:none}
+}
+</style>
+</head>
+<body data-relatorio="2026-08-03">
+<div class="pagina">
+  <header class="capa">
+    <span class="selo"><span class="ponto"></span>Radar Jurídico da Fotografia</span>
+    <h1>Radar de Negócios da Fotografia — 3 de agosto de 2026</h1>
+    <div class="meta">
+      <span class="meta-item">Período varrido <b>27 de julho a 3 de agosto de 2026</b></span>
+      <span class="meta-item">Escopo <b>COMPLETO</b></span>
+    </div>
+    <div class="placar">
+  <div class="placar-item"><span class="placar-num">8</span>
+    <span class="placar-rot">casos novos</span></div>
+  <div class="placar-item"><span class="placar-num">4</span>
+    <span class="placar-rot">pautas sugeridas</span></div>
+</div>
+  </header>
+  <section class="secao">
+  <h2>Resumo da rodada</h2>
+  <p>Esta é a primeira rodada do radar, então toda a varredura entrou como achado novo. A semana em si veio mais seca do que o esperado nas nove frentes, e por isso a varredura foi para trás, no mesmo espírito do radar jurídico, trazendo dado e tendência que ainda não foram traduzidos para quem fotografa por profissão. O achado mais forte da rodada é uma pesquisa global com quase 5 mil fotógrafos que confirma, com número exato, o que o Felipe já ensina há tempo sobre precificação e gestão. Logo atrás vem a tensão entre foto gerada por IA e o valor da presença humana, que já está virando argumento de venda no mercado de casamento. A frente de plataformas veio contaminada por ruído (blogs de marketing repetindo uma citação de Adam Mosseri sem fonte primária), e por isso ficou de fora do relatório. A frente de casos de mercado também veio vazia, porque tudo que apareceu era decisão de tribunal, assunto do radar jurídico, não deste.</p>
+<blockquote class="citacao">De onde vieram os achados: busca aberta via WebSearch e leitura direta das páginas via WebFetch. Funcionaram bem o Fstoppers, o ShootProof, o Canaltech, o Contábeis.com.br e o blog enfbyleosaldanha.com (voz de negócio de fotografia em português, vale acompanhar todas as rodadas). Não funcionaram o PetaPixel para achado de negócio nesta semana específica (trouxe só astronomia e câmera de filme), e os blogs de marketing digital sobre algoritmo do Instagram, que citam Adam Mosseri sem link, data ou fonte verificável.</blockquote>
+</section>
+<section class="secao">
+  <h2><span class="sec-num">1</span>Mudanças de regra e política</h2>
+  <p>A reforma tributária publicou, em 31 de julho de 2026, o cronograma final em três lotes para obrigar o destaque de IBS e CBS nas notas fiscais. Fotógrafo formalizado como MEI ou Simples Nacional que emite nota de serviço (NFS-e) não entra no primeiro lote, que vale a partir de 3 de agosto só para nota de produto (NF-e, NFC-e). A obrigação para a maior parte dos serviços fica para 1º de outubro de 2026, e uma parte residual de serviços vai para dezembro de 2026 ou janeiro de 2027. Não é uma mudança que pega o fotógrafo de surpresa esta semana, mas é uma data que vai voltar a aparecer no calendário do ano, e por isso entra na seção 2 como achado, marcado como relevante mesmo com nota mais seca.</p>
+</section>
+<section class="secao">
+  <h2><span class="sec-num">2</span>Achados da semana</h2>
+  <article class="caso" data-caso="01-metade-dos-fot-grafos-do-mundo-cobra-barato-dema" data-titulo="Metade dos fotógrafos do mundo cobra barato demais e sabe disso">
+  <header class="caso-head">
+    <span class="caso-num">01</span>
+    <h3>Metade dos fotógrafos do mundo cobra barato demais e sabe disso</h3>
+    <div class="formatos"><button class="chip" data-fmt="artigo" title="Artigo" aria-label="Artigo" aria-pressed="false"><svg class="mi" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="M5 3h11l3 3v15H5z" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M8 9h8M8 13h8M8 17h5" stroke="currentColor" stroke-width="1.7"/></svg><span class="chip-txt">Artigo</span></button><button class="chip" data-fmt="carrossel" title="Carrossel" aria-label="Carrossel" aria-pressed="false"><svg class="mi" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><rect x="8" y="4" width="8" height="16" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M5 7v10M19 7v10" stroke="currentColor" stroke-width="1.7"/></svg><span class="chip-txt">Carrossel</span></button><button class="chip" data-fmt="imagem" title="Imagem" aria-label="Imagem" aria-pressed="false"><svg class="mi" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="8.5" cy="10" r="1.6" fill="currentColor"/><path d="M4 17l5-5 4 4 3-2 4 4" fill="none" stroke="currentColor" stroke-width="1.7"/></svg><span class="chip-txt">Imagem</span></button><button class="chip" data-fmt="reels" title="Reels" aria-label="Reels" aria-pressed="false"><svg class="mi" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M10 9.5l5 2.5-5 2.5z" fill="currentColor"/></svg><span class="chip-txt">Reels</span></button><button class="chip" data-fmt="youtube" title="YouTube" aria-label="YouTube" aria-pressed="false"><svg class="mi" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><rect x="2.5" y="6" width="19" height="12" rx="3.5" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M10.5 9.5l4.5 2.5-4.5 2.5z" fill="currentColor"/></svg><span class="chip-txt">YouTube</span></button></div>
+  </header>
+  <div class="decisao-barra"><button class="dec dec--aceito on" data-dec="aceito">Aceito</button><button class="dec dec--standby" data-dec="standby">Standby</button><button class="dec dec--descartado" data-dec="descartado">Descartado</button></div>
+  <div class="caso-corpo">
+    <div class="campo campo--padrao"><span class="rotulo">Frente</span><span class="valor">A. Mercado e dinheiro do nicho</span></div>
+<div class="campo campo--pratica"><span class="rotulo">O que muda no negócio</span><span class="valor">se quase metade do mercado mundial admite que cobra menos do que deveria, e mais de 4 em cada 10 dizem que não conseguem reajustar o preço, o problema não é falta de talento, é falta de método de precificação e de gestão. É o argumento perfeito para qualquer conteúdo sobre a diferença entre faturar e sobrar dinheiro no fim do mês.</span></div>
+<div class="campo campo--historia"><span class="rotulo">O achado em uma linha</span><span class="valor">uma pesquisa com quase 5 mil fotógrafos em mais de 90 países achou que quase metade cobra barato demais, 43% não conseguem subir o preço, e só 3 em cada 10 usam algum sistema para controlar as finanças do negócio.</span></div>
+<div class="campo campo--fato"><span class="rotulo">O dado por trás</span><span class="valor">State of the Photography Industry 2026, da ShootProof, coleta feita no início de 2026 com 4.916 fotógrafos em mais de 90 países. Quase 50% relatam que cobram abaixo do que deveriam, 43% dizem ter dificuldade para reajustar preço, apenas 29,5% usam algum software de contabilidade, 45% não usam nenhum sistema de gestão do negócio, e só 5% sentem que administram bem o estresse operacional. 85% dos clientes chegam por indicação, e o Instagram, apesar de ser o segundo maior canal de descoberta de cliente novo, aparece como o maior desafio de marketing para 85% dos respondentes.</span></div>
+<div class="campo campo--potencial"><span class="rotulo">Potencial de conteúdo</span><span class="valor">17/18 · identificação 3, urgência de agir 3, contraintuição 2, acionabilidade 3, ponte com o negócio 3, vida útil 3. A nota alta vem da combinação rara de amostra grande, tema estrutural e ponte direta com precificação e gestão, os dois pilares que o Felipe já ensina hoje e vai aprofundar nos produtos futuros de gestão e mentoria.</span></div>
+<div class="campo campo--gancho"><span class="rotulo">Gancho de conteúdo</span><span class="valor">artigo de blog com facilitação visual (um comparativo de barras com os principais percentuais). Abertura pronta possível: "Uma pesquisa com quase 5 mil fotógrafos em 90 países perguntou como anda o negócio. Quase metade respondeu que cobra menos do que deveria."</span></div>
+<div class="campo campo--cuidado"><span class="rotulo">Cuidado ao produzir conteúdo</span><span class="valor">a pesquisa é global, não é um recorte brasileiro, então não afirmar que os números valem igual para o mercado daqui. Dizer "estimativa global" ou "pesquisa internacional", nunca "pesquisa no Brasil". Não prometer que aplicar um método resolve os 43% que não conseguem reajustar preço, o dado mostra o problema, não a solução pronta.</span></div>
+<div class="campo campo--aprofundar"><span class="rotulo">Vale aprofundar</span><span class="valor">sim. A página do estudo não tem PDF, é só página web, registrada em `radar-negocios/documentos/2026-08-03/dashboard-state-of-photography-industry-2026.md`. Vale voltar para checar se há recorte por região ou por nicho (casamento, evento, corporativo) que não coube nesta varredura.</span></div>
+<div class="campo campo--lastro"><span class="rotulo">Lastro</span><span class="valor">ShootProof, "State of the Photography Industry 2026", 4.916 respondentes, mais de 90 países, coleta no início de 2026. <a href="https://www.shootproof.com/sopi-2026-april/" target="_blank" rel="noopener">shootproof.com/sopi-2026-april</a></span></div>
+<div class="campo campo--fonte"><span class="rotulo">Fonte</span><span class="valor"><a class="btn-fonte" href="https://www.shootproof.com/sopi-2026-april/" target="_blank" rel="noopener">shootproof.com<span class="seta">↗</span></a></span></div>
+  </div>
+</article>
+<article class="caso" data-caso="02-a-foto-de-casamento-falsa-viralizou-mais-que-a-d" data-titulo="A foto de casamento falsa viralizou mais que a de verdade, e o mercado respondeu com autenticidade">
+  <header class="caso-head">
+    <span class="caso-num">02</span>
+    <h3>A foto de casamento falsa viralizou mais que a de verdade, e o mercado respondeu com autenticidade</h3>
+    <div class="formatos"><button class="chip" data-fmt="artigo" title="Artigo" aria-label="Artigo" aria-pressed="false"><svg class="mi" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="M5 3h11l3 3v15H5z" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M8 9h8M8 13h8M8 17h5" stroke="currentColor" stroke-width="1.7"/></svg><span class="chip-txt">Artigo</span></button><button class="chip" data-fmt="carrossel" title="Carrossel" aria-label="Carrossel" aria-pressed="false"><svg class="mi" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><rect x="8" y="4" width="8" height="16" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M5 7v10M19 7v10" stroke="currentColor" stroke-width="1.7"/></svg><span class="chip-txt">Carrossel</span></button><button class="chip" data-fmt="imagem" title="Imagem" aria-label="Imagem" aria-pressed="false"><svg class="mi" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="8.5" cy="10" r="1.6" fill="currentColor"/><path d="M4 17l5-5 4 4 3-2 4 4" fill="none" stroke="currentColor" stroke-width="1.7"/></svg><span class="chip-txt">Imagem</span></button><button class="chip" data-fmt="reels" title="Reels" aria-label="Reels" aria-pressed="false"><svg class="mi" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M10 9.5l5 2.5-5 2.5z" fill="currentColor"/></svg><span class="chip-txt">Reels</span></button><button class="chip" data-fmt="youtube" title="YouTube" aria-label="YouTube" aria-pressed="false"><svg class="mi" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><rect x="2.5" y="6" width="19" height="12" rx="3.5" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M10.5 9.5l4.5 2.5-4.5 2.5z" fill="currentColor"/></svg><span class="chip-txt">YouTube</span></button></div>
+  </header>
+  <div class="decisao-barra"><button class="dec dec--aceito" data-dec="aceito">Aceito</button><button class="dec dec--standby" data-dec="standby">Standby</button><button class="dec dec--descartado" data-dec="descartado">Descartado</button></div>
+  <div class="caso-corpo">
+    <div class="campo campo--padrao"><span class="rotulo">Frente</span><span class="valor">C. Inteligência artificial, E. Comportamento do consumidor</span></div>
+<div class="campo campo--pratica"><span class="rotulo">O que muda no negócio</span><span class="valor">a ameaça da IA generativa não é só técnica, ela também está mudando o que o cliente valoriza. Quando uma imagem falsa de casamento (feita com Gemini e ChatGPT) rende mais curtida que uma foto real de casamento de gente famosa, o mercado aprende que engajamento não é mais garantia de valor percebido, e que a presença humana e a irreversibilidade da captura viram argumento de venda, principalmente no segmento premium.</span></div>
+<div class="campo campo--historia"><span class="rotulo">O achado em uma linha</span><span class="valor">um post fake de casamento gerado por IA (Zendaya e Tom Holland, montagem, não é casamento real) fez 11 milhões de curtidas. O post oficial do casamento real de um piloto de Fórmula 1, fotografado em película, fez 6 milhões. Mesmo perdendo em curtida, é a foto real que sustenta o argumento de venda de quem cobra mais caro.</span></div>
+<div class="campo campo--fato"><span class="rotulo">O dado por trás</span><span class="valor">o número de curtidas (11 milhões contra 6 milhões) está no blog enfbyleosaldanha.com, publicado em 16 de março de 2026. A tendência de gerar fotos de casamento fake com IA foi registrada pela Fast Company Brasil em 2 de dezembro de 2025, usando principalmente Gemini e ChatGPT. O Fstoppers, em artigo de 14 de maio de 2026, sustenta a tese de que a IA tornou a perfeição técnica barata e acessível, e que o mercado está migrando para valorizar presença, julgamento e inteligência emocional do fotógrafo, coisas que a IA não decide sozinha.</span></div>
+<div class="campo campo--potencial"><span class="rotulo">Potencial de conteúdo</span><span class="valor">16/18 · identificação 3, urgência de agir 2, contraintuição 3, acionabilidade 2, ponte com o negócio 3, vida útil 3. A contraintuição é o que sustenta a nota: o conteúdo falso ganhou mais curtida, e mesmo assim é o real que vende mais caro, porque o que se vende não é a curtida, é a prova de que algo realmente aconteceu.</span></div>
+<div class="campo campo--gancho"><span class="rotulo">Gancho de conteúdo</span><span class="valor">artigo de blog com comparativo visual lado a lado (11 milhões contra 6 milhões), desdobrado em carrossel. Abertura pronta possível: "Uma foto de casamento falsa, feita com inteligência artificial, teve quase o dobro de curtidas que a foto real de um casamento de gente famosa. E ainda assim é a foto real que continua valendo mais caro."</span></div>
+<div class="campo campo--cuidado"><span class="rotulo">Cuidado ao produzir conteúdo</span><span class="valor">não afirmar que IA vai substituir o fotógrafo de casamento, os próprios artigos usados aqui dizem o contrário. Não citar o nome dos famosos envolvidos como se fosse acusação, é só ilustração de um fenômeno de engajamento. Não prometer que "ser autêntico" sozinho aumenta o preço, é argumento de posicionamento, não fórmula automática de faturamento.</span></div>
+<div class="campo campo--aprofundar"><span class="rotulo">Vale aprofundar</span><span class="valor">não nesta forma. Os três artigos usados já têm o dado principal, não há PDF ou pesquisa formal por trás, é observação de mercado e de engajamento em redes sociais.</span></div>
+<div class="campo campo--lastro"><span class="rotulo">Lastro</span><span class="valor">enfbyleosaldanha.com, "O casamento com IA, o analógico e o valor da presença", publicado em 16/03/2026 (números de curtida). Fast Company Brasil, "Trend de casamento com IA viraliza nas redes", publicado em 02/12/2025 (origem da tendência, ferramentas usadas). Fstoppers, "Why 'Less Perfection, More Human' Is the 2026 Photography Trend That Will Last", publicado em 14/05/2026 (tese de mercado).</span></div>
+<div class="campo campo--fonte"><span class="rotulo">Fonte</span><span class="valor"><a class="btn-fonte" href="https://www.enfbyleosaldanha.com/post/casamento-ia-analogico-autenticidade-fotografia," target="_blank" rel="noopener">enfbyleosaldanha.com<span class="seta">↗</span></a></span></div>
+  </div>
+</article>
+<article class="caso" data-caso="03-ensaio-pague-s-se-gostar-vira-modelo-de-app-e-em" data-titulo="Ensaio &quot;pague só se gostar&quot; vira modelo de app, e empurra o preço do fotógrafo para baixo">
+  <header class="caso-head">
+    <span class="caso-num">03</span>
+    <h3>Ensaio "pague só se gostar" vira modelo de app, e empurra o preço do fotógrafo para baixo</h3>
+    <div class="formatos"><button class="chip" data-fmt="artigo" title="Artigo" aria-label="Artigo" aria-pressed="false"><svg class="mi" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="M5 3h11l3 3v15H5z" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M8 9h8M8 13h8M8 17h5" stroke="currentColor" stroke-width="1.7"/></svg><span class="chip-txt">Artigo</span></button><button class="chip" data-fmt="carrossel" title="Carrossel" aria-label="Carrossel" aria-pressed="false"><svg class="mi" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><rect x="8" y="4" width="8" height="16" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M5 7v10M19 7v10" stroke="currentColor" stroke-width="1.7"/></svg><span class="chip-txt">Carrossel</span></button><button class="chip" data-fmt="imagem" title="Imagem" aria-label="Imagem" aria-pressed="false"><svg class="mi" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="8.5" cy="10" r="1.6" fill="currentColor"/><path d="M4 17l5-5 4 4 3-2 4 4" fill="none" stroke="currentColor" stroke-width="1.7"/></svg><span class="chip-txt">Imagem</span></button><button class="chip" data-fmt="reels" title="Reels" aria-label="Reels" aria-pressed="false"><svg class="mi" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M10 9.5l5 2.5-5 2.5z" fill="currentColor"/></svg><span class="chip-txt">Reels</span></button><button class="chip" data-fmt="youtube" title="YouTube" aria-label="YouTube" aria-pressed="false"><svg class="mi" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><rect x="2.5" y="6" width="19" height="12" rx="3.5" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M10.5 9.5l4.5 2.5-4.5 2.5z" fill="currentColor"/></svg><span class="chip-txt">YouTube</span></button></div>
+  </header>
+  <div class="decisao-barra"><button class="dec dec--aceito" data-dec="aceito">Aceito</button><button class="dec dec--standby" data-dec="standby">Standby</button><button class="dec dec--descartado" data-dec="descartado">Descartado</button></div>
+  <div class="caso-corpo">
+    <div class="campo campo--padrao"><span class="rotulo">Frente</span><span class="valor">F. Modelos de negócio e pressão de preço</span></div>
+<div class="campo campo--pratica"><span class="rotulo">O que muda no negócio</span><span class="valor">existe um formato de aplicativo, no Brasil e fora, que conecta fotógrafo a cliente por geolocalização, no estilo de app de transporte: o fotógrafo aborda a pessoa na rua ou no evento, faz uma sessão rápida sem compromisso, e o cliente só paga se gostar do resultado. É um jeito de captar cliente novo sem depender de indicação, mas também é um modelo que empurra o preço do ensaio para o piso, porque o valor de referência que o cliente vê primeiro é o mais barato disponível na plataforma, não o valor de mercado do fotógrafo especializado.</span></div>
+<div class="campo campo--historia"><span class="rotulo">O achado em uma linha</span><span class="valor">o fotógrafo que só participa desse tipo de app corre o risco de virar mão de obra intercambiável dentro de uma vitrine de preço, o oposto de construir um posicionamento próprio.</span></div>
+<div class="campo campo--fato"><span class="rotulo">O dado por trás</span><span class="valor">não há número de faturamento público desse modelo de negócio no Brasil, o que existe é a descrição do funcionamento (sessão sem compromisso, pagamento condicionado, comissão da plataforma não divulgada publicamente) e o paralelo internacional de plataformas do mesmo tipo, que cobram entre 15% e 18% de comissão sobre a venda, conforme documentado por uma delas nos Estados Unidos. Um blog de negócio do nicho, em português, registrou em 14 de janeiro de 2026 que "imagens genéricas não desaparecem, elas mudam de função, tornam-se preenchimento barato", descrevendo a mesma pressão de commoditização vista pelo lado da oferta de imagem, não só pelo lado do aplicativo.</span></div>
+<div class="campo campo--potencial"><span class="rotulo">Potencial de conteúdo</span><span class="valor">14/18 · identificação 2, urgência de agir 2, contraintuição 2, acionabilidade 2, ponte com o negócio 3, vida útil 3. A ponte com o negócio é o que sustenta a nota, porque é exatamente o tipo de fenômeno que justifica ensinar posicionamento e precificação em vez de disputa por preço.</span></div>
+<div class="campo campo--gancho"><span class="rotulo">Gancho de conteúdo</span><span class="valor">artigo de blog sobre o fenômeno "pague só se gostar" e o que ele custa em posicionamento, sem citar nenhuma marca. Abertura pronta possível: "Existe um jeito de captar cliente que parece generoso: você fotografa de graça e o cliente só paga se gostar. O problema não é a técnica. É o preço que essa vitrine ensina o mercado a aceitar."</span></div>
+<div class="campo campo--cuidado"><span class="rotulo">Cuidado ao produzir conteúdo</span><span class="valor">regra dura do projeto, nenhuma marca, aplicativo ou plataforma pode ser citada pelo nome, nem para elogiar nem para criticar. Descrever sempre como fenômeno de mercado. Não afirmar comissão ou faturamento específico do modelo brasileiro, porque essa informação não é pública, só o paralelo internacional tem número.</span></div>
+<div class="campo campo--aprofundar"><span class="rotulo">Vale aprofundar</span><span class="valor">não. Não há estudo ou pesquisa formal por trás, é observação de modelo de negócio a partir de páginas públicas dos próprios serviços.</span></div>
+<div class="campo campo--lastro"><span class="rotulo">Lastro</span><span class="valor">descrição de funcionamento de aplicativo brasileiro de conexão fotógrafo-cliente, consultado em 03/08/2026. Paralelo internacional com comissão de 15% a 18% documentada em página de cadastro de fotógrafo, consultada em 03/08/2026. Citação sobre imagem genérica como "preenchimento barato", enfbyleosaldanha.com, publicado em 14/01/2026.</span></div>
+<div class="campo campo--fonte"><span class="rotulo">Fonte</span><span class="valor"><a class="btn-fonte" href="https://fotomaker.com.br/," target="_blank" rel="noopener">fotomaker.com.br<span class="seta">↗</span></a></span></div>
+  </div>
+</article>
+<article class="caso" data-caso="04-carrossel-bate-reels-em-engajamento-e-em-salvame" data-titulo="Carrossel bate Reels em engajamento e em salvamento, mas o fotógrafo ainda posta pensando só em viralizar">
+  <header class="caso-head">
+    <span class="caso-num">04</span>
+    <h3>Carrossel bate Reels em engajamento e em salvamento, mas o fotógrafo ainda posta pensando só em viralizar</h3>
+    <div class="formatos"><button class="chip" data-fmt="artigo" title="Artigo" aria-label="Artigo" aria-pressed="false"><svg class="mi" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="M5 3h11l3 3v15H5z" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M8 9h8M8 13h8M8 17h5" stroke="currentColor" stroke-width="1.7"/></svg><span class="chip-txt">Artigo</span></button><button class="chip" data-fmt="carrossel" title="Carrossel" aria-label="Carrossel" aria-pressed="false"><svg class="mi" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><rect x="8" y="4" width="8" height="16" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M5 7v10M19 7v10" stroke="currentColor" stroke-width="1.7"/></svg><span class="chip-txt">Carrossel</span></button><button class="chip" data-fmt="imagem" title="Imagem" aria-label="Imagem" aria-pressed="false"><svg class="mi" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="8.5" cy="10" r="1.6" fill="currentColor"/><path d="M4 17l5-5 4 4 3-2 4 4" fill="none" stroke="currentColor" stroke-width="1.7"/></svg><span class="chip-txt">Imagem</span></button><button class="chip" data-fmt="reels" title="Reels" aria-label="Reels" aria-pressed="false"><svg class="mi" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M10 9.5l5 2.5-5 2.5z" fill="currentColor"/></svg><span class="chip-txt">Reels</span></button><button class="chip" data-fmt="youtube" title="YouTube" aria-label="YouTube" aria-pressed="false"><svg class="mi" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><rect x="2.5" y="6" width="19" height="12" rx="3.5" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M10.5 9.5l4.5 2.5-4.5 2.5z" fill="currentColor"/></svg><span class="chip-txt">YouTube</span></button></div>
+  </header>
+  <div class="decisao-barra"><button class="dec dec--aceito" data-dec="aceito">Aceito</button><button class="dec dec--standby" data-dec="standby">Standby</button><button class="dec dec--descartado" data-dec="descartado">Descartado</button></div>
+  <div class="caso-corpo">
+    <div class="campo campo--padrao"><span class="rotulo">Frente</span><span class="valor">J. Marketing e copy do nicho</span></div>
+<div class="campo campo--pratica"><span class="rotulo">O que muda no negócio</span><span class="valor">quem fotografa e só posta Reels pensando em viralizar está otimizando para a métrica errada. Os dados de mercado (não é pesquisa acadêmica, é benchmark de ferramenta de agendamento) apontam o carrossel como o formato que mais retém atenção e mais gera salvamento, que é o sinal que mais pesa pro algoritmo entender que aquele conteúdo merece ser mostrado de novo.</span></div>
+<div class="campo campo--historia"><span class="rotulo">O achado em uma linha</span><span class="valor">carrossel gera, em média, entre 1,4 e 2,3 vezes mais alcance e entre 1,7 e 3,1 vezes mais engajamento e salvamento do que uma foto solo ou um Reels, dependendo da fonte consultada. Making of e comparação de edição, formatos simples de bastidor, performam melhor que carrossel muito produzido.</span></div>
+<div class="campo campo--fato"><span class="rotulo">O dado por trás</span><span class="valor">o artigo, publicado em 25 de março de 2026, cita três fontes de benchmark (uma delas analisou mais de 52 milhões de posts), mas nenhuma delas detalha metodologia completa, período exato da coleta ou tipo de conta analisada, então o número precisa ser lido como estimativa de mercado, não como pesquisa acadêmica fechada.</span></div>
+<div class="campo campo--potencial"><span class="rotulo">Potencial de conteúdo</span><span class="valor">14/18 · identificação 3, urgência de agir 2, contraintuição 2, acionabilidade 3, ponte com o negócio 2, vida útil 2. A acionabilidade puxa a nota, porque muda a rotina de postagem de segunda a sexta sem precisar de nenhum investimento novo.</span></div>
+<div class="campo campo--gancho"><span class="rotulo">Gancho de conteúdo</span><span class="valor">carrossel comparando os dois formatos lado a lado (Reels traz gente nova, carrossel segura quem já chegou), com dado de engajamento. Abertura pronta possível: "Reels traz seguidor novo. Carrossel é o que faz esse seguidor ficar. E é o carrossel que o algoritmo mais recompensa."</span></div>
+<div class="campo campo--cuidado"><span class="rotulo">Cuidado ao produzir conteúdo</span><span class="valor">não afirmar o número exato de multiplicação de engajamento como fato fechado, porque as fontes originais (Buffer, Social Insider, CreatorsJet) não têm link direto nem metodologia publicada no artigo consultado. Usar "estimativa de mercado" ou "benchmarks do setor", nunca "está provado que".</span></div>
+<div class="campo campo--aprofundar"><span class="rotulo">Vale aprofundar</span><span class="valor">sim, mas com ressalva. Não há PDF localizado nesta rodada. Vale, numa rodada futura, tentar acessar diretamente as fontes primárias (Buffer, Social Insider) para confirmar ou descartar o número.</span></div>
+<div class="campo campo--lastro"><span class="rotulo">Lastro</span><span class="valor">artigo consolidando benchmarks de Buffer (mais de 52 milhões de posts analisados), Social Insider e CreatorsJet, publicado em 25/03/2026.</span></div>
+<div class="campo campo--fonte"><span class="rotulo">Fonte</span><span class="valor"><a class="btn-fonte" href="https://maquinadepost.com/blog/carrossel-formato-mais-engaja-instagram.html," target="_blank" rel="noopener">maquinadepost.com<span class="seta">↗</span></a></span></div>
+  </div>
+</article>
+<article class="caso" data-caso="05-casamento-deve-movimentar-r-32-bilh-es-em-2026-m" data-titulo="Casamento deve movimentar R$ 32 bilhões em 2026, mas o estilo que paga mais caro está encolhendo em tamanho">
+  <header class="caso-head">
+    <span class="caso-num">05</span>
+    <h3>Casamento deve movimentar R$ 32 bilhões em 2026, mas o estilo que paga mais caro está encolhendo em tamanho</h3>
+    <div class="formatos"><button class="chip" data-fmt="artigo" title="Artigo" aria-label="Artigo" aria-pressed="false"><svg class="mi" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="M5 3h11l3 3v15H5z" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M8 9h8M8 13h8M8 17h5" stroke="currentColor" stroke-width="1.7"/></svg><span class="chip-txt">Artigo</span></button><button class="chip" data-fmt="carrossel" title="Carrossel" aria-label="Carrossel" aria-pressed="false"><svg class="mi" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><rect x="8" y="4" width="8" height="16" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M5 7v10M19 7v10" stroke="currentColor" stroke-width="1.7"/></svg><span class="chip-txt">Carrossel</span></button><button class="chip" data-fmt="imagem" title="Imagem" aria-label="Imagem" aria-pressed="false"><svg class="mi" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="8.5" cy="10" r="1.6" fill="currentColor"/><path d="M4 17l5-5 4 4 3-2 4 4" fill="none" stroke="currentColor" stroke-width="1.7"/></svg><span class="chip-txt">Imagem</span></button><button class="chip" data-fmt="reels" title="Reels" aria-label="Reels" aria-pressed="false"><svg class="mi" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M10 9.5l5 2.5-5 2.5z" fill="currentColor"/></svg><span class="chip-txt">Reels</span></button><button class="chip" data-fmt="youtube" title="YouTube" aria-label="YouTube" aria-pressed="false"><svg class="mi" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><rect x="2.5" y="6" width="19" height="12" rx="3.5" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M10.5 9.5l4.5 2.5-4.5 2.5z" fill="currentColor"/></svg><span class="chip-txt">YouTube</span></button></div>
+  </header>
+  <div class="decisao-barra"><button class="dec dec--aceito" data-dec="aceito">Aceito</button><button class="dec dec--standby" data-dec="standby">Standby</button><button class="dec dec--descartado" data-dec="descartado">Descartado</button></div>
+  <div class="caso-corpo">
+    <div class="campo campo--padrao"><span class="rotulo">Frente</span><span class="valor">A. Mercado e dinheiro do nicho, E. Comportamento do consumidor</span></div>
+<div class="campo campo--pratica"><span class="rotulo">O que muda no negócio</span><span class="valor">o mercado de casamento continua crescendo em dinheiro, mas o formato que ele está premiando é o intimista, não o grande. Quem posiciona o próprio trabalho só para casamento de 200 convidados está mirando uma fatia que a própria pesquisa do setor diz que está perdendo espaço.</span></div>
+<div class="campo campo--historia"><span class="rotulo">O achado em uma linha</span><span class="valor">o setor de casamentos deve movimentar uma estimativa de R$ 32 bilhões no Brasil em 2026, com cerca de 472 mil cerimônias e ticket médio de R$ 69 mil, mas a mesma pesquisa aponta que a ostentação está perdendo espaço para cerimônias menores e mais pessoais.</span></div>
+<div class="campo campo--fato"><span class="rotulo">O dado por trás</span><span class="valor">pesquisa do Casar.com em parceria com a Assessoria VIP, divulgada em 15 de dezembro de 2025, com base numa plataforma de 3,5 milhões de usuários e mais de 300 mil sites de casamento cadastrados em 2025.</span></div>
+<div class="campo campo--potencial"><span class="rotulo">Potencial de conteúdo</span><span class="valor">11/18 · identificação 2, urgência de agir 1, contraintuição 2, acionabilidade 2, ponte com o negócio 2, vida útil 2.</span></div>
+<div class="campo campo--gancho"><span class="rotulo">Gancho de conteúdo</span><span class="valor">post ou seção de artigo sobre o descompasso entre o tamanho do mercado em dinheiro e o tamanho do evento em convidados. Abertura pronta possível: "O mercado de casamento vai movimentar mais dinheiro em 2026. A festa, em compensação, está ficando menor."</span></div>
+<div class="campo campo--cuidado"><span class="rotulo">Cuidado ao produzir conteúdo</span><span class="valor">é projeção, não fato consumado, dizer sempre "estimativa de" ou "projeção de", nunca "faturou". Não confundir R$ 32 bilhões (mercado inteiro do setor de eventos de casamento) com o que cabe só à fotografia dentro dele, que é uma fração pequena desse total.</span></div>
+<div class="campo campo--aprofundar"><span class="rotulo">Vale aprofundar</span><span class="valor">não nesta forma. Não há PDF localizado, só a repercussão do estudo em múltiplos portais de notícia.</span></div>
+<div class="campo campo--lastro"><span class="rotulo">Lastro</span><span class="valor">Casar.com e Assessoria VIP, pesquisa divulgada em 15/12/2025, projeção de R$ 32 bilhões, 472 mil cerimônias, ticket médio de R$ 69 mil.</span></div>
+<div class="campo campo--fonte"><span class="rotulo">Fonte</span><span class="valor"><a class="btn-fonte" href="https://alexferraz.com.br/2025/12/15/casamentos-devem-movimentar-r-32-bi-no-brasil-em-2026/" target="_blank" rel="noopener">alexferraz.com.br<span class="seta">↗</span></a></span></div>
+  </div>
+</article>
+<article class="caso" data-caso="06-o-mercado-fotogr-fico-brasileiro-tem-mais-de-86-" data-titulo="O mercado fotográfico brasileiro tem mais de 86 mil empresas, e quase 4 em cada 10 não sobrevivem">
+  <header class="caso-head">
+    <span class="caso-num">06</span>
+    <h3>O mercado fotográfico brasileiro tem mais de 86 mil empresas, e quase 4 em cada 10 não sobrevivem</h3>
+    <div class="formatos"><button class="chip" data-fmt="artigo" title="Artigo" aria-label="Artigo" aria-pressed="false"><svg class="mi" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="M5 3h11l3 3v15H5z" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M8 9h8M8 13h8M8 17h5" stroke="currentColor" stroke-width="1.7"/></svg><span class="chip-txt">Artigo</span></button><button class="chip" data-fmt="carrossel" title="Carrossel" aria-label="Carrossel" aria-pressed="false"><svg class="mi" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><rect x="8" y="4" width="8" height="16" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M5 7v10M19 7v10" stroke="currentColor" stroke-width="1.7"/></svg><span class="chip-txt">Carrossel</span></button><button class="chip" data-fmt="imagem" title="Imagem" aria-label="Imagem" aria-pressed="false"><svg class="mi" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="8.5" cy="10" r="1.6" fill="currentColor"/><path d="M4 17l5-5 4 4 3-2 4 4" fill="none" stroke="currentColor" stroke-width="1.7"/></svg><span class="chip-txt">Imagem</span></button><button class="chip" data-fmt="reels" title="Reels" aria-label="Reels" aria-pressed="false"><svg class="mi" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M10 9.5l5 2.5-5 2.5z" fill="currentColor"/></svg><span class="chip-txt">Reels</span></button><button class="chip" data-fmt="youtube" title="YouTube" aria-label="YouTube" aria-pressed="false"><svg class="mi" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><rect x="2.5" y="6" width="19" height="12" rx="3.5" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M10.5 9.5l4.5 2.5-4.5 2.5z" fill="currentColor"/></svg><span class="chip-txt">YouTube</span></button></div>
+  </header>
+  <div class="decisao-barra"><button class="dec dec--aceito" data-dec="aceito">Aceito</button><button class="dec dec--standby" data-dec="standby">Standby</button><button class="dec dec--descartado" data-dec="descartado">Descartado</button></div>
+  <div class="caso-corpo">
+    <div class="campo campo--padrao"><span class="rotulo">Frente</span><span class="valor">A. Mercado e dinheiro do nicho</span></div>
+<div class="campo campo--pratica"><span class="rotulo">O que muda no negócio</span><span class="valor">o setor é acessível para entrar (98,85% do mercado nacional é MEI ou microempresa) e também tem alta taxa de mortalidade. Isso reforça a tese de que o problema do fotógrafo raramente é talento, e quase sempre é gestão, o mesmo ponto que aparece na pesquisa global desta rodada.</span></div>
+<div class="campo campo--historia"><span class="rotulo">O achado em uma linha</span><span class="valor">o Brasil tem mais de 86 mil empresas de fotografia espalhadas por mais de 5 mil municípios, mas no Paraná, recorte estadual usado pelo Sebrae, a taxa de mortalidade do setor chega a 41%.</span></div>
+<div class="campo campo--fato"><span class="rotulo">O dado por trás</span><span class="valor">Sebrae/PR, artigo publicado em 25 de outubro de 2025, com dados de 86.085 empresas de fotografia no país, presentes em 5.063 municípios (apenas 104 municípios brasileiros não têm nenhuma empresa do setor), 15.436 empresas abertas em 2023, e no recorte do Paraná, 5.753 empresas com taxa de mortalidade de 41% e variação empresarial positiva de 57,23% em cinco anos.</span></div>
+<div class="campo campo--potencial"><span class="rotulo">Potencial de conteúdo</span><span class="valor">10/18 · identificação 2, urgência de agir 1, contraintuição 2, acionabilidade 1, ponte com o negócio 2, vida útil 2.</span></div>
+<div class="campo campo--gancho"><span class="rotulo">Gancho de conteúdo</span><span class="valor">post com dado de choque sobre mortalidade, puxando para conteúdo de gestão. Abertura pronta possível: "O Brasil tem mais de 86 mil empresas de fotografia. Em alguns estados, quase 4 em cada 10 não sobrevivem."</span></div>
+<div class="campo campo--cuidado"><span class="rotulo">Cuidado ao produzir conteúdo</span><span class="valor">a taxa de mortalidade de 41% é um recorte estadual (Paraná), não é a taxa nacional, não generalizar como se fosse dado do Brasil inteiro. Não afirmar causa da mortalidade sem fonte, o artigo do Sebrae não detalha o motivo.</span></div>
+<div class="campo campo--aprofundar"><span class="rotulo">Vale aprofundar</span><span class="valor">não. O artigo já traz o dado consolidado, não há relatório em PDF vinculado.</span></div>
+<div class="campo campo--lastro"><span class="rotulo">Lastro</span><span class="valor">Sebrae/PR, "Panorama do Mercado Fotográfico: Tendências e Oportunidades", publicado em 25/10/2025.</span></div>
+<div class="campo campo--fonte"><span class="rotulo">Fonte</span><span class="valor"><a class="btn-fonte" href="https://sebraepr.com.br/impulsiona/panorama-do-mercado-fotografico-tendencias-e-oportunidades/" target="_blank" rel="noopener">sebraepr.com.br<span class="seta">↗</span></a></span></div>
+  </div>
+</article>
+<article class="caso" data-caso="07-c-mera-de-bolso-ganha-corpo-de-drone-e-dois-fabr" data-titulo="Câmera de bolso ganha corpo de drone, e dois fabricantes lançaram isso na mesma semana">
+  <header class="caso-head">
+    <span class="caso-num">07</span>
+    <h3>Câmera de bolso ganha corpo de drone, e dois fabricantes lançaram isso na mesma semana</h3>
+    <div class="formatos"><button class="chip" data-fmt="artigo" title="Artigo" aria-label="Artigo" aria-pressed="false"><svg class="mi" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="M5 3h11l3 3v15H5z" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M8 9h8M8 13h8M8 17h5" stroke="currentColor" stroke-width="1.7"/></svg><span class="chip-txt">Artigo</span></button><button class="chip" data-fmt="carrossel" title="Carrossel" aria-label="Carrossel" aria-pressed="false"><svg class="mi" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><rect x="8" y="4" width="8" height="16" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M5 7v10M19 7v10" stroke="currentColor" stroke-width="1.7"/></svg><span class="chip-txt">Carrossel</span></button><button class="chip" data-fmt="imagem" title="Imagem" aria-label="Imagem" aria-pressed="false"><svg class="mi" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="8.5" cy="10" r="1.6" fill="currentColor"/><path d="M4 17l5-5 4 4 3-2 4 4" fill="none" stroke="currentColor" stroke-width="1.7"/></svg><span class="chip-txt">Imagem</span></button><button class="chip" data-fmt="reels" title="Reels" aria-label="Reels" aria-pressed="false"><svg class="mi" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M10 9.5l5 2.5-5 2.5z" fill="currentColor"/></svg><span class="chip-txt">Reels</span></button><button class="chip" data-fmt="youtube" title="YouTube" aria-label="YouTube" aria-pressed="false"><svg class="mi" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><rect x="2.5" y="6" width="19" height="12" rx="3.5" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M10.5 9.5l4.5 2.5-4.5 2.5z" fill="currentColor"/></svg><span class="chip-txt">YouTube</span></button></div>
+  </header>
+  <div class="decisao-barra"><button class="dec dec--aceito" data-dec="aceito">Aceito</button><button class="dec dec--standby" data-dec="standby">Standby</button><button class="dec dec--descartado" data-dec="descartado">Descartado</button></div>
+  <div class="caso-corpo">
+    <div class="campo campo--padrao"><span class="rotulo">Frente</span><span class="valor">B. Tecnologia e equipamento</span></div>
+<div class="campo campo--pratica"><span class="rotulo">O que muda no negócio</span><span class="valor">para quem faz vídeo de bastidor, conteúdo de rede social e cobertura ágil de evento, uma câmera compacta que também voa reduz o tanto de equipamento que precisa levar. É item de mochila, não muda o modelo de negócio, mas pode simplificar a entrega de conteúdo de bastidor que hoje já é parte do pacote de casamento e evento.</span></div>
+<div class="campo campo--historia"><span class="rotulo">O achado em uma linha</span><span class="valor">a DJI lançou globalmente, em 30 de julho, a Osmo Pocket 4P, câmera de bolso com duas lentes e sensor de 1 polegada. No dia seguinte, 31 de julho, outro fabricante lançou um híbrido de câmera de mão com chassi de drone, que se transforma em poucos segundos e voa sem controle remoto.</span></div>
+<div class="campo campo--fato"><span class="rotulo">O dado por trás</span><span class="valor">a Osmo Pocket 4P tem lente principal de 20 mm (f/2.0) e teleobjetiva equivalente a 60 mm (f/1.8), alcance dinâmico de 17 stops, grava em 6K a 60fps, e já custava o equivalente a R$ 2.849 na loja chinesa antes de impostos, com data brasileira ainda não confirmada. O modelo concorrente da mesma semana usa inteligência artificial no modo de rastreamento automático (follow-me).</span></div>
+<div class="campo campo--potencial"><span class="rotulo">Potencial de conteúdo</span><span class="valor">9/18 · identificação 2, urgência de agir 1, contraintuição 1, acionabilidade 2, ponte com o negócio 1, vida útil 2.</span></div>
+<div class="campo campo--gancho"><span class="rotulo">Gancho de conteúdo</span><span class="valor">post curto de bastidor de equipamento, categoria "o que testamos", não é prioridade de artigo pilar.</span></div>
+<div class="campo campo--cuidado"><span class="rotulo">Cuidado ao produzir conteúdo</span><span class="valor">preço em real ainda não é oficial, o valor citado é conversão direta do preço chinês sem imposto de importação, dizer sempre "estimativa" e nunca o valor final de loja brasileira.</span></div>
+<div class="campo campo--aprofundar"><span class="rotulo">Vale aprofundar</span><span class="valor">não. É notícia de lançamento de produto, sem estudo por trás.</span></div>
+<div class="campo campo--lastro"><span class="rotulo">Lastro</span><span class="valor">DJI, lançamento global da Osmo Pocket 4P em 30/07/2026, anunciado em 23/07/2026. HoverAir, lançamento do modelo híbrido câmera-drone, noticiado pelo Canaltech em 31/07/2026.</span></div>
+<div class="campo campo--fonte"><span class="rotulo">Fonte</span><span class="valor"><a class="btn-fonte" href="https://tecflow.com.br/2026/07/23/dji-osmo-pocket-4p-lancamento-global/," target="_blank" rel="noopener">tecflow.com.br<span class="seta">↗</span></a></span></div>
+  </div>
+</article>
+<article class="caso" data-caso="08-relevante-mas-seco-nota-fiscal-de-servi-o-do-fot" data-titulo="RELEVANTE MAS SECO — Nota fiscal de serviço do fotógrafo MEI muda de cronograma na reforma tributária">
+  <header class="caso-head">
+    <span class="caso-num">08</span>
+    <h3>RELEVANTE MAS SECO — Nota fiscal de serviço do fotógrafo MEI muda de cronograma na reforma tributária</h3>
+    <div class="formatos"><button class="chip" data-fmt="artigo" title="Artigo" aria-label="Artigo" aria-pressed="false"><svg class="mi" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="M5 3h11l3 3v15H5z" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M8 9h8M8 13h8M8 17h5" stroke="currentColor" stroke-width="1.7"/></svg><span class="chip-txt">Artigo</span></button><button class="chip" data-fmt="carrossel" title="Carrossel" aria-label="Carrossel" aria-pressed="false"><svg class="mi" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><rect x="8" y="4" width="8" height="16" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M5 7v10M19 7v10" stroke="currentColor" stroke-width="1.7"/></svg><span class="chip-txt">Carrossel</span></button><button class="chip" data-fmt="imagem" title="Imagem" aria-label="Imagem" aria-pressed="false"><svg class="mi" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="8.5" cy="10" r="1.6" fill="currentColor"/><path d="M4 17l5-5 4 4 3-2 4 4" fill="none" stroke="currentColor" stroke-width="1.7"/></svg><span class="chip-txt">Imagem</span></button><button class="chip" data-fmt="reels" title="Reels" aria-label="Reels" aria-pressed="false"><svg class="mi" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M10 9.5l5 2.5-5 2.5z" fill="currentColor"/></svg><span class="chip-txt">Reels</span></button><button class="chip" data-fmt="youtube" title="YouTube" aria-label="YouTube" aria-pressed="false"><svg class="mi" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><rect x="2.5" y="6" width="19" height="12" rx="3.5" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M10.5 9.5l4.5 2.5-4.5 2.5z" fill="currentColor"/></svg><span class="chip-txt">YouTube</span></button></div>
+  </header>
+  <div class="decisao-barra"><button class="dec dec--aceito" data-dec="aceito">Aceito</button><button class="dec dec--standby" data-dec="standby">Standby</button><button class="dec dec--descartado" data-dec="descartado">Descartado</button></div>
+  <div class="caso-corpo">
+    <div class="campo campo--padrao"><span class="rotulo">Frente</span><span class="valor">G. Tributário e formalização</span></div>
+<div class="campo campo--pratica"><span class="rotulo">O que muda no negócio</span><span class="valor">o fotógrafo formalizado não precisa fazer nada esta semana, mas precisa saber que a régua mudou de lugar. A obrigação de destacar IBS e CBS na nota de serviço (a nota que o fotógrafo emite) não é em agosto, é em outubro para a maior parte dos casos, e uma fração fica para dezembro de 2026 ou janeiro de 2027. Vale marcar no calendário do próprio negócio para não ser pego de surpresa depois.</span></div>
+<div class="campo campo--historia"><span class="rotulo">O achado em uma linha</span><span class="valor">a Receita Federal e o Comitê Gestor do IBS publicaram, em 31 de julho de 2026, o cronograma final em três lotes para tornar obrigatório o destaque de IBS e CBS nas notas fiscais eletrônicas, e a nota de serviço (a que interessa ao fotógrafo) entra depois da nota de produto.</span></div>
+<div class="campo campo--fato"><span class="rotulo">O dado por trás</span><span class="valor">ato conjunto RFB/CGIBS nº 4 de 2026. Lote 1, a partir de 3 de agosto de 2026: nota de produto (NF-e, NFC-e), transporte e documentos ligados. Lote 2, a partir de 1º de outubro de 2026: a maior parte da nota de serviço (NFS-e) e declarações relacionadas. Lote 3, entre dezembro de 2026 e janeiro de 2027: o restante das notas de serviço não cobertas antes, e o regime do Simples Nacional. Separadamente, desde 27 de janeiro de 2026, o MEI prestador de serviço passou a ser obrigado a emitir a NFS-e Nacional (Emissor Nacional gratuito, via gov.br/nfse), inclusive para cliente pessoa física, mudança que já vale e não depende do cronograma do IBS/CBS.</span></div>
+<div class="campo campo--potencial"><span class="rotulo">Potencial de conteúdo</span><span class="valor">9/18 · identificação 2, urgência de agir 2, contraintuição 1, acionabilidade 2, ponte com o negócio 1, vida útil 1. Nota baixa e honesta, mas entra sempre, porque é mudança de regra tributária que pega o mercado de surpresa se ninguém avisar antes do prazo chegar.</span></div>
+<div class="campo campo--gancho"><span class="rotulo">Gancho de conteúdo</span><span class="valor">post curto ou trecho de artigo maior sobre formalização, com um calendário simples dos três lotes. Ângulo: você não precisa fazer nada em agosto, mas outubro chega rápido.</span></div>
+<div class="campo campo--cuidado"><span class="rotulo">Cuidado ao produzir conteúdo</span><span class="valor">não afirmar que o fotógrafo já precisa destacar IBS e CBS na nota agora, a maior parte cai só em outubro. Não confundir a obrigação da NFS-e Nacional (já vale, desde janeiro de 2026) com a obrigação de destaque de IBS/CBS (ainda não vale para a maioria dos fotógrafos). Recomendar sempre confirmar com o contador a classificação exata do serviço, porque o texto oficial trata por categoria de atividade, não por profissão.</span></div>
+<div class="campo campo--aprofundar"><span class="rotulo">Vale aprofundar</span><span class="valor">não nesta forma. É notícia de calendário oficial, sem pesquisa ou estudo por trás.</span></div>
+<div class="campo campo--lastro"><span class="rotulo">Lastro</span><span class="valor">Receita Federal e Comitê Gestor do IBS, ato conjunto RFB/CGIBS nº 4 de 2026, divulgado em 31/07/2026. Contábeis.com.br, sobre a obrigatoriedade da NFS-e Nacional para MEI prestador de serviço, publicado em 27/01/2026.</span></div>
+<div class="campo campo--fonte"><span class="rotulo">Fonte</span><span class="valor"><a class="btn-fonte" href="https://www.reformatributaria.com/documentos-fiscais/receita-e-comite-gestor-publicam-cronograma-em-3-lotes-para-inicio-da-obrigatoriedade-de-destaques-de-ibs-cbs-leia/," target="_blank" rel="noopener">reformatributaria.com<span class="seta">↗</span></a></span></div>
+  </div>
+</article>
+</section>
+<section class="secao">
+  <h2><span class="sec-num">3</span>Para você saber</h2>
+  <ul class="lista"><li>O Adobe Lightroom ganhou, em atualização de abril de 2026, curadoria assistida por IA (Assisted Culling) para separar foto boa de foto ruim em lote grande, um modelo de nitidez com IA para recuperar detalhe fino, e busca por linguagem natural. Ferramenta de produtividade, não muda modelo de negócio. <a href="https://www.dpreview.com/news/9872416768/adobe-lightroom-photoshop-update-june-2026/" target="_blank" rel="noopener">dpreview.com/news/9872416768/adobe-lightroom-photos…</a></li><li>O Fstoppers, em artigo sobre nichos que crescem em 2026, aponta que o denominador comum dos nichos mais resistentes à substituição por IA é a exigência de presença física do fotógrafo no lugar (evento corporativo, imóvel, prato de restaurante), não a beleza da imagem em si. <a href="https://fstoppers.com/business/where-money-going-5-photography-niches-growing-2026-900381" target="_blank" rel="noopener">fstoppers.com/business/where-money-going-5-photogra…</a></li><li>O valor do DAS do MEI em 2026 varia entre R$ 82,05 e R$ 87,05 conforme a atividade, reajuste de rotina puxado pelo novo salário mínimo de R$ 1.621, sem novidade estrutural. <a href="https://www.contabeis.com.br/noticias/74842/mei-em-2026-veja-o-que-muda-no-das-nota-fiscal-e-regras/" target="_blank" rel="noopener">contabeis.com.br/noticias/74842/mei-em-2026-veja-o-…</a></li><li>A Meta divulgou resultado do segundo trimestre de 2026 com receita de US$ 60,8 bilhões (alta de 28% ano contra ano) e reforçou que a monetização de inteligência artificial passa por quatro frentes, incluindo publicidade guiada por IA. É notícia de mercado financeiro da controladora do Instagram, sem efeito direto e imediato na rotina de quem posta, por isso fica nesta seção e não nos achados. <a href="https://oespecialista.safra.com.br/meta-2t26-ia-monetizacao-investimentos/" target="_blank" rel="noopener">oespecialista.safra.com.br/meta-2t26-ia-monetizacao…</a></li></ul>
+</section>
+<section class="secao">
+  <h2><span class="sec-num">4</span>Pauta sugerida</h2>
+  <article class="pauta pauta--alta">
+  <header>
+    <span class="pauta-ordem">1</span>
+    <h3>Uma pesquisa com quase 5 mil fotógrafos, e o dado que ninguém quer admitir sobre o próprio preço</h3>
+    <span class="badge badge--alta">prioridade alta</span>
+  </header>
+  <div class="pauta-corpo"><div class="pauta-campo"><span class="rotulo">Ângulo</span><span class="valor">partir do achado da ShootProof (quase metade cobra barato demais, 43% não conseguem reajustar) e conectar com o método de precificação e gestão que já existe hoje. Fechar com o dado do Instagram ser o maior desafio de marketing mesmo sendo o segundo maior canal de cliente novo, o que reforça indicação como ainda o motor real do negócio.</span></div><div class="pauta-campo"><span class="rotulo">Formato</span><span class="valor">artigo de blog com facilitação visual (comparativo de barras), desdobrado em carrossel.</span></div><div class="pauta-campo"><span class="rotulo">Por que agora</span><span class="valor">é o achado com a nota mais alta da rodada, e a ponte com precificação e gestão é direta com o que já se ensina.</span></div></div>
+</article>
+<article class="pauta pauta--alta">
+  <header>
+    <span class="pauta-ordem">2</span>
+    <h3>A foto de casamento falsa que viralizou mais que a de verdade</h3>
+    <span class="badge badge--alta">prioridade alta</span>
+  </header>
+  <div class="pauta-corpo"><div class="pauta-campo"><span class="rotulo">Ângulo</span><span class="valor">o comparativo de 11 milhões contra 6 milhões de curtidas, IA contra fotografia real, usado para argumentar que presença humana e irreversibilidade da captura estão virando parte do argumento de venda, não só um detalhe estético.</span></div><div class="pauta-campo"><span class="rotulo">Formato</span><span class="valor">artigo de blog com comparativo visual lado a lado, desdobrado em carrossel e Reels curto.</span></div><div class="pauta-campo"><span class="rotulo">Por que agora</span><span class="valor">é o achado que melhor conversa com a ameaça de IA sem soar alarmista, porque o próprio dado mostra que autenticidade ainda vende mais caro.</span></div></div>
+</article>
+<article class="pauta pauta--média">
+  <header>
+    <span class="pauta-ordem">3</span>
+    <h3>O ensaio "pague só se gostar" e o preço que ele ensina o mercado a aceitar</h3>
+    <span class="badge badge--média">prioridade média</span>
+  </header>
+  <div class="pauta-corpo"><div class="pauta-campo"><span class="rotulo">Ângulo</span><span class="valor">descrever o fenômeno do aplicativo de conexão por geolocalização, sem citar nenhuma marca, e usar como gancho para falar de posicionamento contra a lógica de vitrine de preço.</span></div><div class="pauta-campo"><span class="rotulo">Formato</span><span class="valor">artigo de blog, sem imagem de marca nenhuma, ilustração genérica de conceito.</span></div><div class="pauta-campo"><span class="rotulo">Por que agora</span><span class="valor">cruza direto com a frente de modelo de negócio, que é nova neste radar e ainda não tem conteúdo publicado sobre o tema.</span></div></div>
+</article>
+<article class="pauta pauta--média">
+  <header>
+    <span class="pauta-ordem">4</span>
+    <h3>Carrossel contra Reels, o que o algoritmo realmente recompensa</h3>
+    <span class="badge badge--média">prioridade média</span>
+  </header>
+  <div class="pauta-corpo"><div class="pauta-campo"><span class="rotulo">Ângulo</span><span class="valor">usar os números de engajamento e salvamento para argumentar que o fotógrafo deveria postar carrossel de bastidor com a mesma frequência que Reels, e não só quando "tiver tempo".</span></div><div class="pauta-campo"><span class="rotulo">Formato</span><span class="valor">carrossel comparativo, com a ressalva honesta de que o dado é benchmark de mercado, não pesquisa acadêmica fechada.</span></div><div class="pauta-campo"><span class="rotulo">Por que agora</span><span class="valor">é conteúdo prático, de rotina de postagem, que não depende de nenhum produto novo para fazer sentido.</span></div></div>
+</article>
+</section>
+<section class="secao">
+  <h2><span class="sec-num">5</span>Nada relevante encontrado em</h2>
+  <details class="vazios"><summary>Temas buscados que vieram vazios <span class="contador">2</span></summary><ul><li>D. Plataformas e redes sociais. Vários blogs de marketing repetem, sem link, data ou citação verificável, a mesma alegação de que Adam Mosseri teria confirmado novos sinais de algoritmo em 2026. Um dos artigos consultados chegou a admitir no próprio texto que não ia "inventar citação direta". Tratado como ruído e descartado nesta rodada. Vale testar, numa próxima rodada, buscar diretamente o canal oficial creators.instagram.com e a conta pessoal de Mosseri, em vez de agregadores de SEO.</li><li>H. Casos de mercado fora do jurídico. Toda ocorrência de fotógrafo encontrada no período (não entrega de fotos, cobrança sem entrega, golpe) terminou em decisão de tribunal, o que é assunto do radar-juridico-fotografia, não deste. Nenhum caso de sucesso ou fracasso de negócio sem decisão judicial por trás apareceu na varredura desta semana.</li></ul></details>
+</section>
+  <div class="barra-exportar">
+    <span class="contagem" id="contagem"></span>
+    <button class="btn-limpar" id="limpar">Restaurar sugestões</button>
+    <button class="btn-exportar" id="exportar">Baixar minhas decisões</button>
+  </div>
+  <footer class="rodape">
+    <span>Gerado a partir de 2026-08-03.md</span>
+    <span>Fontes oficiais e API pública DataJud (CNJ)</span>
+  </footer>
+</div>
+<script>
+(function () {
+  var chave = 'radar-juridico:' + (document.body.dataset.relatorio || 'sem-nome');
+  var estado = {};
+  try { estado = JSON.parse(localStorage.getItem(chave) || '{}'); } catch (e) { estado = {}; }
+
+  var casos = Array.prototype.slice.call(document.querySelectorAll('.caso'));
+
+  function lerDoDom(art) {
+    var fmts = [];
+    art.querySelectorAll('.chip.on').forEach(function (c) { fmts.push(c.dataset.fmt); });
+    var dec = art.querySelector('.dec.on');
+    return { titulo: art.dataset.titulo, decisao: dec ? dec.dataset.dec : '', formatos: fmts };
+  }
+
+  function aplicar(art, dados) {
+    art.querySelectorAll('.chip').forEach(function (c) {
+      var on = dados.formatos.indexOf(c.dataset.fmt) !== -1;
+      c.classList.toggle('on', on);
+      c.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+    art.querySelectorAll('.dec').forEach(function (d) {
+      d.classList.toggle('on', d.dataset.dec === dados.decisao);
+    });
+    art.dataset.estado = dados.decisao || '';
+  }
+
+  function salvar() {
+    casos.forEach(function (art) { estado[art.dataset.caso] = lerDoDom(art); });
+    try { localStorage.setItem(chave, JSON.stringify(estado)); } catch (e) {}
+    contar();
+  }
+
+  function contar() {
+    var n = { aceito: 0, standby: 0, descartado: 0 };
+    casos.forEach(function (art) {
+      var d = art.dataset.estado;
+      if (n[d] !== undefined) n[d]++;
+    });
+    var alvo = document.getElementById('contagem');
+    if (alvo) {
+      alvo.innerHTML = '<b>' + n.aceito + '</b> aceitos, <b>' + n.standby +
+        '</b> em standby, <b>' + n.descartado + '</b> descartados';
+    }
+  }
+
+  casos.forEach(function (art) {
+    if (estado[art.dataset.caso]) aplicar(art, estado[art.dataset.caso]);
+    else art.dataset.estado = (art.querySelector('.dec.on') || {}).dataset
+      ? art.querySelector('.dec.on').dataset.dec : '';
+
+    art.querySelectorAll('.chip').forEach(function (c) {
+      c.addEventListener('click', function () {
+        var on = !c.classList.contains('on');
+        c.classList.toggle('on', on);
+        c.setAttribute('aria-pressed', on ? 'true' : 'false');
+        salvar();
+      });
+    });
+
+    art.querySelectorAll('.dec').forEach(function (d) {
+      d.addEventListener('click', function () {
+        var jaEra = d.classList.contains('on');
+        art.querySelectorAll('.dec').forEach(function (o) { o.classList.remove('on'); });
+        if (!jaEra) d.classList.add('on');
+        art.dataset.estado = jaEra ? '' : d.dataset.dec;
+        salvar();
+      });
+    });
+  });
+
+  contar();
+
+  var btn = document.getElementById('exportar');
+  if (btn) {
+    btn.addEventListener('click', function () {
+      var saida = { relatorio: document.body.dataset.relatorio, casos: [] };
+      casos.forEach(function (art) {
+        var d = lerDoDom(art);
+        saida.casos.push({
+          id: art.dataset.caso, titulo: d.titulo,
+          decisao: d.decisao || 'sem decisao', formatos: d.formatos
+        });
+      });
+      var blob = new Blob([JSON.stringify(saida, null, 2)], { type: 'application/json' });
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'radar-decisoes-' + saida.relatorio + '.json';
+      a.click();
+      URL.revokeObjectURL(a.href);
+    });
+  }
+
+  var limpar = document.getElementById('limpar');
+  if (limpar) {
+    limpar.addEventListener('click', function () {
+      try { localStorage.removeItem(chave); } catch (e) {}
+      location.reload();
+    });
+  }
+})();
+</script>
+</body>
+</html>

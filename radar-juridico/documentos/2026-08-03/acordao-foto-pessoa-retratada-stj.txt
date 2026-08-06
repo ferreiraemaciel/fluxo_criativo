@@ -1,0 +1,41 @@
+FONTE: https://scon.stj.jus.br/SCON/GetInteiroTeorDoAcordao?num_registro=202402515130&dt_publicacao=07/04/2026
+Baixado em 03/08/2026 pelo navegador embutido do app, texto extraído do PDF oficial via pdf.js. Este é o texto integral, não um resumo.
+
+AGRAVO EM RECURSO ESPECIAL Nº 2688250 - RS (2024/0251513-0)
+RELATORA: MINISTRA DANIELA TEIXEIRA
+AGRAVANTE: DIEGO EVANGELISTA DA VARA (o fotógrafo, autor da ação de origem)
+ADVOGADOS: LUCAS SARETTA FERRARI - RS065755, FREDERICO CARBONERA BOSCHIN - RS054843, JUAN FELIPE NUNES SANCHEZ - RS132060
+AGRAVADO: PATRICK BEZERRA DO NASCIMENTO (a pessoa retratada, réu na ação de origem)
+ADVOGADOS: RUBEM BILHALVA KONIG - RS070044, PEDRO FELIPE GOMES DA SILVA - SP358806, FELIPE AUGUSTO LOSCHI CRISAFULLI - SP393500, ARNALDO DE SOUZA RAMOS JUNIOR - SP481524
+
+NOTA IMPORTANTE: Diego Evangelista da Vara é o mesmo fotógrafo do caso "EDcl no AREsp 2745723/RS" (embedding vs. cópia, contra a Rádio Progresso de Ijuí), julgado pela mesma Terceira Turma, na mesma sessão virtual (24 a 30/03/2026), publicado no mesmo dia (07/04/2026). São duas ações de origem diferentes, dois réus diferentes, mas o mesmo fotógrafo litigando em duas frentes ao mesmo tempo.
+
+EMENTA
+
+DIREITO AUTORAL. AGRAVO EM RECURSO ESPECIAL. RESPONSABILIDADE CIVIL. USO NÃO AUTORIZADO DE FOTOGRAFIA POR PESSOA RETRATADA. AUSÊNCIA DE PREQUESTIONAMENTO. NECESSIDADE DE REEXAME DO CONJUNTO FÁTICO-PROBATÓRIO. INCIDÊNCIA DAS SÚMULAS 7 E 211 DO STJ. AGRAVO CONHECIDO. RECURSO ESPECIAL NÃO CONHECIDO.
+
+ACÓRDÃO: Terceira Turma, Sessão Virtual de 24/03/2026 a 30/03/2026, por unanimidade, não conhecer do recurso, nos termos do voto da Relatora. Votaram com a Relatora: Nancy Andrighi, Humberto Martins, Ricardo Villas Bôas Cueva e Moura Ribeiro. Presidiu Humberto Martins. Brasília, 31 de março de 2026.
+
+VOTO (transcrevendo os fundamentos do acórdão do TJRS que ficou mantido)
+
+"No caso em tela, o autor ajuizou a presente ação indenizatória alegando que o réu utilizou fotografia de sua autoria sem a devida autorização e divulgação, bem como sem o devido crédito, decorrendo desse contexto o dever de indenizar os danos materiais e morais. O réu, em sua tese defensiva, pontuou que não houve ato ilícito na sua reprodução. O pedido foi julgado procedente (...)
+
+Consoante se denota dos autos, o apelante Patrick se utilizou de fotografia produzida pelo autor sem autorização e sem a correta menção à sua autoria, condutas vedadas pela legislação citada, situação que, a toda evidência, tem o condão de ocasionar danos indenizáveis.
+
+Já quanto à assertiva da desnecessidade de autorização para utilização de fotografia de sua própria pessoa e em atendimento ao interesse público, vale ressaltar que o autor é fotógrafo e se viu tolido da fruição de bem decorrente do seu trabalho.
+
+Quanto à alegação da ausência de danos morais indenizáveis, sinalo que o art. 24, II, da Lei 9.610/98, define que 'são direitos morais do autor o de ter seu nome, pseudônimo ou sinal convencional indicado ou anunciado, como sendo o do autor, na utilização de sua obra'. Além disso, o desrespeito à divulgação da autoria da obra fotográfica veiculada gera danos morais por previsão expressa do art. 108 da Lei 9.610/98.
+
+Nessa perspectiva, ante a ausência de prévia autorização e identificação da autoria, o autor Diego faz jus à reparação pelos danos advindos da utilização indevida de fotografia de sua autoria, não podendo o réu se eximir de sua responsabilidade sob o argumento de que ao reproduzir não tinha conhecimento de quem era o autor da foto ou que a foto teria virado de domínio público diante da massificação de sua utilização.
+
+Assim, tendo ficado comprovada a violação ao direito autoral, os danos advindos dispensam comprovação, inclusive, pois são presumidos, uma vez que decorrem da própria Lei 9.610/98. (...)
+
+[Sobre o valor do dano moral, o TJRS reduziu o valor fixado em sentença, dizendo:] '(...) entendo que a quantia de R$ 7.000,00 mostra-se mais adequada à finalidade telada.'
+
+De outro lado, tenho que não merece acolhimento o pleito de condenação do réu ao pagamento de indenização por dano material. No caso concreto, entendo que os danos materiais não restaram devidamente comprovados, a teor do art. 373, I, do CPC (...) cabia ao autor fazer prova do efetivo prejuízo material ou ganho frustrado, com prova documental ou pericial (...)
+
+Isso posto, estou em dar parcial provimento aos recursos para o efeito de julgar parcialmente os pedidos, afastando a condenação referente aos danos materiais e majorando a indenização no tocante aos danos morais para R$ 7.000,00 (...)"
+
+[No agravo em recurso especial ao STJ, Diego alegou violação aos arts. 22, 24, II, 27, 28, 29, I, 79, §1º, 102 e 108 da Lei 9.610/98, arts. 186 e 927 do CC, e art. 42 da Lei 9.615/98 (Lei Pelé, direito de arena/imagem de atleta). A ministra relatora aplicou a Súmula 211 (dispositivos não debatidos pela origem) e a Súmula 7 (reexame de fatos vedado), mantendo o valor de R$ 7.000,00 e a improcedência do dano material.]
+
+Resumo dos valores: R$ 7.000,00 de dano moral mantidos (reduzidos do valor fixado em sentença de origem, valor original não informado neste documento). Dano material negado por falta de provas. Réu identificado: Patrick Bezerra do Nascimento.

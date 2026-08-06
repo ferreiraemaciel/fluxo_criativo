@@ -200,12 +200,12 @@ function ContentCard({ item, col, onOpen, onDragStart }) {
         )}
       </div>
 
-      {item.gancho && (
+      {(item.headline || item.roteiro) && (
         <p style={{ margin:0, fontSize:11, fontFamily:'Roboto,sans-serif', color:'var(--text-3)',
           lineHeight:1.4, overflow:'hidden', display:'-webkit-box',
           WebkitLineClamp:1, WebkitBoxOrient:'vertical',
           borderTop:'1px solid var(--app-border)', paddingTop:6 }}>
-          {item.gancho}
+          {item.headline || item.roteiro}
         </p>
       )}
     </div>
@@ -399,7 +399,6 @@ function AdicionarCriativoOrganicoBtn({ numero, cardId, onDone }) {
 }
 
 /* ── SlideBlock ──────────────────────────────────────────────────*/
-const SLIDE_NOMES = ['Capa','Contexto','Situação','Argumento','Solução','CTA','Encerramento'];
 
 function SlideBlock({ slide, index, total, onChange, onRemove, file, onFileChange }) {
   const [open, setOpen] = useState(false);
@@ -429,7 +428,6 @@ function SlideBlock({ slide, index, total, onChange, onRemove, file, onFileChang
               </span>}
           <span style={{ fontSize:12.5, fontFamily:'Roboto,sans-serif', fontWeight:700, color:'var(--text-1)' }}>
             Slide {index+1}
-            {slide.tipo && <span style={{ fontWeight:400, color:'var(--text-3)', marginLeft:6 }}>— {slide.tipo}</span>}
           </span>
         </div>
         <div style={{ display:'flex', alignItems:'center', gap:6 }}>
@@ -469,54 +467,27 @@ function SlideBlock({ slide, index, total, onChange, onRemove, file, onFileChang
             </div>
           </div>
 
-          {/* Tipo */}
           <div>
-            <label style={LABEL_STYLE}>Tipo</label>
-            <div style={{ display:'flex', gap:5, flexWrap:'wrap' }}>
-              {SLIDE_NOMES.map(n => {
-                const active = slide.tipo === n;
-                return (
-                  <button key={n} onClick={()=>set('tipo',n)}
-                    style={{ padding:'4px 10px', borderRadius:999, fontSize:10.5, cursor:'pointer',
-                      fontFamily:'Roboto,sans-serif', fontWeight:700, transition:'all 120ms',
-                      background: active?'rgba(96,165,250,.2)':'rgba(255,255,255,.04)',
-                      border: active?'1px solid rgba(96,165,250,.5)':'1px solid rgba(255,255,255,.1)',
-                      color: active?'#60a5fa':'var(--text-3)' }}>
-                    {n}
-                  </button>
-                );
-              })}
+            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:6 }}>
+              <label style={{ ...LABEL_STYLE, marginBottom:0 }}>Roteiro</label>
+              <CopyBtn text={slide.roteiro||''}/>
             </div>
-          </div>
-
-          <div>
-            <label style={LABEL_STYLE}>Título</label>
-            <input value={slide.titulo||''} onChange={e=>set('titulo',e.target.value)}
-              placeholder="Título do slide" style={{ ...FIELD_STYLE, resize:'none' }}/>
-          </div>
-
-          <div>
-            <label style={LABEL_STYLE}>Subtítulo</label>
-            <input value={slide.subtitulo||''} onChange={e=>set('subtitulo',e.target.value)}
-              placeholder="Subtítulo ou segunda linha" style={{ ...FIELD_STYLE, resize:'none' }}/>
-          </div>
-
-          <div>
-            <label style={LABEL_STYLE}>Visual / Imagem</label>
-            <textarea value={slide.visual||''} onChange={e=>set('visual',e.target.value)}
-              rows={2} placeholder="Descrição da imagem, fundo, composição..." style={FIELD_STYLE}/>
-          </div>
-
-          <div>
-            <label style={LABEL_STYLE}>Tag / Etiqueta</label>
-            <input value={slide.tag||''} onChange={e=>set('tag',e.target.value)}
-              placeholder="Ex: FOTÓGRAFO E VIDEOMAKER, ANTES DE CONTINUAR..."
-              style={{ ...FIELD_STYLE, resize:'none' }}/>
+            <textarea value={slide.roteiro||''} onChange={e=>set('roteiro',e.target.value)}
+              rows={3} placeholder="O que vai escrito neste slide..." style={FIELD_STYLE}/>
           </div>
 
           <div>
             <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:6 }}>
-              <label style={{ ...LABEL_STYLE, marginBottom:0 }}>Prompt de imagem</label>
+              <label style={{ ...LABEL_STYLE, marginBottom:0 }}>Estética Visual</label>
+              <CopyBtn text={slide.estetica_visual||''}/>
+            </div>
+            <textarea value={slide.estetica_visual||''} onChange={e=>set('estetica_visual',e.target.value)}
+              rows={2} placeholder="Descrição da cena, fundo, composição..." style={FIELD_STYLE}/>
+          </div>
+
+          <div>
+            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:6 }}>
+              <label style={{ ...LABEL_STYLE, marginBottom:0 }}>Prompt</label>
               <CopyBtn text={slide.prompt||''}/>
             </div>
             <textarea value={slide.prompt||''} onChange={e=>set('prompt',e.target.value)}
@@ -555,7 +526,7 @@ function PublishModal({ form, slidesArr, slideFiles, onClose, onSuccess }) {
   const runReels = async () => {
     try {
       setPhase('publishing');
-      const caption = (form.legenda || form.gancho || '').trim();
+      const caption = (form.legenda || form.roteiro || '').trim();
       const scheduleAt = modo === 'agendar' && schedDate
         ? new Date(`${schedDate}T${schedTime}:00-03:00`).toISOString()
         : null;
@@ -659,7 +630,7 @@ function PublishModal({ form, slidesArr, slideFiles, onClose, onSuccess }) {
 
       setPhase('publishing');
 
-      const caption    = (form.legenda || form.gancho || '').trim();
+      const caption    = (form.legenda || form.roteiro || '').trim();
       const tipo       = form.plataforma === 'Carrossel' ? 'carrossel' : 'imagem';
       const scheduleAt = modo === 'agendar' && schedDate
         ? new Date(`${schedDate}T${schedTime}:00-03:00`).toISOString()
@@ -952,7 +923,7 @@ function ResponsavelAvatar({ nome, size=24, active=false }) {
 }
 
 /* ── ContentModal ────────────────────────────────────────────────*/
-const EMPTY_SLIDE = () => ({ tipo:'', titulo:'', subtitulo:'', visual:'', tag:'', prompt:'', image_url:'' });
+const EMPTY_SLIDE = () => ({ roteiro:'', estetica_visual:'', prompt:'', image_url:'' });
 
 function parseSlides(raw) {
   if (!raw) return [EMPTY_SLIDE()];
@@ -965,8 +936,8 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
   const [form, setForm] = useState(item || {
     tema:'', plataforma:'Reels', responsavel:'Felipe',
     status: defaultStatus || 'Fazer',
-    gancho:'', desenvolvimento:'', slides:'', legenda:'', cta:'',
-    prompt_imagem:'', referencia:'',
+    headline:'', roteiro:'', estetica_visual:'', prompt:'',
+    slides:'', legenda:'', observacoes:'', referencia:'',
     data_prevista: prefillDate || '',
   });
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
@@ -1378,14 +1349,14 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
                       onBlur={e=>e.target.style.borderColor='var(--app-border)'}/>
                   </div>
 
-                  {/* Gancho */}
+                  {/* Headline */}
                   <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
                     <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-                      <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)' }}>Gancho</span>
-                      <CopyBtn text={form.gancho}/>
+                      <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)' }}>Headline</span>
+                      <CopyBtn text={form.headline||''}/>
                     </div>
-                    <textarea value={form.gancho} onChange={e=>set('gancho',e.target.value)}
-                      rows={3} placeholder="A primeira frase que para o scroll..."
+                    <textarea value={form.headline||''} onChange={e=>set('headline',e.target.value)}
+                      rows={2} placeholder="O texto escrito na própria arte/vídeo (hook)..."
                       style={{ width:'100%', boxSizing:'border-box', padding:'9px 12px', borderRadius:8, resize:'vertical',
                         background:'var(--app-surface-2)', border:'1px solid var(--app-border)',
                         color:'var(--text-1)', fontFamily:'Roboto,sans-serif', fontSize:13, outline:'none', lineHeight:1.55 }}
@@ -1417,27 +1388,15 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
                         ))}
                       </div>
                     </div>
-                    <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
-                      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-                        <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)' }}>Legenda da postagem</span>
-                        <CopyBtn text={form.legenda||''}/>
-                      </div>
-                      <textarea value={form.legenda||''} onChange={e=>set('legenda',e.target.value)}
-                        rows={3} placeholder="Texto da postagem no Instagram..."
-                        style={{ width:'100%', boxSizing:'border-box', padding:'9px 12px', borderRadius:8, resize:'vertical',
-                          background:'var(--app-surface-2)', border:'1px solid var(--app-border)',
-                          color:'var(--text-1)', fontFamily:'Roboto,sans-serif', fontSize:13, outline:'none', lineHeight:1.55 }}
-                        onFocus={e=>e.target.style.borderColor='rgba(234,170,65,.4)'}
-                        onBlur={e=>e.target.style.borderColor='var(--app-border)'}/>
-                    </div>
                   </>) : (<>
+                    {/* Roteiro (Gancho + Desenvolvimento + CTA, sempre as 3 partes presentes) */}
                     <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
                       <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-                        <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)' }}>Desenvolvimento</span>
-                        <CopyBtn text={form.desenvolvimento}/>
+                        <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)' }}>Roteiro</span>
+                        <CopyBtn text={form.roteiro||''}/>
                       </div>
-                      <textarea value={form.desenvolvimento} onChange={e=>set('desenvolvimento',e.target.value)}
-                        rows={5} placeholder="O conteúdo principal, argumentos, roteiro..."
+                      <textarea value={form.roteiro||''} onChange={e=>set('roteiro',e.target.value)}
+                        rows={6} placeholder="Gancho, desenvolvimento e CTA, as 3 partes precisam estar aqui..."
                         style={{ width:'100%', boxSizing:'border-box', padding:'9px 12px', borderRadius:8, resize:'vertical',
                           background:'var(--app-surface-2)', border:'1px solid var(--app-border)',
                           color:'var(--text-1)', fontFamily:'Roboto,sans-serif', fontSize:13, outline:'none', lineHeight:1.55 }}
@@ -1445,14 +1404,14 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
                         onBlur={e=>e.target.style.borderColor='var(--app-border)'}/>
                     </div>
 
-                    {/* Legenda da postagem — Imagem / Reels / Stories */}
+                    {/* Estética Visual */}
                     <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
                       <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-                        <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)' }}>Legenda da postagem</span>
-                        <CopyBtn text={form.legenda||''}/>
+                        <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)' }}>Estética Visual</span>
+                        <CopyBtn text={form.estetica_visual||''}/>
                       </div>
-                      <textarea value={form.legenda||''} onChange={e=>set('legenda',e.target.value)}
-                        rows={5} placeholder="Texto da postagem no Instagram..."
+                      <textarea value={form.estetica_visual||''} onChange={e=>set('estetica_visual',e.target.value)}
+                        rows={4} placeholder={form.plataforma==='Imagem' ? "Descrição da cena/composição (o Prompt de geração vai no campo abaixo)..." : "Cenário, enquadramento, ritmo de corte, direção de filmagem..."}
                         style={{ width:'100%', boxSizing:'border-box', padding:'9px 12px', borderRadius:8, resize:'vertical',
                           background:'var(--app-surface-2)', border:'1px solid var(--app-border)',
                           color:'var(--text-1)', fontFamily:'Roboto,sans-serif', fontSize:13, outline:'none', lineHeight:1.55 }}
@@ -1460,30 +1419,47 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
                         onBlur={e=>e.target.style.borderColor='var(--app-border)'}/>
                     </div>
 
-                    {/* Prompt de imagem */}
-                    <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
-                      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-                        <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)' }}>Prompt de imagem</span>
-                        <CopyBtn text={form.prompt_imagem||''}/>
+                    {/* Prompt — só Imagem */}
+                    {form.plataforma === 'Imagem' && (
+                      <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+                        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+                          <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)' }}>Prompt</span>
+                          <CopyBtn text={form.prompt||''}/>
+                        </div>
+                        <textarea value={form.prompt||''} onChange={e=>set('prompt',e.target.value)}
+                          rows={4} placeholder="Prompt para gerar a imagem no ChatGPT / Midjourney..."
+                          style={{ width:'100%', boxSizing:'border-box', padding:'9px 12px', borderRadius:8, resize:'vertical',
+                            background:'rgba(96,165,250,.04)', border:'1px solid rgba(96,165,250,.18)',
+                            color:'var(--text-1)', fontFamily:'Roboto,sans-serif', fontSize:13, outline:'none', lineHeight:1.55 }}
+                          onFocus={e=>e.target.style.borderColor='rgba(96,165,250,.5)'}
+                          onBlur={e=>e.target.style.borderColor='rgba(96,165,250,.18)'}/>
                       </div>
-                      <textarea value={form.prompt_imagem||''} onChange={e=>set('prompt_imagem',e.target.value)}
-                        rows={4} placeholder="Prompt para gerar a imagem no ChatGPT / Midjourney..."
-                        style={{ width:'100%', boxSizing:'border-box', padding:'9px 12px', borderRadius:8, resize:'vertical',
-                          background:'rgba(96,165,250,.04)', border:'1px solid rgba(96,165,250,.18)',
-                          color:'var(--text-1)', fontFamily:'Roboto,sans-serif', fontSize:13, outline:'none', lineHeight:1.55 }}
-                        onFocus={e=>e.target.style.borderColor='rgba(96,165,250,.5)'}
-                        onBlur={e=>e.target.style.borderColor='rgba(96,165,250,.18)'}/>
-                    </div>
+                    )}
                   </>)}
 
-                  {/* CTA */}
+                  {/* Legenda da postagem — Reels, Carrossel e Imagem */}
                   <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
                     <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-                      <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)' }}>CTA</span>
-                      <CopyBtn text={form.cta}/>
+                      <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)' }}>Legenda da postagem</span>
+                      <CopyBtn text={form.legenda||''}/>
                     </div>
-                    <textarea value={form.cta} onChange={e=>set('cta',e.target.value)}
-                      rows={2} placeholder="O que você quer que a pessoa faça depois..."
+                    <textarea value={form.legenda||''} onChange={e=>set('legenda',e.target.value)}
+                      rows={5} placeholder="Texto da postagem no Instagram..."
+                      style={{ width:'100%', boxSizing:'border-box', padding:'9px 12px', borderRadius:8, resize:'vertical',
+                        background:'var(--app-surface-2)', border:'1px solid var(--app-border)',
+                        color:'var(--text-1)', fontFamily:'Roboto,sans-serif', fontSize:13, outline:'none', lineHeight:1.55 }}
+                      onFocus={e=>e.target.style.borderColor='rgba(234,170,65,.4)'}
+                      onBlur={e=>e.target.style.borderColor='var(--app-border)'}/>
+                  </div>
+
+                  {/* Informações Adicionais */}
+                  <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+                    <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+                      <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)' }}>Informações Adicionais</span>
+                      <CopyBtn text={form.observacoes||''}/>
+                    </div>
+                    <textarea value={form.observacoes||''} onChange={e=>set('observacoes',e.target.value)}
+                      rows={3} placeholder="Catch-all: o que não cabe nos campos acima..."
                       style={{ width:'100%', boxSizing:'border-box', padding:'9px 12px', borderRadius:8, resize:'vertical',
                         background:'var(--app-surface-2)', border:'1px solid var(--app-border)',
                         color:'var(--text-1)', fontFamily:'Roboto,sans-serif', fontSize:13, outline:'none', lineHeight:1.55 }}
@@ -2055,9 +2031,10 @@ function OrganicoScreen() {
 
     const row = {
       tema:form.tema, plataforma:form.plataforma, responsavel:form.responsavel,
-      status, gancho:form.gancho, desenvolvimento:form.desenvolvimento,
+      status, headline:form.headline||null, roteiro:form.roteiro||null,
+      estetica_visual:form.estetica_visual||null, prompt:form.prompt||null,
       slides:form.slides, legenda:form.legenda,
-      cta:form.cta, prompt_imagem:form.prompt_imagem||null,
+      observacoes:form.observacoes||null,
       data_prevista:form.data_prevista||null,
       referencia:form.referencia||null,
       published_at:form.published_at||null,

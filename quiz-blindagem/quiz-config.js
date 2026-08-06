@@ -6,8 +6,8 @@
    ================================================================ */
 window.QUIZ_CONFIG = {
   funnelSlug: 'blindagem',
-  checkoutUrl: 'https://pay.hotmart.com/C106394543X',
-  preco: { de: 'R$ 497,00', por: 'R$ 397,00', parcelas: '12x R$ 36,12' },
+  checkoutUrl: 'https://pay.hotmart.com/C106394543X?checkoutMode=10',
+  preco: { de: 'R$ 697,00', por: 'R$ 397,00', parcelas: '12x R$ 41,42' },
 
   steps: [
     { type: 'single', key: 'area_atuacao',
@@ -39,11 +39,12 @@ window.QUIZ_CONFIG = {
       ] },
 
     { type: 'single', key: 'confianca_clientes',
-      title: 'Pensa nos seus clientes: eles confiam em você de cara?',
+      title: 'Como você e seu cliente assinam os contratos atualmente?',
       options: [
-        { emoji: '😔', label: 'Sempre sinto que eles ficam desconfiados no começo.' },
-        { emoji: '🤔', label: 'Depende do cliente, às vezes preciso convencer.' },
-        { emoji: '💪', label: 'Confiam sempre, nunca preciso provar nada.' },
+        { emoji: '🖨️', label: 'Imprimo todos os contratos e assinamos manuscrito.' },
+        { emoji: '📲', label: 'Mando pelo WhatsApp e peço uma foto dele assinado.' },
+        { emoji: '🏛️', label: 'Assino pelo gov.br.' },
+        { emoji: '✍️', label: 'Uso uma plataforma de assinatura digital, mas não integrada ao meu processo de contratos.' },
       ] },
 
     { type: 'content',
@@ -65,6 +66,7 @@ window.QUIZ_CONFIG = {
         { emoji: '🍽️', label: 'Ficou sem jantar/mesa em um evento' },
         { emoji: '💸', label: 'Cliente cancelou o contrato e pediu o dinheiro de volta' },
         { emoji: '📅', label: 'Anos depois o cliente pediu as fotos que eu não guardei mais' },
+        { emoji: '🖊️', label: 'Não sabia se o cliente tinha assinado o contrato ou não' },
       ] },
 
     { type: 'single', key: 'custo_processo',
@@ -97,6 +99,7 @@ window.QUIZ_CONFIG = {
         { emoji: '📄', label: 'Um textão em Word e nem sei se me protege.' },
         { emoji: '💬', label: 'Salvo as mensagens que troquei com o cliente pelo WhatsApp.' },
         { emoji: '😨', label: 'Na verdade, eu nem uso contrato…' },
+        { emoji: '📂', label: 'Tenho contratos, mas é uma bagunça de arquivos, e-mails e PDF.' },
       ] },
 
     { type: 'single', key: 'foco_artistico',
@@ -119,42 +122,36 @@ window.QUIZ_CONFIG = {
       ] },
 
     { type: 'single', key: 'protege_dinheiro',
-      title: 'Esse contrato te protege de calote e cancelamento?',
+      title: 'Se um cliente cancelar o serviço e pedir o dinheiro de volta, o que acontece?',
       options: [
-        { emoji: '😖', label: 'Não ajuda, já perdi dinheiro por não estar protegido.' },
-        { emoji: '😐', label: 'Às vezes protege, mas já tive problemas…' },
-        { emoji: '🛡️', label: 'Sim, sempre me protege dessas situações.' },
+        { emoji: '😖', label: 'Já passei por isso e perdi dinheiro, não tinha proteção nenhuma.' },
+        { emoji: '😐', label: 'Depende do caso, já tive problema mas consegui resolver de algum jeito.' },
+        { emoji: '🛡️', label: 'Tenho cláusulas claras de cancelamento, me sinto protegido.' },
       ] },
 
-    { type: 'multi', key: 'temas_dominados',
-      title: 'Desses assuntos jurídicos, quais você manja?',
-      subtitle: 'Pode marcar mais de uma.',
+    { type: 'single', key: 'temas_dominados',
+      title: 'Quando você precisa encontrar um contrato antigo de um cliente, o que acontece?',
       options: [
-        { emoji: '©️', label: 'Direitos autorais' },
-        { emoji: '🖼️', label: 'Direito de Imagem' },
-        { emoji: '🔒', label: 'Lei Geral de Proteção de Dados' },
-        { emoji: '✍️', label: 'Assinatura digital' },
-        { emoji: '📋', label: 'Rescisão contratual' },
-        { emoji: '🛍️', label: 'Relação de consumo' },
-        { emoji: '🤷', label: 'Nenhum deles' },
+        { emoji: '🔍', label: 'Fico procurando em e-mails, pastas e WhatsApp por vários minutos.' },
+        { emoji: '📋', label: 'Peço para o cliente me mandar de volta porque não sei onde guardei.' },
+        { emoji: '📁', label: 'Tenho uma pasta no computador, mas é difícil navegar.' },
+        { emoji: '✅', label: 'Encontro fácil, tenho tudo organizado por cliente.' },
       ] },
 
     { type: 'single', key: 'entende_contrato',
-      title: 'Quando você bate o olho num contrato...',
+      title: 'Hoje, o seu processo de fechar contrato é:',
       options: [
-        { emoji: '❌', label: 'Ainda não uso contrato.' },
-        { emoji: '😵', label: 'Não sou capaz de entender sozinho.' },
-        { emoji: '🧐', label: 'Consigo entender a maioria das cláusulas, mas ainda tenho algumas dúvidas.' },
+        { emoji: '💬', label: 'Mando o arquivo por WhatsApp e espero o cliente responder.' },
+        { emoji: '📝', label: 'Peço pra assinar em papel e fico com uma via.' },
+        { emoji: '🤷', label: 'Não tenho processo. Cada fechamento é um improviso.' },
+        { emoji: '📊', label: 'Tenho processo, mas não consigo acompanhar o status de cada contrato.' },
       ] },
 
-    { type: 'content',
+    { type: 'comparison',
       key: 'quer_modelos',
       heading: 'Contrato não é papel. É sistema.',
-      imgs: [
-        { src: 'assets/clausula-01.jpg', title: 'Contrato em Word ou no WhatsApp', caption: 'Difícil de acompanhar, fácil de perder.' },
-        { src: 'assets/clausula-02.jpg', title: 'Contrato no Blindagem', caption: 'Gerado, assinado, organizado e rastreado em um lugar só.' },
-      ],
-      body: 'O <b>Blindagem</b> é um sistema completo para fotógrafos e videomakers gerirem contratos do início ao fim: gere, assine digitalmente, organize por cliente e acompanhe o status em tempo real.',
+      afterImg: 'assets/clausula-02.jpg',
+      body: 'O <b>Blindagem</b> é um sistema completo para fotógrafos e videomakers gerirem contratos do início ao fim: gere, assine digitalmente, organize por cliente e acompanhe o status em tempo real. Os contratos continuam visuais e personalizados, como os Modelos de Contrato Visual, agora com assinatura digital e gestão completa.',
       question: 'Quer um sistema para gerar, assinar, organizar e acompanhar seus contratos?',
       options: [
         { emoji: '✅', label: 'Sim, preciso disso agora. Estou sem controle.' },
@@ -165,7 +162,7 @@ window.QUIZ_CONFIG = {
     { type: 'capture',
       heading: 'Falta pouco para o seu diagnóstico.',
       img: 'assets/foto-checkout.jpg',
-      body: 'Sou criador do MFP, o Método Fotógrafo Protegido. Advogado especializado, com mais de 15 anos no campo de batalha da fotografia. Já são centenas de fotógrafos protegidos no Brasil. Deixe seus dados para ver o seu resultado.',
+      body: 'Sou Felipe Ferreira, advogado especializado em profissionais da imagem, fotógrafo e videomaker há 15 anos, Mestre em Gestão e Inovação pela UFSC e fundador do Fotografia é o Meu Negócio. Criei o Blindagem para acabar de vez com o caos dos contratos no WhatsApp. Deixe seus dados para ver o seu diagnóstico.',
       cta: 'Ver o meu diagnóstico' },
 
     { type: 'loading',
@@ -177,7 +174,8 @@ window.QUIZ_CONFIG = {
         { emoji: '✍️', title: 'Assinatura Digital', body: 'Assine e receba assinaturas sem papel ou impressora.' },
         { emoji: '📁', title: 'Organização Total', body: 'Todos os contratos centralizados e fáceis de encontrar.' },
         { emoji: '🔔', title: 'Acompanhamento em Tempo Real', body: 'Saiba o status de cada contrato sem precisar ligar pro cliente.' },
-        { emoji: '🛡️', title: 'Proteção Jurídica Garantida!' },
+        { emoji: '🎨', title: 'Contratos Visuais', body: 'Seus contratos continuam visuais e personalizados, como nos Modelos de Contrato Visual.' },
+        { emoji: '🛡️', title: 'Muito mais proteção jurídica para o seu negócio.' },
       ],
       loadingText: 'Analisando perfil e gerando relatório…' },
 

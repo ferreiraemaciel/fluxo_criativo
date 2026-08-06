@@ -515,7 +515,7 @@ function IdeiaScreen() {
           plataforma,
           status: 'Fazer',
           responsavel: 'Felipe',
-          gancho: idea.desc || '',
+          roteiro: idea.desc || '',
         };
         if (refToStore) row.referencia = refToStore;
         const { error } = await window.db.from('conteudo_organico').insert(row);

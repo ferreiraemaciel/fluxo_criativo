@@ -67,6 +67,29 @@ Se algum campo essencial não estiver claro no contexto, perguntar antes de lan�
 
 ---
 
+## TRACKER FMN — UMA IDEIA POR PLATAFORMA (REGRA GLOBAL)
+
+> Combinada com Felipe em 2026-08-03. Aplica-se a qualquer pedido de lançar ideia no Tracker FMN, em qualquer conversa, presente e futura.
+
+Quando o usuário disser "lança como ideia", "joga nas ideias", "cria uma ideia disso" ou equivalente, e o assunto render mais de um formato (artigo, imagem, carrossel, Reels, Stories, YouTube), **lançar um card por formato**, nunca um card único com vários formatos marcados.
+
+**Cada card é escrito para o formato dele.** Não é o mesmo texto replicado três vezes. O título e a descrição mudam conforme o que aquela peça precisa:
+
+| Formato | O que a descrição precisa entregar |
+|---|---|
+| Artigo | Ângulo, abertura pronta, estrutura em seções, seção de honestidade, lastro com fonte e links |
+| Imagem | O que a peça mostra, texto que entra na arte, e o prompt ou a direção visual |
+| Carrossel | Quantidade de slides, o que vai em cada um, e a legenda |
+| Reels | As 7 seções da estrutura de Reels (Headline, Hook, Roteiro em 3 blocos, Legenda, Título, Descrição, Notas de Edição) |
+| Stories | Sequência de telas, o que é enquete ou caixinha, e para onde manda |
+| YouTube | Ângulo, estrutura do roteiro, título e descrição do vídeo |
+
+**Como executar:** rodar `python3 scripts/tracker-lancar-ideia.py` uma vez por formato, com `--formatos` recebendo um único valor. O script recusa mais de um formato por card e explica o motivo. A exceção `--permitir-multi-formato` existe só para o caso raro em que o próprio usuário pedir um card único, e não deve ser usada por conveniência.
+
+**Lastro compartilhado.** Os cards do mesmo assunto repetem a mesma referência (`--referencia`) e o mesmo bloco de lastro no fim da descrição, para que cada um funcione sozinho quando for aberto meses depois.
+
+---
+
 ## KANBAN — CARD EM "FAZER" AVANÇA SOZINHO AO RECEBER MÍDIA (REGRA GLOBAL)
 
 > Aplica-se a qualquer kanban de conteúdo do projeto (Anúncios e Orgânico, Tracker e Khronus), presente e futuro.

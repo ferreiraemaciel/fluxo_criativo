@@ -152,6 +152,10 @@ def main():
         payload = {"status": novo_status}
         if nova_tag is not None:
             payload["tag"] = nova_tag
+        # "etapa" (Copy/Produção) só faz sentido em Fazendo (status=fazer) —
+        # some sozinho em qualquer transição automática pra fora dali.
+        if novo_status != "fazer":
+            payload["etapa"] = None
         # Para lotes de status igual ao atual (só muda tag), não repetir status
         if novo_status in ("campeoes", "testar-novamente", "arquivado"):
             # Só inclui status se for mudança real (ex: campeoes→arquivado)

@@ -1,0 +1,52 @@
+FONTE: https://scon.stj.jus.br/SCON/GetInteiroTeorDoAcordao?num_registro=202500034971&dt_publicacao=18/09/2025
+Baixado em 03/08/2026 pelo navegador embutido do app, texto extraído do PDF oficial via pdf.js (o download direto por requisição simples é bloqueado pelo WAF do STJ). Este é o texto integral, não um resumo.
+
+RECURSO ESPECIAL Nº 2191048 - MG (2025/0003497-1)
+RELATOR: MINISTRO RICARDO VILLAS BÔAS CUEVA
+RECORRENTE: ALDEIA FOTOGRAFIA E IMAGENS LTDA
+RECORRENTE: ALEXANDRE CARNEIRO MOTA
+ADVOGADOS: LEONARDO MACHADO PONTES - MG129942, PAULO MACHADO PONTES - MG140222, SAMUEL GUILHERME DE SOUZA CUSTODIO - MG114330, HILDEBRANDO PONTES NETO - MG016162
+RECORRIDO: TRÊS CORAÇÕES ALIMENTOS S.A
+RECORRIDO: CAFÉ TRÊS CORAÇÕES S/A
+ADVOGADOS: CAROLINA COLARES BARROS DE ASSIS - CE018438, FREDERICO PETERS DE PINHO - CE021454, LÍVIA GARCIA VASCONCELOS - CE019434, SÉRGIO LUÍS TAVARES MARTINS - CE014259, TARCIANO CAPIBARIBE BARROS - CE011208, VOLNEY LIMEIRA LOBO - CE022012
+
+EMENTA
+
+RECURSO ESPECIAL. DIREITO AUTORAL. FOTOGRAFIA. UTILIZAÇÃO NÃO AUTORIZADA. AUSÊNCIA DE COMPROVAÇÃO. REVISÃO. IMPOSSIBILIDADE. CONJUNTO FÁTICO-PROBATÓRIO. OBJETO DO CONTRATO. SÚMULAS NºS 5 E 7/STJ.
+1. É conhecida a jurisprudência no sentido de que a utilização da obra literária, artística ou científica depende de autorização expressa e prévia do autor (art. 29 da Lei nº 9.610/1998).
+2. Entretanto, no caso concreto, os recorrentes não lograram êxito no sentido de comprovar que teriam sido contratados para produzir material com a finalidade de estampar exclusivamente determinado produto (jogos americanos). Desse modo, não seria possível concluir que as contratantes/recorridas não pudessem usar as fotos em outros materiais.
+3. A revisão do entendimento firmado pelas instâncias ordinárias demandaria o reexame dos fatos e das provas dos autos e do objeto contratado, o que é inviável no recurso especial pelos óbices das Súmulas nºs 5 e 7/STJ.
+4. Recurso especial não conhecido.
+
+ACÓRDÃO: Vistos e relatados estes autos, acordam os Ministros da TERCEIRA TURMA do STJ, em Sessão Virtual de 09/09/2025 a 15/09/2025, por unanimidade, não conhecer do recurso, nos termos do voto do Relator. Votaram com o Relator: Moura Ribeiro, Daniela Teixeira, Nancy Andrighi e Humberto Martins. Presidiu Humberto Martins. Brasília, 16 de setembro de 2025.
+
+RELATÓRIO
+
+Trata-se de recurso especial interposto por ALDEIA FOTOGRAFIA E IMAGENS LTDA., fundamentado no art. 105, III, "a" e "c", da CF, contra acórdão do TJSP assim ementado:
+
+"APELAÇÃO CÍVEL – AÇÃO INDENIZATÓRIA – DIREITO AUTORAL – UTILIZAÇÃO DESAUTORIZADA DE OBRA FOTOGRÁFICA – DIVULGAÇÃO QUE NÃO EXTRAPOLA OS LIMITES DO CONTRATO DE PRESTAÇÃO DE SERVIÇOS FIRMADO ENTRE AS PARTES – DEVER DE REPARAÇÃO INEXISTENTE
+- A utilização ou reprodução não autorizada de obra fotográfica configura violação a direito autoral, sujeitando o infrator à reparação dos danos causados ao titular, nos termos do art. 102 da Lei n. 9.610/98.
+- Não demonstrado, pelo autor de obra fotográfica, que a utilização de imagens em produtos da parte ré extrapola os limites do contrato de prestação de serviços firmado entre as partes, ausente cláusula restringindo o uso das imagens, inexiste violação a direito autoral do qual decorra dever reparatório" (e-STJ fl. 873).
+
+Os embargos de declaração opostos foram rejeitados (e-STJ fl. 961).
+
+No recurso especial, alega-se violação dos artigos 4º, 7º, VII; 22, 24, I e II; 28, 29, VIII; 50, 79, §§1º e 2º; 31, 49, 46, 104, II, da Lei nº 9.610/96, argumentando que, com ou sem contrato escrito, não houve autorização verbal e/ou por mensagem, não podendo ocorrer interpretação extensiva que presuma ter havido uma licença sem limites de uso das obras fotográficas pelos recorridos, mormente porque houve expressa cobrança extrajudicial.
+
+VOTO
+
+A insurgência não merece prosperar.
+
+É conhecida a jurisprudência no sentido de que a utilização da obra literária, artística ou científica depende de autorização expressa e prévia do autor (art. 29 da Lei nº 9.610/1998). Nesse sentido, citado o REsp nº 1.704.189/RJ (caso do uso de trecho de música como nome de programa de TV, relator Min. Ricardo Villas Bôas Cueva, Terceira Turma, julgado em 13/10/2020).
+
+Entretanto, no caso concreto, os recorrentes não lograram êxito no sentido de comprovar que teriam sido contratados para produzir material com a finalidade de estampar exclusivamente determinado produto (jogos americanos). Desse modo, não seria possível concluir que as contratantes/recorridas não pudessem usar as fotos em outros materiais. O acórdão do TJSP, transcrito no voto, explica:
+
+"A controvérsia recursal consiste em verificar se a parte ré utilizou obra fotográfica produzida pela parte autora, sem prévia autorização, para além dos limites do contrato de prestação de serviços estabelecido entre as partes, sendo incontroversa a existência da formalização de negócio jurídico entre as partes, em 2007, para realização de fotografias para utilização pela marca Café Fino Grão. A parte autora sustenta que o uso das referidas fotografias deveria ser limitado ao objeto da contratação - confecção de jogos americanos a serem distribuídos aos clientes como brindes - e não poderiam ser utilizadas, posteriormente, em outros produtos. A parte ré, por sua vez, defende a inexistência de exclusividade no uso das fotografias para confecção dos referidos brindes. (...) Com fins de aferir se houve utilização da obra fotográfica autoral nas embalagens de café comercializadas pela ré, foi realizada prova pericial. O expert chegou à conclusão que as fotografias da autora não estampam o Café Fino Grão Tradicional e Café Fino Grão Extra Forte (resposta ao quesito 'g'). Por outro lado, constatou-se que a obra foi utilizada na apresentação do produto no sítio eletrônico do Café Fino Grão, em setembro de 2012 (evento n. 30). Não obstante, não há prova de que a empresa fotográfica tenha sido contratada para produzir material com a finalidade de estampar exclusivamente os mencionados jogos americanos, não sendo possível concluir que a contratante não pudesse usar as fotos em outros materiais. Desta forma, entendo que a parte autora não logrou êxito em comprovar que a utilização constatada na perícia extrapolou os limites contratuais, inexistente qualquer cláusula no pacto firmado entre as partes restringindo o uso das imagens produzidas aos ditos jogos americanos ou vedando a sua utilização, pela contratante, em outros produtos por ela comercializados. Nesse cenário, conclui-se que inexiste violação a direito autoral da parte requerente, relativamente a sua obra fotográfica, da qual se possa derivar dever de reparação da ré, não havendo utilização das fotografias para além dos limites contratados. (...) NEGO PROVIMENTO AO APELO, mantendo inalterada a sentença."
+
+Assim, rever a conclusão do tribunal local demandaria o revolvimento do acervo fático-probatório dos autos e do objeto contratado, procedimento inviável ante a natureza excepcional da via eleita, consoante disposto nas Súmulas nºs 5 e 7/STJ.
+
+Ante o exposto, não conheço do recurso especial. Na origem, os honorários recursais devem ser majorados para 20% em favor do advogado das recorridas, nos termos do art. 85, §11, do CPC, observado o benefício da gratuidade da justiça, se for o caso.
+
+Contrato original: 2007, para fotos usadas pela marca "Café Fino Grão", contratação de "jogos americanos" (brindes/placemats) para distribuição a clientes.
+Uso questionado: setembro de 2012 (cinco anos depois), no site do produto Café Fino Grão.
+Perícia: as fotos NÃO apareceram nas embalagens do Café Fino Grão Tradicional e Extra Forte, mas apareceram no site institucional do produto.
+Resultado: TJSP negou o pedido (sem cláusula restritiva, não haveria prova de extrapolação). STJ não conheceu do recurso especial (Súmulas 5 e 7, barram reexame de contrato e provas).
