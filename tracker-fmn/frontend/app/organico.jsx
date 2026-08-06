@@ -1507,6 +1507,146 @@ function FilterPill({ label, active, color, onClick }) {
   );
 }
 
+/* ── ProgramarModal — escolher um card pronto e jogar numa data ────────────
+   Abre ao clicar num dia do calendário. Lista os cards que já estão na coluna
+   "Postagem" (prontos, com mídia) pra você só escolher a data, em vez de ter
+   que abrir card por card. Também dá pra criar um card novo já naquela data. */
+function ProgramarModal({ dateStr, items, onEscolher, onCriarNovo, onClose }) {
+  const [busca, setBusca] = useState('');
+
+  const fmtData = d => {
+    const [a, m, dia] = d.split('-');
+    return `${dia}/${m}/${a}`;
+  };
+
+  // Prontos pra postar primeiro; depois os que estão em Produção (às vezes o
+  // usuário quer reservar a data antes da arte ficar pronta).
+  const candidatos = items
+    .filter(i => ['Postagem', 'Produção'].includes(i.status))
+    .filter(i => {
+      if (!busca.trim()) return true;
+      const t = busca.trim().toLowerCase();
+      return (i.tema || '').toLowerCase().includes(t) || String(i.numero || '').includes(t);
+    })
+    .sort((a, b) => (a.status === 'Postagem' ? 0 : 1) - (b.status === 'Postagem' ? 0 : 1));
+
+  return (
+    <div onClick={e => e.target === e.currentTarget && onClose()}
+      style={{ position:'fixed', inset:0, background:'rgba(0,0,0,.7)', zIndex:900,
+        display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
+      <div onClick={e => e.stopPropagation()}
+        style={{ width:560, maxWidth:'94vw', maxHeight:'82vh', display:'flex', flexDirection:'column',
+          background:'var(--app-surface)', border:'1px solid var(--app-border-2)', borderRadius:14,
+          overflow:'hidden', boxShadow:'0 24px 64px rgba(0,0,0,.6)' }}>
+
+        <div style={{ padding:'14px 18px', borderBottom:'1px solid var(--app-border)',
+          display:'flex', alignItems:'center', justifyContent:'space-between', flexShrink:0 }}>
+          <div>
+            <div style={{ fontSize:14, fontFamily:'Roboto,sans-serif', fontWeight:700, color:'var(--text-1)' }}>
+              Programar em {fmtData(dateStr)}
+            </div>
+            <div style={{ fontSize:11, fontFamily:'Roboto,sans-serif', color:'var(--text-3)' }}>
+              Escolha um conteúdo pronto ou crie um novo nesta data
+            </div>
+          </div>
+          <button onClick={onClose}
+            style={{ width:28, height:28, borderRadius:'50%', background:'rgba(255,255,255,.07)',
+              border:'none', color:'var(--text-2)', cursor:'pointer', fontSize:18, lineHeight:1 }}>×</button>
+        </div>
+
+        <div style={{ padding:'12px 18px 0', flexShrink:0 }}>
+          <input value={busca} onChange={e => setBusca(e.target.value)}
+            placeholder="Buscar por tema ou número..."
+            style={{ width:'100%', boxSizing:'border-box', padding:'8px 12px', borderRadius:8,
+              background:'var(--app-surface-2)', border:'1px solid var(--app-border)',
+              color:'var(--text-1)', fontFamily:'Roboto,sans-serif', fontSize:12.5, outline:'none' }}/>
+        </div>
+
+        <div style={{ flex:1, overflowY:'auto', padding:'12px 18px', display:'flex', flexDirection:'column', gap:6 }}>
+          {candidatos.length === 0 && (
+            <div style={{ padding:'28px 0', textAlign:'center', color:'var(--text-3)',
+              fontFamily:'Roboto,sans-serif', fontSize:12.5, lineHeight:1.6 }}>
+              Nenhum conteúdo em Postagem ou Produção.<br/>
+              Crie um card novo nesta data abaixo.
+            </div>
+          )}
+          {candidatos.map(it => {
+            const cor = PLAT_COLOR[it.plataforma] || '#94a3b8';
+            const num = String(it.numero || 0).padStart(3, '0');
+            // Mesma regra de thumb do resto da tela: vídeo usa o JPG de
+            // media_files, nunca o .mp4 (img não renderiza vídeo).
+            let thumb = null;
+            try {
+              let mf = it.media_files;
+              if (typeof mf === 'string') mf = JSON.parse(mf);
+              thumb = Array.isArray(mf) ? (mf.find(m => m && m.tipo === 'video')?.thumb_url || null) : null;
+            } catch {}
+            if (!thumb) {
+              try {
+                const sa = JSON.parse(it.slides || '[]');
+                thumb = sa.map(s => s.image_url).filter(Boolean)[0] || null;
+                if (/\.(mp4|webm|mov|m4v)$/i.test(thumb || '')) thumb = null;
+              } catch {}
+            }
+            return (
+              <button key={it.id} onClick={() => onEscolher(it)}
+                style={{ display:'flex', alignItems:'center', gap:10, padding:'9px 11px', width:'100%',
+                  borderRadius:9, cursor:'pointer', textAlign:'left',
+                  background:'var(--app-surface-2)', border:'1px solid var(--app-border)',
+                  transition:'all 120ms' }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor='rgba(234,170,65,.45)'; e.currentTarget.style.background='rgba(234,170,65,.07)'; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor='var(--app-border)'; e.currentTarget.style.background='var(--app-surface-2)'; }}>
+                <div style={{ width:38, height:38, borderRadius:6, flexShrink:0, overflow:'hidden',
+                  background:`${cor}18`, border:'1px solid rgba(255,255,255,.08)',
+                  display:'flex', alignItems:'center', justifyContent:'center' }}>
+                  {thumb
+                    ? <img src={thumb} alt="" style={{ width:'100%', height:'100%', objectFit:'cover' }}/>
+                    : <LucideIcon icon={PLAT_ICON[it.plataforma] || 'file'} size={15} style={{ color:cor }}/>}
+                </div>
+                <div style={{ flex:1, minWidth:0 }}>
+                  <div style={{ display:'flex', alignItems:'center', gap:7 }}>
+                    <span style={{ fontSize:10.5, fontFamily:'Roboto,sans-serif', fontWeight:900,
+                      color:cor, letterSpacing:'0.05em' }}>ORG {num}</span>
+                    <span style={{ fontSize:9.5, fontFamily:'Roboto,sans-serif', fontWeight:700,
+                      padding:'1px 7px', borderRadius:999, color:cor, background:`${cor}18` }}>
+                      {it.plataforma}
+                    </span>
+                    {it.status === 'Produção' && (
+                      <span style={{ fontSize:9.5, fontFamily:'Roboto,sans-serif', color:'var(--text-3)' }}>
+                        em produção
+                      </span>
+                    )}
+                  </div>
+                  <div style={{ fontSize:12.5, fontFamily:'Roboto,sans-serif', color:'var(--text-1)',
+                    marginTop:2, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+                    {it.tema || 'Sem tema'}
+                  </div>
+                  {it.data_prevista && it.data_prevista !== dateStr && (
+                    <div style={{ fontSize:10.5, fontFamily:'Roboto,sans-serif', color:'#fbbf24', marginTop:1 }}>
+                      hoje está em {fmtData(it.data_prevista)}, vai mudar para {fmtData(dateStr)}
+                    </div>
+                  )}
+                </div>
+                <LucideIcon icon="calendar-plus" size={15} style={{ color:'var(--text-3)', flexShrink:0 }}/>
+              </button>
+            );
+          })}
+        </div>
+
+        <div style={{ padding:'12px 18px', borderTop:'1px solid var(--app-border)', flexShrink:0 }}>
+          <button onClick={onCriarNovo}
+            style={{ width:'100%', padding:'9px 0', borderRadius:8, cursor:'pointer',
+              background:'rgba(255,255,255,.04)', border:'1px dashed var(--app-border-2)',
+              color:'var(--text-2)', fontFamily:'Roboto,sans-serif', fontSize:12, fontWeight:700,
+              display:'flex', alignItems:'center', justifyContent:'center', gap:6 }}>
+            <LucideIcon icon="plus" size={13}/>Criar card novo nesta data
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ── ScheduleEditPopover — editor rápido de data/hora de um post agendado ──*/
 function ScheduleEditPopover({ item, onSave, onClose }) {
   const initDate = item.data_prevista ? item.data_prevista.slice(0,10) : '';
@@ -1560,7 +1700,7 @@ const DIAS_SEMANA = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
 const MESES_PT   = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho',
                     'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 
-function CalendarioView({ items, onOpen, onNewWithDate, onReschedule, onEditSchedule }) {
+function CalendarioView({ items, onOpen, onNewWithDate, onReschedule, onEditSchedule, onProgramarNaData }) {
   const today = new Date();
   const [ano, setAno]   = useState(today.getFullYear());
   const [mes, setMes]   = useState(today.getMonth()); // 0-based
@@ -1664,7 +1804,7 @@ function CalendarioView({ items, onOpen, onNewWithDate, onReschedule, onEditSche
 
             return (
               <div key={dateStr}
-                onClick={() => onNewWithDate(dateStr)}
+                onClick={() => onProgramarNaData(dateStr)}
                 onDragOver={e => { e.preventDefault(); if (dragOverDate !== dateStr) setDragOverDate(dateStr); }}
                 onDragLeave={() => setDragOverDate(prev => prev === dateStr ? null : prev)}
                 onDrop={e => {
@@ -1898,6 +2038,8 @@ function OrganicoScreen() {
   const [items, setItems]           = useState([]);
   const [dbAvailable, setDbAvail]   = useState(false);
   const [modal, setModal]           = useState(null);
+  // Data clicada no calendário: abre o seletor de conteúdo pronto pra programar.
+  const [programarData, setProgramarData] = useState(null);
   const [platFilter, setPlatFilter] = useState('Todos');
   const [respFilter, setRespFilter] = useState('Todos');
   const [nextNum, setNextNum]       = useState(1);
@@ -2112,6 +2254,22 @@ function OrganicoScreen() {
           onSave={handleSave} onDelete={handleDelete} onClose={()=>setModal(null)}
           onImported={loadItems}/>
       )}
+      {programarData && (
+        <ProgramarModal
+          dateStr={programarData}
+          items={items}
+          onEscolher={async it => {
+            // Reaproveita o mesmo caminho do arrastar-e-soltar no calendário:
+            // move a data e mantém o horário, se já houver um definido.
+            await handleReschedule(it.id, programarData);
+            setProgramarData(null);
+          }}
+          onCriarNovo={() => {
+            setModal({ item:null, defaultStatus:'Fazer', prefillDate: programarData });
+            setProgramarData(null);
+          }}
+          onClose={() => setProgramarData(null)}/>
+      )}
       <TopBar title="Orgânico"
         actions={
           <div style={{ display:'flex', alignItems:'center', gap:8 }}>
@@ -2197,6 +2355,7 @@ function OrganicoScreen() {
           items={filtered}
           onOpen={item=>setModal({ item, siblings: filtered.filter(i=>i.status===item.status) })}
           onNewWithDate={date=>setModal({ item:null, defaultStatus:'Fazer', prefillDate:date })}
+          onProgramarNaData={date=>setProgramarData(date)}
           onReschedule={handleReschedule}
           onEditSchedule={handleEditSchedule}/>
       ) : (
