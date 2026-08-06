@@ -1219,6 +1219,19 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
 
               {!isNew && item?.numero && (
                 <div style={{ width:'100%', display:'flex', flexDirection:'column', gap:8 }}>
+                  {/* Atalho pra pasta do card no Drive (criada junto com o card).
+                      Fluxo: cria o card, clica aqui, joga a arte, importa. */}
+                  {item.drive_folder_url && (
+                    <a href={item.drive_folder_url} target="_blank" rel="noopener noreferrer"
+                      style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:6,
+                        padding:'7px 12px', borderRadius:8, textDecoration:'none',
+                        background:'rgba(255,255,255,.04)', border:'1px solid var(--app-border)',
+                        color:'var(--text-2)', fontFamily:'Roboto,sans-serif', fontSize:11.5, fontWeight:700 }}
+                      onMouseEnter={e => { e.currentTarget.style.borderColor='rgba(234,170,65,.4)'; e.currentTarget.style.color='var(--fmn-gold)'; }}
+                      onMouseLeave={e => { e.currentTarget.style.borderColor='var(--app-border)'; e.currentTarget.style.color='var(--text-2)'; }}>
+                      <LucideIcon icon="folder-open" size={13}/>Abrir pasta no Drive
+                    </a>
+                  )}
                   <AdicionarCriativoOrganicoBtn numero={item.numero} cardId={item.id} onDone={async () => {
                     if (!window.db) return;
                     const { data } = await window.db.from('conteudo_organico').select('slides').eq('id', item.id).single();
@@ -2048,7 +2061,28 @@ function OrganicoScreen() {
     } else {
       if (dbAvailable) {
         const { data } = await window.db.from('conteudo_organico').insert(row).select().single();
-        if (data) { setItems(prev => [...prev, { ...data, numero:nextNum }]); setNextNum(n=>n+1); setModal(null); return; }
+        if (data) {
+          setItems(prev => [...prev, { ...data, numero:nextNum }]); setNextNum(n=>n+1); setModal(null);
+          // Cria a pasta do card no Drive (ex: "ORG 021 Nome"), na mesma raiz
+          // de onde a importação puxa as artes. Roda solto, sem travar o
+          // fechamento do modal: se o Drive falhar, o card já está salvo e a
+          // pasta pode ser criada na mão como antes.
+          fetch(`${WORKER_URL}/criar-pasta`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ card_id: data.id }),
+          })
+            .then(r => r.json())
+            .then(d => {
+              if (d && d.ok && d.url) {
+                // Reflete o link da pasta no estado local (o worker já gravou no banco).
+                setItems(prev => prev.map(i => i.id === data.id ? { ...i, drive_folder_url: d.url } : i));
+              } else if (d && d.error) {
+                console.warn('Não consegui criar a pasta no Drive:', d.error);
+              }
+            })
+            .catch(e => console.warn('Não consegui criar a pasta no Drive:', e));
+          return;
+        }
       }
       setItems(prev => [...prev, { ...row, id:String(Date.now()), numero:nextNum }]);
       setNextNum(n=>n+1);

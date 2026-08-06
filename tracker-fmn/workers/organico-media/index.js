@@ -596,6 +596,46 @@ async function ordemCards(env) {
   return (await res.json().catch(() => [])).map(r => r.id);
 }
 
+/* Cria a pasta do card na raiz do Orgânico no Drive (ex: "ORG 021 Nome").
+   Chamado quando um card novo é criado, pra o usuário não ter que criar a
+   pasta na mão nem acertar o nome que a importação espera.
+   body: { card_id }  — o número vem da posição do card, mesma regra do resto. */
+async function handleCriarPasta(request, env) {
+  let body; try { body = await request.json(); } catch { return json({ error: 'JSON inválido' }, 400); }
+  const { card_id } = body;
+  if (!card_id) return json({ error: 'card_id é obrigatório' }, 400);
+
+  // Número e nome vêm do banco, não do cliente: o número é posicional e o
+  // nome precisa ser o que está gravado de verdade no card.
+  const ids = await ordemCards(env);
+  const idx = ids.indexOf(card_id);
+  if (idx < 0) return json({ error: 'card não encontrado' }, 404);
+  const numero = idx + 1;
+
+  const res = await fetch(`${env.SUPABASE_URL}/rest/v1/conteudo_organico?id=eq.${card_id}&select=tema`, {
+    headers: { apikey: env.SUPABASE_SERVICE_KEY, Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}` } });
+  const row = (await res.json().catch(() => []))[0] || {};
+
+  const r = await fetch(`${COZINHA_URL}/criar-pasta`, {
+    method: 'POST', headers: { 'X-Token': env.IMPORT_TOKEN, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ root_folder_id: TRACKER_ORGANICO_ROOT, numero, nome: row.tema || '', prefixo: 'ORG' }),
+  });
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok || !d.ok) return json({ error: d.error || `cozinha ${r.status}` }, 500);
+
+  // Já deixa o link da pasta gravado no card: a importação com link passa a
+  // funcionar sem o usuário ir buscar a URL no Drive.
+  if (d.url) {
+    await fetch(`${env.SUPABASE_URL}/rest/v1/conteudo_organico?id=eq.${card_id}`, {
+      method: 'PATCH',
+      headers: { apikey: env.SUPABASE_SERVICE_KEY, Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`,
+                 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+      body: JSON.stringify({ drive_folder_url: d.url }),
+    }).catch(() => {});
+  }
+  return json({ ok: true, ...d, numero });
+}
+
 async function handleImportLink(request, env) {
   let body; try { body = await request.json(); } catch { return json({ error: 'JSON inválido' }, 400); }
   const { card_id, drive_url, plataforma, job_id } = body;
@@ -651,6 +691,7 @@ export default {
       if (method === 'POST' && url.pathname === '/publish') return await handlePublish(request, env);
       if (method === 'POST' && url.pathname === '/put')     return await handlePut(request, env, url);
       if (method === 'POST' && url.pathname === '/card-slides') return await handleCardSlides(request, env);
+      if (method === 'POST' && url.pathname === '/criar-pasta')  return await handleCriarPasta(request, env);
       if (method === 'POST' && url.pathname === '/import-link')   return await handleImportLink(request, env);
       if (method === 'POST' && url.pathname === '/import-direto') return await handleImportDireto(request, env);
       if (method === 'POST' && url.pathname === '/import-geral')  return await handleImportGeral(request, env);
