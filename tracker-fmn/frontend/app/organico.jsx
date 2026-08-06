@@ -506,7 +506,7 @@ function PublishModal({ form, slidesArr, slideFiles, onClose, onSuccess, initial
   // com o dia clicado preenchido, faltando só o horário.
   const [modo, setModo]           = useState(initialModo || 'agora');
   const [schedDate, setDate]      = useState(initialDate || '');
-  const [schedTime, setTime]      = useState('09:00');
+  const [schedTime, setTime]      = useState('18:00');
   const [phase, setPhase]         = useState('idle');
   const [msg, setMsg]             = useState('');
   const [comFacebook, setFB]      = useState(false);
@@ -957,6 +957,26 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
     return () => window.removeEventListener('keydown', handler);
   }, [onClose]);
 
+  // Rede de segurança da pasta no Drive: a criação dispara ao salvar o card,
+  // mas isso depende da aba estar com o Tracker atualizado no momento exato
+  // (aba aberta há horas roda a versão antiga do código e não chama nada).
+  // Aqui, ao ABRIR qualquer card sem pasta, garantimos a criação — cobre também
+  // os cards antigos, feitos antes desta função existir. O endpoint é
+  // idempotente, então reabrir o mesmo card não cria pasta duplicada.
+  const [pastaUrl, setPastaUrl] = useState(item?.drive_folder_url || null);
+  useEffect(() => {
+    if (isNew || !item?.id || item?.drive_folder_url) return;
+    let vivo = true;
+    fetch(`${WORKER_URL}/criar-pasta`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ card_id: item.id }),
+    })
+      .then(r => r.json())
+      .then(d => { if (vivo && d && d.ok && d.url) setPastaUrl(d.url); })
+      .catch(e => console.warn('Não consegui garantir a pasta no Drive:', e));
+    return () => { vivo = false; };
+  }, [item?.id]);
+
   const currentCol = COLUMNS.find(c => c.id === form.status) || COLUMNS[0];
   const sibIdx  = siblings.findIndex(s => s.id === item?.id);
   const hasPrev = sibIdx > 0;
@@ -1226,8 +1246,8 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
                 <div style={{ width:'100%', display:'flex', flexDirection:'column', gap:8 }}>
                   {/* Atalho pra pasta do card no Drive (criada junto com o card).
                       Fluxo: cria o card, clica aqui, joga a arte, importa. */}
-                  {item.drive_folder_url && (
-                    <a href={item.drive_folder_url} target="_blank" rel="noopener noreferrer"
+                  {(pastaUrl || item.drive_folder_url) && (
+                    <a href={pastaUrl || item.drive_folder_url} target="_blank" rel="noopener noreferrer"
                       style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:6,
                         padding:'7px 12px', borderRadius:8, textDecoration:'none',
                         background:'rgba(255,255,255,.04)', border:'1px solid var(--app-border)',
