@@ -11,6 +11,8 @@ O campo **Roteiro** sempre contém as 3 partes — Gancho, Desenvolvimento e CTA
 
 **Texto Principal e Descrição (ADS) sempre terminam com CTA de clique.** Todo `texto_principal` de anúncio precisa fechar chamando pra clicar em SAIBA MAIS — a linguagem pode ser adaptada pro tom de cada ADS específico (ex: "Clique em Saiba Mais", "Clica ali embaixo", "Saiba mais agora"), mas o chamado pra clicar sempre precisa estar presente. **A `descricao_ad` segue a mesma regra**, sempre com uma chamada de clique no fechamento, não só o `texto_principal`.
 
+**Roteiro de Reels sempre em pegada natural de fala, nunca robótico (regra fixa, 2026-08-06).** O texto do campo Roteiro (ADS e Orgânico, plataforma Reels) precisa soar como o Felipe falando de verdade pra câmera, não como um texto escrito lido em voz alta. Frases curtas, contrações ("tava", "tá"), pausas de fala reais, jeito de contar caso ("outro dia eu tava numa aula..."), nunca a cadência simétrica e "redondinha demais" de texto gerado por IA. Depois de escrever o roteiro, reler em voz alta mentalmente: se soar como texto de vídeo institucional, reescrever mais solto. Isso não dispensa o Manual da Copy nem o checklist Light Copy (zero travessão, zero exclamação), só pede que dentro dessas regras o tom fique conversacional.
+
 ---
 
 ## ADS — Reels

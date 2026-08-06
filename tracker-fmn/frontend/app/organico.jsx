@@ -13,13 +13,21 @@ const RESPONSAVEL_CONFIG = {
   'Amanda': { initials:'AM', color:'#60a5fa', bg:'rgba(96,165,250,.18)', photo:null },
 };
 
+// Copy e Produção não são mais colunas: viraram sub-etapa (tag) dentro de
+// "Fazendo", igual ao Kanban de Anúncios. Regras completas em REGRAS-KANBAN-ORGANICO.md.
 const COLUMNS = [
-  { id:'Fazer',     label:'Fazer',     colorDot:'#94a3b8', colorBg:'rgba(148,163,184,.06)', colorBorder:'rgba(148,163,184,.22)' },
-  { id:'Produção',  label:'Produção',  colorDot:'#38bdf8', colorBg:'rgba(56,189,248,.06)',  colorBorder:'rgba(56,189,248,.22)'  },
-  { id:'Postagem',  label:'Postagem',  colorDot:'#fb923c', colorBg:'rgba(251,146,60,.06)',  colorBorder:'rgba(251,146,60,.22)'  },
-  { id:'Agendado',  label:'Agendado',  colorDot:'#a78bfa', colorBg:'rgba(167,139,250,.06)', colorBorder:'rgba(167,139,250,.22)' },
-  { id:'Feito',     label:'Feito',     colorDot:'#4ade80', colorBg:'rgba(74,222,128,.06)',  colorBorder:'rgba(74,222,128,.22)'  },
+  { id:'Fazendo',   label:'Fazendo',   colorDot:'#94a3b8', colorBg:'rgba(148,163,184,.08)', colorBorder:'rgba(148,163,184,.22)' },
+  { id:'Feito',     label:'Feito',     colorDot:'#38bdf8', colorBg:'rgba(56,189,248,.08)',  colorBorder:'rgba(56,189,248,.22)'  },
+  { id:'Postagem',  label:'Postagem',  colorDot:'#fb923c', colorBg:'rgba(251,146,60,.08)',  colorBorder:'rgba(251,146,60,.22)'  },
+  { id:'Agendado',  label:'Agendado',  colorDot:'#a78bfa', colorBg:'rgba(167,139,250,.08)', colorBorder:'rgba(167,139,250,.22)' },
+  { id:'Arquivado', label:'Arquivado', colorDot:'#4ade80', colorBg:'rgba(74,222,128,.08)',  colorBorder:'rgba(74,222,128,.22)'  },
 ];
+
+// Sub-etapas dentro de "Fazendo" (mesmo padrão de ads.etapa).
+const ETAPAS_ORG = {
+  copy:     { label:'Copy',     icon:'pencil',       cor:'#a78bfa' },
+  producao: { label:'Produção', icon:'clapperboard', cor:'#4ade80' },
+};
 
 const PLAT_COLOR = window.PLAT_COLOR; // fonte única em shared.jsx
 const PLAT_ICON  = window.PLAT_ICON;  // fonte única em shared.jsx
@@ -117,7 +125,7 @@ function SlideCarousel({ urls, onExpand }) {
 }
 
 /* ── ContentCard ─────────────────────────────────────────────────*/
-function ContentCard({ item, col, onOpen, onDragStart }) {
+function ContentCard({ item, col, onOpen, onDragStart, onEtapaToggle }) {
   const [hov, setHov]       = useState(false);
   const [dragging, setDrag] = useState(false);
   const color    = PLAT_COLOR[item.plataforma] || '#94a3b8';
@@ -174,7 +182,23 @@ function ContentCard({ item, col, onOpen, onDragStart }) {
           letterSpacing:'0.06em', color:col.colorDot, textTransform:'uppercase', flexShrink:0 }}>
           ORG {num}
         </span>
-        <div style={{ marginLeft:'auto', flexShrink:0 }}>
+        <div style={{ marginLeft:'auto', display:'flex', gap:4, alignItems:'center', flexShrink:0 }}>
+          {/* Sub-etapa Copy/Produção: só existe em "Fazendo" (mesmo padrão dos
+              Anúncios). Clique alterna: sem etapa → Copy → Produção → sem etapa. */}
+          {item.status === 'Fazendo' && (
+            <button
+              onClick={e => { e.stopPropagation(); onEtapaToggle && onEtapaToggle(item); }}
+              title={item.etapa === 'copy' ? 'Etapa: Copy (clique pra passar pra Produção)'
+                   : item.etapa === 'producao' ? 'Etapa: Produção (clique pra limpar)'
+                   : 'Sem etapa definida (clique pra marcar Copy)'}
+              style={{ display:'flex', alignItems:'center', justifyContent:'center', width:18, height:18,
+                padding:0, borderRadius:5, cursor:'pointer', flexShrink:0,
+                background: item.etapa ? `${ETAPAS_ORG[item.etapa].cor}26` : 'rgba(255,255,255,.06)',
+                border: item.etapa ? `1px solid ${ETAPAS_ORG[item.etapa].cor}66` : '1px solid var(--app-border)' }}>
+              <LucideIcon icon={item.etapa ? ETAPAS_ORG[item.etapa].icon : 'circle-dashed'}
+                size={10} style={{ color: item.etapa ? ETAPAS_ORG[item.etapa].cor : 'var(--text-3)' }}/>
+            </button>
+          )}
           {item.responsavel && (
             <ResponsavelAvatar nome={item.responsavel} size={22}/>
           )}
@@ -188,8 +212,8 @@ function ContentCard({ item, col, onOpen, onDragStart }) {
       </p>
 
       <div style={{ display:'flex', gap:4, flexWrap:'wrap', alignItems:'center' }}>
-        <span style={{ display:'inline-flex', alignItems:'center', gap:4, padding:'2px 8px',
-          borderRadius:999, fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700,
+        <span style={{ display:'inline-flex', alignItems:'center', gap:4, padding:'2px 7px',
+          borderRadius:5, fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:500,
           background:`${color}18`, color, border:`1px solid ${color}33` }}>
           <LucideIcon icon={platIcon} size={9}/>{item.plataforma}
         </span>
@@ -213,7 +237,7 @@ function ContentCard({ item, col, onOpen, onDragStart }) {
 }
 
 /* ── OrgColumn ───────────────────────────────────────────────────*/
-function OrgColumn({ col, items, onOpen, onAddNew, onDragStart, onDrop, isDragOver }) {
+function OrgColumn({ col, items, onOpen, onAddNew, onDragStart, onDrop, isDragOver, onEtapaToggle }) {
   const [over, setOver] = useState(false);
 
   const handleDragOver = e => { e.preventDefault(); setOver(true); };
@@ -228,7 +252,7 @@ function OrgColumn({ col, items, onOpen, onAddNew, onDragStart, onDrop, isDragOv
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
       style={{ width:238, minWidth:238, display:'flex', flexDirection:'column',
-        background: highlight ? `${col.colorBg.replace('.06','0.14')}` : col.colorBg,
+        background: highlight ? `${col.colorBg.replace('.08','0.18')}` : col.colorBg,
         border:`1px solid ${highlight ? col.colorDot : col.colorBorder}`,
         borderRadius:12, overflow:'hidden', height:'100%',
         transition:'border-color 120ms, background 120ms',
@@ -249,7 +273,7 @@ function OrgColumn({ col, items, onOpen, onAddNew, onDragStart, onDrop, isDragOv
       </div>
       <div style={{ flex:1, overflowY:'auto', padding:'10px 8px', display:'flex', flexDirection:'column', gap:8 }}>
         {items.map(item => (
-          <ContentCard key={item.id} item={item} col={col} onOpen={onOpen} onDragStart={onDragStart}/>
+          <ContentCard key={item.id} item={item} col={col} onOpen={onOpen} onDragStart={onDragStart} onEtapaToggle={onEtapaToggle}/>
         ))}
         {highlight && items.length === 0 && (
           <div style={{ flex:1, border:`2px dashed ${col.colorDot}55`, borderRadius:8,
@@ -937,7 +961,7 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
   const isNew = !item?.id;
   const [form, setForm] = useState(item || {
     tema:'', plataforma:'Reels', responsavel:'Felipe',
-    status: defaultStatus || 'Fazer',
+    status: defaultStatus || 'Fazendo',
     headline:'', roteiro:'', estetica_visual:'', prompt:'',
     slides:'', legenda:'', observacoes:'', referencia:'',
     data_prevista: prefillDate || '',
@@ -1009,7 +1033,7 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
 
   const handlePublishSuccess = (newSlides, postId, scheduled, scheduledDate, scheduledAtISO) => {
     const updatedSlides = form.plataforma === 'Carrossel' ? JSON.stringify(newSlides) : form.slides;
-    const newStatus     = scheduled ? 'Agendado' : 'Feito';
+    const newStatus     = scheduled ? 'Agendado' : 'Arquivado';
     const updated       = {
       ...form,
       slides: updatedSlides,
@@ -1547,7 +1571,7 @@ function ProgramarModal({ dateStr, items, onEscolher, onCriarNovo, onClose }) {
   // Prontos pra postar primeiro; depois os que estão em Produção (às vezes o
   // usuário quer reservar a data antes da arte ficar pronta).
   const candidatos = items
-    .filter(i => ['Postagem', 'Produção'].includes(i.status))
+    .filter(i => ['Postagem', 'Feito'].includes(i.status))
     .filter(i => {
       if (!busca.trim()) return true;
       const t = busca.trim().toLowerCase();
@@ -1636,9 +1660,9 @@ function ProgramarModal({ dateStr, items, onEscolher, onCriarNovo, onClose }) {
                       padding:'1px 7px', borderRadius:999, color:cor, background:`${cor}18` }}>
                       {it.plataforma}
                     </span>
-                    {it.status === 'Produção' && (
+                    {it.status === 'Feito' && (
                       <span style={{ fontSize:9.5, fontFamily:'Roboto,sans-serif', color:'var(--text-3)' }}>
-                        em produção
+                        arte pronta
                       </span>
                     )}
                   </div>
@@ -1858,7 +1882,7 @@ function CalendarioView({ items, onOpen, onNewWithDate, onReschedule, onEditSche
 
                 {/* Chips dos conteúdos */}
                 {dayItems.slice(0,4).map(item => {
-                  const isFeito = item.status === 'Feito';
+                  const isFeito = item.status === 'Arquivado';
                   const color = isFeito ? '#4ade80' : (PLAT_COLOR[item.plataforma] || '#94a3b8');
                   const num   = String(item.numero||0).padStart(3,'0');
                   // Vídeo (Reels): thumb JPG vem de media_files, nunca do .mp4 de slides
@@ -2084,11 +2108,26 @@ function OrganicoScreen() {
     const item = items.find(i => i.id === dragId);
     if (!item || item.status === colId) { setDragId(null); return; }
 
-    setItems(prev => prev.map(i => i.id === dragId ? { ...i, status: colId } : i));
+    // A sub-etapa (Copy/Produção) só faz sentido dentro de "Fazendo": ao sair
+    // dessa coluna ela é limpa, senão o card carregaria pra sempre uma marca
+    // de um estágio que já passou.
+    const patch = { status: colId };
+    if (colId !== 'Fazendo') patch.etapa = null;
+
+    setItems(prev => prev.map(i => i.id === dragId ? { ...i, ...patch } : i));
     setDragId(null);
 
     if (dbAvailable) {
-      await window.db.from('conteudo_organico').update({ status: colId }).eq('id', dragId);
+      await window.db.from('conteudo_organico').update(patch).eq('id', dragId);
+    }
+  };
+
+  // Alterna a sub-etapa dentro de Fazendo: sem etapa → copy → producao → sem etapa.
+  const handleEtapaToggle = async item => {
+    const proxima = item.etapa === 'copy' ? 'producao' : item.etapa === 'producao' ? null : 'copy';
+    setItems(prev => prev.map(i => i.id === item.id ? { ...i, etapa: proxima } : i));
+    if (dbAvailable) {
+      await window.db.from('conteudo_organico').update({ etapa: proxima }).eq('id', item.id);
     }
   };
 
@@ -2192,7 +2231,7 @@ function OrganicoScreen() {
   }, []);
 
   const handleSave = async form => {
-    // Card em "Fazer" que já recebeu mídia avança sozinho pra "Produção" (não fica
+    // Card em "Fazendo" que já recebeu mídia avança sozinho pra "Feito" (não fica
     // esperando o usuário mudar a coluna manualmente). Vale pra qualquer forma de anexar
     // mídia (upload manual, importar do Drive, etc), já que todo salvamento passa por aqui.
     let temMidia = false;
@@ -2203,17 +2242,19 @@ function OrganicoScreen() {
       midiaCompleta = Array.isArray(s) && s.length > 0 &&
         s.every(sl => sl?.image_url || sl?.video_url || sl?.url_alta);
     } catch {}
-    // Card em "Fazer" com pelo menos 1 mídia avança pra "Produção". Card já em
-    // "Produção" com TODOS os slides preenchidos avança pra "Postagem".
+    // Card em "Fazendo" com pelo menos 1 mídia avança pra "Feito" (arte pronta).
+    // Card em "Feito" com TODOS os slides preenchidos avança pra "Postagem".
     let status = form.status;
-    if (form.status === 'Fazer' && temMidia) status = 'Produção';
-    else if (form.status === 'Produção' && midiaCompleta) status = 'Postagem';
+    if (form.status === 'Fazendo' && temMidia) status = 'Feito';
+    else if (form.status === 'Feito' && midiaCompleta) status = 'Postagem';
 
     const row = {
       tema:form.tema, plataforma:form.plataforma, responsavel:form.responsavel,
       status, headline:form.headline||null, roteiro:form.roteiro||null,
       estetica_visual:form.estetica_visual||null, prompt:form.prompt||null,
       slides:form.slides, legenda:form.legenda,
+      // Sub-etapa só vale em "Fazendo": ao avançar, é zerada.
+      etapa: status === 'Fazendo' ? (form.etapa || null) : null,
       observacoes:form.observacoes||null,
       data_prevista:form.data_prevista||null,
       referencia:form.referencia||null,
@@ -2300,7 +2341,7 @@ function OrganicoScreen() {
             });
           }}
           onCriarNovo={() => {
-            setModal({ item:null, defaultStatus:'Fazer', prefillDate: programarData });
+            setModal({ item:null, defaultStatus:'Fazendo', prefillDate: programarData });
             setProgramarData(null);
           }}
           onClose={() => setProgramarData(null)}/>
@@ -2326,7 +2367,7 @@ function OrganicoScreen() {
               Importar arquivos
             </Btn>
             <Btn variant="primary" size="sm" icon="plus"
-              onClick={()=>setModal({ item:null, defaultStatus:'Fazer' })}>
+              onClick={()=>setModal({ item:null, defaultStatus:'Fazendo' })}>
               Novo
             </Btn>
           </div>
@@ -2382,6 +2423,7 @@ function OrganicoScreen() {
               onAddNew={status=>setModal({ item:null, defaultStatus:status })}
               onDragStart={handleDragStart}
               onDrop={handleDrop}
+              onEtapaToggle={handleEtapaToggle}
               isDragOver={dragId && dropTarget === col.id}/>
           ))}
         </div>
@@ -2389,7 +2431,7 @@ function OrganicoScreen() {
         <CalendarioView
           items={filtered}
           onOpen={item=>setModal({ item, siblings: filtered.filter(i=>i.status===item.status) })}
-          onNewWithDate={date=>setModal({ item:null, defaultStatus:'Fazer', prefillDate:date })}
+          onNewWithDate={date=>setModal({ item:null, defaultStatus:'Fazendo', prefillDate:date })}
           onProgramarNaData={date=>setProgramarData(date)}
           onReschedule={handleReschedule}
           onEditSchedule={handleEditSchedule}/>

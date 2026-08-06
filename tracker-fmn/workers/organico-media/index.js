@@ -362,7 +362,7 @@ async function runScheduledPublish(env) {
           method: 'PATCH',
           headers: { 'apikey': sbKey, 'Authorization': `Bearer ${sbKey}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
           body: JSON.stringify({
-            status: 'Feito', published_at: post.scheduled_at || new Date().toISOString(),
+            status: 'Arquivado', published_at: post.scheduled_at || new Date().toISOString(),
             scheduled_at: null, scheduled_media: null, meta_media_id: pubD.id,
           }),
         });
@@ -411,7 +411,7 @@ async function runScheduledPublish(env) {
         method: 'PATCH',
         headers: { 'apikey': sbKey, 'Authorization': `Bearer ${sbKey}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
         body: JSON.stringify({
-          status: 'Feito',
+          status: 'Arquivado',
           published_at: post.scheduled_at || new Date().toISOString(),
           scheduled_at: null,
           scheduled_media: null,
@@ -515,8 +515,8 @@ async function handleCardSlides(request, env) {
   if (!res.ok) return json({ error: 'Supabase ' + res.status + ': ' + (await res.text()).slice(0, 200) }, 500);
 
   // Card que estava em "Fazer" e recebeu mídia avança sozinho pra "Produção".
-  // Filtro condicional: só afeta a linha se ainda estiver em 'Fazer' (idempotente).
-  await fetch(`${env.SUPABASE_URL}/rest/v1/conteudo_organico?id=eq.${card_id}&status=eq.Fazer`, {
+  // Filtro condicional: só afeta a linha se ainda estiver em 'Fazendo' (idempotente).
+  await fetch(`${env.SUPABASE_URL}/rest/v1/conteudo_organico?id=eq.${card_id}&status=eq.Fazendo`, {
     method: 'PATCH',
     headers: {
       apikey: env.SUPABASE_SERVICE_KEY,
@@ -524,18 +524,18 @@ async function handleCardSlides(request, env) {
       'Content-Type': 'application/json',
       Prefer: 'return=minimal',
     },
-    body: JSON.stringify({ status: 'Produção' }),
+    body: JSON.stringify({ status: 'Feito', etapa: null }),
   }).catch(() => {});
 
   // Card que já estava em "Produção" e teve TODOS os slides preenchidos com
   // mídia (imagem ou vídeo) avança sozinho pra "Postagem". Filtro condicional:
-  // só afeta a linha se ainda estiver em 'Produção' (idempotente).
+  // só afeta a linha se ainda estiver em 'Feito' (idempotente).
   let slidesArr;
   try { slidesArr = typeof slides === 'string' ? JSON.parse(slides) : slides; } catch { slidesArr = null; }
   const midiaCompleta = Array.isArray(slidesArr) && slidesArr.length > 0 &&
     slidesArr.every(s => s && (s.image_url || s.video_url));
   if (midiaCompleta) {
-    await fetch(`${env.SUPABASE_URL}/rest/v1/conteudo_organico?id=eq.${card_id}&status=eq.Produção`, {
+    await fetch(`${env.SUPABASE_URL}/rest/v1/conteudo_organico?id=eq.${card_id}&status=eq.Feito`, {
       method: 'PATCH',
       headers: {
         apikey: env.SUPABASE_SERVICE_KEY,

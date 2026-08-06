@@ -39,9 +39,13 @@ comparação em colunas ou sequência de passos, não é esse formato. Nesse cas
    "fotografia" ou "fotógrafo" tem que estar na frase, não como selo separado). Errado: selo
    "PREÇO NA FOTOGRAFIA" acima da frase genérica. Certo: "Fotógrafo que copia o preço do
    concorrente está copiando o prejuízo dele."
-5. **Anotação manuscrita pequena**, abaixo da frase principal, fonte de caneta casual, cor terracota
-   apagada, levemente torta, como se alguém tivesse rabiscado com a caneta do Instagram depois.
-   É o reforço ou a virada da frase principal, não uma repetição dela.
+5. **Anotação manuscrita pequena**, abaixo da frase principal, fonte de caneta casual, levemente
+   torta, como se alguém tivesse rabiscado com a caneta do Instagram depois. É o reforço ou a virada
+   da frase principal, não uma repetição dela.
+   **Cor: sempre um tom forte e vibrante, tipo caneta neon do Instagram** (verde neon, laranja
+   vibrante, rosa chiclete, amarelo forte), nunca uma cor apagada ou pastel. Varia peça a peça,
+   escolher uma cor diferente da usada na peça anterior, pra elas não ficarem repetitivas na
+   sequência do feed.
 6. **`@felipeferreirafotografo` sempre centralizado horizontalmente na base da arte**, nunca em
    canto, cor cinza discreta, sem negrito.
 7. Sem ícone, sem card, sem borda, sem sombra, sem gradiente. Só tipografia sobre fundo liso.
@@ -61,7 +65,7 @@ MAIN TEXT (the whole visual focus): centered, big bold rounded sans-serif capita
 
 Break the line naturally so it reads well, filling most of the vertical center of the frame.
 
-SMALL HANDWRITTEN NOTE below the main text, casual handwritten marker font (like annotated by hand with Instagram's doodle pen, slightly tilted, imperfect, small), muted terracotta/orange color: "[anotação curta, reforço ou virada da frase]"
+SMALL HANDWRITTEN NOTE below the main text, casual handwritten marker font (like annotated by hand with Instagram's doodle pen, slightly tilted, imperfect, small), in a bold vibrant neon color (choose one: neon green, vibrant orange, bubblegum pink, strong yellow, electric blue), not muted or pastel: "[anotação curta, reforço ou virada da frase]"
 
 BOTTOM: small, plain, gray handle text, horizontally centered at the bottom of the frame (not in a corner), no bold: "@felipeferreirafotografo"
 

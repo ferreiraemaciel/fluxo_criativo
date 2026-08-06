@@ -37,6 +37,27 @@ const TAGS_PERFORMANCE = [
   { tag: 'Mediano',          cor: '#94a3b8', condicao: 'Qualquer outro caso (ex: 1+ venda com gasto ≥ R$297 e CPA ≥ R$297)' },
   { tag: 'Ruim',             cor: '#f87171', condicao: '0 vendas E gasto ≥ R$297' },
 ];
+// Espelho de REGRAS-KANBAN-ORGANICO.md. Mantenha os dois em sincronia ao mudar
+// o fluxo do Orgânico (o markdown é a fonte, isto aqui é a vitrine no Tracker).
+const ETAPAS_ORGANICO = [
+  { nome:'Sem etapa', icone:'circle-dashed', cor:'#94a3b8', desc:'Card recém-criado, ainda não classificado.' },
+  { nome:'Copy',      icone:'pencil',        cor:'#a78bfa', desc:'Ainda escrevendo: headline, roteiro, legenda.' },
+  { nome:'Produção',  icone:'clapperboard',  cor:'#4ade80', desc:'Texto pronto, agora é gravar ou desenhar a peça.' },
+];
+
+const COLUNAS_ORGANICO = [
+  { nome:'Fazendo',   cor:'#94a3b8', significa:'Em construção, é onde a peça nasce',
+    entra:'Card criado (padrão)', sai:'Automático pra Feito ao receber qualquer mídia' },
+  { nome:'Feito',     cor:'#38bdf8', significa:'Arte finalizada, existe arquivo pronto',
+    entra:'Recebeu mídia estando em Fazendo', sai:'Automático pra Postagem quando todos os slides estão preenchidos' },
+  { nome:'Postagem',  cor:'#fb923c', significa:'Na fila: arte e legenda prontas, falta escolher quando',
+    entra:'Slides completos, ou manual', sai:'Ao agendar (Agendado) ou publicar na hora (Arquivado)' },
+  { nome:'Agendado',  cor:'#a78bfa', significa:'Data e hora marcadas, o robô publica sozinho',
+    entra:'Agendamento confirmado no card ou no calendário', sai:'Automático pra Arquivado ao publicar; volta pra Postagem se falhar' },
+  { nome:'Arquivado', cor:'#4ade80', significa:'Já publicado, fica como histórico e métrica',
+    entra:'Publicação concluída', sai:'Não sai sozinho, só manualmente se for reaproveitar' },
+];
+
 const COLUNAS_KANBAN = [
   { nome: 'Fazendo',    cor: '#60a5fa', entra: 'Card criado (padrão) — mescla as antigas Fazer e Fazendo', tag: 'Sem tag',
     sai: 'Automático pra Feito, ao receber mídia via importação do Drive' },
@@ -268,6 +289,93 @@ function SystemScreen() {
                       ['Card em Campeões recalculado e deixa de ser Ótimo', 'Move para Arquivados com a nova tag'],
                       ['Card em Arquivados recalculado e vira Ótimo', 'Move para Campeões'],
                       ['Card em Arquivados recalculado com tag diferente', 'Atualiza a tag, permanece em Arquivados'],
+                    ].map(([gatilho, acao], i) => (
+                      <div key={i} style={{ display:'flex', gap:10, padding:'8px 12px', borderRadius:8,
+                        background:'rgba(255,255,255,.02)' }}>
+                        <LucideIcon icon="arrow-right" size={13} style={{ flexShrink:0, marginTop:1, color:'var(--fmn-gold)' }}/>
+                        <span><span style={{ color:'var(--text-2)' }}>{gatilho}</span> → {acao}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+              </div>
+            </SectionCard>
+
+            {/* Regras do Kanban do Orgânico */}
+            <SectionCard title="Regras do Kanban do Orgânico"
+              headerRight={<span style={{ fontSize:11, color:'var(--text-3)', fontFamily:'Roboto,sans-serif' }}>
+                fonte: REGRAS-KANBAN-ORGANICO.md
+              </span>} style={{ flexShrink:0 }}>
+              <div style={{ display:'flex', flexDirection:'column', gap:20 }}>
+
+                {/* Sub-etapas dentro de Fazendo */}
+                <div>
+                  <div style={{ fontSize:11, fontFamily:'Roboto,sans-serif', fontWeight:700,
+                    letterSpacing:'0.08em', textTransform:'uppercase', color:'var(--text-3)', marginBottom:8 }}>
+                    Sub-etapa dentro de "Fazendo" (clique no ícone do card pra alternar)
+                  </div>
+                  <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:10 }}>
+                    {ETAPAS_ORGANICO.map(e => (
+                      <div key={e.nome} style={{ padding:'12px 14px', borderRadius:10,
+                        background:'var(--app-surface-2)', border:`1px solid ${e.cor}33` }}>
+                        <div style={{ display:'flex', alignItems:'center', gap:7, marginBottom:6 }}>
+                          <LucideIcon icon={e.icone} size={12} style={{ color:e.cor, flexShrink:0 }}/>
+                          <span style={{ fontSize:12.5, fontFamily:'Roboto,sans-serif', fontWeight:700, color:e.cor }}>{e.nome}</span>
+                        </div>
+                        <div style={{ fontSize:11, fontFamily:'Roboto,sans-serif', color:'var(--text-3)', lineHeight:1.4 }}>{e.desc}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{ fontSize:11, fontFamily:'Roboto,sans-serif', color:'var(--text-3)',
+                    marginTop:8, lineHeight:1.5 }}>
+                    A etapa só existe em "Fazendo". Ao sair da coluna, ela é limpa sozinha,
+                    pra o card não carregar a marca de um estágio que já passou.
+                  </div>
+                </div>
+
+                {/* Fluxo das colunas */}
+                <div>
+                  <div style={{ fontSize:11, fontFamily:'Roboto,sans-serif', fontWeight:700,
+                    letterSpacing:'0.08em', textTransform:'uppercase', color:'var(--text-3)', marginBottom:8 }}>
+                    Fluxo das colunas — entrada e saída
+                  </div>
+                  <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+                    {COLUNAS_ORGANICO.map(c => (
+                      <div key={c.nome} style={{ display:'flex', gap:12, alignItems:'flex-start',
+                        padding:'12px 14px', borderRadius:10, background:'var(--app-surface-2)',
+                        border:'1px solid var(--app-border)' }}>
+                        <div style={{ width:100, flexShrink:0, display:'flex', alignItems:'center', gap:7 }}>
+                          <span style={{ width:9, height:9, borderRadius:'50%', background:c.cor, flexShrink:0 }}/>
+                          <span style={{ fontSize:12.5, fontFamily:'Roboto,sans-serif', fontWeight:700, color:'var(--text-1)' }}>{c.nome}</span>
+                        </div>
+                        <div style={{ flex:1, display:'grid', gridTemplateColumns:'1fr 1fr 1.4fr', gap:14, fontSize:11.5,
+                          fontFamily:'Roboto,sans-serif', color:'var(--text-3)', lineHeight:1.4 }}>
+                          <div><b style={{ color:'var(--text-2)' }}>Significa:</b> {c.significa}</div>
+                          <div><b style={{ color:'var(--text-2)' }}>Entra:</b> {c.entra}</div>
+                          <div><b style={{ color:'var(--text-2)' }}>Sai:</b> {c.sai}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Gatilhos automáticos */}
+                <div>
+                  <div style={{ fontSize:11, fontFamily:'Roboto,sans-serif', fontWeight:700,
+                    letterSpacing:'0.08em', textTransform:'uppercase', color:'var(--text-3)', marginBottom:8 }}>
+                    Gatilhos automáticos
+                  </div>
+                  <div style={{ display:'flex', flexDirection:'column', gap:6, fontSize:11.5,
+                    fontFamily:'Roboto,sans-serif', color:'var(--text-3)' }}>
+                    {[
+                      ['Mídia gravada no card em "Fazendo"', 'Move para "Feito" e limpa a sub-etapa'],
+                      ['Todos os slides preenchidos estando em "Feito"', 'Move para "Postagem"'],
+                      ['Agendamento confirmado (card ou calendário)', 'Move para "Agendado" com data e hora'],
+                      ['Robô publica no horário marcado', 'Move para "Arquivado" e registra a data de publicação'],
+                      ['Publicação agendada falha ou é cancelada', 'Volta para "Postagem" e limpa o agendamento'],
+                      ['Card novo criado', 'Cria a pasta "ORG NNN Nome" no Drive e guarda o link no card'],
+                      ['Card sem pasta é aberto', 'Cria a pasta (rede de segurança pra aba desatualizada e cards antigos)'],
                     ].map(([gatilho, acao], i) => (
                       <div key={i} style={{ display:'flex', gap:10, padding:'8px 12px', borderRadius:8,
                         background:'rgba(255,255,255,.02)' }}>

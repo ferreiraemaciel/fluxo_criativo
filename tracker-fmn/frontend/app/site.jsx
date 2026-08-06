@@ -14,6 +14,7 @@ const PAGES_CFG = [
   { slug: '_pg_para-voce',   label: 'Para Você',  icon: 'user'      },
   { slug: '_pg_resultados',  label: 'Resultados', icon: 'award'     },
   { slug: '_pg_contratos',   label: 'Contratos',  icon: 'file-text' },
+  { slug: '_pg_blindagem',   label: 'Blindagem',  icon: 'shield'    },
 ];
 const PAGE_SLUGS = new Set(PAGES_CFG.map(p => p.slug));
 

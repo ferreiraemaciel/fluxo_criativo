@@ -513,7 +513,8 @@ function IdeiaScreen() {
         const row = {
           tema: idea.title,
           plataforma,
-          status: 'Fazer',
+          // Primeira coluna do Kanban do Orgânico (renomeada de "Fazer" em 2026-08-06).
+          status: 'Fazendo',
           responsavel: 'Felipe',
           roteiro: idea.desc || '',
         };
