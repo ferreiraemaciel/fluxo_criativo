@@ -424,11 +424,11 @@ async function runScheduledPublish(env) {
 
     } catch (err) {
       console.error(`[cron] Erro ao publicar ${post.id}:`, err.message);
-      // Volta para Postagem para o usuário tentar manualmente
+      // Volta para Feito (arte pronta) para o usuário tentar de novo
       await fetch(`${sbUrl}/rest/v1/conteudo_organico?id=eq.${post.id}`, {
         method: 'PATCH',
         headers: { 'apikey': sbKey, 'Authorization': `Bearer ${sbKey}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ status: 'Postagem', scheduled_at: null, scheduled_media: null }),
+        body: JSON.stringify({ status: 'Feito', scheduled_at: null, scheduled_media: null }),
       });
     }
   }
@@ -527,25 +527,9 @@ async function handleCardSlides(request, env) {
     body: JSON.stringify({ status: 'Feito', etapa: null }),
   }).catch(() => {});
 
-  // Card que já estava em "Produção" e teve TODOS os slides preenchidos com
-  // mídia (imagem ou vídeo) avança sozinho pra "Postagem". Filtro condicional:
-  // só afeta a linha se ainda estiver em 'Feito' (idempotente).
-  let slidesArr;
-  try { slidesArr = typeof slides === 'string' ? JSON.parse(slides) : slides; } catch { slidesArr = null; }
-  const midiaCompleta = Array.isArray(slidesArr) && slidesArr.length > 0 &&
-    slidesArr.every(s => s && (s.image_url || s.video_url));
-  if (midiaCompleta) {
-    await fetch(`${env.SUPABASE_URL}/rest/v1/conteudo_organico?id=eq.${card_id}&status=eq.Feito`, {
-      method: 'PATCH',
-      headers: {
-        apikey: env.SUPABASE_SERVICE_KEY,
-        Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`,
-        'Content-Type': 'application/json',
-        Prefer: 'return=minimal',
-      },
-      body: JSON.stringify({ status: 'Postagem' }),
-    }).catch(() => {});
-  }
+  // Não existe mais avanço automático depois de "Feito": a coluna "Postagem"
+  // foi removida em 2026-08-07 por ser indistinguível de "Feito" na prática.
+  // De Feito o card só sai por decisão do usuário (agendar ou publicar).
 
   return json({ ok: true });
 }

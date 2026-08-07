@@ -15,13 +15,13 @@ const RESPONSAVEL_CONFIG = {
 
 // Copy e Produção não são mais colunas: viraram sub-etapa (tag) dentro de
 // "Fazendo", igual ao Kanban de Anúncios. Regras completas em REGRAS-KANBAN-ORGANICO.md.
-// Cores na MESMA ORDEM das colunas dos Anúncios: azul → amarelo → laranja →
-// verde → cinza. Assim a posição no fluxo tem a mesma leitura de cor nos dois
-// quadros (a 1ª coluna é azul nos dois, a última é cinza nos dois).
+// Cores seguindo a ordem dos Anúncios: azul na primeira, cinza na última.
+// "Postagem" foi removida em 2026-08-07: era indistinguível de "Feito" na
+// prática (peça pronta esperando data), então virava uma parada a mais sem
+// decisão nova. Quem está pronto fica em Feito até ser agendado.
 const COLUMNS = [
   { id:'Fazendo',   label:'Fazendo',   colorDot:'#3b82f6', colorBg:'rgba(59,130,246,.08)',  colorBorder:'rgba(59,130,246,.25)' },
   { id:'Feito',     label:'Feito',     colorDot:'#fbbf24', colorBg:'rgba(251,191,36,.08)',  colorBorder:'rgba(251,191,36,.25)' },
-  { id:'Postagem',  label:'Postagem',  colorDot:'#f97316', colorBg:'rgba(249,115,22,.08)',  colorBorder:'rgba(249,115,22,.3)'  },
   { id:'Agendado',  label:'Agendado',  colorDot:'#4ade80', colorBg:'rgba(74,222,128,.08)',  colorBorder:'rgba(74,222,128,.25)' },
   { id:'Arquivado', label:'Arquivado', colorDot:'#94a3b8', colorBg:'rgba(148,163,184,.05)', colorBorder:'rgba(148,163,184,.2)'  },
 ];
@@ -1586,7 +1586,7 @@ function FilterPill({ label, active, color, onClick }) {
 
 /* ── ProgramarModal — escolher um card pronto e jogar numa data ────────────
    Abre ao clicar num dia do calendário. Lista os cards que já estão na coluna
-   "Postagem" (prontos, com mídia) pra você só escolher a data, em vez de ter
+   "Feito" (arte pronta) pra você só escolher a data, em vez de ter
    que abrir card por card. Também dá pra criar um card novo já naquela data. */
 function ProgramarModal({ dateStr, items, onEscolher, onCriarNovo, onClose }) {
   const [busca, setBusca] = useState('');
@@ -1599,13 +1599,13 @@ function ProgramarModal({ dateStr, items, onEscolher, onCriarNovo, onClose }) {
   // Prontos pra postar primeiro; depois os que estão em Produção (às vezes o
   // usuário quer reservar a data antes da arte ficar pronta).
   const candidatos = items
-    .filter(i => ['Postagem', 'Feito'].includes(i.status))
+    .filter(i => i.status === 'Feito')
     .filter(i => {
       if (!busca.trim()) return true;
       const t = busca.trim().toLowerCase();
       return (i.tema || '').toLowerCase().includes(t) || String(i.numero || '').includes(t);
     })
-    .sort((a, b) => (a.status === 'Postagem' ? 0 : 1) - (b.status === 'Postagem' ? 0 : 1));
+
 
   return (
     <div onClick={e => e.target === e.currentTarget && onClose()}
@@ -1643,7 +1643,7 @@ function ProgramarModal({ dateStr, items, onEscolher, onCriarNovo, onClose }) {
           {candidatos.length === 0 && (
             <div style={{ padding:'28px 0', textAlign:'center', color:'var(--text-3)',
               fontFamily:'Roboto,sans-serif', fontSize:12.5, lineHeight:1.6 }}>
-              Nenhum conteúdo em Postagem ou Produção.<br/>
+              Nenhum conteúdo pronto em Feito.<br/>
               Crie um card novo nesta data abaixo.
             </div>
           )}
@@ -1688,11 +1688,7 @@ function ProgramarModal({ dateStr, items, onEscolher, onCriarNovo, onClose }) {
                       padding:'1px 7px', borderRadius:999, color:cor, background:`${cor}18` }}>
                       {it.plataforma}
                     </span>
-                    {it.status === 'Feito' && (
-                      <span style={{ fontSize:9.5, fontFamily:'Roboto,sans-serif', color:'var(--text-3)' }}>
-                        arte pronta
-                      </span>
-                    )}
+
                   </div>
                   <div style={{ fontSize:12.5, fontFamily:'Roboto,sans-serif', color:'var(--text-1)',
                     marginTop:2, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
@@ -2271,10 +2267,9 @@ function OrganicoScreen() {
         s.every(sl => sl?.image_url || sl?.video_url || sl?.url_alta);
     } catch {}
     // Card em "Fazendo" com pelo menos 1 mídia avança pra "Feito" (arte pronta).
-    // Card em "Feito" com TODOS os slides preenchidos avança pra "Postagem".
+    // Daí em diante é decisão sua: de Feito só sai ao agendar ou publicar.
     let status = form.status;
     if (form.status === 'Fazendo' && temMidia) status = 'Feito';
-    else if (form.status === 'Feito' && midiaCompleta) status = 'Postagem';
 
     const row = {
       tema:form.tema, plataforma:form.plataforma, responsavel:form.responsavel,
