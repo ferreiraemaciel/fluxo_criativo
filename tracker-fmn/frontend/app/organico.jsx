@@ -2205,9 +2205,14 @@ function OrganicoScreen() {
     const { data } = await window.db.from('conteudo_organico')
       .select('*').order('created_at', { ascending:true }).order('id', { ascending:true });
     if (data) {
+      // `numero` é coluna no banco desde a migration 101 (antes era calculado
+      // pela posição, o que renumerava tudo a cada deleção e desalinhava as
+      // pastas do Drive). O fallback por índice só cobre linha legada sem número.
       const withNum = data.map((item,idx) => ({ ...item, numero: item.numero ?? (idx+1) }));
       setItems(withNum);
-      setNextNum(withNum.length+1);
+      // Próximo número é max+1, igual aos Anúncios: deleção deixa buraco em vez
+      // de renumerar. Contar as linhas daria colisão com um buraco no meio.
+      setNextNum(Math.max(0, ...withNum.map(i => i.numero || 0)) + 1);
     }
   }, []);
   useEffect(() => { loadItems(); }, [loadItems]);
@@ -2291,7 +2296,10 @@ function OrganicoScreen() {
       // Modal permanece aberto — ContentModal exibe "Salvo!" e fecha quando o usuário quiser
     } else {
       if (dbAvailable) {
-        const { data } = await window.db.from('conteudo_organico').insert(row).select().single();
+        // `numero` vai junto no insert: precisa ficar gravado na linha, senão o
+        // card nasce sem número e volta a depender da posição na próxima carga.
+        const { data } = await window.db.from('conteudo_organico')
+          .insert({ ...row, numero: nextNum }).select().single();
         if (data) {
           setItems(prev => [...prev, { ...data, numero:nextNum }]); setNextNum(n=>n+1); setModal(null);
           // Cria a pasta do card no Drive (ex: "ORG 021 Nome"), na mesma raiz
