@@ -571,13 +571,22 @@ async function handleProgresso(request, env, url) {
   } catch { return json({ etapa: 'Processando', pct: 0, done: false, erro: null }); }
 }
 
-async function ordemCards(env) {
-  // id como desempate: cards criados em lote podem empatar no created_at até o
-  // microssegundo, e sem desempate o Postgres não garante a mesma ordem entre uma
-  // consulta e outra — o número "ORG N" (calculado pela posição) ficava instável.
-  const res = await fetch(`${env.SUPABASE_URL}/rest/v1/conteudo_organico?select=id&order=created_at.asc,id.asc`, {
+// O número do card é FIXO e vive na coluna `numero` — nunca mais calculado por
+// posição. Calcular por posição parecia funcionar, mas apagar qualquer card
+// renumerava todos os seguintes, enquanto os nomes das pastas no Drive ficavam
+// congelados. Em 2026-08-07 a lista inteira estava 4 números adiantada: o card
+// que a tela chamava de ORG 033 procurava a pasta "ORG 033" e a pasta dele era
+// a "ORG 037". Resultado: importava a mídia do card errado, ou nenhuma.
+async function cardsComNumero(env) {
+  const res = await fetch(`${env.SUPABASE_URL}/rest/v1/conteudo_organico?select=id,numero`, {
     headers: { apikey: env.SUPABASE_SERVICE_KEY, Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}` } });
-  return (await res.json().catch(() => [])).map(r => r.id);
+  return await res.json().catch(() => []);
+}
+
+async function numeroDoCard(env, cardId) {
+  const linhas = await cardsComNumero(env);
+  const alvo = linhas.find(r => r.id === cardId);
+  return alvo && alvo.numero != null ? alvo.numero : null;
 }
 
 /* Cria a pasta do card na raiz do Orgânico no Drive (ex: "ORG 021 Nome").
@@ -591,10 +600,8 @@ async function handleCriarPasta(request, env) {
 
   // Número e nome vêm do banco, não do cliente: o número é posicional e o
   // nome precisa ser o que está gravado de verdade no card.
-  const ids = await ordemCards(env);
-  const idx = ids.indexOf(card_id);
-  if (idx < 0) return json({ error: 'card não encontrado' }, 404);
-  const numero = idx + 1;
+  const numero = await numeroDoCard(env, card_id);
+  if (numero == null) return json({ error: 'card não encontrado ou sem número' }, 404);
 
   const res = await fetch(`${env.SUPABASE_URL}/rest/v1/conteudo_organico?id=eq.${card_id}&select=tema`, {
     headers: { apikey: env.SUPABASE_SERVICE_KEY, Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}` } });
@@ -634,23 +641,22 @@ async function handleImportDireto(request, env) {
   let body; try { body = await request.json(); } catch { return json({ error: 'JSON inválido' }, 400); }
   const { card_id, plataforma, job_id } = body;
   if (!card_id) return json({ error: 'card_id é obrigatório' }, 400);
-  const ids = await ordemCards(env);
-  const idx = ids.indexOf(card_id);
-  if (idx < 0) return json({ error: 'card não encontrado' }, 404);
-  try { const d = await cozinha(env, { root_folder_id: TRACKER_ORGANICO_ROOT, numero: idx + 1, card_id, plataforma, job_id }); return json({ ok: true, processando: d.processando, imagens: d.imagens, videos: d.videos }); }
+  const numero = await numeroDoCard(env, card_id);
+  if (numero == null) return json({ error: 'card não encontrado ou sem número' }, 404);
+  try { const d = await cozinha(env, { root_folder_id: TRACKER_ORGANICO_ROOT, numero, card_id, plataforma, job_id }); return json({ ok: true, processando: d.processando, imagens: d.imagens, videos: d.videos }); }
   catch (e) { return json({ error: e.message }, 500); }
 }
 
 async function handleImportGeral(request, env) {
   let body; try { body = await request.json(); } catch { body = {}; }
   const job_id = body.job_id;
-  const ids = await ordemCards(env);
+  const linhas = (await cardsComNumero(env)).filter(r => r.numero != null);
   let ok = 0, fail = 0; const erros = [];
-  for (let i = 0; i < ids.length; i++) {
-    try { await cozinha(env, { root_folder_id: TRACKER_ORGANICO_ROOT, numero: i + 1, card_id: ids[i], job_id }); ok++; }
-    catch (e) { if (/não encontrada/.test(e.message)) continue; fail++; erros.push({ card: ids[i], erro: e.message }); }
+  for (const r of linhas) {
+    try { await cozinha(env, { root_folder_id: TRACKER_ORGANICO_ROOT, numero: r.numero, card_id: r.id, job_id }); ok++; }
+    catch (e) { if (/não encontrada/.test(e.message)) continue; fail++; erros.push({ card: r.id, erro: e.message }); }
   }
-  return json({ ok: true, total: ids.length, importados: ok, falhas: fail, erros });
+  return json({ ok: true, total: linhas.length, importados: ok, falhas: fail, erros });
 }
 
 /* ── Router ──────────────────────────────────────────────────────────────── */
