@@ -7,11 +7,16 @@ const { LucideIcon, Btn, Badge, TopBar } = window;
 
 const WORKER_URL   = 'https://organico-media.blindagem-fmn.workers.dev';
 const PLATAFORMAS  = window.PLATAFORMAS; // fonte única em shared.jsx (inclui Artigo, Youtube)
-const RESPONSAVEIS = ['Felipe', 'Amanda'];
+const RESPONSAVEIS = ['Felipe', 'Amanda', 'Lígia'];
+// Time e cores iguais ao Khronus (fonte: crm_team_members lá).
+// Card sem responsável usa a foto "todos": espaço vazio lê como
+// "esqueceram de atribuir", a foto comum diz "é de quem pegar primeiro".
 const RESPONSAVEL_CONFIG = {
-  'Felipe': { initials:'FF', color:'#eaaa41', bg:'rgba(234,170,65,.18)', photo:null },
-  'Amanda': { initials:'AM', color:'#60a5fa', bg:'rgba(96,165,250,.18)', photo:null },
+  'Felipe': { initials:'FE', color:'#eaaa41', bg:'rgba(234,170,65,.18)', photo:'assets/avatar-felipe.png' },
+  'Amanda': { initials:'A',  color:'#a78bfa', bg:'rgba(167,139,250,.18)', photo:'assets/avatar-amanda.png' },
+  'Lígia':  { initials:'L',  color:'#f472b6', bg:'rgba(244,114,182,.18)', photo:'assets/avatar-ligia.png' },
 };
+const RESPONSAVEL_COMUM = { initials:'—', color:'#94a3b8', bg:'rgba(148,163,184,.18)', photo:'assets/avatar-todos.png' };
 
 // Copy e Produção não são mais colunas: viraram sub-etapa (tag) dentro de
 // "Fazendo", igual ao Kanban de Anúncios. Regras completas em REGRAS-KANBAN-ORGANICO.md.
@@ -214,7 +219,7 @@ function ContentCard({ item, col, onOpen, onDragStart, onEtapaToggle }) {
             </button>
           )}
           {item.responsavel && (
-            <ResponsavelAvatar nome={item.responsavel} size={22}/>
+            <ResponsavelAvatar nome={item.responsavel} size={22} sempreAceso/>
           )}
         </div>
       </div>
@@ -943,18 +948,28 @@ function PublishModal({ form, slidesArr, slideFiles, onClose, onSuccess, initial
 }
 
 /* ── ResponsavelAvatar ───────────────────────────────────────────*/
-function ResponsavelAvatar({ nome, size=24, active=false }) {
-  const cfg = RESPONSAVEL_CONFIG[nome] || { initials:(nome||'?')[0], color:'#94a3b8', bg:'rgba(148,163,184,.18)', photo:null };
+function ResponsavelAvatar({ nome, size=24, active=false, sempreAceso=false }) {
+  // Sem nome = card de todos (não é "erro", é tarefa de quem pegar primeiro).
+  const cfg = nome
+    ? (RESPONSAVEL_CONFIG[nome] || { initials:(nome||'?')[0].toUpperCase(), color:'#94a3b8', bg:'rgba(148,163,184,.18)', photo:null })
+    : RESPONSAVEL_COMUM;
+  // No card a foto sempre aparece acesa; no filtro ela apaga quando inativa,
+  // pra ficar claro qual está selecionado.
+  const aceso = sempreAceso || active;
   return (
-    <div style={{ width:size, height:size, borderRadius:'50%', flexShrink:0, overflow:'hidden',
-      display:'flex', alignItems:'center', justifyContent:'center',
-      background: active ? cfg.bg : 'rgba(255,255,255,.08)',
-      border: `2px solid ${active ? cfg.color+'88' : 'rgba(255,255,255,.12)'}`,
-      transition:'all 150ms' }}>
+    <div title={nome || 'De todos'}
+      style={{ width:size, height:size, borderRadius:'50%', flexShrink:0, overflow:'hidden',
+        display:'flex', alignItems:'center', justifyContent:'center',
+        background: aceso ? cfg.bg : 'rgba(255,255,255,.08)',
+        border: `2px solid ${aceso ? cfg.color : 'rgba(255,255,255,.14)'}`,
+        opacity: aceso ? 1 : .5,
+        transition:'all 150ms' }}>
       {cfg.photo
-        ? <img src={cfg.photo} style={{ width:'100%', height:'100%', objectFit:'cover' }}/>
+        ? <img src={cfg.photo} alt={nome || 'De todos'}
+            style={{ width:'100%', height:'100%', objectFit:'cover',
+              filter: aceso ? 'none' : 'grayscale(1)' }}/>
         : <span style={{ fontSize:size*0.32, fontFamily:'Roboto,sans-serif', fontWeight:900,
-            color: active ? cfg.color : 'rgba(255,255,255,.35)', lineHeight:1, userSelect:'none' }}>
+            color: aceso ? cfg.color : 'rgba(255,255,255,.35)', lineHeight:1, userSelect:'none' }}>
             {cfg.initials}
           </span>
       }
@@ -1349,18 +1364,19 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
                     <div style={{ display:'flex', flexDirection:'column', gap:7 }}>
                       <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)' }}>Responsável</span>
                       <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
-                        {RESPONSAVEIS.map(r => {
-                          const cfg = RESPONSAVEL_CONFIG[r] || { color:'#94a3b8', bg:'rgba(148,163,184,.18)' };
-                          const active = form.responsavel === r;
+                        {[null, ...RESPONSAVEIS].map(r => {
+                          const cfg = r ? (RESPONSAVEL_CONFIG[r] || { color:'#94a3b8', bg:'rgba(148,163,184,.18)' })
+                                        : RESPONSAVEL_COMUM;
+                          const active = (form.responsavel || null) === r;
                           return (
-                            <div key={r} onClick={()=>set('responsavel',r)}
+                            <div key={r || 'todos'} onClick={()=>set('responsavel', r)}
                               style={{ display:'flex', alignItems:'center', gap:6, padding:'4px 10px', borderRadius:999,
                                 cursor:'pointer', transition:'all 130ms',
                                 background: active ? cfg.bg : 'rgba(255,255,255,.04)',
                                 border: active ? `1px solid ${cfg.color}55` : '1px solid rgba(255,255,255,.1)' }}>
                               <ResponsavelAvatar nome={r} size={20} active={active}/>
                               <span style={{ fontSize:11, fontFamily:'Roboto,sans-serif', fontWeight:700,
-                                color: active ? cfg.color : 'var(--text-3)' }}>{r}</span>
+                                color: active ? cfg.color : 'var(--text-3)' }}>{r || 'De todos'}</span>
                             </div>
                           );
                         })}
@@ -2346,7 +2362,8 @@ function OrganicoScreen() {
 
   const filtered = items.filter(i => {
     if (platFilter !== 'Todos' && i.plataforma !== platFilter) return false;
-    if (respFilter !== 'Todos' && i.responsavel !== respFilter) return false;
+    if (respFilter === 'Comum') { if (i.responsavel) return false; }
+    else if (respFilter !== 'Todos' && i.responsavel !== respFilter) return false;
     return true;
   });
 
@@ -2443,12 +2460,26 @@ function OrganicoScreen() {
         <div style={{ display:'flex', alignItems:'center', gap:6 }}>
           <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700,
             letterSpacing:'0.08em', textTransform:'uppercase', color:'var(--text-3)' }}>Responsável</span>
-          <div style={{ display:'flex', gap:4 }}>
-            {['Todos',...RESPONSAVEIS].map(r => (
-              <FilterPill key={r} label={r} active={respFilter===r}
-                color={r==='Felipe'?'#eaaa41':r==='Amanda'?'#60a5fa':null}
-                onClick={()=>setRespFilter(r)}/>
-            ))}
+          {/* Só as fotos, com contorno na cor de cada um (padrão do Khronus).
+              Inativo fica em cinza e apagado, então dá pra ver de longe quem
+              está selecionado. 'Comum' filtra os cards sem responsável. */}
+          <div style={{ display:'flex', gap:5, alignItems:'center' }}>
+            <button onClick={()=>setRespFilter('Todos')} title="Todos os responsáveis"
+              style={{ padding:'3px 9px', borderRadius:999, cursor:'pointer',
+                fontSize:10.5, fontFamily:'Roboto,sans-serif', fontWeight:700,
+                background: respFilter==='Todos' ? 'rgba(234,170,65,.14)' : 'rgba(255,255,255,.04)',
+                border: respFilter==='Todos' ? '1px solid rgba(234,170,65,.45)' : '1px solid var(--app-border)',
+                color: respFilter==='Todos' ? 'var(--fmn-gold)' : 'var(--text-3)' }}>
+              Todos
+            </button>
+            {[...RESPONSAVEIS, 'Comum'].map(r => {
+              const nome = r === 'Comum' ? null : r;   // Comum = cards sem responsável
+              return (
+                <div key={r} onClick={()=>setRespFilter(r)} style={{ cursor:'pointer', display:'flex' }}>
+                  <ResponsavelAvatar nome={nome} size={26} active={respFilter===r}/>
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
