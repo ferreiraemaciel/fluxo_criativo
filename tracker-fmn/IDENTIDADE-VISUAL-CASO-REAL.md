@@ -31,6 +31,10 @@ uma frase isolada, sem cena, vai de Citação Crua (ver `IDENTIDADE-VISUAL-CITAC
 5. **`@felipeferreirafotografo` sempre no canto inferior da arte**, cor branca ou clara, discreto,
    sem negrito. Nunca esquecer, é regra obrigatória, não opcional.
 6. Luz quente, tom editorial, nada estéril nem publicitário.
+7. **A legenda nunca repete a manchete que já está escrita na arte.** Quem vê o post já leu a
+   manchete na própria imagem antes de abrir a legenda. Repetir a mesma frase como abertura da
+   legenda é redundante e cansativo de ler duas vezes. A legenda começa contextualizando, contando
+   mais do caso, ou aprofundando um ponto que a manchete não cobre, nunca reescrevendo a manchete.
 
 ---
 

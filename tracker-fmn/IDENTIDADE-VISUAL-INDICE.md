@@ -45,6 +45,10 @@ reconsultar esse fluxo, só seguir a decisão já tomada.
 - **1080x1350px, vertical, 4:5**, sempre, nos 3 formatos.
 - Identificação com fotografia/fotógrafo precisa estar no conteúdo (frase, manchete ou headline),
   não só implícita pelo contexto da conta.
+- **A legenda nunca repete o texto que já está escrito na arte** (frase principal da Citação Crua,
+  manchete do Caso Real, headline da capa do Carrossel). Quem vê o post já leu isso na imagem antes
+  de abrir a legenda. A legenda soma informação nova: contexto, história, dado, aprofundamento,
+  nunca reescreve o que a arte já disse.
 
 ---
 
@@ -53,3 +57,5 @@ reconsultar esse fluxo, só seguir a decisão já tomada.
 - 2026-08-06: Criado depois que a peça do fotógrafo dos 22 anos (artigo "A juíza disse qual papel
   faltava") mostrou que a Citação Crua não servia pra tudo, precisava de um segundo formato com
   foto pra conteúdo narrativo. Esse índice existe pra não repetir essa dúvida do zero toda vez.
+- 2026-08-06 (mesmo dia): Adicionada a regra de legenda nunca repetir o texto da arte, depois de o
+  ORG 035 sair com a legenda abrindo com a mesma frase da manchete.

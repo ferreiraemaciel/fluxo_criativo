@@ -49,30 +49,34 @@ comparação em colunas ou sequência de passos, não é esse formato. Nesse cas
 6. **`@felipeferreirafotografo` sempre centralizado horizontalmente na base da arte**, nunca em
    canto, cor cinza discreta, sem negrito.
 7. Sem ícone, sem card, sem borda, sem sombra, sem gradiente. Só tipografia sobre fundo liso.
+8. **A legenda nunca repete a frase principal que já está escrita na arte.** Quem vê o post já leu
+   a citação na própria imagem. Repetir a mesma frase como abertura da legenda é redundante e
+   cansativo de ler duas vezes. A legenda começa contextualizando, contando a história por trás da
+   frase, ou aprofundando o argumento, nunca reescrevendo a frase principal.
 
 ---
 
-## Template de prompt (copiar e substituir os campos entre colchetes)
+## Produção: direto no Canva, sem prompt de IA pra texto (regra fixa, 2026-08-06)
 
-```
-Create a simple, raw, native-looking Instagram quote graphic. CANVAS SIZE IS MANDATORY AND EXACT: 1080px wide by 1350px tall, vertical portrait orientation, 4:5 ratio, standard Instagram feed post size. Do not crop, do not output square, do not output landscape. This should look like something a real person made in 2 minutes using Instagram's own text tool, not a designed graphic.
+**Esse formato não usa mais prompt de geração de imagem via IA.** Depois de testar em algumas
+peças, o texto gerado por IA nunca sai com a tipografia, o espaçamento e a caixa exatos do
+Instagram nativo (ver histórico de ajustes do ORG 035 em `IDENTIDADE-VISUAL-CASO-REAL.md`). Pra
+Citação Crua, que é 100% tipografia, esse problema pesa ainda mais do que no Caso Real. Decisão:
+produzir direto no Canva, do zero.
 
-BACKGROUND: Plain solid warm off-white/cream color (like #F2EDE4), completely flat, no gradient, no texture, no photo. Slightly imperfect paper tone, very subtle grain, nothing polished.
+**Como montar no Canva:**
+1. Canvas 1080x1350px.
+2. Fundo cor sólida creme (`#F2EDE4` ou tom bem próximo), sem textura, sem gradiente.
+3. Frase principal centralizada, caixa alta, fonte bold arredondada (ex: Poppins Bold, Montserrat
+   Black, ou fonte nativa parecida com o sticker "Strong" do Instagram), preta, ocupando o meio
+   vertical do quadro.
+4. Anotação manuscrita pequena abaixo, fonte de caneta/handwriting do Canva, cor neon vibrante
+   (variar a cada peça, nunca repetir a cor da peça anterior).
+5. `@felipeferreirafotografo` centralizado horizontalmente na base, cinza discreto, sem negrito.
 
-MAIN TEXT (the whole visual focus): centered, big bold rounded sans-serif capital letters, black, in the exact visual style of Instagram's native "Strong" text sticker (thick, chunky, slightly playful rounded font, tight line spacing), reading across multiple centered lines:
-
-"[FRASE PRINCIPAL EM CAIXA ALTA, COM A PALAVRA FOTOGRAFIA OU FOTÓGRAFO DENTRO DELA]"
-
-Break the line naturally so it reads well, filling most of the vertical center of the frame.
-
-SMALL HANDWRITTEN NOTE below the main text, casual handwritten marker font (like annotated by hand with Instagram's doodle pen, slightly tilted, imperfect, small), in a bold vibrant neon color (choose one: neon green, vibrant orange, bubblegum pink, strong yellow, electric blue), not muted or pastel: "[anotação curta, reforço ou virada da frase]"
-
-BOTTOM: small, plain, gray handle text, horizontally centered at the bottom of the frame (not in a corner), no bold: "@felipeferreirafotografo"
-
-STYLE: Deliberately imperfect and handmade-looking, zero corporate polish, no icons, no cards, no borders, no drop shadows, no gradients, looks exactly like a screenshot exported straight from the Instagram app's own text-post creator. All text correctly spelled Portuguese, crisp and legible despite the raw style.
-
-Output as PNG, exactly 1080x1350px, vertical portrait, 4:5 ratio.
-```
+Os campos do card no Tracker (headline = frase principal, observações = anotação manuscrita e cor
+escolhida) continuam sendo preenchidos normalmente, só o campo `prompt` fica vazio ou anotado como
+"produção direto no Canva".
 
 ---
 
@@ -91,3 +95,5 @@ Output as PNG, exactly 1080x1350px, vertical portrait, 4:5 ratio.
 - 2026-08-05: Primeira versão, criada a partir da peça 7 da aula de precificação. Corrigido nessa
   mesma sessão: identificação de nicho precisa estar embutida na frase (não em selo separado), @
   sempre centralizado na base, canvas reforçado em 2 pontos do prompt.
+- 2026-08-06: Removido o prompt de geração via IA. Produção passa a ser 100% manual no Canva,
+  decisão tomada depois de repetidos problemas de tipografia/espaçamento nas peças geradas por IA.
