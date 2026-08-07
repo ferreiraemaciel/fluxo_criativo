@@ -48,12 +48,10 @@ const ETAPAS_ORGANICO = [
 const COLUNAS_ORGANICO = [
   { nome:'Fazendo',   cor:'#3b82f6', significa:'Em construção, é onde a peça nasce',
     entra:'Card criado (padrão)', sai:'Automático pra Feito ao receber qualquer mídia' },
-  { nome:'Feito',     cor:'#fbbf24', significa:'Arte finalizada, existe arquivo pronto',
-    entra:'Recebeu mídia estando em Fazendo', sai:'Automático pra Postagem quando todos os slides estão preenchidos' },
-  { nome:'Postagem',  cor:'#f97316', significa:'Na fila: arte e legenda prontas, falta escolher quando',
-    entra:'Slides completos, ou manual', sai:'Ao agendar (Agendado) ou publicar na hora (Arquivado)' },
+  { nome:'Feito',     cor:'#fbbf24', significa:'Arte pronta, esperando data. É a fila de postagem',
+    entra:'Recebeu mídia estando em Fazendo', sai:'Ao agendar (Agendado) ou publicar na hora (Arquivado)' },
   { nome:'Agendado',  cor:'#4ade80', significa:'Data e hora marcadas, o robô publica sozinho',
-    entra:'Agendamento confirmado no card ou no calendário', sai:'Automático pra Arquivado ao publicar; volta pra Postagem se falhar' },
+    entra:'Agendamento confirmado no card ou no calendário', sai:'Automático pra Arquivado ao publicar; volta pra Feito se falhar' },
   { nome:'Arquivado', cor:'#94a3b8', significa:'Já publicado, fica como histórico e métrica',
     entra:'Publicação concluída', sai:'Não sai sozinho, só manualmente se for reaproveitar' },
 ];
@@ -369,11 +367,10 @@ function SystemScreen() {
                   <div style={{ display:'flex', flexDirection:'column', gap:6, fontSize:11.5,
                     fontFamily:'Roboto,sans-serif', color:'var(--text-3)' }}>
                     {[
-                      ['Mídia gravada no card em "Fazendo"', 'Move para "Feito" e limpa a sub-etapa'],
-                      ['Todos os slides preenchidos estando em "Feito"', 'Move para "Postagem"'],
+                      ['Mídia gravada no card em "Fazendo"', 'Move para "Feito" e limpa a sub-etapa (único avanço automático)'],
                       ['Agendamento confirmado (card ou calendário)', 'Move para "Agendado" com data e hora'],
                       ['Robô publica no horário marcado', 'Move para "Arquivado" e registra a data de publicação'],
-                      ['Publicação agendada falha ou é cancelada', 'Volta para "Postagem" e limpa o agendamento'],
+                      ['Publicação agendada falha ou é cancelada', 'Volta para "Feito" e limpa o agendamento'],
                       ['Card novo criado', 'Cria a pasta "ORG NNN Nome" no Drive e guarda o link no card'],
                       ['Card sem pasta é aberto', 'Cria a pasta (rede de segurança pra aba desatualizada e cards antigos)'],
                     ].map(([gatilho, acao], i) => (

@@ -4,14 +4,13 @@
 > "Copy" e "Produção" deixaram de ser colunas e viraram uma sub-etapa (tag) dentro
 > da coluna de trabalho. Menos colunas, e o estágio da peça fica visível no card.
 
-## As 5 colunas
+## As 4 colunas
 
 | Coluna | O que significa | Como o card ENTRA | Como o card SAI |
 |---|---|---|---|
 | **Fazendo** | Em construção. É onde a peça nasce e onde vive enquanto está sendo escrita ou produzida. | Card criado (padrão). | Automático pra **Feito**, assim que recebe qualquer mídia (importação do Drive ou upload). |
-| **Feito** | A arte/peça está finalizada. Existe arquivo pronto. | Recebeu mídia estando em Fazendo. | Automático pra **Postagem** quando TODOS os slides estão preenchidos. Ou manual, arrastando. |
-| **Postagem** | Na fila pra postar: arte pronta e legenda escrita. Só falta escolher quando. | Todos os slides preenchidos estando em Feito. Ou manual. | Manual, ao agendar (vai pra Agendado) ou ao publicar na hora (vai direto pra Arquivado). |
-| **Agendado** | Tem data e hora marcadas. O robô publica sozinho no horário. | Ao confirmar o agendamento (pelo card ou clicando numa data do calendário). | Automático pra **Arquivado** quando o robô publica. Se o agendamento for cancelado, volta pra Postagem. |
+| **Feito** | A arte está pronta e a peça espera data. É a fila de postagem. | Recebeu mídia estando em Fazendo. | Manual: ao agendar (vai pra Agendado) ou publicar na hora (vai direto pra Arquivado). |
+| **Agendado** | Tem data e hora marcadas. O robô publica sozinho no horário. | Ao confirmar o agendamento (pelo card ou clicando numa data do calendário). | Automático pra **Arquivado** quando o robô publica. Se o agendamento for cancelado, volta pra Feito. |
 | **Arquivado** | Já foi publicado. Fica como histórico e pra medir desempenho. | Publicação concluída (imediata ou agendada). | Não sai sozinho. Só manualmente, se for reaproveitar a peça. |
 
 ## A sub-etapa dentro de "Fazendo": Copy e Produção
@@ -34,11 +33,11 @@ salvamento do card.
 
 1. **Fazendo → Feito**: assim que qualquer mídia é gravada no card. Vale pra
    qualquer forma de anexar (Importar direto, Importar com link, upload manual),
-   porque a regra está no ponto por onde todas passam.
-2. **Feito → Postagem**: quando todos os slides têm mídia.
-3. **Agendado → Arquivado**: quando o robô publica no horário marcado.
-4. **Agendado → Postagem**: se a publicação agendada falhar ou for cancelada.
-5. **Criação da pasta no Drive**: ao criar o card, a pasta `ORG NNN Nome` é criada
+   porque a regra está no ponto por onde todas passam. **É o único avanço
+   automático do fluxo** — de Feito em diante, quem decide é você.
+2. **Agendado → Arquivado**: quando o robô publica no horário marcado.
+3. **Agendado → Feito**: se a publicação agendada falhar ou for cancelada.
+4. **Criação da pasta no Drive**: ao criar o card, a pasta `ORG NNN Nome` é criada
    na raiz do Orgânico. Também é garantida ao abrir qualquer card que ainda não
    tenha pasta (rede de segurança pra aba desatualizada e cards antigos).
 
@@ -46,7 +45,12 @@ salvamento do card.
 
 **Antes:** Fazer → Produção → Postagem → Agendado → Feito (Feito = publicado).
 
-**Depois:** Fazendo → Feito → Postagem → Agendado → Arquivado.
+**Depois (2026-08-06):** Fazendo → Feito → Postagem → Agendado → Arquivado.
+
+**Depois (2026-08-07):** Fazendo → Feito → Agendado → Arquivado. A coluna
+"Postagem" saiu: na prática era indistinguível de "Feito" (peça pronta esperando
+data), então virava uma parada a mais sem nenhuma decisão nova pelo caminho.
+Quem está pronto fica em Feito até ser agendado ou publicado.
 
 Na migração (`100_organico_colunas_e_etapa.sql`), os cards que estavam em "Feito"
 (publicados) foram para **Arquivado**, e os de "Fazer" e "Produção" foram para
