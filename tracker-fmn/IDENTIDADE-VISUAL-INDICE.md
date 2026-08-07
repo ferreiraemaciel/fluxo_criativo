@@ -33,7 +33,13 @@ reconsultar esse fluxo, só seguir a decisão já tomada.
 |---|---|---|---|
 | **Citação Crua** | Tese solta, aforismo, frase de impacto sem cena | Fundo creme liso, frase grande estilo texto nativo do Instagram, anotação manuscrita em cor neon, @ centralizado na base | `IDENTIDADE-VISUAL-CITACAO-CRUA.md` |
 | **Caso Real** | História real com cena, personagem, contexto físico | Fotografia realista, manchete em caixa preta na base, @ no canto | `IDENTIDADE-VISUAL-CASO-REAL.md` |
-| **Carrossel** | Lista, sequência, comparação em colunas, conteúdo grande demais pra 1 imagem | Múltiplos slides 1080x1350, capa e CTA com personagem, sistema de cor semântica | `IDENTIDADE-VISUAL-CARROSSEL.md` |
+| **Carrossel** | Lista, sequência, comparação em colunas, conteúdo grande demais pra 1 imagem | 8 slides 1080x1350 (padrão), capa e CTA com personagem, sistema de cor semântica | `IDENTIDADE-VISUAL-CARROSSEL.md` |
+
+**O Carrossel tem 6 estruturas narrativas oficiais** (definidas em 2026-08-06 por pesquisa de
+mercado): Mito vs. verdade, Caso real com número, Erro de precificação, Checklist de cláusula,
+Certo × errado lado a lado, e Passo a passo de negócio. Antes de montar um carrossel, escolher qual
+das 6 estruturas o conteúdo pede. Detalhe de cada uma, frequência sugerida e CTA que combina estão
+no `IDENTIDADE-VISUAL-CARROSSEL.md`.
 
 ---
 
@@ -59,3 +65,6 @@ reconsultar esse fluxo, só seguir a decisão já tomada.
   foto pra conteúdo narrativo. Esse índice existe pra não repetir essa dúvida do zero toda vez.
 - 2026-08-06 (mesmo dia): Adicionada a regra de legenda nunca repetir o texto da arte, depois de o
   ORG 035 sair com a legenda abrindo com a mesma frase da manchete.
+- 2026-08-06 (mesmo dia): Carrossel ganhou 6 estruturas narrativas oficiais, a partir de pesquisa de
+  mercado. Até então o projeto tinha identidade visual de carrossel, mas nenhuma definição de qual
+  estrutura de conteúdo usar.
