@@ -842,6 +842,253 @@ function RECard({ re, onDelete }) {
   );
 }
 
+/* ── PublicosModal ──────────────────────────────────────────────
+   Público personalizado de compradores no Meta. Duas ações: atualizar o
+   público que já existe (padrão, preserva o semelhante ancorado nele) e
+   criar um público novo com semelhante 1% (secundária, pra outro recorte).
+   Toda a conversa com o Meta passa pela função meta-publicos-sync.
+----------------------------------------------------------------*/
+function PublicosModal({ onClose }) {
+  const [dados, setDados]       = useState(null);
+  const [publicos, setPublicos] = useState([]);
+  const [rotina, setRotina]     = useState(null);
+  const [carregando, setCarregando] = useState(true);
+  const [erro, setErro]         = useState(null);
+  const [ocupado, setOcupado]   = useState(false);
+  const [resultado, setResultado] = useState(null);
+  const [confirmando, setConfirmando] = useState(null); // 'atualizar' | 'criar'
+  const [nomeNovo, setNomeNovo] = useState('');
+
+  const chamar = async (body) => {
+    const r = await fetch(`${window.db.supabaseUrl}/functions/v1/meta-publicos-sync`, {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json', 'Authorization':`Bearer ${window.db.supabaseKey}` },
+      body: JSON.stringify(body),
+    });
+    const j = await r.json();
+    if (j.error) throw new Error(j.error);
+    return j;
+  };
+
+  const carregar = async () => {
+    setCarregando(true); setErro(null);
+    try {
+      const [prev, lista, sync] = await Promise.all([
+        chamar({ action:'preview' }),
+        chamar({ action:'listar' }),
+        window.db.from('sync_status').select('*').eq('script','meta-publicos-sync').maybeSingle(),
+      ]);
+      setDados(prev);
+      setPublicos(lista.publicos || []);
+      setRotina(sync?.data || null);
+    } catch (e) { setErro(e.message || String(e)); }
+    setCarregando(false);
+  };
+
+  useEffect(() => { carregar(); }, []);
+
+  const executar = async (acao) => {
+    setOcupado(true); setErro(null); setConfirmando(null);
+    try {
+      const body = acao === 'atualizar'
+        ? { action:'atualizar' }
+        : { action:'criar', nome: nomeNovo.trim(), semelhante: true };
+      const r = await chamar(body);
+      setResultado({ acao, ...r });
+      await carregar();
+    } catch (e) { setErro(e.message || String(e)); }
+    setOcupado(false);
+  };
+
+  const alvo = dados?.publico_atual;
+  // O semelhante que aponta pro público alvo. É ele que se recalcula sozinho
+  // quando a lista de compradores muda. O vínculo é por identificador
+  // (lookalike_spec.origin), nunca por nome: renomear qualquer um dos dois não
+  // pode fazer o painel achar que o semelhante sumiu.
+  const semelhante = publicos.find(p => p.subtype === 'LOOKALIKE'
+    && alvo?.id && (p.lookalike_spec?.origin || []).some(o => String(o.id) === String(alvo.id)));
+
+  const dataBR = (epochOuIso) => {
+    if (!epochOuIso) return '—';
+    const d = typeof epochOuIso === 'number' ? new Date(epochOuIso * 1000) : new Date(epochOuIso);
+    return isNaN(d) ? '—' : d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  };
+
+  const CARD = { padding:'14px 16px', borderRadius:11, background:'var(--app-surface-2)',
+    border:'1px solid var(--app-border)' };
+  const LBL = { fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700, letterSpacing:'0.1em',
+    textTransform:'uppercase', color:'var(--text-3)', marginBottom:6, display:'block' };
+  const INP = { width:'100%', padding:'8px 11px', borderRadius:7, background:'var(--app-surface-2)',
+    border:'1px solid var(--app-border)', color:'var(--text-1)', fontFamily:'Roboto,sans-serif', fontSize:13 };
+
+  return (
+    <div onClick={onClose}
+      style={{ position:'fixed',inset:0,background:'rgba(0,0,0,.68)',zIndex:500,
+        display:'flex',alignItems:'center',justifyContent:'center' }}>
+      <div onClick={e => e.stopPropagation()}
+        style={{ background:'var(--app-surface)',border:'1px solid var(--app-border-2)',
+          borderRadius:16,width:560,maxHeight:'86vh',display:'flex',flexDirection:'column',
+          boxShadow:'0 24px 64px rgba(0,0,0,.55)' }}>
+
+        <div style={{ padding:'16px 20px',borderBottom:'1px solid var(--app-border)',
+          display:'flex',alignItems:'center',justifyContent:'space-between',flexShrink:0 }}>
+          <span style={{ fontSize:14,fontFamily:'Roboto,sans-serif',fontWeight:700,color:'var(--text-1)' }}>
+            Públicos do Meta
+          </span>
+          <button onClick={onClose}
+            style={{ width:28,height:28,borderRadius:'50%',background:'rgba(255,255,255,.07)',
+              color:'var(--text-2)',cursor:'pointer',fontSize:18,border:'none',
+              display:'flex',alignItems:'center',justifyContent:'center' }}>×</button>
+        </div>
+
+        <div style={{ flex:1,overflowY:'auto',padding:'14px 16px',display:'flex',flexDirection:'column',gap:12 }}>
+
+          {carregando && (
+            <div style={{ padding:'28px',textAlign:'center',color:'var(--text-3)',
+              fontFamily:'Roboto,sans-serif',fontSize:13 }}>Lendo compradores e consultando o Meta...</div>
+          )}
+
+          {erro && (
+            <div style={{ ...CARD, borderColor:'rgba(248,113,113,.4)', background:'rgba(248,113,113,.08)' }}>
+              <span style={{ fontSize:12.5,fontFamily:'Roboto,sans-serif',color:'#f87171' }}>{erro}</span>
+            </div>
+          )}
+
+          {resultado && (
+            <div style={{ ...CARD, borderColor:'rgba(74,222,128,.4)', background:'rgba(74,222,128,.08)' }}>
+              <span style={{ fontSize:12.5,fontFamily:'Roboto,sans-serif',color:'#4ade80',fontWeight:700 }}>
+                {resultado.acao === 'atualizar' ? 'Público atualizado.' : 'Público criado.'}{' '}
+                {resultado.recebidos} de {resultado.enviados} aceitos pelo Meta
+                {resultado.invalidos > 0 ? `, ${resultado.invalidos} recusados` : ', nenhum recusado'}.
+              </span>
+              {resultado.semelhante && (
+                <div style={{ marginTop:6,fontSize:12,fontFamily:'Roboto,sans-serif',color:'var(--text-2)' }}>
+                  {resultado.semelhante.criado
+                    ? `Semelhante 1% criado: ${resultado.semelhante.nome}`
+                    : `Semelhante ainda não: ${resultado.semelhante.dica}`}
+                </div>
+              )}
+            </div>
+          )}
+
+          {!carregando && dados && (
+            <>
+              {/* Público alvo */}
+              <div style={CARD}>
+                <span style={LBL}>Público de compradores</span>
+                <div style={{ display:'flex',alignItems:'baseline',justifyContent:'space-between',gap:10 }}>
+                  <span style={{ fontSize:14.5,fontFamily:'Roboto,sans-serif',fontWeight:700,color:'var(--text-1)' }}>
+                    {alvo?.name || 'Nenhum público configurado'}
+                  </span>
+                  {alvo?.operation_status && (
+                    <span style={{ fontSize:11,fontFamily:'Roboto,sans-serif',
+                      color: alvo.operation_status.code === 200 ? '#4ade80' : 'var(--fmn-gold)' }}>
+                      {alvo.operation_status.description}
+                    </span>
+                  )}
+                </div>
+                <div style={{ marginTop:10,display:'grid',gridTemplateColumns:'1fr 1fr',gap:8 }}>
+                  {[['Compradores no Tracker', dados.compradores_unicos],
+                    ['Campos casáveis por pessoa', `${dados.campos_por_pessoa} de 8`],
+                    ['Conteúdo atualizado no Meta', dataBR(alvo?.time_content_updated)],
+                    ['Última rotina automática', rotina ? dataBR(rotina.last_run) : 'ainda não rodou']].map(([k,v]) => (
+                    <div key={k}>
+                      <div style={{ fontSize:10.5,fontFamily:'Roboto,sans-serif',color:'var(--text-3)' }}>{k}</div>
+                      <div style={{ fontSize:13,fontFamily:'Roboto,sans-serif',fontWeight:700,color:'var(--text-1)' }}>{v}</div>
+                    </div>
+                  ))}
+                </div>
+                <div style={{ marginTop:12 }}>
+                  {confirmando === 'atualizar' ? (
+                    <div style={{ display:'flex',alignItems:'center',gap:8,flexWrap:'wrap' }}>
+                      <span style={{ fontSize:12.5,fontFamily:'Roboto,sans-serif',color:'var(--text-2)' }}>
+                        Enviar {dados.compradores_unicos} compradores para "{alvo?.name}"?
+                      </span>
+                      <Btn variant="primary" size="sm" onClick={() => executar('atualizar')} disabled={ocupado}>
+                        {ocupado ? 'Enviando...' : 'Confirmar'}
+                      </Btn>
+                      <Btn variant="ghost" size="sm" onClick={() => setConfirmando(null)}>Cancelar</Btn>
+                    </div>
+                  ) : (
+                    <Btn variant="primary" size="sm" icon="upload-cloud"
+                      onClick={() => setConfirmando('atualizar')} disabled={ocupado || !alvo}>
+                      Atualizar agora
+                    </Btn>
+                  )}
+                </div>
+              </div>
+
+              {/* Semelhante */}
+              <div style={CARD}>
+                <span style={LBL}>Semelhante 1%</span>
+                <div style={{ fontSize:13.5,fontFamily:'Roboto,sans-serif',fontWeight:700,color:'var(--text-1)' }}>
+                  {semelhante ? semelhante.name : 'Nenhum semelhante ancorado neste público'}
+                </div>
+                <div style={{ marginTop:5,fontSize:11.5,fontFamily:'Roboto,sans-serif',color:'var(--text-3)' }}>
+                  {semelhante
+                    ? 'Se recalcula sozinho a partir do público acima. Não precisa refazer a cada atualização.'
+                    : 'Um semelhante novo pode ser criado junto com um público novo, no bloco abaixo.'}
+                </div>
+              </div>
+
+              {/* Cobertura dos dados */}
+              <div style={CARD}>
+                <span style={LBL}>Qualidade dos dados enviados</span>
+                <div style={{ display:'flex',flexWrap:'wrap',gap:6 }}>
+                  {Object.entries(dados.cobertura).map(([campo, qtd]) => {
+                    const pct = dados.compradores_unicos ? qtd / dados.compradores_unicos : 0;
+                    const cor = pct >= 0.95 ? '#4ade80' : pct >= 0.7 ? '#fbbf24' : '#f87171';
+                    return (
+                      <span key={campo} style={{ display:'flex',alignItems:'center',gap:5,padding:'3px 9px',
+                        borderRadius:999,background:'rgba(255,255,255,.04)',border:'1px solid var(--app-border)',
+                        fontSize:11,fontFamily:'Roboto,sans-serif',color:'var(--text-2)' }}>
+                        <span style={{ width:6,height:6,borderRadius:'50%',background:cor }}/>
+                        {campo} {qtd}
+                      </span>
+                    );
+                  })}
+                </div>
+                <div style={{ marginTop:8,fontSize:11,fontFamily:'Roboto,sans-serif',color:'var(--text-3)' }}>
+                  Tudo sai criptografado. O Meta nunca recebe e-mail, telefone ou CPF legível.
+                </div>
+              </div>
+
+              {/* Criar novo */}
+              <div style={{ ...CARD, background:'rgba(255,255,255,.02)' }}>
+                <span style={LBL}>Criar público novo</span>
+                <div style={{ fontSize:11.5,fontFamily:'Roboto,sans-serif',color:'var(--text-3)',marginBottom:9 }}>
+                  Só para um recorte diferente. Criar do zero não aproveita o semelhante que já existe
+                  nem o aprendizado das campanhas que usam o público atual.
+                </div>
+                {confirmando === 'criar' ? (
+                  <div style={{ display:'flex',alignItems:'center',gap:8,flexWrap:'wrap' }}>
+                    <span style={{ fontSize:12.5,fontFamily:'Roboto,sans-serif',color:'var(--text-2)' }}>
+                      Criar "{nomeNovo.trim()}" com {dados.compradores_unicos} compradores e semelhante 1%?
+                    </span>
+                    <Btn variant="primary" size="sm" onClick={() => executar('criar')} disabled={ocupado}>
+                      {ocupado ? 'Criando...' : 'Confirmar'}
+                    </Btn>
+                    <Btn variant="ghost" size="sm" onClick={() => setConfirmando(null)}>Cancelar</Btn>
+                  </div>
+                ) : (
+                  <div style={{ display:'flex',gap:8 }}>
+                    <input style={INP} value={nomeNovo} placeholder="Nome do público novo"
+                      onChange={e => setNomeNovo(e.target.value)}/>
+                    <Btn variant="secondary" size="sm" icon="plus"
+                      onClick={() => setConfirmando('criar')} disabled={ocupado || !nomeNovo.trim()}>
+                      Criar
+                    </Btn>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ── GlobalRulesModal ───────────────────────────────────────────*/
 function GlobalRulesModal({ rules, onChange, onCreate, onClose }) {
   const [view, setView] = useState('list');
@@ -2038,6 +2285,7 @@ function TrafficScreen() {
       <TopBar title="Tráfego"
         actions={
           <div style={{ display:'flex',alignItems:'center',gap:8 }}>
+            <Btn variant="ghost" size="sm" icon="users" onClick={() => setModal('publicos')}>Públicos</Btn>
             <Btn variant="ghost" size="sm" icon="sliders" onClick={() => setModal('global')}>Regras Gerais</Btn>
             <Btn variant="ghost" size="sm" icon="target" onClick={() => setModal('specific')}>
               Regras Específicas
@@ -2208,6 +2456,7 @@ function TrafficScreen() {
       </div>
 
       {/* Modais */}
+      {modal === 'publicos' && <PublicosModal onClose={() => setModal(null)}/>}
       {modal === 'global' && (
         <GlobalRulesModal rules={globalRules}
           onChange={(code, val) => setGlobalRules(prev => prev.map(r => r.code === code ? { ...r, active: val } : r))}
@@ -2248,3 +2497,4 @@ function TrafficScreen() {
 }
 
 window.TrafficScreen = TrafficScreen;
+window.PublicosModal = PublicosModal;
