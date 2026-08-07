@@ -873,14 +873,13 @@ function PublicosModal({ onClose }) {
   const carregar = async () => {
     setCarregando(true); setErro(null);
     try {
-      const [prev, lista, sync] = await Promise.all([
+      const [prev, lista] = await Promise.all([
         chamar({ action:'preview' }),
         chamar({ action:'listar' }),
-        window.db.from('sync_status').select('*').eq('script','meta-publicos-sync').maybeSingle(),
       ]);
       setDados(prev);
       setPublicos(lista.publicos || []);
-      setRotina(sync?.data || null);
+      setRotina(prev.ultima_rotina || null);
     } catch (e) { setErro(e.message || String(e)); }
     setCarregando(false);
   };

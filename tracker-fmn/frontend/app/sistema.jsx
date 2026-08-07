@@ -15,6 +15,7 @@ const AUTOMACOES_NUVEM = [
   { grupo:'Anúncios', nome: 'kanban-sync (completo)', frequencia: '1x/dia às 6h',                  descricao: 'Recalcula TODOS os anúncios (inclusive arquivados), evita número congelado' },
   { grupo:'Anúncios', nome: 'processar-pausas',       frequencia: 'A cada 5 min',                  descricao: 'Executa pausas automáticas pendentes (alertas de CPA)' },
   { grupo:'Anúncios', nome: 'drive-manutencao',       frequencia: 'A cada 30 min',                 descricao: 'Cria a pasta no Drive de cada anúncio (o "Importar direto" depende dela) e move arquivo solto' },
+  { grupo:'Anúncios', nome: 'meta-publicos-sync',     frequencia: '1x/semana, segunda às 5h',      descricao: 'Manda os compradores pro público personalizado do Meta (o semelhante 1% se recalcula sozinho a partir dele)' },
   // ── Vendas ──
   { grupo:'Vendas',   nome: 'hotmart-backfill',       frequencia: 'A cada 15 min, das 6h às 23h',  descricao: 'Plano B do webhook: busca vendas que não chegaram em tempo real' },
   // ── Orgânico ──

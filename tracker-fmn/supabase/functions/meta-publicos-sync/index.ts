@@ -363,10 +363,17 @@ async function preview(produto: "mcv" | "todos", audienceId?: string) {
     publico_atual = a.error ? { erro: a.error.message } : a;
   }
 
+  // O carimbo vem daqui, e não de uma leitura direta do painel, pra não depender
+  // do RLS de `sync_status` no cliente.
+  const { data: rotina } = await supa()
+    .from("sync_status").select("last_run,status,message,duration_s")
+    .eq("script", "meta-publicos-sync").maybeSingle();
+
   return {
     ok: true,
     escreveu_no_meta: false,
     produto,
+    ultima_rotina: rotina || null,
     linhas_lidas: total_linhas,
     compradores_unicos: norm.length,
     descartados: { transacao_teste: descartados_teste, sem_email_valido: descartados_sem_email },
