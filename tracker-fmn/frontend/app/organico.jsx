@@ -19,6 +19,17 @@ const RESPONSAVEL_CONFIG = {
 // "Postagem" foi removida em 2026-08-07: era indistinguível de "Feito" na
 // prática (peça pronta esperando data), então virava uma parada a mais sem
 // decisão nova. Quem está pronto fica em Feito até ser agendado.
+// Próximo ORG livre: preenche buraco na numeração primeiro (ex: ORG 010, cujo
+// card foi deletado), e só vai pra max+1 quando a sequência está inteira. Mesma
+// regra do quadro de Anúncios, ver NovoAdModal em kanban.jsx. Contar as linhas
+// não serve: com um buraco no meio, o número colidiria com um card existente.
+function proximoLivre(items) {
+  const usados = new Set((items || []).map(i => i.numero).filter(Boolean));
+  let n = 1;
+  while (usados.has(n)) n++;
+  return n;
+}
+
 const COLUMNS = [
   { id:'Fazendo',   label:'Fazendo',   colorDot:'#3b82f6', colorBg:'rgba(59,130,246,.08)',  colorBorder:'rgba(59,130,246,.25)' },
   { id:'Feito',     label:'Feito',     colorDot:'#fbbf24', colorBg:'rgba(251,191,36,.08)',  colorBorder:'rgba(251,191,36,.25)' },
@@ -2210,9 +2221,7 @@ function OrganicoScreen() {
       // pastas do Drive). O fallback por índice só cobre linha legada sem número.
       const withNum = data.map((item,idx) => ({ ...item, numero: item.numero ?? (idx+1) }));
       setItems(withNum);
-      // Próximo número é max+1, igual aos Anúncios: deleção deixa buraco em vez
-      // de renumerar. Contar as linhas daria colisão com um buraco no meio.
-      setNextNum(Math.max(0, ...withNum.map(i => i.numero || 0)) + 1);
+      setNextNum(proximoLivre(withNum));
     }
   }, []);
   useEffect(() => { loadItems(); }, [loadItems]);
@@ -2301,7 +2310,8 @@ function OrganicoScreen() {
         const { data } = await window.db.from('conteudo_organico')
           .insert({ ...row, numero: nextNum }).select().single();
         if (data) {
-          setItems(prev => [...prev, { ...data, numero:nextNum }]); setNextNum(n=>n+1); setModal(null);
+          setItems(prev => { const novos = [...prev, { ...data, numero:nextNum }]; setNextNum(proximoLivre(novos)); return novos; });
+          setModal(null);
           // Cria a pasta do card no Drive (ex: "ORG 021 Nome"), na mesma raiz
           // de onde a importação puxa as artes. Roda solto, sem travar o
           // fechamento do modal: se o Drive falhar, o card já está salvo e a
@@ -2323,8 +2333,7 @@ function OrganicoScreen() {
           return;
         }
       }
-      setItems(prev => [...prev, { ...row, id:String(Date.now()), numero:nextNum }]);
-      setNextNum(n=>n+1);
+      setItems(prev => { const novos = [...prev, { ...row, id:String(Date.now()), numero:nextNum }]; setNextNum(proximoLivre(novos)); return novos; });
       setModal(null);
     }
   };
