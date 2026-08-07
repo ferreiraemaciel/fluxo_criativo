@@ -46,15 +46,15 @@ const ETAPAS_ORGANICO = [
 ];
 
 const COLUNAS_ORGANICO = [
-  { nome:'Fazendo',   cor:'#94a3b8', significa:'Em construção, é onde a peça nasce',
+  { nome:'Fazendo',   cor:'#3b82f6', significa:'Em construção, é onde a peça nasce',
     entra:'Card criado (padrão)', sai:'Automático pra Feito ao receber qualquer mídia' },
-  { nome:'Feito',     cor:'#38bdf8', significa:'Arte finalizada, existe arquivo pronto',
+  { nome:'Feito',     cor:'#fbbf24', significa:'Arte finalizada, existe arquivo pronto',
     entra:'Recebeu mídia estando em Fazendo', sai:'Automático pra Postagem quando todos os slides estão preenchidos' },
-  { nome:'Postagem',  cor:'#fb923c', significa:'Na fila: arte e legenda prontas, falta escolher quando',
+  { nome:'Postagem',  cor:'#f97316', significa:'Na fila: arte e legenda prontas, falta escolher quando',
     entra:'Slides completos, ou manual', sai:'Ao agendar (Agendado) ou publicar na hora (Arquivado)' },
-  { nome:'Agendado',  cor:'#a78bfa', significa:'Data e hora marcadas, o robô publica sozinho',
+  { nome:'Agendado',  cor:'#4ade80', significa:'Data e hora marcadas, o robô publica sozinho',
     entra:'Agendamento confirmado no card ou no calendário', sai:'Automático pra Arquivado ao publicar; volta pra Postagem se falhar' },
-  { nome:'Arquivado', cor:'#4ade80', significa:'Já publicado, fica como histórico e métrica',
+  { nome:'Arquivado', cor:'#94a3b8', significa:'Já publicado, fica como histórico e métrica',
     entra:'Publicação concluída', sai:'Não sai sozinho, só manualmente se for reaproveitar' },
 ];
 

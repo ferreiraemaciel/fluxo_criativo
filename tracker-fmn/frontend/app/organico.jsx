@@ -15,12 +15,15 @@ const RESPONSAVEL_CONFIG = {
 
 // Copy e Produção não são mais colunas: viraram sub-etapa (tag) dentro de
 // "Fazendo", igual ao Kanban de Anúncios. Regras completas em REGRAS-KANBAN-ORGANICO.md.
+// Cores na MESMA ORDEM das colunas dos Anúncios: azul → amarelo → laranja →
+// verde → cinza. Assim a posição no fluxo tem a mesma leitura de cor nos dois
+// quadros (a 1ª coluna é azul nos dois, a última é cinza nos dois).
 const COLUMNS = [
-  { id:'Fazendo',   label:'Fazendo',   colorDot:'#94a3b8', colorBg:'rgba(148,163,184,.08)', colorBorder:'rgba(148,163,184,.22)' },
-  { id:'Feito',     label:'Feito',     colorDot:'#38bdf8', colorBg:'rgba(56,189,248,.08)',  colorBorder:'rgba(56,189,248,.22)'  },
-  { id:'Postagem',  label:'Postagem',  colorDot:'#fb923c', colorBg:'rgba(251,146,60,.08)',  colorBorder:'rgba(251,146,60,.22)'  },
-  { id:'Agendado',  label:'Agendado',  colorDot:'#a78bfa', colorBg:'rgba(167,139,250,.08)', colorBorder:'rgba(167,139,250,.22)' },
-  { id:'Arquivado', label:'Arquivado', colorDot:'#4ade80', colorBg:'rgba(74,222,128,.08)',  colorBorder:'rgba(74,222,128,.22)'  },
+  { id:'Fazendo',   label:'Fazendo',   colorDot:'#3b82f6', colorBg:'rgba(59,130,246,.08)',  colorBorder:'rgba(59,130,246,.25)' },
+  { id:'Feito',     label:'Feito',     colorDot:'#fbbf24', colorBg:'rgba(251,191,36,.08)',  colorBorder:'rgba(251,191,36,.25)' },
+  { id:'Postagem',  label:'Postagem',  colorDot:'#f97316', colorBg:'rgba(249,115,22,.08)',  colorBorder:'rgba(249,115,22,.3)'  },
+  { id:'Agendado',  label:'Agendado',  colorDot:'#4ade80', colorBg:'rgba(74,222,128,.08)',  colorBorder:'rgba(74,222,128,.25)' },
+  { id:'Arquivado', label:'Arquivado', colorDot:'#94a3b8', colorBg:'rgba(148,163,184,.05)', colorBorder:'rgba(148,163,184,.2)'  },
 ];
 
 // Sub-etapas dentro de "Fazendo" (mesmo padrão de ads.etapa).
@@ -1373,6 +1376,31 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
                       })}
                     </div>
                   </div>
+
+                  {/* Etapa — só dentro de Fazendo. Clicar na etapa já ativa
+                      desmarca, voltando pra "sem etapa". */}
+                  {form.status === 'Fazendo' && (
+                    <div style={{ display:'flex', flexDirection:'column', gap:7 }}>
+                      <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700,
+                        letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)' }}>Etapa</span>
+                      <div style={{ display:'flex', gap:5, flexWrap:'wrap' }}>
+                        {Object.entries(ETAPAS_ORG).map(([id, e]) => {
+                          const active = form.etapa === id;
+                          return (
+                            <button key={id} onClick={() => set('etapa', active ? null : id)}
+                              style={{ display:'flex', alignItems:'center', gap:5, padding:'4px 10px',
+                                borderRadius:999, fontSize:11, cursor:'pointer',
+                                fontFamily:'Roboto,sans-serif', fontWeight:700, transition:'all 120ms',
+                                background: active ? `${e.cor}26` : 'rgba(255,255,255,.04)',
+                                border: active ? `1px solid ${e.cor}66` : '1px solid var(--app-border)',
+                                color: active ? e.cor : 'var(--text-3)' }}>
+                              <LucideIcon icon={e.icon} size={11}/>{e.label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
 
                   {/* Data prevista */}
                   <div style={{ display:'flex', flexDirection:'column', gap:7 }}>
