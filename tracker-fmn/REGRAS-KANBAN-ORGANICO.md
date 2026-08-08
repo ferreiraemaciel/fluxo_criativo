@@ -41,6 +41,36 @@ salvamento do card.
    na raiz do Orgânico. Também é garantida ao abrir qualquer card que ainda não
    tenha pasta (rede de segurança pra aba desatualizada e cards antigos).
 
+## O número do card (ORG NNN) — regras duras
+
+O número é a chave que liga o card à pasta dele no Drive. A importação encontra
+a pasta **pelo número**, então qualquer instabilidade nele vira mídia errada no
+card. Por isso o banco garante três coisas (migrações 103 e 104):
+
+1. **Todo card nasce com número**, não importa por onde entre: tela, script,
+   importação em lote, outra sessão. A regra vive num gatilho do banco, não no
+   frontend — assim não existe caminho que escape dela.
+2. **O número nunca muda depois de criado.** Tentar alterar dá erro no banco.
+   O nome da pasta no Drive é congelado quando ela é criada; mudar o número
+   depois quebraria o par card↔pasta na hora.
+3. **Número liberado nunca é reaproveitado.** Apagar um card NÃO apaga a pasta
+   dele no Drive. Se o número voltasse a circular, o próximo card herdaria a
+   pasta (e a arte) do card apagado, e a importação traria conteúdo errado sem
+   avisar. Buraco na numeração é só estética; adotar pasta alheia é erro de
+   conteúdo. Um índice único no banco impede dois cards com o mesmo número.
+
+**Nunca calcular o número pela posição do card na lista.** Foi a origem do bug
+de 2026-08-07: apagar qualquer card renumerava todos os seguintes enquanto os
+nomes das pastas ficavam congelados, e o ORG 033 acabou importando a imagem da
+pasta de outro card. A tela e o worker leem o número gravado, e ponto.
+
+## Padrão de nome no Drive
+
+- Pasta: `ORG NNN Tema do card`
+- Arquivo único: `ORG NNN Tema do card.ext`
+- Carrossel: `ORG NNN Tema do card 01.ext`, `... 02.ext` — a ordem do nome é a
+  ordem dos slides na publicação.
+
 ## Histórico da mudança
 
 **Antes:** Fazer → Produção → Postagem → Agendado → Feito (Feito = publicado).

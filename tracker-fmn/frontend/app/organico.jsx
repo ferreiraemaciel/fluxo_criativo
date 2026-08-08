@@ -28,11 +28,14 @@ const RESPONSAVEL_COMUM = { initials:'—', color:'#94a3b8', bg:'rgba(148,163,18
 // card foi deletado), e só vai pra max+1 quando a sequência está inteira. Mesma
 // regra do quadro de Anúncios, ver NovoAdModal em kanban.jsx. Contar as linhas
 // não serve: com um buraco no meio, o número colidiria com um card existente.
+// Sempre o PRÓXIMO número, nunca um liberado por card apagado: apagar o card
+// não apaga a pasta no Drive, então reaproveitar o número faria o card novo
+// herdar a pasta (e a arte) do antigo. Buraco na numeração é só estética;
+// adotar pasta alheia é erro de conteúdo. O banco garante o mesmo por gatilho
+// (migração 104), isto aqui é só pra tela mostrar o número certo na hora.
 function proximoLivre(items) {
-  const usados = new Set((items || []).map(i => i.numero).filter(Boolean));
-  let n = 1;
-  while (usados.has(n)) n++;
-  return n;
+  const usados = (items || []).map(i => i.numero).filter(Boolean);
+  return usados.length ? Math.max(...usados) + 1 : 1;
 }
 
 const COLUMNS = [
@@ -2235,7 +2238,11 @@ function OrganicoScreen() {
       // `numero` é coluna no banco desde a migration 101 (antes era calculado
       // pela posição, o que renumerava tudo a cada deleção e desalinhava as
       // pastas do Drive). O fallback por índice só cobre linha legada sem número.
-      const withNum = data.map((item,idx) => ({ ...item, numero: item.numero ?? (idx+1) }));
+      // Sem fallback por posição: o número vem do banco e só de lá. Calcular por
+      // posição foi a origem do bug de 2026-08-07 (importava a mídia do card
+      // errado), então é melhor um card aparecer sem número, e chamar atenção,
+      // do que mostrar um número inventado que casa com a pasta de outro.
+      const withNum = data.map(item => ({ ...item, numero: item.numero ?? null }));
       setItems(withNum);
       setNextNum(proximoLivre(withNum));
     }
