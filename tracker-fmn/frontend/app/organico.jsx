@@ -1469,11 +1469,11 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
                   {/* Headline */}
                   <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
                     <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-                      <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)' }}>Headline</span>
+                      <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)' }}>{form.plataforma==='Artigo' ? 'Título do artigo' : 'Headline'}</span>
                       <CopyBtn text={form.headline||''}/>
                     </div>
                     <textarea value={form.headline||''} onChange={e=>set('headline',e.target.value)}
-                      rows={2} placeholder="O texto escrito na própria arte/vídeo (hook)..."
+                      rows={2} placeholder={form.plataforma==='Artigo' ? "O título do artigo, literário e evocativo, igual vai sair no blog..." : "O texto escrito na própria arte/vídeo (hook)..."}
                       style={{ width:'100%', boxSizing:'border-box', padding:'9px 12px', borderRadius:8, resize:'vertical',
                         background:'var(--app-surface-2)', border:'1px solid var(--app-border)',
                         color:'var(--text-1)', fontFamily:'Roboto,sans-serif', fontSize:13, outline:'none', lineHeight:1.55 }}
@@ -1506,14 +1506,14 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
                       </div>
                     </div>
                   </>) : (<>
-                    {/* Roteiro (Gancho + Desenvolvimento + CTA, sempre as 3 partes presentes) */}
+                    {/* Roteiro (Gancho + Desenvolvimento + CTA, sempre as 3 partes presentes) — em Artigo vira a estrutura do texto */}
                     <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
                       <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-                        <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)' }}>Roteiro</span>
+                        <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)' }}>{form.plataforma==='Artigo' ? 'Estrutura do artigo' : 'Roteiro'}</span>
                         <CopyBtn text={form.roteiro||''}/>
                       </div>
                       <textarea value={form.roteiro||''} onChange={e=>set('roteiro',e.target.value)}
-                        rows={6} placeholder="Gancho, desenvolvimento e CTA, as 3 partes precisam estar aqui..."
+                        rows={6} placeholder={form.plataforma==='Artigo' ? "Ângulo, abertura pronta, seções numeradas, seção de honestidade..." : "Gancho, desenvolvimento e CTA, as 3 partes precisam estar aqui..."}
                         style={{ width:'100%', boxSizing:'border-box', padding:'9px 12px', borderRadius:8, resize:'vertical',
                           background:'var(--app-surface-2)', border:'1px solid var(--app-border)',
                           color:'var(--text-1)', fontFamily:'Roboto,sans-serif', fontSize:13, outline:'none', lineHeight:1.55 }}
@@ -1524,11 +1524,11 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
                     {/* Estética Visual */}
                     <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
                       <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-                        <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)' }}>Estética Visual</span>
+                        <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)' }}>{form.plataforma==='Artigo' ? 'Direção visual' : 'Estética Visual'}</span>
                         <CopyBtn text={form.estetica_visual||''}/>
                       </div>
                       <textarea value={form.estetica_visual||''} onChange={e=>set('estetica_visual',e.target.value)}
-                        rows={4} placeholder={form.plataforma==='Imagem' ? "Descrição da cena/composição (o Prompt de geração vai no campo abaixo)..." : "Cenário, enquadramento, ritmo de corte, direção de filmagem..."}
+                        rows={4} placeholder={form.plataforma==='Artigo' ? "Capa, mapa mental, diagramas e outros visuais que o artigo pede..." : form.plataforma==='Imagem' ? "Descrição da cena/composição (o Prompt de geração vai no campo abaixo)..." : "Cenário, enquadramento, ritmo de corte, direção de filmagem..."}
                         style={{ width:'100%', boxSizing:'border-box', padding:'9px 12px', borderRadius:8, resize:'vertical',
                           background:'var(--app-surface-2)', border:'1px solid var(--app-border)',
                           color:'var(--text-1)', fontFamily:'Roboto,sans-serif', fontSize:13, outline:'none', lineHeight:1.55 }}
@@ -1536,15 +1536,15 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
                         onBlur={e=>e.target.style.borderColor='var(--app-border)'}/>
                     </div>
 
-                    {/* Prompt — só Imagem */}
-                    {form.plataforma === 'Imagem' && (
+                    {/* Prompt — Imagem e Artigo (imagem de capa) */}
+                    {(form.plataforma === 'Imagem' || form.plataforma === 'Artigo') && (
                       <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
                         <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-                          <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)' }}>Prompt</span>
+                          <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)' }}>{form.plataforma==='Artigo' ? 'Prompt da imagem de capa' : 'Prompt'}</span>
                           <CopyBtn text={form.prompt||''}/>
                         </div>
                         <textarea value={form.prompt||''} onChange={e=>set('prompt',e.target.value)}
-                          rows={4} placeholder="Prompt para gerar a imagem no ChatGPT / Midjourney..."
+                          rows={4} placeholder={form.plataforma==='Artigo' ? "Prompt para gerar a imagem de capa no ChatGPT (opcional)..." : "Prompt para gerar a imagem no ChatGPT / Midjourney..."}
                           style={{ width:'100%', boxSizing:'border-box', padding:'9px 12px', borderRadius:8, resize:'vertical',
                             background:'rgba(96,165,250,.04)', border:'1px solid rgba(96,165,250,.18)',
                             color:'var(--text-1)', fontFamily:'Roboto,sans-serif', fontSize:13, outline:'none', lineHeight:1.55 }}
@@ -1554,14 +1554,14 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
                     )}
                   </>)}
 
-                  {/* Legenda da postagem — Reels, Carrossel e Imagem */}
+                  {/* Legenda da postagem — Reels, Carrossel e Imagem. Em Artigo vira o resumo/meta description */}
                   <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
                     <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-                      <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)' }}>Legenda da postagem</span>
+                      <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)' }}>{form.plataforma==='Artigo' ? 'Resumo / meta description' : 'Legenda da postagem'}</span>
                       <CopyBtn text={form.legenda||''}/>
                     </div>
                     <textarea value={form.legenda||''} onChange={e=>set('legenda',e.target.value)}
-                      rows={5} placeholder="Texto da postagem no Instagram..."
+                      rows={5} placeholder={form.plataforma==='Artigo' ? "140 a 160 caracteres, o resumo que vai no card do blog e na meta description..." : "Texto da postagem no Instagram..."}
                       style={{ width:'100%', boxSizing:'border-box', padding:'9px 12px', borderRadius:8, resize:'vertical',
                         background:'var(--app-surface-2)', border:'1px solid var(--app-border)',
                         color:'var(--text-1)', fontFamily:'Roboto,sans-serif', fontSize:13, outline:'none', lineHeight:1.55 }}
