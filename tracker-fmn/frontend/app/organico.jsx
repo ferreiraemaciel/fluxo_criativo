@@ -438,11 +438,6 @@ function AdicionarCriativoOrganicoBtn({ numero, cardId, onDone }) {
     falhar('Demorou demais. Recarregue a página em instantes.');
   }
 
-  function manual() {
-    const p = window.prompt('Cole o link ou ID da pasta do criativo no Drive:');
-    if (p && p.trim()) run(p.trim());
-  }
-
   if (step === 'running') {
     return <BarraProgresso pct={pct} etapa={msg}/>;
   }
@@ -452,12 +447,8 @@ function AdicionarCriativoOrganicoBtn({ numero, cardId, onDone }) {
         <div style={{ padding:'6px 10px', borderRadius:8, background:'rgba(248,113,113,.08)',
           border:'1px solid rgba(248,113,113,.3)', fontSize:11, color:'#f87171', lineHeight:1.4 }}>{msg}</div>
       )}
-      <div style={{ display:'flex', gap:8 }}>
-        <Btn variant="secondary" size="sm" icon="image-plus" style={{ flex:1, justifyContent:'center' }}
-          onClick={() => run(null)}>Importar direto</Btn>
-        <Btn variant="ghost" size="sm" icon="link" style={{ justifyContent:'center' }}
-          onClick={manual} title="Colar o link de uma pasta do Drive">Importar com link</Btn>
-      </div>
+      <Btn variant="secondary" size="sm" icon="image-plus" style={{ width:'100%', justifyContent:'center' }}
+        onClick={() => run(null)} title="Puxa a mídia da pasta ORG deste card no Drive">Importar</Btn>
     </div>
   );
 }
@@ -1081,6 +1072,31 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
     setTimeout(() => setSaveStatus('idle'), 2000);
   };
 
+  // ── Salvamento automático ──────────────────────────────────────────────
+  // Grava sozinho 1,2s depois que você para de digitar. Só vale pra card que
+  // JÁ EXISTE: card novo continua nascendo pelo botão "Criar", senão abrir o
+  // modal e desistir encheria o quadro de cards em branco.
+  // O snapshot evita gravação à toa (reabrir o card, ou uma mudança que volta
+  // ao valor original, não disparam nada).
+  const primeiroRender = useRef(true);
+  const ultimoSalvo    = useRef(null);
+  useEffect(() => {
+    if (isNew) return;
+    const finalSlides = form.plataforma === 'Carrossel' ? JSON.stringify(slidesArr) : form.slides;
+    const snapshot = JSON.stringify({ ...form, slides: finalSlides });
+    // Primeira passada é só a abertura do modal, não é edição.
+    if (primeiroRender.current) { primeiroRender.current = false; ultimoSalvo.current = snapshot; return; }
+    if (snapshot === ultimoSalvo.current) return;
+    const t = setTimeout(async () => {
+      ultimoSalvo.current = snapshot;
+      setSaveStatus('saving');
+      await onSave({ ...form, slides: finalSlides });
+      setSaveStatus('saved');
+      setTimeout(() => setSaveStatus(a => a === 'saved' ? 'idle' : a), 1800);
+    }, 1200);
+    return () => clearTimeout(t);
+  }, [form, slidesArr, isNew]);
+
   const handlePublishSuccess = (newSlides, postId, scheduled, scheduledDate, scheduledAtISO) => {
     const updatedSlides = form.plataforma === 'Carrossel' ? JSON.stringify(newSlides) : form.slides;
     const newStatus     = scheduled ? 'Agendado' : 'Arquivado';
@@ -1196,8 +1212,25 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
               )}
             </div>
             <div style={{ display:'flex', gap:8, alignItems:'center', flexShrink:0 }}>
+              {/* Card que já existe salva sozinho; o indicador é o que dá a
+                  confiança de poder fechar a janela sem clicar em nada. */}
+              {!isNew && saveStatus !== 'saving' && saveStatus !== 'saved' && (
+                <span style={{ fontSize:10.5, fontFamily:'Roboto,sans-serif', color:'var(--text-3)' }}>
+                  Salva automaticamente
+                </span>
+              )}
+              {saveStatus === 'saving' && (
+                <span style={{ display:'flex', alignItems:'center', gap:5, fontSize:11,
+                  fontFamily:'Roboto,sans-serif', color:'var(--text-3)' }}>
+                  <LucideIcon icon="loader" size={11} style={{ animation:'spin 1s linear infinite' }}/>
+                  Salvando...
+                </span>
+              )}
               {saveStatus === 'saved' && (
-                <span style={{ fontSize:11, fontFamily:'Roboto,sans-serif', color:'var(--clr-pos)' }}>Salvo!</span>
+                <span style={{ display:'flex', alignItems:'center', gap:5, fontSize:11,
+                  fontFamily:'Roboto,sans-serif', color:'var(--clr-pos)' }}>
+                  <LucideIcon icon="check" size={11}/>Salvo
+                </span>
               )}
               {canShowPublish && (
                 <button onClick={()=>setShowPublish(true)}
@@ -1235,11 +1268,18 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
                   </button>
                 )
               )}
-              <Btn variant="ghost" size="sm" onClick={onClose}>Cancelar</Btn>
-              <Btn variant="primary" size="sm" icon={saveStatus==='saving'?'loader':'check'}
-                onClick={handleSave} disabled={saveStatus==='saving'}>
-                {saveStatus==='saving'?'Salvando...':isNew?'Criar':'Salvar'}
-              </Btn>
+              {isNew ? (<>
+                <Btn variant="ghost" size="sm" onClick={onClose}>Cancelar</Btn>
+                <Btn variant="primary" size="sm" icon={saveStatus==='saving'?'loader':'check'}
+                  onClick={handleSave} disabled={saveStatus==='saving'}>
+                  {saveStatus==='saving'?'Criando...':'Criar'}
+                </Btn>
+              </>) : (
+                // Nada de "Cancelar" em card existente: as alterações já foram
+                // gravadas, o botão prometeria um desfazer que não existe.
+                <Btn variant="primary" size="sm" icon="check"
+                  onClick={onClose} disabled={saveStatus==='saving'}>Fechar</Btn>
+              )}
             </div>
           </div>
 
@@ -1333,12 +1373,18 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
                   )}
                   <AdicionarCriativoOrganicoBtn numero={item.numero} cardId={item.id} onDone={async () => {
                     if (!window.db) return;
-                    const { data } = await window.db.from('conteudo_organico').select('slides').eq('id', item.id).single();
-                    if (data?.slides) {
-                      const novo = parseSlides(data.slides);
-                      setSlidesArr(novo);
-                      set('slides', data.slides);
-                      setPreviewIdx(0);
+                    // Recarrega slides E status: a importação avança o card no
+                    // servidor (Fazendo -> Feito), e se a tela ficasse com o
+                    // status antigo o salvamento automático o devolveria.
+                    const { data } = await window.db.from('conteudo_organico')
+                      .select('slides,status,media_files').eq('id', item.id).single();
+                    if (data) {
+                      if (data.slides) {
+                        setSlidesArr(parseSlides(data.slides));
+                        set('slides', data.slides);
+                        setPreviewIdx(0);
+                      }
+                      if (data.status) set('status', data.status);
                     }
                     onImported && onImported();
                   }}/>
