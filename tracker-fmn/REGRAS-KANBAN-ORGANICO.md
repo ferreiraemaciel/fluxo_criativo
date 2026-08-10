@@ -64,6 +64,35 @@ de 2026-08-07: apagar qualquer card renumerava todos os seguintes enquanto os
 nomes das pastas ficavam congelados, e o ORG 033 acabou importando a imagem da
 pasta de outro card. A tela e o worker leem o número gravado, e ponto.
 
+## A coluna "Agendado" só aceita card com horário marcado
+
+Card em "Agendado" sem data e hora gravadas é invisível para o robô: ele fica
+parado ali para sempre e o quadro mostra tudo em ordem. Foi assim que o ORG 039
+passou do domingo (2026-08-09) sem publicar e sem ninguém perceber.
+
+Por isso:
+
+1. **A única porta para "Agendado" é Publicar > Agendar** dentro do card. É o
+   único caminho que grava o horário e a cópia da mídia que o robô vai usar.
+2. **Arrastar o card para a coluna não agenda nada.** A coluna recusa o card e
+   explica o caminho certo, em vez de aceitar um estado que não funciona.
+3. **Rede de segurança no robô:** a cada rodada (15 em 15 minutos), ele procura
+   cards em "Agendado" sem horário ou sem mídia e marca erro no card. O aviso
+   vermelho faz o problema aparecer no mesmo dia, em vez de na semana seguinte.
+
+## Publicar espera a mídia ficar pronta
+
+O Instagram não publica direto: primeiro ele baixa o arquivo e monta um
+"container", depois publica. Publicar cedo demais devolve "A mídia não está
+pronta" (código 9007) e a postagem falha. Era o caso de imagem e carrossel, que
+publicavam na hora, sem esperar; foi o que derrubou o ORG 029 no agendamento das
+18:00 de 2026-08-10.
+
+Hoje todo tipo de peça passa pelo mesmo caminho: espera o container ficar pronto
+e, se ainda assim vier esse erro passageiro, tenta de novo até 5 vezes. Erro de
+verdade (legenda grande demais, imagem fora de proporção, conta sem permissão)
+falha de primeira e avisa na hora, porque insistir não mudaria o resultado.
+
 ## Padrão de nome no Drive
 
 - Pasta: `ORG NNN Tema do card`

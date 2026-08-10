@@ -2229,6 +2229,16 @@ function OrganicoScreen() {
     // A sub-etapa (Copy/Produção) só faz sentido dentro de "Fazendo": ao sair
     // dessa coluna ela é limpa, senão o card carregaria pra sempre uma marca
     // de um estágio que já passou.
+    if (colId === 'Agendado' && !item.scheduled_at) {
+      window.alert(
+        'Esse card ainda não tem data e hora marcadas, então o robô não teria como publicar ' +
+        'e ele ficaria parado nessa coluna sem avisar.\n\n' +
+        'Abra o card e use Publicar > Agendar para marcar o horário. O card vai para Agendado sozinho.'
+      );
+      setDragId(null);
+      return;
+    }
+
     const patch = { status: colId };
     if (colId !== 'Fazendo') patch.etapa = null;
 
@@ -2371,6 +2381,10 @@ function OrganicoScreen() {
     // Daí em diante é decisão sua: de Feito só sai ao agendar ou publicar.
     let status = form.status;
     if (form.status === 'Fazendo' && temMidia) status = 'Feito';
+    // "Agendado" sem horário marcado é um estado que o robô não enxerga: o card
+    // ficaria parado ali pra sempre, sem erro. Só o fluxo Publicar > Agendar
+    // (que grava horário e mídia) coloca o card nessa coluna.
+    if (status === 'Agendado' && !form.scheduled_at) status = 'Feito';
 
     const row = {
       tema:form.tema, plataforma:form.plataforma, responsavel:form.responsavel,

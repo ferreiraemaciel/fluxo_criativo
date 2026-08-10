@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1350" viewBox="0 0 1080 1350">
+  <defs>
+    <style>
+      .main { font-family: 'Arial Rounded MT Bold', 'Helvetica Rounded', sans-serif; font-size: 79px; font-weight: 700; fill: #111111; letter-spacing: -1.8px; }
+      .note { font-family: 'Noteworthy', 'Marker Felt', cursive; font-size: 40px; font-weight: 700; fill: #145CFF; }
+      .handle { font-family: 'Helvetica Neue', sans-serif; font-size: 21px; font-weight: 400; fill: #85817C; letter-spacing: .35px; }
+    </style>
+    <filter id="grain" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.86" numOctaves="2" seed="61" result="n"/>
+      <feColorMatrix in="n" type="saturate" values="0" result="g"/>
+      <feComponentTransfer in="g"><feFuncA type="table" tableValues="0 0.012"/></feComponentTransfer>
+    </filter>
+  </defs>
+
+  <rect width="1080" height="1350" fill="#F2EDE4"/>
+  <rect width="1080" height="1350" fill="#7A736A" filter="url(#grain)" opacity="0.2"/>
+
+  <g class="main" text-anchor="middle">
+    <text x="540" y="281">SER PESSOA</text>
+    <text x="540" y="371">PÚBLICA NÃO</text>
+    <text x="540" y="461">ABRE A CASA</text>
+    <text x="540" y="551">DE NINGUÉM,</text>
+    <text x="540" y="641">NEM PRA SUA</text>
+    <text x="540" y="731">CÂMERA</text>
+  </g>
+
+  <g class="note" text-anchor="middle" transform="rotate(-1.5 540 900)">
+    <text x="540" y="880">vale pro condomínio, pro evento</text>
+    <text x="540" y="932">e pro drone</text>
+  </g>
+
+  <text x="540" y="1277" text-anchor="middle" class="handle">@felipeferreirafotografo</text>
+</svg>

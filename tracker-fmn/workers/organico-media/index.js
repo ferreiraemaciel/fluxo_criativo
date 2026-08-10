@@ -72,6 +72,36 @@ async function createReelsContainer(graph, igId, token, videoUrl, caption, comFa
   return d.id;
 }
 
+/* ── Publicar um container já criado ──────────────────────────────────────
+   Publicar logo depois de criar o container falha de vez em quando com
+   "Media ID is not available" (código 9007): o Instagram ainda está baixando
+   o arquivo do R2. Acontecia com IMAGEM e CARROSSEL, que publicavam na hora,
+   sem esperar nada — foi o que derrubou o ORG 029 no agendamento das 18:00 de
+   2026-08-10. Agora todo tipo passa por aqui: espera o container ficar pronto
+   e, se mesmo assim vier o erro transitório, tenta de novo em vez de desistir.
+
+   Só erro transitório é repetido. Legenda grande demais, conta sem permissão
+   ou imagem fora de proporção falham na primeira e param aqui mesmo: insistir
+   não muda o resultado e só atrasaria o aviso.                              */
+async function publicarContainer(graph, igId, token, creationId, rotulo = 'a publicação') {
+  await waitReelsReady(graph, creationId, token, 20, 3000);
+
+  let ultimo = null;
+  for (let tentativa = 1; tentativa <= 5; tentativa++) {
+    const params = new URLSearchParams({ creation_id: creationId, access_token: token });
+    const res  = await fetch(`${graph}/${igId}/media_publish`, { method: 'POST', body: params });
+    const data = await res.json();
+    if (data.id) return data.id;
+
+    ultimo = data;
+    const err = data.error || {};
+    const transitorio = err.code === 9007 || err.is_transient === true;
+    if (!transitorio) break;
+    await new Promise(r => setTimeout(r, 5000));
+  }
+  throw new Error(`Erro ao publicar ${rotulo}: ${JSON.stringify(ultimo)}`);
+}
+
 async function waitReelsReady(graph, containerId, token, tries = 20, delayMs = 3000) {
   for (let i = 0; i < tries; i++) {
     const r = await fetch(`${graph}/${containerId}?fields=status_code&access_token=${token}`);
@@ -177,11 +207,7 @@ async function handlePublish(request, env) {
 
     let postId = null;
     if (!scheduleTs) {
-      const pubParams = new URLSearchParams({ creation_id: containerId, access_token: token });
-      const pubRes  = await fetch(`${graph}/${igId}/media_publish`, { method: 'POST', body: pubParams });
-      const pubData = await pubRes.json();
-      if (!pubData.id) throw new Error(`Erro ao publicar Reels: ${JSON.stringify(pubData)}`);
-      postId = pubData.id;
+      postId = await publicarContainer(graph, igId, token, containerId, 'o Reels');
     }
 
     // Só apaga a versão em alta depois que o Instagram terminou de processar
@@ -250,11 +276,7 @@ async function handlePublish(request, env) {
   let postId = null;
   if (!scheduleTs) {
     // Publica imediatamente
-    const pubParams = new URLSearchParams({ creation_id: creationId, access_token: token });
-    const pubRes  = await fetch(`${graph}/${igId}/media_publish`, { method: 'POST', body: pubParams });
-    const pubData = await pubRes.json();
-    if (!pubData.id) throw new Error(`Erro ao publicar: ${JSON.stringify(pubData)}`);
-    postId = pubData.id;
+    postId = await publicarContainer(graph, igId, token, creationId);
   }
 
   // Deleta originais do R2 (após publicar ou agendar com sucesso)
@@ -314,6 +336,38 @@ async function handleSchedule(request, env) {
   return json({ ok: true, scheduled: true });
 }
 
+/* ── Agendados que o robô não consegue publicar ──────────────────────────
+   Card em "Agendado" sem `scheduled_at` (ou sem `scheduled_media`) nunca
+   aparece na busca do cron: ele fica parado na coluna pra sempre, e no quadro
+   parece que está tudo certo. Foi assim que o ORG 039 passou do domingo sem
+   ninguém perceber. Aqui o card é marcado com erro, e o aviso vermelho no
+   quadro faz o problema aparecer no mesmo dia.                             */
+async function sinalizarAgendadosOrfaos(env, sbUrl, sbKey) {
+  try {
+    const res = await fetch(
+      `${sbUrl}/rest/v1/conteudo_organico?status=eq.Agendado&or=(scheduled_at.is.null,scheduled_media.is.null)&erro_publicacao=is.null&select=id,numero`,
+      { headers: { 'apikey': sbKey, 'Authorization': `Bearer ${sbKey}` } }
+    );
+    const orfaos = await res.json();
+    if (!Array.isArray(orfaos) || !orfaos.length) return;
+
+    for (const card of orfaos) {
+      console.log(`[cron] ORG ${card.numero} está em Agendado sem horário/mídia — marcando erro.`);
+      await fetch(`${sbUrl}/rest/v1/conteudo_organico?id=eq.${card.id}`, {
+        method: 'PATCH',
+        headers: { 'apikey': sbKey, 'Authorization': `Bearer ${sbKey}`,
+                   'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+        body: JSON.stringify({
+          erro_publicacao: 'Card em Agendado sem data e hora marcadas. Abra o card e use Publicar > Agendar.',
+          erro_publicacao_em: new Date().toISOString(),
+        }),
+      });
+    }
+  } catch (e) {
+    console.log('[cron] Falha ao checar agendados órfãos:', e && e.message);
+  }
+}
+
 /* ── Cron: publica posts agendados cujo horário chegou ──────────────────── */
 async function runScheduledPublish(env) {
   // Janela permitida: 06:00–23:00 horário de Brasília (UTC-3)
@@ -339,6 +393,9 @@ async function runScheduledPublish(env) {
     { headers: { 'apikey': sbKey, 'Authorization': `Bearer ${sbKey}` } }
   );
   const posts = await res.json();
+
+  await sinalizarAgendadosOrfaos(env, sbUrl, sbKey);
+
   if (!Array.isArray(posts) || !posts.length) {
     console.log('[cron] Nenhum post agendado para publicar agora.');
     return;
@@ -359,10 +416,7 @@ async function runScheduledPublish(env) {
         const ready = await waitReelsReady(graph, creationId, token);
         if (!ready) throw new Error('Vídeo não terminou de processar a tempo — tenta de novo no próximo ciclo.');
 
-        const pubP = new URLSearchParams({ creation_id: creationId, access_token: token });
-        const pubR = await fetch(`${graph}/${igId}/media_publish`, { method: 'POST', body: pubP });
-        const pubD = await pubR.json();
-        if (!pubD.id) throw new Error(`Erro ao publicar Reels: ${JSON.stringify(pubD)}`);
+        await publicarContainer(graph, igId, token, creationId, 'o Reels');
 
         const key = origKeyFromUrl(videoUrl);
         const keysToDelete = collectOrigKeys([], [...origKeys, ...(key ? [key] : [])]);
@@ -405,10 +459,7 @@ async function runScheduledPublish(env) {
       }
 
       // Publica
-      const pubP = new URLSearchParams({ creation_id: creationId, access_token: token });
-      const pubR = await fetch(`${graph}/${igId}/media_publish`, { method: 'POST', body: pubP });
-      const pubD = await pubR.json();
-      if (!pubD.id) throw new Error(`Erro ao publicar: ${JSON.stringify(pubD)}`);
+      await publicarContainer(graph, igId, token, creationId);
 
       // Deleta originais do R2 (deriva a key da URL também, cobre imagens inseridas fora do fluxo normal)
       const keysToDelete = collectOrigKeys(imageUrls, origKeys);
