@@ -246,6 +246,24 @@ function ContentCard({ item, col, onOpen, onDragStart, onEtapaToggle }) {
         )}
       </div>
 
+      {/* Falha na publicação agendada: o card volta pra Feito, e sem este aviso
+          ficaria idêntico a um card que nunca foi agendado — foi o que
+          escondeu a falha do ORG 039 em 2026-08-09. */}
+      {item.erro_publicacao && (
+        <div title={item.erro_publicacao}
+          style={{ display:'flex', alignItems:'center', gap:5, padding:'4px 8px', borderRadius:6,
+            background:'rgba(248,113,113,.1)', border:'1px solid rgba(248,113,113,.3)',
+            fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700, color:'#f87171' }}>
+          <LucideIcon icon="alert-triangle" size={10}/>
+          Falhou ao publicar
+          {item.erro_publicacao_em && (
+            <span style={{ fontWeight:400, opacity:.8 }}>
+              · {new Date(item.erro_publicacao_em).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})}
+            </span>
+          )}
+        </div>
+      )}
+
       {(item.headline || item.roteiro) && (
         <p style={{ margin:0, fontSize:11, fontFamily:'Roboto,sans-serif', color:'var(--text-3)',
           lineHeight:1.4, overflow:'hidden', display:'-webkit-box',

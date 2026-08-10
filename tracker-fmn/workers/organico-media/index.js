@@ -290,6 +290,8 @@ async function handleSchedule(request, env) {
     },
     body: JSON.stringify({
       status: 'Agendado',
+      erro_publicacao: null,
+      erro_publicacao_em: null,
       scheduled_at: scheduleAt,
       data_prevista: scheduleAt.slice(0, 10), // YYYY-MM-DD para o calendário
       scheduled_media: { imageUrls, videoUrl, thumbUrl, origKeys: origKeys || [], caption, tipo, comFacebook: !!comFacebook },
@@ -415,6 +417,9 @@ async function runScheduledPublish(env) {
           published_at: post.scheduled_at || new Date().toISOString(),
           scheduled_at: null,
           scheduled_media: null,
+          // Publicou: some com o erro da tentativa anterior, se houver.
+          erro_publicacao: null,
+          erro_publicacao_em: null,
           // Guarda o id do post no Meta pra casar com as métricas orgânicas depois.
           meta_media_id: pubD.id,
         }),
@@ -424,11 +429,18 @@ async function runScheduledPublish(env) {
 
     } catch (err) {
       console.error(`[cron] Erro ao publicar ${post.id}:`, err.message);
-      // Volta para Feito (arte pronta) para o usuário tentar de novo
+      // Volta para Feito e GRAVA O MOTIVO no card. Antes o erro só ia pro log
+      // do servidor (que nem era guardado) e o card voltava limpo, virando
+      // indistinguível de um card que nunca foi agendado — foi o que aconteceu
+      // com o ORG 039 em 2026-08-09 e impediu descobrir a causa depois.
       await fetch(`${sbUrl}/rest/v1/conteudo_organico?id=eq.${post.id}`, {
         method: 'PATCH',
         headers: { 'apikey': sbKey, 'Authorization': `Bearer ${sbKey}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ status: 'Feito', scheduled_at: null, scheduled_media: null }),
+        body: JSON.stringify({
+          status: 'Feito', scheduled_at: null, scheduled_media: null,
+          erro_publicacao: String(err && err.message || err).slice(0, 500),
+          erro_publicacao_em: new Date().toISOString(),
+        }),
       });
     }
   }
