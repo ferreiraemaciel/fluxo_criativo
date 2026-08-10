@@ -83,7 +83,45 @@ registrar isso. Publicar como se já houvesse condenação antecipa resultado qu
 
 ---
 
-## Produção: direto no Canva, sem prompt de IA pra texto (regra fixa, 2026-08-06)
+## Produção: gerada por IA, com o prompt padrão (regra vigente, 2026-08-07)
+
+> Esta seção substitui a regra anterior de "só Canva", registrada logo abaixo por histórico. Na
+> prática as peças voltaram a ser geradas por IA e o resultado ficou bom, então o prompt é o caminho
+> padrão de novo. O Canva segue valendo como alternativa quando a tipografia sair errada.
+
+**A única coisa que muda de uma peça pra outra é a cor da anotação manuscrita.** Todo o resto do
+prompt é fixo: creme, caixa alta, corpo grande, fonte estilo sticker "Strong", arroba centralizado.
+Não improvisar variação em fundo, fonte ou composição, senão a peça deixa de ser reconhecível como
+do formato.
+
+```
+Create a simple, raw, native-looking Instagram quote graphic. CANVAS SIZE IS MANDATORY AND EXACT: 1080px wide by 1350px tall, vertical portrait orientation, 4:5 ratio, standard Instagram feed post size. Do not crop, do not output square, do not output landscape.
+
+BACKGROUND: Plain solid warm off-white/cream color (like #F2EDE4), completely flat, no gradient, no texture, no photo. Slightly imperfect paper tone, very subtle grain, nothing polished.
+
+MAIN TEXT (the whole visual focus): centered, big bold rounded sans-serif CAPITAL letters, black, in the exact visual style of Instagram's native "Strong" text sticker (thick, chunky, slightly playful rounded font, tight line spacing), filling most of the vertical center of the frame. Break the lines naturally so it reads well:
+
+"[FRASE PRINCIPAL EM CAIXA ALTA, COM A PALAVRA FOTOGRAFIA OU FOTÓGRAFO DENTRO DELA]"
+
+SMALL HANDWRITTEN NOTE below the main text, casual handwritten marker font (like annotated by hand with Instagram's doodle pen, slightly tilted, imperfect, small), in a bold vibrant [COR] color, not muted or pastel: "[anotação curta]"
+
+BOTTOM: small, plain, gray handle text, horizontally centered at the bottom of the frame (not in a corner), no bold: "@felipeferreirafotografo"
+
+STYLE: Deliberately imperfect and handmade-looking, zero corporate polish, no icons, no cards, no borders, no drop shadows, no gradients, looks exactly like a screenshot exported straight from the Instagram app's own text-post creator. All text correctly spelled Portuguese, crisp and legible despite the raw style. The main text must be large enough to be read at thumbnail size.
+
+IMPORTANT: do not include any vertical color bar, stripe or edge accent on the right edge of the image, the background must extend uniformly edge to edge, full bleed, no side border of any kind.
+
+Output as PNG, exactly 1080x1350px, vertical portrait, 4:5 ratio.
+```
+
+**Limite de tamanho da frase.** Em torno de 12 a 20 palavras. Acima disso o gerador reduz o corpo do
+texto pra caber, e é justamente a escala grande que dá a assinatura do formato. Frase longa demais
+descaracteriza a peça, mesmo com tudo o resto certo (aconteceu no ORG 061, primeira versão, com uma
+citação de 28 palavras).
+
+---
+
+## Histórico: a fase "só Canva" (2026-08-06 a 2026-08-07)
 
 **Esse formato não usa mais prompt de geração de imagem via IA.** Depois de testar em algumas
 peças, o texto gerado por IA nunca sai com a tipografia, o espaçamento e a caixa exatos do
@@ -124,3 +162,10 @@ escolhida) continuam sendo preenchidos normalmente, só o campo `prompt` fica va
   sempre centralizado na base, canvas reforçado em 2 pontos do prompt.
 - 2026-08-06: Removido o prompt de geração via IA. Produção passa a ser 100% manual no Canva,
   decisão tomada depois de repetidos problemas de tipografia/espaçamento nas peças geradas por IA.
+- 2026-08-07: Voltou a ser gerada por IA, com prompt padrão travado. As peças recentes saíram boas,
+  então o Canva virou alternativa em vez de regra. Prompt restaurado nas 7 peças que tinham ficado
+  com o campo vazio (ORG 027, 028, 029, 030, 031, 037 e 038), todas com o mesmo template, variando
+  só a cor da anotação.
+- 2026-08-07 (mesmo dia): Registrado o limite prático de 12 a 20 palavras na frase principal, depois
+  de o ORG 061 sair descaracterizado com uma citação de 28 palavras: o corpo do texto encolhe pra
+  caber e a peça perde a assinatura visual.
