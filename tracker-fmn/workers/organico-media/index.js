@@ -45,6 +45,14 @@ function json(data, status = 200) {
   });
 }
 
+/* Parse tolerante: a coluna `slides` guarda JSON stringificado, mas pode vir
+   null, string vazia ou já como array. Nunca lança. */
+function safeParse(v) {
+  if (v === null || v === undefined || v === '') return null;
+  if (typeof v !== 'string') return v;
+  try { return JSON.parse(v); } catch { return null; }
+}
+
 /* ── Reels: cria o container de vídeo e espera processar antes de publicar.
    Video processing no Instagram não é instantâneo (diferente de imagem). ── */
 async function createReelsContainer(graph, igId, token, videoUrl, caption, comFacebook, thumbUrl) {
@@ -510,7 +518,39 @@ async function handleCardSlides(request, env) {
   const { card_id, slides, media_files, plataforma } = body;
   if (!card_id || slides === undefined) return json({ error: 'card_id e slides são obrigatórios' }, 400);
 
-  const patch = { slides: typeof slides === 'string' ? slides : JSON.stringify(slides) };
+  // Importar mídia NUNCA pode apagar o texto do slide (roteiro, estética visual,
+  // prompt). Regra em CAMPOS-COPY-CRIATIVOS.md, quebrada até 2026-08-07 porque
+  // aqui a coluna `slides` era sobrescrita inteira: a importação manda só as
+  // URLs das imagens, então todo o texto ia junto. Aconteceu de verdade no
+  // ORG 042, que perdeu roteiro e direção visual dos 8 slides.
+  //
+  // Agora mescla por índice: parte do que já está gravado e sobrepõe só as
+  // chaves que vierem preenchidas. Assim mídia nova entra, texto antigo fica, e
+  // um caller que mande slide completo continua funcionando como antes.
+  const slidesRecebidos = typeof slides === 'string' ? safeParse(slides) : slides;
+  let slidesFinais = slidesRecebidos;
+
+  if (Array.isArray(slidesRecebidos)) {
+    const atuais = await fetch(
+      `${env.SUPABASE_URL}/rest/v1/conteudo_organico?id=eq.${card_id}&select=slides`,
+      { headers: { apikey: env.SUPABASE_SERVICE_KEY, Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}` } },
+    ).then(r => (r.ok ? r.json() : [])).catch(() => []);
+
+    const antigos = safeParse(atuais?.[0]?.slides) || [];
+    if (Array.isArray(antigos) && antigos.length) {
+      const total = Math.max(antigos.length, slidesRecebidos.length);
+      slidesFinais = Array.from({ length: total }, (_, i) => {
+        const base = (antigos[i] && typeof antigos[i] === 'object') ? { ...antigos[i] } : {};
+        const novo = (slidesRecebidos[i] && typeof slidesRecebidos[i] === 'object') ? slidesRecebidos[i] : {};
+        for (const [k, v] of Object.entries(novo)) {
+          if (v !== undefined && v !== null && v !== '') base[k] = v;
+        }
+        return base;
+      });
+    }
+  }
+
+  const patch = { slides: JSON.stringify(slidesFinais) };
   if (media_files !== undefined) patch.media_files = typeof media_files === 'string' ? media_files : JSON.stringify(media_files);
   if (plataforma) patch.plataforma = plataforma;
 
