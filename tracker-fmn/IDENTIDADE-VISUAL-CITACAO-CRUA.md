@@ -56,6 +56,33 @@ comparação em colunas ou sequência de passos, não é esse formato. Nesse cas
 
 ---
 
+## Variante com atribuição (frase de terceiro)
+
+> Regra fixa, 2026-08-07, a partir do ORG 061 ("A frase da juíza").
+
+Quando a frase principal **não é do Felipe** (citação de decisão judicial, de lei, de estudo, de
+livro), a peça muda em quatro pontos:
+
+1. **A citação é literal.** Nunca parafrasear e apresentar como se fosse a fala da pessoa. Se
+   precisar encurtar pra caber, usar `[...]` pra marcar a supressão, que é a marca editorial padrão.
+2. **Entra uma linha de atribuição** logo abaixo da citação, bem menor, em cinza, sem aspas.
+   Ex: `Decisão da 9ª Vara Cível do Rio de Janeiro, julho de 2026`.
+3. **A frase vai em caixa baixa**, não em caixa alta, porque é citação e caixa alta descaracteriza
+   o texto de outra pessoa.
+4. **A anotação manuscrita vira o comentário do Felipe sobre a frase**, em vez de reforço da frase
+   dele. É ali que entra a tradução sem juridiquês, a piada, ou a aplicação prática.
+
+**Por que isso importa mais do que parece.** Atribuir a um magistrado uma frase que ele não
+escreveu é erro factual, e num perfil que se apoia em autoridade jurídica isso derruba a
+credibilidade inteira. O ORG 061 quase saiu assim: o card trazia "Ser pessoa pública não abre a casa
+de ninguém", que é a tradução do Felipe no artigo, não o que a juíza escreveu. A frase real da
+decisão é outra, e o próprio artigo diz que o peso dela está na literalidade.
+
+Cuidado extra em conteúdo jurídico: se a decisão for **liminar e não sentença**, a legenda precisa
+registrar isso. Publicar como se já houvesse condenação antecipa resultado que a Justiça não deu.
+
+---
+
 ## Produção: direto no Canva, sem prompt de IA pra texto (regra fixa, 2026-08-06)
 
 **Esse formato não usa mais prompt de geração de imagem via IA.** Depois de testar em algumas
