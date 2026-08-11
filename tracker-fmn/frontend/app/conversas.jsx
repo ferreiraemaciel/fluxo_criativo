@@ -30,6 +30,49 @@ function dataCurta(iso) {
   return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
 }
 
+/* ── Separador de dia na conversa ────────────────────────────────────────
+   Sem ele, uma resposta de três semanas atrás fica colada na de hoje e some a
+   noção de quanto tempo o lead ficou esperando, que é justamente o que decide
+   o tom da próxima mensagem.
+
+   O rótulo segue o WhatsApp: os dois dias mais recentes ganham nome ("Hoje",
+   "Ontem"), porque é assim que a gente fala deles; daí pra trás vira data
+   cheia, que é o que realmente informa. O ano entra sempre, já que conversa de
+   lead atravessa virada de ano e "04/08" sozinho seria ambíguo.            */
+function rotuloDia(iso) {
+  const d = new Date(iso);
+  const dia = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const hoje = new Date();
+  const hojeZero = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate());
+  const diff = Math.round((hojeZero - dia) / 86400000);
+  if (diff === 0) return 'Hoje';
+  if (diff === 1) return 'Ontem';
+  return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+}
+
+// Chave do dia (não do horário): é ela que decide onde entra um separador.
+function chaveDia(iso) {
+  const d = new Date(iso);
+  return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+}
+
+function SeparadorData({ rotulo }) {
+  return (
+    // Fica grudado no topo enquanto o dia rola: em conversa longa, você sempre
+    // sabe que dia está lendo sem ter que voltar procurando a etiqueta.
+    <div style={{ position: 'sticky', top: 0, zIndex: 2, display: 'flex',
+      justifyContent: 'center', margin: '10px 0 12px', pointerEvents: 'none' }}>
+      <span style={{ padding: '3px 12px', borderRadius: 999,
+        background: 'var(--overlay-08)', border: '1px solid var(--app-border)',
+        backdropFilter: 'blur(6px)', fontFamily: 'Roboto,sans-serif',
+        fontSize: 10.5, fontWeight: 700, letterSpacing: '.04em',
+        textTransform: 'uppercase', color: 'var(--text-3)' }}>
+        {rotulo}
+      </span>
+    </div>
+  );
+}
+
 const JANELA_MS = 24 * 60 * 60 * 1000;
 
 // Mesma lista usada no backend (whatsapp-ia.ts, PADROES_MSG_AUTOMATICA) pra
@@ -1426,7 +1469,16 @@ function ConversasScreen() {
                     const file = e.dataTransfer.files?.[0];
                     if (file) selecionarArquivo(file);
                   }}>
-                  {thread.map(m => <Bolha key={m.id} msg={m} />)}
+                  {thread.map((m, i) => {
+                    const anterior = thread[i - 1];
+                    const novoDia = !anterior || chaveDia(anterior.created_at) !== chaveDia(m.created_at);
+                    return (
+                      <React.Fragment key={m.id}>
+                        {novoDia && m.created_at && <SeparadorData rotulo={rotuloDia(m.created_at)} />}
+                        <Bolha msg={m} />
+                      </React.Fragment>
+                    );
+                  })}
                   {dragOverThread && (
                     <div style={{ position: 'absolute', inset: 8, borderRadius: 10, border: '2px dashed var(--fmn-gold)',
                       background: 'rgba(234,170,65,.08)', display: 'flex', alignItems: 'center', justifyContent: 'center',

@@ -47,6 +47,11 @@ export const PADROES_MSG_AUTOMATICA = [
   /vamos agendar (o seu|seu) (ensaio|grava[çc][ãa]o|sess[ãa]o)/i,
   /voc[êe] [ée] empreendedor/i,
   /vem comigo e vamos ter o melhor resultado/i,
+  // Auto-resposta de estúdio newborn/gestante: acolhimento longo + pedido de
+  // dados do bebê/criança pra "atendimento", sem relação com o que
+  // perguntamos. Achado no treino de 2026-08-11 (Deborah Demétrio).
+  /capturar momentos preciosos/i,
+  /mensagem já foi recebida/i,
 ];
 
 export function pareceMensagemAutomatica(texto: string): boolean {
