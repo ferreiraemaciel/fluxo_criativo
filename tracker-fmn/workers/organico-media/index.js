@@ -115,6 +115,48 @@ async function waitReelsReady(graph, containerId, token, tries = 20, delayMs = 3
   return false;
 }
 
+/* ── Troca de imagem do slide, direto do modal ────────────────────────────
+   Antes, o botão "Trocar imagem" só guardava o arquivo na memória do browser
+   e o upload acontecia lá na publicação. Isso dava dois problemas: trocar a
+   imagem e só salvar o card perdia a troca (o slide continuava apontando pra
+   URL antiga), e a imagem substituída ficava órfã pra sempre no R2, porque
+   cada upload gera uma key nova e nada apagava a anterior.
+
+   Esta rota resolve os dois: grava na hora e apaga a antiga.
+
+   Escreve em `organico/media/`, o mesmo prefixo que o import do Drive usa, e
+   não em `organico/originais/`. É de propósito: `originais/` é apagado
+   automaticamente depois de publicar (ver collectOrigKeys), e o card ficaria
+   sem imagem. `media/` é permanente.                                        */
+async function handleSlideImage(request, env) {
+  const form = await request.formData();
+  const file = form.get('file');
+  const oldUrl = form.get('old_url') || '';
+  if (!file) return json({ error: 'arquivo ausente' }, 400);
+
+  const ext = (file.name?.split('.').pop() || 'jpg').toLowerCase();
+  const key = `organico/media/${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`;
+  await env.BUCKET.put(key, await file.arrayBuffer(), {
+    httpMetadata: { contentType: file.type || 'image/jpeg' },
+  });
+  const url = `${R2_PUBLIC}/${key}`;
+
+  // Só apaga o que é nosso e o que é imagem de card. Nunca aceita key
+  // arbitrária vinda do cliente: se a URL antiga não casar com um dos
+  // prefixos conhecidos, ignora em silêncio em vez de arriscar apagar
+  // outra coisa. Também não apaga a que acabou de subir.
+  let apagada = null;
+  const prefixos = ['organico/media/', 'organico/originais/', 'organico/thumbs/'];
+  if (oldUrl.startsWith(`${R2_PUBLIC}/`)) {
+    const oldKey = oldUrl.replace(`${R2_PUBLIC}/`, '').split('?')[0];
+    if (oldKey !== key && prefixos.some(p => oldKey.startsWith(p))) {
+      await env.BUCKET.delete(oldKey).then(() => { apagada = oldKey; }).catch(() => {});
+    }
+  }
+
+  return json({ ok: true, url, apagada });
+}
+
 /* ── Upload ──────────────────────────────────────────────────────────────── */
 async function handleUpload(request, env) {
   const form = await request.formData();
@@ -783,6 +825,7 @@ export default {
       if (method === 'POST' && url.pathname === '/upload')  return await handleUpload(request, env);
       if (method === 'POST' && url.pathname === '/publish') return await handlePublish(request, env);
       if (method === 'POST' && url.pathname === '/put')     return await handlePut(request, env, url);
+      if (method === 'POST' && url.pathname === '/slide-image') return await handleSlideImage(request, env);
       if (method === 'POST' && url.pathname === '/card-slides') return await handleCardSlides(request, env);
       if (method === 'POST' && url.pathname === '/criar-pasta')  return await handleCriarPasta(request, env);
       if (method === 'POST' && url.pathname === '/import-link')   return await handleImportLink(request, env);

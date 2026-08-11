@@ -65,11 +65,15 @@ const LABEL_STYLE = {
   letterSpacing:'1.2px', color:'rgba(255,255,255,.4)', textTransform:'uppercase', marginBottom:6,
 };
 
-/* ── Compressão WebP no browser ──────────────────────────────────*/
-// Regra de otimização: converte para WebP 82%.
+/* ── Compressão no browser ───────────────────────────────────────*/
 // Redimensiona SOMENTE se a aresta maior exceder maxPx (padrão 1920).
 // Imagens menores que 1920px são preservadas no tamanho original — nunca aumentar.
-async function compressToWebP(file, maxPx = 1920, quality = 0.82) {
+//
+// Dois formatos de saída, com destinos diferentes:
+//   WebP  → thumb do card, que é só exibição e pode ser bem leve.
+//   JPEG  → imagem que vai ser publicada. A API do Instagram não aceita WebP,
+//           então tudo que pode virar post precisa sair daqui em JPEG.
+async function compressImage(file, { mime = 'image/webp', maxPx = 1920, quality = 0.82 } = {}) {
   return new Promise(resolve => {
     const img = new Image();
     const objectUrl = URL.createObjectURL(file);
@@ -88,12 +92,24 @@ async function compressToWebP(file, maxPx = 1920, quality = 0.82) {
       // w e h nunca excedem as dimensões originais
       const canvas = document.createElement('canvas');
       canvas.width = w; canvas.height = h;
-      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-      canvas.toBlob(blob => resolve(blob), 'image/webp', quality);
+      const ctx = canvas.getContext('2d');
+      // JPEG não tem transparência: sem esse fundo, PNG transparente vira preto.
+      if (mime === 'image/jpeg') {
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(0, 0, w, h);
+      }
+      ctx.drawImage(img, 0, 0, w, h);
+      canvas.toBlob(blob => resolve(blob), mime, quality);
     };
     img.src = objectUrl;
   });
 }
+
+const compressToWebP = (file, maxPx = 1920, quality = 0.82) =>
+  compressImage(file, { mime: 'image/webp', maxPx, quality });
+
+const compressToJpeg = (file, maxPx = 1920, quality = 0.85) =>
+  compressImage(file, { mime: 'image/jpeg', maxPx, quality });
 
 // CarouselLightbox agora vive em shared.jsx (window.CarouselLightbox) — reusado
 // no Tráfego também. Não duplicar aqui.
@@ -455,7 +471,7 @@ function AdicionarCriativoOrganicoBtn({ numero, cardId, onDone }) {
 
 /* ── SlideBlock ──────────────────────────────────────────────────*/
 
-function SlideBlock({ slide, index, total, onChange, onRemove, file, onFileChange }) {
+function SlideBlock({ slide, index, total, onChange, onRemove, file, uploading, onFileChange }) {
   const [open, setOpen] = useState(false);
   const fileRef = useRef();
   const set = (k, v) => onChange(index, { ...slide, [k]: v });
@@ -509,13 +525,15 @@ function SlideBlock({ slide, index, total, onChange, onRemove, file, onFileChang
                 <img src={previewUrl} style={{ width:56, height:56, borderRadius:8,
                   objectFit:'cover', border:'1px solid rgba(255,255,255,.15)', flexShrink:0 }}/>
               )}
-              <button onClick={()=>fileRef.current.click()}
-                style={{ flex:1, padding:'9px', borderRadius:8, cursor:'pointer',
-                  background:'rgba(255,255,255,.03)', border:'1px dashed rgba(255,255,255,.2)',
-                  color:'var(--text-3)', fontSize:11, fontFamily:'Roboto,sans-serif', fontWeight:700,
+              <button onClick={()=>!uploading && fileRef.current.click()} disabled={uploading}
+                style={{ flex:1, padding:'9px', borderRadius:8, cursor: uploading?'default':'pointer',
+                  background: uploading?'rgba(96,165,250,.1)':'rgba(255,255,255,.03)',
+                  border:`1px dashed ${uploading?'rgba(96,165,250,.35)':'rgba(255,255,255,.2)'}`,
+                  color: uploading?'#60a5fa':'var(--text-3)', fontSize:11,
+                  fontFamily:'Roboto,sans-serif', fontWeight:700,
                   display:'flex', alignItems:'center', justifyContent:'center', gap:6 }}>
-                <LucideIcon icon="upload" size={13}/>
-                {previewUrl ? 'Trocar imagem' : 'Selecionar imagem'}
+                <LucideIcon icon={uploading?'loader':'upload'} size={13}/>
+                {uploading ? 'Subindo...' : (previewUrl ? 'Trocar imagem' : 'Selecionar imagem')}
               </button>
               <input ref={fileRef} type="file" accept="image/*" style={{ display:'none' }}
                 onChange={e => e.target.files[0] && onFileChange(index, e.target.files[0])}/>
@@ -1062,7 +1080,41 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
       return next;
     });
   };
-  const handleFileChange = (idx, file) => setSlideFiles(prev => ({ ...prev, [idx]: file }));
+  // Trocar imagem sobe na hora, não espera a publicação.
+  //
+  // Antes isso só guardava o File na memória: quem trocava a imagem e fechava
+  // o card sem publicar perdia a troca em silêncio (o preview mostrava a nova,
+  // porque era um object URL local, mas o banco continuava com a antiga). E a
+  // imagem substituída ficava órfã pra sempre no R2.
+  //
+  // Agora comprime pra JPEG (a API do Instagram não aceita WebP), sobe, grava
+  // a URL no slide e manda o worker apagar a anterior.
+  const [slideUploading, setSlideUploading] = useState({});
+  const handleFileChange = async (idx, file) => {
+    setSlideFiles(prev => ({ ...prev, [idx]: file }));   // preview instantâneo
+    setSlideUploading(prev => ({ ...prev, [idx]: true }));
+    try {
+      const otimizada = await compressToJpeg(file);
+      const fd = new FormData();
+      fd.append('file', otimizada, (file.name || 'imagem').replace(/\.[^.]+$/, '') + '.jpg');
+      const antiga = slidesArr[idx]?.image_url;
+      if (antiga) fd.append('old_url', antiga);
+
+      const res  = await fetch(`${WORKER_URL}/slide-image`, { method: 'POST', body: fd });
+      const data = await res.json();
+      if (!data.ok) throw new Error(data.error || 'falha no upload');
+
+      setSlidesArr(prev => prev.map((s, i) => i === idx ? { ...s, image_url: data.url } : s));
+      // A imagem já está no R2 com URL definitiva. Limpar o File evita que a
+      // publicação suba o mesmo arquivo de novo e crie uma segunda cópia.
+      setSlideFiles(prev => { const n = { ...prev }; delete n[idx]; return n; });
+    } catch (e) {
+      console.warn('Não consegui subir a imagem do slide:', e);
+      alert('Não consegui subir a imagem agora. Ela segue só no preview: publique ou tente de novo antes de fechar o card.');
+    } finally {
+      setSlideUploading(prev => { const n = { ...prev }; delete n[idx]; return n; });
+    }
+  };
 
   const handleSave = async () => {
     setSaveStatus('saving');
@@ -1568,6 +1620,7 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
                             onChange={(i,s) => { updateSlide(i,s); if (s.image_url) setPreviewIdx(i); }}
                             onRemove={removeSlide}
                             file={slideFiles[idx] || null}
+                            uploading={!!slideUploading[idx]}
                             onFileChange={handleFileChange}/>
                         ))}
                       </div>
