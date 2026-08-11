@@ -39,7 +39,7 @@ reconsultar esse fluxo, só seguir a decisão já tomada.
 |---|---|---|---|
 | **Citação Crua** | Tese solta, aforismo, frase de impacto sem cena | Fundo creme liso, frase grande estilo texto nativo do Instagram, anotação manuscrita em cor neon, @ centralizado na base | `IDENTIDADE-VISUAL-CITACAO-CRUA.md` |
 | **Caso Real** | História real com cena, personagem, contexto físico | Fotografia realista, manchete em caixa preta na base, @ no canto | `IDENTIDADE-VISUAL-CASO-REAL.md` |
-| **Card de Consulta** | Lista, régua, checklist ou comparativo que cabe numa imagem só, feito pra ser salvo | Fundo colorido sólido com folha creme flutuando por dentro, título grande, itens numerados, @ na base da folha | `IDENTIDADE-VISUAL-CARD-CONSULTA.md` |
+| **Card de Consulta** | Lista, régua, checklist ou comparativo que cabe numa imagem só, feito pra ser salvo | Fundo cinza escuro com folha branca texturizada flutuando por dentro, título grande na cor de destaque, itens numerados, @ na base da folha. Montado no Canva, não gerado por IA | `IDENTIDADE-VISUAL-CARD-CONSULTA.md` |
 | **Carrossel** | Conteúdo grande demais pra uma imagem só | 8 slides 1080x1350 (referência), capa e CTA, sistema de cor semântica | `IDENTIDADE-VISUAL-CARROSSEL.md` |
 
 **Citação Crua e Card de Consulta são vizinhos e precisam se diferenciar de longe.** Os dois são
