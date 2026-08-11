@@ -127,3 +127,30 @@ e o diagnóstico dependia de adivinhação. **Status "entregue" no banco não é
 prova de que o áudio toca**: no caso do estéreo, o status ficou correto e o
 áudio estava quebrado. Áudio novo só é dado como funcionando depois de alguém
 apertar o play no celular.
+
+## Hora da mensagem recebida é a da Meta, nunca a nossa
+
+> Descoberto em 2026-08-11, como consequência tardia do apagão do
+> `whatsapp-webhook` documentado no topo deste arquivo.
+
+Ao gravar mensagem recebida, `created_at` vem do campo `timestamp` que a Meta
+manda no payload, não do relógio do servidor no momento da gravação. As duas
+horas quase sempre coincidem — e divergem justamente quando mais importa.
+
+**O que aconteceu.** Durante o apagão (7 a 11/08), a Meta reentregou mensagens
+antigas assim que o webhook voltou. Elas foram gravadas com a hora da gravação,
+então uma mensagem de 08/08 às 07:48 aparecia como recebida hoje às 15:23. Três
+consequências, todas silenciosas:
+
+1. O contador de janela de 24h no topo da conversa mostrou "22h 17min restantes"
+   numa janela que estava fechada havia três dias. Quem confiou nele mandou
+   mensagem livre e levou o erro 131047 da Meta ("more than 24 hours have
+   passed"), sem entender o motivo.
+2. O separador de data pôs a mensagem no dia errado do histórico.
+3. O Claudinho leu o histórico fora de ordem, achando recente o que era antigo.
+
+19 mensagens ficaram assim e foram corrigidas com a hora real do payload.
+
+**Regra geral:** qualquer campo de tempo que descreva um fato do lado de fora
+(quando o cliente falou, quando a venda ocorreu) vem do sistema de origem. O
+relógio local só serve para registrar quando NÓS fizemos alguma coisa.
