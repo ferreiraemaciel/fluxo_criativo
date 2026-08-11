@@ -73,6 +73,35 @@ function SeparadorData({ rotulo }) {
   );
 }
 
+/* ── Formato do áudio gravado ─────────────────────────────────────────────
+   O WhatsApp só aceita alguns formatos de áudio, e cada navegador grava num
+   conjunto diferente. Aqui a lista é percorrida do melhor pro aceitável e
+   fica no primeiro que o navegador souber gravar:
+
+     ogg/opus  — o formato nativo de áudio de voz do WhatsApp (Firefox)
+     mp4/aac   — aceito pelo WhatsApp e o que o Chrome grava hoje
+     aac, mpeg — raros, mas aceitos dos dois lados
+
+   webm de propósito fica de fora: o Chrome grava, mas o WhatsApp recusa, e o
+   erro só apareceria depois do envio, com o áudio já gravado e perdido.    */
+const FORMATOS_AUDIO = [
+  { mime: 'audio/ogg;codecs=opus', ext: 'ogg' },
+  { mime: 'audio/mp4',             ext: 'm4a' },
+  { mime: 'audio/aac',             ext: 'aac' },
+  { mime: 'audio/mpeg',            ext: 'mp3' },
+];
+
+function formatoAudioSuportado() {
+  if (typeof MediaRecorder === 'undefined') return null;
+  return FORMATOS_AUDIO.find(f => MediaRecorder.isTypeSupported(f.mime)) || null;
+}
+
+function duracaoCurta(seg) {
+  const m = Math.floor(seg / 60);
+  const s = seg % 60;
+  return `${m}:${String(s).padStart(2, '0')}`;
+}
+
 const JANELA_MS = 24 * 60 * 60 * 1000;
 
 // Mesma lista usada no backend (whatsapp-ia.ts, PADROES_MSG_AUTOMATICA) pra
@@ -985,6 +1014,8 @@ function ConversasScreen() {
   const [enviandoMidia, setEnviandoMidia] = useState(false);
   const [dragOverThread, setDragOverThread] = useState(false);
   const [menuAnexoAberto, setMenuAnexoAberto] = useState(false);
+  const [gravando, setGravando] = useState(false);
+  const [segGrav, setSegGrav]   = useState(0);
   // Mídia escolhida (arquivo ou link) que ainda não foi enviada: fica em
   // espera até o clique em Enviar, pra dar chance de ver antes e cancelar.
   const [pendente, setPendente] = useState(null); // { tipo: 'arquivo'|'link', file?, url?, preview, nome }
@@ -1188,6 +1219,7 @@ function ConversasScreen() {
       if (e.key !== 'Escape') return;
       if (modalNovoContato) { setModalNovoContato(false); return; }
       if (modalPrompt) { setModalPrompt(false); return; }
+      if (gravando) { cancelarGravacao(); return; }
       if (menuAnexoAberto) { setMenuAnexoAberto(false); return; }
       if (pendente) { cancelarPendente(); return; }
       if (prontasAberto) { setProntasAberto(false); return; }
@@ -1195,7 +1227,7 @@ function ConversasScreen() {
     }
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [modalNovoContato, modalPrompt, menuAnexoAberto, pendente, prontasAberto, selecionado]);
+  }, [modalNovoContato, modalPrompt, menuAnexoAberto, pendente, prontasAberto, selecionado, gravando]);
 
   async function enviar() {
     if (pendente) return enviarPendente();
@@ -1236,6 +1268,83 @@ function ConversasScreen() {
     } finally {
       setEnviandoPronta(null);
     }
+  }
+
+  /* ── Gravação de áudio ──────────────────────────────────────────────────
+     O áudio gravado entra no MESMO caminho do arquivo anexado: vira um
+     `pendente`, aparece na barra de prévia pra ser ouvido antes, e só sai
+     quando você clica em Enviar. Ninguém manda por engano um áudio que ainda
+     não ouviu, e o envio, o registro no banco e o upload já existem prontos. */
+  const gravRef      = useRef(null);   // MediaRecorder
+  const gravChunks   = useRef([]);
+  const gravStream   = useRef(null);   // pra desligar o microfone no fim
+  const gravTimer    = useRef(null);
+  const gravDescarta = useRef(false);  // "cancelar" também passa pelo onstop
+
+  async function iniciarGravacao() {
+    if (gravando || !selecionado) return;
+    const formato = formatoAudioSuportado();
+    if (!formato) {
+      alert('Este navegador não grava em nenhum formato de áudio que o WhatsApp aceite. Use o Chrome ou o Firefox atualizado.');
+      return;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        // Limpa o áudio de sala: sem isso, gravação de notebook sai com eco e chiado.
+        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
+      });
+      gravStream.current = stream;
+      gravChunks.current = [];
+      gravDescarta.current = false;
+
+      const rec = new MediaRecorder(stream, { mimeType: formato.mime });
+      rec.ondataavailable = e => { if (e.data && e.data.size) gravChunks.current.push(e.data); };
+      rec.onstop = () => {
+        // O microfone é desligado SEMPRE, inclusive no cancelamento: deixar a
+        // luzinha acesa depois de gravar assusta e parece escuta.
+        gravStream.current?.getTracks().forEach(t => t.stop());
+        gravStream.current = null;
+        clearInterval(gravTimer.current);
+        setGravando(false);
+
+        if (gravDescarta.current) { gravChunks.current = []; setSegGrav(0); return; }
+
+        const blob = new Blob(gravChunks.current, { type: formato.mime });
+        gravChunks.current = [];
+        setSegGrav(0);
+        if (blob.size < 1200) return;   // toque acidental no botão, não é áudio
+
+        const carimbo = new Date().toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' })
+          .replace(/[/\s:]/g, '-');
+        const file = new File([blob], `audio-${carimbo}.${formato.ext}`, { type: formato.mime });
+        setPendente({ tipo: 'arquivo', file, preview: URL.createObjectURL(blob),
+                      nome: file.name, mime: formato.mime, audio: true });
+      };
+
+      rec.start();
+      gravRef.current = rec;
+      setGravando(true);
+      setSegGrav(0);
+      gravTimer.current = setInterval(() => {
+        setSegGrav(s => {
+          // Corta em 3 minutos: o limite de mídia do WhatsApp é bem maior, mas
+          // áudio de venda mais longo que isso não é ouvido até o fim.
+          if (s + 1 >= 180) pararGravacao();
+          return s + 1;
+        });
+      }, 1000);
+    } catch (e) {
+      alert('Não consegui acessar o microfone. Verifique a permissão do navegador para este site.');
+    }
+  }
+
+  function pararGravacao() {
+    if (gravRef.current && gravRef.current.state !== 'inactive') gravRef.current.stop();
+  }
+
+  function cancelarGravacao() {
+    gravDescarta.current = true;
+    pararGravacao();
   }
 
   // Só GUARDA o arquivo escolhido/arrastado pra mostrar a prévia. Não manda
@@ -1551,7 +1660,13 @@ function ConversasScreen() {
               {pendente && (
                 <div style={{ padding: '10px 12px', borderTop: '1px solid var(--app-border)', display: 'flex', alignItems: 'center', gap: 10,
                   background: 'rgba(234,170,65,.06)' }}>
-                  {pendente.preview && (pendente.mime?.startsWith('image/') || (!pendente.mime && pendente.tipo === 'link')) ? (
+                  {pendente.audio ? (
+                    <div style={{ width: 52, height: 52, borderRadius: 8, border: '1px solid var(--app-border)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                      background: 'rgba(234,170,65,.1)' }}>
+                      <LucideIcon icon="mic" size={18} style={{ color: 'var(--fmn-gold)' }} />
+                    </div>
+                  ) : pendente.preview && (pendente.mime?.startsWith('image/') || (!pendente.mime && pendente.tipo === 'link')) ? (
                     <img src={pendente.preview} style={{ width: 52, height: 52, objectFit: 'cover', borderRadius: 8, border: '1px solid var(--app-border)' }}
                       onError={e => { e.target.style.display = 'none'; }} />
                   ) : pendente.mime?.startsWith('video/') ? (
@@ -1564,17 +1679,41 @@ function ConversasScreen() {
                   )}
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--text-1)', fontFamily: 'Roboto,sans-serif' }}>
-                      Pronto pra enviar
+                      {pendente.audio ? 'Ouça antes de enviar' : 'Pronto pra enviar'}
                     </div>
-                    <div style={{ fontSize: 10.5, color: 'var(--text-3)', fontFamily: 'Roboto,sans-serif', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {pendente.nome}
-                    </div>
+                    {pendente.audio ? (
+                      <audio controls src={pendente.preview} style={{ height: 30, maxWidth: '100%', marginTop: 3 }} />
+                    ) : (
+                      <div style={{ fontSize: 10.5, color: 'var(--text-3)', fontFamily: 'Roboto,sans-serif', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {pendente.nome}
+                      </div>
+                    )}
                   </div>
                   <Btn size="sm" variant="ghost" title="Cancelar" onClick={cancelarPendente} disabled={enviandoMidia}>
                     <LucideIcon icon="x" size={13} />
                   </Btn>
                 </div>
               )}
+              {gravando ? (
+                <div style={{ padding: 12, borderTop: '1px solid var(--app-border)', display: 'flex',
+                  gap: 10, alignItems: 'center', background: 'rgba(248,113,113,.06)' }}>
+                  <span style={{ width: 9, height: 9, borderRadius: '50%', background: '#f87171',
+                    animation: 'rec-blink 1.1s ease-in-out infinite', flexShrink: 0 }} />
+                  <span style={{ fontFamily: 'Roboto,sans-serif', fontSize: 13, fontWeight: 700,
+                    color: 'var(--text-1)', fontVariantNumeric: 'tabular-nums' }}>
+                    {duracaoCurta(segGrav)}
+                  </span>
+                  <span style={{ flex: 1, fontFamily: 'Roboto,sans-serif', fontSize: 11.5, color: 'var(--text-3)' }}>
+                    Gravando. Você ouve antes de enviar.
+                  </span>
+                  <Btn size="sm" variant="ghost" title="Descartar a gravação" onClick={cancelarGravacao}>
+                    <LucideIcon icon="trash-2" size={13} />
+                  </Btn>
+                  <Btn size="sm" onClick={pararGravacao}>
+                    <LucideIcon icon="check" size={13} /> Concluir
+                  </Btn>
+                </div>
+              ) : (
               <div style={{ padding: 12, borderTop: pendente ? 'none' : '1px solid var(--app-border)', display: 'flex', gap: 8, alignItems: 'flex-end' }}>
                 <textarea value={texto} onChange={e => setTexto(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); enviar(); } }}
@@ -1615,6 +1754,11 @@ function ConversasScreen() {
                     </>
                   )}
                 </div>
+                <Btn variant="ghost" title="Gravar áudio"
+                  disabled={!contatoAtivo?.janelaAberta || enviandoMidia || !!pendente}
+                  onClick={iniciarGravacao}>
+                  <LucideIcon icon="mic" size={14} />
+                </Btn>
                 <Btn variant={prontasAberto ? 'secondary' : 'ghost'} title="Mensagens prontas"
                   onClick={() => setProntasAberto(p => !p)}>
                   <LucideIcon icon="zap" size={14} />
@@ -1623,6 +1767,7 @@ function ConversasScreen() {
                   {enviandoMidia ? 'Enviando mídia...' : enviando ? 'Enviando...' : 'Enviar'}
                 </Btn>
               </div>
+              )}
             </>
           )}
         </div>
