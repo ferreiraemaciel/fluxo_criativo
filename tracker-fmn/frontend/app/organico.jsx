@@ -2209,6 +2209,7 @@ function OrganicoScreen() {
   const [programarData, setProgramarData] = useState(null);
   const [platFilter, setPlatFilter] = useState('Todos');
   const [respFilter, setRespFilter] = useState('Todos');
+  const [searchQuery, setSearchQuery] = useState('');
   const [nextNum, setNextNum]       = useState(1);
   const [dragId, setDragId]         = useState(null);  // id do card sendo arrastado
   const [dropTarget, setDropTarget] = useState(null);  // colId sendo hovereado
@@ -2449,8 +2450,19 @@ function OrganicoScreen() {
     if (platFilter !== 'Todos' && i.plataforma !== platFilter) return false;
     if (respFilter === 'Comum') { if (i.responsavel) return false; }
     else if (respFilter !== 'Todos' && i.responsavel !== respFilter) return false;
+    if (searchQuery.trim()) {
+      // O número entra como "29" e como "ORG 029": você acha o card digitando
+      // do jeito que ele aparece na tela ou só o número solto.
+      const num = i.numero != null ? `${i.numero} ORG ${String(i.numero).padStart(3,'0')}` : '';
+      const q = searchQuery.trim().toLowerCase();
+      const alvo = [num, i.tema, i.headline, i.roteiro, i.legenda, i.observacoes, i.responsavel]
+        .filter(Boolean).join(' ').toLowerCase();
+      if (!alvo.includes(q)) return false;
+    }
     return true;
   });
+
+  const temFiltroAtivo = platFilter !== 'Todos' || respFilter !== 'Todos' || searchQuery.trim() !== '';
 
   return (
     <div style={{ display:'flex', flexDirection:'column', height:'100%', overflow:'hidden' }}>
@@ -2567,6 +2579,42 @@ function OrganicoScreen() {
             })}
           </div>
         </div>
+        <div style={{ width:1, height:20, background:'var(--app-border)', flexShrink:0 }}/>
+        <div style={{ position:'relative', display:'flex', alignItems:'center' }}>
+          <span style={{ position:'absolute', left:8, pointerEvents:'none',
+            color:'rgba(255,255,255,.3)', display:'flex' }}>
+            <LucideIcon icon="search" size={12}/>
+          </span>
+          <input
+            type="text"
+            placeholder="Buscar ORG, tema, legenda..."
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            style={{ paddingLeft:26, paddingRight:searchQuery ? 26 : 10, paddingTop:4, paddingBottom:4,
+              borderRadius:8, border:'1px solid rgba(255,255,255,.1)',
+              background:'rgba(255,255,255,.05)', color:'var(--text-1)',
+              fontFamily:'Roboto,sans-serif', fontSize:11.5, outline:'none', width:200,
+              transition:'border-color 130ms' }}
+            onFocus={e => e.target.style.borderColor='rgba(234,170,65,.4)'}
+            onBlur={e => e.target.style.borderColor='rgba(255,255,255,.1)'}
+          />
+          {searchQuery && (
+            <button onClick={() => setSearchQuery('')}
+              style={{ position:'absolute', right:6, background:'none', border:'none',
+                color:'rgba(255,255,255,.35)', cursor:'pointer', padding:0, display:'flex' }}>
+              <LucideIcon icon="x" size={11}/>
+            </button>
+          )}
+        </div>
+        {temFiltroAtivo && (
+          <button onClick={()=>{ setPlatFilter('Todos'); setRespFilter('Todos'); setSearchQuery(''); }}
+            style={{ display:'flex', alignItems:'center', gap:4, padding:'4px 8px', borderRadius:6,
+              background:'rgba(248,113,113,.08)', border:'1px solid rgba(248,113,113,.2)',
+              color:'var(--clr-neg)', fontSize:10.5, fontFamily:'Roboto,sans-serif',
+              fontWeight:700, cursor:'pointer' }}>
+            <LucideIcon icon="x" size={11}/>Limpar
+          </button>
+        )}
       </div>
 
       {viewMode === 'kanban' ? (
