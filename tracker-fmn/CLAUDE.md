@@ -97,3 +97,33 @@ Se o lead pedir pra parcelar no boleto, parcelar no Pix, ou disser que não quer
 > Combinado em 2026-07-31.
 
 O link de checkout padrão do MCV que vive em `whatsapp-ia-prompt.ts` usa `sck=whatsapp-cl` (rastreio do Claudinho, IA ao vivo). Isso está correto pro prompt, porque ali é sempre a IA que manda. **Mas quando eu (Claude Code) rascunho uma mensagem com esse link durante uma sessão de `/tracker-treinar-claudinho` pra Felipe ou Amanda colarem e mandarem manualmente no WhatsApp**, isso não é a IA ao vivo mandando, é atendimento humano, então o rastreio certo é `sck=whatsapp-ah`, não `whatsapp-cl`. Trocar o final da URL antes de entregar o rascunho: `https://pay.hotmart.com/W87258826R?checkoutMode=10&sck=whatsapp-ah`. O `whatsapp-cl` continua reservado só pro link que a função `whatsapp-ia.ts` manda sozinha, sem intervenção humana.
+
+## Áudio enviado pelo WhatsApp — sempre OGG/Opus e sempre mono
+
+> Descoberto na implementação da gravação de áudio no Conversas, em 2026-08-11,
+> com dois envios reais de teste que falharam antes de acertar.
+
+Todo áudio que sai do Tracker para o WhatsApp precisa de **duas** coisas ao
+mesmo tempo. Falhar em qualquer uma delas dá erro que só aparece depois:
+
+1. **Formato OGG/Opus.** É o formato de áudio de voz do WhatsApp, o único que
+   vira a bolha nativa (ondinha e controle de velocidade). O MP4 que o Chrome
+   grava é fragmentado e o WhatsApp recusa na entrega, com o erro
+   `"uploaded with mimetype as audio/mp4, however on processing it is of type
+   application/octet-stream"`. A conversão vive em `frontend/app/audio-ogg.js`
+   e só troca a embalagem WebM por OGG, sem recodificar o som.
+
+2. **Mono.** Um OGG/Opus **estéreo** é aceito no envio (status "enviado") e
+   chega no celular, mas ao dar play o WhatsApp mostra *"este áudio não está
+   mais disponível, peça a Comercial FMN para reenviá-lo"*. O mesmo arquivo em
+   mono chega e toca. O arquivo estéreo passava em tudo que dá para medir de
+   fora (ffprobe valida, o navegador decodifica) — o único jeito de descobrir
+   foi enviar de verdade e tentar ouvir. A gravação força `channelCount: 1`.
+
+**Como diagnosticar quando um envio falhar.** O motivo vem no webhook e é
+gravado em `whatsapp_mensagens.raw.status_errors` (`whatsapp-webhook`). Antes
+disso ser guardado, a mensagem ficava marcada como "falhou" sem nenhuma pista,
+e o diagnóstico dependia de adivinhação. **Status "entregue" no banco não é
+prova de que o áudio toca**: no caso do estéreo, o status ficou correto e o
+áudio estava quebrado. Áudio novo só é dado como funcionando depois de alguém
+apertar o play no celular.

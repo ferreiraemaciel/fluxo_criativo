@@ -1291,8 +1291,13 @@ function ConversasScreen() {
     }
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        // Limpa o áudio de sala: sem isso, gravação de notebook sai com eco e chiado.
-        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
+        audio: {
+          // Limpa o áudio de sala: sem isso, gravação de notebook sai com eco e chiado.
+          echoCancellation: true, noiseSuppression: true, autoGainControl: true,
+          // Mono, sempre. Áudio de voz do WhatsApp é mono, e mandar estéreo
+          // além de dobrar o tamanho arrisca a bolha chegar sem tocar.
+          channelCount: 1,
+        },
       });
       gravStream.current = stream;
       gravChunks.current = [];
