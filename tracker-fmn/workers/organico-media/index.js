@@ -115,6 +115,28 @@ async function waitReelsReady(graph, containerId, token, tries = 20, delayMs = 3
   return false;
 }
 
+/* ── Listagem do bucket, só leitura ───────────────────────────────────────
+   O wrangler não tem `r2 object list`, então sem isto não há como auditar o
+   que está guardado. Serve pra cruzar o conteúdo do bucket com o que os cards
+   referenciam de fato e achar arquivo órfão (imagem trocada que ficou pra
+   trás). Protegida por token: expõe nomes de arquivo do bucket inteiro.      */
+async function handleListar(request, env, url) {
+  if (request.headers.get('X-Token') !== env.IMPORT_TOKEN) {
+    return json({ error: 'não autorizado' }, 401);
+  }
+  const prefix = url.searchParams.get('prefix') || 'organico/';
+  const objetos = [];
+  let cursor;
+  do {
+    const lote = await env.BUCKET.list({ prefix, cursor, limit: 1000 });
+    for (const o of lote.objects) {
+      objetos.push({ key: o.key, size: o.size, uploaded: o.uploaded });
+    }
+    cursor = lote.truncated ? lote.cursor : undefined;
+  } while (cursor);
+  return json({ ok: true, prefix, total: objetos.length, objetos });
+}
+
 /* ── Troca de imagem do slide, direto do modal ────────────────────────────
    Antes, o botão "Trocar imagem" só guardava o arquivo na memória do browser
    e o upload acontecia lá na publicação. Isso dava dois problemas: trocar a
@@ -578,9 +600,21 @@ async function handleAuthExchange(request, env) {
 }
 
 /* ── Delete original ─────────────────────────────────────────────────────── */
+// Aceita só chave sob os prefixos deste módulo. Antes apagava qualquer chave
+// que chegasse, sem token e sem validação: bastava conhecer a URL do worker
+// pra remover qualquer objeto do bucket, inclusive imagem de anúncio ou do
+// site. A rota é chamada pelo frontend sem token (a limpeza acontece no
+// browser, ao apagar card), então a trava tem que ser por prefixo.
+// `organico/` inteiro, e não só media/originais/thumbs: existem esquemas de
+// nomeação antigos (organico/org-001/slide-01.png) e a pasta de referências,
+// que também precisam poder ser limpos. O que não pode é sair de `organico/`
+// e alcançar `ads/` ou as imagens do site.
 async function handleDeleteOriginal(key, env) {
+  if (!key || key.includes('..') || !key.startsWith('organico/')) {
+    return json({ error: 'chave fora do escopo do organico-media' }, 400);
+  }
   await env.BUCKET.delete(key);
-  return json({ ok: true });
+  return json({ ok: true, key });
 }
 
 /* ── Put ──────────────────────────────────────────────────────────────────
@@ -825,6 +859,7 @@ export default {
       if (method === 'POST' && url.pathname === '/upload')  return await handleUpload(request, env);
       if (method === 'POST' && url.pathname === '/publish') return await handlePublish(request, env);
       if (method === 'POST' && url.pathname === '/put')     return await handlePut(request, env, url);
+      if (method === 'GET'  && url.pathname === '/listar')      return await handleListar(request, env, url);
       if (method === 'POST' && url.pathname === '/slide-image') return await handleSlideImage(request, env);
       if (method === 'POST' && url.pathname === '/card-slides') return await handleCardSlides(request, env);
       if (method === 'POST' && url.pathname === '/criar-pasta')  return await handleCriarPasta(request, env);

@@ -6,6 +6,9 @@ const { useState, useEffect, useRef } = React;
 const { LucideIcon, Btn, Badge, TopBar } = window;
 
 const WORKER_URL   = 'https://organico-media.blindagem-fmn.workers.dev';
+// Domínio público do bucket R2. Usado pra saber se uma URL é nossa antes de
+// mandar apagar: só se apaga o que está sob esse domínio.
+const R2_PUBLIC    = 'https://pub-3af414794ad1436281d1d1b3e9feea36.r2.dev';
 const PLATAFORMAS  = window.PLATAFORMAS; // fonte única em shared.jsx (inclui Artigo, Youtube)
 const RESPONSAVEIS = ['Felipe', 'Amanda', 'Lígia'];
 // Time e cores iguais ao Khronus (fonte: crm_team_members lá).
@@ -2493,10 +2496,38 @@ function OrganicoScreen() {
     }
   };
 
+  // Apagar o card leva junto as imagens dele no R2. Antes só a linha do banco
+  // era removida e os arquivos ficavam órfãos pra sempre, sem nada apontando
+  // pra eles e sem como saber de quem eram.
+  //
+  // A ordem importa: junta as URLs ANTES de apagar a linha, senão elas somem
+  // com ela. E o R2 é limpo depois, sem travar o fechamento do modal: se uma
+  // exclusão falhar, o card já saiu e o arquivo vira lixo recuperável pela
+  // auditoria, o que é bem melhor que o card não sair.
   const handleDelete = async id => {
-    if (dbAvailable) await window.db.from('conteudo_organico').delete().eq('id',id);
-    setItems(prev => prev.filter(i => i.id!==id));
+    const card = items.find(i => i.id === id);
+    const urls = new Set();
+    if (card) {
+      try {
+        (JSON.parse(card.slides || '[]') || []).forEach(s => s?.image_url && urls.add(s.image_url));
+      } catch {}
+      try {
+        (JSON.parse(card.media_files || '[]') || []).forEach(m => {
+          ['url_alta', 'preview_url', 'thumb_url', 'image_url'].forEach(k => m?.[k] && urls.add(m[k]));
+        });
+      } catch {}
+    }
+
+    if (dbAvailable) await window.db.from('conteudo_organico').delete().eq('id', id);
+    setItems(prev => prev.filter(i => i.id !== id));
     setModal(null);
+
+    urls.forEach(u => {
+      if (!u.startsWith(`${R2_PUBLIC}/`)) return;   // só o que é nosso
+      const key = u.replace(`${R2_PUBLIC}/`, '').split('?')[0];
+      fetch(`${WORKER_URL}/original/${encodeURIComponent(key)}`, { method: 'DELETE' })
+        .catch(e => console.warn('Não consegui apagar do R2:', key, e));
+    });
   };
 
   const filtered = items.filter(i => {
