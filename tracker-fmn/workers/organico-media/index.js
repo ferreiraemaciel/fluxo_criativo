@@ -72,6 +72,9 @@ async function createReelsContainer(graph, igId, token, videoUrl, caption, comFa
   return d.id;
 }
 
+// Limite de legenda do Instagram (erro 36004, "The caption was too long").
+const LIMITE_LEGENDA = 2200;
+
 /* ── Publicar um container já criado ──────────────────────────────────────
    Publicar logo depois de criar o container falha de vez em quando com
    "Media ID is not available" (código 9007): o Instagram ainda está baixando
@@ -366,6 +369,12 @@ async function handleSchedule(request, env) {
   if (!itemId || !scheduleAt) {
     return json({ error: 'itemId e scheduleAt são obrigatórios.' }, 400);
   }
+  // Legenda longa demais é recusada pelo Instagram na hora de publicar. Se
+  // deixarmos agendar assim, o card passa dias parecendo certo e falha sozinho
+  // no horário marcado, quando ninguém está olhando. Melhor recusar agora.
+  if ((caption || '').length > LIMITE_LEGENDA) {
+    return json({ error: `A legenda tem ${caption.length} caracteres e o Instagram aceita no máximo ${LIMITE_LEGENDA}. Tire ${caption.length - LIMITE_LEGENDA} caracteres antes de agendar.` }, 400);
+  }
   if (tipo === 'reels' ? !videoUrl : !imageUrls?.length) {
     return json({ error: tipo === 'reels' ? 'videoUrl ausente.' : 'imageUrls ausente.' }, 400);
   }
@@ -429,6 +438,37 @@ async function sinalizarAgendadosOrfaos(env, sbUrl, sbKey) {
     }
   } catch (e) {
     console.log('[cron] Falha ao checar agendados órfãos:', e && e.message);
+  }
+
+  // Segunda varredura: agendado com legenda que o Instagram vai recusar.
+  // O ponto é avisar DIAS ANTES do horário marcado, com tempo de encurtar o
+  // texto, em vez de descobrir no minuto da publicação. O ORG 036 falhou por
+  // 12 caracteres, e só demos por falta quando o post não saiu.
+  try {
+    const res = await fetch(
+      `${sbUrl}/rest/v1/conteudo_organico?status=eq.Agendado&erro_publicacao=is.null&select=id,numero,scheduled_media`,
+      { headers: { 'apikey': sbKey, 'Authorization': `Bearer ${sbKey}` } }
+    );
+    const agendados = await res.json();
+    if (!Array.isArray(agendados)) return;
+
+    for (const card of agendados) {
+      const legenda = (card.scheduled_media && card.scheduled_media.caption) || '';
+      if (legenda.length <= LIMITE_LEGENDA) continue;
+      const excesso = legenda.length - LIMITE_LEGENDA;
+      console.log(`[cron] ORG ${card.numero} tem legenda ${excesso} caracteres acima do limite — marcando erro.`);
+      await fetch(`${sbUrl}/rest/v1/conteudo_organico?id=eq.${card.id}`, {
+        method: 'PATCH',
+        headers: { 'apikey': sbKey, 'Authorization': `Bearer ${sbKey}`,
+                   'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+        body: JSON.stringify({
+          erro_publicacao: `Legenda com ${legenda.length} caracteres, ${excesso} acima do limite de ${LIMITE_LEGENDA} do Instagram. Encurte e agende de novo, senão a publicação vai falhar no horário marcado.`,
+          erro_publicacao_em: new Date().toISOString(),
+        }),
+      });
+    }
+  } catch (e) {
+    console.log('[cron] Falha ao checar legendas longas:', e && e.message);
   }
 }
 

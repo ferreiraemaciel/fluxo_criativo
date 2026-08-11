@@ -93,6 +93,26 @@ e, se ainda assim vier esse erro passageiro, tenta de novo até 5 vezes. Erro de
 verdade (legenda grande demais, imagem fora de proporção, conta sem permissão)
 falha de primeira e avisa na hora, porque insistir não mudaria o resultado.
 
+## Legenda: 2.200 caracteres é limite, não recomendação
+
+O Instagram recusa a publicação com legenda acima de **2.200 caracteres**
+(erro 36004). Não é aviso nem corte automático: a peça simplesmente não sai.
+O ORG 036 falhou no agendamento de 11/08/2026 por 12 caracteres de excesso.
+
+Três camadas de proteção, cada uma pegando o que a anterior deixou passar:
+
+1. **Contador no campo da legenda**, dentro do card. Fica dourado nos últimos
+   150 caracteres e vermelho quando passa, dizendo quantos sobraram.
+2. **Trava ao publicar e ao agendar.** O agendamento também é recusado no
+   servidor, não só na tela: sem isso, o card ficaria dias parecendo certo e
+   falharia sozinho no horário marcado, quando ninguém está olhando.
+3. **Varredura a cada 15 minutos** nos cards já agendados. Se algum tiver
+   legenda longa demais, ele fica vermelho no quadro **dias antes** da data
+   marcada, com tempo de encurtar o texto.
+
+**A legenda nunca é cortada sozinha.** Decidir o que sai do texto é decisão de
+copy, não de sistema. O que o sistema faz é avisar cedo e com o número exato.
+
 ## Padrão de nome no Drive
 
 - Pasta: `ORG NNN Tema do card`

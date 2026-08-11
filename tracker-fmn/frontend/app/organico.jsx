@@ -10,6 +10,11 @@ const WORKER_URL   = 'https://organico-media.blindagem-fmn.workers.dev';
 // mandar apagar: só se apaga o que está sob esse domínio.
 const R2_PUBLIC    = 'https://pub-3af414794ad1436281d1d1b3e9feea36.r2.dev';
 const PLATAFORMAS  = window.PLATAFORMAS; // fonte única em shared.jsx (inclui Artigo, Youtube)
+
+// Limite de legenda do Instagram. Passar disso não gera aviso: a publicação é
+// recusada (erro 36004, "The caption was too long"). O ORG 036 falhou no
+// agendamento de 11/08/2026 por 12 caracteres de excesso.
+const LIMITE_LEGENDA = 2200;
 const RESPONSAVEIS = ['Felipe', 'Amanda', 'Lígia'];
 // Time e cores iguais ao Khronus (fonte: crm_team_members lá).
 // Card sem responsável usa a foto "todos": espaço vazio lê como
@@ -601,10 +606,24 @@ function PublishModal({ form, slidesArr, slideFiles, onClose, onSuccess, initial
       ? slidesArr.some((s, i) => slideFiles[i] || s.image_url)
       : (slideFiles[0] || slidesArr[0]?.image_url);
 
+  // Barra antes de sair. Vale principalmente pro AGENDAMENTO: sem isso, o card
+  // fica dias parecendo agendado e falha sozinho no horário, quando ninguém
+  // está olhando. Nunca cortar a legenda por conta própria: o texto é seu, e
+  // decidir o que sai dele é decisão de copy, não de sistema.
+  function conferirLegenda(caption) {
+    if (caption.length > LIMITE_LEGENDA) {
+      throw new Error(
+        `A legenda tem ${caption.length} caracteres e o Instagram aceita no máximo ${LIMITE_LEGENDA}. ` +
+        `Tire ${caption.length - LIMITE_LEGENDA} caracteres e tente de novo.`
+      );
+    }
+  }
+
   const runReels = async () => {
     try {
       setPhase('publishing');
       const caption = (form.legenda || form.roteiro || '').trim();
+      conferirLegenda(caption);
       const scheduleAt = modo === 'agendar' && schedDate
         ? new Date(`${schedDate}T${schedTime}:00-03:00`).toISOString()
         : null;
@@ -709,6 +728,7 @@ function PublishModal({ form, slidesArr, slideFiles, onClose, onSuccess, initial
       setPhase('publishing');
 
       const caption    = (form.legenda || form.roteiro || '').trim();
+      conferirLegenda(caption);
       const tipo       = form.plataforma === 'Carrossel' ? 'carrossel' : 'imagem';
       const scheduleAt = modo === 'agendar' && schedDate
         ? new Date(`${schedDate}T${schedTime}:00-03:00`).toISOString()
@@ -1681,7 +1701,23 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
                   <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
                     <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
                       <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)' }}>{form.plataforma==='Artigo' ? 'Resumo / meta description' : 'Legenda da postagem'}</span>
-                      <CopyBtn text={form.legenda||''}/>
+                      <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                        {/* Contador só no que vai pro Instagram. O limite não é
+                            estilo: passar dele faz o Instagram recusar a peça. */}
+                        {form.plataforma !== 'Artigo' && (() => {
+                          const n = (form.legenda || '').length;
+                          const passou = n > LIMITE_LEGENDA;
+                          const perto  = !passou && n > LIMITE_LEGENDA - 150;
+                          return (
+                            <span style={{ fontSize:10.5, fontFamily:'Roboto,sans-serif', fontWeight:700,
+                              color: passou ? 'var(--clr-neg)' : perto ? '#fbbf24' : 'var(--text-3)' }}
+                              title={passou ? `Passou ${n - LIMITE_LEGENDA} caracteres do limite do Instagram` : 'Limite do Instagram'}>
+                              {n}/{LIMITE_LEGENDA}{passou ? ` (${n - LIMITE_LEGENDA} a mais)` : ''}
+                            </span>
+                          );
+                        })()}
+                        <CopyBtn text={form.legenda||''}/>
+                      </div>
                     </div>
                     <textarea value={form.legenda||''} onChange={e=>set('legenda',e.target.value)}
                       rows={5} placeholder={form.plataforma==='Artigo' ? "140 a 160 caracteres, o resumo que vai no card do blog e na meta description..." : "Texto da postagem no Instagram..."}
