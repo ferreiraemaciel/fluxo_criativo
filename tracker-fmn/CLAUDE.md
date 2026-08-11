@@ -2,6 +2,24 @@
 
 > Instruções específicas do Tracker FMN. Complementa o CLAUDE.md da raiz do fluxo-criativo (regras gerais do workshop), mas essas aqui valem só dentro desta pasta.
 
+## whatsapp-webhook — NUNCA deployar sem `--no-verify-jwt` (incidente real, 2026-08-07 a 2026-08-11)
+
+> Combinado com Felipe em 2026-08-11, depois de um incidente real de 4 dias sem receber nenhuma mensagem de lead.
+
+**Regra dura, sem exceção**: todo deploy do `whatsapp-webhook` (sozinho ou junto com outras functions) tem que incluir a flag `--no-verify-jwt`, sempre:
+
+```bash
+supabase functions deploy whatsapp-webhook --project-ref wntzzzuqoqmfcjebmzul --no-verify-jwt
+```
+
+**Por quê.** O `whatsapp-webhook` é o único endpoint deste projeto chamado diretamente pela Meta (WhatsApp Cloud API), que não manda token nenhum do Supabase, só a assinatura própria dela. Se o deploy for feito sem `--no-verify-jwt` (ex: `supabase functions deploy whatsapp-webhook` batendo várias functions juntas num só comando, ou pelo MCP `deploy_edge_function`), o Supabase volta a exigir JWT válido em toda chamada, a Meta não tem esse token, e toda entrega de webhook passa a devolver 401 imediatamente. A mensagem nunca chega a ser gravada. **Não é um erro visível no painel: o Tracker continua funcionando normalmente, só que ninguém nunca mais aparece como "precisa responder", porque nenhuma mensagem nova chega.**
+
+**O que aconteceu de verdade**: um redeploy de rotina (corrigindo um bug de prompt do Claudinho) às 22:45 de 7/8/2026 derrubou essa flag sem querer. O problema só foi percebido 4 dias depois, quando o Felipe estranhou o silêncio total. Nesse intervalo, toda resposta que qualquer lead mandou foi perdida de verdade (a Meta tenta reentregar algumas vezes e desiste, sem fila permanente do lado dela) — não tem como recuperar essas mensagens depois.
+
+**Antes de declarar qualquer deploy do `whatsapp-webhook` como concluído**, confirmar que `verify_jwt: false` está ativo. Forma rápida de checar: `mcp__supabase__get_edge_function` (ou a API equivalente) e procurar o campo `verify_jwt` no JSON retornado — tem que estar `false`. Se não tiver certeza se a flag foi aplicada, rodar o deploy de novo explicitamente com `--no-verify-jwt` antes de seguir em frente.
+
+**As outras functions do Claudinho (`whatsapp-retomada`, `whatsapp-prompt-atual`) não têm esse risco**: são chamadas com token válido do Supabase (`whatsapp-retomada` via pg_cron com service role key; `whatsapp-prompt-atual` via `frontend/app/conversas.jsx` com a chave anon), então `verify_jwt: true` (o padrão) não quebra nada nelas. A regra acima vale só pro `whatsapp-webhook`, mas ao criar qualquer function nova que receba chamada de fora do Supabase (outro provedor de webhook, por exemplo), aplicar o mesmo cuidado.
+
 ## Orgânico — pasta padrão do Drive (fonte oficial de mídia)
 
 **A mídia de qualquer card do Orgânico (imagem, carrossel ou vídeo) SEMPRE vem da pasta do Google Drive, nunca de arquivo solto no Downloads, Desktop ou qualquer outro lugar do Mac.** Pasta raiz: `https://drive.google.com/open?id=1h3cPqEoOnXld-6Sqh3IjsYcsb2bh_PLp` (ID `1h3cPqEoOnXld-6Sqh3IjsYcsb2bh_PLp`, já cadastrado como `ORGANICO_FOLDER_ID` em `scripts/adicionar-criativo-organico.py`). Dentro dela, cada card tem sua própria subpasta `ORG <numero>` (ex: `ORG 019`), e o número segue o mesmo índice por `created_at` mostrado na UI do Kanban.
