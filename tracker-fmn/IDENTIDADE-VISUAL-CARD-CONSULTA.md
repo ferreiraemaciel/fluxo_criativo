@@ -37,7 +37,7 @@ Se tem **um caso**, é Caso Real.
 ## Estrutura obrigatória
 
 1. **Tamanho exato: 1080x1350px, vertical, 4:5.**
-2. **Fundo cinza escuro sólido** (`#3A3A3A`), ocupando a peça inteira. É o que separa esse formato
+2. **Fundo cinza escuro sólido** (`#3f3f3f`), ocupando a peça inteira. É o que separa esse formato
    da Citação Crua à distância, no feed em miniatura. O fundo é fixo, quem varia por tema é a cor
    de destaque (ver paleta abaixo).
 3. **Folha branca texturizada por dentro** (papel, com textura leve visível), com margem generosa em
@@ -90,20 +90,20 @@ Fundo e folha são fixos. **Quem varia por tema é a cor de destaque**, que apar
 borda da caixa do título e nos círculos numerados.
 
 ```
-fundo        #3A3A3A   cinza escuro, fixo
+fundo        #3f3f3f   cinza escuro, fixo
 folha        branca com textura leve de papel, fixo
 texto        preto, fixo
 @ no rodapé  cinza discreto, fixo
 
 destaque, por tema:
-  jurídico / contrato      #A01010   vermelho escuro   (borda da caixa: #7C3AED roxo)
+  jurídico / contrato      #990000   vermelho escuro   (borda da caixa: #7C3AED roxo)
   precificação / dinheiro  #0E7490   ciano profundo
   processo / alerta        #9A3412   laranja queimado
   comportamento / mercado  #9D174D   rosa profundo
 ```
 
-O vermelho escuro com borda roxa é a combinação que já está em produção (ORG 058). Nos outros temas,
-a borda pode acompanhar o próprio destaque num tom mais escuro, ou repetir o roxo se você quiser
+O `#990000` com borda roxa é a combinação que já está em produção (ORG 058). Nos outros temas, a
+borda pode acompanhar o próprio destaque num tom mais escuro, ou repetir o roxo se você quiser
 manter o roxo como assinatura fixa do formato.
 
 **Sobre marca-texto.** Se um dia a cor de destaque for usada como preenchimento em vez de texto
@@ -118,7 +118,7 @@ corpo pequeno cai abaixo do contraste mínimo legível.
 vez e cada peça nova é trocar o título e os itens. Sem geração, sem tentativa e erro de tipografia.
 
 Passo a passo:
-1. Canvas 1080x1350px, fundo cinza escuro `#3A3A3A`.
+1. Canvas 1080x1350px, fundo cinza escuro `#3f3f3f`.
 2. Retângulo branco com textura leve de papel, centralizado, margem de aproximadamente 6% em cada
    lado, cantos arredondados suaves, sombra discreta.
 3. Título em caixa alta no topo da folha, na cor de destaque, dentro de uma caixa de borda. É o
@@ -158,3 +158,6 @@ hierarquia precisa, que é justamente o que gerador de imagem não sustenta.
   mesmo lado), depois de o ORG 058 nascer com a pergunta 1 invertida em relação às outras duas.
 - 2026-08-07 (mesmo dia): Reforçado que o formato **não se gera por IA**. Uma tentativa de geração
   descartou o título, os números e a paleta inteira.
+- 2026-08-07 (mesmo dia): Hex exatos confirmados pelo Felipe, medidos na arte real: fundo `#3f3f3f`
+  e destaque `#990000`. Os valores anteriores (`#3A3A3A` e `#A01010`) eram estimativa minha lendo a
+  imagem, e estavam próximos mas errados.
