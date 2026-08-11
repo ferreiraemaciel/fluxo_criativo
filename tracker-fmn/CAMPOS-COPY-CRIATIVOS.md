@@ -17,6 +17,17 @@ O campo **Roteiro** sempre contém as 3 partes — Gancho, Desenvolvimento e CTA
 
 Isso vale principalmente pra afirmação jurídica: dado, número, artigo de lei e citação de decisão continuam presos à fonte, sem exceção. A liberdade é de argumento, exemplo, aplicação prática e forma, não de fato.
 
+**Nunca afirmar mais do que a fonte primária sustenta (regra fixa, 2026-08-07).** Quando a peça conta um caso real, o que ela afirma como fato precisa estar na decisão, na lei ou no documento. O que veio de reportagem entra atribuído ("segundo a imprensa", "o jornalista que revelou o caso disse"), nunca como fato próprio.
+
+Isso apareceu duas vezes no mesmo lote, e as duas passaram despercebidas até alguém desconfiar:
+
+- As peças afirmavam que as fotos foram feitas **"da rua"**. A decisão diz apenas "a partir de um ponto externo, com equipamento de alta capacidade óptica", sem especificar o lugar. Pior: o jornalista que revelou o caso afirmou textualmente que a foto **não** foi feita da rua.
+- Depois, a arte afirmou que foi **"usando um drone"**. Também não está na decisão, veio da imprensa.
+
+O detalhe traiçoeiro é que o corpo do artigo estava certo o tempo todo ("posicionado do lado de fora do prédio"). Quem errou foi o título, o resumo e as peças, que especificaram mais do que a fonte para ganhar concretude. Concretude é boa, mas não vale inventar o que não está escrito.
+
+Regra prática antes de publicar peça sobre caso real: separe o que é **fato da decisão** do que é **relato de imprensa** e do que é **sua interpretação**, e trate cada um no registro certo. Em processo que ainda corre, registrar também que é liminar e não sentença.
+
 **Roteiro de Reels sempre em pegada natural de fala, nunca robótico (regra fixa, 2026-08-06).** O texto do campo Roteiro (ADS e Orgânico, plataforma Reels) precisa soar como o Felipe falando de verdade pra câmera, não como um texto escrito lido em voz alta. Frases curtas, contrações ("tava", "tá"), pausas de fala reais, jeito de contar caso ("outro dia eu tava numa aula..."), nunca a cadência simétrica e "redondinha demais" de texto gerado por IA. Depois de escrever o roteiro, reler em voz alta mentalmente: se soar como texto de vídeo institucional, reescrever mais solto. Isso não dispensa o Manual da Copy nem o checklist Light Copy (zero travessão, zero exclamação), só pede que dentro dessas regras o tom fique conversacional.
 
 ---

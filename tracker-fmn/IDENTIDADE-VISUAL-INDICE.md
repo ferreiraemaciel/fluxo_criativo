@@ -76,6 +76,42 @@ no `IDENTIDADE-VISUAL-CARROSSEL.md`.
 
 ---
 
+## Conferência obrigatória depois que a arte fica pronta
+
+> Regras nascidas de defeito real e repetido, não de teoria. Os dois primeiros
+> são os que mais aparecem, e os dois são invisíveis pra quem escreveu o texto,
+> porque o erro nasce na geração, não no roteiro.
+
+**1. Acento em CAIXA ALTA some ou quebra.** É o defeito mais frequente de todos.
+Já aconteceu no ORG 029 (NAO), no ORG 061 (PUBLICA, NAO, NINGUEM, CAMERA), no
+ORG 058 ("informação" com espaçamento partido) e no ORG 054 (REGUA).
+
+A causa é entrelinha apertada: em caixa alta, o Ã, o Ú, o É e o Â precisam de
+espaço acima da letra, e quando não há, o gerador ou deixa colidir com a linha
+de cima ou simplesmente descarta o acento. Por isso todo prompt precisa pedir
+**entrelinha confortável** e dizer explicitamente que os acentos são
+obrigatórios e não podem encostar na linha de cima.
+
+Conferir sempre, palavra por palavra, nas peças em caixa alta. As palavras que
+mais caem: NÃO, PÚBLICA, NINGUÉM, CÂMERA, RÉGUA, PREÇO, VOCÊ, É.
+
+**2. Numeração de lista sai errada.** Já aconteceu três vezes: ORG 045 (dois
+slides marcados "CONTA 02 DE 03") e ORG 054 (dois slides com a sequência 1, 2,
+2). O gerador repete um número em vez de avançar.
+
+Isso custa mais caro do que parece quando outro slide se refere à posição: no
+ORG 054, o slide seguinte dizia "repare na terceira" e não existia terceira.
+Contar os números na arte final, sempre.
+
+**3. A ordem de leitura muda na montagem.** Já aconteceu no ORG 042 (dois slides
+invertidos) e no ORG 054 (dois fora de posição). Quando um slide se refere a
+outro ("repare na terceira", "isso serve pra você"), a inversão quebra o sentido
+e o leitor não entende o que está sendo apontado.
+
+Depois de montar, ler o carrossel inteiro na ordem, uma vez, como leitor.
+
+---
+
 ## Histórico de ajustes
 
 - 2026-08-06: Criado depois que a peça do fotógrafo dos 22 anos (artigo "A juíza disse qual papel
@@ -94,3 +130,8 @@ no `IDENTIDADE-VISUAL-CARROSSEL.md`.
 - 2026-08-07 (mesmo dia): Adicionada a regra de atribuição de frase de terceiro, depois de o ORG 061
   ("A frase da juíza") vir com a paráfrase do Felipe no lugar da citação literal da decisão.
   Atribuir paráfrase a um magistrado é erro factual, e num perfil de advogado isso custa caro.
+- 2026-08-07 (mesmo dia): Criada a seção **Conferência obrigatória depois que a arte fica pronta**,
+  com os três defeitos que mais se repetiram: acento sumindo em caixa alta (4 peças), numeração de
+  lista saindo errada (3 vezes) e ordem de leitura mudando na montagem (2 vezes). Todos nascem na
+  geração, não no roteiro, então são invisíveis pra quem escreveu o texto e só aparecem conferindo
+  a arte final.
