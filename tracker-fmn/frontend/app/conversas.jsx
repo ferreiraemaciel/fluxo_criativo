@@ -74,21 +74,22 @@ function SeparadorData({ rotulo }) {
 }
 
 /* ── Formato do áudio gravado ─────────────────────────────────────────────
-   O WhatsApp só aceita alguns formatos de áudio, e cada navegador grava num
-   conjunto diferente. Aqui a lista é percorrida do melhor pro aceitável e
-   fica no primeiro que o navegador souber gravar:
+   O destino é sempre OGG/Opus. É o formato que o WhatsApp usa internamente
+   para áudio de voz: é o único que vira a bolha nativa (com a ondinha e o
+   controle de velocidade) e o que ele aceita sem discussão.
 
-     ogg/opus  — o formato nativo de áudio de voz do WhatsApp (Firefox)
-     mp4/aac   — aceito pelo WhatsApp e o que o Chrome grava hoje
-     aac, mpeg — raros, mas aceitos dos dois lados
+   O Firefox grava direto em OGG. O Chrome não: ele grava o mesmo som Opus,
+   mas embrulhado em WebM. Nesse caso o áudio é apenas desembrulhado e
+   reembrulhado em OGG por audio-ogg.js, sem recodificar nada.
 
-   webm de propósito fica de fora: o Chrome grava, mas o WhatsApp recusa, e o
-   erro só apareceria depois do envio, com o áudio já gravado e perdido.    */
+   O MP4 do Chrome foi tentado antes e o WhatsApp recusou:
+     "uploaded with mimetype as audio/mp4, however on processing it is of
+      type application/octet-stream"
+   Ele grava MP4 fragmentado, que o processador do WhatsApp não reconhece.
+   Por isso o MP4 saiu da lista em vez de virar plano B.                    */
 const FORMATOS_AUDIO = [
-  { mime: 'audio/ogg;codecs=opus', ext: 'ogg' },
-  { mime: 'audio/mp4',             ext: 'm4a' },
-  { mime: 'audio/aac',             ext: 'aac' },
-  { mime: 'audio/mpeg',            ext: 'mp3' },
+  { mime: 'audio/ogg;codecs=opus',  precisaConverter: false },
+  { mime: 'audio/webm;codecs=opus', precisaConverter: true  },
 ];
 
 function formatoAudioSuportado() {
@@ -1299,7 +1300,7 @@ function ConversasScreen() {
 
       const rec = new MediaRecorder(stream, { mimeType: formato.mime });
       rec.ondataavailable = e => { if (e.data && e.data.size) gravChunks.current.push(e.data); };
-      rec.onstop = () => {
+      rec.onstop = async () => {
         // O microfone é desligado SEMPRE, inclusive no cancelamento: deixar a
         // luzinha acesa depois de gravar assusta e parece escuta.
         gravStream.current?.getTracks().forEach(t => t.stop());
@@ -1309,16 +1310,28 @@ function ConversasScreen() {
 
         if (gravDescarta.current) { gravChunks.current = []; setSegGrav(0); return; }
 
-        const blob = new Blob(gravChunks.current, { type: formato.mime });
+        const bruto = new Blob(gravChunks.current, { type: formato.mime });
         gravChunks.current = [];
         setSegGrav(0);
-        if (blob.size < 1200) return;   // toque acidental no botão, não é áudio
+        if (bruto.size < 1200) return;   // toque acidental no botão, não é áudio
+
+        // Troca a caixa WebM pela OGG quando preciso. Não é recodificação:
+        // o som Opus é o mesmo, então é rápido mesmo em áudio de 3 minutos.
+        let blob = bruto;
+        if (formato.precisaConverter) {
+          const convertido = window.webmOpusParaOgg ? await window.webmOpusParaOgg(bruto) : null;
+          if (!convertido) {
+            alert('Não consegui preparar o áudio no formato que o WhatsApp aceita. Tente gravar de novo, ou use o Firefox.');
+            return;
+          }
+          blob = convertido;
+        }
 
         const carimbo = new Date().toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' })
           .replace(/[/\s:]/g, '-');
-        const file = new File([blob], `audio-${carimbo}.${formato.ext}`, { type: formato.mime });
+        const file = new File([blob], `audio-${carimbo}.ogg`, { type: 'audio/ogg' });
         setPendente({ tipo: 'arquivo', file, preview: URL.createObjectURL(blob),
-                      nome: file.name, mime: formato.mime, audio: true });
+                      nome: file.name, mime: 'audio/ogg', audio: true });
       };
 
       rec.start();

@@ -277,8 +277,16 @@ Deno.serve(async (req) => {
           if (!st.id) continue;
           const novoStatus = STATUS_MAP[st.status];
           if (!novoStatus) continue;
+          // O MOTIVO da falha vem aqui dentro e antes era descartado: a mensagem
+          // ficava marcada como "falhou" sem ninguém saber por quê. Guardar em
+          // `raw` é o que permite descobrir depois, sem depender de reproduzir.
+          const patch: Record<string, unknown> = { status: novoStatus };
+          if (st.errors?.length) {
+            patch.raw = { status_errors: st.errors, status_em: new Date().toISOString() };
+            console.error("[whatsapp-webhook] envio falhou:", st.id, JSON.stringify(st.errors));
+          }
           await supabase.from("whatsapp_mensagens")
-            .update({ status: novoStatus })
+            .update(patch)
             .eq("wa_message_id", st.id);
         }
       }
