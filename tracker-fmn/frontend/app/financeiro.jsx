@@ -20,7 +20,7 @@ function DateFilter({ from, to, onChange }) {
     else if (p === '7d')   { f = new Date(hoje); f.setDate(f.getDate() - 6); }
     else if (p === '30d')  { f = new Date(hoje); f.setDate(f.getDate() - 29); }
     else if (p === 'Mês')  f = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
-    else if (p === 'Máximo') f = new Date('2023-01-01');
+    else if (p === 'Máximo') f = new Date('2024-01-01'); // mesma âncora do Dashboard: vida inteira do negócio
     onChange({ from: iso(f), to: iso(hoje) });
   }
   // detecta qual preset bate com o range atual para destacar
@@ -30,7 +30,7 @@ function DateFilter({ from, to, onChange }) {
     const r = { Hoje:0, '7d':6, '30d':29 };
     if (to !== iso(hoje)) return false;
     if (p === 'Mês')    return from === iso(new Date(hoje.getFullYear(), hoje.getMonth(), 1));
-    if (p === 'Máximo') return from === '2023-01-01';
+    if (p === 'Máximo') return from === '2024-01-01';
     const f = new Date(hoje); f.setDate(f.getDate() - r[p]);
     return from === iso(f);
   }
@@ -72,11 +72,15 @@ function useVendasData(from, to) {
     if (!window.db) return;
     async function load() {
       setLoading(true);
+      // Mesma conversão BRT->UTC do Dashboard (fonte única em financas.js).
+      // Sem ela, venda das 21h-23h59 de Brasília cai no dia seguinte em UTC e
+      // sumia do "Hoje" desta aba enquanto aparecia no Dashboard.
+      const brt = window.FMNFinancas.brtRangeUtc(from, to);
       const { data } = await window.db
         .from('vendas')
         .select('hotmart_transaction_id,produto_nome,valor_bruto,preco_oferta,valor_liquido,status,created_at,utm_source')
-        .gte('created_at', from + 'T00:00:00')
-        .lte('created_at', to + 'T23:59:59')
+        .gte('created_at', brt.gte)
+        .lte('created_at', brt.lte)
         .order('created_at', { ascending: false });
       setVendas(data || []);
       setLoading(false);
@@ -593,14 +597,23 @@ function TaxesTab({ dateRange }) {
 
   const periodoAnteriorAoHistorico = inicioGastoDiario && dateRange.from < inicioGastoDiario;
 
-  const aprovadas = vendas.filter(v => v.status === 'aprovada');
-  const fat       = aprovadas.reduce((s,v) => s + Number(v.valor_bruto), 0);
-  const liquido   = aprovadas.reduce((s,v) => s + Number(v.valor_liquido), 0);
-  const hotmartTax = fat - liquido;
-  const hotmartPct = fat > 0 ? ((hotmartTax / fat) * 100).toFixed(2) : '0.00';
-  const vendasCount = aprovadas.length;
-  const metaTax   = gastoMeta * (metaPct / 100);
-  const notaTax   = fat * (notaPct / 100);
+  // Fonte única: antes esta aba recalculava fat/liquido por conta própria com
+  // valor_bruto (que inclui juro de parcelamento), divergindo do Dashboard e
+  // da aba Despesas — achado numa auditoria em 2026-08-12. Agora usa a mesma
+  // função que as outras telas, então os três impostos aqui batem com o
+  // "Imposto sobre Nota" e "Imposto Meta" que aparecem no detalhamento do
+  // Dashboard, pro mesmo período.
+  const resultado = window.FMNFinancas.calcularResultado({
+    vendas, despesas: [], gasto: gastoMeta, notaPct, metaPct,
+    from: dateRange.from, to: dateRange.to,
+  });
+  const fat        = resultado.bruto;
+  const liquido     = resultado.liquido;
+  const hotmartTax  = resultado.taxaHotmart;
+  const hotmartPct  = fat > 0 ? ((hotmartTax / fat) * 100).toFixed(2) : '0.00';
+  const vendasCount = resultado.vendas;
+  const metaTax     = resultado.impostoMeta;
+  const notaTax     = resultado.impostoNota;
 
   if (loading) return <div style={{padding:40,textAlign:'center',color:'var(--text-3)',fontFamily:'Roboto,sans-serif'}}>Carregando...</div>;
   return (
@@ -908,7 +921,7 @@ function HotmartTab({ dateRange }) {
                 <td style={{ padding:'11px 16px', textAlign:'right', fontSize:13.5,
                   fontFamily:'Roboto,sans-serif', fontWeight:700,
                   color:v.status==='reembolsada'?'#f87171':'#4ade80' }}>
-                  {v.status==='reembolsada'?`–${fmt(Math.round(Number(v.valor_bruto)))}`:fmt(Math.round(Number(v.valor_bruto)))}
+                  {v.status==='reembolsada'?`–${fmt(Math.round(Number(v.preco_oferta ?? v.valor_bruto)))}`:fmt(Math.round(Number(v.preco_oferta ?? v.valor_bruto)))}
                 </td>
                 <td style={{ padding:'11px 16px', textAlign:'right' }}>
                   <Badge tone={STATUS_TONE[v.status]||'default'}>{STATUS_LABEL[v.status]||v.status}</Badge>

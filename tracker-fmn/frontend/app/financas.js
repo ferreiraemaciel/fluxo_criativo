@@ -105,6 +105,24 @@
     return valor;
   }
 
+  /* ── BRT → UTC ─────────────────────────────────────────────────
+     Toda venda tem `created_at` gravado em UTC. Filtrar direto por string
+     'YYYY-MM-DDT00:00:00' faz o Postgres interpretar como UTC, mas o
+     usuário pensa em horário de Brasília (UTC-3). Sem essa conversão, uma
+     venda das 22h de Brasília cai no dia seguinte em UTC e some do "hoje".
+
+     Achado numa auditoria em 2026-08-12: o Dashboard já fazia essa conversão
+     (função local brtRangeUtc), mas a aba Financeiro filtrava a string crua.
+     No preset "Hoje", qualquer venda entre 21h e 23h59 sumia do Financeiro e
+     só aparecia no dia seguinte — divergindo do Dashboard pro mesmo dia.
+     Agora é uma função só, usada nos dois lugares.                        */
+  function brtRangeUtc(from, to) {
+    const nextDay = new Date(to + 'T00:00:00'); nextDay.setDate(nextDay.getDate() + 1);
+    const pad = n => String(n).padStart(2, '0');
+    const nd = `${nextDay.getFullYear()}-${pad(nextDay.getMonth()+1)}-${pad(nextDay.getDate())}`;
+    return { gte: from + 'T03:00:00Z', lte: nd + 'T02:59:59Z' };
+  }
+
   function somarDespesas(lista, from, to) {
     return (lista || []).reduce((s, d) => s + rateioDespesa(d, from, to), 0);
   }
@@ -145,5 +163,5 @@
     };
   }
 
-  window.FMNFinancas = { rateioDespesa, somarDespesas, calcularResultado };
+  window.FMNFinancas = { rateioDespesa, somarDespesas, calcularResultado, brtRangeUtc };
 })();

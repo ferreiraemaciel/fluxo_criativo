@@ -351,13 +351,24 @@ Deno.serve(async (req) => {
   // Valor bruto: purchase.price ou subscription
   const valorBruto = Number(compra?.price?.value || assinatura?.plan?.recurrency_period?.amount || 0);
 
-  // Valor líquido: comissão do PRODUCER em data.commissions[]
-  // (compra.commission.as_owner não existe no payload real da Hotmart v2)
-  const comissaoProdutor = comissoes.find((c: any) => c.source === "PRODUCER");
-  const valorLiquido = Number(comissaoProdutor?.value || compra?.price?.value || valorBruto);
-
   // preco_oferta: original_offer_price (sem juros de parcelamento) ou valor_bruto
   const precoOferta = Number(compra?.original_offer_price?.value || compra?.hotmart_fee?.base || valorBruto);
+
+  // Valor líquido: comissão do PRODUCER em data.commissions[], que é o repasse
+  // real (já sem a taxa da Hotmart e sem a comissão de addon "Club").
+  //
+  // FALLBACK, só quando o payload não traz essa comissão (auditoria de
+  // 2026-08-12 encontrou esse caminho, ainda que raro): antes caía no preço
+  // CHEIO da compra, que em venda parcelada inclui juros do cartão — o mesmo
+  // erro que fez 57 vendas do histórico precisarem de correção manual
+  // (scripts/corrigir_valor_liquido.py). Agora a aproximação parte do preço
+  // do PRODUTO (sem juros) menos a taxa da Hotmart, que fica muito mais perto
+  // do repasse real. Continua sendo aproximação, não o valor exato: não
+  // desconta a comissão do Club nem afiliado/coprodução. Se a divergência
+  // aparecer de novo, rode o script de correção contra sales/commissions.
+  const comissaoProdutor = comissoes.find((c: any) => c.source === "PRODUCER");
+  const taxaHotmart = Number(compra?.hotmart_fee?.total || 0);
+  const valorLiquido = Number(comissaoProdutor?.value ?? (precoOferta - taxaHotmart));
 
   // Valor do desconto de cupom: full_price (preço cheio antes do desconto) menos
   // price (o que foi de fato cobrado). 0 quando não houve desconto.

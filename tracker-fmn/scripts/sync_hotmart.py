@@ -197,8 +197,12 @@ def map_sale(item: dict) -> dict:
     #
     # Este ainda é um cálculo aproximado: não enxerga comissão de addon (o
     # "Club", R$ 2,49 por venda) nem coprodução/afiliado. O número exato vem
-    # do endpoint sales/commissions, usado por scripts/corrigir_valor_liquido.py,
-    # e é o que o webhook grava em tempo real.
+    # do endpoint sales/commissions. O webhook (tempo real) já usa esse valor
+    # exato quando o payload traz a comissão do PRODUCER; este script roda
+    # como backfill/reprocessamento e não faz a chamada extra por venda, então
+    # depois de rodá-lo em um período grande, rode também
+    # `corrigir_valor_liquido.py --desde <data> --aplicar` pra fechar essa
+    # diferença residual.
     base_liquido = hotmart_commission_base if hotmart_commission_base else valor_bruto
     valor_liquido = round(base_liquido - hotmart_commission, 2)
 

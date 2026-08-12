@@ -1910,8 +1910,11 @@ function Dicas({ data }) {
   // ── Montar lista de dicas com prioridade ────────────────────────
   const dicas = [];
 
-  // 1. ROAS
-  const roas = gasto > 0 ? fat / gasto : null;
+  // 1. ROAS — data.roas já vem de window.FMNFinancas.calcularResultado (ver
+  // useDashboardData). Recalcular aqui de novo, mesmo com fórmula igual hoje,
+  // é o tipo de duplicação que já divergiu silenciosamente em outros lugares
+  // desta mesma tela.
+  const roas = data?.roas ?? null;
   if (roas !== null) {
     if (roas >= 3) {
       dicas.push({ tipo:'pos', icon:'trending-up',
