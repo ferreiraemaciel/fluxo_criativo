@@ -2391,7 +2391,7 @@ function TrafficScreen() {
           </div>
         }/>
 
-      <div style={{ flex:1,overflow:'auto',padding:'20px 24px',display:'flex',flexDirection:'column',gap:16 }}>
+      <div style={{ flex:1,overflow:'hidden',padding:'20px 24px',display:'flex',flexDirection:'column',gap:16 }}>
 
         {/* ── Modo de visualização + seletor ── */}
         <div style={{ display:'flex', alignItems:'center', gap:10, flexWrap:'wrap' }}>
@@ -2476,17 +2476,19 @@ function TrafficScreen() {
         {/* overflowX é rede de segurança: em tela larga tudo cabe (a coluna de
             nome tem largura fixa e as métricas são estreitas); em tela menor
             vira rolagem lateral em vez de dado cortado fora da borda. */}
-        <div style={{ background:'var(--app-surface)',border:'1px solid var(--app-border)',borderRadius:14, overflowX:'auto' }}>
+        <div style={{ background:'var(--app-surface)',border:'1px solid var(--app-border)',borderRadius:14, overflow:'auto', flex:1, minHeight:0 }}>
           {/* minWidth = soma das larguras das colunas. Sem ele, width:100% com
               tableLayout:fixed espremeria as colunas abaixo do tamanho pedido
               numa tela estreita e o texto vazaria da célula; com ele, a tabela
               para de encolher e o container rola de lado. */}
           <table style={{ width:'100%', minWidth:1546, borderCollapse:'collapse', tableLayout:'fixed' }}>
             <thead>
-              <tr style={{ borderBottom:'1px solid var(--app-border)' }}>
+              <tr>
                 <th style={{ width: viewMode==='metrica' ? undefined : 300, minWidth: 300,
                   padding:'8px 12px', textAlign:'left', fontSize:10, fontFamily:'Roboto,sans-serif',
-                  fontWeight:700, letterSpacing:'0.08em', textTransform:'uppercase', color:'var(--text-3)' }}>
+                  fontWeight:700, letterSpacing:'0.08em', textTransform:'uppercase', color:'var(--text-3)',
+                  position:'sticky', top:0, zIndex:2, background:'var(--app-surface)',
+                  borderBottom:'1px solid var(--app-border)' }}>
                   Campanha / Conjunto / Anúncio
                   {viewMode === 'metrica' && (
                     <span style={{ marginLeft:8, color:'var(--fmn-gold)', letterSpacing:'0.08em' }}>· {metricCol.head}</span>
@@ -2496,7 +2498,9 @@ function TrafficScreen() {
                   <th key={col.pk || col.k} style={{ width: viewMode==='metrica' ? 84 : col.w,
                     padding:'8px 6px', textAlign:'right', fontSize:9.5,
                     fontFamily:'Roboto,sans-serif', fontWeight:700, letterSpacing:'0.04em',
-                    textTransform:'uppercase', color:'var(--text-3)', whiteSpace:'nowrap' }}>
+                    textTransform:'uppercase', color:'var(--text-3)', whiteSpace:'nowrap',
+                    position:'sticky', top:0, zIndex:2, background:'var(--app-surface)',
+                    borderBottom:'1px solid var(--app-border)' }}>
                     {col.head}
                   </th>
                 ))}
