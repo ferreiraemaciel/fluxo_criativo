@@ -2564,6 +2564,17 @@ function OrganicoScreen() {
       fetch(`${WORKER_URL}/original/${encodeURIComponent(key)}`, { method: 'DELETE' })
         .catch(e => console.warn('Não consegui apagar do R2:', key, e));
     });
+
+    // A pasta do Drive vai junto (pra lixeira, dá pra desfazer por 30 dias).
+    // Se ficasse pra trás, o próximo card que reaproveitasse esse número
+    // herdaria ela com o nome do assunto antigo: o /criar-pasta é idempotente
+    // e casa a pasta pelo número, não pelo tema.
+    if (card?.numero != null) {
+      fetch(`${WORKER_URL}/deletar-pasta`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ numero: card.numero }),
+      }).catch(e => console.warn('Não consegui apagar a pasta do Drive:', card.numero, e));
+    }
   };
 
   const filtered = items.filter(i => {
