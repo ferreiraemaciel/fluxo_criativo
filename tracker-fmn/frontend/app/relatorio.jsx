@@ -35,6 +35,7 @@
    ================================================================ */
 
 const { useState, useRef, useEffect } = React;
+const { createPortal } = ReactDOM;
 
 const DESTINATARIOS = {
   felipe: {
@@ -301,13 +302,13 @@ function garantirCssImpressao() {
            abaixo. Vira documento normal só durante a impressão. */
         overflow: visible !important; height: auto !important;
       }
-      /* #root (tokens.css) trava height:100vh + overflow:hidden — o relatório
-         é filho dele na árvore React, então essa trava cortaria a página de
-         novo mesmo depois de soltar o overlay. Mesma lógica: solta só na
-         impressão. */
-      #root {
-        height: auto !important; overflow: visible !important; display: block !important;
-      }
+      /* #root não precisa mais de tratamento especial: o relatório agora é um
+         portal direto pro <body> (ver RelatorioOverlay), então não vive mais
+         dentro da árvore do #root em nenhum momento — inclusive na
+         impressão. Esconder #root evita que o app inteiro (invisível, mas
+         ainda ocupando espaço em overflow:visible) empurre o relatório pra
+         baixo ou deixe folha em branco antes dele. */
+      #root { display: none !important; }
       body * { visibility: hidden !important; }
       .relatorio-print, .relatorio-print * { visibility: visible !important; }
 
@@ -336,17 +337,40 @@ function garantirCssImpressao() {
 }
 
 function RelatorioOverlay({ destinatario, rangeFrom, rangeTo, dados, onClose }) {
+  // Portal direto pro <body>, IRMÃO de #root, não filho dele.
+  //
+  // Por que isso é obrigatório e não só "mais limpo": o relatório nasce
+  // dentro da árvore normal do React, lá no fundo de DashboardScreen. Na
+  // TELA isso não incomoda, porque position:fixed escapa visualmente de
+  // qualquer ancestral. Mas na IMPRESSÃO, quando ele precisa voltar a ser
+  // position:static pra poder paginar, ele volta a ficar sujeito à altura e
+  // ao overflow de TODOS os ancestrais reais — não só o #root (que corrigi
+  // antes), mas qualquer wrapper de tela no meio do caminho também. Corrigir
+  // ancestral por ancestral é jogo de gato e rato; o portal elimina o
+  // problema inteiro, porque não existe mais ancestral nenhum entre o
+  // relatório e o <body> pra travar altura.
+  const [portalNode] = useState(() => {
+    const el = document.createElement('div');
+    el.id = 'relatorio-portal';
+    return el;
+  });
+
   useEffect(() => {
+    document.body.appendChild(portalNode);
     garantirCssImpressao();
     // Pequeno atraso: garante que o mapa (SVG grande) e os gráficos já
     // pintaram antes de abrir o diálogo de impressão.
     const t = setTimeout(() => window.print(), 350);
     const aoTerminar = () => onClose();
     window.addEventListener('afterprint', aoTerminar);
-    return () => { clearTimeout(t); window.removeEventListener('afterprint', aoTerminar); };
+    return () => {
+      clearTimeout(t);
+      window.removeEventListener('afterprint', aoTerminar);
+      document.body.removeChild(portalNode);
+    };
   }, []);
 
-  return (
+  return createPortal((
     <div className="relatorio-overlay-print" style={{ position: 'fixed', inset: 0, zIndex: 9999,
       background: 'rgba(0,0,0,.75)', overflowY: 'auto', padding: '24px 0' }}>
       <div style={{ position: 'sticky', top: 12, display: 'flex', justifyContent: 'center',
@@ -362,7 +386,7 @@ function RelatorioOverlay({ destinatario, rangeFrom, rangeTo, dados, onClose }) 
       </div>
       <RelatorioConteudo destinatario={destinatario} rangeFrom={rangeFrom} rangeTo={rangeTo} dados={dados}/>
     </div>
-  );
+  ), portalNode);
 }
 
 /* ── Botão "Exportar Relatório" com o menu Felipe / Samuel ───────────── */
