@@ -75,6 +75,116 @@ async function createReelsContainer(graph, igId, token, videoUrl, caption, comFa
 // Limite de legenda do Instagram (erro 36004, "The caption was too long").
 const LIMITE_LEGENDA = 2200;
 
+/* ══ ARTIGO DO BLOG FMN ═══════════════════════════════════════════════════
+   Card de Artigo não publica no Instagram: ele liga o artigo no ar no site
+   da FMN, exatamente como o botão do admin faz. O artigo já existe como
+   rascunho no banco do site (a skill /copy-artigo-blog-fmn grava assim); o
+   que falta é virar a chave `ativo` no dia certo.
+
+   O banco do site é OUTRO projeto Supabase, separado do Tracker. As
+   credenciais dele vivem como segredo deste worker, nunca no frontend.
+
+   O slug sai do link do post guardado no campo Referência do card, que é
+   onde ele já é preenchido hoje.                                          */
+
+function slugDoArtigo(referencia) {
+  const m = String(referencia || '').match(/[?&]slug=([^&#\s]+)/);
+  return m ? decodeURIComponent(m[1]) : null;
+}
+
+async function fmnFetch(env, caminho, opcoes = {}) {
+  const url = env.FMN_SUPABASE_URL;
+  const key = env.FMN_SUPABASE_KEY;
+  if (!url || !key) throw new Error('Credenciais do site FMN não configuradas neste worker.');
+  const r = await fetch(`${url}/rest/v1${caminho}`, {
+    ...opcoes,
+    headers: {
+      'apikey': key, 'Authorization': `Bearer ${key}`,
+      'Content-Type': 'application/json', ...(opcoes.headers || {}),
+    },
+  });
+  return r;
+}
+
+/* Situação do artigo no site: existe? já está no ar? */
+async function handleArtigoStatus(request, env, url) {
+  const slug = url.searchParams.get('slug') || slugDoArtigo(url.searchParams.get('referencia'));
+  if (!slug) return json({ error: 'Não achei o slug do artigo. Cole o link do post no campo Referência do card.' }, 400);
+
+  const r = await fmnFetch(env, `/posts?site=eq.fmn&slug=eq.${encodeURIComponent(slug)}&select=id,titulo,slug,ativo,publicado_em`);
+  const linhas = await r.json().catch(() => []);
+  if (!Array.isArray(linhas) || !linhas.length) {
+    return json({ error: `Não existe artigo com o slug "${slug}" no blog. Escreva o artigo primeiro (ele fica como rascunho no admin) e confira o link em Referência.` }, 404);
+  }
+  return json({ ok: true, artigo: linhas[0] });
+}
+
+/* Liga o artigo no ar. Espelha o que o admin faz: ativo = true e a data de
+   publicação preenchida. A data é a do dia marcado, não a de hoje, pra que o
+   artigo apareça no blog com a data que você programou.                    */
+async function publicarArtigo(env, slug, dataPublicacao) {
+  const dia = (dataPublicacao || new Date().toISOString()).slice(0, 10);
+  const r = await fmnFetch(env, `/posts?site=eq.fmn&slug=eq.${encodeURIComponent(slug)}`, {
+    method: 'PATCH',
+    headers: { 'Prefer': 'return=representation' },
+    body: JSON.stringify({ ativo: true, publicado_em: dia }),
+  });
+  const linhas = await r.json().catch(() => []);
+  if (!r.ok) throw new Error(`Erro ao publicar no site: ${JSON.stringify(linhas)}`);
+  if (!Array.isArray(linhas) || !linhas.length) {
+    throw new Error(`Nenhum artigo com o slug "${slug}" no blog. Confira o link em Referência.`);
+  }
+  return linhas[0];
+}
+
+/* Publicar agora, ou agendar pro dia marcado. */
+async function handleArtigoPublicar(request, env) {
+  const body = await request.json().catch(() => ({}));
+  const { cardId, referencia, scheduleAt } = body;
+  const slug = body.slug || slugDoArtigo(referencia);
+  if (!slug)   return json({ error: 'Não achei o slug do artigo. Cole o link do post no campo Referência do card.' }, 400);
+  if (!cardId) return json({ error: 'cardId é obrigatório.' }, 400);
+
+  // Confere que o artigo existe ANTES de marcar qualquer coisa no card: sem
+  // isso, o card ficaria agendado apontando pra um artigo que não existe e
+  // falharia sozinho no dia, que é o erro que a gente já pagou pra aprender.
+  const check = await fmnFetch(env, `/posts?site=eq.fmn&slug=eq.${encodeURIComponent(slug)}&select=id,titulo`);
+  const achados = await check.json().catch(() => []);
+  if (!Array.isArray(achados) || !achados.length) {
+    return json({ error: `Não existe artigo com o slug "${slug}" no blog. Escreva o artigo primeiro e confira o link em Referência.` }, 404);
+  }
+
+  const sbUrl = env.SUPABASE_URL, sbKey = env.SUPABASE_SERVICE_KEY;
+  const patchCard = async (campos) => {
+    await fetch(`${sbUrl}/rest/v1/conteudo_organico?id=eq.${cardId}`, {
+      method: 'PATCH',
+      headers: { 'apikey': sbKey, 'Authorization': `Bearer ${sbKey}`,
+                 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      body: JSON.stringify(campos),
+    });
+  };
+
+  if (scheduleAt) {
+    await patchCard({
+      status: 'Agendado', scheduled_at: scheduleAt,
+      data_prevista: scheduleAt.slice(0, 10),
+      scheduled_media: { tipo: 'artigo', slug },
+      erro_publicacao: null, erro_publicacao_em: null,
+    });
+    return json({ ok: true, scheduled: true, slug, titulo: achados[0].titulo });
+  }
+
+  const artigo = await publicarArtigo(env, slug, new Date().toISOString());
+  await patchCard({
+    status: 'Arquivado', published_at: new Date().toISOString(),
+    scheduled_at: null, scheduled_media: null,
+    erro_publicacao: null, erro_publicacao_em: null,
+  });
+  return json({ ok: true, scheduled: false, slug, titulo: artigo.titulo });
+}
+
+
+
 /* ── Publicar um container já criado ──────────────────────────────────────
    Publicar logo depois de criar o container falha de vez em quando com
    "Media ID is not available" (código 9007): o Instagram ainda está baixando
@@ -453,6 +563,7 @@ async function sinalizarAgendadosOrfaos(env, sbUrl, sbKey) {
     if (!Array.isArray(agendados)) return;
 
     for (const card of agendados) {
+      if (card.scheduled_media && card.scheduled_media.tipo === 'artigo') continue;
       const legenda = (card.scheduled_media && card.scheduled_media.caption) || '';
       if (legenda.length <= LIMITE_LEGENDA) continue;
       const excesso = legenda.length - LIMITE_LEGENDA;
@@ -510,6 +621,37 @@ async function runScheduledPublish(env) {
 
   for (const post of posts) {
     const m = post.scheduled_media || {};
+
+    // Artigo não passa pelo Instagram: liga o post no ar no site da FMN.
+    if (m.tipo === 'artigo') {
+      try {
+        await publicarArtigo(env, m.slug, post.scheduled_at);
+        await fetch(`${sbUrl}/rest/v1/conteudo_organico?id=eq.${post.id}`, {
+          method: 'PATCH',
+          headers: { 'apikey': sbKey, 'Authorization': `Bearer ${sbKey}`,
+                     'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+          body: JSON.stringify({
+            status: 'Arquivado', published_at: post.scheduled_at || new Date().toISOString(),
+            scheduled_at: null, scheduled_media: null,
+          }),
+        });
+        console.log(`[cron] Artigo "${m.slug}" publicado no site.`);
+      } catch (err) {
+        console.error(`[cron] Falha ao publicar o artigo "${m.slug}":`, err && err.message);
+        await fetch(`${sbUrl}/rest/v1/conteudo_organico?id=eq.${post.id}`, {
+          method: 'PATCH',
+          headers: { 'apikey': sbKey, 'Authorization': `Bearer ${sbKey}`,
+                     'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+          body: JSON.stringify({
+            status: 'Feito', scheduled_at: null, scheduled_media: null,
+            erro_publicacao: String(err && err.message || err).slice(0, 500),
+            erro_publicacao_em: new Date().toISOString(),
+          }),
+        });
+      }
+      continue;
+    }
+
     const { imageUrls = [], videoUrl = null, thumbUrl = null, origKeys = [], caption = '', tipo = 'imagem', comFacebook = false } = m;
 
     try {
@@ -923,6 +1065,8 @@ export default {
       if (method === 'POST' && url.pathname === '/slide-image') return await handleSlideImage(request, env);
       if (method === 'POST' && url.pathname === '/card-slides') return await handleCardSlides(request, env);
       if (method === 'POST' && url.pathname === '/criar-pasta')  return await handleCriarPasta(request, env);
+      if (method === 'GET'  && url.pathname === '/artigo-status')   return await handleArtigoStatus(request, env, url);
+      if (method === 'POST' && url.pathname === '/artigo-publicar') return await handleArtigoPublicar(request, env);
       if (method === 'POST' && url.pathname === '/deletar-pasta') return await handleDeletarPasta(request, env);
       if (method === 'POST' && url.pathname === '/import-link')   return await handleImportLink(request, env);
       if (method === 'POST' && url.pathname === '/import-direto') return await handleImportDireto(request, env);

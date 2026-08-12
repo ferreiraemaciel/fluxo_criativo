@@ -20,6 +20,32 @@ supabase functions deploy whatsapp-webhook --project-ref wntzzzuqoqmfcjebmzul --
 
 **As outras functions do Claudinho (`whatsapp-retomada`, `whatsapp-prompt-atual`) não têm esse risco**: são chamadas com token válido do Supabase (`whatsapp-retomada` via pg_cron com service role key; `whatsapp-prompt-atual` via `frontend/app/conversas.jsx` com a chave anon), então `verify_jwt: true` (o padrão) não quebra nada nelas. A regra acima vale só pro `whatsapp-webhook`, mas ao criar qualquer function nova que receba chamada de fora do Supabase (outro provedor de webhook, por exemplo), aplicar o mesmo cuidado.
 
+## Chamar worker da Cloudflare: usar `curl`, nunca `urllib` do Python
+
+> Registrado em 2026-08-12, depois de tropeçar nisso duas vezes na mesma sessão.
+
+A Cloudflare bloqueia o user-agent padrão do `urllib` do Python (`Python-urllib/3.x`)
+e devolve **403 antes de a requisição chegar no worker**. O worker nunca é
+executado, então não aparece nada no `wrangler tail` e o erro parece ser do
+código que acabou de subir.
+
+**Foi exatamente isso que atrasou o teste do `/deletar-pasta`:** o endpoint estava
+certo desde o primeiro deploy, mas o script de teste em Python voltava erro, o que
+apontou o dedo pro lugar errado. Repetido com `curl`, funcionou de primeira.
+
+Para bater em qualquer `*.workers.dev` ou domínio atrás da Cloudflare:
+
+```bash
+curl -s -X POST https://organico-media.blindagem-fmn.workers.dev/deletar-pasta \
+  -H 'Content-Type: application/json' -d '{"numero":999}'
+```
+
+Isso vale só para **chamar o worker**. Falar com o Supabase (PostgREST) e com a
+Google Drive API em Python continua normal, esses não passam pela Cloudflare.
+
+Se precisar mesmo de Python na chamada ao worker, mandar um `User-Agent` de
+navegador no cabeçalho resolve. Mas o caminho curto é `curl`.
+
 ## Orgânico — pasta padrão do Drive (fonte oficial de mídia)
 
 **A mídia de qualquer card do Orgânico (imagem, carrossel ou vídeo) SEMPRE vem da pasta do Google Drive, nunca de arquivo solto no Downloads, Desktop ou qualquer outro lugar do Mac.** Pasta raiz: `https://drive.google.com/open?id=1h3cPqEoOnXld-6Sqh3IjsYcsb2bh_PLp` (ID `1h3cPqEoOnXld-6Sqh3IjsYcsb2bh_PLp`, já cadastrado como `ORGANICO_FOLDER_ID` em `scripts/adicionar-criativo-organico.py`). Dentro dela, cada card tem sua própria subpasta `ORG <numero>` (ex: `ORG 019`), e o número segue o mesmo índice por `created_at` mostrado na UI do Kanban.
