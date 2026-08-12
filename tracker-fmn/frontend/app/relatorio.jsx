@@ -81,7 +81,7 @@ function KpiRelatorio({ label, value, accent }) {
         {label}
       </div>
       <div style={{ fontSize: 19, fontFamily: 'Roboto,sans-serif', fontWeight: 700,
-        color: accent ? 'var(--fmn-gold)' : 'var(--text-1)' }}>
+        color: accent ? 'var(--fmn-gold)' : 'var(--text-1)', whiteSpace: 'nowrap' }}>
         {value}
       </div>
     </div>
@@ -294,16 +294,41 @@ function garantirCssImpressao() {
   style.id = 'relatorio-print-css';
   style.textContent = `
     @media print {
-      html, body { background: #0f1013 !important; }
+      html, body {
+        background: #0f1013 !important;
+        /* tokens.css trava overflow:hidden e height:100% no app inteiro (pra
+           tela normal), o que soma no corte de página junto com o fixed
+           abaixo. Vira documento normal só durante a impressão. */
+        overflow: visible !important; height: auto !important;
+      }
+      /* #root (tokens.css) trava height:100vh + overflow:hidden — o relatório
+         é filho dele na árvore React, então essa trava cortaria a página de
+         novo mesmo depois de soltar o overlay. Mesma lógica: solta só na
+         impressão. */
+      #root {
+        height: auto !important; overflow: visible !important; display: block !important;
+      }
       body * { visibility: hidden !important; }
       .relatorio-print, .relatorio-print * { visibility: visible !important; }
+
+      /* A CAUSA REAL DO CORTE: .relatorio-overlay-print é position:fixed na
+         tela (pra cobrir tudo com um fundo escuro). Motor de impressão do
+         Chrome trata position:fixed como preso a UMA página só — reserva a
+         altura da tela e descarta tudo que passa disso, nunca gera 2ª
+         folha. Aqui ele volta a ser um bloco normal do documento, que é o
+         que permite o conteúdo fluir e paginar de verdade. */
+      .relatorio-overlay-print {
+        position: static !important; inset: auto !important; overflow: visible !important;
+        height: auto !important; padding: 0 !important; background: transparent !important;
+      }
       .relatorio-print {
-        position: absolute; top: 0; left: 0; width: 100% !important;
+        position: static !important; width: 100% !important; margin: 0 !important;
         -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;
       }
       .relatorio-print * {
         -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;
       }
+      .no-print { display: none !important; }
       @page { size: A4; margin: 10mm; }
     }
   `;
@@ -322,8 +347,8 @@ function RelatorioOverlay({ destinatario, rangeFrom, rangeTo, dados, onClose }) 
   }, []);
 
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,.75)',
-      overflowY: 'auto', padding: '24px 0' }}>
+    <div className="relatorio-overlay-print" style={{ position: 'fixed', inset: 0, zIndex: 9999,
+      background: 'rgba(0,0,0,.75)', overflowY: 'auto', padding: '24px 0' }}>
       <div style={{ position: 'sticky', top: 12, display: 'flex', justifyContent: 'center',
         marginBottom: 12 }} className="no-print">
         <button onClick={onClose} style={{
