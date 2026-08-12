@@ -93,6 +93,33 @@ e, se ainda assim vier esse erro passageiro, tenta de novo até 5 vezes. Erro de
 verdade (legenda grande demais, imagem fora de proporção, conta sem permissão)
 falha de primeira e avisa na hora, porque insistir não mudaria o resultado.
 
+## Card de Artigo publica no site, não no Instagram
+
+Card com plataforma **Artigo** tem o mesmo botão Publicar dos outros, mas ele
+faz outra coisa: liga o artigo no ar no blog da FMN, exatamente como o botão
+do admin. Serve tanto pra publicar na hora quanto pra agendar.
+
+**Como funciona.** O artigo já existe como rascunho no banco do site (a skill
+`/copy-artigo-blog-fmn` grava assim, com `ativo: false`). O que o Tracker faz
+é virar a chave: `ativo = true` e `publicado_em` com a data escolhida, que é a
+data que aparece no blog. O texto continua sendo editado no admin. **O Tracker
+é o gatilho de publicação, não um editor de artigo.**
+
+**O elo é o campo Referência.** O slug sai do link do post guardado ali
+(`post.html?slug=...`), que já é como os cards de artigo são preenchidos. Antes
+de agendar, o Tracker consulta o site e mostra o título de verdade que vai ao
+ar, então dá pra ver na hora se o link aponta pro artigo certo. Se o artigo não
+existir no blog, o agendamento é recusado na hora, em vez de falhar sozinho no
+dia marcado.
+
+**Onde o artigo entra no ar:** no primeiro ciclo do robô depois da hora marcada
+(ele roda de 15 em 15 minutos). O card vai pra Arquivado sozinho, igual aos
+outros. Se falhar, volta pra Feito com o motivo no card.
+
+**Banco separado.** O blog vive em outro projeto Supabase, não no do Tracker.
+As credenciais dele são segredo do worker `organico-media`
+(`FMN_SUPABASE_URL`, `FMN_SUPABASE_KEY`), nunca do frontend.
+
 ## Legenda: 2.200 caracteres é limite, não recomendação
 
 O Instagram recusa a publicação com legenda acima de **2.200 caracteres**

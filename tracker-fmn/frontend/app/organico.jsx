@@ -582,6 +582,181 @@ function SlideBlock({ slide, index, total, onChange, onRemove, file, uploading, 
 }
 
 /* ── PublishModal ────────────────────────────────────────────────*/
+/* ── PublicarArtigoModal ─────────────────────────────────────────────────
+   Card de Artigo não vai pro Instagram: publicar aqui significa ligar o
+   artigo no ar no site da FMN, o mesmo que apertar o botão no admin.
+
+   O artigo já existe como rascunho no banco do site (a skill que escreve o
+   artigo grava assim). O que este modal faz é virar a chave `ativo`, agora
+   ou no dia marcado. O texto do artigo continua sendo editado no admin: aqui
+   é só o gatilho de publicação, o Tracker não é editor de artigo.
+
+   O link do post fica no campo Referência do card, que é de onde o slug sai. */
+function PublicarArtigoModal({ form, onClose, onSuccess, initialDate }) {
+  const [modo, setModo]   = useState(initialDate ? 'agendar' : 'agora');
+  const [fase, setFase]   = useState('carregando'); // carregando | pronto | enviando | erro | ok
+  const [artigo, setArtigo] = useState(null);
+  const [erro, setErro]   = useState('');
+  const hoje = new Date().toISOString().slice(0, 10);
+  const [data, setData] = useState(initialDate || form.data_prevista || hoje);
+  const [hora, setHora] = useState('18:00');
+
+  // Confere o artigo no site antes de qualquer coisa: assim você vê o título
+  // de verdade que vai ao ar, em vez de confiar que o link está certo.
+  useEffect(() => {
+    let vivo = true;
+    const ref = encodeURIComponent(form.referencia || '');
+    fetch(`${WORKER_URL}/artigo-status?referencia=${ref}`)
+      .then(async r => ({ ok: r.ok, d: await r.json().catch(() => ({})) }))
+      .then(({ ok, d }) => {
+        if (!vivo) return;
+        if (!ok || d.error) { setErro(d.error || 'Não consegui consultar o artigo no site.'); setFase('erro'); return; }
+        setArtigo(d.artigo); setFase('pronto');
+      })
+      .catch(() => { if (vivo) { setErro('Não consegui falar com o site.'); setFase('erro'); } });
+    return () => { vivo = false; };
+  }, []);
+
+  async function enviar() {
+    setFase('enviando'); setErro('');
+    const scheduleAt = modo === 'agendar'
+      ? new Date(`${data}T${hora}:00-03:00`).toISOString()
+      : null;
+    try {
+      const r = await fetch(`${WORKER_URL}/artigo-publicar`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cardId: form.id, referencia: form.referencia, scheduleAt }),
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok || d.error) throw new Error(d.error || 'Falha ao publicar.');
+      setFase('ok');
+      setTimeout(() => onSuccess(scheduleAt ? 'Agendado' : 'Arquivado', scheduleAt), 900);
+    } catch (e) {
+      setErro(e.message); setFase('erro');
+    }
+  }
+
+  const Caixa = ({ children }) => (
+    <div onClick={e => e.target === e.currentTarget && onClose()}
+      style={{ position:'fixed', inset:0, background:'rgba(0,0,0,.75)', zIndex:900,
+        display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
+      <div style={{ width:'100%', maxWidth:420, background:'var(--app-surface)',
+        border:'1px solid var(--app-border)', borderRadius:14, padding:22,
+        display:'flex', flexDirection:'column', gap:14 }}>
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+          <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+            <div style={{ width:34, height:34, borderRadius:9, display:'flex', alignItems:'center',
+              justifyContent:'center', background:'rgba(234,170,65,.12)', border:'1px solid rgba(234,170,65,.3)' }}>
+              <LucideIcon icon="newspaper" size={16} style={{ color:'var(--fmn-gold)' }}/>
+            </div>
+            <div>
+              <div style={{ fontSize:14, fontFamily:'Roboto,sans-serif', fontWeight:700, color:'var(--text-1)' }}>
+                Publicar no site
+              </div>
+              <div style={{ fontSize:11, fontFamily:'Roboto,sans-serif', color:'var(--text-3)' }}>
+                Blog da FMN
+              </div>
+            </div>
+          </div>
+          <button onClick={onClose} style={{ background:'none', border:'none', cursor:'pointer', color:'var(--text-3)', display:'flex' }}>
+            <LucideIcon icon="x" size={16}/>
+          </button>
+        </div>
+        {children}
+      </div>
+    </div>
+  );
+
+  if (fase === 'carregando') return (
+    <Caixa><div style={{ fontSize:12.5, fontFamily:'Roboto,sans-serif', color:'var(--text-3)' }}>Procurando o artigo no site...</div></Caixa>
+  );
+
+  if (fase === 'erro' && !artigo) return (
+    <Caixa>
+      <div style={{ padding:'10px 12px', borderRadius:9, background:'rgba(248,113,113,.08)',
+        border:'1px solid rgba(248,113,113,.3)', fontSize:12, color:'#f87171', lineHeight:1.5 }}>{erro}</div>
+      <Btn variant="ghost" size="sm" onClick={onClose} style={{ justifyContent:'center' }}>Fechar</Btn>
+    </Caixa>
+  );
+
+  if (fase === 'ok') return (
+    <Caixa>
+      <div style={{ display:'flex', alignItems:'center', gap:8, fontSize:13,
+        fontFamily:'Roboto,sans-serif', fontWeight:700, color:'var(--clr-pos)' }}>
+        <LucideIcon icon="check" size={15}/>
+        {modo === 'agendar' ? 'Agendado.' : 'Artigo no ar.'}
+      </div>
+    </Caixa>
+  );
+
+  return (
+    <Caixa>
+      {/* O título vem do site, não do card: é o que vai aparecer no blog. */}
+      <div style={{ padding:'10px 12px', borderRadius:9, background:'var(--app-surface-2)',
+        border:'1px solid var(--app-border)', display:'flex', flexDirection:'column', gap:4 }}>
+        <span style={{ fontSize:9.5, fontFamily:'Roboto,sans-serif', fontWeight:700,
+          letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)' }}>Artigo no site</span>
+        <span style={{ fontSize:12.5, fontFamily:'Roboto,sans-serif', color:'var(--text-1)', lineHeight:1.45 }}>
+          {artigo.titulo}
+        </span>
+        <a href={`https://www.fotografiaeomeunegocio.com.br/post.html?slug=${artigo.slug}`}
+          target="_blank" rel="noopener noreferrer"
+          style={{ fontSize:11, fontFamily:'Roboto,sans-serif', color:'var(--fmn-gold)', textDecoration:'none' }}>
+          Ver como está agora
+        </a>
+        {artigo.ativo && (
+          <span style={{ fontSize:11, fontFamily:'Roboto,sans-serif', color:'#fbbf24', marginTop:2 }}>
+            Este artigo já está no ar. Publicar de novo só troca a data que aparece no blog.
+          </span>
+        )}
+      </div>
+
+      <div style={{ display:'flex', gap:6 }}>
+        {[['agora','Publicar agora','zap'], ['agendar','Agendar','clock']].map(([v, rotulo, icone]) => (
+          <button key={v} onClick={() => setModo(v)}
+            style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'center', gap:6,
+              padding:'8px 10px', borderRadius:8, cursor:'pointer',
+              fontFamily:'Roboto,sans-serif', fontSize:12, fontWeight:700,
+              background: modo===v ? 'rgba(234,170,65,.14)' : 'rgba(255,255,255,.04)',
+              border: modo===v ? '1px solid rgba(234,170,65,.45)' : '1px solid var(--app-border)',
+              color: modo===v ? 'var(--fmn-gold)' : 'var(--text-3)' }}>
+            <LucideIcon icon={icone} size={13}/>{rotulo}
+          </button>
+        ))}
+      </div>
+
+      {modo === 'agendar' && (<>
+        <div style={{ display:'flex', gap:8 }}>
+          <input type="date" value={data} min={hoje} onChange={e => setData(e.target.value)}
+            style={{ flex:2, boxSizing:'border-box', padding:'8px 10px', borderRadius:8,
+              background:'var(--app-surface-2)', border:'1px solid var(--app-border)',
+              color:'var(--text-1)', fontFamily:'Roboto,sans-serif', fontSize:12.5, outline:'none' }}/>
+          <input type="time" value={hora} onChange={e => setHora(e.target.value)}
+            style={{ flex:1, boxSizing:'border-box', padding:'8px 10px', borderRadius:8,
+              background:'var(--app-surface-2)', border:'1px solid var(--app-border)',
+              color:'var(--text-1)', fontFamily:'Roboto,sans-serif', fontSize:12.5, outline:'none' }}/>
+        </div>
+        {/* O robô roda de 15 em 15 minutos, então o artigo entra no ar no
+            primeiro ciclo depois da hora marcada. Dizer isso evita a dúvida
+            de "marquei 18:00 e às 18:02 ainda não estava lá". */}
+        <span style={{ fontSize:10.5, fontFamily:'Roboto,sans-serif', color:'var(--text-3)', lineHeight:1.5 }}>
+          O artigo entra no ar até 15 minutos depois do horário marcado, e a data que aparece no blog é a do dia escolhido.
+        </span>
+      </>)}
+
+      {erro && (
+        <div style={{ padding:'9px 11px', borderRadius:9, background:'rgba(248,113,113,.08)',
+          border:'1px solid rgba(248,113,113,.3)', fontSize:11.5, color:'#f87171', lineHeight:1.5 }}>{erro}</div>
+      )}
+
+      <Btn onClick={enviar} disabled={fase === 'enviando'} style={{ justifyContent:'center' }}>
+        <LucideIcon icon={fase === 'enviando' ? 'loader' : modo === 'agendar' ? 'clock' : 'send'} size={13}/>
+        {fase === 'enviando' ? 'Enviando...' : modo === 'agendar' ? 'Agendar publicação' : 'Publicar agora'}
+      </Btn>
+    </Caixa>
+  );
+}
+
 function PublishModal({ form, slidesArr, slideFiles, onClose, onSuccess, initialDate, initialModo }) {
   // initialModo/initialDate: quando vem do calendário, já abre em "Agendar"
   // com o dia clicado preenchido, faltando só o horário.
@@ -1191,7 +1366,7 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
     onSave(updated);
   };
 
-  const canShowPublish = !isNew && (form.plataforma === 'Carrossel' || form.plataforma === 'Imagem' || form.plataforma === 'Reels');
+  const canShowPublish = !isNew && (form.plataforma === 'Carrossel' || form.plataforma === 'Imagem' || form.plataforma === 'Reels' || form.plataforma === 'Artigo');
 
   // Painel esquerdo — navegador de slides embarcado
   const [previewIdx, setPreviewIdx] = useState(0);
@@ -1202,7 +1377,20 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
 
   return (
     <>
-      {showPublish && (
+      {showPublish && form.plataforma === 'Artigo' && (
+        <PublicarArtigoModal
+          form={form}
+          onClose={() => setShowPublish(false)}
+          initialDate={prefillSchedDate || null}
+          onSuccess={(novoStatus, quando) => {
+            setShowPublish(false);
+            set('status', novoStatus);
+            if (quando) set('data_prevista', quando.slice(0, 10));
+            onImported && onImported();
+          }}/>
+      )}
+
+      {showPublish && form.plataforma !== 'Artigo' && (
         <PublishModal
           form={form}
           slidesArr={slidesArr}
