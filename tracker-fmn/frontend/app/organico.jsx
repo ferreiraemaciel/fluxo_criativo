@@ -704,9 +704,16 @@ function PublicarArtigoModal({ form, onClose, onSuccess, initialDate }) {
           style={{ fontSize:11, fontFamily:'Roboto,sans-serif', color:'var(--fmn-gold)', textDecoration:'none' }}>
           Ver como está agora
         </a>
+        {/* A data vem do post, e o Tracker não mexe nela. Mostrar aqui evita
+            a surpresa de publicar e o artigo aparecer sem data no blog. */}
+        <span style={{ fontSize:10.5, fontFamily:'Roboto,sans-serif', color:'var(--text-3)', marginTop:2 }}>
+          {artigo.publicado_em
+            ? `Data do artigo: ${artigo.publicado_em.slice(0,10).split('-').reverse().join('/')}`
+            : 'Sem data marcada. Vai ao ar sem data, do jeito que está no admin.'}
+        </span>
         {artigo.ativo && (
           <span style={{ fontSize:11, fontFamily:'Roboto,sans-serif', color:'#fbbf24', marginTop:2 }}>
-            Este artigo já está no ar. Publicar de novo só troca a data que aparece no blog.
+            Este artigo já está no ar.
           </span>
         )}
       </div>
@@ -740,7 +747,7 @@ function PublicarArtigoModal({ form, onClose, onSuccess, initialDate }) {
             primeiro ciclo depois da hora marcada. Dizer isso evita a dúvida
             de "marquei 18:00 e às 18:02 ainda não estava lá". */}
         <span style={{ fontSize:10.5, fontFamily:'Roboto,sans-serif', color:'var(--text-3)', lineHeight:1.5 }}>
-          O artigo entra no ar até 15 minutos depois do horário marcado, e a data que aparece no blog é a do dia escolhido.
+          O artigo entra no ar até 15 minutos depois do horário marcado.
         </span>
       </>)}
 

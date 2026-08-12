@@ -119,15 +119,18 @@ async function handleArtigoStatus(request, env, url) {
   return json({ ok: true, artigo: linhas[0] });
 }
 
-/* Liga o artigo no ar. Espelha o que o admin faz: ativo = true e a data de
-   publicação preenchida. A data é a do dia marcado, não a de hoje, pra que o
-   artigo apareça no blog com a data que você programou.                    */
-async function publicarArtigo(env, slug, dataPublicacao) {
-  const dia = (dataPublicacao || new Date().toISOString()).slice(0, 10);
+/* Liga o artigo no ar.
+
+   A DATA DO POST NÃO É TOCADA AQUI. Se o artigo tem data marcada no admin,
+   ela é respeitada; se não tem, ele é publicado sem data mesmo. Publicar não
+   é o mesmo que datar: a data é decisão editorial, tomada no admin, e o
+   Tracker inventar uma (a de hoje, ou a do agendamento) mudaria a cara do
+   artigo no blog sem ninguém ter pedido.                                   */
+async function publicarArtigo(env, slug) {
   const r = await fmnFetch(env, `/posts?site=eq.fmn&slug=eq.${encodeURIComponent(slug)}`, {
     method: 'PATCH',
     headers: { 'Prefer': 'return=representation' },
-    body: JSON.stringify({ ativo: true, publicado_em: dia }),
+    body: JSON.stringify({ ativo: true }),
   });
   const linhas = await r.json().catch(() => []);
   if (!r.ok) throw new Error(`Erro ao publicar no site: ${JSON.stringify(linhas)}`);
@@ -174,7 +177,7 @@ async function handleArtigoPublicar(request, env) {
     return json({ ok: true, scheduled: true, slug, titulo: achados[0].titulo });
   }
 
-  const artigo = await publicarArtigo(env, slug, new Date().toISOString());
+  const artigo = await publicarArtigo(env, slug);
   await patchCard({
     status: 'Arquivado', published_at: new Date().toISOString(),
     scheduled_at: null, scheduled_media: null,
@@ -625,7 +628,7 @@ async function runScheduledPublish(env) {
     // Artigo não passa pelo Instagram: liga o post no ar no site da FMN.
     if (m.tipo === 'artigo') {
       try {
-        await publicarArtigo(env, m.slug, post.scheduled_at);
+        await publicarArtigo(env, m.slug);
         await fetch(`${sbUrl}/rest/v1/conteudo_organico?id=eq.${post.id}`, {
           method: 'PATCH',
           headers: { 'apikey': sbKey, 'Authorization': `Bearer ${sbKey}`,

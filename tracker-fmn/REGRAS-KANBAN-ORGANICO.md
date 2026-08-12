@@ -101,9 +101,16 @@ do admin. Serve tanto pra publicar na hora quanto pra agendar.
 
 **Como funciona.** O artigo já existe como rascunho no banco do site (a skill
 `/copy-artigo-blog-fmn` grava assim, com `ativo: false`). O que o Tracker faz
-é virar a chave: `ativo = true` e `publicado_em` com a data escolhida, que é a
-data que aparece no blog. O texto continua sendo editado no admin. **O Tracker
-é o gatilho de publicação, não um editor de artigo.**
+é virar uma chave só: `ativo = true`. O texto continua sendo editado no admin.
+**O Tracker é o gatilho de publicação, não um editor de artigo.**
+
+**A data do post nunca é tocada pelo Tracker.** Se o artigo tem data marcada no
+admin, ela é respeitada. Se não tem, ele vai ao ar **sem data**, do jeito que
+está. Publicar não é o mesmo que datar: a data é decisão editorial, tomada no
+admin, e o Tracker preencher uma por conta própria (a de hoje, ou a do
+agendamento) mudaria a cara do artigo no blog sem ninguém ter pedido. Por isso
+o modal mostra a data atual do artigo antes de você confirmar, ou avisa que ele
+não tem nenhuma.
 
 **O elo é o campo Referência.** O slug sai do link do post guardado ali
 (`post.html?slug=...`), que já é como os cards de artigo são preenchidos. Antes
