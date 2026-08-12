@@ -86,7 +86,7 @@ function aggregateMetrics(arr) {
 }
 
 /* ── Hook: dados reais do Supabase ──────────────────────────────*/
-function useTrafficData() {
+function useTrafficData(mostrarDesativados) {
   const [trafficData, setTrafficData] = useState([]);
   const [loading, setLoading]         = useState(true);
   const [tick, setTick]               = useState(0);
@@ -98,7 +98,7 @@ function useTrafficData() {
 
       const ADS_NUM_RE = /ADS\s*0*(\d+)/i;
 
-      const [{ data: insights, error: e1 }, { data: adsList, error: e2 }] = await Promise.all([
+      const queries = [
         window.db.from('insights_cache')
           .select('meta_ad_id,meta_ad_name,meta_campaign_id,meta_campaign_name,meta_adset_id,meta_adset_name,periodo,gasto,cpa,compras,roas,cpm,ctr_unico,impressoes,frequencia,connect_rate,link_clicks,landing_page_views,initiate_checkout,hook_rate')
           .in('periodo', ['maximum','7d','5d','3d','hoje']),
@@ -106,7 +106,22 @@ function useTrafficData() {
           .select('numero,titulo,status,meta_ad_id,media_drive_url,media_files,meta_ad_url,media_tipo,thumb_url,media_preview_url')
           .eq('status', 'ativo')
           .not('meta_ad_id', 'is', null),
-      ]);
+      ];
+      // Anúncios desativados (arquivados, campeões etc): só busca quando o
+      // botão "Mostrar desativados" está ligado — é uma tabela pequena, mas
+      // não tem por que trazer isso em todo carregamento normal da tela.
+      if (mostrarDesativados) {
+        queries.push(
+          window.db.from('ads')
+            .select('numero,titulo,status,meta_ad_id,media_drive_url,media_files,meta_ad_url,media_tipo,thumb_url,media_preview_url')
+            .neq('status', 'ativo')
+            .not('meta_ad_id', 'is', null)
+        );
+      }
+
+      const [{ data: insights, error: e1 }, { data: adsList, error: e2 }, inativosResp] = await Promise.all(queries);
+      const adsListInativos = inativosResp?.data || [];
+      if (inativosResp?.error) console.error('[Tráfego] ads (inativos):', inativosResp.error);
 
       if (e1) console.error('[Tráfego] insights_cache:', e1);
       if (e2) console.error('[Tráfego] ads:', e2);
@@ -115,6 +130,14 @@ function useTrafficData() {
       const adsMap  = Object.fromEntries((adsList||[]).map(a => [a.meta_ad_id, a]));
       const numMap  = Object.fromEntries((adsList||[]).map(a => [a.numero, a]));
       const activoNums = new Set((adsList||[]).map(a => a.numero));
+
+      // Mesmos mapas, mas incluindo os desativados — usados só na 2ª passada
+      // (inclusão de inativos dentro de campanha já ativa) e na montagem final
+      // de cada linha, pra achar o `info` de um anúncio seja ele ativo ou não.
+      const adsMapInativo = Object.fromEntries(adsListInativos.map(a => [a.meta_ad_id, a]));
+      const numMapInativo = Object.fromEntries(adsListInativos.map(a => [a.numero, a]));
+      const adsMapAll = { ...adsMapInativo, ...adsMap };
+      const numMapAll = { ...numMapInativo, ...numMap };
 
       // Agrupa rows por meta_ad_id → periodo, para saber quais tiveram gasto recente
       const rowsByAid = {};
@@ -176,13 +199,52 @@ function useTrafficData() {
         camps[cid].adsets[asid].ads[aid][row.periodo] = row;
       }
 
+      // 2ª passada, só quando "Mostrar desativados" está ligado: inclui
+      // conjuntos e anúncios desativados, mas SOMENTE dentro de campanhas que
+      // já entraram na 1ª passada (têm pelo menos 1 anúncio ativo). Uma
+      // campanha 100% desativada continua fora — "aparecem apenas campanhas
+      // ativas" é a regra combinada com o Felipe em 2026-08-13.
+      if (mostrarDesativados) {
+        const activeCampaignIds = new Set(Object.keys(camps));
+        for (const row of insights||[]) {
+          const aid = row.meta_ad_id;
+          if (activeAids.has(aid)) continue; // já entrou na 1ª passada
+          const cid = row.meta_campaign_id || 'sem-campanha';
+          if (!activeCampaignIds.has(cid)) continue; // campanha inteira desativada, fica de fora
+
+          const nome = row.meta_ad_name || '';
+          let info = adsMapInativo[aid];
+          if (!info) {
+            const m = ADS_NUM_RE.exec(nome);
+            if (m) info = numMapInativo[parseInt(m[1])];
+          }
+          if (!info) continue; // não é um anúncio nosso (nem ativo nem no arquivo de inativos)
+
+          const asid = row.meta_adset_id || 'sem-conjunto';
+          if (!camps[cid].adsets[asid]) {
+            camps[cid].adsets[asid] = {
+              id:asid, name: row.meta_adset_name || `Conjunto ${asid.slice(-6)}`, status:'active', ads:{},
+            };
+          }
+          if (!camps[cid].adsets[asid].ads[aid]) camps[cid].adsets[asid].ads[aid] = {};
+          camps[cid].adsets[asid].ads[aid][row.periodo] = row;
+        }
+      }
+
       const result = Object.values(camps).map(c => {
         const adsets = Object.values(c.adsets).map(as => {
           const ads = Object.entries(as.ads).map(([aid, periods]) => {
             const nome = (periods['maximum'] || Object.values(periods)[0])?.meta_ad_name || '';
-            let info = adsMap[aid];
-            if (!info) { const m = ADS_NUM_RE.exec(nome); if (m) info = numMap[parseInt(m[1])]; }
+            // Mapa combinado (ativo + inativo): um anúncio desativado só chega
+            // aqui se `mostrarDesativados` estiver ligado (2ª passada acima),
+            // então adsMapAll/numMapAll acham o `info` dele mesmo fora de
+            // adsMap/numMap (que continuam só-ativos, usados no resto do app).
+            let info = adsMapAll[aid];
+            if (!info) { const m = ADS_NUM_RE.exec(nome); if (m) info = numMapAll[parseInt(m[1])]; }
             const files = (() => { try { return Array.isArray(info?.media_files) ? info.media_files : (info?.media_files ? JSON.parse(info.media_files) : []); } catch { return []; } })();
+            // Desativado = tem um `info` (é nosso) mas o status dele não é
+            // 'ativo'. Vira somente-visualização na linha (ver TrafficRow).
+            const inactive = !!info && info.status !== 'ativo';
             return {
               id:      `ads-${info?.numero||aid.slice(-6)}`,
               num:     info?.numero ? String(info.numero).padStart(3,'0') : '???',
@@ -193,6 +255,7 @@ function useTrafficData() {
               adsetName: as.name,
               name:    info?.titulo || `Ad ${aid.slice(-6)}`,
               status:  info?.status || 'active',
+              inactive,
               thumb:   bestThumb(info?.thumb_url, files, info?.media_drive_url),
               files,
               mediaTipo: info?.media_tipo || null,
@@ -207,7 +270,11 @@ function useTrafficData() {
           });
           // Ordenar ads por CPA 3d crescente dentro do conjunto
           ads.sort((a, b) => (a.d3 && a.d3.cpa != null ? a.d3.cpa : Infinity) - (b.d3 && b.d3.cpa != null ? b.d3.cpa : Infinity));
-          return { ...as, ads,
+          // Conjunto inteiro desativado: só quando TODOS os seus anúncios
+          // exibidos são inativos (se tiver 1 ativo, o conjunto continua
+          // "vivo", só aquele anúncio específico fica apagado).
+          const adsetInactive = ads.length > 0 && ads.every(a => a.inactive);
+          return { ...as, ads, inactive: adsetInactive,
             hist: aggregateMetrics(ads.map(a => a.hist)),
             d7:   aggregateMetrics(ads.map(a => a.d7)),
             d5:   aggregateMetrics(ads.map(a => a.d5)),
@@ -232,7 +299,7 @@ function useTrafficData() {
       }
     }
     load();
-  }, [tick]);
+  }, [tick, mostrarDesativados]);
 
   return { trafficData, loading, reload: () => setTick(t => t + 1) };
 }
@@ -528,6 +595,13 @@ function TrafficRow({ row, depth=0, period, viewMode='periodo', metricCol, onCel
   const isAd    = depth === 2;
   const hasSub  = !isAd && (row.adsets||row.ads||[]).length > 0;
   const isPaused= pausedIds.includes(row.id) || row.status === 'paused';
+  // Desativado (arquivado/campeão fora do ar, ou conjunto 100% assim):
+  // veio da "2ª passada" do hook, só existe na tela quando o botão "Mostrar
+  // desativados" está ligado. Diferente de isPaused (que é ação NOSSA, feita
+  // agora, via botão Pausar) — aqui é um anúncio que já estava fora do ar
+  // antes mesmo de abrir a tela, então não tem ação nenhuma disponível, só
+  // olhar a métrica histórica.
+  const isInactive = !!row.inactive;
   const myRules = specificRules.filter(re => re.targetId === row.id);
   const isFocused = focusIds.has(row.id);
   const faded     = focusIds.size > 0 && !isFocused;
@@ -535,7 +609,7 @@ function TrafficRow({ row, depth=0, period, viewMode='periodo', metricCol, onCel
   const PKEY = { hoje:'hoje', '3d':'d3', '5d':'d5', '7d':'d7', maximum:'hist' };
   const m = row[PKEY[period] || 'd3'] || null;
 
-  const baseBg  = isPaused ? 'rgba(248,113,113,.03)' : 'transparent';
+  const baseBg  = (isPaused || isInactive) ? 'rgba(248,113,113,.03)' : 'transparent';
   const focusBg = isFocused ? 'rgba(234,170,65,.06)' : baseBg;
   const adCpaColor = isAd && m?.cpa != null
     ? cpaCol(m.cpa) : null;
@@ -544,7 +618,7 @@ function TrafficRow({ row, depth=0, period, viewMode='periodo', metricCol, onCel
     <>
       <tr style={{ borderBottom:'1px solid rgba(255,255,255,.04)',
         background: focusBg,
-        opacity: isPaused ? 0.55 : faded ? 0.3 : 1,
+        opacity: isInactive ? 0.4 : isPaused ? 0.55 : faded ? 0.3 : 1,
         transition:'background 120ms, opacity 150ms',
         outline: isFocused ? '1px solid rgba(234,170,65,.3)' : 'none' }}
         onMouseEnter={e => { if (!isPaused && !faded) e.currentTarget.style.background=isFocused?'rgba(234,170,65,.09)':'rgba(255,255,255,.03)'; e.currentTarget.querySelectorAll('.pause-direct-btn').forEach(b => b.style.opacity='1'); }}
@@ -629,8 +703,9 @@ function TrafficRow({ row, depth=0, period, viewMode='periodo', metricCol, onCel
             </span>
 
 
-            {/* + Regra (campanha, conjunto ou anúncio) */}
-            {onAddRule && (
+            {/* + Regra (campanha, conjunto ou anúncio) — some em linha desativada,
+                que é só visualização, sem ação possível. */}
+            {onAddRule && !isInactive && (
               <button onClick={e => { e.stopPropagation(); onAddRule({ id:row.id, scope: depth===0?'campaign':depth===1?'adset':'ad' }); }}
                 title={depth===0?'Adicionar regra na campanha':depth===1?'Adicionar regra no conjunto':'Adicionar regra no anúncio'}
                 style={{ display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0,
@@ -643,8 +718,8 @@ function TrafficRow({ row, depth=0, period, viewMode='periodo', metricCol, onCel
               </button>
             )}
 
-            {/* Sino de alertas */}
-            {isAd && (adAlerts?.[row.id]?.length > 0 || pausingIds?.has(row.id)) && (() => {
+            {/* Sino de alertas — não dispara pra anúncio já desativado */}
+            {isAd && !isInactive && (adAlerts?.[row.id]?.length > 0 || pausingIds?.has(row.id)) && (() => {
               const isPausing = pausingIds?.has(row.id);
               const ps = adAlerts?.[row.id] || [];
               const hasDanger = ps.some(p => RULE_SV[p.regra] === 'danger');
@@ -663,8 +738,8 @@ function TrafficRow({ row, depth=0, period, viewMode='periodo', metricCol, onCel
               );
             })()}
 
-            {/* Botão pausar direto — visível em qualquer linha ativa */}
-            {!isPaused && onPauseDirect && (
+            {/* Botão pausar direto — visível em qualquer linha ativa (desativada não tem o que pausar) */}
+            {!isPaused && !isInactive && onPauseDirect && (
               <button
                 onClick={e => { e.stopPropagation(); onPauseDirect(row, depth); }}
                 title="Pausar no Meta"
@@ -681,7 +756,8 @@ function TrafficRow({ row, depth=0, period, viewMode='periodo', metricCol, onCel
               </button>
             )}
 
-            {isPaused && <Badge tone="warning">Pausado</Badge>}
+            {isInactive && <Badge tone="default">Desativado</Badge>}
+            {!isInactive && isPaused && <Badge tone="warning">Pausado</Badge>}
             {myRules.map(re => (
               <span key={re.id} style={{ padding:'1px 6px', borderRadius:999, fontSize:9, flexShrink:0,
                 fontFamily:'Roboto,sans-serif', fontWeight:900, letterSpacing:'0.06em',
@@ -2021,7 +2097,8 @@ function SubstituirModal({ adNum, defaultAdsetId, defaultAdsetName, defaultCampI
 
 /* ── TrafficScreen ──────────────────────────────────────────────*/
 function TrafficScreen() {
-  const { trafficData, loading, reload }   = useTrafficData();
+  const [mostrarDesativados, setMostrarDesativados] = useState(false);
+  const { trafficData, loading, reload }   = useTrafficData(mostrarDesativados);
   const { alerts, setAlerts, reloadAlerts } = useAlertas();
   const [alertActions, setAlertActions]    = useState({});
   const [globalRules, setGlobalRules]      = useState(() => {
@@ -2357,6 +2434,23 @@ function TrafficScreen() {
               })}
             </div>
           )}
+
+          {/* Mostrar desativados: revela, dentro das campanhas já ativas, os
+              conjuntos e anúncios desativados (arquivados, campeões fora do
+              ar) — só visualização, sem botão de ação, e entram na métrica
+              agregada do conjunto/campanha. Campanha 100% desativada continua
+              fora da lista, essa regra não muda. */}
+          <button onClick={() => setMostrarDesativados(v => !v)}
+            title="Mostra, dentro das campanhas ativas, os conjuntos e anúncios já desativados (só visualização)"
+            style={{ display:'flex', alignItems:'center', gap:6, padding:'6px 14px', borderRadius:8,
+              cursor:'pointer', fontSize:12.5, fontFamily:'Roboto,sans-serif', fontWeight:700,
+              letterSpacing:'0.02em', transition:'all 150ms',
+              border: mostrarDesativados ? '1px solid rgba(234,170,65,.5)' : '1px solid var(--app-border)',
+              background: mostrarDesativados ? 'rgba(234,170,65,.12)' : 'rgba(255,255,255,.04)',
+              color: mostrarDesativados ? 'var(--fmn-gold)' : 'var(--text-2)' }}>
+            <LucideIcon icon={mostrarDesativados ? 'eye' : 'eye-off'} size={13}/>
+            Mostrar desativados
+          </button>
 
           {/* Modo métrica: chips de métrica */}
           {viewMode === 'metrica' && (
