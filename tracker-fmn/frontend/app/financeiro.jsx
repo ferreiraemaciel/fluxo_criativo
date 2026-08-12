@@ -74,7 +74,7 @@ function useVendasData(from, to) {
       setLoading(true);
       const { data } = await window.db
         .from('vendas')
-        .select('hotmart_transaction_id,produto_nome,valor_bruto,valor_liquido,status,created_at,utm_source')
+        .select('hotmart_transaction_id,produto_nome,valor_bruto,preco_oferta,valor_liquido,status,created_at,utm_source')
         .gte('created_at', from + 'T00:00:00')
         .lte('created_at', to + 'T23:59:59')
         .order('created_at', { ascending: false });
@@ -314,10 +314,10 @@ function ExpensesTab({ dateRange }) {
 
   const revenues = vendas.filter(v => v.status === 'aprovada').map(v => ({
     id: v.hotmart_transaction_id, date: v.created_at?.slice(0,10),
-    type: 'Receita', category: 'Venda', desc: v.produto_nome, value: Number(v.valor_bruto),
+    type: 'Receita', category: 'Venda', desc: v.produto_nome, value: Number(v.preco_oferta ?? v.valor_bruto),
   })).concat(vendas.filter(v => v.status === 'reembolsada').map(v => ({
     id: v.hotmart_transaction_id + '_r', date: v.created_at?.slice(0,10),
-    type: 'Receita', category: 'Reembolso', desc: v.produto_nome, value: -Number(v.valor_bruto),
+    type: 'Receita', category: 'Reembolso', desc: v.produto_nome, value: -Number(v.preco_oferta ?? v.valor_bruto),
   })));
 
   // Linha automática: vem da Meta, não é digitada e não é editável. Editar
