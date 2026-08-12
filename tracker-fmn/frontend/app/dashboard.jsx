@@ -2195,8 +2195,14 @@ function DashboardScreen({ period, onPeriodChange, dateRange, onDateRangeChange,
               padding:'2px 8px', borderRadius:99 }}>atualizando...</span>
           )}
         </div>
-        <DateRangePicker period={period} onPeriodChange={onPeriodChange}
-          dateRange={dateRange} onDateRangeChange={onDateRangeChange}/>
+        <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+          <DateRangePicker period={period} onPeriodChange={onPeriodChange}
+            dateRange={dateRange} onDateRangeChange={onDateRangeChange}/>
+          {window.RelatorioButton && (
+            <window.RelatorioButton rangeFrom={rangeFrom} rangeTo={rangeTo}
+              dados={{ data, chartDays, weeklySales, periodHeatmap, salesByProduct: data?.salesByProduct, salesBySource: data?.salesBySource }}/>
+          )}
+        </div>
       </div>
 
       <div style={{ flex:1, overflowY:'auto', padding:'18px 24px', display:'flex',
@@ -2365,4 +2371,10 @@ function EmptyState({ icon, label }) {
   );
 }
 
-window.DashboardScreen = DashboardScreen;
+// Peças reaproveitadas pelo relatório em PDF (relatorio.jsx): exportar em vez
+// de duplicar garante que o número impresso é sempre o mesmo que está na
+// tela, porque é literalmente o mesmo componente.
+Object.assign(window, {
+  DashboardScreen, BreakdownTable, FlowFunnel, WeeklySalesChart, SalesByPeriod,
+  SalesList, CircularProgress, periodToDates,
+});
