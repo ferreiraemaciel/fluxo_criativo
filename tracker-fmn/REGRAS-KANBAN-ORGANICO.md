@@ -127,6 +127,32 @@ outros. Se falhar, volta pra Feito com o motivo no card.
 As credenciais dele são segredo do worker `organico-media`
 (`FMN_SUPABASE_URL`, `FMN_SUPABASE_KEY`), nunca do frontend.
 
+## "Falhou ao publicar" nem sempre significa que falhou de verdade
+
+> Descoberto com o ORG 033, em 12/08/2026.
+
+O robô grava o sucesso no Meta e SÓ DEPOIS faz a limpeza do arquivo original
+no Drive/R2. Até 12/08/2026, a ordem era invertida num ponto: publicava no
+Meta, limpava o R2, e só então gravava o card como publicado. Um bug nesse
+último passo (variável errada no código, sem relação com o Meta) fez o card
+voltar pra "Feito" com uma mensagem de erro, mesmo o Reels já estando no ar
+havia poucos segundos.
+
+**A pista que expôs o problema:** o arquivo original já tinha sumido do R2,
+e a limpeza só roda depois de publicar de verdade. Card "falhou" com o
+arquivo original já apagado é sinal de que a publicação pode ter dado certo
+e só o registro final quebrou.
+
+**Corrigido:** o card agora é marcado como publicado ANTES de qualquer
+limpeza. Se algo falhar depois disso (por exemplo, ao apagar o arquivo do
+R2), o card já está correto — sobra só um arquivo não apagado, não um card
+mentindo.
+
+**Se acontecer de novo um "falhou" que parecer estranho:** antes de mandar
+publicar de novo, confira no Instagram (`GET /{ig_user_id}/media`, comparar
+legenda e horário) se o post já não está no ar. Republicar sem checar cria
+post duplicado.
+
 ## Legenda: 2.200 caracteres é limite, não recomendação
 
 O Instagram recusa a publicação com legenda acima de **2.200 caracteres**

@@ -665,21 +665,36 @@ async function runScheduledPublish(env) {
         const ready = await waitReelsReady(graph, creationId, token);
         if (!ready) throw new Error('Vídeo não terminou de processar a tempo — tenta de novo no próximo ciclo.');
 
-        await publicarContainer(graph, igId, token, creationId, 'o Reels');
+        const metaMediaId = await publicarContainer(graph, igId, token, creationId, 'o Reels');
 
-        const key = origKeyFromUrl(videoUrl);
-        const keysToDelete = collectOrigKeys([], [...origKeys, ...(key ? [key] : [])]);
-        if (keysToDelete.length) await Promise.all(keysToDelete.map(k => env.BUCKET.delete(k)));
-
+        // O Meta já confirmou a publicação: grava isso no banco AGORA, antes
+        // de qualquer outro passo. Um erro daqui pra frente (ex: falha ao
+        // apagar do R2) não pode mais fazer o card mentir dizendo "falhou"
+        // com o post já no ar — foi exatamente isso que aconteceu com o
+        // ORG 033 em 12/08/2026: o Reels publicou de verdade, um bug na
+        // linha seguinte derrubou o card pra "Feito" com erro, e só não virou
+        // post duplicado porque conferimos no Instagram antes de republicar.
         await fetch(`${sbUrl}/rest/v1/conteudo_organico?id=eq.${post.id}`, {
           method: 'PATCH',
           headers: { 'apikey': sbKey, 'Authorization': `Bearer ${sbKey}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
           body: JSON.stringify({
             status: 'Arquivado', published_at: post.scheduled_at || new Date().toISOString(),
-            scheduled_at: null, scheduled_media: null, meta_media_id: pubD.id,
+            scheduled_at: null, scheduled_media: null, meta_media_id: metaMediaId,
+            erro_publicacao: null, erro_publicacao_em: null,
           }),
         });
-        console.log(`[cron] Reels publicado: ${post.id} → ${pubD.id}`);
+        console.log(`[cron] Reels publicado: ${post.id} → ${metaMediaId}`);
+
+        // Limpeza do R2: best-effort, nunca derruba o card. Já publicou, já
+        // está gravado; sobrar um arquivo original no R2 é desperdício de
+        // espaço, não um card errado.
+        try {
+          const key = origKeyFromUrl(videoUrl);
+          const keysToDelete = collectOrigKeys([], [...origKeys, ...(key ? [key] : [])]);
+          if (keysToDelete.length) await Promise.all(keysToDelete.map(k => env.BUCKET.delete(k)));
+        } catch (errLimpeza) {
+          console.error(`[cron] Reels ${post.id} publicado, mas falhou ao limpar R2:`, errLimpeza.message);
+        }
         continue;
       }
 
@@ -708,15 +723,11 @@ async function runScheduledPublish(env) {
       }
 
       // Publica
-      await publicarContainer(graph, igId, token, creationId);
+      const metaMediaId = await publicarContainer(graph, igId, token, creationId);
 
-      // Deleta originais do R2 (deriva a key da URL também, cobre imagens inseridas fora do fluxo normal)
-      const keysToDelete = collectOrigKeys(imageUrls, origKeys);
-      if (keysToDelete.length) {
-        await Promise.all(keysToDelete.map(k => env.BUCKET.delete(k)));
-      }
-
-      // Atualiza status no Supabase
+      // O Meta já confirmou: grava no banco ANTES de mexer no R2. Mesma
+      // lógica do Reels acima — um erro na limpeza não pode mais fazer o
+      // card mentir "falhou" com o post já publicado (ver ORG 033, 12/08).
       await fetch(`${sbUrl}/rest/v1/conteudo_organico?id=eq.${post.id}`, {
         method: 'PATCH',
         headers: { 'apikey': sbKey, 'Authorization': `Bearer ${sbKey}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
@@ -729,11 +740,22 @@ async function runScheduledPublish(env) {
           erro_publicacao: null,
           erro_publicacao_em: null,
           // Guarda o id do post no Meta pra casar com as métricas orgânicas depois.
-          meta_media_id: pubD.id,
+          meta_media_id: metaMediaId,
         }),
       });
 
-      console.log(`[cron] Publicado: ${post.id} → ${pubD.id}`);
+      // Deleta originais do R2: best-effort, depois de já ter gravado o
+      // sucesso. Falhar aqui é desperdício de espaço, não card errado.
+      try {
+        const keysToDelete = collectOrigKeys(imageUrls, origKeys);
+        if (keysToDelete.length) {
+          await Promise.all(keysToDelete.map(k => env.BUCKET.delete(k)));
+        }
+      } catch (errLimpeza) {
+        console.error(`[cron] ${post.id} publicado, mas falhou ao limpar R2:`, errLimpeza.message);
+      }
+
+      console.log(`[cron] Publicado: ${post.id} → ${metaMediaId}`);
 
     } catch (err) {
       console.error(`[cron] Erro ao publicar ${post.id}:`, err.message);
