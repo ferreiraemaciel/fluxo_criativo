@@ -147,54 +147,11 @@ const TONE_LINHA = { Venda: 'success', Reembolso: 'danger' };
 const fmt    = window.fmtBRL;
 const fmtDec = window.fmtBRL;
 
-/* ── Cálculo proporcional de despesa no período selecionado ──────
-   - unico    → aparece apenas se a data cai dentro do range
-   - mensal   → valor ÷ dias_do_mês × dias_sobrepostos (mês a mês)
-   - anual    → valor ÷ dias_do_ano × dias_sobrepostos (ano a ano)
-*/
-function calcularValorNoPeriodo(despesa, from, to) {
-  const dIni = new Date(from + 'T00:00:00');
-  const dFim = new Date(to   + 'T00:00:00');
-
-  if (despesa.tipo === 'unico') {
-    const dEntry = new Date(despesa.data + 'T00:00:00');
-    return (dEntry >= dIni && dEntry <= dFim) ? Number(despesa.valor) : 0;
-  }
-
-  const recorrencia = despesa.recorrencia || 'mensal';
-
-  if (recorrencia === 'mensal') {
-    let total = 0;
-    let cur = new Date(dIni.getFullYear(), dIni.getMonth(), 1);
-    while (cur <= dFim) {
-      const mesIni = new Date(cur.getFullYear(), cur.getMonth(), 1);
-      const mesFim = new Date(cur.getFullYear(), cur.getMonth() + 1, 0);
-      const sobIni = dIni > mesIni ? dIni : mesIni;
-      const sobFim = dFim < mesFim ? dFim : mesFim;
-      const dias = Math.max(0, Math.round((sobFim - sobIni) / 86400000) + 1);
-      const diasMes = mesFim.getDate();
-      total += (Number(despesa.valor) / diasMes) * dias;
-      cur.setMonth(cur.getMonth() + 1);
-    }
-    return total;
-  }
-
-  if (recorrencia === 'anual') {
-    let total = 0;
-    for (let y = dIni.getFullYear(); y <= dFim.getFullYear(); y++) {
-      const anoIni = new Date(y, 0, 1);
-      const anoFim = new Date(y, 11, 31);
-      const sobIni = dIni > anoIni ? dIni : anoIni;
-      const sobFim = dFim < anoFim ? dFim : anoFim;
-      const dias = Math.max(0, Math.round((sobFim - sobIni) / 86400000) + 1);
-      const diasAno = (y % 4 === 0 && (y % 100 !== 0 || y % 400 === 0)) ? 366 : 365;
-      total += (Number(despesa.valor) / diasAno) * dias;
-    }
-    return total;
-  }
-
-  return Number(despesa.valor);
-}
+/* O rateio de despesa no período mora em financas.js, compartilhado com o
+   Dashboard. Estava copiado inteiro nos dois arquivos, e bastava mudar num
+   só pra as duas telas passarem a mostrar despesas diferentes pro mesmo mês,
+   sem erro nenhum aparecer. */
+const calcularValorNoPeriodo = (d, from, to) => window.FMNFinancas.rateioDespesa(d, from, to);
 
 /* ── AddExpenseModal ─────────────────────────────────────────────*/
 function AddExpenseModal({ onClose, onSaved }) {
@@ -309,7 +266,35 @@ function ExpensesTab({ dateRange }) {
   const { despesas: rawDespesas, loading: loadingDesp, reload: reloadDesp } = useDespesasData();
   const { vendas, loading: loadingVen } = useVendasData(dateRange.from, dateRange.to);
 
-  const expenses = rawDespesas.map(d => {
+  // Tráfego e alíquotas: o maior custo do negócio não era digitado por
+  // ninguém, então não aparecia aqui. O "Saldo Líquido" ignorava R$ 29 mil
+  // de anúncios contra R$ 5 mil de despesas cadastradas.
+  const [gasto, setGasto]     = useState(0);
+  const [notaPct, setNotaPct] = useState(6);
+  const [metaPct, setMetaPct] = useState(12.15);
+  useEffect(() => {
+    if (!window.db) return;
+    window.db.from('config').select('chave,valor').then(({ data }) => {
+      const m = Object.fromEntries((data||[]).map(c => [c.chave, Number(c.valor)]));
+      if (m.imposto_nota_pct != null) setNotaPct(m.imposto_nota_pct);
+      if (m.imposto_meta_pct != null) setMetaPct(m.imposto_meta_pct);
+    });
+  }, []);
+  useEffect(() => {
+    if (!window.db) return;
+    let vivo = true;
+    window.db.from('gasto_diario').select('gasto')
+      .gte('data', dateRange.from).lte('data', dateRange.to)
+      .then(({ data }) => { if (vivo) setGasto((data||[]).reduce((s,r)=>s+Number(r.gasto),0)); });
+    return () => { vivo = false; };
+  }, [dateRange.from, dateRange.to]);
+
+  const resultado = window.FMNFinancas.calcularResultado({
+    vendas, despesas: rawDespesas, gasto, notaPct, metaPct,
+    from: dateRange.from, to: dateRange.to,
+  });
+
+  let expenses = rawDespesas.map(d => {
     const valorPeriodo = calcularValorNoPeriodo(d, dateRange.from, dateRange.to);
     const recorrencia = d.recorrencia || 'mensal';
     const labelRef = d.tipo === 'unico' ? 'único'
@@ -332,6 +317,20 @@ function ExpensesTab({ dateRange }) {
     type: 'Receita', category: 'Reembolso', desc: v.produto_nome, value: -Number(v.valor_bruto),
   })));
 
+  // Linha automática: vem da Meta, não é digitada e não é editável. Editar
+  // aqui não mudaria o gasto real, só criaria uma segunda verdade.
+  const linhaTrafego = gasto > 0 ? [{
+    id: '__trafego__', date: dateRange.to, type: 'Automático', category: 'trafego',
+    desc: 'Anúncios no Meta (importado da conta, não editável)',
+    value: gasto, valorRef: 'gasto do período', automatica: true,
+  }] : [];
+  const linhaImpostoMeta = gasto > 0 ? [{
+    id: '__imposto_meta__', date: dateRange.to, type: 'Automático', category: 'trafego',
+    desc: `Imposto sobre anúncios (${metaPct}% do gasto no Meta)`,
+    value: resultado.impostoMeta, valorRef: 'calculado', automatica: true,
+  }] : [];
+  expenses = [...linhaTrafego, ...linhaImpostoMeta, ...expenses];
+
   const totalExp = expenses.reduce((a,r)=>a+r.value,0);
   const totalRev = revenues.filter(r=>r.value>0).reduce((a,r)=>a+r.value,0);
   const totalRef = Math.abs(revenues.filter(r=>r.value<0).reduce((a,r)=>a+r.value,0));
@@ -341,16 +340,19 @@ function ExpensesTab({ dateRange }) {
     : [...revenues,...expenses.map(e=>({...e,value:-e.value}))]
         .sort((a,b)=>new Date(b.date||'') - new Date(a.date||''));
 
-  const netBalance = totalRev - totalRef - totalExp;
+  // O saldo agora é o LUCRO da fonte única: líquido menos impostos, tráfego
+  // e despesas. Antes era receita bruta menos despesas cadastradas, que não
+  // descontava imposto nem anúncio e por isso nunca batia com o Dashboard.
+  const netBalance = resultado.lucro;
 
   return (
     <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
       {/* KPI Row */}
       <div style={{ display:'flex', gap:12 }}>
-        <CardKPI label="Receita Bruta" value={fmt(totalRev)} icon="trending-up" accent/>
-        <CardKPI label="Total Despesas" value={fmt(totalExp)} icon="trending-down"/>
-        <CardKPI label="Reembolsos" value={fmt(totalRef)} icon="rotate-ccw"/>
-        <CardKPI label="Saldo Líquido" value={fmt(netBalance)} icon="wallet"/>
+        <CardKPI label="Faturamento" value={fmt(resultado.bruto)} icon="trending-up" accent/>
+        <CardKPI label="Custo Total" value={fmt(resultado.custoTotal)} icon="trending-down"/>
+        <CardKPI label="Lucro" value={fmt(resultado.lucro)} icon="wallet"/>
+        <CardKPI label="Margem" value={`${resultado.margem.toFixed(1)}%`} icon="percent"/>
       </div>
 
       {/* View toggle + Add button */}
@@ -434,7 +436,7 @@ function FinTableRow({ row, isLast, onDelete }) {
       <td style={{ padding: '11px 16px', fontSize: 12.5, fontFamily: 'var(--font-body)',
         color: 'var(--text-2)', whiteSpace: 'nowrap' }}>{row.date}</td>
       <td style={{ padding: '11px 16px' }}>
-        <Badge tone={row.type === 'Mensal' ? 'info' : row.type === 'Anual' ? 'teal' : 'warning'}>{row.type}</Badge>
+        <Badge tone={row.automatica ? 'gold' : row.type === 'Mensal' ? 'info' : row.type === 'Anual' ? 'teal' : 'warning'}>{row.type}</Badge>
       </td>
       <td style={{ padding: '11px 16px' }}>
         <Badge tone={TONE_LINHA[row.category] || categoriaInfo(row.category).tone}>{TONE_LINHA[row.category] ? row.category : categoriaInfo(row.category).label}</Badge>
@@ -453,7 +455,7 @@ function FinTableRow({ row, isLast, onDelete }) {
         )}
       </td>
       <td style={{ padding: '11px 16px', textAlign: 'right' }}>
-        {hov && (
+        {hov && !row.automatica && (
           <button onClick={onDelete} style={{
             width: 26, height: 26, borderRadius: 6, display: 'flex', alignItems: 'center',
             justifyContent: 'center', cursor: 'pointer', background: 'rgba(248,113,113,.1)',

@@ -109,56 +109,43 @@ function useDashboardData(period, dateRange) {
         const fat    = (vendas || []).reduce((s, v) => s + Number(v.preco_oferta || v.valor_bruto), 0);
         const reimb  = (reembolsos || []).reduce((s, v) => s + Number(v.valor_bruto), 0);
 
-        // rateio fiel: mensal ÷ dias do mês, anual ÷ dias do ano, único só no dia exato
-        function calcDespPeriodo(lista, fromStr, toStr) {
-          const dIni = new Date(fromStr + 'T00:00:00');
-          const dFim = new Date(toStr   + 'T00:00:00');
-          let total = 0;
-          for (const d of (lista || [])) {
-            const rec = d.recorrencia || 'mensal';
-            const val = Number(d.valor);
-            if (d.tipo === 'unico') {
-              const dEntry = new Date((d.data || fromStr) + 'T00:00:00');
-              if (dEntry >= dIni && dEntry <= dFim) total += val;
-            } else if (rec === 'mensal') {
-              let cur = new Date(dIni.getFullYear(), dIni.getMonth(), 1);
-              while (cur <= dFim) {
-                const mIni = new Date(cur.getFullYear(), cur.getMonth(), 1);
-                const mFim = new Date(cur.getFullYear(), cur.getMonth() + 1, 0);
-                const sIni = dIni > mIni ? dIni : mIni;
-                const sFim = dFim < mFim ? dFim : mFim;
-                const dias = Math.max(0, Math.round((sFim - sIni) / 86400000) + 1);
-                total += (val / mFim.getDate()) * dias;
-                cur.setMonth(cur.getMonth() + 1);
-              }
-            } else if (rec === 'anual') {
-              for (let y = dIni.getFullYear(); y <= dFim.getFullYear(); y++) {
-                const aIni = new Date(y, 0, 1);
-                const aFim = new Date(y, 11, 31);
-                const sIni = dIni > aIni ? dIni : aIni;
-                const sFim = dFim < aFim ? dFim : aFim;
-                const dias = Math.max(0, Math.round((sFim - sIni) / 86400000) + 1);
-                const diasAno = (y % 4 === 0 && (y % 100 !== 0 || y % 400 === 0)) ? 366 : 365;
-                total += (val / diasAno) * dias;
-              }
-            }
-          }
-          return total;
-        }
+        // Rateio de despesa: fonte única em financas.js, a mesma que a aba
+        // Financeiro usa. Estava copiado aqui, e bastava mudar num lado pra
+        // as duas telas divergirem em silêncio.
+        const calcDespPeriodo = (lista, f, t) => window.FMNFinancas.somarDespesas(lista, f, t);
 
         const periodoFrom = period === 'Máximo' ? new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().slice(0,10) : from;
         const periodoTo   = period === 'Máximo' ? new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).toISOString().slice(0,10) : to;
         const desp = calcDespPeriodo(despesas, periodoFrom, periodoTo);
 
-        const impostoMeta    = fat > 0 ? gasto * (metaPct / 100) : 0;
-        const impostoNota    = fat * (notaPct / 100);
-        // Hotmart já descontou sua taxa em valor_liquido — não deduzir de novo
-        const lucro          = fat - impostoMeta - impostoNota - desp - reimb;
-        const margem         = fat > 0 ? (lucro / fat) * 100 : 0;
+        // Fonte única do resultado, a mesma da aba Financeiro. O que mudou:
+        //
+        // 1. O lucro parte do LÍQUIDO. O comentário antigo aqui dizia que a
+        //    taxa da Hotmart já estava descontada, mas o faturamento vinha do
+        //    valor BRUTO, então ela nunca saía da conta. O lucro estava
+        //    inflado em ~11% do faturamento (R$ 621 só em agosto).
+        //
+        // 2. O tráfego passou a ser subtraído. Ele nunca entrou nesta conta:
+        //    o maior custo do negócio ficava de fora do "lucro real".
+        //
+        // 3. Reembolso deixou de ser subtraído. Quando a Hotmart estorna, ela
+        //    troca o status da própria linha da venda, então ela já sai do
+        //    faturamento sozinha. Subtrair de novo descontava duas vezes o
+        //    mesmo reembolso (R$ 1.288 escondidos em junho).
+        const resultado = window.FMNFinancas.calcularResultado({
+          vendas: vendas || [], despesas, gasto, notaPct, metaPct,
+          from: periodoFrom, to: periodoTo,
+        });
+        const impostoMeta = resultado.impostoMeta;
+        const impostoNota = resultado.impostoNota;
+        const liquido     = resultado.liquido;
+        const taxaHotmart = resultado.taxaHotmart;
+        const lucro       = resultado.lucro;
+        const margem      = resultado.margem;
 
         const totalVendasBruto = (vendas || []).length;
-        const roas        = gasto > 0 ? fat / gasto : null;
-        const roi          = (gasto + desp) > 0 ? lucro / (gasto + desp) : null;
+        const roas        = resultado.roas;
+        const roi         = resultado.roi;
         const ticketMedio  = totalVendasBruto > 0 ? fat / totalVendasBruto : null;
 
         // CAC (só cliente novo, ache pela 1ª compra em toda a história) e LTV
@@ -216,11 +203,13 @@ function useDashboardData(period, dateRange) {
 
         /* breakdown — fat já é o líquido Hotmart (sem taxa e sem juros parcelamento) */
         const breakdownRows = [
-          { label: 'Faturamento bruto (preço produto)',  value: fat,  color: 'var(--text-1)', bold: true },
-          { label: `Imposto Meta (${metaPct.toString().replace('.',',')}%)`, value: -impostoMeta, color: 'var(--clr-neg)' },
+          { label: 'Faturamento (base da nota)', value: fat, color: 'var(--text-1)', bold: true },
+          { label: 'Taxa da Hotmart',            value: -taxaHotmart,  color: 'var(--clr-neg)' },
+          { label: 'Recebido na conta',          value: liquido,       color: 'var(--text-2)' },
           { label: `Imposto sobre Nota (${notaPct.toString().replace('.',',')}%)`, value: -impostoNota, color: 'var(--clr-neg)' },
-          { label: 'Despesas recorrentes',       value: -desp,         color: 'var(--clr-neg)' },
-          { label: 'Reembolsos',                 value: -reimb,        color: 'var(--clr-warn)' },
+          { label: 'Anúncios no Meta',           value: -gasto,        color: 'var(--clr-neg)' },
+          { label: `Imposto sobre anúncios (${metaPct.toString().replace('.',',')}%)`, value: -impostoMeta, color: 'var(--clr-neg)' },
+          { label: 'Despesas',                   value: -desp,         color: 'var(--clr-neg)' },
           { label: 'Lucro real',                 value: lucro,         color: 'var(--clr-pos)', bold: true, separator: true },
         ];
 
