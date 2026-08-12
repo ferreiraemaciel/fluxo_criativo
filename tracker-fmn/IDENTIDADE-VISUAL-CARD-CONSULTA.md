@@ -112,10 +112,33 @@ corpo pequeno cai abaixo do contraste mínimo legível.
 
 ---
 
-## Produção
+## Produção: gerada por IA, com prompt travado (regra vigente, 2026-08-12)
 
-**Direto no Canva, sem prompt de IA.** Esse é o formato mais barato dos quatro: monta o template uma
-vez e cada peça nova é trocar o título e os itens. Sem geração, sem tentativa e erro de tipografia.
+> Esta seção substitui a regra anterior de "só Canva", mantida logo abaixo por histórico. Mesmo
+> caminho que a Citação Crua já tinha feito: virou "só Canva" depois de um teste ruim e voltou pra
+> IA quando a spec ficou precisa o bastante pra sustentar o prompt.
+
+**O que muda de uma peça pra outra é só a cor de destaque, o título e os itens.** Fundo, folha,
+hierarquia e posição do arroba são fixos. Não improvisar variação de composição, senão a peça deixa
+de ser reconhecível como do formato.
+
+O prompt de referência está no card do **ORG 056** (os 4 movimentos de segunda-feira), primeira peça
+do formato gerada por IA. Copiar de lá e trocar título, itens, linha de fecho e a cor de destaque.
+
+Três pontos do prompt que **não** podem cair, porque são justamente onde a geração erra:
+
+1. **O título é o maior elemento da peça**, dito explicitamente e em caixa alta no prompt. Sem isso o
+   gerador nivela tudo e a peça vira parágrafo.
+2. **Todos os nomes de critério no mesmo corpo**, dito como regra e com o motivo junto. Sem isso o
+   primeiro item sai maior e os outros parecem rodapé (aconteceu na primeira geração do ORG 058).
+3. **Entrelinha confortável e acentos obrigatórios**, nominalmente nas palavras acentuadas daquele
+   título. Acento em caixa alta é o defeito mais frequente de todos os formatos.
+
+**Quando cair pro Canva.** Se depois de duas tentativas a tipografia continuar saindo errada (título
+trocado, número repetido, hierarquia invertida), montar no Canva pelo passo a passo abaixo em vez de
+insistir. É mais rápido do que brigar com o gerador.
+
+## Alternativa: montar no Canva
 
 Passo a passo:
 1. Canvas 1080x1350px, fundo cinza escuro `#3f3f3f`.
@@ -128,9 +151,11 @@ Passo a passo:
 5. Linha de fecho embaixo, com a consequência em negrito.
 6. `@felipeferreirafotografo` centralizado na base da folha.
 
-**Não gerar por IA.** Foi testado e o resultado divergiu do padrão em tudo: título trocado, números
-sumidos, hierarquia invertida e paleta inventada. Card de Consulta é conteúdo estruturado com
-hierarquia precisa, que é justamente o que gerador de imagem não sustenta.
+> **Histórico:** entre 07/08 e 12/08/2026 esta seção dizia "não gerar por IA", depois de um teste em
+> que o resultado divergiu do padrão em tudo (título trocado, números sumidos, hierarquia invertida,
+> paleta inventada). Aquele teste, porém, foi feito antes de a spec ter hex exato, regra de
+> hierarquia e regra de corpo único dos itens. Com essas três coisas escritas dentro do prompt, a
+> geração passou a ser viável, e a regra vigente é a da seção acima.
 
 ---
 
@@ -139,6 +164,8 @@ hierarquia precisa, que é justamente o que gerador de imagem não sustenta.
 - ORG 058 — Quando a fotografia vira invasão de privacidade (primeira peça do formato, é a
   referência visual: foi ela que definiu o cinza, a folha texturizada e o vermelho com borda roxa)
 - ORG 064 — Condomínio, evento ou drone: a régua é a mesma (variante comparativa)
+- ORG 056 — Fotógrafo: o que fazer na segunda-feira de manhã (primeira peça do formato **gerada por
+  IA**; o prompt dela é a referência pras próximas)
 
 ---
 
@@ -161,3 +188,8 @@ hierarquia precisa, que é justamente o que gerador de imagem não sustenta.
 - 2026-08-07 (mesmo dia): Hex exatos confirmados pelo Felipe, medidos na arte real: fundo `#3f3f3f`
   e destaque `#990000`. Os valores anteriores (`#3A3A3A` e `#A01010`) eram estimativa minha lendo a
   imagem, e estavam próximos mas errados.
+- 2026-08-12: **Produção volta a ser por IA**, com prompt travado, e o Canva passa a ser a
+  alternativa em vez da regra. Motivo: o "não gerar por IA" tinha sido escrito a partir de um teste
+  feito antes de a spec ter hex exato, hierarquia definida e a regra de corpo único dos itens. Com
+  esses três pontos escritos dentro do prompt, a geração se sustenta. Mesmo arco que a Citação Crua
+  já tinha percorrido. Prompt de referência no card do ORG 056.
