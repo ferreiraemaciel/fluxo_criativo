@@ -102,8 +102,11 @@ function useDashboardData(period, dateRange) {
         /* despesas recorrentes do mês */
         const { data: despesas } = await window.db
           .from('despesas')
-          .select('valor, tipo, recorrencia, data')
-          .eq('ativo', true);
+          // Sem filtro de `ativo`: quem decide o período de uma despesa é o
+          // par data/data_fim, não uma chave liga-desliga. Filtrar por `ativo`
+          // apagava a despesa do passado inteiro no instante em que ela era
+          // desligada, e ainda divergia da aba Financeiro, que nunca filtrou.
+          .select('valor, tipo, recorrencia, data, data_fim');
 
         /* calcula KPIs — usa preco_oferta (preço do produto s/ juros do parcelamento = base de NF) */
         const fat    = (vendas || []).reduce((s, v) => s + Number(v.preco_oferta || v.valor_bruto), 0);

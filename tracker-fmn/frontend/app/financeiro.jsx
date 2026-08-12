@@ -96,7 +96,7 @@ function useDespesasData() {
       setLoading(true);
       const { data } = await window.db
         .from('despesas')
-        .select('id,descricao,categoria,tipo,recorrencia,valor,data,ativo,observacoes')
+        .select('id,descricao,categoria,tipo,recorrencia,valor,data,data_fim,ativo,observacoes')
         .order('data', { ascending: false });
       setDespesas(data || []);
       setLoading(false);
@@ -300,12 +300,15 @@ function ExpensesTab({ dateRange }) {
     const labelRef = d.tipo === 'unico' ? 'único'
       : recorrencia === 'anual' ? `/ano: ${fmtDec(Number(d.valor))}`
       : `/mês: ${fmtDec(Number(d.valor))}`;
+    const br = iso => iso ? iso.split('-').reverse().join('/') : null;
     return {
-      id: d.id, date: d.data,
+      id: d.id, date: d.data, dataFim: d.data_fim,
       type: d.tipo === 'recorrente' ? (recorrencia === 'anual' ? 'Anual' : 'Mensal') : 'Único',
       category: d.categoria,
-      desc: d.descricao, value: valorPeriodo, valorRef: labelRef,
+      desc: d.descricao + (d.data_fim ? ` · encerrada em ${br(d.data_fim)}` : ''),
+      value: valorPeriodo, valorRef: labelRef,
       isRecorrente: d.tipo === 'recorrente',
+      encerravel: d.tipo === 'recorrente' && !d.data_fim,
     };
   });
 
@@ -399,6 +402,19 @@ function ExpensesTab({ dateRange }) {
                     if(row.type==='Receita') return; // vendas não deletam daqui
                     await window.db.from('despesas').delete().eq('id', row.id);
                     reloadDesp();
+                  }}
+                  onEncerrar={async ()=>{
+                    // Encerrar é diferente de apagar. Apagar some com a despesa
+                    // do passado inteiro e distorce todos os meses em que ela
+                    // realmente existiu; encerrar só diz até quando ela valeu.
+                    const hoje = new Date().toISOString().slice(0,10);
+                    const q = window.prompt(
+                      `Até que dia "${row.desc}" foi cobrada?\n\nData no formato AAAA-MM-DD. ` +
+                      `Depois dessa data ela para de descontar do lucro, e os meses anteriores ficam como estavam.`,
+                      hoje);
+                    if (!q || !/^\d{4}-\d{2}-\d{2}$/.test(q.trim())) return;
+                    await window.db.from('despesas').update({ data_fim: q.trim() }).eq('id', row.id);
+                    reloadDesp();
                   }}/>
               ))}
             </tbody>
@@ -427,7 +443,7 @@ function ExpensesTab({ dateRange }) {
 }
 
 /* ── FinTableRow ─────────────────────────────────────────────────*/
-function FinTableRow({ row, isLast, onDelete }) {
+function FinTableRow({ row, isLast, onDelete, onEncerrar }) {
   const [hov, setHov] = useState(false);
   return (
     <tr onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
@@ -455,11 +471,23 @@ function FinTableRow({ row, isLast, onDelete }) {
         )}
       </td>
       <td style={{ padding: '11px 16px', textAlign: 'right' }}>
+        {hov && !row.automatica && row.encerravel && (
+          <button onClick={onEncerrar} title="Encerrar: para de cobrar daqui pra frente, sem mexer no passado"
+            style={{
+              height: 26, padding: '0 9px', borderRadius: 6, display: 'inline-flex', alignItems: 'center',
+              gap: 5, cursor: 'pointer', background: 'rgba(251,191,36,.1)', marginRight: 6,
+              border: '1px solid rgba(251,191,36,.25)', color: 'var(--clr-warn)',
+              fontFamily: 'Roboto,sans-serif', fontSize: 11, fontWeight: 700,
+            }}>
+            <LucideIcon icon="calendar-x" size={12} />Encerrar
+          </button>
+        )}
         {hov && !row.automatica && (
           <button onClick={onDelete} style={{
             width: 26, height: 26, borderRadius: 6, display: 'flex', alignItems: 'center',
             justifyContent: 'center', cursor: 'pointer', background: 'rgba(248,113,113,.1)',
-            border: '1px solid rgba(248,113,113,.2)', color: 'var(--clr-neg)', marginLeft: 'auto',
+            border: '1px solid rgba(248,113,113,.2)', color: 'var(--clr-neg)',
+            display: 'inline-flex',
           }}>
             <LucideIcon icon="trash-2" size={13} />
           </button>

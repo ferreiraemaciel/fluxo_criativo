@@ -47,9 +47,25 @@
      mostraria um mês inteiro de assinatura e afundaria o lucro da
      semana.                                                        */
   function rateioDespesa(despesa, from, to) {
-    const dIni = new Date(from + 'T00:00:00');
-    const dFim = new Date(to   + 'T00:00:00');
+    let dIni = new Date(from + 'T00:00:00');
+    let dFim = new Date(to   + 'T00:00:00');
     const valor = Number(despesa.valor) || 0;
+
+    // Despesa recorrente tem começo e pode ter fim. Antes o cálculo ignorava
+    // os dois: assinatura cancelada seguia descontando do lucro pra sempre, e
+    // não havia como encerrar sem apagar o histórico dela.
+    // O recorte é a interseção entre o período pedido e a vida da despesa.
+    if (despesa.tipo !== 'unico') {
+      if (despesa.data) {
+        const inicio = new Date(despesa.data + 'T00:00:00');
+        if (inicio > dIni) dIni = inicio;
+      }
+      if (despesa.data_fim) {
+        const fim = new Date(despesa.data_fim + 'T00:00:00');
+        if (fim < dFim) dFim = fim;
+      }
+      if (dIni > dFim) return 0;   // a despesa não existia neste período
+    }
 
     if (despesa.tipo === 'unico') {
       const dEntry = new Date((despesa.data || from) + 'T00:00:00');
