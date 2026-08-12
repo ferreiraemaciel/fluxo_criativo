@@ -1,6 +1,6 @@
 /* ================================================================
    Tracker FMN — Financeiro Screen v2
-   Components: DateFilter · FinTableRow · ExpensesTab · TaxesTab · ProductCostsTab · FinancialScreen
+   Components: DateFilter · FinTableRow · ExpensesTab · TaxesTab · FinancialScreen
    ================================================================ */
 const { useState, useEffect } = React;
 const { CardKPI, SectionCard, TopBar, LucideIcon, Btn, Badge } = window;
@@ -106,16 +106,42 @@ function useDespesasData() {
   return { despesas, loading, reload: () => setTick(t => t + 1) };
 }
 
-/* Configuração dos produtos (custo fixo estimado por produto) */
-const productsData = [
-  { id: 1, product: 'Modelos de Contrato Visual', ticket: 297, cost: 30, margin: 89.9 },
+/* ── Categorias de despesa ────────────────────────────────────────
+   Fonte única: o cadastro, a etiqueta colorida e o texto exibido saem daqui.
+   Antes eram três listas soltas que não conversavam: o formulário gravava
+   "ferramenta", o banco tinha "ferramentas" e "producao", e a tabela de cores
+   procurava por "Ferramenta" com maiúscula. Nenhuma casava, e por isso toda
+   etiqueta ficava cinza.
+
+   A chave é a forma achatada (minúscula, sem acento), então "Produção",
+   "producao" e "PRODUÇÃO" caem todas no mesmo lugar.                      */
+const CATEGORIAS_DESPESA = [
+  { chave: 'trafego',     label: 'Tráfego',     tone: 'info'    },
+  { chave: 'plataforma',  label: 'Plataforma',  tone: 'teal'    },
+  { chave: 'ferramenta',  label: 'Ferramenta',  tone: 'gold'    },
+  { chave: 'criativo',    label: 'Criativo',    tone: 'amber'   },
+  { chave: 'producao',    label: 'Produção',    tone: 'amber'   },
+  { chave: 'equipe',      label: 'Equipe',      tone: 'success' },
+  { chave: 'consultoria', label: 'Consultoria', tone: 'warning' },
+  { chave: 'outros',      label: 'Outros',      tone: 'default' },
 ];
 
-const CATEGORY_TONE = {
-  'Tráfego': 'info', 'Plataforma': 'teal', 'Ferramenta': 'gold',
-  'Criativo': 'amber', 'Equipe': 'success', 'Consultoria': 'warning',
-  'Venda': 'success', 'Reembolso': 'danger', 'Outros': 'default',
-};
+// Achata pra comparar: minúscula, sem acento e sem plural bobo.
+function chaveCategoria(valor) {
+  const base = String(valor || 'outros').toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+  return base.replace(/s$/, '') === 'ferramenta' ? 'ferramenta' : base;
+}
+
+function categoriaInfo(valor) {
+  const k = chaveCategoria(valor);
+  return CATEGORIAS_DESPESA.find(c => c.chave === k)
+      || { chave: k, label: String(valor || 'Outros'), tone: 'default' };
+}
+
+// Receita e reembolso não são categorias de despesa, mas aparecem na mesma
+// tabela no modo Balanço, então precisam de cor própria.
+const TONE_LINHA = { Venda: 'success', Reembolso: 'danger' };
 
 
 const fmt    = window.fmtBRL;
@@ -172,10 +198,11 @@ function calcularValorNoPeriodo(despesa, from, to) {
 
 /* ── AddExpenseModal ─────────────────────────────────────────────*/
 function AddExpenseModal({ onClose, onSaved }) {
+  const [erro, setErro] = useState('');
   const [form, setForm] = useState({ descricao:'', categoria:'ferramenta', tipo:'recorrente', recorrencia:'mensal', valor:'', data: new Date().toISOString().slice(0,10), observacoes:'' });
   const [saving, setSaving] = useState(false);
   const set = (k,v) => setForm(p => ({...p,[k]:v}));
-  const categorias = ['tráfego','plataforma','ferramenta','criativo','equipe','consultoria','outros'];
+  const categorias = CATEGORIAS_DESPESA;
   const handleSave = async () => {
     if (!form.descricao || !form.valor) return;
     setSaving(true);
@@ -185,7 +212,8 @@ function AddExpenseModal({ onClose, onSaved }) {
       valor: Number(form.valor), data: form.data, ativo: true, observacoes: form.observacoes || null,
     });
     setSaving(false);
-    if (!error) { onSaved(); onClose(); }
+    if (error) { setErro(error.message || 'Não consegui salvar. Confira os campos.'); return; }
+    onSaved(); onClose();
   };
   const inp = { padding:'7px 10px', borderRadius:7, fontSize:12.5, fontFamily:'Roboto,sans-serif',
     background:'var(--app-surface-2)', border:'1px solid var(--app-border)', color:'var(--text-1)',
@@ -249,9 +277,14 @@ function AddExpenseModal({ onClose, onSaved }) {
           <span style={{ fontSize:11,fontFamily:'Roboto,sans-serif',fontWeight:700,color:'var(--text-3)',
             letterSpacing:'0.06em',textTransform:'uppercase' }}>Categoria</span>
           <select value={form.categoria} onChange={e=>set('categoria',e.target.value)} style={{...inp,cursor:'pointer'}}>
-            {categorias.map(c=><option key={c} value={c}>{c.charAt(0).toUpperCase()+c.slice(1)}</option>)}
+            {categorias.map(c=><option key={c.chave} value={c.chave}>{c.label}</option>)}
           </select>
         </div>
+        {erro && (
+          <div style={{ padding:'9px 11px',borderRadius:8,background:'rgba(248,113,113,.08)',
+            border:'1px solid rgba(248,113,113,.3)',fontSize:11.5,color:'#f87171',
+            fontFamily:'Roboto,sans-serif',lineHeight:1.5 }}>{erro}</div>
+        )}
         <div style={{ display:'flex',gap:8,marginTop:4 }}>
           <button onClick={onClose} style={{ flex:1,padding:'10px',borderRadius:8,
             background:'rgba(255,255,255,.06)',border:'1px solid var(--app-border)',
@@ -285,7 +318,7 @@ function ExpensesTab({ dateRange }) {
     return {
       id: d.id, date: d.data,
       type: d.tipo === 'recorrente' ? (recorrencia === 'anual' ? 'Anual' : 'Mensal') : 'Único',
-      category: d.categoria.charAt(0).toUpperCase() + d.categoria.slice(1),
+      category: d.categoria,
       desc: d.descricao, value: valorPeriodo, valorRef: labelRef,
       isRecorrente: d.tipo === 'recorrente',
     };
@@ -337,7 +370,7 @@ function ExpensesTab({ dateRange }) {
         </div>
         <Btn variant="primary" size="sm" icon="plus"
           onClick={()=>setShowAddModal(true)}>
-          {view==='receitas'?'Adicionar Receita':'Adicionar Gasto'}
+          Adicionar Gasto
         </Btn>
       </div>
 
@@ -404,7 +437,7 @@ function FinTableRow({ row, isLast, onDelete }) {
         <Badge tone={row.type === 'Mensal' ? 'info' : row.type === 'Anual' ? 'teal' : 'warning'}>{row.type}</Badge>
       </td>
       <td style={{ padding: '11px 16px' }}>
-        <Badge tone={CATEGORY_TONE[row.category] || 'default'}>{row.category}</Badge>
+        <Badge tone={TONE_LINHA[row.category] || categoriaInfo(row.category).tone}>{TONE_LINHA[row.category] ? row.category : categoriaInfo(row.category).label}</Badge>
       </td>
       <td style={{ padding: '11px 16px', fontSize: 13, fontFamily: 'var(--font-body)',
         color: 'var(--text-1)', maxWidth: 280 }}>{row.desc}</td>
@@ -500,16 +533,35 @@ function TaxesTab({ dateRange }) {
   const [notaPct, setNotaPct]     = useState(6);
   const [metaPct, setMetaPct]     = useState(12.15);
 
+  const [inicioGastoDiario, setInicioGastoDiario] = useState(null);
+
   useEffect(() => {
     if (!window.db) return;
-    window.db.from('insights_cache').select('gasto').eq('periodo','maximum')
-      .then(({ data }) => setGastoMeta((data||[]).reduce((s,r)=>s+Number(r.gasto),0)));
     window.db.from('config').select('chave,valor').then(({ data }) => {
       const m = Object.fromEntries((data||[]).map(c => [c.chave, Number(c.valor)]));
       if (m.imposto_nota_pct != null) setNotaPct(m.imposto_nota_pct);
       if (m.imposto_meta_pct != null) setMetaPct(m.imposto_meta_pct);
     });
+    // Onde começa o histórico diário de gasto. Antes dessa data só existe o
+    // total de vida, sem quebra por dia, e o card avisa em vez de fingir.
+    window.db.from('gasto_diario').select('data').order('data').limit(1)
+      .then(({ data }) => setInicioGastoDiario(data?.[0]?.data || null));
   }, []);
+
+  // O gasto com anúncios vem do histórico DIÁRIO, recortado pelo período
+  // escolhido. Antes lia o total de vida inteira (`periodo='maximum'`), então
+  // o imposto era o mesmo número escolhendo "Hoje" ou "Mês": 12,15% sobre
+  // R$ 155 mil, em vez de sobre o gasto do período.
+  useEffect(() => {
+    if (!window.db) return;
+    let vivo = true;
+    window.db.from('gasto_diario').select('gasto')
+      .gte('data', dateRange.from).lte('data', dateRange.to)
+      .then(({ data }) => { if (vivo) setGastoMeta((data||[]).reduce((s,r)=>s+Number(r.gasto),0)); });
+    return () => { vivo = false; };
+  }, [dateRange.from, dateRange.to]);
+
+  const periodoAnteriorAoHistorico = inicioGastoDiario && dateRange.from < inicioGastoDiario;
 
   const aprovadas = vendas.filter(v => v.status === 'aprovada');
   const fat       = aprovadas.reduce((s,v) => s + Number(v.valor_bruto), 0);
@@ -546,6 +598,14 @@ function TaxesTab({ dateRange }) {
           <AliquotaEditavel chave="imposto_meta_pct" valor={metaPct} onSaved={setMetaPct}/>
         </div>
         <TaxRow label="Base (gasto Meta)" value={fmt(Math.round(gastoMeta))} />
+        {periodoAnteriorAoHistorico && (
+          <div style={{ marginTop:8, padding:'8px 10px', borderRadius:8,
+            background:'rgba(251,191,36,.07)', border:'1px solid rgba(251,191,36,.18)',
+            fontSize:11, fontFamily:'var(--font-body)', color:'var(--clr-warn)', lineHeight:1.5 }}>
+            O gasto dia a dia só existe a partir de {inicioGastoDiario.split('-').reverse().join('/')}.
+            O que veio antes disso não entra nesta conta.
+          </div>
+        )}
         <TaxRow label="Imposto calculado" value={fmt(Math.round(metaTax))} accent />
         <TaxRow label="Imposto por venda (média)" value={fmt(vendasCount ? metaTax / vendasCount : 0)} />
         <div style={{ marginTop: 12, padding: '10px 12px', borderRadius: 8,
@@ -575,113 +635,14 @@ function TaxesTab({ dateRange }) {
   );
 }
 
-/* ── ProductCostsTab (editável, lê tabela produtos) ──────────────*/
-function ProductCostsTab() {
-  const [produtos, setProdutos] = useState([]);
-  const [loading, setLoading]   = useState(true);
-  const [editId, setEditId]     = useState(null);
-  const [editVal, setEditVal]   = useState('');
+/* ── Custo de Produtos: fora do frontend por enquanto ────────────
+   A aba foi removida da tela em 2026-08-12. Motivo: infoproduto não tem
+   custo por unidade vendida, então todos os custos eram R$ 0 e a margem
+   dava 100% em tudo. Número que nunca muda não é informação, é ruído.
 
-  async function load() {
-    if (!window.db) return;
-    setLoading(true);
-    const { data } = await window.db.from('produtos')
-      .select('nome,ticket,custo,ativo').order('ticket', { ascending: false });
-    setProdutos(data || []);
-    setLoading(false);
-  }
-  useEffect(() => { load(); }, []);
-
-  async function salvarCusto(nome) {
-    const novoCusto = Number(String(editVal).replace(',', '.')) || 0;
-    await window.db.from('produtos').update({ custo: novoCusto, updated_at: new Date().toISOString() }).eq('nome', nome);
-    setEditId(null); setEditVal('');
-    load();
-  }
-
-  if (loading) return <div style={{padding:40,textAlign:'center',color:'var(--text-3)',fontFamily:'Roboto,sans-serif'}}>Carregando...</div>;
-
-  return (
-    <SectionCard title="Custo de Produtos"
-      headerRight={<span style={{ fontSize:11, color:'var(--text-3)', fontFamily:'Roboto,sans-serif' }}>
-        Clique no custo para editar. Infoproduto começa em R$ 0.
-      </span>}
-      noPad>
-      <div style={{ overflowX: 'auto' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-          <thead>
-            <tr style={{ borderBottom: '1px solid var(--app-border)' }}>
-              {['Produto', 'Ticket Médio', 'Custo', 'Margem Bruta', 'Status'].map((h, i) => (
-                <th key={i} style={{
-                  padding: '10px 16px', textAlign: i >= 1 ? 'right' : 'left',
-                  fontSize: 10, fontFamily: 'var(--font-display)', fontWeight: 700,
-                  letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--text-3)',
-                }}>{h}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {produtos.map((row, i) => {
-              const isLast = i === produtos.length - 1;
-              const ticket = Number(row.ticket) || 0;
-              const custo  = Number(row.custo) || 0;
-              const margin = ticket > 0 ? ((ticket - custo) / ticket) * 100 : 0;
-              const editing = editId === row.nome;
-              return (
-                <tr key={row.nome}
-                  style={{ borderBottom: isLast ? 'none' : '1px solid var(--app-border)' }}>
-                  <td style={{ padding: '13px 16px', fontSize: 13.5, fontFamily: 'var(--font-body)',
-                    color: 'var(--text-1)', fontWeight: 700 }}>
-                    {row.nome}
-                  </td>
-                  <td style={{ padding: '13px 16px', textAlign: 'right', fontSize: 13.5,
-                    fontFamily: 'var(--font-display)', fontWeight: 700, color: 'var(--fmn-gold)' }}>
-                    {fmt(Math.round(ticket))}
-                  </td>
-                  <td style={{ padding: '13px 16px', textAlign: 'right', fontSize: 13,
-                    fontFamily: 'var(--font-display)', fontWeight: 500, color: 'var(--clr-neg)' }}>
-                    {editing ? (
-                      <input autoFocus type="number" value={editVal}
-                        onChange={e => setEditVal(e.target.value)}
-                        onBlur={() => salvarCusto(row.nome)}
-                        onKeyDown={e => { if (e.key === 'Enter') salvarCusto(row.nome); if (e.key === 'Escape') { setEditId(null); setEditVal(''); } }}
-                        style={{ width:90, padding:'5px 8px', borderRadius:6, textAlign:'right',
-                          background:'var(--app-surface-2)', border:'1px solid var(--fmn-gold)',
-                          color:'var(--text-1)', fontFamily:'Roboto,sans-serif', fontSize:13, colorScheme:'dark' }}/>
-                    ) : (
-                      <span onClick={() => { setEditId(row.nome); setEditVal(String(custo)); }}
-                        style={{ cursor:'pointer', padding:'4px 8px', borderRadius:6,
-                          border:'1px dashed rgba(255,255,255,.15)', transition:'all 130ms' }}
-                        onMouseEnter={e => e.currentTarget.style.borderColor='var(--fmn-gold)'}
-                        onMouseLeave={e => e.currentTarget.style.borderColor='rgba(255,255,255,.15)'}>
-                        {fmt(custo)}
-                      </span>
-                    )}
-                  </td>
-                  <td style={{ padding: '13px 16px', textAlign: 'right' }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 3 }}>
-                      <span style={{ fontSize: 14, fontFamily: 'var(--font-display)', fontWeight: 900,
-                        color: margin >= 70 ? 'var(--clr-pos)' : margin >= 40 ? 'var(--clr-warn)' : 'var(--clr-neg)' }}>
-                        {margin.toFixed(1)}%
-                      </span>
-                      <div style={{ width: 72, height: 4, background: 'rgba(255,255,255,.06)', borderRadius: 99 }}>
-                        <div style={{ width: `${Math.max(0, Math.min(100, margin))}%`, height: '100%',
-                          background: margin >= 70 ? 'var(--clr-pos)' : margin >= 40 ? 'var(--clr-warn)' : 'var(--clr-neg)', borderRadius: 99 }} />
-                      </div>
-                    </div>
-                  </td>
-                  <td style={{ padding: '13px 16px', textAlign: 'right' }}>
-                    <Badge tone={row.ativo ? 'success' : 'default'} dot>{row.ativo ? 'Ativo' : 'Inativo'}</Badge>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-    </SectionCard>
-  );
-}
+   A tabela `produtos` continua no Supabase, com a estrutura inteira. No dia
+   em que existir produto com custo de verdade (impresso, coprodução,
+   comissão de afiliado), a aba volta a partir dela.                       */
 
 /* ── HotmartTab ──────────────────────────────────────────────────*/
 const STATUS_TONE  = { aprovada:'success', reembolsada:'danger', cancelada:'warning', pendente:'default' };
@@ -876,7 +837,6 @@ function FinancialScreen() {
     { id: 'hotmart',  label: 'Hotmart',          icon: 'shopping-cart' },
     { id: 'despesas', label: 'Despesas',          icon: 'receipt' },
     { id: 'impostos', label: 'Impostos',          icon: 'landmark' },
-    { id: 'produtos', label: 'Custo de Produtos', icon: 'package' },
   ];
   return (
     <div style={{ flex:1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight:0 }}>
@@ -906,7 +866,6 @@ function FinancialScreen() {
         {tab === 'hotmart'  && <HotmartTab dateRange={dateRange}/>}
         {tab === 'despesas' && <ExpensesTab dateRange={dateRange}/>}
         {tab === 'impostos' && <TaxesTab dateRange={dateRange}/>}
-        {tab === 'produtos'  && <ProductCostsTab />}
       </div>
     </div>
   );
