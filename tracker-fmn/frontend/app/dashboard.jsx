@@ -24,7 +24,9 @@ function periodToDates(period, dateRange) {
   const iso = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
   if (period === 'Custom') return { from: dateRange.from, to: dateRange.to };
   if (period === 'Hoje')   return { from: iso(today), to: iso(today) };
-  if (period === 'Máximo') return { from: '2020-01-01', to: iso(today) };
+  // Vida inteira do negócio. A data é anterior à primeira venda e ao primeiro
+  // dia de anúncio (11/02/2025), então cobre tudo sem inventar período vazio.
+  if (period === 'Máximo') return { from: '2024-01-01', to: iso(today) };
   const days = parseInt(period) || 7;
   const from = new Date(today); from.setDate(today.getDate() - days + 1);
   return { from: iso(from), to: iso(today) };
@@ -80,24 +82,22 @@ function useDashboardData(period, dateRange) {
           .select('gasto, link_clicks, landing_page_views, compras, initiate_checkout')
           .eq('periodo', insightsPeriodo);
 
-        /* gasto Meta + funil do PERÍODO: soma o diário no range. Em Máximo usa o total de vida */
-        let gasto, totCliques, totLP, totIC, totComp;
-        if (period === 'Máximo') {
-          gasto      = (insights || []).reduce((s, i) => s + Number(i.gasto), 0);
-          totCliques = (insights || []).reduce((s,i)=>s+Number(i.link_clicks||0),0);
-          totLP      = (insights || []).reduce((s,i)=>s+Number(i.landing_page_views||0),0);
-          totIC      = (insights || []).reduce((s,i)=>s+Number(i.initiate_checkout||0),0);
-          totComp    = (insights || []).reduce((s,i)=>s+Number(i.compras||0),0);
-        } else {
-          const { data: gd } = await window.db
-            .from('gasto_diario').select('gasto,cliques,lp_views,initiate_checkout,compras')
-            .gte('data', from).lte('data', to);
-          gasto      = (gd || []).reduce((s, r) => s + Number(r.gasto), 0);
-          totCliques = (gd || []).reduce((s, r) => s + Number(r.cliques||0), 0);
-          totLP      = (gd || []).reduce((s, r) => s + Number(r.lp_views||0), 0);
-          totIC      = (gd || []).reduce((s, r) => s + Number(r.initiate_checkout||0), 0);
-          totComp    = (gd || []).reduce((s, r) => s + Number(r.compras||0), 0);
-        }
+        /* Gasto e funil do PERÍODO, sempre do histórico diário.
+
+           "Máximo" tinha um caminho próprio, que somava o total de vida da
+           conta. Isso era necessário porque o histórico diário só existia
+           desde abril de 2026. Em 12/08/2026 ele foi preenchido desde o
+           primeiro dia de veiculação (11/02/2025), então uma régua só serve
+           pra qualquer período, e "Máximo" passou a ser de verdade a vida
+           inteira do negócio, coerente com as vendas e as despesas. */
+        const { data: gd } = await window.db
+          .from('gasto_diario').select('gasto,cliques,lp_views,initiate_checkout,compras')
+          .gte('data', from).lte('data', to);
+        const gasto      = (gd || []).reduce((s, r) => s + Number(r.gasto), 0);
+        const totCliques = (gd || []).reduce((s, r) => s + Number(r.cliques||0), 0);
+        const totLP      = (gd || []).reduce((s, r) => s + Number(r.lp_views||0), 0);
+        const totIC      = (gd || []).reduce((s, r) => s + Number(r.initiate_checkout||0), 0);
+        const totComp    = (gd || []).reduce((s, r) => s + Number(r.compras||0), 0);
 
         /* despesas recorrentes do mês */
         const { data: despesas } = await window.db
@@ -117,8 +117,11 @@ function useDashboardData(period, dateRange) {
         // as duas telas divergirem em silêncio.
         const calcDespPeriodo = (lista, f, t) => window.FMNFinancas.somarDespesas(lista, f, t);
 
-        const periodoFrom = period === 'Máximo' ? new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().slice(0,10) : from;
-        const periodoTo   = period === 'Máximo' ? new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).toISOString().slice(0,10) : to;
+        // As despesas usam exatamente o mesmo intervalo do resto da tela. Em
+        // "Máximo" isto aqui trocava pelo mês atual, e o painel comparava
+        // venda da vida inteira com despesa de um mês só.
+        const periodoFrom = from;
+        const periodoTo   = to;
         const desp = calcDespPeriodo(despesas, periodoFrom, periodoTo);
 
         // Fonte única do resultado, a mesma da aba Financeiro. O que mudou:

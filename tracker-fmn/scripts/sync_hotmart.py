@@ -184,11 +184,23 @@ def map_sale(item: dict) -> dict:
     price        = purchase.get("price", {})
     valor_bruto  = price.get("value", 0.0)
 
-    # Hotmart retorna commission_as e fee separados — calculamos líquido
     hotmart_fee_obj = purchase.get("hotmart_fee", {})
     hotmart_commission = hotmart_fee_obj.get("total", 0.0)
     hotmart_commission_base = hotmart_fee_obj.get("base")  # preço produto sem juros parcelamento
-    valor_liquido = round(valor_bruto - hotmart_commission, 2)
+
+    # Líquido = preço do produto - taxa da Hotmart.
+    #
+    # ATENÇÃO: partia de `valor_bruto`, que em venda parcelada inclui os juros
+    # do cartão. Numa venda 12x isso registrava R$ 338,23 de líquido quando a
+    # Hotmart repassa R$ 264,14: o juro do comprador entrava como receita do
+    # produtor, e ele nunca foi dele. A base da taxa é o preço do produto.
+    #
+    # Este ainda é um cálculo aproximado: não enxerga comissão de addon (o
+    # "Club", R$ 2,49 por venda) nem coprodução/afiliado. O número exato vem
+    # do endpoint sales/commissions, usado por scripts/corrigir_valor_liquido.py,
+    # e é o que o webhook grava em tempo real.
+    base_liquido = hotmart_commission_base if hotmart_commission_base else valor_bruto
+    valor_liquido = round(base_liquido - hotmart_commission, 2)
 
     # preco_oferta: preço base do produto sem juros de parcelamento
     # hotmart_fee.base = base de cálculo da taxa = preço do produto sem parcelamento
