@@ -650,17 +650,57 @@ function TaxesTab({ dateRange }) {
 const STATUS_TONE  = { aprovada:'success', reembolsada:'danger', cancelada:'warning', pendente:'default' };
 const STATUS_LABEL = { aprovada:'Aprovado', reembolsada:'Reembolso', cancelada:'Cancelado', pendente:'Pendente' };
 
+/* ── SinalHotmart ────────────────────────────────────────────────
+   Mostra quando entrou a última venda no banco, que é o jeito honesto de
+   dizer se a integração está viva. Verde quando chegou algo nas últimas
+   48h, amarelo depois disso. Nunca inventa "conectado".                 */
+function SinalHotmart({ faixa, registros }) {
+  const [ultima, setUltima] = useState(undefined);
+  useEffect(() => {
+    if (!window.db) return;
+    window.db.from('vendas').select('created_at').order('created_at', { ascending:false }).limit(1)
+      .then(({ data }) => setUltima(data?.[0]?.created_at || null));
+  }, []);
+
+  const horas = ultima ? (Date.now() - new Date(ultima)) / 3600000 : null;
+  const ok    = horas != null && horas < 48;
+  const cor   = ultima === undefined ? '#8a8a8a' : ok ? '#4ade80' : '#fbbf24';
+  const texto = ultima === undefined ? 'Conferindo a integração...'
+    : ultima === null ? 'Nenhuma venda registrada ainda'
+    : horas < 1  ? 'Última venda há menos de 1 hora'
+    : horas < 48 ? `Última venda há ${Math.floor(horas)}h`
+    : `Última venda há ${Math.floor(horas / 24)} dias`;
+
+  return (
+    <div style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 14px', borderRadius:10,
+      background:`${cor}11`, border:`1px solid ${cor}33` }}>
+      <div style={{ width:8, height:8, borderRadius:'50%', background:cor, flexShrink:0,
+        boxShadow:`0 0 6px ${cor}` }}/>
+      <span style={{ fontSize:12.5, fontFamily:'Roboto,sans-serif', fontWeight:700, color:cor }}>
+        Hotmart · {texto}
+      </span>
+      <span style={{ marginLeft:'auto', fontSize:11, color:'var(--text-3)', fontFamily:'Roboto,sans-serif' }}>
+        {faixa.from.split('-').reverse().join('/')} a {faixa.to.split('-').reverse().join('/')} · {registros} registros
+      </span>
+    </div>
+  );
+}
+
 function HotmartTab({ dateRange }) {
   const [activeFilter, setActiveFilter] = useState('Todos');
   const { vendas, loading } = useVendasData(dateRange.from, dateRange.to);
-  const filters = ['Todos','Aprovados','Reembolsos'];
+  const filters = ['Todos','Aprovados','Reembolsos','Cancelados','Problemas'];
 
   const productMap = {};
   vendas.forEach(v => {
     const k = v.produto_nome || 'Outros';
     if (!productMap[k]) productMap[k] = { id:k, nome:k, vendas:0, aprovacoes:0, reembolsos:0, receita:0 };
     productMap[k].vendas++;
-    if (v.status==='aprovada')   { productMap[k].aprovacoes++; productMap[k].receita += Number(v.valor_bruto); }
+    // `preco_oferta` é o preço do produto sem os juros do parcelamento, que é
+    // a base da nota. É o mesmo número que o Dashboard e a aba Despesas usam;
+    // aqui era `valor_bruto`, e por isso a receita aparecia maior que no resto
+    // do sistema (R$ 1.397 de diferença no histórico).
+    if (v.status==='aprovada')   { productMap[k].aprovacoes++; productMap[k].receita += Number(v.preco_oferta ?? v.valor_bruto); }
     if (v.status==='reembolsada') productMap[k].reembolsos++;
   });
   const hotmartProducts = Object.values(productMap).sort((a,b) => b.receita - a.receita);
@@ -670,38 +710,65 @@ function HotmartTab({ dateRange }) {
   const totalReemb   = hotmartProducts.reduce((a,p) => a + p.reembolsos, 0);
   const ticketMedio  = Math.round(totalReceita / (totalAprov || 1));
 
-  const filteredVendas = vendas.filter(v => {
-    if (activeFilter === 'Aprovados') return v.status === 'aprovada';
-    if (activeFilter === 'Reembolsos') return v.status === 'reembolsada';
+  // Reembolso importa como TAXA, não como número solto: 5 reembolsos em 30
+  // vendas é problema, em 300 é rotina.
+  const taxaReembolso = (totalAprov + totalReemb) > 0
+    ? (totalReemb / (totalAprov + totalReemb)) * 100 : 0;
+
+  // Chargeback e protesto não apareciam em lugar nenhum da tela, embora
+  // existam no banco e sejam dinheiro levado de volta à força. Ficavam
+  // escondidos dentro de "Todos", sem filtro e sem contagem.
+  const outrosProblemas = vendas.filter(v => v.status === 'chargeback' || v.status === 'protesto');
+
+  const LIMITE_LISTA = 100;
+  const vendasFiltradas = vendas.filter(v => {
+    if (activeFilter === 'Aprovados')   return v.status === 'aprovada';
+    if (activeFilter === 'Reembolsos')  return v.status === 'reembolsada';
+    if (activeFilter === 'Cancelados')  return v.status === 'cancelada';
+    if (activeFilter === 'Problemas')   return v.status === 'chargeback' || v.status === 'protesto';
     return true;
-  }).slice(0, 100);
+  });
+  // A lista era cortada em 100 sem avisar: no período "Máximo" você via 100 de
+  // 1.476 achando que era tudo.
+  const filteredVendas = vendasFiltradas.slice(0, LIMITE_LISTA);
+  const cortouLista = vendasFiltradas.length > LIMITE_LISTA;
 
   return (
     <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
-      {/* Banner de conexão */}
-      <div style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 14px',
-        borderRadius:10, background:'rgba(74,222,128,.06)', border:'1px solid rgba(74,222,128,.2)' }}>
-        <div style={{ width:8, height:8, borderRadius:'50%', background:'#4ade80', flexShrink:0,
-          boxShadow:'0 0 6px #4ade80' }}/>
-        <span style={{ fontSize:12.5, fontFamily:'Roboto,sans-serif', fontWeight:700, color:'#4ade80' }}>
-          Hotmart — Backend conectado
-        </span>
-        <span style={{ fontSize:12, color:'var(--text-3)', fontFamily:'Roboto,sans-serif' }}>
-          · Dados via tabela <code style={{ fontFamily:'monospace', background:'rgba(255,255,255,.06)',
-            padding:'1px 5px', borderRadius:4, fontSize:11 }}>vendas</code> no Supabase
-        </span>
-        <span style={{ marginLeft:'auto', fontSize:11, color:'var(--text-3)', fontFamily:'Roboto,sans-serif' }}>
-          {dateRange.from} a {dateRange.to} · {vendas.length} registros
-        </span>
-      </div>
+      {/* Sinal de vida da integração.
+
+          O banner antigo dizia "Backend conectado" em verde, sempre, mesmo
+          que nada estivesse chegando. Um indicador que nunca muda não avisa
+          nada: em agosto de 2026 o webhook do WhatsApp ficou 4 dias fora do
+          ar e o painel continuou parecendo saudável. Agora ele mostra quando
+          entrou a última venda, e fica amarelo se faz mais de 48h. */}
+      <SinalHotmart faixa={dateRange} registros={vendas.length}/>
 
       {/* KPIs */}
       <div style={{ display:'flex', gap:12 }}>
-        <CardKPI label="Receita Hotmart" value={fmt(totalReceita)} icon="trending-up" accent/>
+        <CardKPI label="Faturamento" value={fmt(totalReceita)} icon="trending-up" accent/>
         <CardKPI label="Aprovações" value={String(totalAprov)} icon="check-circle"/>
-        <CardKPI label="Reembolsos" value={String(totalReemb)} icon="rotate-ccw"/>
+        <CardKPI label="Reembolsos" value={`${totalReemb} · ${taxaReembolso.toFixed(1)}%`} icon="rotate-ccw"/>
         <CardKPI label="Ticket Médio" value={fmt(ticketMedio)} icon="tag"/>
       </div>
+
+      {cortouLista && (
+        <div style={{ padding:'8px 12px', borderRadius:9, background:'rgba(251,191,36,.07)',
+          border:'1px solid rgba(251,191,36,.18)', fontSize:11.5, fontFamily:'Roboto,sans-serif',
+          color:'var(--clr-warn)', lineHeight:1.5 }}>
+          A lista abaixo mostra as {LIMITE_LISTA} vendas mais recentes de {vendasFiltradas.length} no período.
+          Os totais e os cartões acima consideram todas.
+        </div>
+      )}
+
+      {outrosProblemas.length > 0 && (
+        <div style={{ padding:'8px 12px', borderRadius:9, background:'rgba(248,113,113,.07)',
+          border:'1px solid rgba(248,113,113,.2)', fontSize:11.5, fontFamily:'Roboto,sans-serif',
+          color:'var(--clr-neg)', lineHeight:1.5 }}>
+          {outrosProblemas.length === 1 ? 'Há 1 venda' : `Há ${outrosProblemas.length} vendas`} com
+          chargeback ou protesto no período. Veja no filtro "Problemas".
+        </div>
+      )}
 
       {/* Tabela de produtos */}
       <SectionCard title="Produtos" noPad>
