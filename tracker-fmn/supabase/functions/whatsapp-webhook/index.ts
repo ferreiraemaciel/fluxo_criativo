@@ -165,6 +165,20 @@ Deno.serve(async (req) => {
           const precisaHumanoImediato = msg.type === "video" || msg.type === "location"
             || (msg.type === "document" && !documentoEhPdf);
 
+          // A HORA DA MENSAGEM É A DA META, NÃO A NOSSA.
+          // Elas quase sempre coincidem, mas divergem justamente quando mais
+          // importa: se o webhook ficar fora do ar, a Meta reentrega depois, e
+          // gravar "agora" faria uma mensagem de três dias atrás parecer recém
+          // chegada. Isso aconteceu de verdade no apagão de 07 a 11/08/2026 e
+          // teve consequência real: o Tracker mostrou "22h restantes" numa
+          // janela de 24h que estava fechada havia dias, e o envio falhou com
+          // o erro 131047 da Meta. A hora dela também é o que põe a mensagem
+          // no dia certo do histórico.
+          const tsMeta = Number(msg.timestamp);
+          const momento = Number.isFinite(tsMeta) && tsMeta > 0
+            ? new Date(tsMeta * 1000).toISOString()
+            : new Date().toISOString();
+
           const gravou = await gravarEntradaSeNova({
             telefone,
             nome,
@@ -175,6 +189,7 @@ Deno.serve(async (req) => {
             status: "recebido",
             origem: "resposta_lead",
             lida_pelo_time: false,
+            created_at: momento,
             raw: msg,
           });
           if (!gravou) continue; // duplicata (reenvio da Meta), já tratamos essa mensagem.
@@ -277,8 +292,16 @@ Deno.serve(async (req) => {
           if (!st.id) continue;
           const novoStatus = STATUS_MAP[st.status];
           if (!novoStatus) continue;
+          // O MOTIVO da falha vem aqui dentro e antes era descartado: a mensagem
+          // ficava marcada como "falhou" sem ninguém saber por quê. Guardar em
+          // `raw` é o que permite descobrir depois, sem depender de reproduzir.
+          const patch: Record<string, unknown> = { status: novoStatus };
+          if (st.errors?.length) {
+            patch.raw = { status_errors: st.errors, status_em: new Date().toISOString() };
+            console.error("[whatsapp-webhook] envio falhou:", st.id, JSON.stringify(st.errors));
+          }
           await supabase.from("whatsapp_mensagens")
-            .update({ status: novoStatus })
+            .update(patch)
             .eq("wa_message_id", st.id);
         }
       }

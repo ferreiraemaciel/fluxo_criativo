@@ -11,6 +11,25 @@ O campo **Roteiro** sempre contém as 3 partes — Gancho, Desenvolvimento e CTA
 
 **Texto Principal e Descrição (ADS) sempre terminam com CTA de clique.** Todo `texto_principal` de anúncio precisa fechar chamando pra clicar em SAIBA MAIS — a linguagem pode ser adaptada pro tom de cada ADS específico (ex: "Clique em Saiba Mais", "Clica ali embaixo", "Saiba mais agora"), mas o chamado pra clicar sempre precisa estar presente. **A `descricao_ad` segue a mesma regra**, sempre com uma chamada de clique no fechamento, não só o `texto_principal`.
 
+**Conteúdo pode ir além do artigo de origem, mas sempre com aviso (regra fixa, 2026-08-07).** Quando uma peça nasce de um artigo do blog, ela não fica presa ao que está escrito lá. Pode e deve puxar o que é conexo: o "sabendo disso, o fotógrafo pode e deve fazer o seguinte", uma frase de impacto que a matéria não traz, um desdobramento prático, uma analogia nova. O artigo é ponto de partida, não teto.
+
+**A contrapartida é obrigatória: toda vez que uma peça sair do escopo do artigo, avisar o Felipe explicitamente**, dizendo o que foi acrescentado e de onde veio. Ele é advogado e responde pelo que publica, então precisa saber o que é citação da matéria e o que é extrapolação. Sem esse aviso, o risco é publicar como se fosse conteúdo já revisado por ele quando não é.
+
+Isso vale principalmente pra afirmação jurídica: dado, número, artigo de lei e citação de decisão continuam presos à fonte, sem exceção. A liberdade é de argumento, exemplo, aplicação prática e forma, não de fato.
+
+**Nunca afirmar mais do que a fonte primária sustenta (regra fixa, 2026-08-07).** Quando a peça conta um caso real, o que ela afirma como fato precisa estar na decisão, na lei ou no documento. O que veio de reportagem entra atribuído ("segundo a imprensa", "o jornalista que revelou o caso disse"), nunca como fato próprio.
+
+Isso apareceu duas vezes no mesmo lote, e as duas passaram despercebidas até alguém desconfiar:
+
+- As peças afirmavam que as fotos foram feitas **"da rua"**. A decisão diz apenas "a partir de um ponto externo, com equipamento de alta capacidade óptica", sem especificar o lugar. Pior: o jornalista que revelou o caso afirmou textualmente que a foto **não** foi feita da rua.
+- Depois, a arte afirmou que foi **"usando um drone"**. Também não está na decisão, veio da imprensa.
+
+O detalhe traiçoeiro é que o corpo do artigo estava certo o tempo todo ("posicionado do lado de fora do prédio"). Quem errou foi o título, o resumo e as peças, que especificaram mais do que a fonte para ganhar concretude. Concretude é boa, mas não vale inventar o que não está escrito.
+
+Regra prática antes de publicar peça sobre caso real: separe o que é **fato da decisão** do que é **relato de imprensa** e do que é **sua interpretação**, e trate cada um no registro certo. Em processo que ainda corre, registrar também que é liminar e não sentença.
+
+**Roteiro de Reels sempre em pegada natural de fala, nunca robótico (regra fixa, 2026-08-06).** O texto do campo Roteiro (ADS e Orgânico, plataforma Reels) precisa soar como o Felipe falando de verdade pra câmera, não como um texto escrito lido em voz alta. Frases curtas, contrações ("tava", "tá"), pausas de fala reais, jeito de contar caso ("outro dia eu tava numa aula..."), nunca a cadência simétrica e "redondinha demais" de texto gerado por IA. Depois de escrever o roteiro, reler em voz alta mentalmente: se soar como texto de vídeo institucional, reescrever mais solto. Isso não dispensa o Manual da Copy nem o checklist Light Copy (zero travessão, zero exclamação), só pede que dentro dessas regras o tom fique conversacional.
+
 ---
 
 ## ADS — Reels

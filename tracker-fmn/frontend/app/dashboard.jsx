@@ -24,7 +24,9 @@ function periodToDates(period, dateRange) {
   const iso = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
   if (period === 'Custom') return { from: dateRange.from, to: dateRange.to };
   if (period === 'Hoje')   return { from: iso(today), to: iso(today) };
-  if (period === 'Máximo') return { from: '2020-01-01', to: iso(today) };
+  // Vida inteira do negócio. A data é anterior à primeira venda e ao primeiro
+  // dia de anúncio (11/02/2025), então cobre tudo sem inventar período vazio.
+  if (period === 'Máximo') return { from: '2024-01-01', to: iso(today) };
   const days = parseInt(period) || 7;
   const from = new Date(today); from.setDate(today.getDate() - days + 1);
   return { from: iso(from), to: iso(today) };
@@ -80,85 +82,76 @@ function useDashboardData(period, dateRange) {
           .select('gasto, link_clicks, landing_page_views, compras, initiate_checkout')
           .eq('periodo', insightsPeriodo);
 
-        /* gasto Meta + funil do PERÍODO: soma o diário no range. Em Máximo usa o total de vida */
-        let gasto, totCliques, totLP, totIC, totComp;
-        if (period === 'Máximo') {
-          gasto      = (insights || []).reduce((s, i) => s + Number(i.gasto), 0);
-          totCliques = (insights || []).reduce((s,i)=>s+Number(i.link_clicks||0),0);
-          totLP      = (insights || []).reduce((s,i)=>s+Number(i.landing_page_views||0),0);
-          totIC      = (insights || []).reduce((s,i)=>s+Number(i.initiate_checkout||0),0);
-          totComp    = (insights || []).reduce((s,i)=>s+Number(i.compras||0),0);
-        } else {
-          const { data: gd } = await window.db
-            .from('gasto_diario').select('gasto,cliques,lp_views,initiate_checkout,compras')
-            .gte('data', from).lte('data', to);
-          gasto      = (gd || []).reduce((s, r) => s + Number(r.gasto), 0);
-          totCliques = (gd || []).reduce((s, r) => s + Number(r.cliques||0), 0);
-          totLP      = (gd || []).reduce((s, r) => s + Number(r.lp_views||0), 0);
-          totIC      = (gd || []).reduce((s, r) => s + Number(r.initiate_checkout||0), 0);
-          totComp    = (gd || []).reduce((s, r) => s + Number(r.compras||0), 0);
-        }
+        /* Gasto e funil do PERÍODO, sempre do histórico diário.
+
+           "Máximo" tinha um caminho próprio, que somava o total de vida da
+           conta. Isso era necessário porque o histórico diário só existia
+           desde abril de 2026. Em 12/08/2026 ele foi preenchido desde o
+           primeiro dia de veiculação (11/02/2025), então uma régua só serve
+           pra qualquer período, e "Máximo" passou a ser de verdade a vida
+           inteira do negócio, coerente com as vendas e as despesas. */
+        const { data: gd } = await window.db
+          .from('gasto_diario').select('gasto,cliques,lp_views,initiate_checkout,compras')
+          .gte('data', from).lte('data', to);
+        const gasto      = (gd || []).reduce((s, r) => s + Number(r.gasto), 0);
+        const totCliques = (gd || []).reduce((s, r) => s + Number(r.cliques||0), 0);
+        const totLP      = (gd || []).reduce((s, r) => s + Number(r.lp_views||0), 0);
+        const totIC      = (gd || []).reduce((s, r) => s + Number(r.initiate_checkout||0), 0);
+        const totComp    = (gd || []).reduce((s, r) => s + Number(r.compras||0), 0);
 
         /* despesas recorrentes do mês */
         const { data: despesas } = await window.db
           .from('despesas')
-          .select('valor, tipo, recorrencia, data')
-          .eq('ativo', true);
+          // Sem filtro de `ativo`: quem decide o período de uma despesa é o
+          // par data/data_fim, não uma chave liga-desliga. Filtrar por `ativo`
+          // apagava a despesa do passado inteiro no instante em que ela era
+          // desligada, e ainda divergia da aba Financeiro, que nunca filtrou.
+          .select('valor, tipo, recorrencia, data, data_fim');
 
         /* calcula KPIs — usa preco_oferta (preço do produto s/ juros do parcelamento = base de NF) */
         const fat    = (vendas || []).reduce((s, v) => s + Number(v.preco_oferta || v.valor_bruto), 0);
         const reimb  = (reembolsos || []).reduce((s, v) => s + Number(v.valor_bruto), 0);
 
-        // rateio fiel: mensal ÷ dias do mês, anual ÷ dias do ano, único só no dia exato
-        function calcDespPeriodo(lista, fromStr, toStr) {
-          const dIni = new Date(fromStr + 'T00:00:00');
-          const dFim = new Date(toStr   + 'T00:00:00');
-          let total = 0;
-          for (const d of (lista || [])) {
-            const rec = d.recorrencia || 'mensal';
-            const val = Number(d.valor);
-            if (d.tipo === 'unico') {
-              const dEntry = new Date((d.data || fromStr) + 'T00:00:00');
-              if (dEntry >= dIni && dEntry <= dFim) total += val;
-            } else if (rec === 'mensal') {
-              let cur = new Date(dIni.getFullYear(), dIni.getMonth(), 1);
-              while (cur <= dFim) {
-                const mIni = new Date(cur.getFullYear(), cur.getMonth(), 1);
-                const mFim = new Date(cur.getFullYear(), cur.getMonth() + 1, 0);
-                const sIni = dIni > mIni ? dIni : mIni;
-                const sFim = dFim < mFim ? dFim : mFim;
-                const dias = Math.max(0, Math.round((sFim - sIni) / 86400000) + 1);
-                total += (val / mFim.getDate()) * dias;
-                cur.setMonth(cur.getMonth() + 1);
-              }
-            } else if (rec === 'anual') {
-              for (let y = dIni.getFullYear(); y <= dFim.getFullYear(); y++) {
-                const aIni = new Date(y, 0, 1);
-                const aFim = new Date(y, 11, 31);
-                const sIni = dIni > aIni ? dIni : aIni;
-                const sFim = dFim < aFim ? dFim : aFim;
-                const dias = Math.max(0, Math.round((sFim - sIni) / 86400000) + 1);
-                const diasAno = (y % 4 === 0 && (y % 100 !== 0 || y % 400 === 0)) ? 366 : 365;
-                total += (val / diasAno) * dias;
-              }
-            }
-          }
-          return total;
-        }
+        // Rateio de despesa: fonte única em financas.js, a mesma que a aba
+        // Financeiro usa. Estava copiado aqui, e bastava mudar num lado pra
+        // as duas telas divergirem em silêncio.
+        const calcDespPeriodo = (lista, f, t) => window.FMNFinancas.somarDespesas(lista, f, t);
 
-        const periodoFrom = period === 'Máximo' ? new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().slice(0,10) : from;
-        const periodoTo   = period === 'Máximo' ? new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).toISOString().slice(0,10) : to;
+        // As despesas usam exatamente o mesmo intervalo do resto da tela. Em
+        // "Máximo" isto aqui trocava pelo mês atual, e o painel comparava
+        // venda da vida inteira com despesa de um mês só.
+        const periodoFrom = from;
+        const periodoTo   = to;
         const desp = calcDespPeriodo(despesas, periodoFrom, periodoTo);
 
-        const impostoMeta    = fat > 0 ? gasto * (metaPct / 100) : 0;
-        const impostoNota    = fat * (notaPct / 100);
-        // Hotmart já descontou sua taxa em valor_liquido — não deduzir de novo
-        const lucro          = fat - impostoMeta - impostoNota - desp - reimb;
-        const margem         = fat > 0 ? (lucro / fat) * 100 : 0;
+        // Fonte única do resultado, a mesma da aba Financeiro. O que mudou:
+        //
+        // 1. O lucro parte do LÍQUIDO. O comentário antigo aqui dizia que a
+        //    taxa da Hotmart já estava descontada, mas o faturamento vinha do
+        //    valor BRUTO, então ela nunca saía da conta. O lucro estava
+        //    inflado em ~11% do faturamento (R$ 621 só em agosto).
+        //
+        // 2. O tráfego passou a ser subtraído. Ele nunca entrou nesta conta:
+        //    o maior custo do negócio ficava de fora do "lucro real".
+        //
+        // 3. Reembolso deixou de ser subtraído. Quando a Hotmart estorna, ela
+        //    troca o status da própria linha da venda, então ela já sai do
+        //    faturamento sozinha. Subtrair de novo descontava duas vezes o
+        //    mesmo reembolso (R$ 1.288 escondidos em junho).
+        const resultado = window.FMNFinancas.calcularResultado({
+          vendas: vendas || [], despesas, gasto, notaPct, metaPct,
+          from: periodoFrom, to: periodoTo,
+        });
+        const impostoMeta = resultado.impostoMeta;
+        const impostoNota = resultado.impostoNota;
+        const liquido     = resultado.liquido;
+        const taxaHotmart = resultado.taxaHotmart;
+        const lucro       = resultado.lucro;
+        const margem      = resultado.margem;
 
         const totalVendasBruto = (vendas || []).length;
-        const roas        = gasto > 0 ? fat / gasto : null;
-        const roi          = (gasto + desp) > 0 ? lucro / (gasto + desp) : null;
+        const roas        = resultado.roas;
+        const roi         = resultado.roi;
         const ticketMedio  = totalVendasBruto > 0 ? fat / totalVendasBruto : null;
 
         // CAC (só cliente novo, ache pela 1ª compra em toda a história) e LTV
@@ -216,11 +209,13 @@ function useDashboardData(period, dateRange) {
 
         /* breakdown — fat já é o líquido Hotmart (sem taxa e sem juros parcelamento) */
         const breakdownRows = [
-          { label: 'Faturamento bruto (preço produto)',  value: fat,  color: 'var(--text-1)', bold: true },
-          { label: `Imposto Meta (${metaPct.toString().replace('.',',')}%)`, value: -impostoMeta, color: 'var(--clr-neg)' },
+          { label: 'Faturamento (base da nota)', value: fat, color: 'var(--text-1)', bold: true },
+          { label: 'Taxa da Hotmart',            value: -taxaHotmart,  color: 'var(--clr-neg)' },
+          { label: 'Recebido na conta',          value: liquido,       color: 'var(--text-2)' },
           { label: `Imposto sobre Nota (${notaPct.toString().replace('.',',')}%)`, value: -impostoNota, color: 'var(--clr-neg)' },
-          { label: 'Despesas recorrentes',       value: -desp,         color: 'var(--clr-neg)' },
-          { label: 'Reembolsos',                 value: -reimb,        color: 'var(--clr-warn)' },
+          { label: 'Anúncios no Meta',           value: -gasto,        color: 'var(--clr-neg)' },
+          { label: `Imposto sobre anúncios (${metaPct.toString().replace('.',',')}%)`, value: -impostoMeta, color: 'var(--clr-neg)' },
+          { label: 'Despesas',                   value: -desp,         color: 'var(--clr-neg)' },
           { label: 'Lucro real',                 value: lucro,         color: 'var(--clr-pos)', bold: true, separator: true },
         ];
 
@@ -1915,8 +1910,11 @@ function Dicas({ data }) {
   // ── Montar lista de dicas com prioridade ────────────────────────
   const dicas = [];
 
-  // 1. ROAS
-  const roas = gasto > 0 ? fat / gasto : null;
+  // 1. ROAS — data.roas já vem de window.FMNFinancas.calcularResultado (ver
+  // useDashboardData). Recalcular aqui de novo, mesmo com fórmula igual hoje,
+  // é o tipo de duplicação que já divergiu silenciosamente em outros lugares
+  // desta mesma tela.
+  const roas = data?.roas ?? null;
   if (roas !== null) {
     if (roas >= 3) {
       dicas.push({ tipo:'pos', icon:'trending-up',
@@ -2197,8 +2195,14 @@ function DashboardScreen({ period, onPeriodChange, dateRange, onDateRangeChange,
               padding:'2px 8px', borderRadius:99 }}>atualizando...</span>
           )}
         </div>
-        <DateRangePicker period={period} onPeriodChange={onPeriodChange}
-          dateRange={dateRange} onDateRangeChange={onDateRangeChange}/>
+        <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+          <DateRangePicker period={period} onPeriodChange={onPeriodChange}
+            dateRange={dateRange} onDateRangeChange={onDateRangeChange}/>
+          {window.RelatorioButton && (
+            <window.RelatorioButton rangeFrom={rangeFrom} rangeTo={rangeTo}
+              dados={{ data, chartDays, weeklySales, periodHeatmap, salesByProduct: data?.salesByProduct, salesBySource: data?.salesBySource }}/>
+          )}
+        </div>
       </div>
 
       <div style={{ flex:1, overflowY:'auto', padding:'18px 24px', display:'flex',
@@ -2367,4 +2371,10 @@ function EmptyState({ icon, label }) {
   );
 }
 
-window.DashboardScreen = DashboardScreen;
+// Peças reaproveitadas pelo relatório em PDF (relatorio.jsx): exportar em vez
+// de duplicar garante que o número impresso é sempre o mesmo que está na
+// tela, porque é literalmente o mesmo componente.
+Object.assign(window, {
+  DashboardScreen, BreakdownTable, FlowFunnel, WeeklySalesChart, SalesByPeriod,
+  SalesList, CircularProgress, periodToDates,
+});

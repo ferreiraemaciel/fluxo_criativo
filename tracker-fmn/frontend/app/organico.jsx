@@ -6,20 +6,58 @@ const { useState, useEffect, useRef } = React;
 const { LucideIcon, Btn, Badge, TopBar } = window;
 
 const WORKER_URL   = 'https://organico-media.blindagem-fmn.workers.dev';
+// Domínio público do bucket R2. Usado pra saber se uma URL é nossa antes de
+// mandar apagar: só se apaga o que está sob esse domínio.
+const R2_PUBLIC    = 'https://pub-3af414794ad1436281d1d1b3e9feea36.r2.dev';
 const PLATAFORMAS  = window.PLATAFORMAS; // fonte única em shared.jsx (inclui Artigo, Youtube)
-const RESPONSAVEIS = ['Felipe', 'Amanda'];
+
+// Limite de legenda do Instagram. Passar disso não gera aviso: a publicação é
+// recusada (erro 36004, "The caption was too long"). O ORG 036 falhou no
+// agendamento de 11/08/2026 por 12 caracteres de excesso.
+const LIMITE_LEGENDA = 2200;
+const RESPONSAVEIS = ['Felipe', 'Amanda', 'Lígia'];
+// Time e cores iguais ao Khronus (fonte: crm_team_members lá).
+// Card sem responsável usa a foto "todos": espaço vazio lê como
+// "esqueceram de atribuir", a foto comum diz "é de quem pegar primeiro".
 const RESPONSAVEL_CONFIG = {
-  'Felipe': { initials:'FF', color:'#eaaa41', bg:'rgba(234,170,65,.18)', photo:null },
-  'Amanda': { initials:'AM', color:'#60a5fa', bg:'rgba(96,165,250,.18)', photo:null },
+  'Felipe': { initials:'FE', color:'#eaaa41', bg:'rgba(234,170,65,.18)', photo:'assets/avatar-felipe.png' },
+  'Amanda': { initials:'A',  color:'#a78bfa', bg:'rgba(167,139,250,.18)', photo:'assets/avatar-amanda.png' },
+  'Lígia':  { initials:'L',  color:'#f472b6', bg:'rgba(244,114,182,.18)', photo:'assets/avatar-ligia.png' },
 };
+const RESPONSAVEL_COMUM = { initials:'—', color:'#94a3b8', bg:'rgba(148,163,184,.18)', photo:'assets/avatar-todos.png' };
+
+// Copy e Produção não são mais colunas: viraram sub-etapa (tag) dentro de
+// "Fazendo", igual ao Kanban de Anúncios. Regras completas em REGRAS-KANBAN-ORGANICO.md.
+// Cores seguindo a ordem dos Anúncios: azul na primeira, cinza na última.
+// "Postagem" foi removida em 2026-08-07: era indistinguível de "Feito" na
+// prática (peça pronta esperando data), então virava uma parada a mais sem
+// decisão nova. Quem está pronto fica em Feito até ser agendado.
+// Próximo ORG livre: preenche buraco na numeração primeiro (ex: ORG 010, cujo
+// card foi deletado), e só vai pra max+1 quando a sequência está inteira. Mesma
+// regra do quadro de Anúncios, ver NovoAdModal em kanban.jsx. Contar as linhas
+// não serve: com um buraco no meio, o número colidiria com um card existente.
+// Sempre o PRÓXIMO número, nunca um liberado por card apagado: apagar o card
+// não apaga a pasta no Drive, então reaproveitar o número faria o card novo
+// herdar a pasta (e a arte) do antigo. Buraco na numeração é só estética;
+// adotar pasta alheia é erro de conteúdo. O banco garante o mesmo por gatilho
+// (migração 104), isto aqui é só pra tela mostrar o número certo na hora.
+function proximoLivre(items) {
+  const usados = (items || []).map(i => i.numero).filter(Boolean);
+  return usados.length ? Math.max(...usados) + 1 : 1;
+}
 
 const COLUMNS = [
-  { id:'Fazer',     label:'Fazer',     colorDot:'#94a3b8', colorBg:'rgba(148,163,184,.06)', colorBorder:'rgba(148,163,184,.22)' },
-  { id:'Produção',  label:'Produção',  colorDot:'#38bdf8', colorBg:'rgba(56,189,248,.06)',  colorBorder:'rgba(56,189,248,.22)'  },
-  { id:'Postagem',  label:'Postagem',  colorDot:'#fb923c', colorBg:'rgba(251,146,60,.06)',  colorBorder:'rgba(251,146,60,.22)'  },
-  { id:'Agendado',  label:'Agendado',  colorDot:'#a78bfa', colorBg:'rgba(167,139,250,.06)', colorBorder:'rgba(167,139,250,.22)' },
-  { id:'Feito',     label:'Feito',     colorDot:'#4ade80', colorBg:'rgba(74,222,128,.06)',  colorBorder:'rgba(74,222,128,.22)'  },
+  { id:'Fazendo',   label:'Fazendo',   colorDot:'#3b82f6', colorBg:'rgba(59,130,246,.08)',  colorBorder:'rgba(59,130,246,.25)' },
+  { id:'Feito',     label:'Feito',     colorDot:'#fbbf24', colorBg:'rgba(251,191,36,.08)',  colorBorder:'rgba(251,191,36,.25)' },
+  { id:'Agendado',  label:'Agendado',  colorDot:'#4ade80', colorBg:'rgba(74,222,128,.08)',  colorBorder:'rgba(74,222,128,.25)' },
+  { id:'Arquivado', label:'Arquivado', colorDot:'#94a3b8', colorBg:'rgba(148,163,184,.05)', colorBorder:'rgba(148,163,184,.2)'  },
 ];
+
+// Sub-etapas dentro de "Fazendo" (mesmo padrão de ads.etapa).
+const ETAPAS_ORG = {
+  copy:     { label:'Copy',     icon:'pencil',       cor:'#a78bfa' },
+  producao: { label:'Produção', icon:'clapperboard', cor:'#4ade80' },
+};
 
 const PLAT_COLOR = window.PLAT_COLOR; // fonte única em shared.jsx
 const PLAT_ICON  = window.PLAT_ICON;  // fonte única em shared.jsx
@@ -35,11 +73,15 @@ const LABEL_STYLE = {
   letterSpacing:'1.2px', color:'rgba(255,255,255,.4)', textTransform:'uppercase', marginBottom:6,
 };
 
-/* ── Compressão WebP no browser ──────────────────────────────────*/
-// Regra de otimização: converte para WebP 82%.
+/* ── Compressão no browser ───────────────────────────────────────*/
 // Redimensiona SOMENTE se a aresta maior exceder maxPx (padrão 1920).
 // Imagens menores que 1920px são preservadas no tamanho original — nunca aumentar.
-async function compressToWebP(file, maxPx = 1920, quality = 0.82) {
+//
+// Dois formatos de saída, com destinos diferentes:
+//   WebP  → thumb do card, que é só exibição e pode ser bem leve.
+//   JPEG  → imagem que vai ser publicada. A API do Instagram não aceita WebP,
+//           então tudo que pode virar post precisa sair daqui em JPEG.
+async function compressImage(file, { mime = 'image/webp', maxPx = 1920, quality = 0.82 } = {}) {
   return new Promise(resolve => {
     const img = new Image();
     const objectUrl = URL.createObjectURL(file);
@@ -58,12 +100,24 @@ async function compressToWebP(file, maxPx = 1920, quality = 0.82) {
       // w e h nunca excedem as dimensões originais
       const canvas = document.createElement('canvas');
       canvas.width = w; canvas.height = h;
-      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-      canvas.toBlob(blob => resolve(blob), 'image/webp', quality);
+      const ctx = canvas.getContext('2d');
+      // JPEG não tem transparência: sem esse fundo, PNG transparente vira preto.
+      if (mime === 'image/jpeg') {
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(0, 0, w, h);
+      }
+      ctx.drawImage(img, 0, 0, w, h);
+      canvas.toBlob(blob => resolve(blob), mime, quality);
     };
     img.src = objectUrl;
   });
 }
+
+const compressToWebP = (file, maxPx = 1920, quality = 0.82) =>
+  compressImage(file, { mime: 'image/webp', maxPx, quality });
+
+const compressToJpeg = (file, maxPx = 1920, quality = 0.85) =>
+  compressImage(file, { mime: 'image/jpeg', maxPx, quality });
 
 // CarouselLightbox agora vive em shared.jsx (window.CarouselLightbox) — reusado
 // no Tráfego também. Não duplicar aqui.
@@ -117,7 +171,7 @@ function SlideCarousel({ urls, onExpand }) {
 }
 
 /* ── ContentCard ─────────────────────────────────────────────────*/
-function ContentCard({ item, col, onOpen, onDragStart }) {
+function ContentCard({ item, col, onOpen, onDragStart, onEtapaToggle }) {
   const [hov, setHov]       = useState(false);
   const [dragging, setDrag] = useState(false);
   const color    = PLAT_COLOR[item.plataforma] || '#94a3b8';
@@ -174,9 +228,25 @@ function ContentCard({ item, col, onOpen, onDragStart }) {
           letterSpacing:'0.06em', color:col.colorDot, textTransform:'uppercase', flexShrink:0 }}>
           ORG {num}
         </span>
-        <div style={{ marginLeft:'auto', flexShrink:0 }}>
+        <div style={{ marginLeft:'auto', display:'flex', gap:4, alignItems:'center', flexShrink:0 }}>
+          {/* Sub-etapa Copy/Produção: só existe em "Fazendo" (mesmo padrão dos
+              Anúncios). Clique alterna: sem etapa → Copy → Produção → sem etapa. */}
+          {item.status === 'Fazendo' && (
+            <button
+              onClick={e => { e.stopPropagation(); onEtapaToggle && onEtapaToggle(item); }}
+              title={item.etapa === 'copy' ? 'Etapa: Copy (clique pra passar pra Produção)'
+                   : item.etapa === 'producao' ? 'Etapa: Produção (clique pra limpar)'
+                   : 'Sem etapa definida (clique pra marcar Copy)'}
+              style={{ display:'flex', alignItems:'center', justifyContent:'center', width:18, height:18,
+                padding:0, borderRadius:5, cursor:'pointer', flexShrink:0,
+                background: item.etapa ? `${ETAPAS_ORG[item.etapa].cor}26` : 'rgba(255,255,255,.06)',
+                border: item.etapa ? `1px solid ${ETAPAS_ORG[item.etapa].cor}66` : '1px solid var(--app-border)' }}>
+              <LucideIcon icon={item.etapa ? ETAPAS_ORG[item.etapa].icon : 'circle-dashed'}
+                size={10} style={{ color: item.etapa ? ETAPAS_ORG[item.etapa].cor : 'var(--text-3)' }}/>
+            </button>
+          )}
           {item.responsavel && (
-            <ResponsavelAvatar nome={item.responsavel} size={22}/>
+            <ResponsavelAvatar nome={item.responsavel} size={22} sempreAceso/>
           )}
         </div>
       </div>
@@ -188,8 +258,8 @@ function ContentCard({ item, col, onOpen, onDragStart }) {
       </p>
 
       <div style={{ display:'flex', gap:4, flexWrap:'wrap', alignItems:'center' }}>
-        <span style={{ display:'inline-flex', alignItems:'center', gap:4, padding:'2px 8px',
-          borderRadius:999, fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700,
+        <span style={{ display:'inline-flex', alignItems:'center', gap:4, padding:'2px 7px',
+          borderRadius:5, fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:500,
           background:`${color}18`, color, border:`1px solid ${color}33` }}>
           <LucideIcon icon={platIcon} size={9}/>{item.plataforma}
         </span>
@@ -199,6 +269,24 @@ function ContentCard({ item, col, onOpen, onDragStart }) {
           </span>
         )}
       </div>
+
+      {/* Falha na publicação agendada: o card volta pra Feito, e sem este aviso
+          ficaria idêntico a um card que nunca foi agendado — foi o que
+          escondeu a falha do ORG 039 em 2026-08-09. */}
+      {item.erro_publicacao && (
+        <div title={item.erro_publicacao}
+          style={{ display:'flex', alignItems:'center', gap:5, padding:'4px 8px', borderRadius:6,
+            background:'rgba(248,113,113,.1)', border:'1px solid rgba(248,113,113,.3)',
+            fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700, color:'#f87171' }}>
+          <LucideIcon icon="alert-triangle" size={10}/>
+          Falhou ao publicar
+          {item.erro_publicacao_em && (
+            <span style={{ fontWeight:400, opacity:.8 }}>
+              · {new Date(item.erro_publicacao_em).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})}
+            </span>
+          )}
+        </div>
+      )}
 
       {(item.headline || item.roteiro) && (
         <p style={{ margin:0, fontSize:11, fontFamily:'Roboto,sans-serif', color:'var(--text-3)',
@@ -213,7 +301,7 @@ function ContentCard({ item, col, onOpen, onDragStart }) {
 }
 
 /* ── OrgColumn ───────────────────────────────────────────────────*/
-function OrgColumn({ col, items, onOpen, onAddNew, onDragStart, onDrop, isDragOver }) {
+function OrgColumn({ col, items, onOpen, onAddNew, onDragStart, onDrop, isDragOver, onEtapaToggle }) {
   const [over, setOver] = useState(false);
 
   const handleDragOver = e => { e.preventDefault(); setOver(true); };
@@ -228,7 +316,7 @@ function OrgColumn({ col, items, onOpen, onAddNew, onDragStart, onDrop, isDragOv
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
       style={{ width:238, minWidth:238, display:'flex', flexDirection:'column',
-        background: highlight ? `${col.colorBg.replace('.06','0.14')}` : col.colorBg,
+        background: highlight ? `${col.colorBg.replace('.08','0.18')}` : col.colorBg,
         border:`1px solid ${highlight ? col.colorDot : col.colorBorder}`,
         borderRadius:12, overflow:'hidden', height:'100%',
         transition:'border-color 120ms, background 120ms',
@@ -249,7 +337,7 @@ function OrgColumn({ col, items, onOpen, onAddNew, onDragStart, onDrop, isDragOv
       </div>
       <div style={{ flex:1, overflowY:'auto', padding:'10px 8px', display:'flex', flexDirection:'column', gap:8 }}>
         {items.map(item => (
-          <ContentCard key={item.id} item={item} col={col} onOpen={onOpen} onDragStart={onDragStart}/>
+          <ContentCard key={item.id} item={item} col={col} onOpen={onOpen} onDragStart={onDragStart} onEtapaToggle={onEtapaToggle}/>
         ))}
         {highlight && items.length === 0 && (
           <div style={{ flex:1, border:`2px dashed ${col.colorDot}55`, borderRadius:8,
@@ -374,11 +462,6 @@ function AdicionarCriativoOrganicoBtn({ numero, cardId, onDone }) {
     falhar('Demorou demais. Recarregue a página em instantes.');
   }
 
-  function manual() {
-    const p = window.prompt('Cole o link ou ID da pasta do criativo no Drive:');
-    if (p && p.trim()) run(p.trim());
-  }
-
   if (step === 'running') {
     return <BarraProgresso pct={pct} etapa={msg}/>;
   }
@@ -388,19 +471,15 @@ function AdicionarCriativoOrganicoBtn({ numero, cardId, onDone }) {
         <div style={{ padding:'6px 10px', borderRadius:8, background:'rgba(248,113,113,.08)',
           border:'1px solid rgba(248,113,113,.3)', fontSize:11, color:'#f87171', lineHeight:1.4 }}>{msg}</div>
       )}
-      <div style={{ display:'flex', gap:8 }}>
-        <Btn variant="secondary" size="sm" icon="image-plus" style={{ flex:1, justifyContent:'center' }}
-          onClick={() => run(null)}>Importar direto</Btn>
-        <Btn variant="ghost" size="sm" icon="link" style={{ justifyContent:'center' }}
-          onClick={manual} title="Colar o link de uma pasta do Drive">Importar com link</Btn>
-      </div>
+      <Btn variant="secondary" size="sm" icon="image-plus" style={{ width:'100%', justifyContent:'center' }}
+        onClick={() => run(null)} title="Puxa a mídia da pasta ORG deste card no Drive">Importar</Btn>
     </div>
   );
 }
 
 /* ── SlideBlock ──────────────────────────────────────────────────*/
 
-function SlideBlock({ slide, index, total, onChange, onRemove, file, onFileChange }) {
+function SlideBlock({ slide, index, total, onChange, onRemove, file, uploading, onFileChange }) {
   const [open, setOpen] = useState(false);
   const fileRef = useRef();
   const set = (k, v) => onChange(index, { ...slide, [k]: v });
@@ -454,13 +533,15 @@ function SlideBlock({ slide, index, total, onChange, onRemove, file, onFileChang
                 <img src={previewUrl} style={{ width:56, height:56, borderRadius:8,
                   objectFit:'cover', border:'1px solid rgba(255,255,255,.15)', flexShrink:0 }}/>
               )}
-              <button onClick={()=>fileRef.current.click()}
-                style={{ flex:1, padding:'9px', borderRadius:8, cursor:'pointer',
-                  background:'rgba(255,255,255,.03)', border:'1px dashed rgba(255,255,255,.2)',
-                  color:'var(--text-3)', fontSize:11, fontFamily:'Roboto,sans-serif', fontWeight:700,
+              <button onClick={()=>!uploading && fileRef.current.click()} disabled={uploading}
+                style={{ flex:1, padding:'9px', borderRadius:8, cursor: uploading?'default':'pointer',
+                  background: uploading?'rgba(96,165,250,.1)':'rgba(255,255,255,.03)',
+                  border:`1px dashed ${uploading?'rgba(96,165,250,.35)':'rgba(255,255,255,.2)'}`,
+                  color: uploading?'#60a5fa':'var(--text-3)', fontSize:11,
+                  fontFamily:'Roboto,sans-serif', fontWeight:700,
                   display:'flex', alignItems:'center', justifyContent:'center', gap:6 }}>
-                <LucideIcon icon="upload" size={13}/>
-                {previewUrl ? 'Trocar imagem' : 'Selecionar imagem'}
+                <LucideIcon icon={uploading?'loader':'upload'} size={13}/>
+                {uploading ? 'Subindo...' : (previewUrl ? 'Trocar imagem' : 'Selecionar imagem')}
               </button>
               <input ref={fileRef} type="file" accept="image/*" style={{ display:'none' }}
                 onChange={e => e.target.files[0] && onFileChange(index, e.target.files[0])}/>
@@ -501,10 +582,194 @@ function SlideBlock({ slide, index, total, onChange, onRemove, file, onFileChang
 }
 
 /* ── PublishModal ────────────────────────────────────────────────*/
-function PublishModal({ form, slidesArr, slideFiles, onClose, onSuccess }) {
-  const [modo, setModo]           = useState('agora');
-  const [schedDate, setDate]      = useState('');
-  const [schedTime, setTime]      = useState('09:00');
+/* ── PublicarArtigoModal ─────────────────────────────────────────────────
+   Card de Artigo não vai pro Instagram: publicar aqui significa ligar o
+   artigo no ar no site da FMN, o mesmo que apertar o botão no admin.
+
+   O artigo já existe como rascunho no banco do site (a skill que escreve o
+   artigo grava assim). O que este modal faz é virar a chave `ativo`, agora
+   ou no dia marcado. O texto do artigo continua sendo editado no admin: aqui
+   é só o gatilho de publicação, o Tracker não é editor de artigo.
+
+   O link do post fica no campo Referência do card, que é de onde o slug sai. */
+function PublicarArtigoModal({ form, onClose, onSuccess, initialDate }) {
+  const [modo, setModo]   = useState(initialDate ? 'agendar' : 'agora');
+  const [fase, setFase]   = useState('carregando'); // carregando | pronto | enviando | erro | ok
+  const [artigo, setArtigo] = useState(null);
+  const [erro, setErro]   = useState('');
+  const hoje = new Date().toISOString().slice(0, 10);
+  const [data, setData] = useState(initialDate || form.data_prevista || hoje);
+  const [hora, setHora] = useState('18:00');
+
+  // Confere o artigo no site antes de qualquer coisa: assim você vê o título
+  // de verdade que vai ao ar, em vez de confiar que o link está certo.
+  useEffect(() => {
+    let vivo = true;
+    const ref = encodeURIComponent(form.referencia || '');
+    fetch(`${WORKER_URL}/artigo-status?referencia=${ref}`)
+      .then(async r => ({ ok: r.ok, d: await r.json().catch(() => ({})) }))
+      .then(({ ok, d }) => {
+        if (!vivo) return;
+        if (!ok || d.error) { setErro(d.error || 'Não consegui consultar o artigo no site.'); setFase('erro'); return; }
+        setArtigo(d.artigo); setFase('pronto');
+      })
+      .catch(() => { if (vivo) { setErro('Não consegui falar com o site.'); setFase('erro'); } });
+    return () => { vivo = false; };
+  }, []);
+
+  async function enviar() {
+    setFase('enviando'); setErro('');
+    const scheduleAt = modo === 'agendar'
+      ? new Date(`${data}T${hora}:00-03:00`).toISOString()
+      : null;
+    try {
+      const r = await fetch(`${WORKER_URL}/artigo-publicar`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cardId: form.id, referencia: form.referencia, scheduleAt }),
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok || d.error) throw new Error(d.error || 'Falha ao publicar.');
+      setFase('ok');
+      setTimeout(() => onSuccess(scheduleAt ? 'Agendado' : 'Arquivado', scheduleAt), 900);
+    } catch (e) {
+      setErro(e.message); setFase('erro');
+    }
+  }
+
+  const Caixa = ({ children }) => (
+    <div onClick={e => e.target === e.currentTarget && onClose()}
+      style={{ position:'fixed', inset:0, background:'rgba(0,0,0,.75)', zIndex:900,
+        display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
+      <div style={{ width:'100%', maxWidth:420, background:'var(--app-surface)',
+        border:'1px solid var(--app-border)', borderRadius:14, padding:22,
+        display:'flex', flexDirection:'column', gap:14 }}>
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+          <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+            <div style={{ width:34, height:34, borderRadius:9, display:'flex', alignItems:'center',
+              justifyContent:'center', background:'rgba(234,170,65,.12)', border:'1px solid rgba(234,170,65,.3)' }}>
+              <LucideIcon icon="newspaper" size={16} style={{ color:'var(--fmn-gold)' }}/>
+            </div>
+            <div>
+              <div style={{ fontSize:14, fontFamily:'Roboto,sans-serif', fontWeight:700, color:'var(--text-1)' }}>
+                Publicar no site
+              </div>
+              <div style={{ fontSize:11, fontFamily:'Roboto,sans-serif', color:'var(--text-3)' }}>
+                Blog da FMN
+              </div>
+            </div>
+          </div>
+          <button onClick={onClose} style={{ background:'none', border:'none', cursor:'pointer', color:'var(--text-3)', display:'flex' }}>
+            <LucideIcon icon="x" size={16}/>
+          </button>
+        </div>
+        {children}
+      </div>
+    </div>
+  );
+
+  if (fase === 'carregando') return (
+    <Caixa><div style={{ fontSize:12.5, fontFamily:'Roboto,sans-serif', color:'var(--text-3)' }}>Procurando o artigo no site...</div></Caixa>
+  );
+
+  if (fase === 'erro' && !artigo) return (
+    <Caixa>
+      <div style={{ padding:'10px 12px', borderRadius:9, background:'rgba(248,113,113,.08)',
+        border:'1px solid rgba(248,113,113,.3)', fontSize:12, color:'#f87171', lineHeight:1.5 }}>{erro}</div>
+      <Btn variant="ghost" size="sm" onClick={onClose} style={{ justifyContent:'center' }}>Fechar</Btn>
+    </Caixa>
+  );
+
+  if (fase === 'ok') return (
+    <Caixa>
+      <div style={{ display:'flex', alignItems:'center', gap:8, fontSize:13,
+        fontFamily:'Roboto,sans-serif', fontWeight:700, color:'var(--clr-pos)' }}>
+        <LucideIcon icon="check" size={15}/>
+        {modo === 'agendar' ? 'Agendado.' : 'Artigo no ar.'}
+      </div>
+    </Caixa>
+  );
+
+  return (
+    <Caixa>
+      {/* O título vem do site, não do card: é o que vai aparecer no blog. */}
+      <div style={{ padding:'10px 12px', borderRadius:9, background:'var(--app-surface-2)',
+        border:'1px solid var(--app-border)', display:'flex', flexDirection:'column', gap:4 }}>
+        <span style={{ fontSize:9.5, fontFamily:'Roboto,sans-serif', fontWeight:700,
+          letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)' }}>Artigo no site</span>
+        <span style={{ fontSize:12.5, fontFamily:'Roboto,sans-serif', color:'var(--text-1)', lineHeight:1.45 }}>
+          {artigo.titulo}
+        </span>
+        <a href={`https://www.fotografiaeomeunegocio.com.br/post.html?slug=${artigo.slug}`}
+          target="_blank" rel="noopener noreferrer"
+          style={{ fontSize:11, fontFamily:'Roboto,sans-serif', color:'var(--fmn-gold)', textDecoration:'none' }}>
+          Ver como está agora
+        </a>
+        {/* A data vem do post, e o Tracker não mexe nela. Mostrar aqui evita
+            a surpresa de publicar e o artigo aparecer sem data no blog. */}
+        <span style={{ fontSize:10.5, fontFamily:'Roboto,sans-serif', color:'var(--text-3)', marginTop:2 }}>
+          {artigo.publicado_em
+            ? `Data do artigo: ${artigo.publicado_em.slice(0,10).split('-').reverse().join('/')}`
+            : 'Sem data marcada. Vai ao ar sem data, do jeito que está no admin.'}
+        </span>
+        {artigo.ativo && (
+          <span style={{ fontSize:11, fontFamily:'Roboto,sans-serif', color:'#fbbf24', marginTop:2 }}>
+            Este artigo já está no ar.
+          </span>
+        )}
+      </div>
+
+      <div style={{ display:'flex', gap:6 }}>
+        {[['agora','Publicar agora','zap'], ['agendar','Agendar','clock']].map(([v, rotulo, icone]) => (
+          <button key={v} onClick={() => setModo(v)}
+            style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'center', gap:6,
+              padding:'8px 10px', borderRadius:8, cursor:'pointer',
+              fontFamily:'Roboto,sans-serif', fontSize:12, fontWeight:700,
+              background: modo===v ? 'rgba(234,170,65,.14)' : 'rgba(255,255,255,.04)',
+              border: modo===v ? '1px solid rgba(234,170,65,.45)' : '1px solid var(--app-border)',
+              color: modo===v ? 'var(--fmn-gold)' : 'var(--text-3)' }}>
+            <LucideIcon icon={icone} size={13}/>{rotulo}
+          </button>
+        ))}
+      </div>
+
+      {modo === 'agendar' && (<>
+        <div style={{ display:'flex', gap:8 }}>
+          <input type="date" value={data} min={hoje} onChange={e => setData(e.target.value)}
+            style={{ flex:2, boxSizing:'border-box', padding:'8px 10px', borderRadius:8,
+              background:'var(--app-surface-2)', border:'1px solid var(--app-border)',
+              color:'var(--text-1)', fontFamily:'Roboto,sans-serif', fontSize:12.5, outline:'none' }}/>
+          <input type="time" value={hora} onChange={e => setHora(e.target.value)}
+            style={{ flex:1, boxSizing:'border-box', padding:'8px 10px', borderRadius:8,
+              background:'var(--app-surface-2)', border:'1px solid var(--app-border)',
+              color:'var(--text-1)', fontFamily:'Roboto,sans-serif', fontSize:12.5, outline:'none' }}/>
+        </div>
+        {/* O robô roda de 15 em 15 minutos, então o artigo entra no ar no
+            primeiro ciclo depois da hora marcada. Dizer isso evita a dúvida
+            de "marquei 18:00 e às 18:02 ainda não estava lá". */}
+        <span style={{ fontSize:10.5, fontFamily:'Roboto,sans-serif', color:'var(--text-3)', lineHeight:1.5 }}>
+          O artigo entra no ar até 15 minutos depois do horário marcado.
+        </span>
+      </>)}
+
+      {erro && (
+        <div style={{ padding:'9px 11px', borderRadius:9, background:'rgba(248,113,113,.08)',
+          border:'1px solid rgba(248,113,113,.3)', fontSize:11.5, color:'#f87171', lineHeight:1.5 }}>{erro}</div>
+      )}
+
+      <Btn onClick={enviar} disabled={fase === 'enviando'} style={{ justifyContent:'center' }}>
+        <LucideIcon icon={fase === 'enviando' ? 'loader' : modo === 'agendar' ? 'clock' : 'send'} size={13}/>
+        {fase === 'enviando' ? 'Enviando...' : modo === 'agendar' ? 'Agendar publicação' : 'Publicar agora'}
+      </Btn>
+    </Caixa>
+  );
+}
+
+function PublishModal({ form, slidesArr, slideFiles, onClose, onSuccess, initialDate, initialModo }) {
+  // initialModo/initialDate: quando vem do calendário, já abre em "Agendar"
+  // com o dia clicado preenchido, faltando só o horário.
+  const [modo, setModo]           = useState(initialModo || 'agora');
+  const [schedDate, setDate]      = useState(initialDate || '');
+  const [schedTime, setTime]      = useState('18:00');
   const [phase, setPhase]         = useState('idle');
   const [msg, setMsg]             = useState('');
   const [comFacebook, setFB]      = useState(false);
@@ -523,10 +788,24 @@ function PublishModal({ form, slidesArr, slideFiles, onClose, onSuccess }) {
       ? slidesArr.some((s, i) => slideFiles[i] || s.image_url)
       : (slideFiles[0] || slidesArr[0]?.image_url);
 
+  // Barra antes de sair. Vale principalmente pro AGENDAMENTO: sem isso, o card
+  // fica dias parecendo agendado e falha sozinho no horário, quando ninguém
+  // está olhando. Nunca cortar a legenda por conta própria: o texto é seu, e
+  // decidir o que sai dele é decisão de copy, não de sistema.
+  function conferirLegenda(caption) {
+    if (caption.length > LIMITE_LEGENDA) {
+      throw new Error(
+        `A legenda tem ${caption.length} caracteres e o Instagram aceita no máximo ${LIMITE_LEGENDA}. ` +
+        `Tire ${caption.length - LIMITE_LEGENDA} caracteres e tente de novo.`
+      );
+    }
+  }
+
   const runReels = async () => {
     try {
       setPhase('publishing');
       const caption = (form.legenda || form.roteiro || '').trim();
+      conferirLegenda(caption);
       const scheduleAt = modo === 'agendar' && schedDate
         ? new Date(`${schedDate}T${schedTime}:00-03:00`).toISOString()
         : null;
@@ -631,6 +910,7 @@ function PublishModal({ form, slidesArr, slideFiles, onClose, onSuccess }) {
       setPhase('publishing');
 
       const caption    = (form.legenda || form.roteiro || '').trim();
+      conferirLegenda(caption);
       const tipo       = form.plataforma === 'Carrossel' ? 'carrossel' : 'imagem';
       const scheduleAt = modo === 'agendar' && schedDate
         ? new Date(`${schedDate}T${schedTime}:00-03:00`).toISOString()
@@ -903,18 +1183,28 @@ function PublishModal({ form, slidesArr, slideFiles, onClose, onSuccess }) {
 }
 
 /* ── ResponsavelAvatar ───────────────────────────────────────────*/
-function ResponsavelAvatar({ nome, size=24, active=false }) {
-  const cfg = RESPONSAVEL_CONFIG[nome] || { initials:(nome||'?')[0], color:'#94a3b8', bg:'rgba(148,163,184,.18)', photo:null };
+function ResponsavelAvatar({ nome, size=24, active=false, sempreAceso=false }) {
+  // Sem nome = card de todos (não é "erro", é tarefa de quem pegar primeiro).
+  const cfg = nome
+    ? (RESPONSAVEL_CONFIG[nome] || { initials:(nome||'?')[0].toUpperCase(), color:'#94a3b8', bg:'rgba(148,163,184,.18)', photo:null })
+    : RESPONSAVEL_COMUM;
+  // No card a foto sempre aparece acesa; no filtro ela apaga quando inativa,
+  // pra ficar claro qual está selecionado.
+  const aceso = sempreAceso || active;
   return (
-    <div style={{ width:size, height:size, borderRadius:'50%', flexShrink:0, overflow:'hidden',
-      display:'flex', alignItems:'center', justifyContent:'center',
-      background: active ? cfg.bg : 'rgba(255,255,255,.08)',
-      border: `2px solid ${active ? cfg.color+'88' : 'rgba(255,255,255,.12)'}`,
-      transition:'all 150ms' }}>
+    <div title={nome || 'De todos'}
+      style={{ width:size, height:size, borderRadius:'50%', flexShrink:0, overflow:'hidden',
+        display:'flex', alignItems:'center', justifyContent:'center',
+        background: aceso ? cfg.bg : 'rgba(255,255,255,.08)',
+        border: `2px solid ${aceso ? cfg.color : 'rgba(255,255,255,.14)'}`,
+        opacity: aceso ? 1 : .5,
+        transition:'all 150ms' }}>
       {cfg.photo
-        ? <img src={cfg.photo} style={{ width:'100%', height:'100%', objectFit:'cover' }}/>
+        ? <img src={cfg.photo} alt={nome || 'De todos'}
+            style={{ width:'100%', height:'100%', objectFit:'cover',
+              filter: aceso ? 'none' : 'grayscale(1)' }}/>
         : <span style={{ fontSize:size*0.32, fontFamily:'Roboto,sans-serif', fontWeight:900,
-            color: active ? cfg.color : 'rgba(255,255,255,.35)', lineHeight:1, userSelect:'none' }}>
+            color: aceso ? cfg.color : 'rgba(255,255,255,.35)', lineHeight:1, userSelect:'none' }}>
             {cfg.initials}
           </span>
       }
@@ -931,11 +1221,11 @@ function parseSlides(raw) {
   catch { return [EMPTY_SLIDE()]; }
 }
 
-function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigate, onSave, onClose, onDelete, onImported }) {
+function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigate, onSave, onClose, onDelete, onImported, abrirPublicar, prefillSchedDate }) {
   const isNew = !item?.id;
   const [form, setForm] = useState(item || {
     tema:'', plataforma:'Reels', responsavel:'Felipe',
-    status: defaultStatus || 'Fazer',
+    status: defaultStatus || 'Fazendo',
     headline:'', roteiro:'', estetica_visual:'', prompt:'',
     slides:'', legenda:'', observacoes:'', referencia:'',
     data_prevista: prefillDate || '',
@@ -944,7 +1234,8 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
 
   const [slidesArr, setSlidesArr]     = useState(() => parseSlides(form.slides));
   const [slideFiles, setSlideFiles]   = useState({});
-  const [showPublish, setShowPublish] = useState(false);
+  // Aberto direto quando o card veio do calendário (clique numa data).
+  const [showPublish, setShowPublish] = useState(!!abrirPublicar);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [saveStatus, setSaveStatus]   = useState('idle');
 
@@ -953,6 +1244,26 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
   }, [onClose]);
+
+  // Rede de segurança da pasta no Drive: a criação dispara ao salvar o card,
+  // mas isso depende da aba estar com o Tracker atualizado no momento exato
+  // (aba aberta há horas roda a versão antiga do código e não chama nada).
+  // Aqui, ao ABRIR qualquer card sem pasta, garantimos a criação — cobre também
+  // os cards antigos, feitos antes desta função existir. O endpoint é
+  // idempotente, então reabrir o mesmo card não cria pasta duplicada.
+  const [pastaUrl, setPastaUrl] = useState(item?.drive_folder_url || null);
+  useEffect(() => {
+    if (isNew || !item?.id || item?.drive_folder_url) return;
+    let vivo = true;
+    fetch(`${WORKER_URL}/criar-pasta`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ card_id: item.id }),
+    })
+      .then(r => r.json())
+      .then(d => { if (vivo && d && d.ok && d.url) setPastaUrl(d.url); })
+      .catch(e => console.warn('Não consegui garantir a pasta no Drive:', e));
+    return () => { vivo = false; };
+  }, [item?.id]);
 
   const currentCol = COLUMNS.find(c => c.id === form.status) || COLUMNS[0];
   const sibIdx  = siblings.findIndex(s => s.id === item?.id);
@@ -974,7 +1285,41 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
       return next;
     });
   };
-  const handleFileChange = (idx, file) => setSlideFiles(prev => ({ ...prev, [idx]: file }));
+  // Trocar imagem sobe na hora, não espera a publicação.
+  //
+  // Antes isso só guardava o File na memória: quem trocava a imagem e fechava
+  // o card sem publicar perdia a troca em silêncio (o preview mostrava a nova,
+  // porque era um object URL local, mas o banco continuava com a antiga). E a
+  // imagem substituída ficava órfã pra sempre no R2.
+  //
+  // Agora comprime pra JPEG (a API do Instagram não aceita WebP), sobe, grava
+  // a URL no slide e manda o worker apagar a anterior.
+  const [slideUploading, setSlideUploading] = useState({});
+  const handleFileChange = async (idx, file) => {
+    setSlideFiles(prev => ({ ...prev, [idx]: file }));   // preview instantâneo
+    setSlideUploading(prev => ({ ...prev, [idx]: true }));
+    try {
+      const otimizada = await compressToJpeg(file);
+      const fd = new FormData();
+      fd.append('file', otimizada, (file.name || 'imagem').replace(/\.[^.]+$/, '') + '.jpg');
+      const antiga = slidesArr[idx]?.image_url;
+      if (antiga) fd.append('old_url', antiga);
+
+      const res  = await fetch(`${WORKER_URL}/slide-image`, { method: 'POST', body: fd });
+      const data = await res.json();
+      if (!data.ok) throw new Error(data.error || 'falha no upload');
+
+      setSlidesArr(prev => prev.map((s, i) => i === idx ? { ...s, image_url: data.url } : s));
+      // A imagem já está no R2 com URL definitiva. Limpar o File evita que a
+      // publicação suba o mesmo arquivo de novo e crie uma segunda cópia.
+      setSlideFiles(prev => { const n = { ...prev }; delete n[idx]; return n; });
+    } catch (e) {
+      console.warn('Não consegui subir a imagem do slide:', e);
+      alert('Não consegui subir a imagem agora. Ela segue só no preview: publique ou tente de novo antes de fechar o card.');
+    } finally {
+      setSlideUploading(prev => { const n = { ...prev }; delete n[idx]; return n; });
+    }
+  };
 
   const handleSave = async () => {
     setSaveStatus('saving');
@@ -984,9 +1329,34 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
     setTimeout(() => setSaveStatus('idle'), 2000);
   };
 
+  // ── Salvamento automático ──────────────────────────────────────────────
+  // Grava sozinho 1,2s depois que você para de digitar. Só vale pra card que
+  // JÁ EXISTE: card novo continua nascendo pelo botão "Criar", senão abrir o
+  // modal e desistir encheria o quadro de cards em branco.
+  // O snapshot evita gravação à toa (reabrir o card, ou uma mudança que volta
+  // ao valor original, não disparam nada).
+  const primeiroRender = useRef(true);
+  const ultimoSalvo    = useRef(null);
+  useEffect(() => {
+    if (isNew) return;
+    const finalSlides = form.plataforma === 'Carrossel' ? JSON.stringify(slidesArr) : form.slides;
+    const snapshot = JSON.stringify({ ...form, slides: finalSlides });
+    // Primeira passada é só a abertura do modal, não é edição.
+    if (primeiroRender.current) { primeiroRender.current = false; ultimoSalvo.current = snapshot; return; }
+    if (snapshot === ultimoSalvo.current) return;
+    const t = setTimeout(async () => {
+      ultimoSalvo.current = snapshot;
+      setSaveStatus('saving');
+      await onSave({ ...form, slides: finalSlides });
+      setSaveStatus('saved');
+      setTimeout(() => setSaveStatus(a => a === 'saved' ? 'idle' : a), 1800);
+    }, 1200);
+    return () => clearTimeout(t);
+  }, [form, slidesArr, isNew]);
+
   const handlePublishSuccess = (newSlides, postId, scheduled, scheduledDate, scheduledAtISO) => {
     const updatedSlides = form.plataforma === 'Carrossel' ? JSON.stringify(newSlides) : form.slides;
-    const newStatus     = scheduled ? 'Agendado' : 'Feito';
+    const newStatus     = scheduled ? 'Agendado' : 'Arquivado';
     const updated       = {
       ...form,
       slides: updatedSlides,
@@ -1003,7 +1373,7 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
     onSave(updated);
   };
 
-  const canShowPublish = !isNew && (form.plataforma === 'Carrossel' || form.plataforma === 'Imagem' || form.plataforma === 'Reels');
+  const canShowPublish = !isNew && (form.plataforma === 'Carrossel' || form.plataforma === 'Imagem' || form.plataforma === 'Reels' || form.plataforma === 'Artigo');
 
   // Painel esquerdo — navegador de slides embarcado
   const [previewIdx, setPreviewIdx] = useState(0);
@@ -1014,12 +1384,27 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
 
   return (
     <>
-      {showPublish && (
+      {showPublish && form.plataforma === 'Artigo' && (
+        <PublicarArtigoModal
+          form={form}
+          onClose={() => setShowPublish(false)}
+          initialDate={prefillSchedDate || null}
+          onSuccess={(novoStatus, quando) => {
+            setShowPublish(false);
+            set('status', novoStatus);
+            if (quando) set('data_prevista', quando.slice(0, 10));
+            onImported && onImported();
+          }}/>
+      )}
+
+      {showPublish && form.plataforma !== 'Artigo' && (
         <PublishModal
           form={form}
           slidesArr={slidesArr}
           slideFiles={slideFiles}
           onClose={() => setShowPublish(false)}
+          initialDate={prefillSchedDate || null}
+          initialModo={prefillSchedDate ? 'agendar' : null}
           onSuccess={handlePublishSuccess}/>
       )}
 
@@ -1097,8 +1482,25 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
               )}
             </div>
             <div style={{ display:'flex', gap:8, alignItems:'center', flexShrink:0 }}>
+              {/* Card que já existe salva sozinho; o indicador é o que dá a
+                  confiança de poder fechar a janela sem clicar em nada. */}
+              {!isNew && saveStatus !== 'saving' && saveStatus !== 'saved' && (
+                <span style={{ fontSize:10.5, fontFamily:'Roboto,sans-serif', color:'var(--text-3)' }}>
+                  Salva automaticamente
+                </span>
+              )}
+              {saveStatus === 'saving' && (
+                <span style={{ display:'flex', alignItems:'center', gap:5, fontSize:11,
+                  fontFamily:'Roboto,sans-serif', color:'var(--text-3)' }}>
+                  <LucideIcon icon="loader" size={11} style={{ animation:'spin 1s linear infinite' }}/>
+                  Salvando...
+                </span>
+              )}
               {saveStatus === 'saved' && (
-                <span style={{ fontSize:11, fontFamily:'Roboto,sans-serif', color:'var(--clr-pos)' }}>Salvo!</span>
+                <span style={{ display:'flex', alignItems:'center', gap:5, fontSize:11,
+                  fontFamily:'Roboto,sans-serif', color:'var(--clr-pos)' }}>
+                  <LucideIcon icon="check" size={11}/>Salvo
+                </span>
               )}
               {canShowPublish && (
                 <button onClick={()=>setShowPublish(true)}
@@ -1136,11 +1538,18 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
                   </button>
                 )
               )}
-              <Btn variant="ghost" size="sm" onClick={onClose}>Cancelar</Btn>
-              <Btn variant="primary" size="sm" icon={saveStatus==='saving'?'loader':'check'}
-                onClick={handleSave} disabled={saveStatus==='saving'}>
-                {saveStatus==='saving'?'Salvando...':isNew?'Criar':'Salvar'}
-              </Btn>
+              {isNew ? (<>
+                <Btn variant="ghost" size="sm" onClick={onClose}>Cancelar</Btn>
+                <Btn variant="primary" size="sm" icon={saveStatus==='saving'?'loader':'check'}
+                  onClick={handleSave} disabled={saveStatus==='saving'}>
+                  {saveStatus==='saving'?'Criando...':'Criar'}
+                </Btn>
+              </>) : (
+                // Nada de "Cancelar" em card existente: as alterações já foram
+                // gravadas, o botão prometeria um desfazer que não existe.
+                <Btn variant="primary" size="sm" icon="check"
+                  onClick={onClose} disabled={saveStatus==='saving'}>Fechar</Btn>
+              )}
             </div>
           </div>
 
@@ -1219,14 +1628,33 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
 
               {!isNew && item?.numero && (
                 <div style={{ width:'100%', display:'flex', flexDirection:'column', gap:8 }}>
+                  {/* Atalho pra pasta do card no Drive (criada junto com o card).
+                      Fluxo: cria o card, clica aqui, joga a arte, importa. */}
+                  {(pastaUrl || item.drive_folder_url) && (
+                    <a href={pastaUrl || item.drive_folder_url} target="_blank" rel="noopener noreferrer"
+                      style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:6,
+                        padding:'7px 12px', borderRadius:8, textDecoration:'none',
+                        background:'rgba(255,255,255,.04)', border:'1px solid var(--app-border)',
+                        color:'var(--text-2)', fontFamily:'Roboto,sans-serif', fontSize:11.5, fontWeight:700 }}
+                      onMouseEnter={e => { e.currentTarget.style.borderColor='rgba(234,170,65,.4)'; e.currentTarget.style.color='var(--fmn-gold)'; }}
+                      onMouseLeave={e => { e.currentTarget.style.borderColor='var(--app-border)'; e.currentTarget.style.color='var(--text-2)'; }}>
+                      <LucideIcon icon="folder-open" size={13}/>Abrir pasta no Drive
+                    </a>
+                  )}
                   <AdicionarCriativoOrganicoBtn numero={item.numero} cardId={item.id} onDone={async () => {
                     if (!window.db) return;
-                    const { data } = await window.db.from('conteudo_organico').select('slides').eq('id', item.id).single();
-                    if (data?.slides) {
-                      const novo = parseSlides(data.slides);
-                      setSlidesArr(novo);
-                      set('slides', data.slides);
-                      setPreviewIdx(0);
+                    // Recarrega slides E status: a importação avança o card no
+                    // servidor (Fazendo -> Feito), e se a tela ficasse com o
+                    // status antigo o salvamento automático o devolveria.
+                    const { data } = await window.db.from('conteudo_organico')
+                      .select('slides,status,media_files').eq('id', item.id).single();
+                    if (data) {
+                      if (data.slides) {
+                        setSlidesArr(parseSlides(data.slides));
+                        set('slides', data.slides);
+                        setPreviewIdx(0);
+                      }
+                      if (data.status) set('status', data.status);
                     }
                     onImported && onImported();
                   }}/>
@@ -1273,18 +1701,19 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
                     <div style={{ display:'flex', flexDirection:'column', gap:7 }}>
                       <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)' }}>Responsável</span>
                       <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
-                        {RESPONSAVEIS.map(r => {
-                          const cfg = RESPONSAVEL_CONFIG[r] || { color:'#94a3b8', bg:'rgba(148,163,184,.18)' };
-                          const active = form.responsavel === r;
+                        {[null, ...RESPONSAVEIS].map(r => {
+                          const cfg = r ? (RESPONSAVEL_CONFIG[r] || { color:'#94a3b8', bg:'rgba(148,163,184,.18)' })
+                                        : RESPONSAVEL_COMUM;
+                          const active = (form.responsavel || null) === r;
                           return (
-                            <div key={r} onClick={()=>set('responsavel',r)}
+                            <div key={r || 'todos'} onClick={()=>set('responsavel', r)}
                               style={{ display:'flex', alignItems:'center', gap:6, padding:'4px 10px', borderRadius:999,
                                 cursor:'pointer', transition:'all 130ms',
                                 background: active ? cfg.bg : 'rgba(255,255,255,.04)',
                                 border: active ? `1px solid ${cfg.color}55` : '1px solid rgba(255,255,255,.1)' }}>
                               <ResponsavelAvatar nome={r} size={20} active={active}/>
                               <span style={{ fontSize:11, fontFamily:'Roboto,sans-serif', fontWeight:700,
-                                color: active ? cfg.color : 'var(--text-3)' }}>{r}</span>
+                                color: active ? cfg.color : 'var(--text-3)' }}>{r || 'De todos'}</span>
                             </div>
                           );
                         })}
@@ -1311,6 +1740,31 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
                       })}
                     </div>
                   </div>
+
+                  {/* Etapa — só dentro de Fazendo. Clicar na etapa já ativa
+                      desmarca, voltando pra "sem etapa". */}
+                  {form.status === 'Fazendo' && (
+                    <div style={{ display:'flex', flexDirection:'column', gap:7 }}>
+                      <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700,
+                        letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)' }}>Etapa</span>
+                      <div style={{ display:'flex', gap:5, flexWrap:'wrap' }}>
+                        {Object.entries(ETAPAS_ORG).map(([id, e]) => {
+                          const active = form.etapa === id;
+                          return (
+                            <button key={id} onClick={() => set('etapa', active ? null : id)}
+                              style={{ display:'flex', alignItems:'center', gap:5, padding:'4px 10px',
+                                borderRadius:999, fontSize:11, cursor:'pointer',
+                                fontFamily:'Roboto,sans-serif', fontWeight:700, transition:'all 120ms',
+                                background: active ? `${e.cor}26` : 'rgba(255,255,255,.04)',
+                                border: active ? `1px solid ${e.cor}66` : '1px solid var(--app-border)',
+                                color: active ? e.cor : 'var(--text-3)' }}>
+                              <LucideIcon icon={e.icon} size={11}/>{e.label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
 
                   {/* Data prevista */}
                   <div style={{ display:'flex', flexDirection:'column', gap:7 }}>
@@ -1352,11 +1806,11 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
                   {/* Headline */}
                   <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
                     <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-                      <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)' }}>Headline</span>
+                      <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)' }}>{form.plataforma==='Artigo' ? 'Título do artigo' : 'Headline'}</span>
                       <CopyBtn text={form.headline||''}/>
                     </div>
                     <textarea value={form.headline||''} onChange={e=>set('headline',e.target.value)}
-                      rows={2} placeholder="O texto escrito na própria arte/vídeo (hook)..."
+                      rows={2} placeholder={form.plataforma==='Artigo' ? "O título do artigo, literário e evocativo, igual vai sair no blog..." : "O texto escrito na própria arte/vídeo (hook)..."}
                       style={{ width:'100%', boxSizing:'border-box', padding:'9px 12px', borderRadius:8, resize:'vertical',
                         background:'var(--app-surface-2)', border:'1px solid var(--app-border)',
                         color:'var(--text-1)', fontFamily:'Roboto,sans-serif', fontSize:13, outline:'none', lineHeight:1.55 }}
@@ -1384,19 +1838,20 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
                             onChange={(i,s) => { updateSlide(i,s); if (s.image_url) setPreviewIdx(i); }}
                             onRemove={removeSlide}
                             file={slideFiles[idx] || null}
+                            uploading={!!slideUploading[idx]}
                             onFileChange={handleFileChange}/>
                         ))}
                       </div>
                     </div>
                   </>) : (<>
-                    {/* Roteiro (Gancho + Desenvolvimento + CTA, sempre as 3 partes presentes) */}
+                    {/* Roteiro (Gancho + Desenvolvimento + CTA, sempre as 3 partes presentes) — em Artigo vira a estrutura do texto */}
                     <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
                       <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-                        <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)' }}>Roteiro</span>
+                        <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)' }}>{form.plataforma==='Artigo' ? 'Estrutura do artigo' : 'Roteiro'}</span>
                         <CopyBtn text={form.roteiro||''}/>
                       </div>
                       <textarea value={form.roteiro||''} onChange={e=>set('roteiro',e.target.value)}
-                        rows={6} placeholder="Gancho, desenvolvimento e CTA, as 3 partes precisam estar aqui..."
+                        rows={6} placeholder={form.plataforma==='Artigo' ? "Ângulo, abertura pronta, seções numeradas, seção de honestidade..." : "Gancho, desenvolvimento e CTA, as 3 partes precisam estar aqui..."}
                         style={{ width:'100%', boxSizing:'border-box', padding:'9px 12px', borderRadius:8, resize:'vertical',
                           background:'var(--app-surface-2)', border:'1px solid var(--app-border)',
                           color:'var(--text-1)', fontFamily:'Roboto,sans-serif', fontSize:13, outline:'none', lineHeight:1.55 }}
@@ -1407,11 +1862,11 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
                     {/* Estética Visual */}
                     <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
                       <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-                        <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)' }}>Estética Visual</span>
+                        <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)' }}>{form.plataforma==='Artigo' ? 'Direção visual' : 'Estética Visual'}</span>
                         <CopyBtn text={form.estetica_visual||''}/>
                       </div>
                       <textarea value={form.estetica_visual||''} onChange={e=>set('estetica_visual',e.target.value)}
-                        rows={4} placeholder={form.plataforma==='Imagem' ? "Descrição da cena/composição (o Prompt de geração vai no campo abaixo)..." : "Cenário, enquadramento, ritmo de corte, direção de filmagem..."}
+                        rows={4} placeholder={form.plataforma==='Artigo' ? "Capa, mapa mental, diagramas e outros visuais que o artigo pede..." : form.plataforma==='Imagem' ? "Descrição da cena/composição (o Prompt de geração vai no campo abaixo)..." : "Cenário, enquadramento, ritmo de corte, direção de filmagem..."}
                         style={{ width:'100%', boxSizing:'border-box', padding:'9px 12px', borderRadius:8, resize:'vertical',
                           background:'var(--app-surface-2)', border:'1px solid var(--app-border)',
                           color:'var(--text-1)', fontFamily:'Roboto,sans-serif', fontSize:13, outline:'none', lineHeight:1.55 }}
@@ -1419,15 +1874,15 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
                         onBlur={e=>e.target.style.borderColor='var(--app-border)'}/>
                     </div>
 
-                    {/* Prompt — só Imagem */}
-                    {form.plataforma === 'Imagem' && (
+                    {/* Prompt — Imagem e Artigo (imagem de capa) */}
+                    {(form.plataforma === 'Imagem' || form.plataforma === 'Artigo') && (
                       <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
                         <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-                          <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)' }}>Prompt</span>
+                          <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)' }}>{form.plataforma==='Artigo' ? 'Prompt da imagem de capa' : 'Prompt'}</span>
                           <CopyBtn text={form.prompt||''}/>
                         </div>
                         <textarea value={form.prompt||''} onChange={e=>set('prompt',e.target.value)}
-                          rows={4} placeholder="Prompt para gerar a imagem no ChatGPT / Midjourney..."
+                          rows={4} placeholder={form.plataforma==='Artigo' ? "Prompt para gerar a imagem de capa no ChatGPT (opcional)..." : "Prompt para gerar a imagem no ChatGPT / Midjourney..."}
                           style={{ width:'100%', boxSizing:'border-box', padding:'9px 12px', borderRadius:8, resize:'vertical',
                             background:'rgba(96,165,250,.04)', border:'1px solid rgba(96,165,250,.18)',
                             color:'var(--text-1)', fontFamily:'Roboto,sans-serif', fontSize:13, outline:'none', lineHeight:1.55 }}
@@ -1437,14 +1892,30 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
                     )}
                   </>)}
 
-                  {/* Legenda da postagem — Reels, Carrossel e Imagem */}
+                  {/* Legenda da postagem — Reels, Carrossel e Imagem. Em Artigo vira o resumo/meta description */}
                   <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
                     <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-                      <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)' }}>Legenda da postagem</span>
-                      <CopyBtn text={form.legenda||''}/>
+                      <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)' }}>{form.plataforma==='Artigo' ? 'Resumo / meta description' : 'Legenda da postagem'}</span>
+                      <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                        {/* Contador só no que vai pro Instagram. O limite não é
+                            estilo: passar dele faz o Instagram recusar a peça. */}
+                        {form.plataforma !== 'Artigo' && (() => {
+                          const n = (form.legenda || '').length;
+                          const passou = n > LIMITE_LEGENDA;
+                          const perto  = !passou && n > LIMITE_LEGENDA - 150;
+                          return (
+                            <span style={{ fontSize:10.5, fontFamily:'Roboto,sans-serif', fontWeight:700,
+                              color: passou ? 'var(--clr-neg)' : perto ? '#fbbf24' : 'var(--text-3)' }}
+                              title={passou ? `Passou ${n - LIMITE_LEGENDA} caracteres do limite do Instagram` : 'Limite do Instagram'}>
+                              {n}/{LIMITE_LEGENDA}{passou ? ` (${n - LIMITE_LEGENDA} a mais)` : ''}
+                            </span>
+                          );
+                        })()}
+                        <CopyBtn text={form.legenda||''}/>
+                      </div>
                     </div>
                     <textarea value={form.legenda||''} onChange={e=>set('legenda',e.target.value)}
-                      rows={5} placeholder="Texto da postagem no Instagram..."
+                      rows={5} placeholder={form.plataforma==='Artigo' ? "140 a 160 caracteres, o resumo que vai no card do blog e na meta description..." : "Texto da postagem no Instagram..."}
                       style={{ width:'100%', boxSizing:'border-box', padding:'9px 12px', borderRadius:8, resize:'vertical',
                         background:'var(--app-surface-2)', border:'1px solid var(--app-border)',
                         color:'var(--text-1)', fontFamily:'Roboto,sans-serif', fontSize:13, outline:'none', lineHeight:1.55 }}
@@ -1491,6 +1962,142 @@ function FilterPill({ label, active, color, onClick }) {
         color: active?(color||'var(--fmn-gold)'):'rgba(255,255,255,.42)' }}>
       {label}
     </button>
+  );
+}
+
+/* ── ProgramarModal — escolher um card pronto e jogar numa data ────────────
+   Abre ao clicar num dia do calendário. Lista os cards que já estão na coluna
+   "Feito" (arte pronta) pra você só escolher a data, em vez de ter
+   que abrir card por card. Também dá pra criar um card novo já naquela data. */
+function ProgramarModal({ dateStr, items, onEscolher, onCriarNovo, onClose }) {
+  const [busca, setBusca] = useState('');
+
+  const fmtData = d => {
+    const [a, m, dia] = d.split('-');
+    return `${dia}/${m}/${a}`;
+  };
+
+  // Prontos pra postar primeiro; depois os que estão em Produção (às vezes o
+  // usuário quer reservar a data antes da arte ficar pronta).
+  const candidatos = items
+    .filter(i => i.status === 'Feito')
+    .filter(i => {
+      if (!busca.trim()) return true;
+      const t = busca.trim().toLowerCase();
+      return (i.tema || '').toLowerCase().includes(t) || String(i.numero || '').includes(t);
+    })
+
+
+  return (
+    <div onClick={e => e.target === e.currentTarget && onClose()}
+      style={{ position:'fixed', inset:0, background:'rgba(0,0,0,.7)', zIndex:900,
+        display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
+      <div onClick={e => e.stopPropagation()}
+        style={{ width:560, maxWidth:'94vw', maxHeight:'82vh', display:'flex', flexDirection:'column',
+          background:'var(--app-surface)', border:'1px solid var(--app-border-2)', borderRadius:14,
+          overflow:'hidden', boxShadow:'0 24px 64px rgba(0,0,0,.6)' }}>
+
+        <div style={{ padding:'14px 18px', borderBottom:'1px solid var(--app-border)',
+          display:'flex', alignItems:'center', justifyContent:'space-between', flexShrink:0 }}>
+          <div>
+            <div style={{ fontSize:14, fontFamily:'Roboto,sans-serif', fontWeight:700, color:'var(--text-1)' }}>
+              Programar em {fmtData(dateStr)}
+            </div>
+            <div style={{ fontSize:11, fontFamily:'Roboto,sans-serif', color:'var(--text-3)' }}>
+              Escolha um conteúdo pronto ou crie um novo nesta data
+            </div>
+          </div>
+          <button onClick={onClose}
+            style={{ width:28, height:28, borderRadius:'50%', background:'rgba(255,255,255,.07)',
+              border:'none', color:'var(--text-2)', cursor:'pointer', fontSize:18, lineHeight:1 }}>×</button>
+        </div>
+
+        <div style={{ padding:'12px 18px 0', flexShrink:0 }}>
+          <input value={busca} onChange={e => setBusca(e.target.value)}
+            placeholder="Buscar por tema ou número..."
+            style={{ width:'100%', boxSizing:'border-box', padding:'8px 12px', borderRadius:8,
+              background:'var(--app-surface-2)', border:'1px solid var(--app-border)',
+              color:'var(--text-1)', fontFamily:'Roboto,sans-serif', fontSize:12.5, outline:'none' }}/>
+        </div>
+
+        <div style={{ flex:1, overflowY:'auto', padding:'12px 18px', display:'flex', flexDirection:'column', gap:6 }}>
+          {candidatos.length === 0 && (
+            <div style={{ padding:'28px 0', textAlign:'center', color:'var(--text-3)',
+              fontFamily:'Roboto,sans-serif', fontSize:12.5, lineHeight:1.6 }}>
+              Nenhum conteúdo pronto em Feito.<br/>
+              Crie um card novo nesta data abaixo.
+            </div>
+          )}
+          {candidatos.map(it => {
+            const cor = PLAT_COLOR[it.plataforma] || '#94a3b8';
+            const num = String(it.numero || 0).padStart(3, '0');
+            // Mesma regra de thumb do resto da tela: vídeo usa o JPG de
+            // media_files, nunca o .mp4 (img não renderiza vídeo).
+            let thumb = null;
+            try {
+              let mf = it.media_files;
+              if (typeof mf === 'string') mf = JSON.parse(mf);
+              thumb = Array.isArray(mf) ? (mf.find(m => m && m.tipo === 'video')?.thumb_url || null) : null;
+            } catch {}
+            if (!thumb) {
+              try {
+                const sa = JSON.parse(it.slides || '[]');
+                thumb = sa.map(s => s.image_url).filter(Boolean)[0] || null;
+                if (/\.(mp4|webm|mov|m4v)$/i.test(thumb || '')) thumb = null;
+              } catch {}
+            }
+            return (
+              <button key={it.id} onClick={() => onEscolher(it)}
+                style={{ display:'flex', alignItems:'center', gap:10, padding:'9px 11px', width:'100%',
+                  borderRadius:9, cursor:'pointer', textAlign:'left',
+                  background:'var(--app-surface-2)', border:'1px solid var(--app-border)',
+                  transition:'all 120ms' }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor='rgba(234,170,65,.45)'; e.currentTarget.style.background='rgba(234,170,65,.07)'; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor='var(--app-border)'; e.currentTarget.style.background='var(--app-surface-2)'; }}>
+                <div style={{ width:38, height:38, borderRadius:6, flexShrink:0, overflow:'hidden',
+                  background:`${cor}18`, border:'1px solid rgba(255,255,255,.08)',
+                  display:'flex', alignItems:'center', justifyContent:'center' }}>
+                  {thumb
+                    ? <img src={thumb} alt="" style={{ width:'100%', height:'100%', objectFit:'cover' }}/>
+                    : <LucideIcon icon={PLAT_ICON[it.plataforma] || 'file'} size={15} style={{ color:cor }}/>}
+                </div>
+                <div style={{ flex:1, minWidth:0 }}>
+                  <div style={{ display:'flex', alignItems:'center', gap:7 }}>
+                    <span style={{ fontSize:10.5, fontFamily:'Roboto,sans-serif', fontWeight:900,
+                      color:cor, letterSpacing:'0.05em' }}>ORG {num}</span>
+                    <span style={{ fontSize:9.5, fontFamily:'Roboto,sans-serif', fontWeight:700,
+                      padding:'1px 7px', borderRadius:999, color:cor, background:`${cor}18` }}>
+                      {it.plataforma}
+                    </span>
+
+                  </div>
+                  <div style={{ fontSize:12.5, fontFamily:'Roboto,sans-serif', color:'var(--text-1)',
+                    marginTop:2, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+                    {it.tema || 'Sem tema'}
+                  </div>
+                  {it.data_prevista && it.data_prevista !== dateStr && (
+                    <div style={{ fontSize:10.5, fontFamily:'Roboto,sans-serif', color:'#fbbf24', marginTop:1 }}>
+                      hoje está em {fmtData(it.data_prevista)}, vai mudar para {fmtData(dateStr)}
+                    </div>
+                  )}
+                </div>
+                <LucideIcon icon="calendar-plus" size={15} style={{ color:'var(--text-3)', flexShrink:0 }}/>
+              </button>
+            );
+          })}
+        </div>
+
+        <div style={{ padding:'12px 18px', borderTop:'1px solid var(--app-border)', flexShrink:0 }}>
+          <button onClick={onCriarNovo}
+            style={{ width:'100%', padding:'9px 0', borderRadius:8, cursor:'pointer',
+              background:'rgba(255,255,255,.04)', border:'1px dashed var(--app-border-2)',
+              color:'var(--text-2)', fontFamily:'Roboto,sans-serif', fontSize:12, fontWeight:700,
+              display:'flex', alignItems:'center', justifyContent:'center', gap:6 }}>
+            <LucideIcon icon="plus" size={13}/>Criar card novo nesta data
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -1547,7 +2154,7 @@ const DIAS_SEMANA = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
 const MESES_PT   = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho',
                     'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 
-function CalendarioView({ items, onOpen, onNewWithDate, onReschedule, onEditSchedule }) {
+function CalendarioView({ items, onOpen, onNewWithDate, onReschedule, onEditSchedule, onProgramarNaData }) {
   const today = new Date();
   const [ano, setAno]   = useState(today.getFullYear());
   const [mes, setMes]   = useState(today.getMonth()); // 0-based
@@ -1651,7 +2258,7 @@ function CalendarioView({ items, onOpen, onNewWithDate, onReschedule, onEditSche
 
             return (
               <div key={dateStr}
-                onClick={() => onNewWithDate(dateStr)}
+                onClick={() => onProgramarNaData(dateStr)}
                 onDragOver={e => { e.preventDefault(); if (dragOverDate !== dateStr) setDragOverDate(dateStr); }}
                 onDragLeave={() => setDragOverDate(prev => prev === dateStr ? null : prev)}
                 onDrop={e => {
@@ -1680,7 +2287,7 @@ function CalendarioView({ items, onOpen, onNewWithDate, onReschedule, onEditSche
 
                 {/* Chips dos conteúdos */}
                 {dayItems.slice(0,4).map(item => {
-                  const isFeito = item.status === 'Feito';
+                  const isFeito = item.status === 'Arquivado';
                   const color = isFeito ? '#4ade80' : (PLAT_COLOR[item.plataforma] || '#94a3b8');
                   const num   = String(item.numero||0).padStart(3,'0');
                   // Vídeo (Reels): thumb JPG vem de media_files, nunca do .mp4 de slides
@@ -1885,8 +2492,11 @@ function OrganicoScreen() {
   const [items, setItems]           = useState([]);
   const [dbAvailable, setDbAvail]   = useState(false);
   const [modal, setModal]           = useState(null);
+  // Data clicada no calendário: abre o seletor de conteúdo pronto pra programar.
+  const [programarData, setProgramarData] = useState(null);
   const [platFilter, setPlatFilter] = useState('Todos');
   const [respFilter, setRespFilter] = useState('Todos');
+  const [searchQuery, setSearchQuery] = useState('');
   const [nextNum, setNextNum]       = useState(1);
   const [dragId, setDragId]         = useState(null);  // id do card sendo arrastado
   const [dropTarget, setDropTarget] = useState(null);  // colId sendo hovereado
@@ -1904,11 +2514,36 @@ function OrganicoScreen() {
     const item = items.find(i => i.id === dragId);
     if (!item || item.status === colId) { setDragId(null); return; }
 
-    setItems(prev => prev.map(i => i.id === dragId ? { ...i, status: colId } : i));
+    // A sub-etapa (Copy/Produção) só faz sentido dentro de "Fazendo": ao sair
+    // dessa coluna ela é limpa, senão o card carregaria pra sempre uma marca
+    // de um estágio que já passou.
+    if (colId === 'Agendado' && !item.scheduled_at) {
+      window.alert(
+        'Esse card ainda não tem data e hora marcadas, então o robô não teria como publicar ' +
+        'e ele ficaria parado nessa coluna sem avisar.\n\n' +
+        'Abra o card e use Publicar > Agendar para marcar o horário. O card vai para Agendado sozinho.'
+      );
+      setDragId(null);
+      return;
+    }
+
+    const patch = { status: colId };
+    if (colId !== 'Fazendo') patch.etapa = null;
+
+    setItems(prev => prev.map(i => i.id === dragId ? { ...i, ...patch } : i));
     setDragId(null);
 
     if (dbAvailable) {
-      await window.db.from('conteudo_organico').update({ status: colId }).eq('id', dragId);
+      await window.db.from('conteudo_organico').update(patch).eq('id', dragId);
+    }
+  };
+
+  // Alterna a sub-etapa dentro de Fazendo: sem etapa → copy → producao → sem etapa.
+  const handleEtapaToggle = async item => {
+    const proxima = item.etapa === 'copy' ? 'producao' : item.etapa === 'producao' ? null : 'copy';
+    setItems(prev => prev.map(i => i.id === item.id ? { ...i, etapa: proxima } : i));
+    if (dbAvailable) {
+      await window.db.from('conteudo_organico').update({ etapa: proxima }).eq('id', item.id);
     }
   };
 
@@ -1962,9 +2597,16 @@ function OrganicoScreen() {
     const { data } = await window.db.from('conteudo_organico')
       .select('*').order('created_at', { ascending:true }).order('id', { ascending:true });
     if (data) {
-      const withNum = data.map((item,idx) => ({ ...item, numero: item.numero ?? (idx+1) }));
+      // `numero` é coluna no banco desde a migration 101 (antes era calculado
+      // pela posição, o que renumerava tudo a cada deleção e desalinhava as
+      // pastas do Drive). O fallback por índice só cobre linha legada sem número.
+      // Sem fallback por posição: o número vem do banco e só de lá. Calcular por
+      // posição foi a origem do bug de 2026-08-07 (importava a mídia do card
+      // errado), então é melhor um card aparecer sem número, e chamar atenção,
+      // do que mostrar um número inventado que casa com a pasta de outro.
+      const withNum = data.map(item => ({ ...item, numero: item.numero ?? null }));
       setItems(withNum);
-      setNextNum(withNum.length+1);
+      setNextNum(proximoLivre(withNum));
     }
   }, []);
   useEffect(() => { loadItems(); }, [loadItems]);
@@ -2012,7 +2654,7 @@ function OrganicoScreen() {
   }, []);
 
   const handleSave = async form => {
-    // Card em "Fazer" que já recebeu mídia avança sozinho pra "Produção" (não fica
+    // Card em "Fazendo" que já recebeu mídia avança sozinho pra "Feito" (não fica
     // esperando o usuário mudar a coluna manualmente). Vale pra qualquer forma de anexar
     // mídia (upload manual, importar do Drive, etc), já que todo salvamento passa por aqui.
     let temMidia = false;
@@ -2023,17 +2665,22 @@ function OrganicoScreen() {
       midiaCompleta = Array.isArray(s) && s.length > 0 &&
         s.every(sl => sl?.image_url || sl?.video_url || sl?.url_alta);
     } catch {}
-    // Card em "Fazer" com pelo menos 1 mídia avança pra "Produção". Card já em
-    // "Produção" com TODOS os slides preenchidos avança pra "Postagem".
+    // Card em "Fazendo" com pelo menos 1 mídia avança pra "Feito" (arte pronta).
+    // Daí em diante é decisão sua: de Feito só sai ao agendar ou publicar.
     let status = form.status;
-    if (form.status === 'Fazer' && temMidia) status = 'Produção';
-    else if (form.status === 'Produção' && midiaCompleta) status = 'Postagem';
+    if (form.status === 'Fazendo' && temMidia) status = 'Feito';
+    // "Agendado" sem horário marcado é um estado que o robô não enxerga: o card
+    // ficaria parado ali pra sempre, sem erro. Só o fluxo Publicar > Agendar
+    // (que grava horário e mídia) coloca o card nessa coluna.
+    if (status === 'Agendado' && !form.scheduled_at) status = 'Feito';
 
     const row = {
       tema:form.tema, plataforma:form.plataforma, responsavel:form.responsavel,
       status, headline:form.headline||null, roteiro:form.roteiro||null,
       estetica_visual:form.estetica_visual||null, prompt:form.prompt||null,
       slides:form.slides, legenda:form.legenda,
+      // Sub-etapa só vale em "Fazendo": ao avançar, é zerada.
+      etapa: status === 'Fazendo' ? (form.etapa || null) : null,
       observacoes:form.observacoes||null,
       data_prevista:form.data_prevista||null,
       referencia:form.referencia||null,
@@ -2047,36 +2694,137 @@ function OrganicoScreen() {
       // Modal permanece aberto — ContentModal exibe "Salvo!" e fecha quando o usuário quiser
     } else {
       if (dbAvailable) {
-        const { data } = await window.db.from('conteudo_organico').insert(row).select().single();
-        if (data) { setItems(prev => [...prev, { ...data, numero:nextNum }]); setNextNum(n=>n+1); setModal(null); return; }
+        // `numero` vai junto no insert: precisa ficar gravado na linha, senão o
+        // card nasce sem número e volta a depender da posição na próxima carga.
+        const { data } = await window.db.from('conteudo_organico')
+          .insert({ ...row, numero: nextNum }).select().single();
+        if (data) {
+          setItems(prev => { const novos = [...prev, { ...data, numero:nextNum }]; setNextNum(proximoLivre(novos)); return novos; });
+          setModal(null);
+          // Cria a pasta do card no Drive (ex: "ORG 021 Nome"), na mesma raiz
+          // de onde a importação puxa as artes. Roda solto, sem travar o
+          // fechamento do modal: se o Drive falhar, o card já está salvo e a
+          // pasta pode ser criada na mão como antes.
+          fetch(`${WORKER_URL}/criar-pasta`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ card_id: data.id }),
+          })
+            .then(r => r.json())
+            .then(d => {
+              if (d && d.ok && d.url) {
+                // Reflete o link da pasta no estado local (o worker já gravou no banco).
+                setItems(prev => prev.map(i => i.id === data.id ? { ...i, drive_folder_url: d.url } : i));
+              } else if (d && d.error) {
+                console.warn('Não consegui criar a pasta no Drive:', d.error);
+              }
+            })
+            .catch(e => console.warn('Não consegui criar a pasta no Drive:', e));
+          return;
+        }
       }
-      setItems(prev => [...prev, { ...row, id:String(Date.now()), numero:nextNum }]);
-      setNextNum(n=>n+1);
+      setItems(prev => { const novos = [...prev, { ...row, id:String(Date.now()), numero:nextNum }]; setNextNum(proximoLivre(novos)); return novos; });
       setModal(null);
     }
   };
 
+  // Apagar o card leva junto as imagens dele no R2. Antes só a linha do banco
+  // era removida e os arquivos ficavam órfãos pra sempre, sem nada apontando
+  // pra eles e sem como saber de quem eram.
+  //
+  // A ordem importa: junta as URLs ANTES de apagar a linha, senão elas somem
+  // com ela. E o R2 é limpo depois, sem travar o fechamento do modal: se uma
+  // exclusão falhar, o card já saiu e o arquivo vira lixo recuperável pela
+  // auditoria, o que é bem melhor que o card não sair.
   const handleDelete = async id => {
-    if (dbAvailable) await window.db.from('conteudo_organico').delete().eq('id',id);
-    setItems(prev => prev.filter(i => i.id!==id));
+    const card = items.find(i => i.id === id);
+    const urls = new Set();
+    if (card) {
+      try {
+        (JSON.parse(card.slides || '[]') || []).forEach(s => s?.image_url && urls.add(s.image_url));
+      } catch {}
+      try {
+        (JSON.parse(card.media_files || '[]') || []).forEach(m => {
+          ['url_alta', 'preview_url', 'thumb_url', 'image_url'].forEach(k => m?.[k] && urls.add(m[k]));
+        });
+      } catch {}
+    }
+
+    if (dbAvailable) await window.db.from('conteudo_organico').delete().eq('id', id);
+    setItems(prev => prev.filter(i => i.id !== id));
     setModal(null);
+
+    urls.forEach(u => {
+      if (!u.startsWith(`${R2_PUBLIC}/`)) return;   // só o que é nosso
+      const key = u.replace(`${R2_PUBLIC}/`, '').split('?')[0];
+      fetch(`${WORKER_URL}/original/${encodeURIComponent(key)}`, { method: 'DELETE' })
+        .catch(e => console.warn('Não consegui apagar do R2:', key, e));
+    });
+
+    // A pasta do Drive vai junto (pra lixeira, dá pra desfazer por 30 dias).
+    // Se ficasse pra trás, o próximo card que reaproveitasse esse número
+    // herdaria ela com o nome do assunto antigo: o /criar-pasta é idempotente
+    // e casa a pasta pelo número, não pelo tema.
+    if (card?.numero != null) {
+      fetch(`${WORKER_URL}/deletar-pasta`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ numero: card.numero }),
+      }).catch(e => console.warn('Não consegui apagar a pasta do Drive:', card.numero, e));
+    }
   };
 
   const filtered = items.filter(i => {
     if (platFilter !== 'Todos' && i.plataforma !== platFilter) return false;
-    if (respFilter !== 'Todos' && i.responsavel !== respFilter) return false;
+    if (respFilter === 'Comum') { if (i.responsavel) return false; }
+    else if (respFilter !== 'Todos' && i.responsavel !== respFilter) return false;
+    if (searchQuery.trim()) {
+      // O número entra como "29" e como "ORG 029": você acha o card digitando
+      // do jeito que ele aparece na tela ou só o número solto.
+      const num = i.numero != null ? `${i.numero} ORG ${String(i.numero).padStart(3,'0')}` : '';
+      const q = searchQuery.trim().toLowerCase();
+      const alvo = [num, i.tema, i.headline, i.roteiro, i.legenda, i.observacoes, i.responsavel]
+        .filter(Boolean).join(' ').toLowerCase();
+      if (!alvo.includes(q)) return false;
+    }
     return true;
   });
+
+  const temFiltroAtivo = platFilter !== 'Todos' || respFilter !== 'Todos' || searchQuery.trim() !== '';
 
   return (
     <div style={{ display:'flex', flexDirection:'column', height:'100%', overflow:'hidden' }}>
       {modal && (
         <ContentModal key={modal.item?.id || 'novo'} item={modal.item||null} defaultStatus={modal.defaultStatus}
           prefillDate={modal.prefillDate||null}
+          abrirPublicar={modal.abrirPublicar||false}
+          prefillSchedDate={modal.prefillSchedDate||null}
           siblings={modal.siblings||[]}
           onNavigate={newItem => setModal({ item:newItem, siblings: filtered.filter(i=>i.status===newItem.status) })}
           onSave={handleSave} onDelete={handleDelete} onClose={()=>setModal(null)}
           onImported={loadItems}/>
+      )}
+      {programarData && (
+        <ProgramarModal
+          dateStr={programarData}
+          items={items}
+          onEscolher={it => {
+            // Abre o card já no modal de publicar, em "Agendar", com o dia
+            // clicado preenchido. É o mesmo fluxo do botão Publicar de dentro
+            // do card (agendamento de verdade, com mídia e horário), só que
+            // entrando pelo calendário. Falta o usuário só escolher a hora.
+            const data = programarData;
+            setProgramarData(null);
+            setModal({
+              item: it,
+              siblings: filtered.filter(i => i.status === it.status),
+              abrirPublicar: true,
+              prefillSchedDate: data,
+            });
+          }}
+          onCriarNovo={() => {
+            setModal({ item:null, defaultStatus:'Fazendo', prefillDate: programarData });
+            setProgramarData(null);
+          }}
+          onClose={() => setProgramarData(null)}/>
       )}
       <TopBar title="Orgânico"
         actions={
@@ -2099,7 +2847,7 @@ function OrganicoScreen() {
               Importar arquivos
             </Btn>
             <Btn variant="primary" size="sm" icon="plus"
-              onClick={()=>setModal({ item:null, defaultStatus:'Fazer' })}>
+              onClick={()=>setModal({ item:null, defaultStatus:'Fazendo' })}>
               Novo
             </Btn>
           </div>
@@ -2135,14 +2883,64 @@ function OrganicoScreen() {
         <div style={{ display:'flex', alignItems:'center', gap:6 }}>
           <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700,
             letterSpacing:'0.08em', textTransform:'uppercase', color:'var(--text-3)' }}>Responsável</span>
-          <div style={{ display:'flex', gap:4 }}>
-            {['Todos',...RESPONSAVEIS].map(r => (
-              <FilterPill key={r} label={r} active={respFilter===r}
-                color={r==='Felipe'?'#eaaa41':r==='Amanda'?'#60a5fa':null}
-                onClick={()=>setRespFilter(r)}/>
-            ))}
+          {/* Só as fotos, com contorno na cor de cada um (padrão do Khronus).
+              Inativo fica em cinza e apagado, então dá pra ver de longe quem
+              está selecionado. 'Comum' filtra os cards sem responsável. */}
+          <div style={{ display:'flex', gap:5, alignItems:'center' }}>
+            <button onClick={()=>setRespFilter('Todos')} title="Todos os responsáveis"
+              style={{ padding:'3px 9px', borderRadius:999, cursor:'pointer',
+                fontSize:10.5, fontFamily:'Roboto,sans-serif', fontWeight:700,
+                background: respFilter==='Todos' ? 'rgba(234,170,65,.14)' : 'rgba(255,255,255,.04)',
+                border: respFilter==='Todos' ? '1px solid rgba(234,170,65,.45)' : '1px solid var(--app-border)',
+                color: respFilter==='Todos' ? 'var(--fmn-gold)' : 'var(--text-3)' }}>
+              Todos
+            </button>
+            {[...RESPONSAVEIS, 'Comum'].map(r => {
+              const nome = r === 'Comum' ? null : r;   // Comum = cards sem responsável
+              return (
+                <div key={r} onClick={()=>setRespFilter(r)} style={{ cursor:'pointer', display:'flex' }}>
+                  <ResponsavelAvatar nome={nome} size={26} active={respFilter===r}/>
+                </div>
+              );
+            })}
           </div>
         </div>
+        <div style={{ width:1, height:20, background:'var(--app-border)', flexShrink:0 }}/>
+        <div style={{ position:'relative', display:'flex', alignItems:'center' }}>
+          <span style={{ position:'absolute', left:8, pointerEvents:'none',
+            color:'rgba(255,255,255,.3)', display:'flex' }}>
+            <LucideIcon icon="search" size={12}/>
+          </span>
+          <input
+            type="text"
+            placeholder="Buscar ORG, tema, legenda..."
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            style={{ paddingLeft:26, paddingRight:searchQuery ? 26 : 10, paddingTop:4, paddingBottom:4,
+              borderRadius:8, border:'1px solid rgba(255,255,255,.1)',
+              background:'rgba(255,255,255,.05)', color:'var(--text-1)',
+              fontFamily:'Roboto,sans-serif', fontSize:11.5, outline:'none', width:200,
+              transition:'border-color 130ms' }}
+            onFocus={e => e.target.style.borderColor='rgba(234,170,65,.4)'}
+            onBlur={e => e.target.style.borderColor='rgba(255,255,255,.1)'}
+          />
+          {searchQuery && (
+            <button onClick={() => setSearchQuery('')}
+              style={{ position:'absolute', right:6, background:'none', border:'none',
+                color:'rgba(255,255,255,.35)', cursor:'pointer', padding:0, display:'flex' }}>
+              <LucideIcon icon="x" size={11}/>
+            </button>
+          )}
+        </div>
+        {temFiltroAtivo && (
+          <button onClick={()=>{ setPlatFilter('Todos'); setRespFilter('Todos'); setSearchQuery(''); }}
+            style={{ display:'flex', alignItems:'center', gap:4, padding:'4px 8px', borderRadius:6,
+              background:'rgba(248,113,113,.08)', border:'1px solid rgba(248,113,113,.2)',
+              color:'var(--clr-neg)', fontSize:10.5, fontFamily:'Roboto,sans-serif',
+              fontWeight:700, cursor:'pointer' }}>
+            <LucideIcon icon="x" size={11}/>Limpar
+          </button>
+        )}
       </div>
 
       {viewMode === 'kanban' ? (
@@ -2155,6 +2953,7 @@ function OrganicoScreen() {
               onAddNew={status=>setModal({ item:null, defaultStatus:status })}
               onDragStart={handleDragStart}
               onDrop={handleDrop}
+              onEtapaToggle={handleEtapaToggle}
               isDragOver={dragId && dropTarget === col.id}/>
           ))}
         </div>
@@ -2162,7 +2961,8 @@ function OrganicoScreen() {
         <CalendarioView
           items={filtered}
           onOpen={item=>setModal({ item, siblings: filtered.filter(i=>i.status===item.status) })}
-          onNewWithDate={date=>setModal({ item:null, defaultStatus:'Fazer', prefillDate:date })}
+          onNewWithDate={date=>setModal({ item:null, defaultStatus:'Fazendo', prefillDate:date })}
+          onProgramarNaData={date=>setProgramarData(date)}
           onReschedule={handleReschedule}
           onEditSchedule={handleEditSchedule}/>
       ) : (

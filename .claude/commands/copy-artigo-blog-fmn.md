@@ -58,8 +58,10 @@ Propor, com base em design thinking (memória `feedback-design-thinking-visual`)
 - Uma imagem de abertura (frame de filme/série real via crédito "Reprodução/Detentor", ou foto gerada por IA se for cena original).
 - Outros visuais que reforcem pontos específicos (quadro visual, régua de equilíbrio, checklist), só se fizer sentido, sem exagerar.
 
+**Formato da capa (`capa_url`):** paisagem, 1792x1024px (proporção ~16:9), o tamanho nativo landscape que o ChatGPT/DALL-E 3 gera. Diferente do 1080x1350 vertical usado em anúncio e Orgânico (Instagram). `post.html` mostra a capa num hero largo e `blog.html` num card de altura fixa, os dois com `object-fit:cover` sem aspect-ratio travado, então uma imagem paisagem cobre bem os dois. Todo prompt de imagem de capa **termina** com a frase "wide landscape orientation, cinematic 16:9 widescreen framing", porque sem essa instrução o ChatGPT tende a gerar quadrado.
+
 Para cada imagem:
-1. Gerar o prompt em inglês.
+1. Gerar o prompt em inglês. Para a imagem de capa, aplicar o formato acima.
 2. Gerar via `gerar-imagem` (ChatGPT) ou buscar o frame real (Frinkiac para Simpsons, etc.).
 3. Otimizar antes de subir: aresta maior no máximo 1920px sem upscale; **se o arquivo de origem é PNG, mantém PNG**; se não é PNG, vira JPG ~80%. (Ver memória `feedback-otimizacao-imagens-regra` para o porquê.)
 4. Subir via `curl -F "file=@arquivo" -F "prefix=fmn" "https://fem-upload.blindagem-fmn.workers.dev"`, que devolve `{"url": "..."}`.

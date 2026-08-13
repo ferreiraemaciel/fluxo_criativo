@@ -647,10 +647,10 @@ function MetaAdModal({ card, onClose }) {
       if (isCarousel) return { imageUrls: r2Urls };
       if (r2Url) return { imageUrl: r2Url };
       if (raw.meta_image_hash) return { imageHash: raw.meta_image_hash };
-      throw new Error('Não achei a imagem nem no R2 nem já hospedada no Meta. Use "Importar direto" ou "Importar com link" pra subir a imagem de novo antes de publicar.');
+      throw new Error('Não achei a imagem nem no R2 nem já hospedada no Meta. Use "Importar" no card pra subir a imagem de novo antes de publicar.');
     }
     if (raw.meta_video_id) return { videoId: raw.meta_video_id };
-    if (!r2Url) throw new Error('Não achei o vídeo em alta no R2 (foi apagado ou nunca existiu) e esse anúncio ainda não tem vídeo hospedado no Meta. Use "Importar direto" ou "Importar com link" pra fazer o upload de novo antes de publicar.');
+    if (!r2Url) throw new Error('Não achei o vídeo em alta no R2 (foi apagado ou nunca existiu) e esse anúncio ainda não tem vídeo hospedado no Meta. Use "Importar" no card pra fazer o upload de novo antes de publicar.');
     const videoId = await prepararCriativoMeta(r2Url);
     return { videoId };
   }
@@ -921,7 +921,7 @@ function MetaAdModal({ card, onClose }) {
                   <>
                     A versão em alta foi apagada do R2 depois que a prévia foi gerada, e esse
                     anúncio ainda não subiu pro Meta. O arquivo original continua no Drive.
-                    Feche esta janela e use "Importar direto" no card para trazer a alta de volta,
+                    Feche esta janela e use "Importar" no card para trazer a alta de volta,
                     depois publique.
                     {raw.media_drive_url && (
                       <>
@@ -1140,8 +1140,7 @@ function MetaIdField({ card, onSaved }) {
 
 /* ── AdicionarCriativoBtn ────────────────────────────────────────
    Importa da pasta do Drive pela cozinha na nuvem (ffmpeg/otimização
-   fora do Mac). "Importar direto" acha a pasta ADS pelo número;
-   "Importar com link" o usuário cola o link da pasta.
+   fora do Mac). "Importar" acha a pasta ADS pelo número do card.
 ─────────────────────────────────────────────────────────────────*/
 function AdicionarCriativoBtn({ card, onDone }) {
   const [step, setStep] = useState('idle'); // idle | running | warn
@@ -1206,11 +1205,6 @@ function AdicionarCriativoBtn({ card, onDone }) {
     falhar('Demorou demais. Recarregue a página em instantes.');
   }
 
-  function manual() {
-    const p = window.prompt('Cole o link da pasta do criativo no Drive:');
-    if (p && p.trim()) run(p.trim());
-  }
-
   if (step === 'running') {
     return <BarraProgresso pct={pct} etapa={msg}/>;
   }
@@ -1220,12 +1214,8 @@ function AdicionarCriativoBtn({ card, onDone }) {
         <div style={{ padding:'6px 10px', borderRadius:8, background:'rgba(248,113,113,.08)',
           border:'1px solid rgba(248,113,113,.3)', fontSize:11, color:'#f87171', lineHeight:1.4 }}>{msg}</div>
       )}
-      <div style={{ display:'flex', gap:8 }}>
-        <Btn variant="secondary" size="sm" icon="image-plus" style={{ flex:1, justifyContent:'center' }}
-          onClick={() => run(null)}>Importar direto</Btn>
-        <Btn variant="ghost" size="sm" icon="link" style={{ justifyContent:'center' }}
-          onClick={manual} title="Colar o link da pasta do Drive">Importar com link</Btn>
-      </div>
+      <Btn variant="secondary" size="sm" icon="image-plus" style={{ width:'100%', justifyContent:'center' }}
+        onClick={() => run(null)} title="Puxa a mídia da pasta ADS deste card no Drive">Importar</Btn>
     </div>
   );
 }
@@ -1500,6 +1490,21 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
     setTimeout(() => setSaveStatus('idle'), 2000);
   }
 
+  // ── Salvamento automático ──────────────────────────────────────────────
+  // Grava sozinho 1,2s depois que você para de mexer. O card de anúncio SEMPRE
+  // já existe (nasce pelo botão do quadro), então não tem caso de "card novo".
+  // O snapshot evita gravação à toa: abrir o card, ou mexer e voltar ao valor
+  // original, não disparam nada.
+  const primeiroRenderAd = useRef(true);
+  const ultimoSalvoAd    = useRef(null);
+  useEffect(() => {
+    const snapshot = JSON.stringify(fields);
+    if (primeiroRenderAd.current) { primeiroRenderAd.current = false; ultimoSalvoAd.current = snapshot; return; }
+    if (snapshot === ultimoSalvoAd.current) return;
+    const t = setTimeout(() => { ultimoSalvoAd.current = snapshot; salvar(); }, 1200);
+    return () => clearTimeout(t);
+  }, [fields]);
+
   async function mudarStatus(novoStatus) {
     const patch = { status: novoStatus };
     const novaTag = resolveTag(novoStatus, fields.status, card.vendas, card.cpa, card.gasto);
@@ -1606,8 +1611,24 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
                 onBlur={e => e.target.style.borderColor='transparent'}/>
             </div>
             <div style={{ display:'flex', gap:8, flexShrink:0, alignItems:'center' }}>
+              {/* O card salva sozinho; o indicador é o que dá confiança de
+                  poder fechar a janela sem clicar em nada. */}
+              {saveStatus === 'idle' && (
+                <span style={{ fontSize:10.5, fontFamily:'Roboto,sans-serif', color:'var(--text-3)' }}>
+                  Salva automaticamente
+                </span>
+              )}
+              {saveStatus === 'saving' && (
+                <span style={{ display:'flex', alignItems:'center', gap:5, fontSize:11,
+                  fontFamily:'Roboto,sans-serif', color:'var(--text-3)' }}>
+                  <LucideIcon icon="loader" size={11} style={{ animation:'spin 1s linear infinite' }}/>Salvando...
+                </span>
+              )}
               {saveStatus === 'saved' && (
-                <span style={{ fontSize:11, fontFamily:'Roboto,sans-serif', color:'var(--clr-pos)' }}>Salvo!</span>
+                <span style={{ display:'flex', alignItems:'center', gap:5, fontSize:11,
+                  fontFamily:'Roboto,sans-serif', color:'var(--clr-pos)' }}>
+                  <LucideIcon icon="check" size={11}/>Salvo
+                </span>
               )}
               {saveStatus === 'error' && (
                 <span style={{ fontSize:11, fontFamily:'Roboto,sans-serif', color:'var(--clr-neg)' }}>Erro ao salvar</span>
@@ -1659,11 +1680,10 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
                   </div>
                 )}
               </div>
-              <Btn variant="ghost" size="sm" onClick={onClose}>Cancelar</Btn>
-              <Btn variant="primary" size="sm" icon={saveStatus==='saving'?'loader':'save'}
-                onClick={salvar} disabled={saveStatus==='saving'}>
-                {saveStatus==='saving'?'Salvando...':'Salvar'}
-              </Btn>
+              {/* Nada de "Cancelar": as alterações já foram gravadas, o botão
+                  prometeria um desfazer que não existe. */}
+              <Btn variant="primary" size="sm" icon="check"
+                onClick={onClose} disabled={saveStatus==='saving'}>Fechar</Btn>
             </div>
           </div>
 

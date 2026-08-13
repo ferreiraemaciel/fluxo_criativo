@@ -2,6 +2,50 @@
 
 > Instruções específicas do Tracker FMN. Complementa o CLAUDE.md da raiz do fluxo-criativo (regras gerais do workshop), mas essas aqui valem só dentro desta pasta.
 
+## whatsapp-webhook — NUNCA deployar sem `--no-verify-jwt` (incidente real, 2026-08-07 a 2026-08-11)
+
+> Combinado com Felipe em 2026-08-11, depois de um incidente real de 4 dias sem receber nenhuma mensagem de lead.
+
+**Regra dura, sem exceção**: todo deploy do `whatsapp-webhook` (sozinho ou junto com outras functions) tem que incluir a flag `--no-verify-jwt`, sempre:
+
+```bash
+supabase functions deploy whatsapp-webhook --project-ref wntzzzuqoqmfcjebmzul --no-verify-jwt
+```
+
+**Por quê.** O `whatsapp-webhook` é o único endpoint deste projeto chamado diretamente pela Meta (WhatsApp Cloud API), que não manda token nenhum do Supabase, só a assinatura própria dela. Se o deploy for feito sem `--no-verify-jwt` (ex: `supabase functions deploy whatsapp-webhook` batendo várias functions juntas num só comando, ou pelo MCP `deploy_edge_function`), o Supabase volta a exigir JWT válido em toda chamada, a Meta não tem esse token, e toda entrega de webhook passa a devolver 401 imediatamente. A mensagem nunca chega a ser gravada. **Não é um erro visível no painel: o Tracker continua funcionando normalmente, só que ninguém nunca mais aparece como "precisa responder", porque nenhuma mensagem nova chega.**
+
+**O que aconteceu de verdade**: um redeploy de rotina (corrigindo um bug de prompt do Claudinho) às 22:45 de 7/8/2026 derrubou essa flag sem querer. O problema só foi percebido 4 dias depois, quando o Felipe estranhou o silêncio total. Nesse intervalo, toda resposta que qualquer lead mandou foi perdida de verdade (a Meta tenta reentregar algumas vezes e desiste, sem fila permanente do lado dela) — não tem como recuperar essas mensagens depois.
+
+**Antes de declarar qualquer deploy do `whatsapp-webhook` como concluído**, confirmar que `verify_jwt: false` está ativo. Forma rápida de checar: `mcp__supabase__get_edge_function` (ou a API equivalente) e procurar o campo `verify_jwt` no JSON retornado — tem que estar `false`. Se não tiver certeza se a flag foi aplicada, rodar o deploy de novo explicitamente com `--no-verify-jwt` antes de seguir em frente.
+
+**As outras functions do Claudinho (`whatsapp-retomada`, `whatsapp-prompt-atual`) não têm esse risco**: são chamadas com token válido do Supabase (`whatsapp-retomada` via pg_cron com service role key; `whatsapp-prompt-atual` via `frontend/app/conversas.jsx` com a chave anon), então `verify_jwt: true` (o padrão) não quebra nada nelas. A regra acima vale só pro `whatsapp-webhook`, mas ao criar qualquer function nova que receba chamada de fora do Supabase (outro provedor de webhook, por exemplo), aplicar o mesmo cuidado.
+
+## Chamar worker da Cloudflare: usar `curl`, nunca `urllib` do Python
+
+> Registrado em 2026-08-12, depois de tropeçar nisso duas vezes na mesma sessão.
+
+A Cloudflare bloqueia o user-agent padrão do `urllib` do Python (`Python-urllib/3.x`)
+e devolve **403 antes de a requisição chegar no worker**. O worker nunca é
+executado, então não aparece nada no `wrangler tail` e o erro parece ser do
+código que acabou de subir.
+
+**Foi exatamente isso que atrasou o teste do `/deletar-pasta`:** o endpoint estava
+certo desde o primeiro deploy, mas o script de teste em Python voltava erro, o que
+apontou o dedo pro lugar errado. Repetido com `curl`, funcionou de primeira.
+
+Para bater em qualquer `*.workers.dev` ou domínio atrás da Cloudflare:
+
+```bash
+curl -s -X POST https://organico-media.blindagem-fmn.workers.dev/deletar-pasta \
+  -H 'Content-Type: application/json' -d '{"numero":999}'
+```
+
+Isso vale só para **chamar o worker**. Falar com o Supabase (PostgREST) e com a
+Google Drive API em Python continua normal, esses não passam pela Cloudflare.
+
+Se precisar mesmo de Python na chamada ao worker, mandar um `User-Agent` de
+navegador no cabeçalho resolve. Mas o caminho curto é `curl`.
+
 ## Orgânico — pasta padrão do Drive (fonte oficial de mídia)
 
 **A mídia de qualquer card do Orgânico (imagem, carrossel ou vídeo) SEMPRE vem da pasta do Google Drive, nunca de arquivo solto no Downloads, Desktop ou qualquer outro lugar do Mac.** Pasta raiz: `https://drive.google.com/open?id=1h3cPqEoOnXld-6Sqh3IjsYcsb2bh_PLp` (ID `1h3cPqEoOnXld-6Sqh3IjsYcsb2bh_PLp`, já cadastrado como `ORGANICO_FOLDER_ID` em `scripts/adicionar-criativo-organico.py`). Dentro dela, cada card tem sua própria subpasta `ORG <numero>` (ex: `ORG 019`), e o número segue o mesmo índice por `created_at` mostrado na UI do Kanban.
@@ -79,3 +123,60 @@ Se o lead pedir pra parcelar no boleto, parcelar no Pix, ou disser que não quer
 > Combinado em 2026-07-31.
 
 O link de checkout padrão do MCV que vive em `whatsapp-ia-prompt.ts` usa `sck=whatsapp-cl` (rastreio do Claudinho, IA ao vivo). Isso está correto pro prompt, porque ali é sempre a IA que manda. **Mas quando eu (Claude Code) rascunho uma mensagem com esse link durante uma sessão de `/tracker-treinar-claudinho` pra Felipe ou Amanda colarem e mandarem manualmente no WhatsApp**, isso não é a IA ao vivo mandando, é atendimento humano, então o rastreio certo é `sck=whatsapp-ah`, não `whatsapp-cl`. Trocar o final da URL antes de entregar o rascunho: `https://pay.hotmart.com/W87258826R?checkoutMode=10&sck=whatsapp-ah`. O `whatsapp-cl` continua reservado só pro link que a função `whatsapp-ia.ts` manda sozinha, sem intervenção humana.
+
+## Áudio enviado pelo WhatsApp — sempre OGG/Opus e sempre mono
+
+> Descoberto na implementação da gravação de áudio no Conversas, em 2026-08-11,
+> com dois envios reais de teste que falharam antes de acertar.
+
+Todo áudio que sai do Tracker para o WhatsApp precisa de **duas** coisas ao
+mesmo tempo. Falhar em qualquer uma delas dá erro que só aparece depois:
+
+1. **Formato OGG/Opus.** É o formato de áudio de voz do WhatsApp, o único que
+   vira a bolha nativa (ondinha e controle de velocidade). O MP4 que o Chrome
+   grava é fragmentado e o WhatsApp recusa na entrega, com o erro
+   `"uploaded with mimetype as audio/mp4, however on processing it is of type
+   application/octet-stream"`. A conversão vive em `frontend/app/audio-ogg.js`
+   e só troca a embalagem WebM por OGG, sem recodificar o som.
+
+2. **Mono.** Um OGG/Opus **estéreo** é aceito no envio (status "enviado") e
+   chega no celular, mas ao dar play o WhatsApp mostra *"este áudio não está
+   mais disponível, peça a Comercial FMN para reenviá-lo"*. O mesmo arquivo em
+   mono chega e toca. O arquivo estéreo passava em tudo que dá para medir de
+   fora (ffprobe valida, o navegador decodifica) — o único jeito de descobrir
+   foi enviar de verdade e tentar ouvir. A gravação força `channelCount: 1`.
+
+**Como diagnosticar quando um envio falhar.** O motivo vem no webhook e é
+gravado em `whatsapp_mensagens.raw.status_errors` (`whatsapp-webhook`). Antes
+disso ser guardado, a mensagem ficava marcada como "falhou" sem nenhuma pista,
+e o diagnóstico dependia de adivinhação. **Status "entregue" no banco não é
+prova de que o áudio toca**: no caso do estéreo, o status ficou correto e o
+áudio estava quebrado. Áudio novo só é dado como funcionando depois de alguém
+apertar o play no celular.
+
+## Hora da mensagem recebida é a da Meta, nunca a nossa
+
+> Descoberto em 2026-08-11, como consequência tardia do apagão do
+> `whatsapp-webhook` documentado no topo deste arquivo.
+
+Ao gravar mensagem recebida, `created_at` vem do campo `timestamp` que a Meta
+manda no payload, não do relógio do servidor no momento da gravação. As duas
+horas quase sempre coincidem — e divergem justamente quando mais importa.
+
+**O que aconteceu.** Durante o apagão (7 a 11/08), a Meta reentregou mensagens
+antigas assim que o webhook voltou. Elas foram gravadas com a hora da gravação,
+então uma mensagem de 08/08 às 07:48 aparecia como recebida hoje às 15:23. Três
+consequências, todas silenciosas:
+
+1. O contador de janela de 24h no topo da conversa mostrou "22h 17min restantes"
+   numa janela que estava fechada havia três dias. Quem confiou nele mandou
+   mensagem livre e levou o erro 131047 da Meta ("more than 24 hours have
+   passed"), sem entender o motivo.
+2. O separador de data pôs a mensagem no dia errado do histórico.
+3. O Claudinho leu o histórico fora de ordem, achando recente o que era antigo.
+
+19 mensagens ficaram assim e foram corrigidas com a hora real do payload.
+
+**Regra geral:** qualquer campo de tempo que descreva um fato do lado de fora
+(quando o cliente falou, quando a venda ocorreu) vem do sistema de origem. O
+relógio local só serve para registrar quando NÓS fizemos alguma coisa.

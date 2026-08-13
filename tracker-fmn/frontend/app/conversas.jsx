@@ -30,6 +30,79 @@ function dataCurta(iso) {
   return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
 }
 
+/* ── Separador de dia na conversa ────────────────────────────────────────
+   Sem ele, uma resposta de três semanas atrás fica colada na de hoje e some a
+   noção de quanto tempo o lead ficou esperando, que é justamente o que decide
+   o tom da próxima mensagem.
+
+   O rótulo segue o WhatsApp: os dois dias mais recentes ganham nome ("Hoje",
+   "Ontem"), porque é assim que a gente fala deles; daí pra trás vira data
+   cheia, que é o que realmente informa. O ano entra sempre, já que conversa de
+   lead atravessa virada de ano e "04/08" sozinho seria ambíguo.            */
+function rotuloDia(iso) {
+  const d = new Date(iso);
+  const dia = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const hoje = new Date();
+  const hojeZero = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate());
+  const diff = Math.round((hojeZero - dia) / 86400000);
+  if (diff === 0) return 'Hoje';
+  if (diff === 1) return 'Ontem';
+  return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+}
+
+// Chave do dia (não do horário): é ela que decide onde entra um separador.
+function chaveDia(iso) {
+  const d = new Date(iso);
+  return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+}
+
+function SeparadorData({ rotulo }) {
+  return (
+    // Fica grudado no topo enquanto o dia rola: em conversa longa, você sempre
+    // sabe que dia está lendo sem ter que voltar procurando a etiqueta.
+    <div style={{ position: 'sticky', top: 0, zIndex: 2, display: 'flex',
+      justifyContent: 'center', margin: '10px 0 12px', pointerEvents: 'none' }}>
+      <span style={{ padding: '3px 12px', borderRadius: 999,
+        background: 'var(--overlay-08)', border: '1px solid var(--app-border)',
+        backdropFilter: 'blur(6px)', fontFamily: 'Roboto,sans-serif',
+        fontSize: 10.5, fontWeight: 700, letterSpacing: '.04em',
+        textTransform: 'uppercase', color: 'var(--text-3)' }}>
+        {rotulo}
+      </span>
+    </div>
+  );
+}
+
+/* ── Formato do áudio gravado ─────────────────────────────────────────────
+   O destino é sempre OGG/Opus. É o formato que o WhatsApp usa internamente
+   para áudio de voz: é o único que vira a bolha nativa (com a ondinha e o
+   controle de velocidade) e o que ele aceita sem discussão.
+
+   O Firefox grava direto em OGG. O Chrome não: ele grava o mesmo som Opus,
+   mas embrulhado em WebM. Nesse caso o áudio é apenas desembrulhado e
+   reembrulhado em OGG por audio-ogg.js, sem recodificar nada.
+
+   O MP4 do Chrome foi tentado antes e o WhatsApp recusou:
+     "uploaded with mimetype as audio/mp4, however on processing it is of
+      type application/octet-stream"
+   Ele grava MP4 fragmentado, que o processador do WhatsApp não reconhece.
+   Por isso o MP4 saiu da lista em vez de virar plano B.                    */
+const FORMATOS_AUDIO = [
+  { mime: 'audio/ogg;codecs=opus',  precisaConverter: false },
+  { mime: 'audio/webm;codecs=opus', precisaConverter: true  },
+];
+
+function formatoAudioSuportado() {
+  if (typeof MediaRecorder === 'undefined') return null;
+  return FORMATOS_AUDIO.find(f => MediaRecorder.isTypeSupported(f.mime)) || null;
+}
+
+function duracaoCurta(seg) {
+  const m = Math.floor(seg / 60);
+  const s = seg % 60;
+  return `${m}:${String(s).padStart(2, '0')}`;
+}
+
 const JANELA_MS = 24 * 60 * 60 * 1000;
 
 // Mesma lista usada no backend (whatsapp-ia.ts, PADROES_MSG_AUTOMATICA) pra
@@ -942,6 +1015,8 @@ function ConversasScreen() {
   const [enviandoMidia, setEnviandoMidia] = useState(false);
   const [dragOverThread, setDragOverThread] = useState(false);
   const [menuAnexoAberto, setMenuAnexoAberto] = useState(false);
+  const [gravando, setGravando] = useState(false);
+  const [segGrav, setSegGrav]   = useState(0);
   // Mídia escolhida (arquivo ou link) que ainda não foi enviada: fica em
   // espera até o clique em Enviar, pra dar chance de ver antes e cancelar.
   const [pendente, setPendente] = useState(null); // { tipo: 'arquivo'|'link', file?, url?, preview, nome }
@@ -1145,6 +1220,7 @@ function ConversasScreen() {
       if (e.key !== 'Escape') return;
       if (modalNovoContato) { setModalNovoContato(false); return; }
       if (modalPrompt) { setModalPrompt(false); return; }
+      if (gravando) { cancelarGravacao(); return; }
       if (menuAnexoAberto) { setMenuAnexoAberto(false); return; }
       if (pendente) { cancelarPendente(); return; }
       if (prontasAberto) { setProntasAberto(false); return; }
@@ -1152,7 +1228,7 @@ function ConversasScreen() {
     }
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [modalNovoContato, modalPrompt, menuAnexoAberto, pendente, prontasAberto, selecionado]);
+  }, [modalNovoContato, modalPrompt, menuAnexoAberto, pendente, prontasAberto, selecionado, gravando]);
 
   async function enviar() {
     if (pendente) return enviarPendente();
@@ -1193,6 +1269,100 @@ function ConversasScreen() {
     } finally {
       setEnviandoPronta(null);
     }
+  }
+
+  /* ── Gravação de áudio ──────────────────────────────────────────────────
+     O áudio gravado entra no MESMO caminho do arquivo anexado: vira um
+     `pendente`, aparece na barra de prévia pra ser ouvido antes, e só sai
+     quando você clica em Enviar. Ninguém manda por engano um áudio que ainda
+     não ouviu, e o envio, o registro no banco e o upload já existem prontos. */
+  const gravRef      = useRef(null);   // MediaRecorder
+  const gravChunks   = useRef([]);
+  const gravStream   = useRef(null);   // pra desligar o microfone no fim
+  const gravTimer    = useRef(null);
+  const gravDescarta = useRef(false);  // "cancelar" também passa pelo onstop
+
+  async function iniciarGravacao() {
+    if (gravando || !selecionado) return;
+    const formato = formatoAudioSuportado();
+    if (!formato) {
+      alert('Este navegador não grava em nenhum formato de áudio que o WhatsApp aceite. Use o Chrome ou o Firefox atualizado.');
+      return;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          // Limpa o áudio de sala: sem isso, gravação de notebook sai com eco e chiado.
+          echoCancellation: true, noiseSuppression: true, autoGainControl: true,
+          // Mono, sempre. Áudio de voz do WhatsApp é mono, e mandar estéreo
+          // além de dobrar o tamanho arrisca a bolha chegar sem tocar.
+          channelCount: 1,
+        },
+      });
+      gravStream.current = stream;
+      gravChunks.current = [];
+      gravDescarta.current = false;
+
+      const rec = new MediaRecorder(stream, { mimeType: formato.mime });
+      rec.ondataavailable = e => { if (e.data && e.data.size) gravChunks.current.push(e.data); };
+      rec.onstop = async () => {
+        // O microfone é desligado SEMPRE, inclusive no cancelamento: deixar a
+        // luzinha acesa depois de gravar assusta e parece escuta.
+        gravStream.current?.getTracks().forEach(t => t.stop());
+        gravStream.current = null;
+        clearInterval(gravTimer.current);
+        setGravando(false);
+
+        if (gravDescarta.current) { gravChunks.current = []; setSegGrav(0); return; }
+
+        const bruto = new Blob(gravChunks.current, { type: formato.mime });
+        gravChunks.current = [];
+        setSegGrav(0);
+        if (bruto.size < 1200) return;   // toque acidental no botão, não é áudio
+
+        // Troca a caixa WebM pela OGG quando preciso. Não é recodificação:
+        // o som Opus é o mesmo, então é rápido mesmo em áudio de 3 minutos.
+        let blob = bruto;
+        if (formato.precisaConverter) {
+          const convertido = window.webmOpusParaOgg ? await window.webmOpusParaOgg(bruto) : null;
+          if (!convertido) {
+            alert('Não consegui preparar o áudio no formato que o WhatsApp aceita. Tente gravar de novo, ou use o Firefox.');
+            return;
+          }
+          blob = convertido;
+        }
+
+        const carimbo = new Date().toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' })
+          .replace(/[/\s:]/g, '-');
+        const file = new File([blob], `audio-${carimbo}.ogg`, { type: 'audio/ogg' });
+        setPendente({ tipo: 'arquivo', file, preview: URL.createObjectURL(blob),
+                      nome: file.name, mime: 'audio/ogg', audio: true });
+      };
+
+      rec.start();
+      gravRef.current = rec;
+      setGravando(true);
+      setSegGrav(0);
+      gravTimer.current = setInterval(() => {
+        setSegGrav(s => {
+          // Corta em 3 minutos: o limite de mídia do WhatsApp é bem maior, mas
+          // áudio de venda mais longo que isso não é ouvido até o fim.
+          if (s + 1 >= 180) pararGravacao();
+          return s + 1;
+        });
+      }, 1000);
+    } catch (e) {
+      alert('Não consegui acessar o microfone. Verifique a permissão do navegador para este site.');
+    }
+  }
+
+  function pararGravacao() {
+    if (gravRef.current && gravRef.current.state !== 'inactive') gravRef.current.stop();
+  }
+
+  function cancelarGravacao() {
+    gravDescarta.current = true;
+    pararGravacao();
   }
 
   // Só GUARDA o arquivo escolhido/arrastado pra mostrar a prévia. Não manda
@@ -1426,7 +1596,16 @@ function ConversasScreen() {
                     const file = e.dataTransfer.files?.[0];
                     if (file) selecionarArquivo(file);
                   }}>
-                  {thread.map(m => <Bolha key={m.id} msg={m} />)}
+                  {thread.map((m, i) => {
+                    const anterior = thread[i - 1];
+                    const novoDia = !anterior || chaveDia(anterior.created_at) !== chaveDia(m.created_at);
+                    return (
+                      <React.Fragment key={m.id}>
+                        {novoDia && m.created_at && <SeparadorData rotulo={rotuloDia(m.created_at)} />}
+                        <Bolha msg={m} />
+                      </React.Fragment>
+                    );
+                  })}
                   {dragOverThread && (
                     <div style={{ position: 'absolute', inset: 8, borderRadius: 10, border: '2px dashed var(--fmn-gold)',
                       background: 'rgba(234,170,65,.08)', display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -1499,7 +1678,13 @@ function ConversasScreen() {
               {pendente && (
                 <div style={{ padding: '10px 12px', borderTop: '1px solid var(--app-border)', display: 'flex', alignItems: 'center', gap: 10,
                   background: 'rgba(234,170,65,.06)' }}>
-                  {pendente.preview && (pendente.mime?.startsWith('image/') || (!pendente.mime && pendente.tipo === 'link')) ? (
+                  {pendente.audio ? (
+                    <div style={{ width: 52, height: 52, borderRadius: 8, border: '1px solid var(--app-border)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                      background: 'rgba(234,170,65,.1)' }}>
+                      <LucideIcon icon="mic" size={18} style={{ color: 'var(--fmn-gold)' }} />
+                    </div>
+                  ) : pendente.preview && (pendente.mime?.startsWith('image/') || (!pendente.mime && pendente.tipo === 'link')) ? (
                     <img src={pendente.preview} style={{ width: 52, height: 52, objectFit: 'cover', borderRadius: 8, border: '1px solid var(--app-border)' }}
                       onError={e => { e.target.style.display = 'none'; }} />
                   ) : pendente.mime?.startsWith('video/') ? (
@@ -1512,17 +1697,41 @@ function ConversasScreen() {
                   )}
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--text-1)', fontFamily: 'Roboto,sans-serif' }}>
-                      Pronto pra enviar
+                      {pendente.audio ? 'Ouça antes de enviar' : 'Pronto pra enviar'}
                     </div>
-                    <div style={{ fontSize: 10.5, color: 'var(--text-3)', fontFamily: 'Roboto,sans-serif', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {pendente.nome}
-                    </div>
+                    {pendente.audio ? (
+                      <audio controls src={pendente.preview} style={{ height: 30, maxWidth: '100%', marginTop: 3 }} />
+                    ) : (
+                      <div style={{ fontSize: 10.5, color: 'var(--text-3)', fontFamily: 'Roboto,sans-serif', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {pendente.nome}
+                      </div>
+                    )}
                   </div>
                   <Btn size="sm" variant="ghost" title="Cancelar" onClick={cancelarPendente} disabled={enviandoMidia}>
                     <LucideIcon icon="x" size={13} />
                   </Btn>
                 </div>
               )}
+              {gravando ? (
+                <div style={{ padding: 12, borderTop: '1px solid var(--app-border)', display: 'flex',
+                  gap: 10, alignItems: 'center', background: 'rgba(248,113,113,.06)' }}>
+                  <span style={{ width: 9, height: 9, borderRadius: '50%', background: '#f87171',
+                    animation: 'rec-blink 1.1s ease-in-out infinite', flexShrink: 0 }} />
+                  <span style={{ fontFamily: 'Roboto,sans-serif', fontSize: 13, fontWeight: 700,
+                    color: 'var(--text-1)', fontVariantNumeric: 'tabular-nums' }}>
+                    {duracaoCurta(segGrav)}
+                  </span>
+                  <span style={{ flex: 1, fontFamily: 'Roboto,sans-serif', fontSize: 11.5, color: 'var(--text-3)' }}>
+                    Gravando. Você ouve antes de enviar.
+                  </span>
+                  <Btn size="sm" variant="ghost" title="Descartar a gravação" onClick={cancelarGravacao}>
+                    <LucideIcon icon="trash-2" size={13} />
+                  </Btn>
+                  <Btn size="sm" onClick={pararGravacao}>
+                    <LucideIcon icon="check" size={13} /> Concluir
+                  </Btn>
+                </div>
+              ) : (
               <div style={{ padding: 12, borderTop: pendente ? 'none' : '1px solid var(--app-border)', display: 'flex', gap: 8, alignItems: 'flex-end' }}>
                 <textarea value={texto} onChange={e => setTexto(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); enviar(); } }}
@@ -1563,6 +1772,11 @@ function ConversasScreen() {
                     </>
                   )}
                 </div>
+                <Btn variant="ghost" title="Gravar áudio"
+                  disabled={!contatoAtivo?.janelaAberta || enviandoMidia || !!pendente}
+                  onClick={iniciarGravacao}>
+                  <LucideIcon icon="mic" size={14} />
+                </Btn>
                 <Btn variant={prontasAberto ? 'secondary' : 'ghost'} title="Mensagens prontas"
                   onClick={() => setProntasAberto(p => !p)}>
                   <LucideIcon icon="zap" size={14} />
@@ -1571,6 +1785,7 @@ function ConversasScreen() {
                   {enviandoMidia ? 'Enviando mídia...' : enviando ? 'Enviando...' : 'Enviar'}
                 </Btn>
               </div>
+              )}
             </>
           )}
         </div>

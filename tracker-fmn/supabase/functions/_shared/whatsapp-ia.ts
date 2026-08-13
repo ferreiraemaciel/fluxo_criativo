@@ -39,6 +39,16 @@ async function iaAtivaGlobalmente(supabase: any): Promise<boolean> {
 // Claudinho pra treinar e avaliar as respostas na hora.
 const TELEFONE_TESTE_TREINAMENTO = "5548996981982";
 
+// Lead que manda várias mensagens em sequência (ainda terminando de explicar
+// a situação) não pode receber resposta em cima da primeira mensagem só,
+// isso corta o raciocínio dele pela metade. Toda mensagem espera esse tanto
+// antes de responder de verdade; se chegar mensagem mais nova nesse meio
+// tempo, essa aqui desiste (a mensagem nova já dispara sua própria espera,
+// e vai responder o histórico completo quando chegar a vez dela). Combinado
+// com Felipe em 2026-08-12, depois de ver um lead mandar 4 mensagens seguidas
+// contando um problema real e a resposta ter saído em cima da primeira.
+const DELAY_RESPOSTA_MS = 30_000;
+
 async function modoTreinamentoAtivo(supabase: any): Promise<boolean> {
   const { data } = await supabase.from("app_config").select("valor").eq("chave", "whatsapp_modo_treinamento").single();
   return data?.valor === true;
@@ -170,6 +180,24 @@ export async function processarComIA(supabase: any, telefoneRaw: string, nomeLea
   // Por enquanto a IA só atua no fluxo de leads do quiz. Aluno novo (quem
   // comprou o MCV, etapa forçada por enviarBoasVindasMcv) fica de fora.
   if (contato?.etapa === "aluno") return;
+
+  // Espera antes de responder de verdade, pra dar tempo do lead terminar de
+  // mandar mensagem em sequência (ver DELAY_RESPOSTA_MS acima). Se durante a
+  // espera chegou mensagem mais nova que a que disparou essa chamada, desiste
+  // — a chamada da mensagem nova está fazendo a mesma espera e vai responder
+  // o histórico completo quando for a vez dela.
+  if (mensagemId) {
+    await dormir(DELAY_RESPOSTA_MS);
+    const { data: maisRecente } = await supabase
+      .from("whatsapp_mensagens")
+      .select("wa_message_id")
+      .eq("telefone", telefone)
+      .eq("direcao", "entrada")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (maisRecente?.wa_message_id && maisRecente.wa_message_id !== mensagemId) return;
+  }
 
   // Trava contra duas mensagens do lead chegando quase juntas: cada uma
   // dispara seu próprio processarComIA em background, e sem essa trava as

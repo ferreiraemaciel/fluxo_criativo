@@ -78,10 +78,13 @@ def parse_folder_id(s):
     m=re.search(r"[-\w]{25,}", s); return m.group(0) if m else s
 
 def cards_por_numero():
-    """Replica a UI: ordena por created_at asc (id como desempate, mesmo critério
-    do frontend e do worker — evita numero instável quando created_at empata)."""
-    rows=requests.get(f"{SB}/rest/v1/conteudo_organico?select=id,tema,plataforma,created_at,slides&order=created_at.asc,id.asc&limit=2000",headers=H).json()
-    return {i+1: r for i,r in enumerate(rows)}
+    """`numero` vem direto da coluna do banco (migration 101), igual o frontend
+    faz em organico.jsx. Nunca recalcular por posição: foi assim que o card
+    errado recebeu mídia no bug de 2026-08-07 (deletar um card no meio da lista
+    desalinhava a numeração da posição em relação às pastas do Drive, que usam
+    o numero fixo). Card sem numero na coluna (linha legada) fica de fora."""
+    rows=requests.get(f"{SB}/rest/v1/conteudo_organico?select=id,numero,tema,plataforma,created_at,slides&order=created_at.asc,id.asc&limit=2000",headers=H).json()
+    return {r["numero"]: r for r in rows if r.get("numero") is not None}
 
 def slides_existentes(card):
     """Lê os slides já salvos no card (título, subtítulo, prompt etc) pra não

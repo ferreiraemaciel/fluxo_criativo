@@ -150,8 +150,8 @@ window.QUIZ_CONFIG = {
     { type: 'comparison',
       key: 'quer_modelos',
       heading: 'Contrato não é papel. É sistema.',
-      afterImg: 'assets/clausula-02.jpg',
-      body: 'O <b>Blindagem</b> é um sistema completo para fotógrafos e videomakers gerirem contratos do início ao fim: gere, assine digitalmente, organize por cliente e acompanhe o status em tempo real. Os contratos continuam visuais e personalizados, como os Modelos de Contrato Visual, agora com assinatura digital e gestão completa.',
+      afterImg: 'assets/mockup-app-macbook.webp',
+      body: 'O <b>Blindagem</b> inclui os <b>+200 Modelos de Contrato Visual</b> (fotografia, vídeo, eventos, ensaio e muito mais) mais tudo que você precisa para gerir contratos do início ao fim: gere, envie para assinar digitalmente, organize por cliente e acompanhe o status em tempo real.',
       question: 'Quer um sistema para gerar, assinar, organizar e acompanhar seus contratos?',
       options: [
         { emoji: '✅', label: 'Sim, preciso disso agora. Estou sem controle.' },
@@ -166,7 +166,7 @@ window.QUIZ_CONFIG = {
       cta: 'Ver o meu diagnóstico' },
 
     { type: 'loading',
-      img: 'assets/mockup-celular.png',
+      img: 'assets/mockup-app-celular.webp',
       heading: 'Com o Blindagem você ganha:',
       duration: 4500,
       items: [
@@ -174,7 +174,7 @@ window.QUIZ_CONFIG = {
         { emoji: '✍️', title: 'Assinatura Digital', body: 'Assine e receba assinaturas sem papel ou impressora.' },
         { emoji: '📁', title: 'Organização Total', body: 'Todos os contratos centralizados e fáceis de encontrar.' },
         { emoji: '🔔', title: 'Acompanhamento em Tempo Real', body: 'Saiba o status de cada contrato sem precisar ligar pro cliente.' },
-        { emoji: '🎨', title: 'Contratos Visuais', body: 'Seus contratos continuam visuais e personalizados, como nos Modelos de Contrato Visual.' },
+        { emoji: '🎨', title: '+200 Modelos de Contrato Visual incluídos', body: 'Fotografia, vídeo, ensaio, evento e muito mais. Prontos para usar, adaptáveis ao seu nicho.' },
         { emoji: '🛡️', title: 'Muito mais proteção jurídica para o seu negócio.' },
       ],
       loadingText: 'Analisando perfil e gerando relatório…' },
