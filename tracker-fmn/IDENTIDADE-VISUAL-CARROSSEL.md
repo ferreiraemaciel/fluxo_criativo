@@ -150,12 +150,13 @@ vantagem competitiva, não falta de referência pra copiar.
 > apertada e sem respiro. O que está aqui é o que ele fez de fato, não o que foi pedido antes.
 > Vale para todo carrossel novo.
 
-**Tudo centralizado, em coluna única.** Título, objeto, rótulo e frase, todos no eixo central. Não
-usar objeto à esquerda com texto à direita: a leitura em duas colunas aperta a peça e é justamente
-isso que tira o respiro.
+**Coluna única centralizada é o ponto de partida, não uma regra.** Foi o que funcionou no ORG 047, e
+resolve a maioria dos casos, mas a composição pode variar quando o conteúdo pedir: duas colunas,
+texto alinhado à esquerda, objeto fora do eixo. O que não pode variar é o **respiro**. Se a
+alternativa escolhida aperta a peça, ela está errada por isso, não por não ser centralizada.
 
-**A ordem vertical é sempre a mesma**, e é ela que dá o padrão que faz os slides parecerem uma
-família:
+**O que precisa se manter constante é a ordem dos elementos dentro do slide**, porque é ela que faz
+os oito parecerem uma família em vez de oito artes separadas:
 
 1. Nome do critério, caixa alta, preto, condensada pesada. Maior elemento do slide.
 2. Objeto pequeno em pixel art 16-bit, na versão vermelha (o erro).
@@ -167,19 +168,26 @@ família:
 8. A frase de hoje, preto, mesmo corpo da outra frase.
 9. Indicador de progresso no rodapé à esquerda, seta de swipe no rodapé à direita.
 
-**Rótulos em português, não em linguagem de game.** `COMO EU FIZ` e `COMO EU FARIA`. Rótulo em
-inglês ou em jargão de jogo (FASE 1, PRIMEIRA PARTIDA, NEW GAME +) sai da peça: o primeiro vira
-duplo sentido e o gerador desenha outra coisa (aconteceu, virou campo de futebol), e o segundo
-compete com o conteúdo. O universo de game vive no estilo de desenho e na abertura, não nos rótulos
-de cada slide.
+**Texto em português por padrão**, inclusive os rótulos: `COMO EU FIZ` e `COMO EU FARIA`. Inglês
+entra só quando o termo em inglês é o nome real da coisa e traduzir soaria pior (`New Game Plus` na
+abertura do ORG 047 é o caso: é o nome do conceito, não existe versão em português que se reconheça).
+Fora isso, português.
+
+Vale também para jargão de game usado como rótulo de slide. `FASE 1` e `PRIMEIRA PARTIDA` foram
+testados e saíram: o segundo tem duplo sentido e o gerador desenhou um campo de futebol no slide de
+PREÇO, e os dois competiam com o conteúdo. O universo de game vive no estilo de desenho e na
+abertura, não em cada slide.
 
 **Respiro é o item mais importante da lista.** Nenhum bloco de cor cheio ocupando o slide. Fundo
 creme dominante, elementos pequenos, muito espaço vazio entre os dois lados. Se a peça parecer
 cheia, o problema é sempre falta de espaço, nunca falta de elemento.
 
-**Uma exceção de cor, uma só.** O slide de honestidade, perto do fim, vai com fundo vermelho cheio e
-texto branco. É a única quebra de fundo do carrossel inteiro, e é ela que sinaliza mudança de tom
-antes do fecho. Repetir essa quebra em outro slide mata o efeito.
+**Quebra de fundo marca virada de tom.** No ORG 047 é o slide de honestidade, perto do fim, com
+fundo vermelho cheio e texto branco, sinalizando mudança de tom antes do fecho. Pode haver mais de
+uma quebra quando o carrossel pedir, por exemplo um carrossel com dois momentos de virada. O que
+importa é que **cada quebra corresponda a uma virada real do conteúdo**. Fundo colorido usado como
+enfeite, sem virada por trás, gasta o recurso e as quebras seguintes deixam de significar alguma
+coisa.
 
 **Progresso e swipe.** Oito ícones no rodapé esquerdo, preenchendo um por slide, e três setas `>>>`
 em verde no rodapé direito. Conferir a contagem na arte final, um por um: repetir número é o defeito
