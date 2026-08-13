@@ -150,7 +150,7 @@ window.QUIZ_CONFIG = {
     { type: 'comparison',
       key: 'quer_modelos',
       heading: 'Contrato não é papel. É sistema.',
-      afterImg: 'assets/clausula-02.jpg',
+      afterImg: 'assets/mockup-app-macbook.webp',
       body: 'O <b>Blindagem</b> inclui os <b>+200 Modelos de Contrato Visual</b> (fotografia, vídeo, eventos, ensaio e muito mais) mais tudo que você precisa para gerir contratos do início ao fim: gere, envie para assinar digitalmente, organize por cliente e acompanhe o status em tempo real.',
       question: 'Quer um sistema para gerar, assinar, organizar e acompanhar seus contratos?',
       options: [
@@ -166,7 +166,7 @@ window.QUIZ_CONFIG = {
       cta: 'Ver o meu diagnóstico' },
 
     { type: 'loading',
-      img: 'assets/mockup-celular.png',
+      img: 'assets/mockup-app-celular.webp',
       heading: 'Com o Blindagem você ganha:',
       duration: 4500,
       items: [
