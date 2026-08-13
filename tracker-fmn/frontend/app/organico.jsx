@@ -2150,7 +2150,7 @@ function ScheduleEditPopover({ item, onSave, onClose }) {
 }
 
 /* ── CalendarioView ──────────────────────────────────────────────*/
-const DIAS_SEMANA = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+const DIAS_SEMANA_GRID = ['Seg','Ter','Qua','Qui','Sex','Sáb','Dom']; // indexado pela posição na grade (0=segunda), igual a Agenda/Khronus
 const MESES_PT   = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho',
                     'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 
@@ -2162,7 +2162,7 @@ function CalendarioView({ items, onOpen, onNewWithDate, onReschedule, onEditSche
   const [dragOverDate, setDragOverDate] = useState(null);
   const [editingId, setEditingId]   = useState(null); // id do card com editor de horário aberto
 
-  const primeiroDia = new Date(ano, mes, 1).getDay(); // 0=dom
+  const primeiroDia = (new Date(ano, mes, 1).getDay() + 6) % 7; // 0=segunda...6=domingo
   const diasNoMes   = new Date(ano, mes + 1, 0).getDate();
   const todayStr    = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
 
@@ -2218,8 +2218,8 @@ function CalendarioView({ items, onOpen, onNewWithDate, onReschedule, onEditSche
       <div style={{ flex:1, display:'flex', flexDirection:'column', minHeight:0 }}>
         {/* Cabeçalho dias da semana */}
         <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', gap:4, marginBottom:4 }}>
-          {DIAS_SEMANA.map((d, i) => {
-            const isWeekend = i === 0 || i === 6;
+          {DIAS_SEMANA_GRID.map((d, i) => {
+            const isWeekend = i === 5 || i === 6;
             return (
               <div key={d} style={{ textAlign:'center', fontSize:10.5, fontFamily:'Roboto,sans-serif',
                 fontWeight:900, letterSpacing:'0.06em',
@@ -2235,8 +2235,8 @@ function CalendarioView({ items, onOpen, onNewWithDate, onReschedule, onEditSche
         <div style={{ flex:1, display:'grid', gridTemplateColumns:'repeat(7,1fr)',
           gridAutoRows:'1fr', gap:4 }}>
           {cells.map((dia, idx) => {
-            const colIdx = idx % 7; // 0=dom, 6=sáb
-            const isWeekend = colIdx === 0 || colIdx === 6;
+            const colIdx = idx % 7; // 0=segunda...6=domingo
+            const isWeekend = colIdx === 5 || colIdx === 6;
             if (!dia) return (
               <div key={`e${idx}`} style={{
                 background: isWeekend ? 'rgba(255,255,255,.01)' : 'transparent',
