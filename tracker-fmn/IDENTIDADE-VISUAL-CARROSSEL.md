@@ -150,10 +150,13 @@ vantagem competitiva, não falta de referência pra copiar.
 > apertada e sem respiro. O que está aqui é o que ele fez de fato, não o que foi pedido antes.
 > Vale para todo carrossel novo.
 
-**Coluna única centralizada é o ponto de partida, não uma regra.** Foi o que funcionou no ORG 047, e
-resolve a maioria dos casos, mas a composição pode variar quando o conteúdo pedir: duas colunas,
-texto alinhado à esquerda, objeto fora do eixo. O que não pode variar é o **respiro**. Se a
-alternativa escolhida aperta a peça, ela está errada por isso, não por não ser centralizada.
+**A composição é livre.** Coluna única centralizada é uma opção entre outras, foi a que funcionou no
+ORG 047 e pode ser usada ou não. Duas colunas, texto alinhado à esquerda, objeto fora do eixo,
+qualquer arranjo serve: quem decide é o conteúdo daquele carrossel. Não tratar o que foi feito no
+ORG 047 como molde a seguir.
+
+O que não varia é o **respiro**. Se a composição escolhida aperta a peça, ela está errada por isso,
+nunca por não ser centralizada.
 
 **O que precisa se manter constante é a ordem dos elementos dentro do slide**, porque é ela que faz
 os oito parecerem uma família em vez de oito artes separadas:
