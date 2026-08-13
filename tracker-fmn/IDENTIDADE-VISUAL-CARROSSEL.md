@@ -141,3 +141,58 @@ vantagem competitiva, não falta de referência pra copiar.
   perfil do Instagram em janeiro de 2025. O tamanho de upload continua 1080x1350.
 - 2026-08-06: CTA do último slide passa a puxar **comentário** na maioria das peças, em vez de
   salvamento. O carrossel já lidera salvamento naturalmente, o que falta pra ele é comentário.
+
+---
+
+## Padrão de composição do slide (aprovado 2026-08-12, a partir do ORG 047)
+
+> Nasceu de uma peça que o Felipe teve que refazer quase toda na mão porque a geração veio
+> apertada e sem respiro. O que está aqui é o que ele fez de fato, não o que foi pedido antes.
+> Vale para todo carrossel novo.
+
+**Tudo centralizado, em coluna única.** Título, objeto, rótulo e frase, todos no eixo central. Não
+usar objeto à esquerda com texto à direita: a leitura em duas colunas aperta a peça e é justamente
+isso que tira o respiro.
+
+**A ordem vertical é sempre a mesma**, e é ela que dá o padrão que faz os slides parecerem uma
+família:
+
+1. Nome do critério, caixa alta, preto, condensada pesada. Maior elemento do slide.
+2. Objeto pequeno em pixel art 16-bit, na versão vermelha (o erro).
+3. Rótulo `COMO EU FIZ`, caixa alta, vermelho, corpo pequeno, com espaçamento entre letras.
+4. A frase do erro, preto, corpo pequeno, no máximo duas linhas.
+5. Espaço generoso.
+6. O mesmo objeto na versão verde (o acerto).
+7. Rótulo `COMO EU FARIA`, caixa alta, verde, mesmo corpo do outro rótulo.
+8. A frase de hoje, preto, mesmo corpo da outra frase.
+9. Indicador de progresso no rodapé à esquerda, seta de swipe no rodapé à direita.
+
+**Rótulos em português, não em linguagem de game.** `COMO EU FIZ` e `COMO EU FARIA`. Rótulo em
+inglês ou em jargão de jogo (FASE 1, PRIMEIRA PARTIDA, NEW GAME +) sai da peça: o primeiro vira
+duplo sentido e o gerador desenha outra coisa (aconteceu, virou campo de futebol), e o segundo
+compete com o conteúdo. O universo de game vive no estilo de desenho e na abertura, não nos rótulos
+de cada slide.
+
+**Respiro é o item mais importante da lista.** Nenhum bloco de cor cheio ocupando o slide. Fundo
+creme dominante, elementos pequenos, muito espaço vazio entre os dois lados. Se a peça parecer
+cheia, o problema é sempre falta de espaço, nunca falta de elemento.
+
+**Uma exceção de cor, uma só.** O slide de honestidade, perto do fim, vai com fundo vermelho cheio e
+texto branco. É a única quebra de fundo do carrossel inteiro, e é ela que sinaliza mudança de tom
+antes do fecho. Repetir essa quebra em outro slide mata o efeito.
+
+**Progresso e swipe.** Oito ícones no rodapé esquerdo, preenchendo um por slide, e três setas `>>>`
+em verde no rodapé direito. Conferir a contagem na arte final, um por um: repetir número é o defeito
+mais comum aqui.
+
+**Objeto por critério.** Um objeto pequeno, na versão vermelha em cima e verde embaixo, mesmo
+desenho nas duas. Objeto de fotografia quando ele existe e é reconhecível na hora (lente, bolsa,
+câmera, etiqueta). Quando o conceito é abstrato, ícone universal resolve melhor que metáfora
+fotográfica forçada: o ORG 047 usa moeda em PREÇO, escudo em CONTRATO e alvo em FOCO, e funciona
+porque a leitura é instantânea. O critério é reconhecimento imediato, não pureza temática.
+
+**@felipeferreirafotografo aparece na capa e no CTA.** Não precisa nos slides do meio.
+
+**Capa.** Título com a palavra que carrega o tema destacada em verde no meio do bloco preto, linha
+de apoio em corpo pequeno logo abaixo, e o sprite do fotógrafo no canto inferior esquerdo sobre a
+tira de filme. O arroba fecha o rodapé.
