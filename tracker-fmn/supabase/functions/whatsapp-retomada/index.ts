@@ -48,6 +48,26 @@ const TOOL_RETOMADA = {
   },
 };
 
+// Trava em código contra a frase reservada de handoff vazando pra retomada.
+// A regra já existe no prompt (ver systemPrompt abaixo), mas o modelo já
+// desobedeceu DUAS vezes em produção (Juan em 2026-08-04, Jadiel em
+// 2026-08-13), então não dá pra confiar só na instrução. Essa frase promete
+// um retorno que ninguém vai cumprir, e fora do contexto de handoff (lead
+// desconfiando que fala com IA) ela não reconecta com nada real da conversa.
+// Não dá pra só remover a frase: sem ela sobra uma mensagem vazia. Por isso
+// a mensagem inteira é descartada e nada é enviado nesse ciclo — o contato
+// não fica marcado como retomado, então a próxima execução do cron tenta de
+// novo, com uma geração nova.
+const FRASES_HANDOFF_PROIBIDAS = [
+  /j[áa]\s+te\s+retorno/i,
+  /fica\s+comigo\s+s[óo]\s+um\s+segundo/i,
+  /um\s+segundo,?\s+j[áa]\s+te/i,
+];
+
+function usouFraseDeHandoff(texto: string): boolean {
+  return FRASES_HANDOFF_PROIBIDAS.some((re) => re.test(texto || ""));
+}
+
 async function gerarRetomada(historico: { role: string; content: string }[], ultimaFoiDoLead: boolean): Promise<{ mensagem: string; tokensEntrada: number; tokensSaida: number } | null> {
   if (!ANTHROPIC_API_KEY) return null;
 
@@ -98,6 +118,12 @@ ${instrucaoVacuo}`;
     const mensagem = aplicarCorrecoesAutomaticas(
       String(toolUse.input.mensagem).replace(/\s*[—–]\s*/g, ", ").trim(),
     );
+    // Ver FRASES_HANDOFF_PROIBIDAS acima: descarta a retomada inteira em vez
+    // de mandar uma promessa de retorno vazia pro lead.
+    if (usouFraseDeHandoff(mensagem)) {
+      console.warn("[whatsapp-retomada] descartada: modelo usou frase reservada de handoff:", mensagem);
+      return null;
+    }
     return { mensagem, tokensEntrada: d.usage?.input_tokens || 0, tokensSaida: d.usage?.output_tokens || 0 };
   } catch (err) {
     console.error("[whatsapp-retomada] erro Anthropic:", err);
@@ -147,6 +173,13 @@ Essa conversa estava andando rápido hoje, várias trocas de mensagem reais, e a
     const mensagem = aplicarCorrecoesAutomaticas(
       String(toolUse.input.mensagem).replace(/\\n/g, "\n").replace(/\s*[—–]\s*/g, ", ").trim(),
     );
+    // Mesma trava da retomada normal (ver FRASES_HANDOFF_PROIBIDAS): esse
+    // prompt também carrega o SYSTEM_PROMPT_MCV inteiro, então corre o mesmo
+    // risco de emprestar a frase reservada de handoff fora de contexto.
+    if (usouFraseDeHandoff(mensagem)) {
+      console.warn("[whatsapp-retomada] nudge descartado: modelo usou frase reservada de handoff:", mensagem);
+      return null;
+    }
     return { mensagem, tokensEntrada: d.usage?.input_tokens || 0, tokensSaida: d.usage?.output_tokens || 0 };
   } catch (err) {
     console.error("[whatsapp-retomada] erro Anthropic (nudge reação):", err);
