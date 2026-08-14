@@ -41,6 +41,15 @@ const RESPONSAVEL_COMUM = { initials:'—', color:'#94a3b8', bg:'rgba(148,163,18
 // herdar a pasta (e a arte) do antigo. Buraco na numeração é só estética;
 // adotar pasta alheia é erro de conteúdo. O banco garante o mesmo por gatilho
 // (migração 104), isto aqui é só pra tela mostrar o número certo na hora.
+// Cards para os quais já pedimos a pasta nesta aba. Dois pontos do código
+// chamam /criar-pasta (logo após criar o card, e ao abrir um card sem pasta),
+// e num card recém-criado os dois disparam quase juntos: o segundo ainda não
+// enxerga o drive_folder_url, porque quem grava esse campo é o worker. A
+// idempotência do lado do servidor não bastou (a listagem do Drive é
+// eventualmente consistente e não devolvia a pasta criada 2s antes, foi o que
+// duplicou o ORG 071). Este conjunto corta a segunda chamada na origem.
+const pastasPedidas = new Set();
+
 function proximoLivre(items) {
   const usados = (items || []).map(i => i.numero).filter(Boolean);
   return usados.length ? Math.max(...usados) + 1 : 1;
@@ -1254,6 +1263,8 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
   const [pastaUrl, setPastaUrl] = useState(item?.drive_folder_url || null);
   useEffect(() => {
     if (isNew || !item?.id || item?.drive_folder_url) return;
+    if (pastasPedidas.has(item.id)) return;
+    pastasPedidas.add(item.id);
     let vivo = true;
     fetch(`${WORKER_URL}/criar-pasta`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -2705,6 +2716,7 @@ function OrganicoScreen() {
           // de onde a importação puxa as artes. Roda solto, sem travar o
           // fechamento do modal: se o Drive falhar, o card já está salvo e a
           // pasta pode ser criada na mão como antes.
+          pastasPedidas.add(data.id);
           fetch(`${WORKER_URL}/criar-pasta`, {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ card_id: data.id }),
