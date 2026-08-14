@@ -124,6 +124,20 @@ Se o lead pedir pra parcelar no boleto, parcelar no Pix, ou disser que não quer
 
 O link de checkout padrão do MCV que vive em `whatsapp-ia-prompt.ts` usa `sck=whatsapp-cl` (rastreio do Claudinho, IA ao vivo). Isso está correto pro prompt, porque ali é sempre a IA que manda. **Mas quando eu (Claude Code) rascunho uma mensagem com esse link durante uma sessão de `/tracker-treinar-claudinho` pra Felipe ou Amanda colarem e mandarem manualmente no WhatsApp**, isso não é a IA ao vivo mandando, é atendimento humano, então o rastreio certo é `sck=whatsapp-ah`, não `whatsapp-cl`. Trocar o final da URL antes de entregar o rascunho: `https://pay.hotmart.com/W87258826R?checkoutMode=10&sck=whatsapp-ah`. O `whatsapp-cl` continua reservado só pro link que a função `whatsapp-ia.ts` manda sozinha, sem intervenção humana.
 
+## Link da página de vendas do MCV pra venda orgânica no WhatsApp (atendimento humano)
+
+> Combinado em 2026-08-14. Alternativa ao link direto de checkout quando o lead se beneficia de ver a página de vendas completa antes de decidir (objeção não resolvida, quer entender melhor o produto, pediu prova social), sempre em envio manual, nunca pelo Claudinho ao vivo.
+
+A página de vendas (`https://www.contratos.fotografiaeomeunegocio.com.br`) já tem um script embutido que repassa o `sck` recebido na URL da própria página direto pro botão de checkout, sem precisar de nada além disso. **O link certo pra colar numa mensagem manual carrega só o `sck`, sem `utm_*` junto** (os `utm_*` são redundantes aqui: só alimentam GA4/Pixel da própria página, o log de pageview do Tracker não lê `utm_*`, e o `sck` sozinho já é o que decide a atribuição na tabela `vendas`):
+
+```
+https://www.contratos.fotografiaeomeunegocio.com.br/?sck=whatsapp-ah-lp
+```
+
+**Por que `whatsapp-ah-lp` e não `whatsapp-ah`:** usa um sufixo `-lp` diferente do link direto de checkout, pra separar nos relatórios quem recebeu a página de vendas completa de quem recebeu o link direto pro pagamento, é o dado que mostra qual dos dois converte melhor no orgânico. Testado ponta a ponta em 2026-08-14: o `sck` chega intacto na Hotmart (verificado no HTML de produção, dentro do limite de 30 caracteres) e o `hotmart-webhook` grava `sck` e `utm_source` iguais na tabela `vendas`, confirmado com venda real anterior usando o formato irmão `whatsapp-ah` (venda de 24/07, atribuída corretamente).
+
+**Limitação de rastreio que existe e não tem como eliminar:** o repasse do `sck` depende do JavaScript da página rodar no clique do botão. Se o lead sair da página e voltar depois sem os parâmetros na URL (histórico, digitando o endereço de cabeça), a venda cai no `sck` padrão da própria página (`lp-contratos-fmn`) em vez do rastreio individual. Isso é aceitável, é a mesma limitação que qualquer LP com repasse de UTM tem.
+
 ## Áudio enviado pelo WhatsApp — sempre OGG/Opus e sempre mono
 
 > Descoberto na implementação da gravação de áudio no Conversas, em 2026-08-11,
