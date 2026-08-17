@@ -2,6 +2,17 @@
 
 > Instruções específicas do Tracker FMN. Complementa o CLAUDE.md da raiz do fluxo-criativo (regras gerais do workshop), mas essas aqui valem só dentro desta pasta.
 
+## Aviso de ADS/mídia repetida na mesma campanha (aba Anúncios, modal Publicar)
+
+> Combinado com Felipe em 2026-08-17. É só aviso, nunca bloqueia a publicação.
+
+Ao escolher a campanha no modal "Publicar" (`MetaAdModal` em `frontend/app/kanban.jsx`, função `checarDuplicidadeNaCampanha`), o Tracker consulta a tabela `ads` filtrando por `meta_campaign_id` e mostra um aviso amarelo (não bloqueante) em dois casos:
+
+1. **O mesmo card (mesmo `numero`) já foi publicado nessa campanha antes** — evita criar um segundo anúncio duplicado do mesmo ADS por engano.
+2. **Outro card usa a mesma mídia** (`meta_image_hash` ou `meta_video_id` batendo) **dentro da mesma campanha** — é um sinal de que a mesma imagem/vídeo já rodou ali, útil pra não repetir criativo sem perceber.
+
+Escopo é a **campanha inteira**, não só o conjunto de anúncios (um mesmo criativo pode se repetir em conjuntos diferentes da mesma campanha e o aviso ainda dispara). A checagem é best-effort: se a consulta falhar, não trava o fluxo de publicação, só não mostra aviso nenhum.
+
 ## Regra G5 — CPA acima do limite pausa o ADS sozinho, sem confirmação no chat
 
 > Combinado com Felipe em 2026-08-17. É uma exceção explícita ao "GATE EM CAMADA DE CHAT ANTES DE OPERAÇÕES DE ESCRITA NA META GRAPH API" da raiz do fluxo-criativo: essa ação específica (pausar por estouro de CPA) está pré-aprovada permanentemente, não passa mais pelo gate.

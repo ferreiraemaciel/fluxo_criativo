@@ -510,6 +510,7 @@ function MetaAdModal({ card, onClose }) {
   const [loadingMsg, setLoadingMsg] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [resultUrl, setResultUrl] = useState('');
+  const [avisoDuplicidade, setAvisoDuplicidade] = useState(null); // string | null, não bloqueia publicação
 
   // ESC fecha
   React.useEffect(() => {
@@ -575,6 +576,7 @@ function MetaAdModal({ card, onClose }) {
     if (objKey) setCampaignObj(objKey);
     setAdsetId(''); setAdsetName(''); setAdsets([]);
     setNewAdset(false);
+    setAvisoDuplicidade(null);
     // Detecta se a campanha existente é CBO (tem orçamento na campanha)
     const c = campaigns.find(x => x.id === id);
     setCampaignIsCbo(!!(c && (Number(c.daily_budget) > 0 || Number(c.lifetime_budget) > 0)));
@@ -588,6 +590,48 @@ function MetaAdModal({ card, onClose }) {
     } finally {
       setLoadingAdset(false);
     }
+    checarDuplicidadeNaCampanha(id, name);
+  }
+
+  // Aviso não bloqueante: este mesmo ADS (numero) ou a mesma mídia (imagem/vídeo
+  // já hospedada no Meta) já rodou nesta campanha antes. Cobre os dois casos com
+  // reais chances de acontecer: republicar o mesmo card por engano, e reaproveitar
+  // a mesma imagem/vídeo num card novo sem perceber que ela já rodou ali.
+  // Escopo é a campanha inteira (não só o conjunto) — combinado com Felipe em 2026-08-17.
+  async function checarDuplicidadeNaCampanha(campId, campName) {
+    if (!campId) return;
+    try {
+      const { data, error } = await window.db.from('ads')
+        .select('numero,titulo,meta_ad_id,meta_ad_url,meta_image_hash,meta_video_id,updated_at')
+        .eq('meta_campaign_id', campId)
+        .not('meta_ad_id', 'is', null);
+      if (error || !data) return;
+
+      const mesmoCard = data.find(r => Number(r.numero) === adNum);
+      if (mesmoCard) {
+        const quando = mesmoCard.updated_at
+          ? new Date(mesmoCard.updated_at).toLocaleDateString('pt-BR')
+          : 'data desconhecida';
+        setAvisoDuplicidade(
+          `Este mesmo ADS ${card.num} já foi publicado nesta campanha (${campName}) em ${quando}. Publicar de novo cria um segundo anúncio duplicado.`
+        );
+        return;
+      }
+
+      const mesmaMidia = data.find(r =>
+        Number(r.numero) !== adNum &&
+        ((raw.meta_image_hash && r.meta_image_hash === raw.meta_image_hash) ||
+         (raw.meta_video_id && r.meta_video_id === raw.meta_video_id))
+      );
+      if (mesmaMidia) {
+        setAvisoDuplicidade(
+          `A mesma mídia (imagem/vídeo) já foi usada no ADS ${mesmaMidia.numero} dentro desta campanha (${campName}). Pode ser intencional, mas vale conferir antes de publicar.`
+        );
+        return;
+      }
+
+      setAvisoDuplicidade(null);
+    } catch { /* checagem best-effort, nunca trava o fluxo de publicação */ }
   }
 
   async function handleCreateCampaign() {
@@ -830,6 +874,15 @@ function MetaAdModal({ card, onClose }) {
                     </div>
               }
             </div>
+
+            {avisoDuplicidade && (
+              <div style={{ padding:'10px 12px', borderRadius:8, background:'rgba(234,170,65,.08)',
+                border:'1px solid rgba(234,170,65,.3)', fontSize:12, color:'var(--fmn-gold)', lineHeight:1.5,
+                display:'flex', gap:8, alignItems:'flex-start' }}>
+                <LucideIcon icon="alert-triangle" size={14} style={{ marginTop:1, flexShrink:0 }}/>
+                <span>{avisoDuplicidade}</span>
+              </div>
+            )}
 
             {/* ── Conjunto ── */}
             <div>
