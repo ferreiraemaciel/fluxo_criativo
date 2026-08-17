@@ -1403,7 +1403,13 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
           onSuccess={(novoStatus, quando) => {
             setShowPublish(false);
             set('status', novoStatus);
-            if (quando) set('data_prevista', quando.slice(0, 10));
+            // O worker já grava scheduled_at no banco, mas o form local não sabia
+            // disso: 1,2s depois o salvamento automático mandava esse form (sem
+            // scheduled_at) pro handleSave, que tem a trava "Agendado sem
+            // scheduled_at vira Feito" — e rebaixava o card de volta, mesmo com
+            // o agendamento certo já salvo (bug real do ORG 065, 2026-08-17).
+            if (quando) { set('data_prevista', quando.slice(0, 10)); set('scheduled_at', quando); }
+            else set('scheduled_at', null);
             onImported && onImported();
           }}/>
       )}

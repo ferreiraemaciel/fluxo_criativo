@@ -127,6 +127,22 @@ outros. Se falhar, volta pra Feito com o motivo no card.
 As credenciais dele são segredo do worker `organico-media`
 (`FMN_SUPABASE_URL`, `FMN_SUPABASE_KEY`), nunca do frontend.
 
+**Bug real corrigido (ORG 065, 2026-08-17): agendar Artigo caía de volta pra
+"Feito" sozinho.** O worker grava `status: 'Agendado'` e `scheduled_at` certos
+no banco na hora do agendamento. Mas o formulário do card, na tela, só ficava
+sabendo do `status` novo, nunca do `scheduled_at` — e 1,2s depois o
+salvamento automático mandava esse formulário (sem `scheduled_at`) pro
+`handleSave`, que tem a trava "Agendado sem `scheduled_at` vira Feito" (regra
+da seção acima, criada pra pegar card órfão). A trava fazia exatamente o que
+devia fazer, só que com informação incompleta: rebaixava o card de volta pra
+Feito mesmo com o agendamento certo já salvo no banco. `scheduled_at` nunca
+foi tocado por esse PATCH (ele nem entra no `row` do `handleSave`), então o
+card ficava com o pior dos dois mundos: "Feito" na coluna, mas com data e
+hora de publicação escondidas, esperando o robô que nunca ia rodar porque a
+coluna não era mais Agendado. Corrigido preenchendo `scheduled_at` no
+formulário local assim que o agendamento é confirmado (`organico.jsx`, dentro
+do `onSuccess` do `PublicarArtigoModal`).
+
 ## "Falhou ao publicar" nem sempre significa que falhou de verdade
 
 > Descoberto com o ORG 033, em 12/08/2026.
