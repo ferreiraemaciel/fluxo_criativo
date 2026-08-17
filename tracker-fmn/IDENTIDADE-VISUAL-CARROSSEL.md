@@ -89,7 +89,7 @@ vantagem competitiva, não falta de referência pra copiar.
   ponto de partida.
 - **Todo slide, sem exceção, é gerado no tamanho 1080x1350px** (largura x altura, vertical, proporção 4:5).
 - Cada slide pode ter fundo diferente entre si: cor sólida, textura leve, ou foto ocupando o espaço todo.
-- **Capa (slide 1) e último slide (CTA)** usam foto real do Felipe, ou uma ilustração de personagem muito parecido com ele (existe gabarito próprio pra gerar essa ilustração via ChatGPT).
+- **Capa (slide 1) e último slide (CTA) não exigem mais foto ou ilustração do Felipe** (regra afrouxada em 2026-08-17, ver histórico de ajustes). Foto real dele, ou uma ilustração de personagem muito parecido com ele (existe gabarito próprio pra gerar essa ilustração via ChatGPT), é uma opção a usar quando fizer sentido pro tema específico do carrossel, nunca obrigatória. Quando não fizer sentido, vale qualquer conceito visual forte e criativo que prenda atenção de verdade.
 - No canto direito de cada slide (exceto o último), um pedacinho do próximo slide "vaza" visualmente na borda, dando a sensação de que existe mais conteúdo pra arrastar. **Essa barra é aplicada depois no Canva pelo Felipe, manualmente, no momento de montar o carrossel. NUNCA incluir essa instrução no prompt de imagem do ChatGPT — o ChatGPT não sabe qual é o próximo slide e o resultado fica ruim.**
   - **Atenção:** só omitir a instrução não é suficiente. O ChatGPT tende a inserir essa barra colorida na borda direita sozinho (por inferência do estilo). É obrigatório incluir uma instrução negativa explícita em todo prompt de slide, tipo: "IMPORTANT: do not include any vertical color bar, stripe, edge accent, or preview of another slide on the right edge of the image — the background must extend uniformly edge to edge, full bleed, no side border of any kind."
 - Ícone de "arraste para o lado" com setinha em todos os slides, exceto o último.
@@ -141,6 +141,10 @@ vantagem competitiva, não falta de referência pra copiar.
   perfil do Instagram em janeiro de 2025. O tamanho de upload continua 1080x1350.
 - 2026-08-06: CTA do último slide passa a puxar **comentário** na maioria das peças, em vez de
   salvamento. O carrossel já lidera salvamento naturalmente, o que falta pra ele é comentário.
+- 2026-08-17: Capa e último slide deixam de exigir foto ou ilustração do Felipe. A partir do ORG 076
+  ("As 8 cláusulas..."), decidido usar um conceito visual sem o personagem (selo de cera lacrando um
+  documento) por ser mais chamativo pro tema daquele carrossel especificamente. Foto dele continua
+  válida quando fizer sentido, só deixou de ser regra fixa.
 
 ---
 
