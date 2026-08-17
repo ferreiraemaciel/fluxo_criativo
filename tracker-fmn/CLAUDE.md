@@ -134,6 +134,8 @@ A página de vendas (`https://www.contratos.fotografiaeomeunegocio.com.br`) já 
 https://www.contratos.fotografiaeomeunegocio.com.br/?sck=whatsapp-ah-lp
 ```
 
+**Gatilho obrigatório: lead pedindo pra ver/visualizar os modelos.** Sempre que o lead pedir pra ver os modelos, ver exemplo, ver como é visualmente, mandar exatamente esse link da página de vendas, nunca um print ou imagem solta dos Modelos de Contrato Visual. Mandar print/imagem do MCV é entregar o próprio produto de graça, o produto É o design visual dos contratos. A página de vendas mostra prévia, exemplos e prova social sem entregar o arquivo editável em si.
+
 **Por que `whatsapp-ah-lp` e não `whatsapp-ah`:** usa um sufixo `-lp` diferente do link direto de checkout, pra separar nos relatórios quem recebeu a página de vendas completa de quem recebeu o link direto pro pagamento, é o dado que mostra qual dos dois converte melhor no orgânico. Testado ponta a ponta em 2026-08-14: o `sck` chega intacto na Hotmart (verificado no HTML de produção, dentro do limite de 30 caracteres) e o `hotmart-webhook` grava `sck` e `utm_source` iguais na tabela `vendas`, confirmado com venda real anterior usando o formato irmão `whatsapp-ah` (venda de 24/07, atribuída corretamente).
 
 **Limitação de rastreio que existe e não tem como eliminar:** o repasse do `sck` depende do JavaScript da página rodar no clique do botão. Se o lead sair da página e voltar depois sem os parâmetros na URL (histórico, digitando o endereço de cabeça), a venda cai no `sck` padrão da própria página (`lp-contratos-fmn`) em vez do rastreio individual. Isso é aceitável, é a mesma limitação que qualquer LP com repasse de UTM tem.
