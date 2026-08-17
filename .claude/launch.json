@@ -64,7 +64,7 @@
     ,{
       "name": "khronus",
       "runtimeExecutable": "/opt/homebrew/bin/python3",
-      "runtimeArgs": ["-m", "http.server", "3040", "--directory", "/Users/ferreiraemaciel/Documents/khronus/frontend"],
+      "runtimeArgs": ["-m", "http.server", "3040", "--directory", "/Users/felipeferreira/Documents/khronus/frontend"],
       "port": 3040
     }
     ,{
