@@ -2,6 +2,21 @@
 
 > Instruções específicas do Tracker FMN. Complementa o CLAUDE.md da raiz do fluxo-criativo (regras gerais do workshop), mas essas aqui valem só dentro desta pasta.
 
+## Regra G5 — CPA acima do limite pausa o ADS sozinho, sem confirmação no chat
+
+> Combinado com Felipe em 2026-08-17. É uma exceção explícita ao "GATE EM CAMADA DE CHAT ANTES DE OPERAÇÕES DE ESCRITA NA META GRAPH API" da raiz do fluxo-criativo: essa ação específica (pausar por estouro de CPA) está pré-aprovada permanentemente, não passa mais pelo gate.
+
+Qualquer ADS ativo, de qualquer produto ou conta, que tenha **CPA acima de R$207,90 nas janelas de 3 dias E de 5 dias ao mesmo tempo** é pausado automaticamente no Meta, sem eu perguntar antes. O valor vive em `regras_atp` (`codigo='G5'`, campo `parametros.cpa_limite`) e pode ser mudado direto na tabela sem precisar mexer em código.
+
+**Como funciona, ponta a ponta:**
+1. `meta-sync` (scope `curtas`, roda a cada 15min via pg_cron) calcula CPA 3d/5d de cada ADS e, se os dois estourarem o limite, grava um `alertas` com `acao_pendente='pausar'` (função `verificarRegraG5` em `supabase/functions/meta-sync/index.ts`).
+2. `processar-pausas` (roda a cada 5min via pg_cron, migração `051_kanban_sync_nuvem.sql`) lê esses alertas pendentes, chama `POST /{ad_id}` na Graph API com `status=PAUSED`, classifica o criativo (`Ótimo`/`Mediano`/`Ruim`/`Testar novamente`) e move o ADS pra coluna certa do Kanban de Tráfego, com uma nota `[Pausado automaticamente — G5 em {data}]` nas observações.
+3. Ciclo completo, do estouro do CPA até o ADS pausado de verdade na Meta: até ~20 minutos.
+
+**Antes dessa mudança**, o G5 só criava o alerta (`acao_tomada: 'alertado'`), nunca marcava `acao_pendente`, então nada era pausado sozinho — o aluno via o alerta na aba Tráfego mas precisava pausar manualmente. Isso fechou essa lacuna.
+
+**Se um dia o limite ou a regra de "precisa bater nas duas janelas" mudar**, é só editar `regras_atp.parametros.cpa_limite` (não precisa redeploy) ou a lógica em `verificarRegraG5()` (aí sim precisa redeploy do `meta-sync`).
+
 ## whatsapp-webhook — NUNCA deployar sem `--no-verify-jwt` (incidente real, 2026-08-07 a 2026-08-11)
 
 > Combinado com Felipe em 2026-08-11, depois de um incidente real de 4 dias sem receber nenhuma mensagem de lead.

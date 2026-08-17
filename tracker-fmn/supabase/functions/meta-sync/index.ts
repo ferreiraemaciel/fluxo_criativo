@@ -381,12 +381,17 @@ async function verificarRegraG5() {
         .eq("meta_ad_id", i3d.meta_ad_id)
         .single();
 
+      // Combinado com Felipe em 2026-08-17: G5 não fica só no aviso, marca a
+      // pausa como pendente pra processar-pausas (roda a cada 5min) executar
+      // sozinha no Meta, sem esperar aprovação no chat. Vale pra qualquer ADS
+      // ativo, sem filtro de produto/conta.
       await supabase.from("alertas").insert({
         ads_numero:     adsRow?.numero || null,
         meta_ad_id:     i3d.meta_ad_id,
         regra_codigo:   "G5",
-        mensagem:       `G5: CPA 3d R$${Number(cpa3d).toFixed(2)} e CPA 5d R$${Number(cpa5d).toFixed(2)} acima do limite R$${cpaLimite.toFixed(2)}.`,
-        acao_tomada:    "alertado",
+        mensagem:       `G5: CPA 3d R$${Number(cpa3d).toFixed(2)} e CPA 5d R$${Number(cpa5d).toFixed(2)} acima do limite R$${cpaLimite.toFixed(2)}. Pausado automaticamente.`,
+        acao_tomada:    "pausa_automatica",
+        acao_pendente:  "pausar",
         dados_snapshot: { cpa3d, cpa5d, cpa_limite: cpaLimite },
       });
     }
