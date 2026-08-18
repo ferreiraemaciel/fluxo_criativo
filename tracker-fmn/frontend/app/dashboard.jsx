@@ -6,13 +6,16 @@ const { CardKPI, SectionCard, TopBar, LucideIcon, Badge } = window;
 // FotoMap captured at render time to avoid race with map.jsx loading
 
 /* ── Helpers ─────────────────────────────────────────────────────*/
-// Simplificado a pedido: só duas fontes possíveis. Qualquer utm_source
-// rastreado (Ads, Instagram, Google, TikTok, WhatsApp/IA etc.) conta como
-// Tráfego. Sem utm_source (venda direta/não rastreada) conta como Orgânico.
+// Simplificado a pedido: três fontes possíveis. sck com "evento" (ex:
+// evento-ttd2026) conta como Evento, pra separar vendas feitas em estande/
+// palestra do tráfego pago de verdade. Qualquer outro utm_source rastreado
+// (Ads, Instagram, Google, TikTok, WhatsApp/IA etc.) conta como Tráfego.
+// Sem utm_source (venda direta/não rastreada) conta como Orgânico.
 function normalizeSource(raw) {
   if (!raw || !String(raw).trim()) return 'Orgânico';
   const s = String(raw).toLowerCase();
   if (s.includes('organic') || s.includes('orgânico')) return 'Orgânico';
+  if (s.includes('evento')) return 'Evento';
   return 'Tráfego';
 }
 const fmtCur = window.fmtBRL;
