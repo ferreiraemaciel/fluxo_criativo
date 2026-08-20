@@ -252,12 +252,18 @@ function useDashboardData(period, dateRange) {
           { label: 'Upsell Blindagem',        value: upsellConv, pct: +((upsellConv/totCliques)*100).toFixed(1) },
         ] : null;
 
-        /* CPA médio consolidado (blended): investimento total ÷ compras totais do período.
-           Usa gasto e totComp já calculados acima (gasto_diario para 7/14/30d — fresco e
-           batido contra o Meta; insights_cache maximum para a visão de vida inteira).
-           Antes era média das médias sobre o insights_cache (cada anúncio pesava igual,
-           tendo 1 ou 100 vendas, e incluía linhas congeladas de anúncios já pausados). */
-        const cpaMedio = totComp > 0 ? gasto / totComp : null;
+        /* CPA médio consolidado (blended): investimento total ÷ vendas aprovadas de
+           verdade no período (totalVendas, a mesma contagem que já alimenta faturamento,
+           lucro e ROAS — fonte: tabela vendas, aprovada na Hotmart).
+           Bug corrigido em 2026-08-20: usava totComp (compras que o Pixel do Meta
+           reporta em gasto_diario), que sub-conta muito a venda real — o Pixel só vê
+           o que é atribuído a clique/visualização de anúncio, então venda fechada por
+           WhatsApp, orgânico ou que demora a confirmar fica de fora. Isso inflava o CPA
+           médio mostrado em até 3x (ex.: 30 dias mostrava R$327,52 quando o real, com
+           vendas aprovadas de verdade, era R$129,02).
+           Antes disso era média das médias sobre o insights_cache (cada anúncio pesava
+           igual, tendo 1 ou 100 vendas, e incluía linhas congeladas de anúncios pausados). */
+        const cpaMedio = totalVendas > 0 ? gasto / totalVendas : null;
 
         /* ranking de ADs — apenas campeões */
         const { data: adsRaw } = await window.db
