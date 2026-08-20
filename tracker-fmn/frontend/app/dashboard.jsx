@@ -100,7 +100,6 @@ function useDashboardData(period, dateRange) {
         const totCliques = (gd || []).reduce((s, r) => s + Number(r.cliques||0), 0);
         const totLP      = (gd || []).reduce((s, r) => s + Number(r.lp_views||0), 0);
         const totIC      = (gd || []).reduce((s, r) => s + Number(r.initiate_checkout||0), 0);
-        const totComp    = (gd || []).reduce((s, r) => s + Number(r.compras||0), 0);
 
         /* despesas recorrentes do mês */
         const { data: despesas } = await window.db
@@ -243,12 +242,20 @@ function useDashboardData(period, dateRange) {
         const blindSet    = new Set((blindEmailsRaw || []).map(r => r.comprador_email).filter(Boolean));
         const upsellConv  = [...blindSet].filter(e => mcvSet.has(e)).length;
 
-        /* funil steps — badge mostra só o percentual centralizado, igual às demais etapas */
+        /* funil steps — badge mostra só o percentual centralizado, igual às demais etapas.
+           "Vendas Aprovadas" usa totalVendas (aprovada de verdade na Hotmart), não totComp
+           (Purchase que o Pixel do Meta reporta em gasto_diario) — mesmo bug e mesma
+           correção do CPA médio acima: o Pixel só vê venda atribuída a clique/visualização
+           de anúncio, então essa etapa mostrava bem menos vendas do que o real (ex.: 6 em
+           vez de 22 em 7 dias). O percentual passa a ser sobre o total de vendas, não só
+           as que o Meta conseguiu atribuir — pode passar de 100% do "Início de Compra" se
+           boa parte da venda vier por fora do clique no anúncio (WhatsApp, orgânico), o que
+           é esperado e não é bug. */
         const funnelSteps = totCliques > 0 ? [
           { label: 'Cliques',                value: totCliques, pct: 100 },
           { label: 'Visualizações de Página', value: totLP,      pct: +((totLP/totCliques)*100).toFixed(1) },
           { label: 'Início de Compra',        value: totIC,      pct: +((totIC/totCliques)*100).toFixed(1) },
-          { label: 'Vendas Aprovadas',        value: totComp,    pct: +((totComp/totCliques)*100).toFixed(1) },
+          { label: 'Vendas Aprovadas',        value: totalVendas, pct: +((totalVendas/totCliques)*100).toFixed(1) },
           { label: 'Upsell Blindagem',        value: upsellConv, pct: +((upsellConv/totCliques)*100).toFixed(1) },
         ] : null;
 
