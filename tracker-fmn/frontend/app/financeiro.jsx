@@ -68,6 +68,7 @@ function DateFilter({ from, to, onChange }) {
 function useVendasData(from, to) {
   const [vendas, setVendas] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [tick, setTick] = useState(0);
   useEffect(() => {
     if (!window.db) return;
     async function load() {
@@ -86,8 +87,8 @@ function useVendasData(from, to) {
       setLoading(false);
     }
     load();
-  }, [from, to]);
-  return { vendas, loading };
+  }, [from, to, tick]);
+  return { vendas, loading, reload: () => setTick(t => t + 1) };
 }
 
 function useDespesasData() {
@@ -263,12 +264,133 @@ function AddExpenseModal({ onClose, onSaved }) {
   );
 }
 
+/* ── AddRevenueModal ──────────────────────────────────────────────
+   Venda que não veio pela Hotmart (fechada direto, por fora do checkout
+   automático) — ex: mentoria vendida 1:1. Grava na MESMA tabela `vendas`
+   que a Hotmart usa, então conta pra faturamento, lucro, funil e CPA médio
+   igual a qualquer outra venda, sem precisar de tela nem cálculo à parte.
+
+   `hotmart_transaction_id` é obrigatório e único na tabela — como não existe
+   transação real da Hotmart aqui, geramos um id sintético com prefixo
+   MANUAL-, que também serve pra identificar a origem depois (nenhuma rotina
+   de sync ou de correção de valor_liquido mexe em transação que não conhece,
+   então essas linhas não correm risco de ser sobrescritas).
+   `utm_source: 'manual'` cai na categoria própria "Manual" em Vendas por
+   Fonte (dashboard.jsx), pra não distorcer o ROAS de Tráfego.             */
+function AddRevenueModal({ onClose, onSaved }) {
+  const [erro, setErro] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState({
+    produto: '', valor: '', nome: '', email: '',
+    data: new Date().toISOString().slice(0,10), observacoes: '',
+  });
+  const set = (k,v) => setForm(p => ({...p,[k]:v}));
+
+  const handleSave = async () => {
+    if (!form.produto.trim() || !form.valor) { setErro('Preencha ao menos o produto e o valor.'); return; }
+    setSaving(true); setErro('');
+    const uid = (window.crypto?.randomUUID ? window.crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`);
+    const valor = Number(form.valor);
+    const { error } = await window.db.from('vendas').insert({
+      hotmart_transaction_id: `MANUAL-${uid}`,
+      produto_nome: form.produto.trim(),
+      valor_bruto: valor,
+      valor_liquido: valor,   // entra por inteiro: sem taxa de gateway, sem juros (o cliente assume)
+      preco_oferta: valor,
+      status: 'aprovada',
+      metodo_pagamento: 'Manual',
+      utm_source: 'manual',
+      comprador_nome: form.nome.trim() || null,
+      comprador_email: form.email.trim() || null,
+      // Meio-dia de Brasília evita o card de "venda de ontem" só por causa
+      // do fuso — mesmo cuidado do resto do projeto com data sem hora.
+      created_at: `${form.data}T12:00:00-03:00`,
+      hotmart_raw: form.observacoes.trim() ? { origem: 'manual', observacoes: form.observacoes.trim() } : { origem: 'manual' },
+    });
+    setSaving(false);
+    if (error) { setErro(error.message || 'Não consegui salvar. Confira os campos.'); return; }
+    onSaved(); onClose();
+  };
+
+  const inp = { padding:'7px 10px', borderRadius:7, fontSize:12.5, fontFamily:'Roboto,sans-serif',
+    background:'var(--app-surface-2)', border:'1px solid var(--app-border)', color:'var(--text-1)',
+    colorScheme:'dark', width:'100%', boxSizing:'border-box' };
+  const lbl = { fontSize:11, fontFamily:'Roboto,sans-serif', fontWeight:700, color:'var(--text-3)',
+    letterSpacing:'0.06em', textTransform:'uppercase' };
+  return (
+    <div onClick={onClose} style={{ position:'fixed',inset:0,background:'rgba(0,0,0,.6)',zIndex:500,
+      display:'flex',alignItems:'center',justifyContent:'center' }}>
+      <div onClick={e=>e.stopPropagation()} style={{ background:'var(--app-surface)',
+        border:'1px solid var(--app-border-2)',borderRadius:16,padding:24,width:400,
+        display:'flex',flexDirection:'column',gap:14,boxShadow:'0 20px 60px rgba(0,0,0,.5)' }}>
+        <div style={{ display:'flex',justifyContent:'space-between',alignItems:'center' }}>
+          <span style={{ fontSize:15,fontFamily:'Roboto,sans-serif',fontWeight:700,color:'var(--text-1)' }}>Registrar Receita</span>
+          <button onClick={onClose} style={{ width:28,height:28,borderRadius:'50%',background:'rgba(255,255,255,.07)',
+            color:'var(--text-2)',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',fontSize:16 }}>×</button>
+        </div>
+        <div style={{ display:'flex',flexDirection:'column',gap:5 }}>
+          <span style={lbl}>Produto</span>
+          <input type="text" value={form.produto} placeholder="Ex: Mentoria XP Sala Preta"
+            onChange={e=>set('produto',e.target.value)} style={inp}/>
+        </div>
+        <div style={{ display:'flex',gap:10 }}>
+          <div style={{ flex:1,display:'flex',flexDirection:'column',gap:5 }}>
+            <span style={lbl}>Valor recebido (R$)</span>
+            <input type="number" value={form.valor} placeholder="497.00"
+              onChange={e=>set('valor',e.target.value)} style={inp}/>
+          </div>
+          <div style={{ flex:1,display:'flex',flexDirection:'column',gap:5 }}>
+            <span style={lbl}>Data da venda</span>
+            <input type="date" value={form.data}
+              onChange={e=>set('data',e.target.value)} style={inp}/>
+          </div>
+        </div>
+        <div style={{ display:'flex',gap:10 }}>
+          <div style={{ flex:1,display:'flex',flexDirection:'column',gap:5 }}>
+            <span style={lbl}>Comprador (opcional)</span>
+            <input type="text" value={form.nome} placeholder="Nome"
+              onChange={e=>set('nome',e.target.value)} style={inp}/>
+          </div>
+          <div style={{ flex:1,display:'flex',flexDirection:'column',gap:5 }}>
+            <span style={lbl}>E-mail (opcional)</span>
+            <input type="email" value={form.email} placeholder="cliente@email.com"
+              onChange={e=>set('email',e.target.value)} style={inp}/>
+          </div>
+        </div>
+        <div style={{ display:'flex',flexDirection:'column',gap:5 }}>
+          <span style={lbl}>Observações (opcional)</span>
+          <input type="text" value={form.observacoes} placeholder="Ex: fechado por WhatsApp, pago à vista"
+            onChange={e=>set('observacoes',e.target.value)} style={inp}/>
+        </div>
+        {erro && (
+          <div style={{ padding:'9px 11px',borderRadius:8,background:'rgba(248,113,113,.08)',
+            border:'1px solid rgba(248,113,113,.3)',fontSize:11.5,color:'#f87171',
+            fontFamily:'Roboto,sans-serif',lineHeight:1.5 }}>{erro}</div>
+        )}
+        <div style={{ display:'flex',gap:8,marginTop:4 }}>
+          <button onClick={onClose} style={{ flex:1,padding:'10px',borderRadius:8,
+            background:'rgba(255,255,255,.06)',border:'1px solid var(--app-border)',
+            color:'var(--text-1)',fontFamily:'Roboto,sans-serif',fontWeight:700,fontSize:12,cursor:'pointer' }}>
+            Cancelar
+          </button>
+          <button onClick={handleSave} disabled={saving} style={{ flex:1,padding:'10px',borderRadius:8,
+            background:'var(--fmn-gold)',color:'var(--fmn-black)',fontFamily:'Roboto,sans-serif',
+            fontWeight:700,fontSize:12,cursor:'pointer',opacity:saving?0.6:1 }}>
+            {saving?'Salvando...':'Salvar'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ── ExpensesTab ─────────────────────────────────────────────────*/
 function ExpensesTab({ dateRange }) {
   const [view, setView] = useState('despesas');
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showAddRevenueModal, setShowAddRevenueModal] = useState(false);
   const { despesas: rawDespesas, loading: loadingDesp, reload: reloadDesp } = useDespesasData();
-  const { vendas, loading: loadingVen } = useVendasData(dateRange.from, dateRange.to);
+  const { vendas, loading: loadingVen, reload: reloadVen } = useVendasData(dateRange.from, dateRange.to);
 
   // Tráfego e alíquotas: o maior custo do negócio não era digitado por
   // ninguém, então não aparecia aqui. O "Saldo Líquido" ignorava R$ 29 mil
@@ -377,10 +499,16 @@ function ExpensesTab({ dateRange }) {
             </button>
           ))}
         </div>
-        <Btn variant="primary" size="sm" icon="plus"
-          onClick={()=>setShowAddModal(true)}>
-          Adicionar Gasto
-        </Btn>
+        <div style={{ display:'flex', gap:8 }}>
+          <Btn variant="secondary" size="sm" icon="plus"
+            onClick={()=>setShowAddRevenueModal(true)}>
+            Registrar Receita
+          </Btn>
+          <Btn variant="primary" size="sm" icon="plus"
+            onClick={()=>setShowAddModal(true)}>
+            Adicionar Gasto
+          </Btn>
+        </div>
       </div>
 
       {/* Table */}
@@ -441,6 +569,9 @@ function ExpensesTab({ dateRange }) {
       </SectionCard>
       {showAddModal && (
         <AddExpenseModal onClose={() => setShowAddModal(false)} onSaved={reloadDesp}/>
+      )}
+      {showAddRevenueModal && (
+        <AddRevenueModal onClose={() => setShowAddRevenueModal(false)} onSaved={reloadVen}/>
       )}
     </div>
   );

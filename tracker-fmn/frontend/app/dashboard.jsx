@@ -16,6 +16,10 @@ function normalizeSource(raw) {
   const s = String(raw).toLowerCase();
   if (s.includes('organic') || s.includes('orgânico')) return 'Orgânico';
   if (s.includes('evento')) return 'Evento';
+  // Venda lançada manualmente no Financeiro (não veio de anúncio nenhum) —
+  // sem isso caía dentro de "Tráfego" e inflava o ROAS por canal com receita
+  // que não veio de anúncio.
+  if (s.includes('manual')) return 'Manual';
   return 'Tráfego';
 }
 const fmtCur = window.fmtBRL;

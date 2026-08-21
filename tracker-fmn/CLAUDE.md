@@ -2,6 +2,20 @@
 
 > Instruções específicas do Tracker FMN. Complementa o CLAUDE.md da raiz do fluxo-criativo (regras gerais do workshop), mas essas aqui valem só dentro desta pasta.
 
+## Receita manual (venda fora da Hotmart) — aba Financeiro
+
+> Adicionado em 2026-08-21, primeira venda: Mentoria XP Sala Preta.
+
+Venda fechada por fora do checkout automático (ex: mentoria negociada 1:1, fechada por WhatsApp) não vem de webhook nenhum, então tem que ser lançada à mão. O botão **"Registrar Receita"** na aba Financeiro (`AddRevenueModal` em `frontend/app/financeiro.jsx`) grava direto na tabela `vendas`, a mesma que a Hotmart usa — por isso conta pra faturamento, lucro, funil de vendas e CPA médio igual a qualquer outra venda, sem precisar de tela nem cálculo separado.
+
+**Como funciona por baixo:**
+- `hotmart_transaction_id` recebe um id sintético com prefixo `MANUAL-` (não existe transação real da Hotmart pra essa venda). Isso também serve pra identificar a origem depois — nenhum script de sync (`sync_hotmart.py`, `corrigir_valor_liquido.py`) mexe em transação que não reconhece, então essas linhas nunca são sobrescritas por engano.
+- `valor_liquido = valor_bruto = preco_oferta`, sem desconto de taxa nem juros: o valor entra por inteiro, e se algum dia a venda manual tiver taxa de gateway ou juros embutido, isso precisa ser descontado à mão no valor lançado.
+- `utm_source: 'manual'` cai numa categoria própria ("Manual") em Vendas por Fonte no Dashboard, pra não se misturar com "Tráfego" e distorcer o ROAS calculado sobre anúncio de verdade.
+- `status: 'aprovada'` direto — venda manual só é lançada quando o dinheiro já está confirmado, não existe estado "pendente" nesse fluxo.
+
+**Não editável nem deletável pela tela.** Igual a uma venda da Hotmart, uma vez lançada só corrige via SQL (pedir pra mim). Isso evita apagar/alterar histórico financeiro sem querer.
+
 ## Aviso de ADS/mídia repetida na mesma campanha (aba Anúncios, modal Publicar)
 
 > Combinado com Felipe em 2026-08-17. É só aviso, nunca bloqueia a publicação.
