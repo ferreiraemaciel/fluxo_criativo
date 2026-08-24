@@ -17,3 +17,4 @@ Um caso só volta a aparecer no relatório quando houver fato novo (recurso julg
 - 2026-08-03 | Pessoa retratada usou a foto sem autorização nem crédito e foi condenada (Terceira Turma do STJ, AREsp 2688250/RS) | https://scon.stj.jus.br/SCON/
 - 2026-08-03 | Incorporar publicação e copiar arquivo tratados de formas diferentes em matéria jornalística (Terceira Turma do STJ, EDcl no AREsp 2745723/RS) | https://scon.stj.jus.br/SCON/
 - 2026-08-03 | Vídeo de chá revelação viralizou e o tribunal negou indenização e retirada do ar (9ª Câmara Cível do TJ/RS, comarca de Ibirubá) | https://www.tjrs.jus.br/novo/?post_type=noticia&p=217144
+- 2026-08-24 | TJ/SC autoriza criança a fazer conteúdo publicitário de crossfit infantil, com limite de horas e poupança reservada (Vara da Infância e Juventude de Jaraguá do Sul/SC, processo em segredo de justiça) | https://www.migalhas.com.br/quentes/462978/tj-sc-autoriza-crianca-a-fazer-publicidade-sobre-crossfit-infantil-nas-redes
