@@ -377,9 +377,21 @@ async function verificarRegraG5() {
     if (!alertaExistente) {
       const { data: adsRow } = await supabase
         .from("ads")
-        .select("numero")
+        .select("numero, status")
         .eq("meta_ad_id", i3d.meta_ad_id)
         .single();
+
+      // Bug real corrigido em 2026-08-25: sem essa checagem, um ADS já pausado
+      // pelo próprio G5 continuava sendo re-alertado pra sempre (a cada ciclo
+      // do meta-sync, de 6 em 6h), porque o insights_cache de um ADS sem
+      // veiculação nova fica com o CPA 3d/5d congelado no último valor real
+      // antes da pausa — nunca zera, nunca sai do limite sozinho. ADS 022 e
+      // ADS 233 acumularam 28 registros idênticos de "pausado automaticamente"
+      // na mesma observação, um a cada 6h, por mais de uma semana, mesmo já
+      // pausados de verdade no Meta desde o primeiro disparo. Se o ADS não
+      // está mais "ativo" na nossa tabela (ou seja, já foi processado antes,
+      // virou campeão ou foi arquivado), não há nada novo pra fazer aqui.
+      if (adsRow?.status && adsRow.status !== "ativo") continue;
 
       // Combinado com Felipe em 2026-08-17: G5 não fica só no aviso, marca a
       // pausa como pendente pra processar-pausas (roda a cada 5min) executar
