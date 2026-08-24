@@ -223,6 +223,7 @@ Deno.serve(async (req) => {
     });
 
     await sincronizarGastoDiarioHoje();
+    await verificarRegraG1();
     await verificarRegraG5();
   } else {
     // scope=maximo: só o período de vida inteira, 1x/dia. Atualiza também
@@ -333,6 +334,66 @@ async function sincronizarGastoDiarioHoje() {
     }
   } catch (err) {
     console.error("Erro ao sincronizar gasto_diario:", String(err));
+  }
+}
+
+// Combinado com Felipe em 2026-08-25: gasto real sem NENHUMA venda em 5 dias
+// é pior que CPA alto (é CPA "infinito"), mas até aqui o G5 não pegava esse
+// caso — a query dele filtra fora qualquer insights_cache com cpa=null, e
+// cpa vira null quando compras=0 (divisão por zero). ADS 029 e ADS 193
+// gastaram R$373 e R$447 em 5 dias com zero venda e nunca foram nem
+// avaliados pelo G5, passavam batido. G1 já existia como linha cadastrada em
+// `regras_atp` ("Gasto sem conversão"), mas nunca tinha sido implementada.
+async function verificarRegraG1() {
+  const { data: regra } = await supabase
+    .from("regras_atp")
+    .select("parametros")
+    .eq("codigo", "G1")
+    .eq("ativo", true)
+    .single();
+
+  if (!regra) return;
+  const multiplicador = regra.parametros?.multiplicador_ticket ?? 1;
+  const ticket = regra.parametros?.ticket ?? 297; // ticket do MCV, único produto na conta hoje
+  const gastoLimite = multiplicador * ticket;
+
+  const { data: insights5d } = await supabase
+    .from("insights_cache")
+    .select("meta_ad_id, gasto, compras")
+    .eq("periodo", "5d")
+    .eq("compras", 0)
+    .gte("gasto", gastoLimite);
+
+  for (const i5d of insights5d || []) {
+    const { data: alertaExistente } = await supabase
+      .from("alertas")
+      .select("id")
+      .eq("meta_ad_id", i5d.meta_ad_id)
+      .eq("regra_codigo", "G1")
+      .eq("resolvido", false)
+      .single();
+
+    if (!alertaExistente) {
+      const { data: adsRow } = await supabase
+        .from("ads")
+        .select("numero, status")
+        .eq("meta_ad_id", i5d.meta_ad_id)
+        .single();
+
+      // Mesma proteção do G5: uma vez processado, não fica re-alertando um
+      // ADS que já saiu de "ativo" (já foi pausado e classificado).
+      if (adsRow?.status && adsRow.status !== "ativo") continue;
+
+      await supabase.from("alertas").insert({
+        ads_numero:     adsRow?.numero || null,
+        meta_ad_id:     i5d.meta_ad_id,
+        regra_codigo:   "G1",
+        mensagem:       `G1: gastou R$${Number(i5d.gasto).toFixed(2)} em 5 dias sem nenhuma venda (limite: R$${gastoLimite.toFixed(2)}). Pausado automaticamente.`,
+        acao_tomada:    "pausa_automatica",
+        acao_pendente:  "pausar",
+        dados_snapshot: { gasto5d: i5d.gasto, compras5d: i5d.compras, gasto_limite: gastoLimite },
+      });
+    }
   }
 }
 

@@ -44,6 +44,18 @@ Qualquer ADS ativo, de qualquer produto ou conta, que tenha **CPA acima de R$207
 
 **Se um dia o limite ou a regra de "precisa bater nas duas janelas" mudar**, é só editar `regras_atp.parametros.cpa_limite` (não precisa redeploy) ou a lógica em `verificarRegraG5()` (aí sim precisa redeploy do `meta-sync`).
 
+## Regra G1 — gasto real sem NENHUMA venda em 5 dias também pausa sozinho
+
+> Combinado com Felipe em 2026-08-25. Mesma exceção ao gate de escrita do G5 acima, mesmo mecanismo (`alertas.acao_pendente='pausar'` → `processar-pausas` executa).
+
+**Por que essa regra precisou existir separada do G5.** ADS 029 e ADS 193 gastaram R$373,76 e R$448,99 em 5 dias sem NENHUMA venda, e nunca foram nem avaliados pelo G5 — porque a query dele filtra fora (`.not("cpa","is",null)`) qualquer `insights_cache` com `cpa=null`, e `cpa` vira `null` quando `compras=0` (divisão por zero). Gasto real sem venda nenhuma é pior que CPA alto (é CPA "infinito"), mas justamente esse pior caso passava batido pro G5.
+
+**A regra:** ADS com `compras=0` E `gasto ≥ multiplicador_ticket × ticket` na janela de 5 dias é pausado automaticamente, mesma lógica de execução do G5 (`verificarRegraG1()` em `supabase/functions/meta-sync/index.ts`, chamada logo antes do G5 dentro do scope `curtas`). Os dois parâmetros vivem em `regras_atp` (`codigo='G1'`, `parametros.multiplicador_ticket` e `parametros.ticket`, hoje `1` e `297` — o ticket do MCV, único produto na conta), editáveis sem redeploy.
+
+**G1 já existia como linha cadastrada em `regras_atp`** ("Gasto sem conversão"), mas nunca tinha sido implementada em código nenhum — só o nome e os parâmetros existiam, sem função nenhuma lendo isso. Essa foi a primeira vez que essa regra rodou de verdade.
+
+**Mesma proteção do G5 contra re-alerta infinito** já nasceu junto: só avalia ADS com `ads.status='ativo'`, não fica re-processando o que já foi pausado e classificado.
+
 ## whatsapp-webhook — NUNCA deployar sem `--no-verify-jwt` (incidente real, 2026-08-07 a 2026-08-11)
 
 > Combinado com Felipe em 2026-08-11, depois de um incidente real de 4 dias sem receber nenhuma mensagem de lead.
