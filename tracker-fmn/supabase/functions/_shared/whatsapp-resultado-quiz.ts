@@ -105,7 +105,7 @@ export async function enviarResultadoQuizWhatsapp(
       custo_usd: custo,
     });
     await sb.from("quiz_leads").update({ whatsapp_resultado_enviado: true }).eq("funnel_slug", funnelSlug).eq("code", code);
-    await upsertContato(sb, to, nome, "lead_novo");
+    await upsertContato(sb, to, nome, "lead_novo", { iaElegivel: true });
   } catch (err) {
     console.error("Erro ao enviar resultado do quiz por WhatsApp:", err);
     await sb.from("whatsapp_mensagens").insert({

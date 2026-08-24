@@ -7,7 +7,7 @@ export async function upsertContato(
   telefone: string,
   nome: string | null,
   etapaSeNovo: "lead_novo" | "em_conversa" | "aluno" | "perdido",
-  opts: { forcarEtapa?: boolean; promoverParaEmConversa?: boolean; tornouAlunoEm?: string } = {},
+  opts: { forcarEtapa?: boolean; promoverParaEmConversa?: boolean; tornouAlunoEm?: string; iaElegivel?: boolean } = {},
 ) {
   const { data: existente } = await supabase
     .from("whatsapp_contatos")
@@ -18,6 +18,10 @@ export async function upsertContato(
   if (!existente) {
     const insert: Record<string, unknown> = { telefone, nome, etapa: etapaSeNovo };
     if (etapaSeNovo === "aluno" && opts.tornouAlunoEm) insert.tornou_aluno_em = opts.tornouAlunoEm;
+    // ia_elegivel vem `false` por padrão na tabela (trava proposital contra
+    // "ligar pra todo mundo sem querer"). Só quem cria o contato explicitando
+    // iaElegivel:true nasce já elegível pra resposta ao vivo do Claudinho.
+    if (opts.iaElegivel) insert.ia_elegivel = true;
     await supabase.from("whatsapp_contatos").insert(insert);
     return;
   }
