@@ -2,6 +2,21 @@
 
 > Instruções específicas do Tracker FMN. Complementa o CLAUDE.md da raiz do fluxo-criativo (regras gerais do workshop), mas essas aqui valem só dentro desta pasta.
 
+## Anúncio criado direto no Gerenciador do Meta — como fazer o Tracker adotar
+
+> Combinado com Felipe em 2026-08-25. Via de volta (Meta → Tracker), simétrica à publicação normal (Tracker → Meta).
+
+Por padrão, um anúncio criado direto no Gerenciador de Anúncios do Meta (fora do botão "Publicar" do Tracker) **não aparece sozinho** em nenhuma tela — nem no Kanban de Anúncios, nem em Tráfego. Dois motivos: (1) o nome precisa seguir o padrão `ADS N - título` pra ser reconhecido, e (2) o Tracker nunca cria card novo sozinho a partir do Meta — só reconcilia card que já existe.
+
+**Passo a passo pra criar um anúncio pelo Gerenciador e o Tracker adotar sozinho:**
+1. Criar o card no Tracker primeiro, pra reservar o número (botão "Novo AD" no Kanban de Anúncios, ou pedir pra mim). O card nasce em `status: 'fazer'`, sem `meta_ad_id`.
+2. No Gerenciador do Meta, nomear o anúncio exatamente `ADS <número> - <título>` (mesmo padrão que o Tracker usa sozinho ao publicar, regex `ADS_PATTERN = /ADS\s*0*(\d+)/i` em `kanban-sync/index.ts`).
+3. Ativar o anúncio no Meta. No próximo ciclo do `kanban-sync` (scope `curtas`, a cada 15 minutos), o Tracker encontra o nome, casa com o card local pelo número, e **adota**: grava `meta_ad_id`, `meta_campaign_id`, `meta_adset_id` e o permalink, move o card pra "Ativos". No ciclo seguinte do `meta-sync` (até 6h depois, mesmo prazo do G1/G5), as métricas (`insights_cache`) começam a sincronizar, e ele passa a aparecer na aba Tráfego com dado real.
+
+**Por que precisa reservar o número antes, e o Tracker nunca cria o card sozinho.** `numero` é a chave que amarra o anúncio a `vendas`, `alertas` e todo o resto do banco — deixar o Meta "inventar" um número livre seria abrir mão dessa amarração, e criar linha nova sem controle já causou card incompleto no passado (por isso foi desligado, ver comentário em `kanban-sync/index.ts`). A única fonte de verdade pra número novo é o Tracker.
+
+**O que muda no código:** `syncMetaAdStatus()` em `supabase/functions/kanban-sync/index.ts` passou a buscar `adset_id`/`campaign_id` de todo anúncio da conta (antes só `id,name,effective_status`), e a reconciliação deixou de exigir `meta_ad_id` já preenchido pra considerar um card — antes (`.not("meta_ad_id","is",null)`) só atualizava quem já tinha sido publicado pelo próprio app.
+
 ## Receita manual (venda fora da Hotmart) — aba Financeiro
 
 > Adicionado em 2026-08-21, primeira venda: Mentoria XP Sala Preta.

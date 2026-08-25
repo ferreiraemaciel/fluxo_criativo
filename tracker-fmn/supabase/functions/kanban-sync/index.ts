@@ -76,8 +76,12 @@ function dateRange(daysBack: number): { since: string; until: string } {
 async function syncMetaAdStatus(): Promise<Set<number>> {
   // Sem filtro de effective_status: precisamos ver TODOS os estados (inclusive
   // PAUSED/ARCHIVED) pra reconciliar corretamente o meta_publish_status.
+  // adset_id/campaign_id entraram em 2026-08-25 pra viabilizar a "via de volta":
+  // anúncio criado direto no Gerenciador do Meta (nomeado "ADS N - título",
+  // pra um número já reservado no Tracker) agora é adotado automaticamente,
+  // sem precisar ter nascido pelo botão Publicar do Tracker.
   const qs = new URLSearchParams({
-    fields: "id,name,effective_status",
+    fields: "id,name,effective_status,adset_id,campaign_id",
     limit: "500",
     access_token: FB_TOKEN,
   });
@@ -90,27 +94,33 @@ async function syncMetaAdStatus(): Promise<Set<number>> {
   }
 
   // Mapeia numero (extraído do nome "ADS N") → o status mais relevante achado
-  // (prioriza ACTIVE se houver mais de um ad_id pro mesmo número — recorrência).
+  // (prioriza ACTIVE se houver mais de um ad_id pro mesmo número — recorrência),
+  // e guarda junto o id/adset/campanha desse ad — precisa disso pra "adotar"
+  // um ad criado direto no Gerenciador (ver `adotarPorNumero` abaixo).
   const statusPorNumero: Record<number, string> = {};
+  const adPorNumero: Record<number, { id: string; adset_id?: string; campaign_id?: string }> = {};
   for (const d of todos) {
     const m = ADS_PATTERN.exec(d.name || "");
     if (!m) continue;
     const num = parseInt(m[1], 10);
     if (!statusPorNumero[num] || d.effective_status === "ACTIVE") {
       statusPorNumero[num] = d.effective_status;
+      adPorNumero[num] = { id: d.id, adset_id: d.adset_id, campaign_id: d.campaign_id };
     }
   }
 
   const AINDA_NAO_LIVRE = new Set(["PAUSED", "IN_PROCESS", "PENDING_REVIEW", "DISAPPROVED", "WITH_ISSUES"]);
   const SUMIU = new Set(["ARCHIVED", "DELETED"]);
 
-  // Só reconcilia ads que a gente já conhece localmente (criados via o app,
-  // que já grava meta_ad_id na criação) — evita reintroduzir o upsert cego
-  // que criava linha nova incompleta (só numero/titulo/status/tipo).
+  // Reconcilia todo card que já existe localmente — inclusive quem ainda não
+  // tem `meta_ad_id` (card criado no Tracker só pra reservar o número, ou
+  // esperando ser "adotado" por um ad publicado direto no Gerenciador). Nunca
+  // cria linha nova sozinho: isso continua proibido (evita reintroduzir o
+  // upsert cego que já causou card incompleto no passado), o número sempre
+  // precisa já existir como card no Tracker antes.
   const { data: locais } = await supabase
     .from("ads")
-    .select("numero, status, meta_publish_status, tag, vendas_total, cpa_historico, gasto_total")
-    .not("meta_ad_id", "is", null)
+    .select("numero, status, meta_publish_status, tag, meta_ad_id, vendas_total, cpa_historico, gasto_total")
     .limit(2000);
 
   const ativosDeVerdade = new Set<number>();
@@ -122,6 +132,24 @@ async function syncMetaAdStatus(): Promise<Set<number>> {
     if (efStatus === "ACTIVE") {
       ativosDeVerdade.add(ad.numero);
       const patch: Record<string, unknown> = {};
+
+      // Adoção: card existe no Tracker (número reservado) mas nunca foi
+      // publicado por aqui — foi criado direto no Gerenciador do Meta, com o
+      // nome "ADS N - título" apontando pra esse mesmo número. Vincula pela
+      // primeira vez, incluindo o permalink (mesma chamada que o fluxo normal
+      // de publicação usa). Combinado com Felipe em 2026-08-25: via de volta,
+      // Meta → Tracker, simétrica à que já existe de Tracker → Meta.
+      if (!ad.meta_ad_id) {
+        const metaAd = adPorNumero[ad.numero];
+        if (metaAd?.id) {
+          patch.meta_ad_id = metaAd.id;
+          if (metaAd.adset_id)    patch.meta_adset_id    = metaAd.adset_id;
+          if (metaAd.campaign_id) patch.meta_campaign_id = metaAd.campaign_id;
+          const permalink = await fetchAdPermalink(metaAd.id);
+          if (permalink) patch.meta_ad_url = permalink;
+        }
+      }
+
       if (ad.meta_publish_status !== "ativo") patch.meta_publish_status = "ativo";
       // Bug corrigido 2026-07-23: só movia pra Ativos quem vinha de Fazer/Fazendo
       // (o caminho normal de 1ª publicação). Quando o anúncio é ativado direto
