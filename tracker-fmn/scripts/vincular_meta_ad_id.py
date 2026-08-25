@@ -49,10 +49,26 @@ def supabase_request(method, path, body=None):
         return json.loads(e.read().decode("utf-8"))
 
 
+# O nome do anúncio na Meta carrega DOIS números: o do slot da campanha ("CR 62")
+# e o do criativo ("ADS 52"). Quem identifica o criativo é o segundo.
+#
+# A versão anterior pegava o primeiro número que aparecesse no nome, com
+# r'\b(\d{1,4})\b'. Como "CR" vem antes de "ADS", ela capturava o slot e
+# vinculava o card ao anúncio errado: 136 dos 237 cards ficaram assim, 134 deles
+# apontando para um anúncio cujo CR era igual ao número do card. Corrigido em
+# 2026-08-25. O sync_insights.py sempre usou o padrão certo, por isso as
+# métricas nunca quebraram, só o vínculo.
+ADS_PATTERN = re.compile(r"ADS\s*0*(\d{1,4})\b", re.IGNORECASE)
+
+
 def extrair_numero(nome):
-    """Extrai número de nomes como 'ADS 246 - tema', 'AD246', '246 - criativo', etc."""
-    m = re.search(r'\b(\d{1,4})\b', nome or "")
-    return int(m.group(1)) if m else None
+    """Número do CRIATIVO, lido do trecho 'ADS N' do nome do anúncio.
+
+    Se o nome não tiver 'ADS N', devolve None e o anúncio é ignorado. Não vale
+    chutar pelo primeiro número que aparecer: era exatamente esse chute que
+    produzia o vínculo errado."""
+    achados = ADS_PATTERN.findall(nome or "")
+    return int(achados[-1]) if achados else None
 
 
 def buscar_ads_meta(account_id, token):
@@ -60,7 +76,7 @@ def buscar_ads_meta(account_id, token):
     ads = []
     url = (
         f"https://graph.facebook.com/v25.0/act_{account_id}/ads"
-        f"?fields=id,name,effective_status"
+        f"?fields=id,name,effective_status,created_time"
         f"&limit=500"
         f"&access_token={token}"
     )
@@ -104,18 +120,32 @@ def main():
     supabase_map = buscar_ads_supabase()
     print(f"  {len(supabase_map)} ads no Supabase.")
 
-    # Monta mapa número → meta_ad_id a partir dos anúncios Meta
-    meta_por_numero = {}
+    # Monta mapa número → meta_ad_id a partir dos anúncios Meta.
+    #
+    # O mesmo criativo costuma rodar em vários anúncios (o ADS 195 roda em 9).
+    # O card guarda um id só, então é preciso um critério estável, senão cada
+    # execução escolhe um diferente e o campo fica trocando à toa.
+    # Critério: anúncio ATIVO ganha de pausado; empatou, fica o mais recente.
+    candidatos = {}
     sem_numero = []
     for ad in meta_ads:
         n = extrair_numero(ad["name"])
-        if n is not None:
-            if n not in meta_por_numero:
-                meta_por_numero[n] = ad["id"]
-            else:
-                print(f"  [aviso] Número {n} duplicado no Meta: '{ad['name']}' — mantendo o primeiro.")
-        else:
+        if n is None:
             sem_numero.append(ad["name"])
+            continue
+        candidatos.setdefault(n, []).append(ad)
+
+    def prioridade(ad):
+        ativo = 1 if (ad.get("effective_status") or "").upper() == "ACTIVE" else 0
+        return (ativo, ad.get("created_time") or "", ad["id"])
+
+    meta_por_numero = {}
+    for n, lista in candidatos.items():
+        escolhido = max(lista, key=prioridade)
+        meta_por_numero[n] = escolhido["id"]
+        if len(lista) > 1:
+            print(f"  [info] ADS {n}: {len(lista)} anúncios com esse criativo, "
+                  f"escolhido '{escolhido['name'][:60]}'")
 
     # Vincula
     atualizados = []
