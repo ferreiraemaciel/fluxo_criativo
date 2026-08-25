@@ -73,7 +73,10 @@ function dateRange(daysBack: number): { since: string; until: string } {
 // escrevia "pausado", que não é nenhuma delas, e o card sumia da visão.
 // Só PROMOVE (fazer/fazendo → ativo); nunca rebaixa um card sozinho — isso
 // continua sendo decisão manual (arrastar pra Testar novamente/Arquivados).
-async function syncMetaAdStatus(): Promise<Set<number>> {
+async function syncMetaAdStatus(): Promise<{
+  ativos: Set<number>;
+  adPorNumero: Record<number, { id: string; adset_id?: string; campaign_id?: string }>;
+}> {
   // Sem filtro de effective_status: precisamos ver TODOS os estados (inclusive
   // PAUSED/ARCHIVED) pra reconciliar corretamente o meta_publish_status.
   // adset_id/campaign_id entraram em 2026-08-25 pra viabilizar a "via de volta":
@@ -206,7 +209,7 @@ async function syncMetaAdStatus(): Promise<Set<number>> {
     }
   }
 
-  return ativosDeVerdade;
+  return { ativos: ativosDeVerdade, adPorNumero };
 }
 
 // ── Permalinks ────────────────────────────────────────────────────────────────
@@ -371,7 +374,7 @@ Deno.serve(async (req) => {
     }
   }
 
-  const targetNums = await syncMetaAdStatus();
+  const { ativos: targetNums, adPorNumero } = await syncMetaAdStatus();
   if (targetNums.size === 0) {
     return new Response(JSON.stringify({ ok: true, scope, aviso: "nenhum ad ativo no Meta" }),
       { headers: { "Content-Type": "application/json" } });
@@ -386,17 +389,8 @@ Deno.serve(async (req) => {
     const rowsHoje = await fetchAccountAdInsights({ date_preset: "today" });
 
     const agg: Record<number, { g3d: number; v3d: number; g5d: number; v5d: number }> = {};
-    // Guarda o ad_id de MAIOR gasto recente pra cada número — é assim que um
-    // anúncio relançado no Gerenciador (mesmo "ADS N", ad_id novo) assume o
-    // lugar do antigo sozinho: o antigo para de gastar, o novo passa a gastar
-    // mais, e em até 15min (ciclo desta função) o `meta_ad_id` troca. Guardar
-    // adset/campanha junto (não só o id) fechou uma lacuna real em 2026-08-25:
-    // o meta_ad_id trocava certinho, mas meta_campaign_id/meta_adset_id
-    // ficavam apontando pro anúncio antigo, o que podia agrupar errado na aba
-    // Tráfego se o relançamento fosse numa campanha ou conjunto diferente.
-    const bestAdId: Record<number, { id: string; gasto: number; adsetId?: string; campaignId?: string }> = {};
 
-    const accumulate = (rows: any[], key: "3d" | "5d", trackBest: boolean) => {
+    const accumulate = (rows: any[], key: "3d" | "5d") => {
       for (const d of rows) {
         const nome = d.ad_name || "";
         const m = ADS_PATTERN.exec(nome);
@@ -408,18 +402,18 @@ Deno.serve(async (req) => {
         const slot = agg[num] || (agg[num] = { g3d: 0, v3d: 0, g5d: 0, v5d: 0 });
         if (key === "3d") { slot.g3d += gasto; slot.v3d += vendas; }
         else { slot.g5d += gasto; slot.v5d += vendas; }
-        if (trackBest && gasto > 0) {
-          const cur = bestAdId[num];
-          if (!cur || gasto > cur.gasto) {
-            bestAdId[num] = { id: d.ad_id, gasto, adsetId: d.adset_id, campaignId: d.campaign_id };
-          }
-        }
       }
     };
-    accumulate(rows3d, "3d", true);
-    accumulate(rows5d, "5d", true);
+    accumulate(rows3d, "3d");
+    accumulate(rows5d, "5d");
     void rowsHoje; // hoje já é coberto pela edge function meta-sync (insights_cache); aqui só serve de sinal de vida
 
+    // meta_ad_id/adset/campanha vêm de `adPorNumero` (syncMetaAdStatus), não de
+    // "quem gastou mais nesta janela" — bug real corrigido em 2026-08-26. O
+    // critério por gasto elegia às vezes um ad_id ANTIGO se ele tivesse gasto
+    // recente maior que o novo relançamento (ex: MCV 216/217, ADS 195/275/344/356
+    // trocaram pro ad_id errado). `adPorNumero` é sempre o ad_id que a Meta
+    // reporta como ACTIVE agora — fonte única de verdade sobre "qual é o atual".
     let ok = 0;
     for (const [numStr, slot] of Object.entries(agg)) {
       const num = Number(numStr);
@@ -431,21 +425,23 @@ Deno.serve(async (req) => {
         vendas_5d: slot.v5d,
         cpa_5d: slot.v5d > 0 ? Math.round((slot.g5d / slot.v5d) * 100) / 100 : null,
       };
-      const melhor = bestAdId[num];
-      if (melhor) {
-        payload.meta_ad_id = melhor.id;
-        if (melhor.adsetId)    payload.meta_adset_id    = melhor.adsetId;
-        if (melhor.campaignId) payload.meta_campaign_id = melhor.campaignId;
+      const atual = adPorNumero[num];
+      if (atual) {
+        payload.meta_ad_id = atual.id;
+        if (atual.adset_id)    payload.meta_adset_id    = atual.adset_id;
+        if (atual.campaign_id) payload.meta_campaign_id = atual.campaign_id;
       }
       const { error } = await supabase.from("ads").update(payload).eq("numero", num);
       if (!error) ok++;
     }
 
     let permalinksOk = 0;
-    for (const [numStr, melhor] of Object.entries(bestAdId)) {
-      const permalink = await fetchAdPermalink(melhor.id);
+    for (const num of targetNums) {
+      const atual = adPorNumero[num];
+      if (!atual) continue;
+      const permalink = await fetchAdPermalink(atual.id);
       if (permalink) {
-        await supabase.from("ads").update({ meta_ad_url: permalink }).eq("numero", Number(numStr));
+        await supabase.from("ads").update({ meta_ad_url: permalink }).eq("numero", num);
         permalinksOk++;
       }
     }
@@ -471,7 +467,6 @@ Deno.serve(async (req) => {
     // o que está rodando agora. Relançar o mesmo número com um ad_id novo não
     // zera nem perde o histórico do antigo, os dois entram na mesma soma.
     const agg: Record<number, { gasto: number; vendas: number }> = {};
-    const bestAdId: Record<number, { id: string; gasto: number; adsetId?: string; campaignId?: string }> = {};
     for (const d of rowsMax) {
       const nome = d.ad_name || "";
       const m = ADS_PATTERN.exec(nome);
@@ -483,14 +478,17 @@ Deno.serve(async (req) => {
       const slot = agg[num] || (agg[num] = { gasto: 0, vendas: 0 });
       slot.gasto += gasto;
       slot.vendas += vendas;
-      if (gasto > 0) {
-        const cur = bestAdId[num];
-        if (!cur || gasto > cur.gasto) {
-          bestAdId[num] = { id: d.ad_id, gasto, adsetId: d.adset_id, campaignId: d.campaign_id };
-        }
-      }
     }
 
+    // meta_ad_id/adset/campanha vêm de `adPorNumero` (syncMetaAdStatus), nunca
+    // de "qual ad_id gastou mais na vida inteira". Bug real corrigido em
+    // 2026-08-26: pra número reutilizado várias vezes ao longo do histórico da
+    // conta, o ad_id de MAIOR gasto acumulado quase sempre é um anúncio antigo
+    // e morto, não o relançamento atual — ADS 195, 275, 344 e 356 (campanhas
+    // MCV 216/217) ficaram presos em ad_id, campanha e conjunto de meses atrás,
+    // mesmo com o anúncio novo já ativo e rodando. gasto_total/vendas_total/
+    // cpa_historico continuam somando TODO ad_id que já usou o nome (isso está
+    // certo, é o CPA global) — só o vínculo "qual é o atual" não pode vir dali.
     let ok = 0;
     for (const [numStr, slot] of Object.entries(agg)) {
       const num = Number(numStr);
@@ -499,11 +497,11 @@ Deno.serve(async (req) => {
         vendas_total: slot.vendas,
         cpa_historico: slot.vendas > 0 ? Math.round((slot.gasto / slot.vendas) * 100) / 100 : null,
       };
-      const melhor = bestAdId[num];
-      if (melhor) {
-        payload.meta_ad_id = melhor.id;
-        if (melhor.adsetId)    payload.meta_adset_id    = melhor.adsetId;
-        if (melhor.campaignId) payload.meta_campaign_id = melhor.campaignId;
+      const atual = adPorNumero[num];
+      if (atual) {
+        payload.meta_ad_id = atual.id;
+        if (atual.adset_id)    payload.meta_adset_id    = atual.adset_id;
+        if (atual.campaign_id) payload.meta_campaign_id = atual.campaign_id;
       }
       const { error } = await supabase.from("ads").update(payload).eq("numero", num);
       if (!error) ok++;
