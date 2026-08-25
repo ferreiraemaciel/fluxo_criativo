@@ -2,6 +2,29 @@
 
 > Instruções específicas do Tracker FMN. Complementa o CLAUDE.md da raiz do fluxo-criativo (regras gerais do workshop), mas essas aqui valem só dentro desta pasta.
 
+## hotmart-webhook — NUNCA deployar sem `--no-verify-jwt` (incidente real, 2026-08-24 a 2026-08-25)
+
+> Mesma classe de incidente já documentada abaixo pro `whatsapp-webhook`, agora confirmada pela segunda vez, com uma function diferente.
+
+**Regra dura, sem exceção**: todo deploy do `hotmart-webhook` (sozinho ou junto com outras functions) tem que incluir a flag `--no-verify-jwt`, sempre:
+
+```bash
+supabase functions deploy hotmart-webhook --project-ref wntzzzuqoqmfcjebmzul --no-verify-jwt
+```
+
+**Por quê.** Igual ao `whatsapp-webhook`, o `hotmart-webhook` é chamado direto pela Hotmart, que não manda token do Supabase, só o token próprio dela (`HOTMART_WEBHOOK_TOKEN`). Se o deploy for feito sem `--no-verify-jwt`, o Supabase volta a exigir JWT válido, a Hotmart não tem esse token, e toda venda em tempo real passa a devolver 401 antes de chegar no nosso código. **Não trava o Tracker nem aparece como erro em lugar nenhum** — o painel continua funcionando normal.
+
+**O que aconteceu de verdade.** Um deploy em 24/08/2026 às 20:44 UTC (dentro do commit `6927232`, da auditoria do Financeiro) derrubou essa flag sem querer. Passou despercebido porque **a Hotmart tem um plano B que mascarou o sintoma mais óbvio**: a function `hotmart-backfill` (`sales/history`, roda a cada 15min das 6h às 23h59 de Brasília) encontra a venda de qualquer forma e insere na tabela, então nenhuma venda foi perdida de verdade. O sinal de que algo estava errado só apareceu na tela "Últimas Vendas" do Financeiro, com a etiqueta amarela "Sem rastreio (webhook falhou)" — Felipe reparou e perguntou.
+
+**O que o backfill NÃO cobre, e por isso fica perdido pra sempre nessas vendas:**
+1. **`utm_source`/rastreio (`sck`) fica sempre null.** O endpoint `sales/history` da Hotmart não devolve esse dado, só o payload do webhook em tempo real tem. Não tem como recuperar depois — a origem dessas vendas (Meta Ads, WhatsApp, orgânico) fica desconhecida pra sempre.
+2. **Mensagem de boas-vindas no WhatsApp não é enviada.** `whatsapp_boas_vindas_enviado` fica `false` — só o `hotmart-webhook` dispara isso, o backfill só grava a venda e enriquece endereço/telefone.
+3. **Evento de Purchase não é mandado pra API de Conversões do Meta (CAPI).** Só o `hotmart-webhook` faz isso. Uma venda que veio de anúncio e caiu nessa falha nunca vira sinal de otimização pro algoritmo do Meta.
+
+**Antes de declarar qualquer deploy do `hotmart-webhook` como concluído**, confirmar `verify_jwt: false` (mesma checagem do `whatsapp-webhook`: `mcp__supabase__list_edge_functions` ou `get_edge_function`, procurar o campo). Se não tiver certeza, rodar o deploy de novo explicitamente com `--no-verify-jwt`.
+
+**Sinal de alerta pra ficar de olho:** a etiqueta amarela "Sem rastreio (webhook falhou)" na tela "Últimas Vendas" do Financeiro (`dashboard.jsx`, `classifyOrigin()`) é o primeiro lugar onde esse tipo de falha aparece. Se aparecer, é sempre motivo pra checar o `verify_jwt` do `hotmart-webhook` na hora.
+
 ## Anúncio criado direto no Gerenciador do Meta — como fazer o Tracker adotar
 
 > Combinado com Felipe em 2026-08-25. Via de volta (Meta → Tracker), simétrica à publicação normal (Tracker → Meta).
