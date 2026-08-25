@@ -17,6 +17,15 @@ Por padrão, um anúncio criado direto no Gerenciador de Anúncios do Meta (fora
 
 **O que muda no código:** `syncMetaAdStatus()` em `supabase/functions/kanban-sync/index.ts` passou a buscar `adset_id`/`campaign_id` de todo anúncio da conta (antes só `id,name,effective_status`), e a reconciliação deixou de exigir `meta_ad_id` já preenchido pra considerar um card — antes (`.not("meta_ad_id","is",null)`) só atualizava quem já tinha sido publicado pelo próprio app.
 
+### Relançar o mesmo número (card que JÁ tinha `meta_ad_id` de antes)
+
+Isso é diferente de "adotar" (acima, pra card sem vínculo nenhum). Se o ADS N já rodou antes pelo Tracker, foi pausado/arquivado, e agora você cria um anúncio NOVO no Meta reaproveitando o mesmo número — **isso já era resolvido automaticamente antes desta sessão, por um mecanismo que já existia** (não foi criado agora, só reforçado):
+
+- `kanban-sync` (`curtas` e `maximo`) agrupa o gasto/venda de TODA a conta **pelo número extraído do nome**, não pelo `meta_ad_id` — então `gasto_total`/`vendas_total`/`cpa_historico` (o CPA global do card) já somam automaticamente TODO ad_id que algum dia usou aquele "ADS N", antigo e novo juntos. Relançar não zera nem perde histórico.
+- Dentro desse mesmo agrupamento, `meta_ad_id` do card é sempre trocado pro ad_id de **maior gasto** entre os que compartilham o nome (`bestAdId`) — como o antigo para de gastar e o novo passa a gastar, a troca acontece sozinha, em até 15 minutos (ciclo do `curtas`).
+
+**O que estava faltando e foi corrigido em 2026-08-25:** `meta_campaign_id`/`meta_adset_id` não acompanhavam essa troca — só o `meta_ad_id` mudava, campanha e conjunto continuavam apontando pro anúncio antigo. Se o relançamento fosse numa campanha ou conjunto diferente do original, a aba Tráfego agrupava errado. Agora os dois campos trocam junto com o `meta_ad_id`, na mesma leva (`bestAdId` passou a guardar `adsetId`/`campaignId`, não só o id).
+
 ## Receita manual (venda fora da Hotmart) — aba Financeiro
 
 > Adicionado em 2026-08-21, primeira venda: Mentoria XP Sala Preta.

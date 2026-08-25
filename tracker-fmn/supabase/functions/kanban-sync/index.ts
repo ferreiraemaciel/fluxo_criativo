@@ -386,7 +386,15 @@ Deno.serve(async (req) => {
     const rowsHoje = await fetchAccountAdInsights({ date_preset: "today" });
 
     const agg: Record<number, { g3d: number; v3d: number; g5d: number; v5d: number }> = {};
-    const bestAdId: Record<number, [string, number]> = {};
+    // Guarda o ad_id de MAIOR gasto recente pra cada número — é assim que um
+    // anúncio relançado no Gerenciador (mesmo "ADS N", ad_id novo) assume o
+    // lugar do antigo sozinho: o antigo para de gastar, o novo passa a gastar
+    // mais, e em até 15min (ciclo desta função) o `meta_ad_id` troca. Guardar
+    // adset/campanha junto (não só o id) fechou uma lacuna real em 2026-08-25:
+    // o meta_ad_id trocava certinho, mas meta_campaign_id/meta_adset_id
+    // ficavam apontando pro anúncio antigo, o que podia agrupar errado na aba
+    // Tráfego se o relançamento fosse numa campanha ou conjunto diferente.
+    const bestAdId: Record<number, { id: string; gasto: number; adsetId?: string; campaignId?: string }> = {};
 
     const accumulate = (rows: any[], key: "3d" | "5d", trackBest: boolean) => {
       for (const d of rows) {
@@ -402,7 +410,9 @@ Deno.serve(async (req) => {
         else { slot.g5d += gasto; slot.v5d += vendas; }
         if (trackBest && gasto > 0) {
           const cur = bestAdId[num];
-          if (!cur || gasto > cur[1]) bestAdId[num] = [d.ad_id, gasto];
+          if (!cur || gasto > cur.gasto) {
+            bestAdId[num] = { id: d.ad_id, gasto, adsetId: d.adset_id, campaignId: d.campaign_id };
+          }
         }
       }
     };
@@ -421,14 +431,19 @@ Deno.serve(async (req) => {
         vendas_5d: slot.v5d,
         cpa_5d: slot.v5d > 0 ? Math.round((slot.g5d / slot.v5d) * 100) / 100 : null,
       };
-      if (bestAdId[num]) payload.meta_ad_id = bestAdId[num][0];
+      const melhor = bestAdId[num];
+      if (melhor) {
+        payload.meta_ad_id = melhor.id;
+        if (melhor.adsetId)    payload.meta_adset_id    = melhor.adsetId;
+        if (melhor.campaignId) payload.meta_campaign_id = melhor.campaignId;
+      }
       const { error } = await supabase.from("ads").update(payload).eq("numero", num);
       if (!error) ok++;
     }
 
     let permalinksOk = 0;
-    for (const [numStr, [metaAdId]] of Object.entries(bestAdId)) {
-      const permalink = await fetchAdPermalink(metaAdId);
+    for (const [numStr, melhor] of Object.entries(bestAdId)) {
+      const permalink = await fetchAdPermalink(melhor.id);
       if (permalink) {
         await supabase.from("ads").update({ meta_ad_url: permalink }).eq("numero", Number(numStr));
         permalinksOk++;
@@ -449,8 +464,14 @@ Deno.serve(async (req) => {
     try {
     const rowsMax = await fetchAccountAdInsights({ date_preset: "maximum" });
 
+    // "maximum" traz uma linha por ad_id (inclusive arquivado/deletado, desde
+    // que tenha gasto histórico), e o agrupamento aqui é por NÚMERO extraído
+    // do nome, não por ad_id — então gasto_total/vendas_total/cpa_historico
+    // já é o CPA global somado de TODO ad_id que já usou esse "ADS N", não só
+    // o que está rodando agora. Relançar o mesmo número com um ad_id novo não
+    // zera nem perde o histórico do antigo, os dois entram na mesma soma.
     const agg: Record<number, { gasto: number; vendas: number }> = {};
-    const bestAdId: Record<number, [string, number]> = {};
+    const bestAdId: Record<number, { id: string; gasto: number; adsetId?: string; campaignId?: string }> = {};
     for (const d of rowsMax) {
       const nome = d.ad_name || "";
       const m = ADS_PATTERN.exec(nome);
@@ -464,7 +485,9 @@ Deno.serve(async (req) => {
       slot.vendas += vendas;
       if (gasto > 0) {
         const cur = bestAdId[num];
-        if (!cur || gasto > cur[1]) bestAdId[num] = [d.ad_id, gasto];
+        if (!cur || gasto > cur.gasto) {
+          bestAdId[num] = { id: d.ad_id, gasto, adsetId: d.adset_id, campaignId: d.campaign_id };
+        }
       }
     }
 
@@ -476,7 +499,12 @@ Deno.serve(async (req) => {
         vendas_total: slot.vendas,
         cpa_historico: slot.vendas > 0 ? Math.round((slot.gasto / slot.vendas) * 100) / 100 : null,
       };
-      if (bestAdId[num]) payload.meta_ad_id = bestAdId[num][0];
+      const melhor = bestAdId[num];
+      if (melhor) {
+        payload.meta_ad_id = melhor.id;
+        if (melhor.adsetId)    payload.meta_adset_id    = melhor.adsetId;
+        if (melhor.campaignId) payload.meta_campaign_id = melhor.campaignId;
+      }
       const { error } = await supabase.from("ads").update(payload).eq("numero", num);
       if (!error) ok++;
     }
