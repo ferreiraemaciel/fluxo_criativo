@@ -111,6 +111,47 @@ Deno.serve(async (req) => {
     return new Response("Não autorizado", { status: 401 });
   }
 
+  // Endpoint de recuperação: reenviar a boas-vindas do MCV pra uma venda que
+  // já existe em `vendas` mas nunca recebeu (ex: veio pelo hotmart-backfill,
+  // não pelo webhook em tempo real — o backfill não dispara boas-vindas,
+  // sinal real do incidente de 2026-08-24/25 documentado no CLAUDE.md).
+  // Reaproveita a MESMA função (enviarBoasVindasMcv) e os MESMOS segredos que
+  // o fluxo normal usa — nunca lida com o token/link em texto puro fora daqui.
+  // Protegido pelo mesmo HOTMART_WEBHOOK_TOKEN acima, não é endpoint público.
+  const url = new URL(req.url);
+  if (url.pathname.endsWith("/reenviar-boas-vindas")) {
+    let body: any;
+    try { body = await req.json(); } catch { return new Response("Payload inválido", { status: 400 }); }
+    const transactionId = body?.transactionId;
+    if (!transactionId) {
+      return new Response(JSON.stringify({ erro: "transactionId é obrigatório" }), {
+        status: 400, headers: { "Content-Type": "application/json" },
+      });
+    }
+    const { data: venda } = await supabase
+      .from("vendas")
+      .select("comprador_telefone, comprador_nome, whatsapp_boas_vindas_enviado")
+      .eq("hotmart_transaction_id", transactionId)
+      .single();
+    if (!venda) {
+      return new Response(JSON.stringify({ erro: "venda não encontrada" }), {
+        status: 404, headers: { "Content-Type": "application/json" },
+      });
+    }
+    if (venda.whatsapp_boas_vindas_enviado) {
+      return new Response(JSON.stringify({ ok: true, ja_enviado: true }), {
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+    if (!venda.comprador_telefone) {
+      return new Response(JSON.stringify({ erro: "venda sem telefone cadastrado" }), {
+        status: 400, headers: { "Content-Type": "application/json" },
+      });
+    }
+    await enviarBoasVindasMcv(transactionId, venda.comprador_telefone, venda.comprador_nome);
+    return new Response(JSON.stringify({ ok: true }), { headers: { "Content-Type": "application/json" } });
+  }
+
   let payload: any;
   try {
     payload = await req.json();

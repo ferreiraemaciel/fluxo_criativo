@@ -25,6 +25,19 @@ supabase functions deploy hotmart-webhook --project-ref wntzzzuqoqmfcjebmzul --n
 
 **Sinal de alerta pra ficar de olho:** a etiqueta amarela "Sem rastreio (webhook falhou)" na tela "Últimas Vendas" do Financeiro (`dashboard.jsx`, `classifyOrigin()`) é o primeiro lugar onde esse tipo de falha aparece. Se aparecer, é sempre motivo pra checar o `verify_jwt` do `hotmart-webhook` na hora.
 
+**Escopo real do incidente (conferido em 2026-08-25).** Só 2 vendas afetadas, as duas do produto MCV, as duas dentro da janela exata da falha (24/08 20:44 UTC até o conserto): Milene Back Juwer (`HP0358000289`) e Adriana Tavares Ribeiro (`HP2884276891`). Nenhuma outra venda de nenhum produto nos últimos ~14 dias caiu nisso. Existe um agrupamento parecido de eventos `SYNC_*` em junho/2026 (10 a 29/06), mas é de um período bem anterior à fase estável do projeto — não é o mesmo incidente, não indica recorrência.
+
+**Endpoint de recuperação: reenviar boas-vindas pra venda que ficou sem.** Se uma venda do MCV passar por essa falha (ou qualquer outra que deixe `whatsapp_boas_vindas_enviado=false` numa venda aprovada), tem um jeito de mandar a mensagem depois, manual, sem tocar em segredo nenhum na mão:
+
+```bash
+curl -X POST "https://wntzzzuqoqmfcjebmzul.supabase.co/functions/v1/hotmart-webhook/reenviar-boas-vindas" \
+  -H "X-Hotmart-Webhook-Token: <valor de HOTMART_WEBHOOK_TOKEN no .env>" \
+  -H "Content-Type: application/json" \
+  -d '{"transactionId":"<hotmart_transaction_id da venda>"}'
+```
+
+Reaproveita a mesma função `enviarBoasVindasMcv()` e os mesmos segredos que o fluxo normal usa (template aprovado, link do grupo), então o resultado é idêntico ao que teria acontecido na hora certa. Já checa sozinho se a venda existe, se já foi enviada antes (idempotente, não manda duas vezes) e se tem telefone cadastrado. Foi usado pra recuperar a venda da Milene em 2026-08-25, ~8h depois da compra.
+
 ## Anúncio criado direto no Gerenciador do Meta — como fazer o Tracker adotar
 
 > Combinado com Felipe em 2026-08-25. Via de volta (Meta → Tracker), simétrica à publicação normal (Tracker → Meta).
