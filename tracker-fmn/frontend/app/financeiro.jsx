@@ -173,8 +173,29 @@ function AddExpenseModal({ onClose, onSaved }) {
       recorrencia: form.tipo === 'recorrente' ? form.recorrencia : 'mensal',
       valor: Number(form.valor), data: form.data, ativo: true, observacoes: form.observacoes || null,
     });
+    if (error) { setSaving(false); setErro(error.message || 'Não consegui salvar. Confira os campos.'); return; }
+
+    // Tag é enfeite útil, nunca pode derrubar o lançamento da receita: a
+    // venda já está salva a essa altura. Se a marcação falhar (ou a pessoa
+    // ainda não existir como contato no Khronus), avisa e segue.
+    if (form.tagId && form.telefone.trim()) {
+      try {
+        const r = await fetch(`${window.db.supabaseUrl}/functions/v1/khronus-tags`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${window.db.supabaseKey}` },
+          body: JSON.stringify({ acao: 'marcar', telefone: form.telefone, tag_id: form.tagId }),
+        });
+        const d = await r.json().catch(() => ({}));
+        if (d.motivo === 'sem_contato') {
+          setSaving(false);
+          setAviso('Receita salva. A tag não foi aplicada: esse telefone ainda não existe como contato no Khronus.');
+          onSaved();
+          return;
+        }
+      } catch { /* venda salva é o que importa */ }
+    }
+
     setSaving(false);
-    if (error) { setErro(error.message || 'Não consegui salvar. Confira os campos.'); return; }
     onSaved(); onClose();
   };
   const inp = { padding:'7px 10px', borderRadius:7, fontSize:12.5, fontFamily:'Roboto,sans-serif',
@@ -247,6 +268,11 @@ function AddExpenseModal({ onClose, onSaved }) {
             border:'1px solid rgba(248,113,113,.3)',fontSize:11.5,color:'#f87171',
             fontFamily:'Roboto,sans-serif',lineHeight:1.5 }}>{erro}</div>
         )}
+        {aviso && (
+          <div style={{ padding:'9px 11px',borderRadius:8,background:'rgba(251,191,36,.08)',
+            border:'1px solid rgba(251,191,36,.3)',fontSize:11.5,color:'#fbbf24',
+            fontFamily:'Roboto,sans-serif',lineHeight:1.5 }}>{aviso}</div>
+        )}
         <div style={{ display:'flex',gap:8,marginTop:4 }}>
           <button onClick={onClose} style={{ flex:1,padding:'10px',borderRadius:8,
             background:'rgba(255,255,255,.06)',border:'1px solid var(--app-border)',
@@ -279,12 +305,25 @@ function AddExpenseModal({ onClose, onSaved }) {
    Fonte (dashboard.jsx), pra não distorcer o ROAS de Tráfego.             */
 function AddRevenueModal({ onClose, onSaved }) {
   const [erro, setErro] = useState('');
+  const [aviso, setAviso] = useState('');
   const [saving, setSaving] = useState(false);
+  const [tags, setTags] = useState([]);
   const [form, setForm] = useState({
-    produto: '', valor: '', nome: '', email: '',
+    produto: '', valor: '', nome: '', email: '', telefone: '', tagId: '',
     data: new Date().toISOString().slice(0,10), observacoes: '',
   });
   const set = (k,v) => setForm(p => ({...p,[k]:v}));
+
+  // Tags do Khronus pra marcar o comprador. Venda manual não passa pelo
+  // hotmart-webhook, então a marcação automática por produto_id não
+  // acontece aqui: quem escolhe a tag é quem está lançando a receita.
+  useEffect(() => {
+    fetch(`${window.db.supabaseUrl}/functions/v1/khronus-tags`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${window.db.supabaseKey}` },
+      body: JSON.stringify({ acao: 'listar' }),
+    }).then(r => r.json()).then(d => setTags(d.tags || [])).catch(() => setTags([]));
+  }, []);
 
   const handleSave = async () => {
     if (!form.produto.trim() || !form.valor) { setErro('Preencha ao menos o produto e o valor.'); return; }
@@ -302,6 +341,7 @@ function AddRevenueModal({ onClose, onSaved }) {
       utm_source: 'manual',
       comprador_nome: form.nome.trim() || null,
       comprador_email: form.email.trim() || null,
+      comprador_telefone: form.telefone.trim() || null,
       // Meio-dia de Brasília evita o card de "venda de ontem" só por causa
       // do fuso — mesmo cuidado do resto do projeto com data sem hora.
       created_at: `${form.data}T12:00:00-03:00`,
@@ -356,6 +396,24 @@ function AddRevenueModal({ onClose, onSaved }) {
             <input type="email" value={form.email} placeholder="cliente@email.com"
               onChange={e=>set('email',e.target.value)} style={inp}/>
           </div>
+        </div>
+        <div style={{ display:'flex',gap:10 }}>
+          <div style={{ flex:1,display:'flex',flexDirection:'column',gap:5 }}>
+            <span style={lbl}>WhatsApp (opcional)</span>
+            <input type="text" value={form.telefone} placeholder="48 99999-9999"
+              onChange={e=>set('telefone',e.target.value)} style={inp}/>
+          </div>
+          <div style={{ flex:1,display:'flex',flexDirection:'column',gap:5 }}>
+            <span style={lbl}>Marcar tag (opcional)</span>
+            <select value={form.tagId} onChange={e=>set('tagId',e.target.value)} style={inp}>
+              <option value="">Nenhuma</option>
+              {tags.map(t => <option key={t.id} value={t.id}>{t.nome}</option>)}
+            </select>
+          </div>
+        </div>
+        <div style={{ fontSize:10.5,fontFamily:'Roboto,sans-serif',color:'var(--text-3)',lineHeight:1.5,marginTop:-6 }}>
+          A tag marca o comprador no atendimento do Khronus. Precisa do WhatsApp, e só funciona se
+          ele já for contato por lá.
         </div>
         <div style={{ display:'flex',flexDirection:'column',gap:5 }}>
           <span style={lbl}>Observações (opcional)</span>

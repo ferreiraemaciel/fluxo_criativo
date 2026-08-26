@@ -14,6 +14,8 @@ Toda venda aprovada que chega no `hotmart-webhook` marca o contato do Khronus co
 
 **Backfill rodado uma vez** (script em `scratchpad/backfill_tags.py`, não versionado por ser de uso único): cruzou 977 compradores com telefone utilizável contra os 457 contatos que existiam no Khronus e criou 208 marcações. Sobrou muita compra sem marcação porque a maioria dos compradores nunca chegou a virar contato no Khronus, o que é esperado.
 
+**Venda manual (botão "Registrar Receita", aba Financeiro) marca tag também, mas com a escolha na mão.** Ela não passa pelo `hotmart-webhook` e nem tem `produto_id`, então não há como deduzir a tag: o modal ganhou dois campos opcionais, WhatsApp e um seletor de tag, e a marcação vai pela Edge Function `khronus-tags` (`acao: 'marcar'`; a mesma function lista as tags pro seletor com `acao: 'listar'`). O telefone informado também passou a ser gravado em `vendas.comprador_telefone`, que antes se perdia. Se o telefone ainda não for contato no Khronus, a receita é salva do mesmo jeito e aparece um aviso amarelo dizendo que só a tag não foi aplicada.
+
 **Falhar em marcar tag nunca derruba o webhook.** A função engole o próprio erro de propósito: registrar a venda é o que importa ali, tag é enfeite útil.
 
 ## Cada ADS tem produto (MCV ou BLI), e as regras usam o ticket do produto certo (2026-08-26)
