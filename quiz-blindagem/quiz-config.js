@@ -45,6 +45,7 @@ window.QUIZ_CONFIG = {
         { emoji: '📲', label: 'Mando pelo WhatsApp e peço uma foto dele assinado.' },
         { emoji: '🏛️', label: 'Assino pelo gov.br.' },
         { emoji: '✍️', label: 'Uso uma plataforma de assinatura digital, mas não integrada ao meu processo de contratos.' },
+        { emoji: '🚫', label: 'Ainda não uso contratos.' },
       ] },
 
     { type: 'content',
@@ -70,7 +71,7 @@ window.QUIZ_CONFIG = {
       ] },
 
     { type: 'single', key: 'custo_processo',
-      title: 'E se algo desse errado, você imagina o tamanho do prejuízo?',
+      title: 'E se algo desse errado, você imagina o tamanho do prejuízo por não usar um contrato seguro?',
       options: [
         { emoji: '💵', label: 'No máximo uns R$ 500, dá para resolver fácil.' },
         { emoji: '💸', label: 'Algo entre R$ 2.000 e R$ 5.000, dependendo do caso.' },
