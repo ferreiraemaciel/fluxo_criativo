@@ -119,7 +119,7 @@ function useAdsCards() {
     setLoading(true);
     const { data: adsList } = await window.db
       .from('ads')
-      .select('numero,titulo,status,tag,etapa,tipo,headline,hook_copy,hook_visual,desenvolvimento_cta,roteiro,estetica_visual,prompt,slides,texto_principal,titulo_ad,descricao_ad,posicionamento,media_drive_url,media_tipo,media_files,meta_ad_id,meta_ad_url,vendas_total,cpa_historico,gasto_total,isento_regra,observacoes,referencia,thumb_url,media_url,media_preview_url,meta_image_hash,meta_video_id,meta_campaign_id,meta_adset_id,meta_publish_status,ordem_manual')
+      .select('numero,titulo,status,produto,tag,etapa,tipo,headline,hook_copy,hook_visual,desenvolvimento_cta,roteiro,estetica_visual,prompt,slides,texto_principal,titulo_ad,descricao_ad,posicionamento,media_drive_url,media_tipo,media_files,meta_ad_id,meta_ad_url,vendas_total,cpa_historico,gasto_total,isento_regra,observacoes,referencia,thumb_url,media_url,media_preview_url,meta_image_hash,meta_video_id,meta_campaign_id,meta_adset_id,meta_publish_status,ordem_manual')
       .order('numero', { ascending: false });
 
     const { data: insights } = await window.db
@@ -285,6 +285,16 @@ function KanbanCard({ card, col, onOpen, onDragStart, podeArrastar, onDropAntes,
           letterSpacing:'0.06em', color:col.colorDot, textTransform:'uppercase', flexShrink:0 }}>
           ADS {card.num}
         </span>
+        {/* Só marca o que foge do padrão: a conta é quase toda MCV, então
+            destacar BLI é o que ajuda a bater o olho e achar. */}
+        {card.raw?.produto === 'BLI' && (
+          <span title="Anúncio do Blindagem"
+            style={{ fontSize:9, fontFamily:'Roboto,sans-serif', fontWeight:900, letterSpacing:'0.06em',
+              color:'#60a5fa', background:'rgba(96,165,250,.12)', border:'1px solid rgba(96,165,250,.35)',
+              borderRadius:4, padding:'1px 5px', flexShrink:0 }}>
+            BLI
+          </span>
+        )}
         <div style={{ marginLeft:'auto', display:'flex', gap:4, alignItems:'center', flexShrink:0 }}>
           {card.col === 'fazer' && (
             <button
@@ -1426,6 +1436,9 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
     meta_ad_url:      raw.meta_ad_url     || '',
     media_drive_url:  raw.media_drive_url || '',
     media_tipo:       raw.media_tipo      || null,
+    // Produto que esse ADS vende. Define qual ticket/CPA limite as regras
+    // automáticas G1 e G5 aplicam (ver regras_atp.parametros.por_produto).
+    produto:          raw.produto         || 'MCV',
   });
 
   const [showDriveInput, setShowDriveInput] = useState(false);
@@ -1654,6 +1667,20 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
                 borderRadius:6, padding:'3px 9px', flexShrink:0 }}>
                 ADS {card.num}
               </span>
+              {/* Produto do anúncio (MCV ou Blindagem). Combinado com Felipe em
+                  2026-08-26: define qual ticket/CPA limite as regras
+                  automáticas G1 e G5 usam pra julgar esse ADS. */}
+              <select value={fields.produto} onChange={e => set('produto', e.target.value)}
+                title="Produto que este anúncio vende. Define o ticket e o CPA limite usados pelas regras automáticas."
+                style={{ fontSize:11, fontFamily:'Roboto,sans-serif', fontWeight:900,
+                  letterSpacing:'0.06em', flexShrink:0, cursor:'pointer', outline:'none',
+                  color: fields.produto === 'BLI' ? '#60a5fa' : 'var(--fmn-gold)',
+                  background: fields.produto === 'BLI' ? 'rgba(96,165,250,.12)' : 'rgba(234,170,65,.12)',
+                  border: `1px solid ${fields.produto === 'BLI' ? 'rgba(96,165,250,.4)' : 'rgba(234,170,65,.4)'}`,
+                  borderRadius:6, padding:'3px 7px' }}>
+                <option value="MCV">MCV</option>
+                <option value="BLI">BLI</option>
+              </select>
               <input value={fields.titulo} onChange={e => set('titulo', e.target.value)}
                 placeholder="Título do criativo"
                 style={{ fontSize:14.5, fontFamily:'Roboto,sans-serif', fontWeight:700,

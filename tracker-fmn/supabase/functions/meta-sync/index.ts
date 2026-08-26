@@ -353,16 +353,30 @@ async function verificarRegraG1() {
     .single();
 
   if (!regra) return;
-  const multiplicador = regra.parametros?.multiplicador_ticket ?? 1;
-  const ticket = regra.parametros?.ticket ?? 297; // ticket do MCV, único produto na conta hoje
-  const gastoLimite = multiplicador * ticket;
+  // Combinado com Felipe em 2026-08-26: com anúncio de Blindagem entrando na
+  // conta, o limite deixou de ser único. Cada ADS diz o produto dele
+  // (ads.produto = MCV | BLI) e a regra usa o ticket daquele produto. Os
+  // valores soltos na raiz de `parametros` continuam existindo como fallback
+  // pra ADS sem produto reconhecido.
+  const porProduto = regra.parametros?.por_produto || {};
+  const limitePara = (produto: string | null) => {
+    const cfg = porProduto[produto || ""] || regra.parametros || {};
+    const mult   = cfg.multiplicador_ticket ?? regra.parametros?.multiplicador_ticket ?? 1;
+    const ticket = cfg.ticket ?? regra.parametros?.ticket ?? 297;
+    return mult * ticket;
+  };
+  // Busca a partir do MENOR limite entre os produtos: o filtro por produto é
+  // aplicado ad a ad logo abaixo, aqui só evitamos varrer a tabela inteira.
+  const limiteMinimo = Math.min(
+    ...[limitePara(null), ...Object.keys(porProduto).map(limitePara)],
+  );
 
   const { data: insights5d } = await supabase
     .from("insights_cache")
     .select("meta_ad_id, gasto, compras")
     .eq("periodo", "5d")
     .eq("compras", 0)
-    .gte("gasto", gastoLimite);
+    .gte("gasto", limiteMinimo);
 
   for (const i5d of insights5d || []) {
     const { data: alertaExistente } = await supabase
@@ -376,7 +390,7 @@ async function verificarRegraG1() {
     if (!alertaExistente) {
       const { data: adsRow } = await supabase
         .from("ads")
-        .select("numero, status")
+        .select("numero, status, produto")
         .eq("meta_ad_id", i5d.meta_ad_id)
         .single();
 
@@ -384,14 +398,18 @@ async function verificarRegraG1() {
       // ADS que já saiu de "ativo" (já foi pausado e classificado).
       if (adsRow?.status && adsRow.status !== "ativo") continue;
 
+      // Limite do produto DESTE anúncio, não um limite global da conta.
+      const gastoLimite = limitePara(adsRow?.produto || null);
+      if (Number(i5d.gasto) < gastoLimite) continue;
+
       await supabase.from("alertas").insert({
         ads_numero:     adsRow?.numero || null,
         meta_ad_id:     i5d.meta_ad_id,
         regra_codigo:   "G1",
-        mensagem:       `G1: gastou R$${Number(i5d.gasto).toFixed(2)} em 5 dias sem nenhuma venda (limite: R$${gastoLimite.toFixed(2)}). Pausado automaticamente.`,
+        mensagem:       `G1 (${adsRow?.produto || "MCV"}): gastou R$${Number(i5d.gasto).toFixed(2)} em 5 dias sem nenhuma venda (limite: R$${gastoLimite.toFixed(2)}). Pausado automaticamente.`,
         acao_tomada:    "pausa_automatica",
         acao_pendente:  "pausar",
-        dados_snapshot: { gasto5d: i5d.gasto, compras5d: i5d.compras, gasto_limite: gastoLimite },
+        dados_snapshot: { gasto5d: i5d.gasto, compras5d: i5d.compras, gasto_limite: gastoLimite, produto: adsRow?.produto || null },
       });
     }
   }
@@ -406,7 +424,14 @@ async function verificarRegraG5() {
     .single();
 
   if (!regra) return;
-  const cpaLimite = regra.parametros?.cpa_limite || 207.90;
+  // Por produto desde 2026-08-26 (ver comentário equivalente no G1). O valor
+  // solto em `parametros.cpa_limite` continua como fallback.
+  const porProduto = regra.parametros?.por_produto || {};
+  const cpaLimitePara = (produto: string | null) =>
+    porProduto[produto || ""]?.cpa_limite ?? regra.parametros?.cpa_limite ?? 207.90;
+  const cpaLimiteMinimo = Math.min(
+    ...[cpaLimitePara(null), ...Object.keys(porProduto).map(cpaLimitePara)],
+  );
 
   const { data: insights3d } = await supabase
     .from("insights_cache")
@@ -425,7 +450,9 @@ async function verificarRegraG5() {
   for (const i3d of insights3d || []) {
     const cpa3d = i3d.cpa;
     const cpa5d = map5d[i3d.meta_ad_id];
-    if (!cpa5d || cpa3d < cpaLimite || cpa5d < cpaLimite) continue;
+    // Pré-filtro pelo menor limite entre os produtos; o limite exato do
+    // produto deste ADS é conferido depois de saber qual produto ele é.
+    if (!cpa5d || cpa3d < cpaLimiteMinimo || cpa5d < cpaLimiteMinimo) continue;
 
     const { data: alertaExistente } = await supabase
       .from("alertas")
@@ -438,7 +465,7 @@ async function verificarRegraG5() {
     if (!alertaExistente) {
       const { data: adsRow } = await supabase
         .from("ads")
-        .select("numero, status")
+        .select("numero, status, produto")
         .eq("meta_ad_id", i3d.meta_ad_id)
         .single();
 
@@ -454,18 +481,23 @@ async function verificarRegraG5() {
       // virou campeão ou foi arquivado), não há nada novo pra fazer aqui.
       if (adsRow?.status && adsRow.status !== "ativo") continue;
 
+      // Limite do produto DESTE anúncio (MCV e Blindagem têm ticket
+      // diferente), não mais um limite único da conta.
+      const cpaLimite = cpaLimitePara(adsRow?.produto || null);
+      if (cpa3d < cpaLimite || cpa5d < cpaLimite) continue;
+
       // Combinado com Felipe em 2026-08-17: G5 não fica só no aviso, marca a
       // pausa como pendente pra processar-pausas (roda a cada 5min) executar
       // sozinha no Meta, sem esperar aprovação no chat. Vale pra qualquer ADS
-      // ativo, sem filtro de produto/conta.
+      // ativo, de qualquer produto.
       await supabase.from("alertas").insert({
         ads_numero:     adsRow?.numero || null,
         meta_ad_id:     i3d.meta_ad_id,
         regra_codigo:   "G5",
-        mensagem:       `G5: CPA 3d R$${Number(cpa3d).toFixed(2)} e CPA 5d R$${Number(cpa5d).toFixed(2)} acima do limite R$${cpaLimite.toFixed(2)}. Pausado automaticamente.`,
+        mensagem:       `G5 (${adsRow?.produto || "MCV"}): CPA 3d R$${Number(cpa3d).toFixed(2)} e CPA 5d R$${Number(cpa5d).toFixed(2)} acima do limite R$${cpaLimite.toFixed(2)}. Pausado automaticamente.`,
         acao_tomada:    "pausa_automatica",
         acao_pendente:  "pausar",
-        dados_snapshot: { cpa3d, cpa5d, cpa_limite: cpaLimite },
+        dados_snapshot: { cpa3d, cpa5d, cpa_limite: cpaLimite, produto: adsRow?.produto || null },
       });
     }
   }

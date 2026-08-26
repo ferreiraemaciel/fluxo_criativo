@@ -1,5 +1,29 @@
 # Tracker FMN — Regras do Projeto
 
+> Instruções específicas do Tracker FMN. Complementa o CLAUDE.md da raiz do fluxo-criativo (regras gerais do workshop), mas essas aqui valem só dentro desta pasta.
+
+## Cada ADS tem produto (MCV ou BLI), e as regras usam o ticket do produto certo (2026-08-26)
+
+> Combinado com Felipe em 2026-08-26, quando os primeiros anúncios de Blindagem entraram na conta.
+
+**Até aqui a conta só rodava MCV**, então ticket e CPA limite eram valores únicos em `regras_atp`, sem distinção de produto. Com Blindagem entrando, um anúncio dele seria julgado pelo ticket do MCV — pausaria cedo ou tarde demais, dependendo do caso.
+
+**`ads.produto`** (migration `106_ads_produto.sql`): `'MCV'` ou `'BLI'`, `not null default 'MCV'`, com CHECK e índice. Os 351 ADS que já existiam foram todos marcados como MCV no próprio backfill da migration (eram o único produto da conta). ADS novo nasce MCV por padrão, e vira BLI trocando no seletor ao lado do "ADS N" dentro do card.
+
+**Valores por produto**, em `regras_atp.parametros.por_produto` (editável direto na tabela, sem redeploy):
+
+| Produto | Ticket (G1) | CPA limite (G5) |
+|---|---|---|
+| MCV | R$297 | R$207,90 |
+| BLI | R$397 | R$277,90 |
+
+O ticket do Blindagem é o plano anual/à vista (R$397), escolha do Felipe: as vendas dele variam de R$99,98 a R$397 por ser assinatura, então não dá pra deduzir do banco. CPA limite segue a mesma proporção do MCV (70% do ticket).
+
+**Como o código resolve** (`verificarRegraG1` e `verificarRegraG5` em `meta-sync/index.ts`): a consulta ao `insights_cache` usa o **menor** limite entre os produtos (só pra não varrer a tabela inteira), e o limite exato é conferido depois, ad a ad, já sabendo o `ads.produto` daquele anúncio. Os valores soltos na raiz de `parametros` (`ticket`, `cpa_limite`) continuam existindo como fallback pra ADS sem produto reconhecido. A mensagem do alerta e o `dados_snapshot` agora carregam o produto, pra ficar claro qual limite foi aplicado.
+
+**Na tela:** seletor MCV/BLI no cabeçalho do card (dourado pra MCV, azul pra BLI) e badge azul "BLI" no card da lista. Só o BLI ganha badge: a conta é quase toda MCV, destacar a exceção é o que ajuda a achar.
+
+
 ## Boas-vindas de aluno novo (MCV) — migrou da API oficial pro Khronus (2026-08-26)
 
 > Combinado com Felipe em 2026-08-26, mesma linha da mudança na Recuperação de Venda (ver seção abaixo). `enviarBoasVindasMcv()`, em `hotmart-webhook/index.ts`, dispara sozinha em toda venda aprovada do MCV.
@@ -14,8 +38,6 @@
 
 **Testado em produção no dia da mudança**, reenviando pra Adriana Tavares Ribeiro (`HP2884276891`) — venda que tinha ficado sem boas-vindas no incidente do `verify_jwt` de 24/08 (documentado abaixo) e continuava pendente. Confirmado na fila do Khronus (`status='pendente'`, corpo certo, telefone certo).
 
-
-> Instruções específicas do Tracker FMN. Complementa o CLAUDE.md da raiz do fluxo-criativo (regras gerais do workshop), mas essas aqui valem só dentro desta pasta.
 
 ## Recuperação de Venda — telefone automático, badge de situação e envio pelo WhatsApp do suporte (2026-08-26)
 
