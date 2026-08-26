@@ -489,6 +489,19 @@ function Bar({ label, n, max, pctVal, color, sub }) {
 // usado no cruzamento server-side (cruzarComQuiz, hotmart-backfill).
 const tel11 = s => String(s || '').replace(/\D/g, '').slice(-11);
 
+// Formato de telefone do Khronus (mesma lógica de contratovisual/src/lib/
+// khronus-whatsapp.ts e das Edge Functions enviar-recuperacao-khronus /
+// khronus-fila-status): 55 + DDD + 8 dígitos, SEM o 9º dígito do celular.
+// Descoberto em 2026-08-26: a Ponte só reconhece contato nesse formato,
+// diferente de tel11 (usado pra whatsapp_mensagens/API oficial, que mantém
+// o 9). Retorna null se não der pra normalizar (telefone incompleto).
+const telKhronus = raw => {
+  let d = String(raw || '').replace(/\D/g, '');
+  d = d.startsWith('55') && d.length > 11 ? d.slice(2) : d;
+  if (d.length === 11 && d[2] === '9') d = d.slice(0, 2) + d.slice(3);
+  return d.length === 10 ? '55' + d : null;
+};
+
 const SITUACAO_INFO = {
   abandonou:    { label: 'Abandonou o carrinho', cor: '#94a3b8' },
   pendente:     { label: 'Pagamento pendente',   cor: '#fbbf24' },
@@ -522,11 +535,12 @@ const MSG_SITUACAO = {
 function EnviarRecuperacaoModal({ item, onClose }) {
   const primeiroNome = (item.nome || '').trim().split(/\s+/)[0] || 'tudo bem';
   const [corpo, setCorpo] = useState((MSG_SITUACAO[item.situacao] || MSG_SITUACAO.abandonou)(primeiroNome));
-  const [status, setStatus] = useState('idle'); // idle | enviando | ok | erro
+  const [status, setStatus] = useState('idle'); // idle | enviando | ok | erro | manual
   const [erro, setErro] = useState('');
+  const [waLink, setWaLink] = useState('');
 
   const enviar = async () => {
-    setStatus('enviando'); setErro('');
+    setStatus('enviando'); setErro(''); setWaLink('');
     try {
       const SUPA_URL = window.db?.supabaseUrl || '';
       const SUPA_KEY = window.db?.supabaseKey || '';
@@ -536,6 +550,14 @@ function EnviarRecuperacaoModal({ item, onClose }) {
         body: JSON.stringify({ telefone: item.telefone, nome: item.nome, corpo }),
       });
       const d = await r.json().catch(() => ({}));
+      // A Ponte só manda pra quem já tem conversa aberta com o número de
+      // suporte. Sem isso, cai no link manual (mesmo fallback do Blindagem):
+      // alguém manda a primeira na mão, e daí em diante vai automático.
+      if (d.motivo === 'sem_contato_conhecido') {
+        setWaLink(d.waLink || '');
+        setStatus('manual');
+        return;
+      }
       if (!r.ok || d.erro) throw new Error(d.erro || `Erro HTTP ${r.status}`);
       setStatus('ok');
     } catch (e) {
@@ -568,6 +590,22 @@ function EnviarRecuperacaoModal({ item, onClose }) {
             <LucideIcon icon="check" size={15}/>
             Colocado na fila do número de suporte.
           </div>
+        ) : status === 'manual' ? (
+          <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
+            <div style={{ padding:'11px 13px', borderRadius:9, background:'rgba(148,163,184,.1)',
+              border:'1px solid rgba(148,163,184,.3)', fontSize:11.5, color:'var(--text-2)', lineHeight:1.6 }}>
+              Essa pessoa ainda não tem conversa aberta com o número de suporte, então o envio automático
+              não funciona pra ela. Mande essa primeira mensagem na mão pelo botão abaixo. Depois que a
+              conversa existir, todo envio seguinte pra ela já sai automático daqui.
+            </div>
+            <a href={waLink} target="_blank" rel="noopener noreferrer" onClick={onClose}
+              style={{ padding:'10px', borderRadius:9, textDecoration:'none', textAlign:'center',
+                background:'var(--fmn-gold)', color:'var(--fmn-black)', fontFamily:'Roboto,sans-serif',
+                fontWeight:700, fontSize:12.5, display:'flex', alignItems:'center', justifyContent:'center', gap:6 }}>
+              <LucideIcon icon="external-link" size={13}/>
+              Abrir no WhatsApp com a mensagem pronta
+            </a>
+          </div>
         ) : (<>
           <textarea value={corpo} onChange={e => setCorpo(e.target.value)} rows={6}
             style={{ width:'100%', boxSizing:'border-box', padding:'10px 12px', borderRadius:9,
@@ -595,7 +633,7 @@ function EnviarRecuperacaoModal({ item, onClose }) {
   );
 }
 
-function CarrinhoTable({ itens, recuperados, contatadosOficial, contatadosSuporte }) {
+function CarrinhoTable({ itens, recuperados, contatadosOficial, contatadosSuporte, conhecidosSuporte }) {
   const [enviarPara, setEnviarPara] = useState(null); // item | null
   const [busca, setBusca] = useState('');
   const [filtro, setFiltro] = useState('todos'); // todos | pendente | recuperado
@@ -680,16 +718,28 @@ function CarrinhoTable({ itens, recuperados, contatadosOficial, contatadosSuport
               const quente = dias != null && dias <= 7;
               const sit = SITUACAO_INFO[it.situacao] || { label: it.situacao || '—', cor: '#94a3b8' };
               const jaContatado   = it.telefone && contatadosOficial.has(tel11(it.telefone));
-              const statusSuporte = it.telefone ? contatadosSuporte.get(tel11(it.telefone)) : null;
+              const telK          = telKhronus(it.telefone);
+              const statusSuporte = telK ? contatadosSuporte.get(telK) : null;
               const jaSuporte     = !!statusSuporte;
               const falhouSuporte = statusSuporte === 'falhou';
+              // Ponte só consegue mandar pra quem ela já viu numa conversa
+              // real. Sem isso, o envio automático nunca funciona.
+              const conhecido     = !!(telK && conhecidosSuporte.has(telK));
               return (
                 <tr key={it.id} style={{ borderBottom:'1px solid rgba(255,255,255,.04)' }}>
                   <td style={{ ...td, color:'var(--text-1)', fontWeight:600 }}>{it.nome || '—'}</td>
                   <td style={td}>
                     <div style={{ fontSize:12 }}>{it.email || '—'}</div>
                     {it.telefone && <div style={{ fontSize:11, color:'var(--text-3)' }}>{it.telefone}</div>}
-                    <div style={{ display:'flex', gap:4, flexWrap:'wrap', marginTop: (jaContatado || jaSuporte) ? 3 : 0 }}>
+                    <div style={{ display:'flex', gap:4, flexWrap:'wrap', marginTop: (jaContatado || jaSuporte || (it.telefone && !conhecido)) ? 3 : 0 }}>
+                      {it.telefone && !conhecido && (
+                        <div title="A Ponte só manda pra quem já tem conversa aberta com o número de suporte. Precisa de um primeiro contato manual."
+                          style={{ display:'inline-block', padding:'1px 7px', borderRadius:999,
+                          fontSize:9.5, fontWeight:700, fontFamily:'Roboto,sans-serif', whiteSpace:'nowrap',
+                          background:'rgba(148,163,184,.12)', border:'1px solid rgba(148,163,184,.35)', color:'#94a3b8' }}>
+                          Sem conversa no suporte
+                        </div>
+                      )}
                       {jaContatado && (
                         <div style={{ display:'inline-block', padding:'1px 7px', borderRadius:999,
                           fontSize:9.5, fontWeight:700, fontFamily:'Roboto,sans-serif', whiteSpace:'nowrap',
@@ -911,7 +961,8 @@ function FunisScreen({ onNavigate }) {
   const [carrinho, setCarrinho]           = useState([]);
   const [recuperados, setRecuperados]     = useState(new Set());
   const [contatadosOficial, setContatadosOficial] = useState(new Set());
-  const [contatadosSuporte, setContatadosSuporte] = useState(new Map()); // tel11 -> status
+  const [contatadosSuporte, setContatadosSuporte] = useState(new Map()); // telKhronus -> status
+  const [conhecidosSuporte, setConhecidosSuporte] = useState(new Set());  // telKhronus que a Ponte reconhece
   const [loadingCarrinho, setLoadingCarrinho] = useState(false);
   const [extraAgg, setExtraAgg]     = useState({});
   const [funnel, setFunnel]         = useState('all');
@@ -1037,22 +1088,26 @@ function FunisScreen({ onNavigate }) {
       // existe), pra sinalizar "falhou" (ex: número sem WhatsApp) separado
       // de "pendente"/"enviado" — pedido do Felipe no mesmo dia, depois de
       // um caso real de erro "contato sem identificador de chat".
-      if (telefones.length) {
+      const telefonesKhronus = [...new Set(itens.map(i => telKhronus(i.telefone)).filter(Boolean))];
+      if (telefonesKhronus.length) {
         try {
           const r = await fetch(`${window.db.supabaseUrl}/functions/v1/khronus-fila-status`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${window.db.supabaseKey}` },
-            body: JSON.stringify({ telefones: telefones.map(t => '55' + t) }),
+            body: JSON.stringify({ telefones: telefonesKhronus }),
           });
           const d = await r.json().catch(() => ({}));
           const porTel = new Map();
-          (d.telefones || []).forEach(({ telefone, status }) => porTel.set(tel11(telefone), status));
+          (d.telefones || []).forEach(({ telefone, status }) => porTel.set(telefone, status));
           setContatadosSuporte(porTel);
+          setConhecidosSuporte(new Set(d.conhecidos || []));
         } catch {
           setContatadosSuporte(new Map());
+          setConhecidosSuporte(new Set());
         }
       } else {
         setContatadosSuporte(new Map());
+        setConhecidosSuporte(new Set());
       }
     });
   }, [periodo, customFrom, customTo, aba]);
@@ -1180,7 +1235,7 @@ function FunisScreen({ onNavigate }) {
                       <CardKPI label="Taxa de recuperação"  value={taxa + '%'} icon="trending-up"/>
                       <CardKPI label="Quentes (até 7 dias)" value={nf(quentes)} icon="flame"/>
                     </div>
-                    <CarrinhoTable itens={carrinho} recuperados={recuperados} contatadosOficial={contatadosOficial} contatadosSuporte={contatadosSuporte}/>
+                    <CarrinhoTable itens={carrinho} recuperados={recuperados} contatadosOficial={contatadosOficial} contatadosSuporte={contatadosSuporte} conhecidosSuporte={conhecidosSuporte}/>
                   </>);
                 })()}
           </div>

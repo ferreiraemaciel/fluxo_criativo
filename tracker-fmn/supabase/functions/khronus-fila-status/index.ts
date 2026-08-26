@@ -14,11 +14,19 @@ const khronus = createClient(
 
 const STUDIO_ID = "37029f8d-3d05-424e-8d80-e89951815359"; // "Ferreira & Maciel"
 
-function normalizarTelefone(raw: string): string {
-  let d = String(raw || "").replace(/\D/g, "");
-  if (d.startsWith("0")) d = d.replace(/^0+/, "");
-  if (!d.startsWith("55")) d = "55" + d;
-  return d;
+// Mesma lógica de contratovisual/src/lib/khronus-whatsapp.ts. O Khronus
+// guarda telefone SEM o 9º dígito (12 dígitos: 55+DDD+8) — sem isso, a
+// consulta nunca bate com o que a Ponte já reconhece. Ver o comentário
+// completo em enviar-recuperacao-khronus/index.ts.
+function normalizarTelefoneKhronus(bruto: string): string | null {
+  const digitos = String(bruto || "").replace(/\D/g, "");
+  if (!digitos) return null;
+  let local = digitos.startsWith("55") && digitos.length > 11 ? digitos.slice(2) : digitos;
+  if (local.length === 11 && local[2] === "9") {
+    local = local.slice(0, 2) + local.slice(3);
+  }
+  if (local.length !== 10) return null;
+  return `55${local}`;
 }
 
 const CORS = {
@@ -49,7 +57,7 @@ Deno.serve(async (req) => {
     });
   }
 
-  const candidatos = [...new Set(telefones.map(normalizarTelefone))];
+  const candidatos = [...new Set(telefones.map(normalizarTelefoneKhronus).filter(Boolean) as string[])];
 
   try {
     // Um telefone por status mais recente: se a última tentativa falhou, o
@@ -71,7 +79,24 @@ Deno.serve(async (req) => {
       });
     }
     const resultado = Object.entries(porTelefone).map(([telefone, v]) => ({ telefone, status: v.status }));
-    return new Response(JSON.stringify({ telefones: resultado }), {
+
+    // Quem a Ponte já reconhece de verdade (wa_chat_id preenchido) — sem
+    // isso, o envio automático NUNCA funciona pra esse telefone, precisa
+    // de um primeiro contato manual (wa.me). Ver enviar-recuperacao-khronus
+    // pro raciocínio completo.
+    const conhecidos: string[] = [];
+    for (let i = 0; i < candidatos.length; i += 200) {
+      const { data, error } = await khronus
+        .from("crm_whatsapp_contatos")
+        .select("telefone")
+        .eq("studio_id", STUDIO_ID)
+        .not("wa_chat_id", "is", null)
+        .in("telefone", candidatos.slice(i, i + 200));
+      if (error) throw new Error(error.message);
+      (data || []).forEach((r) => conhecidos.push(r.telefone));
+    }
+
+    return new Response(JSON.stringify({ telefones: resultado, conhecidos }), {
       headers: { "Content-Type": "application/json", ...CORS },
     });
   } catch (e) {

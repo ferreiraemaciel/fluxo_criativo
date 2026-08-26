@@ -634,6 +634,21 @@ function normalizarTelefoneWhatsapp(raw: string): string {
   return d;
 }
 
+// Mesma lógica de contratovisual/src/lib/khronus-whatsapp.ts. O Khronus
+// guarda telefone SEM o 9º dígito (12 dígitos: 55+DDD+8) — é assim que o
+// WhatsApp normaliza por baixo. Diferente de normalizarTelefoneWhatsapp
+// acima (que mantém o 9 e é usado só pra bookkeeping local do Tracker).
+function normalizarTelefoneKhronus(bruto: string): string | null {
+  const digitos = String(bruto || "").replace(/\D/g, "");
+  if (!digitos) return null;
+  let local = digitos.startsWith("55") && digitos.length > 11 ? digitos.slice(2) : digitos;
+  if (local.length === 11 && local[2] === "9") {
+    local = local.slice(0, 2) + local.slice(3);
+  }
+  if (local.length !== 10) return null;
+  return `55${local}`;
+}
+
 // Manda a boas-vindas de aluno novo pelo número de suporte, via fila do
 // Khronus (Ponte, WhatsApp Web automatizado) — não é mais a API oficial do
 // Meta (mudou em 2026-08-26). Idempotente: quem chama já checou
@@ -644,39 +659,46 @@ async function enviarBoasVindasMcv(transactionId: string, telefoneRaw: string, n
     return;
   }
   const to = normalizarTelefoneWhatsapp(telefoneRaw);
+  const telefoneKhronus = normalizarTelefoneKhronus(telefoneRaw);
   const primeiroNome = (nome || "").trim().split(/\s+/)[0] || "tudo bem";
   const corpo = renderCorpoTemplate("boas_vindas_mcv", [primeiroNome, WHATSAPP_GRUPO_LINK_MCV]);
 
   try {
-    const { data: existente } = await khronus
-      .from("crm_whatsapp_contatos")
-      .select("id")
-      .eq("studio_id", STUDIO_ID_KHRONUS)
-      .eq("telefone", to)
-      .maybeSingle();
+    // NUNCA cria contato no Khronus — só quem observa a conversa real (a
+    // própria Ponte) pode fazer isso, ver comentário completo em
+    // enviar-recuperacao-khronus/index.ts. Sem wa_chat_id, a Ponte nunca
+    // consegue mandar (erro "contato sem identificador de chat"), então
+    // nem vale a pena enfileirar — fica pendente de contato manual.
+    const contato = telefoneKhronus
+      ? (await khronus.from("crm_whatsapp_contatos")
+          .select("id, wa_chat_id")
+          .eq("studio_id", STUDIO_ID_KHRONUS)
+          .eq("telefone", telefoneKhronus)
+          .maybeSingle()).data
+      : null;
 
-    let contatoId = existente?.id;
-    if (!contatoId) {
-      const { data: novo, error: errContato } = await khronus
-        .from("crm_whatsapp_contatos")
-        .insert({ studio_id: STUDIO_ID_KHRONUS, telefone: to, nome, etapa: "aluno" })
-        .select("id")
-        .single();
-      if (errContato) throw new Error(`Criar contato: ${errContato.message}`);
-      contatoId = novo.id;
+    if (contato?.wa_chat_id) {
+      const { error: errFila } = await khronus.from("crm_whatsapp_fila_envio").insert({
+        studio_id: STUDIO_ID_KHRONUS,
+        contato_id: contato.id,
+        telefone: telefoneKhronus,
+        tipo: "texto",
+        corpo,
+        status: "pendente",
+      });
+      if (errFila) throw new Error(`Enfileirar: ${errFila.message}`);
+      await supabase.from("vendas").update({ whatsapp_boas_vindas_enviado: true }).eq("hotmart_transaction_id", transactionId);
+      console.log("Boas-vindas MCV enfileirada no Khronus:", transactionId, telefoneKhronus);
+    } else {
+      // Sem contato conhecido pela Ponte: fica sem enviar automático.
+      // whatsapp_boas_vindas_enviado continua false de propósito, pra
+      // ficar visível/reprocessável (mesmo sinal que já existia pro
+      // incidente do verify_jwt — ver seção do hotmart-webhook no
+      // CLAUDE.md). Recuperação manual: /reenviar-boas-vindas depois que
+      // alguém mandar a primeira mensagem na mão pra esse número.
+      console.log("Boas-vindas MCV pulada — Ponte não conhece esse contato ainda:", transactionId, telefoneKhronus || to);
     }
 
-    const { error: errFila } = await khronus.from("crm_whatsapp_fila_envio").insert({
-      studio_id: STUDIO_ID_KHRONUS,
-      contato_id: contatoId,
-      telefone: to,
-      tipo: "texto",
-      corpo,
-      status: "pendente",
-    });
-    if (errFila) throw new Error(`Enfileirar: ${errFila.message}`);
-
-    await supabase.from("vendas").update({ whatsapp_boas_vindas_enviado: true }).eq("hotmart_transaction_id", transactionId);
     const { data: vendaData } = await supabase
       .from("vendas")
       .select("created_at")
@@ -686,7 +708,6 @@ async function enviarBoasVindasMcv(transactionId: string, telefoneRaw: string, n
       forcarEtapa: true,
       tornouAlunoEm: vendaData?.created_at || new Date().toISOString(),
     });
-    console.log("Boas-vindas MCV enfileirada no Khronus:", transactionId, to);
   } catch (err) {
     console.error("Erro ao enfileirar boas-vindas MCV no Khronus:", err);
   }
