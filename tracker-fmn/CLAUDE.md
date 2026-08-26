@@ -1,5 +1,20 @@
 # Tracker FMN — Regras do Projeto
 
+## Boas-vindas de aluno novo (MCV) — migrou da API oficial pro Khronus (2026-08-26)
+
+> Combinado com Felipe em 2026-08-26, mesma linha da mudança na Recuperação de Venda (ver seção abaixo). `enviarBoasVindasMcv()`, em `hotmart-webhook/index.ts`, dispara sozinha em toda venda aprovada do MCV.
+
+**Antes:** chamava a Graph API do Meta direto (`graph.facebook.com/.../messages`), com o template aprovado `boas_vindas_mcv`, sujeito a custo de template e à janela de 24h.
+
+**Agora:** não fala mais com o Meta nem com `FB_ACCESS_TOKEN_PERMANENTE`/`WHATSAPP_PHONE_NUMBER_ID` (removidos do arquivo). Grava direto em `khronus.crm_whatsapp_contatos`/`crm_whatsapp_fila_envio` (schema do banco do Blindagem, estúdio "Ferreira & Maciel", `STUDIO_ID_KHRONUS` fixo no código, mesmo padrão de `enviar-recuperacao-khronus/index.ts`). Quem manda de verdade é a Ponte, WhatsApp Web no número de suporte — mesma dependência documentada abaixo pra Recuperação de Venda.
+
+**O que continua igual:** o texto (mesmo `renderCorpoTemplate("boas_vindas_mcv", ...)`), a idempotência (`vendas.whatsapp_boas_vindas_enviado`, só vira `true` depois que o enfileiramento no Khronus funciona — se falhar, fica `false` e o endpoint de recuperação `/reenviar-boas-vindas` continua servindo pra reprocessar), e o registro do aluno em `whatsapp_contatos` local do Tracker (`upsertContato`, etapa forçada `aluno`).
+
+**O que mudou de verdade:** não grava mais nada em `whatsapp_mensagens` (essa tabela é o histórico da API oficial — like a mensagem não sai mais por lá, registrar ali seria enganoso, ia parecer que saiu pelo número oficial). Não depende mais de janela de 24h nem gera custo de template Meta.
+
+**Testado em produção no dia da mudança**, reenviando pra Adriana Tavares Ribeiro (`HP2884276891`) — venda que tinha ficado sem boas-vindas no incidente do `verify_jwt` de 24/08 (documentado abaixo) e continuava pendente. Confirmado na fila do Khronus (`status='pendente'`, corpo certo, telefone certo).
+
+
 > Instruções específicas do Tracker FMN. Complementa o CLAUDE.md da raiz do fluxo-criativo (regras gerais do workshop), mas essas aqui valem só dentro desta pasta.
 
 ## Recuperação de Venda — telefone automático, badge de situação e envio pelo WhatsApp do suporte (2026-08-26)
