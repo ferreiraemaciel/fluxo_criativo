@@ -599,6 +599,7 @@ function CarrinhoTable({ itens, recuperados, contatadosOficial }) {
   const [enviarPara, setEnviarPara] = useState(null); // item | null
   const [busca, setBusca] = useState('');
   const [filtro, setFiltro] = useState('todos'); // todos | pendente | recuperado
+  const [situacaoFiltro, setSituacaoFiltro] = useState('todas'); // todas | abandonou | pendente | ...
 
   const fmtData = d => d ? new Date(d).toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit', year:'2-digit' }) : '—';
   const diasAtras = d => {
@@ -610,10 +611,16 @@ function CarrinhoTable({ itens, recuperados, contatadosOficial }) {
     const rec = recuperados.has((it.email || '').trim().toLowerCase());
     if (filtro === 'pendente'   && rec) return false;
     if (filtro === 'recuperado' && !rec) return false;
+    if (situacaoFiltro !== 'todas' && it.situacao !== situacaoFiltro) return false;
     if (!busca.trim()) return true;
     const t = busca.trim().toLowerCase();
     return (it.nome || '').toLowerCase().includes(t) || (it.email || '').toLowerCase().includes(t);
   });
+
+  // Contagem por situação, sobre a lista já filtrada por busca/recuperado —
+  // pra saber quantos tem em cada opção do dropdown antes de escolher.
+  const contagemSituacao = {};
+  itens.forEach(it => { contagemSituacao[it.situacao] = (contagemSituacao[it.situacao] || 0) + 1; });
 
   const th = { padding:'8px 10px', textAlign:'left', fontSize:9.5, fontFamily:'Roboto,sans-serif',
     fontWeight:700, letterSpacing:'0.06em', textTransform:'uppercase', color:'var(--text-3)', whiteSpace:'nowrap' };
@@ -636,6 +643,15 @@ function CarrinhoTable({ itens, recuperados, contatadosOficial }) {
             {label}
           </button>
         ))}
+        <select value={situacaoFiltro} onChange={e => setSituacaoFiltro(e.target.value)}
+          style={{ padding:'7px 12px', borderRadius:999, cursor:'pointer', fontSize:11.5,
+            fontFamily:'Roboto,sans-serif', fontWeight:700, border:'1px solid var(--app-border)',
+            background:'rgba(255,255,255,.04)', color:'var(--text-2)', outline:'none' }}>
+          <option value="todas">Toda situação ({itens.length})</option>
+          {Object.keys(SITUACAO_INFO).filter(s => contagemSituacao[s]).map(s => (
+            <option key={s} value={s}>{SITUACAO_INFO[s].label} ({contagemSituacao[s]})</option>
+          ))}
+        </select>
       </div>
 
       <div style={{ background:'var(--app-surface)', border:'1px solid var(--app-border)', borderRadius:14, overflow:'hidden' }}>
@@ -969,11 +985,22 @@ function FunisScreen({ onNavigate }) {
       // Claudinho ou humano via Conversas) — combinado com Felipe em
       // 2026-08-26, pra não mandar a mensagem de recuperação duplicada por
       // dois canais diferentes (oficial + Khronus/número de suporte).
+      // Bug corrigido em 2026-08-26: o PostgREST corta em 1000 linhas por
+      // padrão mesmo pedindo .limit(20000) maior — puxar a tabela inteira de
+      // whatsapp_mensagens (2146+ linhas e crescendo) sempre perdia mensagem
+      // recente por trás desse corte silencioso. Corrigido buscando só os
+      // telefones (formato 55+DDD+número, igual salvo na tabela) que
+      // interessam pra essa lista, em lotes de 200 — mesmo padrão já usado
+      // acima pra achar quem "Comprou depois".
       const telefones = [...new Set(itens.map(i => tel11(i.telefone)).filter(t => t.length >= 10))];
+      const enviados = new Set();
       if (telefones.length) {
-        const { data: msgs } = await window.db.from('whatsapp_mensagens')
-          .select('telefone').eq('direcao', 'saida').limit(20000);
-        const enviados = new Set((msgs || []).map(m => tel11(m.telefone)));
+        const candidatos = telefones.map(t => '55' + t);
+        for (let i = 0; i < candidatos.length; i += 200) {
+          const { data: msgs } = await window.db.from('whatsapp_mensagens')
+            .select('telefone').eq('direcao', 'saida').in('telefone', candidatos.slice(i, i + 200));
+          (msgs || []).forEach(m => enviados.add(tel11(m.telefone)));
+        }
         setContatadosOficial(new Set(telefones.filter(t => enviados.has(t))));
       } else {
         setContatadosOficial(new Set());
