@@ -44,6 +44,24 @@ Deno.serve(async (_req) => {
       const decorrido = agora - new Date(contato.checkout_enviado_em).getTime();
       if (decorrido < ESPERA_MIN_MS || decorrido > ESPERA_MAX_MS) continue;
 
+      // Essa mensagem é fixa, não lê o histórico. Se o lead já voltou a
+      // conversar depois que o link saiu (nova pergunta, nova troca), a
+      // conversa já seguiu adiante e essa pergunta genérica de "conseguiu
+      // abrir o link?" soa desconectada, ignora o que já foi dito. Só manda
+      // quando o lead ficou realmente em silêncio desde o link. Achado real
+      // em 2026-08-25 (Nislany Araujo): ela voltou com duas perguntas novas,
+      // já recebeu resposta, e mesmo assim essa function mandou a pergunta
+      // genérica por cima, como se nada tivesse acontecido.
+      const { data: trocaDepoisDoLink } = await supabase
+        .from("whatsapp_mensagens")
+        .select("id")
+        .eq("telefone", contato.telefone)
+        .eq("direcao", "entrada")
+        .gt("created_at", contato.checkout_enviado_em)
+        .limit(1)
+        .maybeSingle();
+      if (trocaDepoisDoLink) continue;
+
       try {
         const r = await fetch(`https://graph.facebook.com/v25.0/${WHATSAPP_PHONE_NUMBER_ID}/messages`, {
           method: "POST",
