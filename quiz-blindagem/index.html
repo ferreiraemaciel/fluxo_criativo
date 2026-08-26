@@ -760,12 +760,18 @@ function rPrecheckout(){
 
   // — depoimentos
   stage.appendChild(el(`<div class="pco-section-title">A transformação de quem já usa:</div>`));
+  stage.appendChild(el(`<div style="max-width:280px;margin:0 auto 18px">
+    <div style="border-radius:14px;overflow:hidden;aspect-ratio:9/16;background:#000">
+      <iframe src="https://www.youtube.com/embed/WzozsP2pJHo" title="Depoimento real: 25 contratos enviados e 22 assinados no mesmo dia" loading="lazy" style="width:100%;height:100%;border:none;display:block" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    </div>
+    <p style="font-size:12px;color:var(--ink-2);text-align:center;margin-top:10px">"25 contratos enviados, 22 assinados no mesmo dia." Depoimento real de aluna que usa o Blindagem.</p>
+  </div>`));
   ['assets/depo-01.jpg','assets/depo-02.jpg','assets/depo-03.jpg','assets/depo-04.jpg'].forEach(src =>
     stage.appendChild(el(`<img src="${src}" alt="" style="width:100%;border-radius:14px;margin-bottom:14px">`)));
 
   // — preço final + 2º botão
   stage.appendChild(el(`<img src="assets/mockup-app-celular-mao.webp" alt="" style="width:70%;display:block;margin:0 auto 18px">`));
-  stage.appendChild(el(`<div class="pco-price"><div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-2);margin-bottom:6px">🔒 Licença anual</div><div style="text-decoration:line-through;color:var(--ink-2);font-size:14px;margin-bottom:4px">R$ 697,00 à vista</div><div class="pco-por" style="font-size:26px;line-height:1.2">Apenas 12x de R$ 41,42</div><div class="pco-px" style="margin-top:8px;font-size:13.5px">ou R$ 397,00 à vista</div></div>`));
+  stage.appendChild(el(`<div class="pco-price"><div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-2);margin-bottom:6px">🔒 Licença anual</div><div style="text-decoration:line-through;color:var(--ink-2);font-size:14px;margin-bottom:4px">R$ 697,00 à vista</div><div class="pco-por" style="font-size:26px;line-height:1.2">Apenas 12x de R$ 41,06</div><div class="pco-px" style="margin-top:8px;font-size:13.5px">ou R$ 397,00 à vista</div></div>`));
   const b2 = el(`<button class="btn" style="margin-bottom:32px">QUERO ME PROTEGER AGORA</button>`);
   b2.onclick = goCheckout;
   stage.appendChild(b2);

@@ -7,7 +7,7 @@
 window.QUIZ_CONFIG = {
   funnelSlug: 'blindagem',
   checkoutUrl: 'https://pay.hotmart.com/C106394543X?checkoutMode=10',
-  preco: { de: 'R$ 697,00', por: 'R$ 397,00', parcelas: '12x R$ 41,42' },
+  preco: { de: 'R$ 697,00', por: 'R$ 397,00', parcelas: '12x R$ 41,06' },
 
   steps: [
     { type: 'single', key: 'area_atuacao',
