@@ -497,7 +497,104 @@ const SITUACAO_INFO = {
   protesto:     { label: 'Em protesto',          cor: '#f87171' },
   recuperacao:  { label: 'Em recuperação',       cor: '#fbbf24' },
 };
+
+// Uma mensagem por situação, cada uma argumentando o motivo específico —
+// combinado com Felipe em 2026-08-26: tom solto, de conversa mesmo, não é
+// copy de venda. Envia pelo número de suporte, via fila do Khronus (Ponte,
+// WhatsApp Web automatizado — não é a API oficial, essa é a linha do
+// Claudinho). Ver enviar-recuperacao-khronus/index.ts.
+const MSG_SITUACAO = {
+  abandonou:    n => `Oi, ${n}. Vi aqui que você chegou a abrir o checkout dos Modelos de Contrato Visual e não finalizou. Ficou alguma dúvida no meio do caminho, ou foi só falta de tempo mesmo?`,
+  pendente:     n => `Oi, ${n}. Seu pagamento dos Modelos de Contrato Visual ainda está pendente aqui do nosso lado. Se foi Pix ou boleto, às vezes a confirmação demora um pouco. Já conseguiu finalizar, ou posso te ajudar com alguma coisa?`,
+  recusada:     n => `Oi, ${n}. Seu cartão acabou sendo recusado na hora de fechar os Modelos de Contrato Visual. Geralmente é algo simples de resolver, limite, dado digitado errado ou o banco barrando por segurança mesmo. Quer que eu gere um link novo pra tentar de novo, ou prefere outra forma de pagamento?`,
+  expirada:     n => `Oi, ${n}. O boleto dos Modelos de Contrato Visual venceu sem pagamento. Se ainda faz sentido pra você, é rápido gerar um novo. Quer que eu mande?`,
+  cancelada:    n => `Oi, ${n}. Vi que a sua compra dos Modelos de Contrato Visual acabou sendo cancelada. Rolou algum problema no meio do caminho, ou foi decisão sua mesmo? Se quiser retomar, é só me chamar.`,
+  atrasada:     n => `Oi, ${n}. Seu pagamento dos Modelos de Contrato Visual está atrasado aqui do nosso lado. Ainda dá tempo de regularizar, quer que eu te mande o link de novo?`,
+  bloqueada:    n => `Oi, ${n}. Sua compra dos Modelos de Contrato Visual ficou bloqueada por segurança do meio de pagamento. Normalmente é rápido de resolver. Posso te ajudar a tentar de novo?`,
+  pre_aprovada: n => `Oi, ${n}. Sua compra dos Modelos de Contrato Visual está quase lá, só falta a confirmação final. Se precisar de alguma coisa da minha parte pra isso destravar, me avisa.`,
+  protesto:     n => `Oi, ${n}. Vi que a sua compra dos Modelos de Contrato Visual entrou em protesto de pagamento. Se foi engano ou se quiser entender o que houve, me chama que eu resolvo com você.`,
+  recuperacao:  n => `Oi, ${n}. Ainda dá tempo de fechar os Modelos de Contrato Visual, sua compra ficou como recuperável aqui do nosso lado. Posso te mandar o link de novo?`,
+};
+
+/* ── Modal de envio (Recuperação de Venda → número de suporte via Khronus) */
+function EnviarRecuperacaoModal({ item, onClose }) {
+  const primeiroNome = (item.nome || '').trim().split(/\s+/)[0] || 'tudo bem';
+  const [corpo, setCorpo] = useState((MSG_SITUACAO[item.situacao] || MSG_SITUACAO.abandonou)(primeiroNome));
+  const [status, setStatus] = useState('idle'); // idle | enviando | ok | erro
+  const [erro, setErro] = useState('');
+
+  const enviar = async () => {
+    setStatus('enviando'); setErro('');
+    try {
+      const SUPA_URL = window.db?.supabaseUrl || '';
+      const SUPA_KEY = window.db?.supabaseKey || '';
+      const r = await fetch(`${SUPA_URL}/functions/v1/enviar-recuperacao-khronus`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${SUPA_KEY}` },
+        body: JSON.stringify({ telefone: item.telefone, nome: item.nome, corpo }),
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok || d.erro) throw new Error(d.erro || `Erro HTTP ${r.status}`);
+      setStatus('ok');
+    } catch (e) {
+      setStatus('erro'); setErro(e.message || 'Não consegui enviar.');
+    }
+  };
+
+  return (
+    <div onClick={onClose} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,.7)', zIndex:900,
+      display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
+      <div onClick={e => e.stopPropagation()} style={{ width:'100%', maxWidth:440, background:'var(--app-surface)',
+        border:'1px solid var(--app-border)', borderRadius:14, padding:22, display:'flex', flexDirection:'column', gap:14 }}>
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+          <div>
+            <div style={{ fontSize:14, fontFamily:'Roboto,sans-serif', fontWeight:700, color:'var(--text-1)' }}>
+              Mandar mensagem de recuperação
+            </div>
+            <div style={{ fontSize:11, fontFamily:'Roboto,sans-serif', color:'var(--text-3)' }}>
+              Número de suporte (Khronus) · {item.nome || item.telefone}
+            </div>
+          </div>
+          <button onClick={onClose} style={{ background:'none', border:'none', cursor:'pointer', color:'var(--text-3)' }}>
+            <LucideIcon icon="x" size={16}/>
+          </button>
+        </div>
+
+        {status === 'ok' ? (
+          <div style={{ display:'flex', alignItems:'center', gap:8, fontSize:13, fontFamily:'Roboto,sans-serif',
+            fontWeight:700, color:'var(--clr-pos)' }}>
+            <LucideIcon icon="check" size={15}/>
+            Colocado na fila do número de suporte.
+          </div>
+        ) : (<>
+          <textarea value={corpo} onChange={e => setCorpo(e.target.value)} rows={6}
+            style={{ width:'100%', boxSizing:'border-box', padding:'10px 12px', borderRadius:9,
+              background:'var(--app-surface-2)', border:'1px solid var(--app-border)', color:'var(--text-1)',
+              fontFamily:'Roboto,sans-serif', fontSize:12.5, lineHeight:1.5, resize:'vertical', outline:'none' }}/>
+          <div style={{ fontSize:10.5, fontFamily:'Roboto,sans-serif', color:'var(--text-3)', lineHeight:1.5 }}>
+            Edite à vontade antes de mandar. Vai pra fila do número de suporte, via Khronus — precisa da
+            extensão Ponte conectada nesse número pra sair de verdade.
+          </div>
+          {erro && (
+            <div style={{ padding:'9px 11px', borderRadius:9, background:'rgba(248,113,113,.08)',
+              border:'1px solid rgba(248,113,113,.3)', fontSize:11.5, color:'#f87171' }}>{erro}</div>
+          )}
+          <button onClick={enviar} disabled={status==='enviando' || !item.telefone}
+            style={{ padding:'10px', borderRadius:9, border:'none', cursor: item.telefone ? 'pointer':'not-allowed',
+              background:'var(--fmn-gold)', color:'var(--fmn-black)', fontFamily:'Roboto,sans-serif',
+              fontWeight:700, fontSize:12.5, opacity: status==='enviando' ? .6 : 1,
+              display:'flex', alignItems:'center', justifyContent:'center', gap:6 }}>
+            <LucideIcon icon={status==='enviando' ? 'loader' : 'send'} size={13}/>
+            {!item.telefone ? 'Sem telefone cadastrado' : status==='enviando' ? 'Enviando...' : 'Mandar mensagem'}
+          </button>
+        </>)}
+      </div>
+    </div>
+  );
+}
+
 function CarrinhoTable({ itens, recuperados }) {
+  const [enviarPara, setEnviarPara] = useState(null); // item | null
   const [busca, setBusca] = useState('');
   const [filtro, setFiltro] = useState('todos'); // todos | pendente | recuperado
 
@@ -545,15 +642,16 @@ function CarrinhoTable({ itens, recuperados }) {
             <tr style={{ borderBottom:'1px solid var(--app-border)' }}>
               <th style={th}>Pessoa</th>
               <th style={th}>Contato</th>
-              <th style={{ ...th, width:140 }}>Situação</th>
+              <th style={{ ...th, width:170 }}>Situação</th>
               <th style={{ ...th, width:110 }}>Ocorreu em</th>
               <th style={{ ...th, width:90 }}>Há</th>
               <th style={{ ...th, width:120 }}>Resultado</th>
+              <th style={{ ...th, width:50 }}></th>
             </tr>
           </thead>
           <tbody>
             {lista.length === 0 && (
-              <tr><td colSpan={6} style={{ ...td, textAlign:'center', padding:'40px 0', color:'var(--text-3)' }}>
+              <tr><td colSpan={7} style={{ ...td, textAlign:'center', padding:'40px 0', color:'var(--text-3)' }}>
                 Nenhum lead nesse filtro.
               </td></tr>
             )}
@@ -570,9 +668,9 @@ function CarrinhoTable({ itens, recuperados }) {
                     <div style={{ fontSize:12 }}>{it.email || '—'}</div>
                     {it.telefone && <div style={{ fontSize:11, color:'var(--text-3)' }}>{it.telefone}</div>}
                   </td>
-                  <td style={td}>
-                    <span style={{ padding:'2px 9px', borderRadius:999, fontSize:10.5, fontWeight:700,
-                      fontFamily:'Roboto,sans-serif', background: `${sit.cor}1a`,
+                  <td style={{ ...td, whiteSpace:'nowrap' }}>
+                    <span style={{ display:'inline-block', padding:'2px 9px', borderRadius:999, fontSize:10.5, fontWeight:700,
+                      fontFamily:'Roboto,sans-serif', background: `${sit.cor}1a`, whiteSpace:'nowrap',
                       border: `1px solid ${sit.cor}55`, color: sit.cor }}>
                       {sit.label}
                     </span>
@@ -590,12 +688,23 @@ function CarrinhoTable({ itens, recuperados }) {
                       {rec ? 'Comprou depois' : 'Não recuperado'}
                     </span>
                   </td>
+                  <td style={{ ...td, textAlign:'center' }}>
+                    <button onClick={() => setEnviarPara(it)} title="Mandar mensagem de recuperação (número de suporte)"
+                      style={{ width:28, height:28, borderRadius:8, border:'1px solid rgba(74,222,128,.3)',
+                        background:'rgba(74,222,128,.1)', color:'#4ade80', cursor:'pointer',
+                        display:'inline-flex', alignItems:'center', justifyContent:'center' }}>
+                      <LucideIcon icon="message-circle" size={14}/>
+                    </button>
+                  </td>
                 </tr>
               );
             })}
           </tbody>
         </table>
       </div>
+      {enviarPara && (
+        <EnviarRecuperacaoModal item={enviarPara} onClose={() => setEnviarPara(null)}/>
+      )}
     </div>
   );
 }

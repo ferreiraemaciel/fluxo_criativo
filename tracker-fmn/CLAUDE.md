@@ -2,6 +2,22 @@
 
 > Instruções específicas do Tracker FMN. Complementa o CLAUDE.md da raiz do fluxo-criativo (regras gerais do workshop), mas essas aqui valem só dentro desta pasta.
 
+## Recuperação de Venda — telefone automático, badge de situação e envio pelo WhatsApp do suporte (2026-08-26)
+
+> Combinado com Felipe em 2026-08-26, na sequência direta da ampliação documentada logo abaixo. Três pedidos: (1) telefone aparecendo de verdade na tela, (2) badge de situação sem quebrar linha, (3) clicar no ícone do WhatsApp manda mensagem específica pra cada situação, pelo número de suporte via Khronus.
+
+**1. Telefone — o cruzamento com `quiz_leads` virou rotina automática, não precisa mais rodar SQL na mão.** A função `cruzarComQuiz()` dentro de `hotmart-backfill/index.ts` roda a cada ciclo do cron (15 em 15 minutos, 6h às 23h59 de Brasília) e faz duas coisas: preenche `abandono_carrinho.telefone` nulo cruzando por e-mail com `quiz_leads.whatsapp`, e promove `whatsapp_contatos.estagio_venda` pra `'fechamento'` quando o telefone bate (últimos 11 dígitos) com um lead que chegou no carrinho ou virou venda não aprovada. É o mesmo critério do backfill retroativo de 407 registros feito uma vez (ver seção abaixo), só que agora roda sozinho pra todo abandono novo, porque a causa raiz (Hotmart não manda telefone nenhum no payload de `PURCHASE_OUT_OF_SHOPPING_CART`, confirmado inspecionando a coluna `raw`) não é bug pra corrigir, é limitação permanente do payload.
+
+**2. Badge de situação sem quebrar linha.** `funis.jsx`, coluna "Situação": `whiteSpace:'nowrap'` na `<td>` e no `<span>` do badge, `display:'inline-block'` no `<span>`, largura da coluna `140`→`170`.
+
+**3. Enviar mensagem de recuperação pelo WhatsApp do suporte, via Khronus (não é a API oficial do Meta).** Ícone de mensagem novo em cada linha da tabela `CarrinhoTable` abre o modal `EnviarRecuperacaoModal`, com um texto pré-preenchido específico pra cada situação (dicionário `MSG_SITUACAO` em `funis.jsx`, um gerador por situação: abandonou, pendente, recusada, expirada, cancelada, atrasada, bloqueada, pre_aprovada, protesto, recuperacao — todos em Light Copy, sem travessão, sem exclamação, tom solto e desenrolado, terminando em pergunta). Editável antes de mandar.
+
+**Como o envio funciona por baixo — importante entender que não é a API oficial:** o clique não fala com o Meta Cloud API (essa é a linha do Claudinho, número oficial). Ele chama a Edge Function `enviar-recuperacao-khronus` (Tracker FMN), que só grava na fila de envio do **Khronus** (`khronus.crm_whatsapp_fila_envio`, schema do banco do Blindagem/Contrato Visual, que hospeda os dois produtos), pro estúdio "Ferreira & Maciel" (`STUDIO_ID` fixo no código). Quem manda a mensagem de verdade é a extensão **Ponte** do Khronus (WhatsApp Web automatizado via wa-js, não API oficial), instalada no Chrome com o WhatsApp Web do número de suporte logado, puxando essa fila.
+
+**Dependência pendente do lado do Felipe:** enquanto a Ponte não estiver conectada e logada no número de suporte, a mensagem fica represada em `status='pendente'` na fila do Khronus — não dá erro nenhum, só fica esperando a Ponte processar. Felipe estava nesse exato momento (26/08) migrando Khronus e Blindagem pra se falarem, com o plano de rodar o número de suporte pelo Khronus.
+
+**Segredos novos no Tracker FMN pra falar com o banco do Khronus (cross-project):** `KHRONUS_SUPABASE_URL` e `KHRONUS_SERVICE_ROLE_KEY`, mesmos valores do `.env` do `contratovisual` (é o mesmo projeto físico Supabase, só schema diferente).
+
 ## Recuperação de Venda (antes "Carrinho abandonado") — ampliado em 2026-08-26
 
 > Combinado com Felipe em 2026-08-26. Três partes: (1) ampliar o escopo, (2) puxar dado retroativo real, (3) achar lead mais quente do que o rótulo dizia.

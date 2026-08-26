@@ -157,6 +157,97 @@ async function transacoesExistentes(ids: string[]): Promise<Set<string>> {
   return new Set((data || []).map((r) => r.hotmart_transaction_id));
 }
 
+// Cruzamento com quiz_leads, virou rotina em 2026-08-26 (antes era SQL manual,
+// rodado uma vez). A Hotmart genuinamente não manda telefone no evento de
+// abandono de carrinho (confirmado no payload bruto, só tem nome e e-mail) —
+// então o único jeito de completar é achar a mesma pessoa pelo e-mail em
+// quiz_leads, que guarda o WhatsApp que ela mesma digitou antes de abandonar.
+// Também promove o contato correspondente em whatsapp_contatos pra
+// estagio_venda='fechamento': quem já chegou no carrinho é mais quente que
+// um lead comum de quiz, não faz sentido tratar os dois iguais.
+async function cruzarComQuiz() {
+  const { data: semTelefone } = await supabase
+    .from("abandono_carrinho")
+    .select("id, email")
+    .or("telefone.is.null,telefone.eq.")
+    .not("email", "is", null)
+    .limit(500);
+
+  let telefonesPreenchidos = 0;
+  let contatosPromovidos = 0;
+
+  for (const item of semTelefone || []) {
+    const { data: lead } = await supabase
+      .from("quiz_leads")
+      .select("whatsapp")
+      .ilike("email", item.email)
+      .not("whatsapp", "is", null)
+      .neq("whatsapp", "")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (!lead?.whatsapp) continue;
+
+    const { error } = await supabase
+      .from("abandono_carrinho")
+      .update({ telefone: lead.whatsapp })
+      .eq("id", item.id);
+    if (!error) telefonesPreenchidos++;
+  }
+
+  // Promove estagio_venda de quem já chegou no carrinho ou virou transação
+  // não-aprovada — bate por e-mail (quiz_leads) e depois por telefone
+  // (últimos 11 dígitos, ignora diferença de DDI) com whatsapp_contatos.
+  const { data: emailsQuentes } = await supabase
+    .from("abandono_carrinho")
+    .select("email")
+    .not("email", "is", null)
+    .limit(2000);
+  const { data: vendasNaoAprovadas } = await supabase
+    .from("vendas")
+    .select("comprador_email")
+    .neq("status", "aprovada")
+    .not("comprador_email", "is", null)
+    .limit(2000);
+  const emailsSet = new Set([
+    ...(emailsQuentes || []).map((r) => (r.email || "").toLowerCase().trim()),
+    ...(vendasNaoAprovadas || []).map((r) => (r.comprador_email || "").toLowerCase().trim()),
+  ]);
+
+  if (emailsSet.size) {
+    const { data: leadsQuentes } = await supabase
+      .from("quiz_leads")
+      .select("email, whatsapp")
+      .not("whatsapp", "is", null)
+      .neq("whatsapp", "")
+      .limit(5000);
+    const tel11 = (s: string) => (s || "").replace(/\D/g, "").slice(-11);
+    const telefonesQuentes = new Set(
+      (leadsQuentes || [])
+        .filter((l) => emailsSet.has((l.email || "").toLowerCase().trim()))
+        .map((l) => tel11(l.whatsapp)),
+    );
+    if (telefonesQuentes.size) {
+      const { data: contatos } = await supabase
+        .from("whatsapp_contatos")
+        .select("telefone, etapa, estagio_venda")
+        .neq("etapa", "aluno")
+        .limit(5000);
+      for (const c of contatos || []) {
+        if (!telefonesQuentes.has(tel11(c.telefone))) continue;
+        if (c.estagio_venda === "fechamento") continue;
+        const { error } = await supabase
+          .from("whatsapp_contatos")
+          .update({ estagio_venda: "fechamento", updated_at: new Date().toISOString() })
+          .eq("telefone", c.telefone);
+        if (!error) contatosPromovidos++;
+      }
+    }
+  }
+
+  return { telefonesPreenchidos, contatosPromovidos };
+}
+
 Deno.serve(async (req) => {
   const url = new URL(req.url);
   const force = url.searchParams.get("force") === "1";
@@ -236,8 +327,10 @@ Deno.serve(async (req) => {
       if (!error) enriquecidas++;
     }
 
+    const cruzados = await cruzarComQuiz();
+
     return new Response(
-      JSON.stringify({ ok: true, retornadas: items.length, inseridas, falhas: falhas.length, enriquecidas }),
+      JSON.stringify({ ok: true, retornadas: items.length, inseridas, falhas: falhas.length, enriquecidas, ...cruzados }),
       { headers: { "Content-Type": "application/json" } },
     );
   } catch (e) {
