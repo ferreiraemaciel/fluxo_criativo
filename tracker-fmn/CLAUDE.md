@@ -2,6 +2,16 @@
 
 > Instruções específicas do Tracker FMN. Complementa o CLAUDE.md da raiz do fluxo-criativo (regras gerais do workshop), mas essas aqui valem só dentro desta pasta.
 
+## "Tem mídia" é mídia entregue, nunca pasta cadastrada (bug real, 2026-08-26)
+
+ADS 341, 342, 346 e 348 voltavam sozinhos pra "Feito" a cada 15 minutos, mesmo depois de Felipe arrastar de volta pra "Fazendo", e apareciam com a etiqueta "sem preview".
+
+**Causa:** o `kanban-sync` (e o `aplicar_regras.py`) tratavam `media_drive_url` como prova de que o criativo estava pronto (`hasMedia = files.length > 0 || !!ad.media_drive_url`). Mas essa URL é a da **pasta** do Drive, preenchida quando o card nasce, muito antes de existir vídeo nenhum lá dentro. Esses 4 tinham pasta cadastrada e zero arquivo importado, então a regra "card em Fazendo com mídia avança pra Feito" disparava em todo ciclo. A etiqueta "sem preview" era o sintoma certo apontando pro problema real: não havia mídia.
+
+**Correção:** `hasMedia` passou a exigir mídia de verdade, `media_files` preenchido ou `thumb_url`/`media_url`. O `sync_drive.py` já estava certo (ele só move depois de importar o arquivo), e a regra global do CLAUDE.md da raiz sempre disse "ao receber a mídia", não "ao cadastrar a pasta".
+
+**Lembrete pra qualquer regra futura de avanço automático de card:** o gatilho é o arquivo gravado no card, nunca o endereço de onde ele deveria estar.
+
 ## Comprador sai marcado com a tag do produto no Khronus (2026-08-26)
 
 > Combinado com Felipe em 2026-08-26. Vale pra QUALQUER produto vendido, não só os que têm mensagem automática.
