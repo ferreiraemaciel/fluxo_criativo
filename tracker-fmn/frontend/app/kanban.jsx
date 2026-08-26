@@ -1553,12 +1553,33 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
 
   const set = (key, val) => setFields(f => ({ ...f, [key]: val }));
 
+  // Referência do que já está gravado no banco, do ponto de vista desta aba.
+  // Começa com o estado em que o card foi carregado e é atualizada a cada
+  // gravação bem-sucedida. É contra ela que o diff é calculado.
+  const gravadoAd = useRef(null);
+
+  /* Grava SÓ os campos que mudaram nesta aba, nunca o objeto inteiro.
+     Antes ia `update(fields)` com tudo. O efeito colateral era silencioso e
+     caro: uma aba aberta há vinte minutos carregava a versão antiga do card,
+     e qualquer mexida regravava TODOS os campos com o que ela conhecia,
+     apagando o que tinha sido escrito nesse meio tempo por outra aba, por
+     outro computador ou por script. Aconteceu de verdade no ADS 306 em
+     26/08/2026: os campos de copy foram gravados e sumiram minutos depois.
+     Com o diff, aba velha só consegue mexer no campo que você de fato tocou. */
   async function salvar() {
+    const base = gravadoAd.current || {};
+    const patch = {};
+    for (const [k, v] of Object.entries(fields)) {
+      if (JSON.stringify(v) !== JSON.stringify(base[k])) patch[k] = v;
+    }
+    if (!Object.keys(patch).length) { setSaveStatus('idle'); return; }
+
     setSaveStatus('saving');
-    const { error } = await window.db.from('ads').update(fields).eq('numero', parseInt(card.num, 10));
+    const { error } = await window.db.from('ads').update(patch).eq('numero', parseInt(card.num, 10));
     if (error) { setSaveStatus('error'); return; }
+    gravadoAd.current = { ...base, ...patch };
     setSaveStatus('saved');
-    if (onUpdate) onUpdate({ ...card, col: fields.status, hook: fields.titulo, raw: { ...raw, ...fields } });
+    if (onUpdate) onUpdate({ ...card, col: fields.status, hook: fields.titulo, raw: { ...raw, ...patch } });
     setTimeout(() => setSaveStatus('idle'), 2000);
   }
 
@@ -1571,7 +1592,12 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
   const ultimoSalvoAd    = useRef(null);
   useEffect(() => {
     const snapshot = JSON.stringify(fields);
-    if (primeiroRenderAd.current) { primeiroRenderAd.current = false; ultimoSalvoAd.current = snapshot; return; }
+    if (primeiroRenderAd.current) {
+      primeiroRenderAd.current = false;
+      ultimoSalvoAd.current = snapshot;
+      gravadoAd.current = { ...fields };   // ponto de partida do diff
+      return;
+    }
     if (snapshot === ultimoSalvoAd.current) return;
     const t = setTimeout(() => { ultimoSalvoAd.current = snapshot; salvar(); }, 1200);
     return () => clearTimeout(t);

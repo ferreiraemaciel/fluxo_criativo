@@ -230,7 +230,7 @@ async function fetchAdPermalink(metaAdId: string): Promise<string | null> {
 async function aplicarRegrasKanban() {
   const { data: ads } = await supabase
     .from("ads")
-    .select("numero, status, tag, vendas_total, cpa_historico, gasto_total, media_files, media_drive_url")
+    .select("numero, status, tag, vendas_total, cpa_historico, gasto_total, media_files, thumb_url, media_url")
     .limit(1000);
 
   const batches = new Map<string, number[]>();
@@ -247,13 +247,21 @@ async function aplicarRegrasKanban() {
     const cpa = ad.cpa_historico;
     const gasto = ad.gasto_total;
 
+    // "Tem mídia" é mídia ENTREGUE, não pasta cadastrada. Corrigido em
+    // 2026-08-26: o critério antigo aceitava `media_drive_url` sozinho, e a
+    // URL da pasta do Drive é preenchida quando o card é criado, muito antes
+    // de existir vídeo nenhum lá dentro. Resultado real: ADS 341, 342, 346 e
+    // 348 voltavam pra "Feito" a cada ciclo (15min) mesmo depois do Felipe
+    // arrastar de volta pra "Fazendo", porque tinham a pasta cadastrada e
+    // zero arquivo importado — e apareciam com a etiqueta "sem preview", que
+    // era o sintoma certo de que a mídia não estava pronta.
     let hasMedia = false;
     try {
       const mf = ad.media_files;
       const files = Array.isArray(mf) ? mf : JSON.parse(mf || "[]");
-      hasMedia = files.length > 0 || !!ad.media_drive_url;
+      hasMedia = files.length > 0 || !!ad.thumb_url || !!ad.media_url;
     } catch {
-      hasMedia = !!ad.media_drive_url;
+      hasMedia = !!ad.thumb_url || !!ad.media_url;
     }
 
       // Card em "Fazendo" (id fazer) com mídia pronta avança sozinho pra

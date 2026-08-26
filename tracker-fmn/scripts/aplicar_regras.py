@@ -76,7 +76,7 @@ def supa_request(path, method="GET", body=None):
         return None
 
 def fetch_all_ads():
-    fields = "numero,status,tag,vendas_total,cpa_historico,gasto_total,media_files,media_drive_url"
+    fields = "numero,status,tag,vendas_total,cpa_historico,gasto_total,media_files,thumb_url,media_url"
     return supa_request(f"ads?select={fields}&order=numero.asc&limit=1000") or []
 
 def batch_patch(numeros, payload, dry_run):
@@ -108,14 +108,17 @@ def main():
         cpa    = ad.get("cpa_historico")
         gasto  = ad.get("gasto_total")
 
-        # Detecta se tem mídia vinculada
+        # Mídia ENTREGUE, não pasta cadastrada. Mesmo motivo do kanban-sync
+        # (corrigido em 2026-08-26): media_drive_url é preenchida quando o
+        # card nasce, muito antes de existir arquivo lá dentro, e sozinha ela
+        # fazia o card voltar pra "Feito" toda vez que era arrastado de volta.
         has_media = False
         try:
             mf = ad.get("media_files") or "[]"
             files = mf if isinstance(mf, list) else json.loads(mf)
-            has_media = len(files) > 0 or bool(ad.get("media_drive_url"))
+            has_media = len(files) > 0 or bool(ad.get("thumb_url")) or bool(ad.get("media_url"))
         except Exception:
-            has_media = bool(ad.get("media_drive_url"))
+            has_media = bool(ad.get("thumb_url")) or bool(ad.get("media_url"))
 
         # Regra 1: fazer (Fazendo) + mídia → fazendo (Feito)
         if status == "fazer" and has_media:
