@@ -640,6 +640,29 @@ async function handleCardSlides(request, env) {
   return json({ ok: true });
 }
 
+/* Manda pra lixeira a pasta do anúncio no Drive. Chamado quando o card é
+   excluído no Tracker, pra a pasta não ficar órfã e ser herdada com o nome
+   errado pelo próximo card que reaproveitar aquele número (a numeração dos
+   anúncios preenche buracos). Foi o que aconteceu com o ADS 302 em 26/08/2026,
+   que herdou a pasta "ADS 302 Você trabalha protegido?" de um card deletado.
+   Mesma correção que o orgânico já tinha recebido.
+   body: { numero } — o card já pode ter sumido do banco quando isso roda, então
+   o número vem do cliente. A cozinha só aceita pasta que casa a convenção
+   "ADS <numero>" sob a raiz do Tráfego, então o alcance é fechado. */
+async function handleDeletarPasta(request, env) {
+  let body; try { body = await request.json(); } catch { return json({ error: 'JSON inválido' }, 400); }
+  const numero = Number(body.numero);
+  if (!Number.isInteger(numero) || numero <= 0) return json({ error: 'numero inválido' }, 400);
+
+  const r = await fetch(`${COZINHA_URL}/deletar-pasta`, {
+    method: 'POST', headers: { 'X-Token': env.IMPORT_TOKEN, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ root_folder_id: TRACKER_TRAFEGO_ROOT, numero }),
+  });
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok || !d.ok) return json({ error: d.error || `cozinha ${r.status}` }, 500);
+  return json({ ok: true, ...d, numero });
+}
+
 async function cozinhaTrafego(env, payload) {
   let r;
   try {
@@ -729,6 +752,7 @@ export default {
         if (url.pathname === '/delete-ads')      return await handleDeleteAds(request, env);
         if (url.pathname === '/put')             return await handlePut(request, env, url);
         if (url.pathname === '/card-slides')     return await handleCardSlides(request, env);
+        if (url.pathname === '/deletar-pasta')   return await handleDeletarPasta(request, env);
         if (url.pathname === '/import-link')     return await handleImportLink(request, env);
         if (url.pathname === '/import-direto')   return await handleImportDireto(request, env);
         if (url.pathname === '/import-geral')    return await handleImportGeral(request, env);

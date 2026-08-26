@@ -1590,7 +1590,20 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
 
   async function deletarAd() {
     setDeleting(true);
-    await window.db.from('ads').delete().eq('numero', parseInt(card.num, 10));
+    const numero = parseInt(card.num, 10);
+    await window.db.from('ads').delete().eq('numero', numero);
+
+    // A pasta do Drive vai junto (pra lixeira, dá pra desfazer por 30 dias).
+    // Se ficasse pra trás, o próximo card que reaproveitasse esse número
+    // herdaria ela com o nome do anúncio antigo, porque a numeração dos
+    // anúncios preenche buracos. Aconteceu com o ADS 302 em 26/08/2026.
+    if (Number.isInteger(numero)) {
+      fetch(`${ADS_MEDIA_WORKER}/deletar-pasta`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ numero }),
+      }).catch(e => console.warn('Não consegui apagar a pasta do Drive:', numero, e));
+    }
+
     if (onUpdate) onUpdate({ ...card, deleted: true });
     onClose();
   }
@@ -2429,6 +2442,7 @@ function AtivarMetaModal({ itens, onClose, onDone, onEdit }) {
 function KanbanScreen({ targetAd, onConsumeTarget }) {
   const [selectedCard, setSelectedCard] = useState(null);
   const [showNovoAds, setShowNovoAds]   = useState(false);
+  const [prodFilter, setProdFilter]     = useState('Todos');
   const [fmtFilter, setFmtFilter]       = useState('Todos');
   const [tagFilter, setTagFilter]       = useState('Todas');
   const [searchQuery, setSearchQuery]   = useState('');
@@ -2577,6 +2591,9 @@ function KanbanScreen({ targetAd, onConsumeTarget }) {
   }
 
   const filteredCards = CARDS.filter(c => {
+    // Card sem produto gravado conta como MCV: foi o único produto até o
+    // Blindagem entrar, em 26/08/2026, e é o mesmo default usado no card.
+    if (prodFilter !== 'Todos' && (c.raw?.produto || 'MCV') !== prodFilter) return false;
     if (fmtFilter !== 'Todos' && !c.formats.includes(fmtFilter)) return false;
     if (tagFilter !== 'Todas' && c.tag !== tagFilter) return false;
     if (searchQuery.trim()) {
@@ -2588,7 +2605,7 @@ function KanbanScreen({ targetAd, onConsumeTarget }) {
     return true;
   });
 
-  const hasActiveFilters = fmtFilter !== 'Todos' || tagFilter !== 'Todas' || searchQuery.trim() !== '';
+  const hasActiveFilters = prodFilter !== 'Todos' || fmtFilter !== 'Todos' || tagFilter !== 'Todas' || searchQuery.trim() !== '';
 
   function handleUpdate(updatedCard) {
     if (updatedCard.deleted) { setSelectedCard(null); reload(); return; }
@@ -2679,6 +2696,16 @@ function KanbanScreen({ targetAd, onConsumeTarget }) {
         flexWrap:'wrap' }}>
         <div style={{ display:'flex', alignItems:'center', gap:6 }}>
           <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700,
+            letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)', whiteSpace:'nowrap' }}>Produto</span>
+          <div style={{ display:'flex', gap:4 }}>
+            {['Todos','MCV','BLI'].map(pr => (
+              <FilterPill key={pr} label={pr} active={prodFilter===pr} onClick={()=>setProdFilter(pr)}/>
+            ))}
+          </div>
+        </div>
+        <div style={{ width:1, height:16, background:'var(--app-border)' }}/>
+        <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+          <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700,
             letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)', whiteSpace:'nowrap' }}>Formato</span>
           <div style={{ display:'flex', gap:4 }}>
             {['Todos','Reels','Imagem','Carrossel'].map(f => (
@@ -2734,7 +2761,7 @@ function KanbanScreen({ targetAd, onConsumeTarget }) {
           )}
         </div>
         {hasActiveFilters && (
-          <button onClick={()=>{ setFmtFilter('Todos'); setTagFilter('Todas'); setSearchQuery(''); }}
+          <button onClick={()=>{ setProdFilter('Todos'); setFmtFilter('Todos'); setTagFilter('Todas'); setSearchQuery(''); }}
             style={{ display:'flex', alignItems:'center', gap:4, padding:'4px 8px', borderRadius:6,
               background:'rgba(248,113,113,.08)', border:'1px solid rgba(248,113,113,.2)',
               color:'var(--clr-neg)', fontSize:10.5, fontFamily:'Roboto,sans-serif', fontWeight:700, cursor:'pointer' }}>
