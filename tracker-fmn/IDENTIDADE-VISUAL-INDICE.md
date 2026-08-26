@@ -21,25 +21,30 @@ O conteúdo tem ITENS (lista, régua, checklist, comparativo de cenários)
 e cabe numa imagem só, feito pra ser salvo e consultado depois?
   → CARD DE CONSULTA
 
+O contraste entre DUAS IMAGENS é o próprio argumento, e as duas
+juntas já dizem alguma coisa antes de o leitor ler a frase?
+  → COMPARAÇÃO VISUAL
+
 O conteúdo é grande demais pra caber numa imagem só?
   → CARROSSEL
 ```
 
-Atalho: **uma frase** é Citação Crua, **um caso** é Caso Real, **itens** é Card de Consulta, e o que
-não cabe em uma imagem é Carrossel.
+Atalho: **uma frase** é Citação Crua, **um caso** é Caso Real, **itens** é Card de Consulta, **duas
+imagens que se contrastam** é Comparação Visual, e o que não cabe em uma imagem é Carrossel.
 
 Quando o mesmo tema já foi decidido em conversa (ex: "a peça 5 vira Citação Crua"), não precisa
 reconsultar esse fluxo, só seguir a decisão já tomada.
 
 ---
 
-## Os 4 formatos
+## Os 5 formatos
 
 | Formato | Quando usar | Visual | Doc detalhado |
 |---|---|---|---|
 | **Citação Crua** | Tese solta, aforismo, frase de impacto sem cena | Fundo creme liso, frase grande estilo texto nativo do Instagram, anotação manuscrita em cor neon, @ centralizado na base | `IDENTIDADE-VISUAL-CITACAO-CRUA.md` |
 | **Caso Real** | História real com cena, personagem, contexto físico | Fotografia realista, manchete em caixa preta na base, @ no canto | `IDENTIDADE-VISUAL-CASO-REAL.md` |
 | **Card de Consulta** | Lista, régua, checklist ou comparativo que cabe numa imagem só, feito pra ser salvo | Fundo cinza escuro com folha branca texturizada flutuando por dentro, título grande na cor de destaque, itens numerados, @ na base da folha. Montado no Canva, não gerado por IA | `IDENTIDADE-VISUAL-CARD-CONSULTA.md` |
+| **Comparação Visual** | Contraste entre duas imagens, quando elas provam o ponto sozinhas | Duas imagens ocupando metade da altura cada, corte reto no meio, uma frase em caixa preta na divisa, @ no canto. Montado no Canva a partir de imagens prontas, não gerado de uma vez pela IA | `IDENTIDADE-VISUAL-COMPARACAO.md` |
 | **Carrossel** | Conteúdo grande demais pra uma imagem só | 8 slides 1080x1350 (referência), capa e CTA, sistema de cor semântica | `IDENTIDADE-VISUAL-CARROSSEL.md` |
 
 **Citação Crua e Card de Consulta são vizinhos e precisam se diferenciar de longe.** Os dois são
@@ -47,6 +52,8 @@ imagem única e tipográfica. O que separa: a Citação Crua tem fundo creme che
 rabisco neon; o Card de Consulta tem fundo colorido com folha por dentro, título grande e itens
 numerados, sem rabisco. Se bater dúvida, o teste é o conteúdo: **uma frase** é Citação Crua,
 **itens** é Card de Consulta.
+
+**Card de Consulta e Comparação Visual também são vizinhos**, porque os dois cobrem "comparação". O que separa é quem carrega o argumento: no Card de Consulta é a tipografia e a lista de itens, na Comparação Visual é o contraste entre as duas imagens. Regra curta: **comparativo escrito é Card de Consulta, comparativo visto é Comparação Visual.** O teste prático está no doc do formato: tapa a frase com o dedo, se as duas imagens continuam dizendo alguma coisa, é Comparação Visual.
 
 **O Carrossel tem 6 estruturas narrativas oficiais** (definidas em 2026-08-06 por pesquisa de
 mercado): Mito vs. verdade, Caso real com número, Erro de precificação, Checklist de cláusula,
@@ -56,16 +63,16 @@ no `IDENTIDADE-VISUAL-CARROSSEL.md`.
 
 ---
 
-## Regras que valem pros 4 formatos
+## Regras que valem pros 5 formatos
 
 - **Nunca pode parecer feito por IA.** Cara humanizada, imperfeita, "feito é melhor que perfeito".
 - **`@felipeferreirafotografo` é obrigatório em toda peça**, sem exceção. Cada formato tem sua
-  posição fixa (ver doc específico), mas a presença do @ não é opcional em nenhum dos quatro.
-- **1080x1350px, vertical, 4:5**, sempre, nos 4 formatos.
+  posição fixa (ver doc específico), mas a presença do @ não é opcional em nenhum dos cinco.
+- **1080x1350px, vertical, 4:5**, sempre, nos 5 formatos.
 - Identificação com fotografia/fotógrafo precisa estar no conteúdo (frase, manchete ou headline),
   não só implícita pelo contexto da conta.
 - **A legenda nunca repete o texto que já está escrito na arte** (frase principal da Citação Crua,
-  manchete do Caso Real, título do Card de Consulta, headline da capa do Carrossel). Quem vê o post
+  manchete do Caso Real, título do Card de Consulta, frase da Comparação Visual, headline da capa do Carrossel). Quem vê o post
   já leu isso na imagem antes de abrir a legenda. A legenda soma informação nova: contexto,
   história, dado, aprofundamento, nunca reescreve o que a arte já disse.
 - **Frase de terceiro sempre leva atribuição.** Quando o texto principal não é do Felipe (citação de
@@ -130,6 +137,7 @@ Depois de montar, ler o carrossel inteiro na ordem, uma vez, como leitor.
 - 2026-08-07 (mesmo dia): Adicionada a regra de atribuição de frase de terceiro, depois de o ORG 061
   ("A frase da juíza") vir com a paráfrase do Felipe no lugar da citação literal da decisão.
   Atribuir paráfrase a um magistrado é erro factual, e num perfil de advogado isso custa caro.
+- 2026-08-26: Entrou o quinto formato, **Comparação Visual**. Motivo: as duas ilustrações geradas pro artigo da gôndola do supermercado ficaram tão diferentes entre si que provavam o ponto sozinhas, e nenhum dos quatro formatos servia (Citação Crua proíbe foto, Caso Real pede história com personagem e cena, Card de Consulta é comparativo em texto, Carrossel seria esticar o que cabe numa imagem só). Primeira peça: ORG 085. Como as duas imagens já existiam, a peça saiu sem gerar nada novo, que é o cenário ideal desse formato.
 - 2026-08-07 (mesmo dia): Criada a seção **Conferência obrigatória depois que a arte fica pronta**,
   com os três defeitos que mais se repetiram: acento sumindo em caixa alta (4 peças), numeração de
   lista saindo errada (3 vezes) e ordem de leitura mudando na montagem (2 vezes). Todos nascem na
