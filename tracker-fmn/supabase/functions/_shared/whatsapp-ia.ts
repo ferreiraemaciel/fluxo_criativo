@@ -243,6 +243,10 @@ async function baixarImagemBase64(midiaUrl: string): Promise<{ data: string; med
 }
 
 async function processarComIAInterno(supabase: any, telefone: string, nomeLead: string | null, mensagemId: string | null, contato: any) {
+  // Marca o instante em que essa chamada começou a processar, pra travar
+  // envio duplicado mais abaixo (ver checagem antes do fetch de envio).
+  const inicioProcessamento = new Date().toISOString();
+
   const { data: historico } = await supabase
     .from("whatsapp_mensagens")
     .select("direcao, tipo, corpo, midia_url, transcricao, created_at")
@@ -390,6 +394,31 @@ async function processarComIAInterno(supabase: any, telefone: string, nomeLead: 
     // Espera um tempo humano de "digitando" antes de mandar. Nunca responde
     // no mesmo instante que a mensagem chegou.
     await esperarComDigitando(tempoDeDigitacao(resposta.mensagem), mensagemId);
+
+    // Trava final contra resposta duplicada. Entre o começo desse
+    // processamento (leitura do histórico) e agora, se passou tempo real de
+    // chamada de IA + simulação de digitando, minutos às vezes. Se nesse meio
+    // tempo já saiu QUALQUER mensagem nossa (outra chamada concorrente que
+    // também passou pela checagem de "mensagem mais nova" antes da trava de
+    // ia_processando, ou um humano que respondeu manualmente), essa resposta
+    // já chegou tarde e mandá-la duplica ou atropela o que já foi dito.
+    // Achado real em produção (Marcelo Veiga, 2026-08-26): duas mensagens
+    // do lead chegaram a ~68s de distância, cada uma passou pela checagem
+    // de 30s achando que ainda era a mais nova, e as duas geraram e
+    // mandaram resposta, a segunda um minuto depois da primeira.
+    const { data: jaRespondeuNesseMeioTempo } = await supabase
+      .from("whatsapp_mensagens")
+      .select("id")
+      .eq("telefone", telefone)
+      .eq("direcao", "saida")
+      .gt("created_at", inicioProcessamento)
+      .limit(1)
+      .maybeSingle();
+    if (jaRespondeuNesseMeioTempo) {
+      console.log("[whatsapp-ia] resposta descartada: já saiu mensagem nova enquanto essa era gerada:", telefone);
+      return;
+    }
+
     try {
       const r = await fetch(`https://graph.facebook.com/v25.0/${WHATSAPP_PHONE_NUMBER_ID}/messages`, {
         method: "POST",
