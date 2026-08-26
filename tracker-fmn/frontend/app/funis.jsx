@@ -480,8 +480,8 @@ function Bar({ label, n, max, pctVal, color, sub }) {
    Ampliado em 2026-08-26: antes só existia carrinho abandonado (quem chegou
    no checkout da Hotmart e não concluiu, via PURCHASE_OUT_OF_SHOPPING_CART).
    Agora também entra quem virou transação de verdade mas não fechou —
-   pendente, recusada, expirada, cancelada, atrasada, bloqueada, pre_aprovada,
-   protesto. É mais quente que carrinho abandonado (chegou mais longe), então
+   pendente, recusada, expirada, cancelada, atrasada, bloqueada, pre_aprovada.
+   É mais quente que carrinho abandonado (chegou mais longe), então
    fica destacado com a situação real, não só um "abandonou" genérico.
    "Recuperado" = essa mesma pessoa aparece depois em vendas aprovada,
    casando por e-mail.                                                     */
@@ -494,7 +494,6 @@ const SITUACAO_INFO = {
   atrasada:     { label: 'Pagamento atrasado',   cor: '#fbbf24' },
   bloqueada:    { label: 'Bloqueada',            cor: '#f87171' },
   pre_aprovada: { label: 'Pré-aprovada',         cor: '#60a5fa' },
-  protesto:     { label: 'Em protesto',          cor: '#f87171' },
   recuperacao:  { label: 'Em recuperação',       cor: '#fbbf24' },
 };
 
@@ -504,16 +503,15 @@ const SITUACAO_INFO = {
 // WhatsApp Web automatizado — não é a API oficial, essa é a linha do
 // Claudinho). Ver enviar-recuperacao-khronus/index.ts.
 const MSG_SITUACAO = {
-  abandonou:    n => `Oi, ${n}. Vi aqui que você chegou a abrir o checkout dos Modelos de Contrato Visual e não finalizou. Ficou alguma dúvida no meio do caminho, ou foi só falta de tempo mesmo?`,
-  pendente:     n => `Oi, ${n}. Seu pagamento dos Modelos de Contrato Visual ainda está pendente aqui do nosso lado. Se foi Pix ou boleto, às vezes a confirmação demora um pouco. Já conseguiu finalizar, ou posso te ajudar com alguma coisa?`,
-  recusada:     n => `Oi, ${n}. Seu cartão acabou sendo recusado na hora de fechar os Modelos de Contrato Visual. Geralmente é algo simples de resolver, limite, dado digitado errado ou o banco barrando por segurança mesmo. Quer que eu gere um link novo pra tentar de novo, ou prefere outra forma de pagamento?`,
-  expirada:     n => `Oi, ${n}. O boleto dos Modelos de Contrato Visual venceu sem pagamento. Se ainda faz sentido pra você, é rápido gerar um novo. Quer que eu mande?`,
-  cancelada:    n => `Oi, ${n}. Vi que a sua compra dos Modelos de Contrato Visual acabou sendo cancelada. Rolou algum problema no meio do caminho, ou foi decisão sua mesmo? Se quiser retomar, é só me chamar.`,
-  atrasada:     n => `Oi, ${n}. Seu pagamento dos Modelos de Contrato Visual está atrasado aqui do nosso lado. Ainda dá tempo de regularizar, quer que eu te mande o link de novo?`,
+  abandonou:    n => `Oi, ${n}. Vi aqui que você chegou a abrir o checkout dos Modelos de Contrato Visual e não finalizou. Ficou alguma dúvida no meio do caminho ou foi só falta de tempo mesmo?`,
+  pendente:     n => `Oi, ${n}. Seu pagamento dos Modelos de Contrato Visual ainda está pendente aqui do nosso lado. Se foi Pix ou boleto, às vezes a confirmação demora um pouco. Já conseguiu finalizar ou posso te ajudar com alguma coisa?`,
+  recusada:     n => `Oi, ${n}. Algum imprevisto aconteceu com seu cartão na hora de fechar os Modelos de Contrato Visual. Geralmente é algo simples de resolver, limite, dado digitado errado ou o banco barrando por segurança mesmo. Quer que eu gere um link novo pra tentar de novo ou prefere outra forma de pagamento?`,
+  expirada:     n => `Oi, ${n}. O boleto dos Modelos de Contrato Visual venceu sem pagamento. Vamos dar andamento na evolução do seu negócio, posso emitir um novo link para você?`,
+  cancelada:    n => `Oi, ${n}. Vi que a sua compra dos Modelos de Contrato Visual acabou sendo cancelada. Rolou algum problema no meio do caminho ou foi decisão sua mesmo? Abre teu coração e me conta.`,
+  atrasada:     n => `Oi, ${n}. Seu pagamento dos Modelos de Contrato Visual está com algum contratempo. Ainda dá tempo de regularizar, quer que eu te mande o link de novo?`,
   bloqueada:    n => `Oi, ${n}. Sua compra dos Modelos de Contrato Visual ficou bloqueada por segurança do meio de pagamento. Normalmente é rápido de resolver. Posso te ajudar a tentar de novo?`,
-  pre_aprovada: n => `Oi, ${n}. Sua compra dos Modelos de Contrato Visual está quase lá, só falta a confirmação final. Se precisar de alguma coisa da minha parte pra isso destravar, me avisa.`,
-  protesto:     n => `Oi, ${n}. Vi que a sua compra dos Modelos de Contrato Visual entrou em protesto de pagamento. Se foi engano ou se quiser entender o que houve, me chama que eu resolvo com você.`,
-  recuperacao:  n => `Oi, ${n}. Ainda dá tempo de fechar os Modelos de Contrato Visual, sua compra ficou como recuperável aqui do nosso lado. Posso te mandar o link de novo?`,
+  pre_aprovada: n => `Oi, ${n}. Sua compra dos Modelos de Contrato Visual está quase lá, só falta a confirmação final. O que eu posso fazer para te ajudar nisso?`,
+  recuperacao:  n => `Oi, ${n}. Ainda dá tempo de fechar os Modelos de Contrato Visual, faltou tão pouco para você ter tanta melhoria aí pro seu lado, então bora finalizarmos essa etapa?`,
 };
 
 /* ── Modal de envio (Recuperação de Venda → número de suporte via Khronus) */
@@ -898,12 +896,13 @@ function FunisScreen({ onNavigate }) {
   // Recuperação de Venda: carrinho abandonado (nunca chegou a virar transação
   // na Hotmart) + venda que virou transação mas não fechou de primeira
   // (pendente, recusada, expirada, cancelada, atrasada, bloqueada,
-  // pre_aprovada, protesto). Ampliado em 2026-08-26 — antes só existia o
-  // carrinho abandonado, e uma venda com boleto vencido ou cartão recusado
-  // não aparecia em lugar nenhum como oportunidade de recuperação.
+  // pre_aprovada). Ampliado em 2026-08-26 — antes só existia o carrinho
+  // abandonado, e uma venda com boleto vencido ou cartão recusado não
+  // aparecia em lugar nenhum como oportunidade de recuperação.
   // Não inclui reembolsada/chargeback: isso já foi venda fechada, é
   // problema pós-venda, categoria diferente de "ainda não converteu".
-  const STATUS_RECUPERAVEL = ['pendente','cancelada','recusada','expirada','atrasada','bloqueada','pre_aprovada','protesto','recuperacao'];
+  // "protesto" também não entra: Felipe nunca habilitou esse status na conta.
+  const STATUS_RECUPERAVEL = ['pendente','cancelada','recusada','expirada','atrasada','bloqueada','pre_aprovada','recuperacao'];
   useEffect(() => {
     if (!window.db || aba !== 'carrinho') return;
     setLoadingCarrinho(true);
