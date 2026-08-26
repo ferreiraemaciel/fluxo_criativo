@@ -476,11 +476,27 @@ function Bar({ label, n, max, pctVal, color, sub }) {
   );
 }
 
-/* ── Carrinho abandonado ────────────────────────────────────────
-   Quem chegou no checkout da Hotmart e não concluiu. Chega pelo webhook
-   (evento PURCHASE_OUT_OF_SHOPPING_CART) e é a base da ação de recuperação
-   por WhatsApp. "Recuperado" = essa mesma pessoa aparece depois na tabela
-   de vendas, casando por e-mail.                                          */
+/* ── Recuperação de Venda ──────────────────────────────────────
+   Ampliado em 2026-08-26: antes só existia carrinho abandonado (quem chegou
+   no checkout da Hotmart e não concluiu, via PURCHASE_OUT_OF_SHOPPING_CART).
+   Agora também entra quem virou transação de verdade mas não fechou —
+   pendente, recusada, expirada, cancelada, atrasada, bloqueada, pre_aprovada,
+   protesto. É mais quente que carrinho abandonado (chegou mais longe), então
+   fica destacado com a situação real, não só um "abandonou" genérico.
+   "Recuperado" = essa mesma pessoa aparece depois em vendas aprovada,
+   casando por e-mail.                                                     */
+const SITUACAO_INFO = {
+  abandonou:    { label: 'Abandonou o carrinho', cor: '#94a3b8' },
+  pendente:     { label: 'Pagamento pendente',   cor: '#fbbf24' },
+  recusada:     { label: 'Cartão recusado',      cor: '#f87171' },
+  expirada:     { label: 'Boleto vencido',       cor: '#f87171' },
+  cancelada:    { label: 'Cancelada',            cor: '#f87171' },
+  atrasada:     { label: 'Pagamento atrasado',   cor: '#fbbf24' },
+  bloqueada:    { label: 'Bloqueada',            cor: '#f87171' },
+  pre_aprovada: { label: 'Pré-aprovada',         cor: '#60a5fa' },
+  protesto:     { label: 'Em protesto',          cor: '#f87171' },
+  recuperacao:  { label: 'Em recuperação',       cor: '#fbbf24' },
+};
 function CarrinhoTable({ itens, recuperados }) {
   const [busca, setBusca] = useState('');
   const [filtro, setFiltro] = useState('todos'); // todos | pendente | recuperado
@@ -529,28 +545,37 @@ function CarrinhoTable({ itens, recuperados }) {
             <tr style={{ borderBottom:'1px solid var(--app-border)' }}>
               <th style={th}>Pessoa</th>
               <th style={th}>Contato</th>
-              <th style={{ ...th, width:110 }}>Abandonou</th>
+              <th style={{ ...th, width:140 }}>Situação</th>
+              <th style={{ ...th, width:110 }}>Ocorreu em</th>
               <th style={{ ...th, width:90 }}>Há</th>
-              <th style={{ ...th, width:120 }}>Situação</th>
+              <th style={{ ...th, width:120 }}>Resultado</th>
             </tr>
           </thead>
           <tbody>
             {lista.length === 0 && (
-              <tr><td colSpan={5} style={{ ...td, textAlign:'center', padding:'40px 0', color:'var(--text-3)' }}>
-                Nenhum carrinho abandonado nesse filtro.
+              <tr><td colSpan={6} style={{ ...td, textAlign:'center', padding:'40px 0', color:'var(--text-3)' }}>
+                Nenhum lead nesse filtro.
               </td></tr>
             )}
             {lista.map(it => {
               const rec  = recuperados.has((it.email || '').trim().toLowerCase());
               const dias = diasAtras(it.created_at);
-              // Abandono esfria rápido: até 7 dias ainda é quente pra recuperar.
+              // Abandono/pendência esfria rápido: até 7 dias ainda é quente pra recuperar.
               const quente = dias != null && dias <= 7;
+              const sit = SITUACAO_INFO[it.situacao] || { label: it.situacao || '—', cor: '#94a3b8' };
               return (
                 <tr key={it.id} style={{ borderBottom:'1px solid rgba(255,255,255,.04)' }}>
                   <td style={{ ...td, color:'var(--text-1)', fontWeight:600 }}>{it.nome || '—'}</td>
                   <td style={td}>
                     <div style={{ fontSize:12 }}>{it.email || '—'}</div>
                     {it.telefone && <div style={{ fontSize:11, color:'var(--text-3)' }}>{it.telefone}</div>}
+                  </td>
+                  <td style={td}>
+                    <span style={{ padding:'2px 9px', borderRadius:999, fontSize:10.5, fontWeight:700,
+                      fontFamily:'Roboto,sans-serif', background: `${sit.cor}1a`,
+                      border: `1px solid ${sit.cor}55`, color: sit.cor }}>
+                      {sit.label}
+                    </span>
                   </td>
                   <td style={td}>{fmtData(it.created_at)}</td>
                   <td style={{ ...td, color: quente ? 'var(--fmn-gold)' : 'var(--text-3)', fontWeight: quente ? 700 : 400 }}>
@@ -559,9 +584,9 @@ function CarrinhoTable({ itens, recuperados }) {
                   <td style={td}>
                     <span style={{ padding:'2px 9px', borderRadius:999, fontSize:10.5, fontWeight:700,
                       fontFamily:'Roboto,sans-serif',
-                      background: rec ? 'rgba(74,222,128,.12)' : 'rgba(248,113,113,.1)',
-                      border: `1px solid ${rec ? 'rgba(74,222,128,.35)' : 'rgba(248,113,113,.25)'}`,
-                      color: rec ? '#4ade80' : '#f87171' }}>
+                      background: rec ? 'rgba(74,222,128,.12)' : 'rgba(255,255,255,.04)',
+                      border: `1px solid ${rec ? 'rgba(74,222,128,.35)' : 'var(--app-border)'}`,
+                      color: rec ? '#4ade80' : 'var(--text-3)' }}>
                       {rec ? 'Comprou depois' : 'Não recuperado'}
                     </span>
                   </td>
@@ -761,27 +786,54 @@ function FunisScreen({ onNavigate }) {
     q.then(({ data: rows, error }) => { if (!error) setLeads(rows || []); setLoadingLeads(false); });
   }, [periodo, customFrom, customTo, aba, funnel]);
 
-  // Carrinhos abandonados + quem comprou depois (casa por e-mail).
+  // Recuperação de Venda: carrinho abandonado (nunca chegou a virar transação
+  // na Hotmart) + venda que virou transação mas não fechou de primeira
+  // (pendente, recusada, expirada, cancelada, atrasada, bloqueada,
+  // pre_aprovada, protesto). Ampliado em 2026-08-26 — antes só existia o
+  // carrinho abandonado, e uma venda com boleto vencido ou cartão recusado
+  // não aparecia em lugar nenhum como oportunidade de recuperação.
+  // Não inclui reembolsada/chargeback: isso já foi venda fechada, é
+  // problema pós-venda, categoria diferente de "ainda não converteu".
+  const STATUS_RECUPERAVEL = ['pendente','cancelada','recusada','expirada','atrasada','bloqueada','pre_aprovada','protesto','recuperacao'];
   useEffect(() => {
     if (!window.db || aba !== 'carrinho') return;
     setLoadingCarrinho(true);
-    let q = window.db.from('abandono_carrinho')
+    let qAband = window.db.from('abandono_carrinho')
       .select('id,nome,email,telefone,produto_nome,created_at,utm_source,meta_ad_id')
       .order('created_at', { ascending: false }).limit(5000);
-    if (range.p_from) q = q.gte('created_at', range.p_from);
-    if (range.p_to)   q = q.lte('created_at', range.p_to + 'T23:59:59Z');
-    q.then(async ({ data: rows, error }) => {
-      const itens = error ? [] : (rows || []);
+    let qVendas = window.db.from('vendas')
+      .select('hotmart_transaction_id,comprador_nome,comprador_email,comprador_telefone,produto_nome,created_at,utm_source,meta_ad_id,status')
+      .in('status', STATUS_RECUPERAVEL)
+      .order('created_at', { ascending: false }).limit(5000);
+    if (range.p_from) { qAband = qAband.gte('created_at', range.p_from); qVendas = qVendas.gte('created_at', range.p_from); }
+    if (range.p_to)   { qAband = qAband.lte('created_at', range.p_to + 'T23:59:59Z'); qVendas = qVendas.lte('created_at', range.p_to + 'T23:59:59Z'); }
+
+    Promise.all([qAband, qVendas]).then(async ([{ data: aband, error: e1 }, { data: vend, error: e2 }]) => {
+      const itensAband = (e1 ? [] : (aband || [])).map(i => ({
+        id: 'ab_' + i.id, nome: i.nome, email: i.email, telefone: i.telefone,
+        produto_nome: i.produto_nome, created_at: i.created_at,
+        utm_source: i.utm_source, meta_ad_id: i.meta_ad_id, situacao: 'abandonou',
+      }));
+      const itensVenda = (e2 ? [] : (vend || [])).map(v => ({
+        id: 'vd_' + v.hotmart_transaction_id, nome: v.comprador_nome, email: v.comprador_email,
+        telefone: v.comprador_telefone, produto_nome: v.produto_nome, created_at: v.created_at,
+        utm_source: v.utm_source, meta_ad_id: v.meta_ad_id, situacao: v.status,
+      }));
+      const itens = [...itensAband, ...itensVenda].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
       setCarrinho(itens);
-      // Marca como recuperado quem abandonou e depois aparece em vendas.
+
+      // Marca como recuperado quem aparece de novo em vendas com status aprovada.
+      // Bug corrigido em 2026-08-26: filtrava por `email`, coluna que não existe
+      // em `vendas` (o campo certo é `comprador_email`) — a checagem nunca achava
+      // ninguém, "Comprou depois" nunca aparecia mesmo quando era verdade.
       const emails = [...new Set(itens.map(i => (i.email || '').trim().toLowerCase()).filter(Boolean))];
       const rec = new Set();
       if (emails.length) {
         // Em lotes: lista muito grande estoura o tamanho da URL do filtro `in`.
         for (let i = 0; i < emails.length; i += 200) {
           const { data: v } = await window.db.from('vendas')
-            .select('email').in('email', emails.slice(i, i + 200));
-          (v || []).forEach(r => r.email && rec.add(r.email.trim().toLowerCase()));
+            .select('comprador_email').eq('status', 'aprovada').in('comprador_email', emails.slice(i, i + 200));
+          (v || []).forEach(r => r.comprador_email && rec.add(r.comprador_email.trim().toLowerCase()));
         }
       }
       setRecuperados(rec);
@@ -871,7 +923,7 @@ function FunisScreen({ onNavigate }) {
 
         {/* Tabs */}
         <div style={{ display:'flex', gap:2, borderBottom:'1px solid var(--app-border)', marginBottom:18 }}>
-          {[['analise','bar-chart-2','Análise'],['leads','users','Leads'],['carrinho','shopping-cart','Carrinho abandonado']].map(([id,icon,label]) => (
+          {[['analise','bar-chart-2','Análise'],['leads','users','Leads'],['carrinho','shopping-cart','Recuperação de Venda']].map(([id,icon,label]) => (
             <button key={id} onClick={() => setAba(id)}
               style={{ display:'flex', alignItems:'center', gap:6, padding:'10px 18px', cursor:'pointer',
                 background:'transparent', border:'none', borderBottom:`2px solid ${aba===id?'var(--fmn-gold)':'transparent'}`,
@@ -893,12 +945,12 @@ function FunisScreen({ onNavigate }) {
           </div>
         )}
 
-        {/* ABA CARRINHO ABANDONADO */}
+        {/* ABA RECUPERAÇÃO DE VENDA (antes só "Carrinho abandonado") */}
         {aba === 'carrinho' && (
           <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
             {loadingCarrinho
               ? <div style={{ padding:'60px 0', textAlign:'center', color:'var(--text-3)', fontSize:13 }}>
-                  <LucideIcon icon="loader" size={22}/><div style={{ marginTop:8 }}>Carregando carrinhos...</div>
+                  <LucideIcon icon="loader" size={22}/><div style={{ marginTop:8 }}>Carregando...</div>
                 </div>
               : (() => {
                   const total = carrinho.length;
@@ -907,10 +959,10 @@ function FunisScreen({ onNavigate }) {
                   const taxa = total ? Math.round(rec / total * 100) : 0;
                   return (<>
                     <div style={{ display:'flex', gap:12 }}>
-                      <CardKPI label="Carrinhos abandonados" value={nf(total)} icon="shopping-cart" accent/>
-                      <CardKPI label="Compraram depois"      value={nf(rec)}   icon="check-circle"/>
-                      <CardKPI label="Taxa de recuperação"   value={taxa + '%'} icon="trending-up"/>
-                      <CardKPI label="Quentes (até 7 dias)"  value={nf(quentes)} icon="flame"/>
+                      <CardKPI label="Leads pra recuperar"  value={nf(total)} icon="shopping-cart" accent/>
+                      <CardKPI label="Compraram depois"     value={nf(rec)}   icon="check-circle"/>
+                      <CardKPI label="Taxa de recuperação"  value={taxa + '%'} icon="trending-up"/>
+                      <CardKPI label="Quentes (até 7 dias)" value={nf(quentes)} icon="flame"/>
                     </div>
                     <CarrinhoTable itens={carrinho} recuperados={recuperados}/>
                   </>);
