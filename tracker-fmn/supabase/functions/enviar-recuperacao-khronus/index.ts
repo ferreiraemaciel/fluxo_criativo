@@ -33,9 +33,20 @@ function normalizarTelefone(raw: string): string {
   return d;
 }
 
+// Chamado direto pelo navegador (frontend Tracker), precisa de CORS — sem
+// isso o preflight OPTIONS falha antes da requisição sair e o front só vê
+// "Failed to fetch", sem detalhe nenhum do erro real.
+const CORS = {
+  "Access-Control-Allow-Origin":  "*",
+  "Access-Control-Allow-Headers": "authorization, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+};
+
 Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response(null, { headers: CORS });
+
   if (req.method !== "POST") {
-    return new Response("Método não permitido", { status: 405 });
+    return new Response("Método não permitido", { status: 405, headers: CORS });
   }
 
   let body: any;
@@ -43,7 +54,7 @@ Deno.serve(async (req) => {
     body = await req.json();
   } catch {
     return new Response(JSON.stringify({ erro: "Payload inválido" }), {
-      status: 400, headers: { "Content-Type": "application/json" },
+      status: 400, headers: { "Content-Type": "application/json", ...CORS },
     });
   }
 
@@ -53,12 +64,12 @@ Deno.serve(async (req) => {
 
   if (!telefoneRaw) {
     return new Response(JSON.stringify({ erro: "telefone é obrigatório" }), {
-      status: 400, headers: { "Content-Type": "application/json" },
+      status: 400, headers: { "Content-Type": "application/json", ...CORS },
     });
   }
   if (!corpo) {
     return new Response(JSON.stringify({ erro: "corpo é obrigatório" }), {
-      status: 400, headers: { "Content-Type": "application/json" },
+      status: 400, headers: { "Content-Type": "application/json", ...CORS },
     });
   }
 
@@ -96,12 +107,12 @@ Deno.serve(async (req) => {
     if (errFila) throw new Error(`Enfileirar: ${errFila.message}`);
 
     return new Response(JSON.stringify({ ok: true, contatoId }), {
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...CORS },
     });
   } catch (e) {
     console.error("[enviar-recuperacao-khronus] erro:", e.message);
     return new Response(JSON.stringify({ ok: false, erro: e.message }), {
-      status: 500, headers: { "Content-Type": "application/json" },
+      status: 500, headers: { "Content-Type": "application/json", ...CORS },
     });
   }
 });

@@ -511,7 +511,7 @@ const MSG_SITUACAO = {
   pendente:     n => `Oi, ${n}. Seu pagamento dos Modelos de Contrato Visual ainda está pendente aqui do nosso lado. Se foi Pix ou boleto, às vezes a confirmação demora um pouco. Já conseguiu finalizar ou posso te ajudar com alguma coisa?`,
   recusada:     n => `Oi, ${n}. Algum imprevisto aconteceu com seu cartão na hora de fechar os Modelos de Contrato Visual. Geralmente é algo simples de resolver, limite, dado digitado errado ou o banco barrando por segurança mesmo. Quer que eu gere um link novo pra tentar de novo ou prefere outra forma de pagamento?`,
   expirada:     n => `Oi, ${n}. O boleto dos Modelos de Contrato Visual venceu sem pagamento. Vamos dar andamento na evolução do seu negócio, posso emitir um novo link para você?`,
-  cancelada:    n => `Oi, ${n}. Vi que a sua compra dos Modelos de Contrato Visual acabou sendo cancelada. Rolou algum problema no meio do caminho ou foi decisão sua mesmo? Abre teu coração e me conta.`,
+  cancelada:    n => `Oi, ${n}. Vi que a sua compra dos Modelos de Contrato Visual acabou sendo cancelada. Rolou algum problema no meio do caminho ou foi decisão sua mesmo? Abre teu coração e me conta, quero te ajudar nisso, ok?`,
   atrasada:     n => `Oi, ${n}. Seu pagamento dos Modelos de Contrato Visual está com algum contratempo. Ainda dá tempo de regularizar, quer que eu te mande o link de novo?`,
   bloqueada:    n => `Oi, ${n}. Sua compra dos Modelos de Contrato Visual ficou bloqueada por segurança do meio de pagamento. Normalmente é rápido de resolver. Posso te ajudar a tentar de novo?`,
   pre_aprovada: n => `Oi, ${n}. Sua compra dos Modelos de Contrato Visual está quase lá, só falta a confirmação final. O que eu posso fazer para te ajudar nisso?`,
@@ -595,7 +595,7 @@ function EnviarRecuperacaoModal({ item, onClose }) {
   );
 }
 
-function CarrinhoTable({ itens, recuperados, contatadosOficial }) {
+function CarrinhoTable({ itens, recuperados, contatadosOficial, contatadosSuporte }) {
   const [enviarPara, setEnviarPara] = useState(null); // item | null
   const [busca, setBusca] = useState('');
   const [filtro, setFiltro] = useState('todos'); // todos | pendente | recuperado
@@ -680,19 +680,29 @@ function CarrinhoTable({ itens, recuperados, contatadosOficial }) {
               const quente = dias != null && dias <= 7;
               const sit = SITUACAO_INFO[it.situacao] || { label: it.situacao || '—', cor: '#94a3b8' };
               const jaContatado = it.telefone && contatadosOficial.has(tel11(it.telefone));
+              const jaSuporte   = it.telefone && contatadosSuporte.has(tel11(it.telefone));
               return (
                 <tr key={it.id} style={{ borderBottom:'1px solid rgba(255,255,255,.04)' }}>
                   <td style={{ ...td, color:'var(--text-1)', fontWeight:600 }}>{it.nome || '—'}</td>
                   <td style={td}>
                     <div style={{ fontSize:12 }}>{it.email || '—'}</div>
                     {it.telefone && <div style={{ fontSize:11, color:'var(--text-3)' }}>{it.telefone}</div>}
-                    {jaContatado && (
-                      <div style={{ display:'inline-block', marginTop:3, padding:'1px 7px', borderRadius:999,
-                        fontSize:9.5, fontWeight:700, fontFamily:'Roboto,sans-serif', whiteSpace:'nowrap',
-                        background:'rgba(96,165,250,.12)', border:'1px solid rgba(96,165,250,.35)', color:'#60a5fa' }}>
-                        Já contatado (API oficial)
-                      </div>
-                    )}
+                    <div style={{ display:'flex', gap:4, flexWrap:'wrap', marginTop: (jaContatado || jaSuporte) ? 3 : 0 }}>
+                      {jaContatado && (
+                        <div style={{ display:'inline-block', padding:'1px 7px', borderRadius:999,
+                          fontSize:9.5, fontWeight:700, fontFamily:'Roboto,sans-serif', whiteSpace:'nowrap',
+                          background:'rgba(96,165,250,.12)', border:'1px solid rgba(96,165,250,.35)', color:'#60a5fa' }}>
+                          Já contatado (API oficial)
+                        </div>
+                      )}
+                      {jaSuporte && (
+                        <div style={{ display:'inline-block', padding:'1px 7px', borderRadius:999,
+                          fontSize:9.5, fontWeight:700, fontFamily:'Roboto,sans-serif', whiteSpace:'nowrap',
+                          background:'rgba(234,170,65,.12)', border:'1px solid rgba(234,170,65,.35)', color:'var(--fmn-gold)' }}>
+                          Já contatado pelo suporte
+                        </div>
+                      )}
+                    </div>
                   </td>
                   <td style={{ ...td, whiteSpace:'nowrap' }}>
                     <span style={{ display:'inline-block', padding:'2px 9px', borderRadius:999, fontSize:10.5, fontWeight:700,
@@ -716,13 +726,15 @@ function CarrinhoTable({ itens, recuperados, contatadosOficial }) {
                   </td>
                   <td style={{ ...td, textAlign:'center' }}>
                     <button onClick={() => setEnviarPara(it)}
-                      title={jaContatado
-                        ? 'Já recebeu mensagem pela API oficial — confira antes de mandar de novo pelo suporte'
+                      title={jaSuporte
+                        ? 'Já tem mensagem na fila do suporte — confira antes de mandar de novo'
+                        : jaContatado
+                        ? 'Já recebeu mensagem pela API oficial — confira antes de mandar pelo suporte'
                         : 'Mandar mensagem de recuperação (número de suporte)'}
                       style={{ width:28, height:28, borderRadius:8,
-                        border: jaContatado ? '1px solid rgba(96,165,250,.35)' : '1px solid rgba(74,222,128,.3)',
-                        background: jaContatado ? 'rgba(96,165,250,.1)' : 'rgba(74,222,128,.1)',
-                        color: jaContatado ? '#60a5fa' : '#4ade80', cursor:'pointer',
+                        border: jaSuporte ? '1px solid rgba(234,170,65,.35)' : jaContatado ? '1px solid rgba(96,165,250,.35)' : '1px solid rgba(74,222,128,.3)',
+                        background: jaSuporte ? 'rgba(234,170,65,.1)' : jaContatado ? 'rgba(96,165,250,.1)' : 'rgba(74,222,128,.1)',
+                        color: jaSuporte ? 'var(--fmn-gold)' : jaContatado ? '#60a5fa' : '#4ade80', cursor:'pointer',
                         display:'inline-flex', alignItems:'center', justifyContent:'center' }}>
                       <LucideIcon icon="message-circle" size={14}/>
                     </button>
@@ -888,6 +900,7 @@ function FunisScreen({ onNavigate }) {
   const [carrinho, setCarrinho]           = useState([]);
   const [recuperados, setRecuperados]     = useState(new Set());
   const [contatadosOficial, setContatadosOficial] = useState(new Set());
+  const [contatadosSuporte, setContatadosSuporte] = useState(new Set());
   const [loadingCarrinho, setLoadingCarrinho] = useState(false);
   const [extraAgg, setExtraAgg]     = useState({});
   const [funnel, setFunnel]         = useState('all');
@@ -1004,6 +1017,27 @@ function FunisScreen({ onNavigate }) {
         setContatadosOficial(new Set(telefones.filter(t => enviados.has(t))));
       } else {
         setContatadosOficial(new Set());
+      }
+
+      // Marca quem já tem mensagem na fila do Khronus (número de suporte,
+      // via Ponte) — cobre tanto o envio manual daqui da tela quanto a
+      // boas-vindas automática de aluno novo (as duas gravam na mesma fila).
+      // Combinado com Felipe em 2026-08-26.
+      if (telefones.length) {
+        try {
+          const r = await fetch(`${window.db.supabaseUrl}/functions/v1/khronus-fila-status`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${window.db.supabaseKey}` },
+            body: JSON.stringify({ telefones: telefones.map(t => '55' + t) }),
+          });
+          const d = await r.json().catch(() => ({}));
+          const noKhronus = new Set((d.telefones || []).map(tel11));
+          setContatadosSuporte(new Set(telefones.filter(t => noKhronus.has(t))));
+        } catch {
+          setContatadosSuporte(new Set());
+        }
+      } else {
+        setContatadosSuporte(new Set());
       }
     });
   }, [periodo, customFrom, customTo, aba]);
@@ -1131,7 +1165,7 @@ function FunisScreen({ onNavigate }) {
                       <CardKPI label="Taxa de recuperação"  value={taxa + '%'} icon="trending-up"/>
                       <CardKPI label="Quentes (até 7 dias)" value={nf(quentes)} icon="flame"/>
                     </div>
-                    <CarrinhoTable itens={carrinho} recuperados={recuperados} contatadosOficial={contatadosOficial}/>
+                    <CarrinhoTable itens={carrinho} recuperados={recuperados} contatadosOficial={contatadosOficial} contatadosSuporte={contatadosSuporte}/>
                   </>);
                 })()}
           </div>
