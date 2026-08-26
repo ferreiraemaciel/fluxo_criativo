@@ -63,7 +63,12 @@ Propor, com base em design thinking (memória `feedback-design-thinking-visual`)
 Para cada imagem:
 1. Gerar o prompt em inglês. Para a imagem de capa, aplicar o formato acima.
 2. Gerar via `gerar-imagem` (ChatGPT) ou buscar o frame real (Frinkiac para Simpsons, etc.).
-3. Otimizar antes de subir: aresta maior no máximo 1920px sem upscale; **se o arquivo de origem é PNG, mantém PNG**; se não é PNG, vira JPG ~80%. (Ver memória `feedback-otimizacao-imagens-regra` para o porquê.)
+3. Otimizar antes de subir: aresta maior no máximo 1920px sem upscale. **O formato de saída se decide pelo tipo de imagem, não pela extensão do arquivo de origem:**
+   - **Gráfico** (mapa mental, infográfico, diagrama, comparativo, print de tela, qualquer coisa com linha fina, texto ou área de cor chapada): sai **PNG**. Artefato de JPEG borra traço e deixa texto sujo, e nesses casos o peso extra do PNG se paga.
+   - **Foto** (capa fotorrealista, cena gerada por IA, frame de filme, fotografia de verdade): sai **JPEG a 85 a 90%, progressivo**, mesmo que a origem seja PNG. Foto não tem traço fino pra preservar, e a diferença de peso é grande demais pra ignorar num hero.
+   - **Régua prática:** se o JPEG de qualidade alta ficar mais do que 3x mais leve que o PNG e você não enxergar diferença lado a lado, é foto, vai de JPEG. Capa de artigo é quase sempre foto.
+   - Caso real que originou essa distinção (2026-08-26): a capa do artigo da gôndola do supermercado tinha 2,1 MB em PNG e 298 KB em JPEG a 88%, oito vezes mais leve, sem diferença visível. A regra antiga ("se a origem é PNG, mantém PNG") mandava subir os 2,1 MB.
+   (Ver memória `feedback-otimizacao-imagens-regra` para o histórico.)
 4. Subir via `curl -F "file=@arquivo" -F "prefix=fmn" "https://fem-upload.blindagem-fmn.workers.dev"`, que devolve `{"url": "..."}`.
 5. Se for frame de terceiro (filme/série), a legenda termina em `Foto: Reprodução/Nome do detentor.`
 
