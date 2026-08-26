@@ -18,6 +18,8 @@
 
 **Segredos novos no Tracker FMN pra falar com o banco do Khronus (cross-project):** `KHRONUS_SUPABASE_URL` e `KHRONUS_SERVICE_ROLE_KEY`, mesmos valores do `.env` do `contratovisual` (é o mesmo projeto físico Supabase, só schema diferente).
 
+**4. Marcação de quem já foi contatado pela API oficial (evita mensagem duplicada por dois canais).** Combinado com Felipe logo depois: a mesma pessoa pode estar na fila de Recuperação de Venda e já ter recebido mensagem do comercial pela API oficial do Meta (Claudinho, ou humano via aba Conversas). Pra não mandar a mesma recuperação duas vezes por canais diferentes, `funis.jsx` cruza o telefone de cada lead com `whatsapp_mensagens` (`direcao='saida'`, últimos 11 dígitos, mesmo critério de `tel11` usado em `cruzarComQuiz()`). Quem já foi contatado ganha badge azul "Já contatado (API oficial)" ao lado do telefone, e o ícone de enviar muda de verde pra azul (aviso, não bloqueio — o botão continua funcionando, é só sinal visual pra eu decidir com calma antes de mandar de novo).
+
 ## Recuperação de Venda (antes "Carrinho abandonado") — ampliado em 2026-08-26
 
 > Combinado com Felipe em 2026-08-26. Três partes: (1) ampliar o escopo, (2) puxar dado retroativo real, (3) achar lead mais quente do que o rótulo dizia.
