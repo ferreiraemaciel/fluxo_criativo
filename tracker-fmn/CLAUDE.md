@@ -2,6 +2,19 @@
 
 > Instruções específicas do Tracker FMN. Complementa o CLAUDE.md da raiz do fluxo-criativo (regras gerais do workshop), mas essas aqui valem só dentro desta pasta.
 
+## O corte de 1.000 linhas do Supabase (armadilha que mordeu 3 vezes no mesmo dia)
+
+**O Supabase corta toda consulta em 1.000 linhas por padrão.** O `.limit()` do client só REDUZ esse teto, nunca aumenta: pedir `.limit(5000)` devolve 1.000 e nada avisa que faltou. Não é erro, não é warning, a tela simplesmente mostra menos dado do que existe e parece correta.
+
+**Três lugares onde isso mordeu em 2026-08-26**, todos em `funis.jsx`:
+1. **Badge "Já contatado (API oficial)"** não aparecia mesmo com mensagem enviada de verdade, porque `whatsapp_mensagens` já passou de 2.100 linhas e a mensagem procurada ficava fora das 1.000 primeiras.
+2. **Aba Leads** mostrava "1.000 leads" quando o real eram **1.574** nos últimos 30 dias. O número parecia um total redondo, mas era o teto.
+3. **Aba Análise** calculava todos os percentuais (perfil, tipo de negócio, uso de contrato) em cima de 1.000 leads em vez do total, então os percentuais estavam errados sem nenhum sinal disso.
+
+**A correção padrão** é a função `buscarTudo(montarQuery)` no topo do `funis.jsx`: pagina de 1.000 em 1.000 com `.range()` até a página vir incompleta. Ela recebe uma FUNÇÃO que monta a query (não a query pronta), porque uma query do supabase-js não pode ser reexecutada com `.range()` diferente.
+
+**Regra pra qualquer consulta nova:** se a tabela pode passar de 1.000 linhas no período consultado, ou pagina, ou filtra por chave específica (`.in()`, `.eq()`). Nunca confie em `.limit()` alto, e desconfie sempre de um total que dá exatamente 1.000.
+
 ## "Tem mídia" é mídia entregue, nunca pasta cadastrada (bug real, 2026-08-26)
 
 ADS 341, 342, 346 e 348 voltavam sozinhos pra "Feito" a cada 15 minutos, mesmo depois de Felipe arrastar de volta pra "Fazendo", e apareciam com a etiqueta "sem preview".

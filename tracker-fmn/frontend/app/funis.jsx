@@ -485,6 +485,24 @@ function Bar({ label, n, max, pctVal, color, sub }) {
    fica destacado com a situação real, não só um "abandonou" genérico.
    "Recuperado" = essa mesma pessoa aparece depois em vendas aprovada,
    casando por e-mail.                                                     */
+// Busca TODAS as linhas, não só as 1000 primeiras.
+//
+// O Supabase corta o resultado em 1000 linhas por padrão (limite do
+// servidor); o .limit() do client só reduz esse teto, nunca aumenta. Pedir
+// .limit(5000) engana: volta 1000 e nada avisa que faltou. Foi o que
+// escondia 574 dos 1.574 leads dos últimos 30 dias na aba Leads, e o que
+// fazia o badge de contato sumir na Recuperação de Venda.
+async function buscarTudo(montarQuery, passo = 1000) {
+  const linhas = [];
+  for (let pagina = 0; ; pagina++) {
+    const { data, error } = await montarQuery().range(pagina * passo, pagina * passo + passo - 1);
+    if (error) break;
+    linhas.push(...(data || []));
+    if (!data || data.length < passo) break;
+  }
+  return linhas;
+}
+
 // Últimos 11 dígitos (DDD+número), ignora diferença de DDI — mesmo critério
 // usado no cruzamento server-side (cruzarComQuiz, hotmart-backfill).
 const tel11 = s => String(s || '').replace(/\D/g, '').slice(-11);
@@ -956,13 +974,16 @@ function FunisScreen({ onNavigate }) {
   useEffect(() => {
     if (!window.db || aba !== 'leads') return;
     setLoadingLeads(true);
-    let q = window.db.from('quiz_leads').select(
-      'id,nome,email,whatsapp,area_atuacao,profissionalizacao,tipo_negocio,confianca_clientes,situacoes,custo_processo,usa_contrato,tipo_contrato_atual,foco_artistico,sentimentos,protege_dinheiro,temas_dominados,entende_contrato,quer_modelos,nivel_risco,completou_lead,completou_quiz,utm_source,utm_medium,utm_campaign,utm_content,created_at,perfil,device_platform'
-    ).order('created_at', { ascending: false }).limit(5000);
-    if (range.p_from) q = q.gte('created_at', range.p_from);
-    if (range.p_to)   q = q.lte('created_at', range.p_to + 'T23:59:59Z');
-    if (funnel !== 'all') q = q.eq('funnel_slug', funnel);
-    q.then(({ data: rows, error }) => { if (!error) setLeads(rows || []); setLoadingLeads(false); });
+    const montar = () => {
+      let q = window.db.from('quiz_leads').select(
+        'id,nome,email,whatsapp,area_atuacao,profissionalizacao,tipo_negocio,confianca_clientes,situacoes,custo_processo,usa_contrato,tipo_contrato_atual,foco_artistico,sentimentos,protege_dinheiro,temas_dominados,entende_contrato,quer_modelos,nivel_risco,completou_lead,completou_quiz,utm_source,utm_medium,utm_campaign,utm_content,created_at,perfil,device_platform'
+      ).order('created_at', { ascending: false });
+      if (range.p_from) q = q.gte('created_at', range.p_from);
+      if (range.p_to)   q = q.lte('created_at', range.p_to + 'T23:59:59Z');
+      if (funnel !== 'all') q = q.eq('funnel_slug', funnel);
+      return q;
+    };
+    buscarTudo(montar).then(rows => { setLeads(rows); setLoadingLeads(false); });
   }, [periodo, customFrom, customTo, aba, funnel]);
 
   // Recuperação de Venda: carrinho abandonado (nunca chegou a virar transação
@@ -978,23 +999,31 @@ function FunisScreen({ onNavigate }) {
   useEffect(() => {
     if (!window.db || aba !== 'carrinho') return;
     setLoadingCarrinho(true);
-    let qAband = window.db.from('abandono_carrinho')
-      .select('id,nome,email,telefone,produto_nome,created_at,utm_source,meta_ad_id')
-      .order('created_at', { ascending: false }).limit(5000);
-    let qVendas = window.db.from('vendas')
-      .select('hotmart_transaction_id,comprador_nome,comprador_email,comprador_telefone,produto_nome,created_at,utm_source,meta_ad_id,status')
-      .in('status', STATUS_RECUPERAVEL)
-      .order('created_at', { ascending: false }).limit(5000);
-    if (range.p_from) { qAband = qAband.gte('created_at', range.p_from); qVendas = qVendas.gte('created_at', range.p_from); }
-    if (range.p_to)   { qAband = qAband.lte('created_at', range.p_to + 'T23:59:59Z'); qVendas = qVendas.lte('created_at', range.p_to + 'T23:59:59Z'); }
+    const montarAband = () => {
+      let q = window.db.from('abandono_carrinho')
+        .select('id,nome,email,telefone,produto_nome,created_at,utm_source,meta_ad_id')
+        .order('created_at', { ascending: false });
+      if (range.p_from) q = q.gte('created_at', range.p_from);
+      if (range.p_to)   q = q.lte('created_at', range.p_to + 'T23:59:59Z');
+      return q;
+    };
+    const montarVendas = () => {
+      let q = window.db.from('vendas')
+        .select('hotmart_transaction_id,comprador_nome,comprador_email,comprador_telefone,produto_nome,created_at,utm_source,meta_ad_id,status')
+        .in('status', STATUS_RECUPERAVEL)
+        .order('created_at', { ascending: false });
+      if (range.p_from) q = q.gte('created_at', range.p_from);
+      if (range.p_to)   q = q.lte('created_at', range.p_to + 'T23:59:59Z');
+      return q;
+    };
 
-    Promise.all([qAband, qVendas]).then(async ([{ data: aband, error: e1 }, { data: vend, error: e2 }]) => {
-      const itensAband = (e1 ? [] : (aband || [])).map(i => ({
+    Promise.all([buscarTudo(montarAband), buscarTudo(montarVendas)]).then(async ([aband, vend]) => {
+      const itensAband = (aband || []).map(i => ({
         id: 'ab_' + i.id, nome: i.nome, email: i.email, telefone: i.telefone,
         produto_nome: i.produto_nome, created_at: i.created_at,
         utm_source: i.utm_source, meta_ad_id: i.meta_ad_id, situacao: 'abandonou',
       }));
-      const itensVenda = (e2 ? [] : (vend || [])).map(v => ({
+      const itensVenda = (vend || []).map(v => ({
         id: 'vd_' + v.hotmart_transaction_id, nome: v.comprador_nome, email: v.comprador_email,
         telefone: v.comprador_telefone, produto_nome: v.produto_nome, created_at: v.created_at,
         utm_source: v.utm_source, meta_ad_id: v.meta_ad_id, situacao: v.status,
@@ -1075,11 +1104,14 @@ function FunisScreen({ onNavigate }) {
   useEffect(() => {
     if (!window.db || aba !== 'analise') return;
     const EXTRA_FIELDS = ['profissionalizacao','tipo_negocio','confianca_clientes','tipo_contrato_atual','foco_artistico','protege_dinheiro','entende_contrato'];
-    let q = window.db.from('quiz_leads').select(EXTRA_FIELDS.join(',')).limit(5000);
-    if (range.p_from) q = q.gte('created_at', range.p_from);
-    if (range.p_to)   q = q.lte('created_at', range.p_to + 'T23:59:59Z');
-    if (funnel !== 'all') q = q.eq('funnel_slug', funnel);
-    q.then(({ data: rows }) => {
+    const montarExtra = () => {
+      let q = window.db.from('quiz_leads').select(EXTRA_FIELDS.join(','));
+      if (range.p_from) q = q.gte('created_at', range.p_from);
+      if (range.p_to)   q = q.lte('created_at', range.p_to + 'T23:59:59Z');
+      if (funnel !== 'all') q = q.eq('funnel_slug', funnel);
+      return q;
+    };
+    buscarTudo(montarExtra).then(rows => {
       if (!rows) return;
       const agg = {};
       EXTRA_FIELDS.forEach(f => {
