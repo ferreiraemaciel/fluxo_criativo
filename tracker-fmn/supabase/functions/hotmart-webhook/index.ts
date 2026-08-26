@@ -4,19 +4,25 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { upsertContato } from "../_shared/whatsapp-contatos.ts";
 import { renderCorpoTemplate } from "../_shared/whatsapp-templates.ts";
-import { custoTemplateUsd } from "../_shared/whatsapp-custos.ts";
-import { janelaAbertaPara } from "../_shared/whatsapp-janela.ts";
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
   Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
 );
 
+// Boas-vindas de aluno novo não vai mais pela API oficial do Meta — combinado
+// com Felipe em 2026-08-26, mesma lógica de enviar-recuperacao-khronus: grava
+// na fila do Khronus, a Ponte (WhatsApp Web logado no número de suporte)
+// manda de verdade. Ver enviar-recuperacao-khronus/index.ts pro caminho irmão.
+const khronus = createClient(
+  Deno.env.get("KHRONUS_SUPABASE_URL")!,
+  Deno.env.get("KHRONUS_SERVICE_ROLE_KEY")!,
+  { db: { schema: "khronus" } },
+);
+const STUDIO_ID_KHRONUS = "37029f8d-3d05-424e-8d80-e89951815359"; // "Ferreira & Maciel"
+
 const HOTMART_TOKEN = Deno.env.get("HOTMART_WEBHOOK_TOKEN");
 
-// WhatsApp Cloud API — boas-vindas automáticas pra quem compra o MCV.
-const WHATSAPP_TOKEN          = Deno.env.get("FB_ACCESS_TOKEN_PERMANENTE");
-const WHATSAPP_PHONE_NUMBER_ID = Deno.env.get("WHATSAPP_PHONE_NUMBER_ID");
 const WHATSAPP_GRUPO_LINK_MCV  = Deno.env.get("WHATSAPP_GRUPO_LINK_MCV");
 const PRODUTO_ID_MCV            = "3400278";
 
@@ -628,64 +634,48 @@ function normalizarTelefoneWhatsapp(raw: string): string {
   return d;
 }
 
-// Dispara o template boas_vindas_mcv (Utilidade, aprovado no Meta) via
-// Cloud API e registra em whatsapp_mensagens. Idempotente: quem chama já
-// checou vendas.whatsapp_boas_vindas_enviado antes.
+// Manda a boas-vindas de aluno novo pelo número de suporte, via fila do
+// Khronus (Ponte, WhatsApp Web automatizado) — não é mais a API oficial do
+// Meta (mudou em 2026-08-26). Idempotente: quem chama já checou
+// vendas.whatsapp_boas_vindas_enviado antes.
 async function enviarBoasVindasMcv(transactionId: string, telefoneRaw: string, nome: string | null) {
-  if (!WHATSAPP_TOKEN || !WHATSAPP_PHONE_NUMBER_ID || !WHATSAPP_GRUPO_LINK_MCV) {
-    console.log("WhatsApp boas-vindas: credenciais ausentes, pulando.");
+  if (!WHATSAPP_GRUPO_LINK_MCV) {
+    console.log("WhatsApp boas-vindas: WHATSAPP_GRUPO_LINK_MCV ausente, pulando.");
     return;
   }
   const to = normalizarTelefoneWhatsapp(telefoneRaw);
   const primeiroNome = (nome || "").trim().split(/\s+/)[0] || "tudo bem";
   const corpo = renderCorpoTemplate("boas_vindas_mcv", [primeiroNome, WHATSAPP_GRUPO_LINK_MCV]);
 
-  // Janela de 24h já aberta (o lead mandou mensagem recente)? Manda como
-  // texto livre em vez de template: mesmo conteúdo, sem custo nenhum. Template
-  // paga sempre, não importa se a janela já está aberta ou não.
-  const janelaJaAberta = await janelaAbertaPara(supabase, to);
-
   try {
-    const body = janelaJaAberta
-      ? { messaging_product: "whatsapp", to, type: "text", text: { body: corpo } }
-      : {
-          messaging_product: "whatsapp",
-          to,
-          type: "template",
-          template: {
-            name: "boas_vindas_mcv",
-            language: { code: "pt_BR" },
-            components: [{
-              type: "body",
-              parameters: [
-                { type: "text", text: primeiroNome },
-                { type: "text", text: WHATSAPP_GRUPO_LINK_MCV },
-              ],
-            }],
-          },
-        };
-    const r = await fetch(`https://graph.facebook.com/v25.0/${WHATSAPP_PHONE_NUMBER_ID}/messages`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${WHATSAPP_TOKEN}`, "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-    const d = await r.json();
-    if (!r.ok || d.error) throw new Error(d.error?.message || `whatsapp ${r.status}`);
+    const { data: existente } = await khronus
+      .from("crm_whatsapp_contatos")
+      .select("id")
+      .eq("studio_id", STUDIO_ID_KHRONUS)
+      .eq("telefone", to)
+      .maybeSingle();
 
-    const custo = janelaJaAberta ? 0 : await custoTemplateUsd(supabase, "utility");
-    await supabase.from("whatsapp_mensagens").insert({
+    let contatoId = existente?.id;
+    if (!contatoId) {
+      const { data: novo, error: errContato } = await khronus
+        .from("crm_whatsapp_contatos")
+        .insert({ studio_id: STUDIO_ID_KHRONUS, telefone: to, nome, etapa: "aluno" })
+        .select("id")
+        .single();
+      if (errContato) throw new Error(`Criar contato: ${errContato.message}`);
+      contatoId = novo.id;
+    }
+
+    const { error: errFila } = await khronus.from("crm_whatsapp_fila_envio").insert({
+      studio_id: STUDIO_ID_KHRONUS,
+      contato_id: contatoId,
       telefone: to,
-      nome,
-      direcao: "saida",
-      tipo: janelaJaAberta ? "texto" : "template",
+      tipo: "texto",
       corpo,
-      template_nome: janelaJaAberta ? null : "boas_vindas_mcv",
-      wa_message_id: d?.messages?.[0]?.id || null,
-      status: "enviado",
-      origem: "venda_mcv",
-      raw: d,
-      custo_usd: custo,
+      status: "pendente",
     });
+    if (errFila) throw new Error(`Enfileirar: ${errFila.message}`);
+
     await supabase.from("vendas").update({ whatsapp_boas_vindas_enviado: true }).eq("hotmart_transaction_id", transactionId);
     const { data: vendaData } = await supabase
       .from("vendas")
@@ -696,13 +686,9 @@ async function enviarBoasVindasMcv(transactionId: string, telefoneRaw: string, n
       forcarEtapa: true,
       tornouAlunoEm: vendaData?.created_at || new Date().toISOString(),
     });
-    console.log("Boas-vindas MCV enviada:", transactionId, to);
+    console.log("Boas-vindas MCV enfileirada no Khronus:", transactionId, to);
   } catch (err) {
-    console.error("Erro ao enviar boas-vindas MCV:", err);
-    await supabase.from("whatsapp_mensagens").insert({
-      telefone: to, nome, direcao: "saida", tipo: "template", corpo: "boas_vindas_mcv",
-      template_nome: "boas_vindas_mcv", status: "falhou", origem: "venda_mcv", raw: { erro: String(err) },
-    });
+    console.error("Erro ao enfileirar boas-vindas MCV no Khronus:", err);
   }
 }
 
