@@ -12,20 +12,14 @@
 // Ponte, instalada no perfil de Chrome com o WhatsApp Web do número de
 // suporte logado, puxando essa fila e enviando pelo wa-js.
 //
-// Descoberta real em 2026-08-26, comparando com a integração já existente
-// do Blindagem (contratovisual/src/lib/khronus-whatsapp.ts): a Ponte só
-// consegue mandar mensagem pra quem ela já RECONHECE de uma conversa real
-// no WhatsApp Web (khronus.crm_whatsapp_contatos.wa_chat_id preenchido).
-// Contato nunca visto = sem wa_chat_id = a Ponte marca a fila como
-// "falhou" com o erro "contato sem identificador de chat"
-// (ver ~/Documents/khronus/extensao-ponte/ponte.js). Por isso esta function
-// NUNCA cria contato novo (só o próprio observador da Ponte pode criar —
-// tem uma trava lá especificamente contra isso, ver comentário em
-// ponte.js linha ~118) e, se não achar wa_chat_id, devolve
-// `sem_contato_conhecido` com um link wa.me pronto — o mesmo fallback
-// manual que o Blindagem já usa: alguém manda essa primeira mensagem na
-// mão, a Ponte passa a reconhecer o contato, e da próxima vez em diante o
-// envio automático funciona.
+// Histórico que explica o formato do telefone aqui: até 2026-08-26 a Ponte
+// só conseguia mandar pra quem ela já tinha visto conversando (contato com
+// `wa_chat_id` preenchido), e sem isso o envio morria em "contato sem
+// identificador de chat". Nesse mesmo dia a Ponte ganhou o passo de
+// perguntar ao WhatsApp qual é o identificador de um número (queryExists),
+// então iniciar conversa nova voltou a ser possível: basta o contato existir
+// com o telefone certo, que a Ponte resolve o identificador sozinha na
+// primeira tentativa de envio.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const khronus = createClient(
@@ -81,6 +75,7 @@ Deno.serve(async (req) => {
 
   const telefoneRaw = body?.telefone;
   const corpo = (body?.corpo || "").trim();
+  const nome = body?.nome || null;
 
   if (!telefoneRaw) {
     return new Response(JSON.stringify({ erro: "telefone é obrigatório" }), {
@@ -101,27 +96,32 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { data: contato, error: erroContato } = await khronus
+    const { data: existente, error: erroContato } = await khronus
       .from("crm_whatsapp_contatos")
-      .select("id, wa_chat_id")
+      .select("id")
       .eq("studio_id", STUDIO_ID)
       .eq("telefone", telefone)
       .maybeSingle();
     if (erroContato) throw new Error(`Buscar contato: ${erroContato.message}`);
 
-    if (!contato?.wa_chat_id) {
-      // Ponte nunca viu esse número numa conversa real — não dá pra
-      // enfileirar (falharia sempre). Devolve o link manual, igual ao
-      // fallback do Blindagem.
-      const waLink = `https://wa.me/${telefone}?text=${encodeURIComponent(corpo)}`;
-      return new Response(JSON.stringify({ ok: false, motivo: "sem_contato_conhecido", waLink }), {
-        headers: { "Content-Type": "application/json", ...CORS },
-      });
+    // Contato novo entra sem wa_chat_id de propósito: é a Ponte que descobre
+    // o identificador com o WhatsApp e preenche na primeira tentativa de
+    // envio. Nome de contato que já existe nunca é sobrescrito (pode já ter
+    // conversa e nome próprio lá).
+    let contatoId = existente?.id;
+    if (!contatoId) {
+      const { data: novo, error: errNovo } = await khronus
+        .from("crm_whatsapp_contatos")
+        .insert({ studio_id: STUDIO_ID, telefone, nome, etapa: "em_conversa" })
+        .select("id")
+        .single();
+      if (errNovo) throw new Error(`Criar contato: ${errNovo.message}`);
+      contatoId = novo.id;
     }
 
     const { error: errFila } = await khronus.from("crm_whatsapp_fila_envio").insert({
       studio_id: STUDIO_ID,
-      contato_id: contato.id,
+      contato_id: contatoId,
       telefone,
       tipo: "texto",
       corpo,
@@ -129,7 +129,7 @@ Deno.serve(async (req) => {
     });
     if (errFila) throw new Error(`Enfileirar: ${errFila.message}`);
 
-    return new Response(JSON.stringify({ ok: true, contatoId: contato.id }), {
+    return new Response(JSON.stringify({ ok: true, contatoId }), {
       headers: { "Content-Type": "application/json", ...CORS },
     });
   } catch (e) {

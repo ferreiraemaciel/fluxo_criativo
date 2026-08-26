@@ -664,23 +664,34 @@ async function enviarBoasVindasMcv(transactionId: string, telefoneRaw: string, n
   const corpo = renderCorpoTemplate("boas_vindas_mcv", [primeiroNome, WHATSAPP_GRUPO_LINK_MCV]);
 
   try {
-    // NUNCA cria contato no Khronus — só quem observa a conversa real (a
-    // própria Ponte) pode fazer isso, ver comentário completo em
-    // enviar-recuperacao-khronus/index.ts. Sem wa_chat_id, a Ponte nunca
-    // consegue mandar (erro "contato sem identificador de chat"), então
-    // nem vale a pena enfileirar — fica pendente de contato manual.
-    const contato = telefoneKhronus
-      ? (await khronus.from("crm_whatsapp_contatos")
-          .select("id, wa_chat_id")
-          .eq("studio_id", STUDIO_ID_KHRONUS)
-          .eq("telefone", telefoneKhronus)
-          .maybeSingle()).data
-      : null;
+    // Aluno novo quase nunca tem conversa anterior com o número de suporte,
+    // e desde 2026-08-26 isso deixou de ser impedimento: o contato entra sem
+    // wa_chat_id e a Ponte descobre o identificador com o WhatsApp na
+    // primeira tentativa de envio (ver ponte.js, ação 'resolver-numero').
+    if (!telefoneKhronus) {
+      console.log("Boas-vindas MCV pulada, telefone inválido:", transactionId, to);
+    } else {
+      const { data: existente } = await khronus
+        .from("crm_whatsapp_contatos")
+        .select("id")
+        .eq("studio_id", STUDIO_ID_KHRONUS)
+        .eq("telefone", telefoneKhronus)
+        .maybeSingle();
 
-    if (contato?.wa_chat_id) {
+      let contatoId = existente?.id;
+      if (!contatoId) {
+        const { data: novo, error: errContato } = await khronus
+          .from("crm_whatsapp_contatos")
+          .insert({ studio_id: STUDIO_ID_KHRONUS, telefone: telefoneKhronus, nome, etapa: "aluno" })
+          .select("id")
+          .single();
+        if (errContato) throw new Error(`Criar contato: ${errContato.message}`);
+        contatoId = novo.id;
+      }
+
       const { error: errFila } = await khronus.from("crm_whatsapp_fila_envio").insert({
         studio_id: STUDIO_ID_KHRONUS,
-        contato_id: contato.id,
+        contato_id: contatoId,
         telefone: telefoneKhronus,
         tipo: "texto",
         corpo,
@@ -689,14 +700,6 @@ async function enviarBoasVindasMcv(transactionId: string, telefoneRaw: string, n
       if (errFila) throw new Error(`Enfileirar: ${errFila.message}`);
       await supabase.from("vendas").update({ whatsapp_boas_vindas_enviado: true }).eq("hotmart_transaction_id", transactionId);
       console.log("Boas-vindas MCV enfileirada no Khronus:", transactionId, telefoneKhronus);
-    } else {
-      // Sem contato conhecido pela Ponte: fica sem enviar automático.
-      // whatsapp_boas_vindas_enviado continua false de propósito, pra
-      // ficar visível/reprocessável (mesmo sinal que já existia pro
-      // incidente do verify_jwt — ver seção do hotmart-webhook no
-      // CLAUDE.md). Recuperação manual: /reenviar-boas-vindas depois que
-      // alguém mandar a primeira mensagem na mão pra esse número.
-      console.log("Boas-vindas MCV pulada — Ponte não conhece esse contato ainda:", transactionId, telefoneKhronus || to);
     }
 
     const { data: vendaData } = await supabase
