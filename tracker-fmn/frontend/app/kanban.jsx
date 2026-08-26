@@ -285,16 +285,6 @@ function KanbanCard({ card, col, onOpen, onDragStart, podeArrastar, onDropAntes,
           letterSpacing:'0.06em', color:col.colorDot, textTransform:'uppercase', flexShrink:0 }}>
           ADS {card.num}
         </span>
-        {/* Só marca o que foge do padrão: a conta é quase toda MCV, então
-            destacar BLI é o que ajuda a bater o olho e achar. */}
-        {card.raw?.produto === 'BLI' && (
-          <span title="Anúncio do Blindagem"
-            style={{ fontSize:9, fontFamily:'Roboto,sans-serif', fontWeight:900, letterSpacing:'0.06em',
-              color:'#60a5fa', background:'rgba(96,165,250,.12)', border:'1px solid rgba(96,165,250,.35)',
-              borderRadius:4, padding:'1px 5px', flexShrink:0 }}>
-            BLI
-          </span>
-        )}
         <div style={{ marginLeft:'auto', display:'flex', gap:4, alignItems:'center', flexShrink:0 }}>
           {card.col === 'fazer' && (
             <button
@@ -337,6 +327,22 @@ function KanbanCard({ card, col, onOpen, onDragStart, podeArrastar, onDropAntes,
 
       {/* Formats */}
       <div style={{ display:'flex', gap:4, flexWrap:'wrap' }}>
+        {/* Produto vem antes do formato: é a primeira coisa que separa um
+            anúncio do outro agora que a conta roda MCV e Blindagem juntos. */}
+        {(() => {
+          const prod = card.raw?.produto || 'MCV';
+          const azul = prod === 'BLI';
+          return (
+            <span title={azul ? 'Blindagem' : 'Modelos de Contrato Visual'}
+              style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700,
+                letterSpacing:'0.04em', borderRadius:5, padding:'2px 7px',
+                color: azul ? '#60a5fa' : 'var(--fmn-gold)',
+                background: azul ? 'rgba(96,165,250,.12)' : 'rgba(234,170,65,.12)',
+                border: `1px solid ${azul ? 'rgba(96,165,250,.35)' : 'rgba(234,170,65,.35)'}` }}>
+              {prod}
+            </span>
+          );
+        })()}
         {hasMedia
           ? card.formats.map(f => <Badge key={f} tone={FORMAT_TONE[f]||'default'}>{f}</Badge>)
           : <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:500,
@@ -1661,12 +1667,6 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
                   </span>
                 </div>
               )}
-              <span style={{ fontSize:12, fontFamily:'Roboto,sans-serif', fontWeight:900,
-                letterSpacing:'0.08em', textTransform:'uppercase', color:currentCol.colorDot,
-                background:`${currentCol.colorDot}20`, border:`1px solid ${currentCol.colorDot}40`,
-                borderRadius:6, padding:'3px 9px', flexShrink:0 }}>
-                ADS {card.num}
-              </span>
               {/* Produto do anúncio (MCV ou Blindagem). Combinado com Felipe em
                   2026-08-26: define qual ticket/CPA limite as regras
                   automáticas G1 e G5 usam pra julgar esse ADS. */}
@@ -1681,6 +1681,12 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
                 <option value="MCV">MCV</option>
                 <option value="BLI">BLI</option>
               </select>
+              <span style={{ fontSize:12, fontFamily:'Roboto,sans-serif', fontWeight:900,
+                letterSpacing:'0.08em', textTransform:'uppercase', color:currentCol.colorDot,
+                background:`${currentCol.colorDot}20`, border:`1px solid ${currentCol.colorDot}40`,
+                borderRadius:6, padding:'3px 9px', flexShrink:0 }}>
+                ADS {card.num}
+              </span>
               <input value={fields.titulo} onChange={e => set('titulo', e.target.value)}
                 placeholder="Título do criativo"
                 style={{ fontSize:14.5, fontFamily:'Roboto,sans-serif', fontWeight:700,
