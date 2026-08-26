@@ -280,6 +280,12 @@ Deno.serve(async (req) => {
       utm_campaign:  sckP.utm_campaign || null,
       meta_ad_id:    sckP.meta_ad_id   || null,
       created_at:    compra?.order_date ? new Date(compra.order_date).toISOString() : new Date().toISOString(),
+      // Payload bruto pra diagnóstico. Achado em 2026-08-26: desde a semana de
+      // 27/07 (quando o reconhecimento do evento PURCHASE_OUT_OF_SHOPPING_CART
+      // foi corrigido e o volume real de abandono passou a entrar), ~96% dos
+      // registros chegam sem telefone — e sem o payload bruto não dá pra saber
+      // qual é o campo real que a Hotmart está mandando pra corrigir a extração.
+      raw: payload,
     });
 
     // Cria o contato na aba Conversas marcado como recuperação de carrinho,
