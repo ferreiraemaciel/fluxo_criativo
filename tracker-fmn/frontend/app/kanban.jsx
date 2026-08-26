@@ -1591,7 +1591,35 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
   async function deletarAd() {
     setDeleting(true);
     const numero = parseInt(card.num, 10);
+
+    // Junta as URLs de mídia ANTES de apagar a linha, senão elas somem junto e
+    // os arquivos ficam órfãos no R2 pra sempre. Mesma lógica do Orgânico.
+    const urls = new Set();
+    const addUrl = u => { if (typeof u === 'string' && u.includes('/r2.dev/')) urls.add(u); };
+    addUrl(raw.thumb_url); addUrl(raw.media_preview_url);
+    for (const campo of ['media_url', 'media_files']) {
+      try {
+        const v = raw[campo];
+        const arr = typeof v === 'string' ? JSON.parse(v || '[]') : (v || []);
+        (Array.isArray(arr) ? arr : []).forEach(item => {
+          if (typeof item === 'string') addUrl(item);
+          else if (item && typeof item === 'object') {
+            ['url_alta', 'preview_url', 'thumb_url', 'image_url', 'url'].forEach(k => addUrl(item[k]));
+          }
+        });
+      } catch {}
+    }
+
     await window.db.from('ads').delete().eq('numero', numero);
+
+    // Roda solto: se o R2 falhar, o card já foi apagado e o arquivo pode ser
+    // limpo depois. Travar o fechamento do modal por causa disso seria pior.
+    urls.forEach(u => {
+      const key = u.split('/r2.dev/')[1]?.split('?')[0];
+      if (!key || !key.startsWith('ads/')) return;   // só o que é nosso
+      fetch(`${ADS_MEDIA_WORKER}/original/${encodeURIComponent(key)}`, { method: 'DELETE' })
+        .catch(e => console.warn('Não consegui apagar do R2:', key, e));
+    });
 
     // A pasta do Drive vai junto (pra lixeira, dá pra desfazer por 30 dias).
     // Se ficasse pra trás, o próximo card que reaproveitasse esse número

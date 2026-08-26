@@ -28,9 +28,14 @@ const khronus = createClient(
   { db: { schema: "khronus" } },
 );
 
-// Estúdio "Ferreira & Maciel" no Khronus — o mesmo que já existe pra
-// contato@ferreiraemaciel.com.br. Fixo por enquanto: só um estúdio nosso lá.
-const STUDIO_ID = "37029f8d-3d05-424e-8d80-e89951815359";
+// Estúdio "Fotografia é o Meu Negócio" no Khronus: é a Ponte dele que roda
+// no número de SUPORTE do FMN. Corrigido em 2026-08-26 depois de uma
+// mensagem sair pelo WhatsApp errado — estava apontando pro estúdio
+// "Ferreira & Maciel" (o único que existia quando isso foi escrito), cuja
+// Ponte roda no WhatsApp pessoal do Felipe. Ao mexer aqui, confira antes em
+// khronus.crm_whatsapp_ponte_status qual número está pareado em cada
+// estúdio: é ele que decide de qual WhatsApp a mensagem sai.
+const STUDIO_ID = "d00109c7-84ec-4905-b39d-cbe0da66af75";
 
 // Mesma lógica de contratovisual/src/lib/khronus-whatsapp.ts
 // (normalizarTelefoneKhronus). O Khronus guarda telefone SEM o 9º dígito

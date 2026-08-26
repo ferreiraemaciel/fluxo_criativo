@@ -12,7 +12,7 @@ const khronus = createClient(
   { db: { schema: "khronus" } },
 );
 
-const STUDIO_ID = "37029f8d-3d05-424e-8d80-e89951815359"; // "Ferreira & Maciel"
+const STUDIO_ID = "d00109c7-84ec-4905-b39d-cbe0da66af75"; // "Fotografia é o Meu Negócio" (número de suporte do FMN)
 
 // Mesma lógica de contratovisual/src/lib/khronus-whatsapp.ts. O Khronus
 // guarda telefone SEM o 9º dígito (12 dígitos: 55+DDD+8) — sem isso, a

@@ -19,7 +19,7 @@ const khronus = createClient(
   Deno.env.get("KHRONUS_SERVICE_ROLE_KEY")!,
   { db: { schema: "khronus" } },
 );
-const STUDIO_ID_KHRONUS = "37029f8d-3d05-424e-8d80-e89951815359"; // "Ferreira & Maciel"
+const STUDIO_ID_KHRONUS = "d00109c7-84ec-4905-b39d-cbe0da66af75"; // "Fotografia é o Meu Negócio" (número de suporte do FMN)
 
 const HOTMART_TOKEN = Deno.env.get("HOTMART_WEBHOOK_TOKEN");
 

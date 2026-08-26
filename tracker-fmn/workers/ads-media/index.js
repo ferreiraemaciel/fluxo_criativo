@@ -192,10 +192,19 @@ async function handleUploadMeta(request, env) {
   }
 }
 
-/* ── DELETE /original/:key ───────────────────────────────────────*/
+/* ── DELETE /original/:key ───────────────────────────────────────
+   A rota é aberta (sem token), porque quem chama é o navegador logo depois de
+   publicar ou de excluir um card. Por isso o alcance é travado no prefixo:
+   só apaga o que está sob "ads/", que é onde vive a mídia dos anúncios. Sem
+   essa trava, qualquer um que soubesse a URL do worker apagaria qualquer
+   objeto do bucket, inclusive as fotos do site. Mesma correção já feita no
+   worker do orgânico.                                                       */
 async function handleDeleteOriginal(key, env) {
+  if (!key || key.includes('..') || !key.startsWith('ads/')) {
+    return json({ error: 'chave fora do escopo do ads-media' }, 400);
+  }
   await env.BUCKET.delete(key);
-  return json({ ok: true });
+  return json({ ok: true, key });
 }
 
 /* ================================================================
