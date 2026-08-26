@@ -485,6 +485,10 @@ function Bar({ label, n, max, pctVal, color, sub }) {
    fica destacado com a situação real, não só um "abandonou" genérico.
    "Recuperado" = essa mesma pessoa aparece depois em vendas aprovada,
    casando por e-mail.                                                     */
+// Últimos 11 dígitos (DDD+número), ignora diferença de DDI — mesmo critério
+// usado no cruzamento server-side (cruzarComQuiz, hotmart-backfill).
+const tel11 = s => String(s || '').replace(/\D/g, '').slice(-11);
+
 const SITUACAO_INFO = {
   abandonou:    { label: 'Abandonou o carrinho', cor: '#94a3b8' },
   pendente:     { label: 'Pagamento pendente',   cor: '#fbbf24' },
@@ -591,7 +595,7 @@ function EnviarRecuperacaoModal({ item, onClose }) {
   );
 }
 
-function CarrinhoTable({ itens, recuperados }) {
+function CarrinhoTable({ itens, recuperados, contatadosOficial }) {
   const [enviarPara, setEnviarPara] = useState(null); // item | null
   const [busca, setBusca] = useState('');
   const [filtro, setFiltro] = useState('todos'); // todos | pendente | recuperado
@@ -659,12 +663,20 @@ function CarrinhoTable({ itens, recuperados }) {
               // Abandono/pendência esfria rápido: até 7 dias ainda é quente pra recuperar.
               const quente = dias != null && dias <= 7;
               const sit = SITUACAO_INFO[it.situacao] || { label: it.situacao || '—', cor: '#94a3b8' };
+              const jaContatado = it.telefone && contatadosOficial.has(tel11(it.telefone));
               return (
                 <tr key={it.id} style={{ borderBottom:'1px solid rgba(255,255,255,.04)' }}>
                   <td style={{ ...td, color:'var(--text-1)', fontWeight:600 }}>{it.nome || '—'}</td>
                   <td style={td}>
                     <div style={{ fontSize:12 }}>{it.email || '—'}</div>
                     {it.telefone && <div style={{ fontSize:11, color:'var(--text-3)' }}>{it.telefone}</div>}
+                    {jaContatado && (
+                      <div style={{ display:'inline-block', marginTop:3, padding:'1px 7px', borderRadius:999,
+                        fontSize:9.5, fontWeight:700, fontFamily:'Roboto,sans-serif', whiteSpace:'nowrap',
+                        background:'rgba(96,165,250,.12)', border:'1px solid rgba(96,165,250,.35)', color:'#60a5fa' }}>
+                        Já contatado (API oficial)
+                      </div>
+                    )}
                   </td>
                   <td style={{ ...td, whiteSpace:'nowrap' }}>
                     <span style={{ display:'inline-block', padding:'2px 9px', borderRadius:999, fontSize:10.5, fontWeight:700,
@@ -687,9 +699,14 @@ function CarrinhoTable({ itens, recuperados }) {
                     </span>
                   </td>
                   <td style={{ ...td, textAlign:'center' }}>
-                    <button onClick={() => setEnviarPara(it)} title="Mandar mensagem de recuperação (número de suporte)"
-                      style={{ width:28, height:28, borderRadius:8, border:'1px solid rgba(74,222,128,.3)',
-                        background:'rgba(74,222,128,.1)', color:'#4ade80', cursor:'pointer',
+                    <button onClick={() => setEnviarPara(it)}
+                      title={jaContatado
+                        ? 'Já recebeu mensagem pela API oficial — confira antes de mandar de novo pelo suporte'
+                        : 'Mandar mensagem de recuperação (número de suporte)'}
+                      style={{ width:28, height:28, borderRadius:8,
+                        border: jaContatado ? '1px solid rgba(96,165,250,.35)' : '1px solid rgba(74,222,128,.3)',
+                        background: jaContatado ? 'rgba(96,165,250,.1)' : 'rgba(74,222,128,.1)',
+                        color: jaContatado ? '#60a5fa' : '#4ade80', cursor:'pointer',
                         display:'inline-flex', alignItems:'center', justifyContent:'center' }}>
                       <LucideIcon icon="message-circle" size={14}/>
                     </button>
@@ -854,6 +871,7 @@ function FunisScreen({ onNavigate }) {
   const [leads, setLeads]           = useState([]);
   const [carrinho, setCarrinho]           = useState([]);
   const [recuperados, setRecuperados]     = useState(new Set());
+  const [contatadosOficial, setContatadosOficial] = useState(new Set());
   const [loadingCarrinho, setLoadingCarrinho] = useState(false);
   const [extraAgg, setExtraAgg]     = useState({});
   const [funnel, setFunnel]         = useState('all');
@@ -946,6 +964,20 @@ function FunisScreen({ onNavigate }) {
       }
       setRecuperados(rec);
       setLoadingCarrinho(false);
+
+      // Marca quem já recebeu mensagem pela API oficial (número comercial,
+      // Claudinho ou humano via Conversas) — combinado com Felipe em
+      // 2026-08-26, pra não mandar a mensagem de recuperação duplicada por
+      // dois canais diferentes (oficial + Khronus/número de suporte).
+      const telefones = [...new Set(itens.map(i => tel11(i.telefone)).filter(t => t.length >= 10))];
+      if (telefones.length) {
+        const { data: msgs } = await window.db.from('whatsapp_mensagens')
+          .select('telefone').eq('direcao', 'saida').limit(20000);
+        const enviados = new Set((msgs || []).map(m => tel11(m.telefone)));
+        setContatadosOficial(new Set(telefones.filter(t => enviados.has(t))));
+      } else {
+        setContatadosOficial(new Set());
+      }
     });
   }, [periodo, customFrom, customTo, aba]);
 
@@ -1072,7 +1104,7 @@ function FunisScreen({ onNavigate }) {
                       <CardKPI label="Taxa de recuperação"  value={taxa + '%'} icon="trending-up"/>
                       <CardKPI label="Quentes (até 7 dias)" value={nf(quentes)} icon="flame"/>
                     </div>
-                    <CarrinhoTable itens={carrinho} recuperados={recuperados}/>
+                    <CarrinhoTable itens={carrinho} recuperados={recuperados} contatadosOficial={contatadosOficial}/>
                   </>);
                 })()}
           </div>
