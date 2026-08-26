@@ -52,17 +52,26 @@ Deno.serve(async (req) => {
   const candidatos = [...new Set(telefones.map(normalizarTelefone))];
 
   try {
-    const encontrados = new Set<string>();
+    // Um telefone por status mais recente: se a última tentativa falhou, o
+    // Tracker precisa saber disso pra sinalizar "falhou" mesmo que uma
+    // tentativa anterior tenha dado certo (situação nova, mensagem nova).
+    const porTelefone: Record<string, { status: string; criado_em: string }> = {};
     for (let i = 0; i < candidatos.length; i += 200) {
       const { data, error } = await khronus
         .from("crm_whatsapp_fila_envio")
-        .select("telefone")
+        .select("telefone,status,criado_em")
         .eq("studio_id", STUDIO_ID)
         .in("telefone", candidatos.slice(i, i + 200));
       if (error) throw new Error(error.message);
-      (data || []).forEach((r) => encontrados.add(r.telefone));
+      (data || []).forEach((r) => {
+        const atual = porTelefone[r.telefone];
+        if (!atual || r.criado_em > atual.criado_em) {
+          porTelefone[r.telefone] = { status: r.status, criado_em: r.criado_em };
+        }
+      });
     }
-    return new Response(JSON.stringify({ telefones: [...encontrados] }), {
+    const resultado = Object.entries(porTelefone).map(([telefone, v]) => ({ telefone, status: v.status }));
+    return new Response(JSON.stringify({ telefones: resultado }), {
       headers: { "Content-Type": "application/json", ...CORS },
     });
   } catch (e) {

@@ -679,8 +679,10 @@ function CarrinhoTable({ itens, recuperados, contatadosOficial, contatadosSuport
               // Abandono/pendência esfria rápido: até 7 dias ainda é quente pra recuperar.
               const quente = dias != null && dias <= 7;
               const sit = SITUACAO_INFO[it.situacao] || { label: it.situacao || '—', cor: '#94a3b8' };
-              const jaContatado = it.telefone && contatadosOficial.has(tel11(it.telefone));
-              const jaSuporte   = it.telefone && contatadosSuporte.has(tel11(it.telefone));
+              const jaContatado   = it.telefone && contatadosOficial.has(tel11(it.telefone));
+              const statusSuporte = it.telefone ? contatadosSuporte.get(tel11(it.telefone)) : null;
+              const jaSuporte     = !!statusSuporte;
+              const falhouSuporte = statusSuporte === 'falhou';
               return (
                 <tr key={it.id} style={{ borderBottom:'1px solid rgba(255,255,255,.04)' }}>
                   <td style={{ ...td, color:'var(--text-1)', fontWeight:600 }}>{it.nome || '—'}</td>
@@ -695,7 +697,14 @@ function CarrinhoTable({ itens, recuperados, contatadosOficial, contatadosSuport
                           Já contatado (API oficial)
                         </div>
                       )}
-                      {jaSuporte && (
+                      {jaSuporte && falhouSuporte && (
+                        <div style={{ display:'inline-block', padding:'1px 7px', borderRadius:999,
+                          fontSize:9.5, fontWeight:700, fontFamily:'Roboto,sans-serif', whiteSpace:'nowrap',
+                          background:'rgba(248,113,113,.12)', border:'1px solid rgba(248,113,113,.35)', color:'#f87171' }}>
+                          Falhou ao enviar (suporte)
+                        </div>
+                      )}
+                      {jaSuporte && !falhouSuporte && (
                         <div style={{ display:'inline-block', padding:'1px 7px', borderRadius:999,
                           fontSize:9.5, fontWeight:700, fontFamily:'Roboto,sans-serif', whiteSpace:'nowrap',
                           background:'rgba(234,170,65,.12)', border:'1px solid rgba(234,170,65,.35)', color:'var(--fmn-gold)' }}>
@@ -726,15 +735,17 @@ function CarrinhoTable({ itens, recuperados, contatadosOficial, contatadosSuport
                   </td>
                   <td style={{ ...td, textAlign:'center' }}>
                     <button onClick={() => setEnviarPara(it)}
-                      title={jaSuporte
+                      title={falhouSuporte
+                        ? 'A última tentativa pelo suporte falhou (confira o motivo) — pode tentar de novo'
+                        : jaSuporte
                         ? 'Já tem mensagem na fila do suporte — confira antes de mandar de novo'
                         : jaContatado
                         ? 'Já recebeu mensagem pela API oficial — confira antes de mandar pelo suporte'
                         : 'Mandar mensagem de recuperação (número de suporte)'}
                       style={{ width:28, height:28, borderRadius:8,
-                        border: jaSuporte ? '1px solid rgba(234,170,65,.35)' : jaContatado ? '1px solid rgba(96,165,250,.35)' : '1px solid rgba(74,222,128,.3)',
-                        background: jaSuporte ? 'rgba(234,170,65,.1)' : jaContatado ? 'rgba(96,165,250,.1)' : 'rgba(74,222,128,.1)',
-                        color: jaSuporte ? 'var(--fmn-gold)' : jaContatado ? '#60a5fa' : '#4ade80', cursor:'pointer',
+                        border: falhouSuporte ? '1px solid rgba(248,113,113,.35)' : jaSuporte ? '1px solid rgba(234,170,65,.35)' : jaContatado ? '1px solid rgba(96,165,250,.35)' : '1px solid rgba(74,222,128,.3)',
+                        background: falhouSuporte ? 'rgba(248,113,113,.1)' : jaSuporte ? 'rgba(234,170,65,.1)' : jaContatado ? 'rgba(96,165,250,.1)' : 'rgba(74,222,128,.1)',
+                        color: falhouSuporte ? '#f87171' : jaSuporte ? 'var(--fmn-gold)' : jaContatado ? '#60a5fa' : '#4ade80', cursor:'pointer',
                         display:'inline-flex', alignItems:'center', justifyContent:'center' }}>
                       <LucideIcon icon="message-circle" size={14}/>
                     </button>
@@ -900,7 +911,7 @@ function FunisScreen({ onNavigate }) {
   const [carrinho, setCarrinho]           = useState([]);
   const [recuperados, setRecuperados]     = useState(new Set());
   const [contatadosOficial, setContatadosOficial] = useState(new Set());
-  const [contatadosSuporte, setContatadosSuporte] = useState(new Set());
+  const [contatadosSuporte, setContatadosSuporte] = useState(new Map()); // tel11 -> status
   const [loadingCarrinho, setLoadingCarrinho] = useState(false);
   const [extraAgg, setExtraAgg]     = useState({});
   const [funnel, setFunnel]         = useState('all');
@@ -1022,7 +1033,10 @@ function FunisScreen({ onNavigate }) {
       // Marca quem já tem mensagem na fila do Khronus (número de suporte,
       // via Ponte) — cobre tanto o envio manual daqui da tela quanto a
       // boas-vindas automática de aluno novo (as duas gravam na mesma fila).
-      // Combinado com Felipe em 2026-08-26.
+      // Combinado com Felipe em 2026-08-26. Guarda o status (não só se
+      // existe), pra sinalizar "falhou" (ex: número sem WhatsApp) separado
+      // de "pendente"/"enviado" — pedido do Felipe no mesmo dia, depois de
+      // um caso real de erro "contato sem identificador de chat".
       if (telefones.length) {
         try {
           const r = await fetch(`${window.db.supabaseUrl}/functions/v1/khronus-fila-status`, {
@@ -1031,13 +1045,14 @@ function FunisScreen({ onNavigate }) {
             body: JSON.stringify({ telefones: telefones.map(t => '55' + t) }),
           });
           const d = await r.json().catch(() => ({}));
-          const noKhronus = new Set((d.telefones || []).map(tel11));
-          setContatadosSuporte(new Set(telefones.filter(t => noKhronus.has(t))));
+          const porTel = new Map();
+          (d.telefones || []).forEach(({ telefone, status }) => porTel.set(tel11(telefone), status));
+          setContatadosSuporte(porTel);
         } catch {
-          setContatadosSuporte(new Set());
+          setContatadosSuporte(new Map());
         }
       } else {
-        setContatadosSuporte(new Set());
+        setContatadosSuporte(new Map());
       }
     });
   }, [periodo, customFrom, customTo, aba]);
