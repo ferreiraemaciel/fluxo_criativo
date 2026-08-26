@@ -2,6 +2,20 @@
 
 > Instruções específicas do Tracker FMN. Complementa o CLAUDE.md da raiz do fluxo-criativo (regras gerais do workshop), mas essas aqui valem só dentro desta pasta.
 
+## Comprador sai marcado com a tag do produto no Khronus (2026-08-26)
+
+> Combinado com Felipe em 2026-08-26. Vale pra QUALQUER produto vendido, não só os que têm mensagem automática.
+
+Toda venda aprovada que chega no `hotmart-webhook` marca o contato do Khronus com a tag do produto comprado (`marcarTagDoProduto`). **Quem compra mais de um produto acumula tags**, nunca troca uma pela outra: o recorde hoje é um contato com 5 tags. Idempotente, e uma tag que tenha sido removida à mão volta a valer se a pessoa comprar de novo (comprar outra vez é marcação nova de verdade).
+
+**Tags** (estúdio "Fotografia é o Meu Negócio", `khronus.crm_whatsapp_tags`): Modelos de Contrato Visual, Blindagem e Mensagens que Vendem já existiam; Pack Pro Lightroom, Cenários Natalinos, Combo de Presets e Mentoria XP Sala Preta foram criadas nesse dia. O de-para vive em `TAG_POR_PRODUTO` no `hotmart-webhook/index.ts`, com o `produto_id` da Hotmart como chave. **Produto novo na Hotmart precisa entrar nesse mapa e ganhar tag**, senão a venda entra sem marcação nenhuma, silenciosamente. `7521047` (Mensagens que Vendem APP) aponta pra mesma tag de `5246538`: é o mesmo produto em outra oferta.
+
+**Não cria contato só pra pendurar tag.** Se a pessoa ainda não existe no Khronus, a marcação simplesmente não acontece (quem cria contato é o fluxo de mensagem). A tag entra na venda seguinte, ou num backfill.
+
+**Backfill rodado uma vez** (script em `scratchpad/backfill_tags.py`, não versionado por ser de uso único): cruzou 977 compradores com telefone utilizável contra os 457 contatos que existiam no Khronus e criou 208 marcações. Sobrou muita compra sem marcação porque a maioria dos compradores nunca chegou a virar contato no Khronus, o que é esperado.
+
+**Falhar em marcar tag nunca derruba o webhook.** A função engole o próprio erro de propósito: registrar a venda é o que importa ali, tag é enfeite útil.
+
 ## Cada ADS tem produto (MCV ou BLI), e as regras usam o ticket do produto certo (2026-08-26)
 
 > Combinado com Felipe em 2026-08-26, quando os primeiros anúncios de Blindagem entraram na conta.

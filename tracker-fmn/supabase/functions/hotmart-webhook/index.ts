@@ -26,6 +26,22 @@ const HOTMART_TOKEN = Deno.env.get("HOTMART_WEBHOOK_TOKEN");
 const WHATSAPP_GRUPO_LINK_MCV  = Deno.env.get("WHATSAPP_GRUPO_LINK_MCV");
 const PRODUTO_ID_MCV            = "3400278";
 
+// Combinado com Felipe em 2026-08-26: quem compra sai marcado no Khronus com
+// a tag do produto que adquiriu, pra dar pra filtrar o atendimento por
+// produto. Quem compra mais de um produto acumula tags, nunca troca uma pela
+// outra. As tags vivem em khronus.crm_whatsapp_tags (estúdio FMN); o id fica
+// aqui porque é chave estrangeira de outro banco, não dá pra inferir pelo
+// nome sem uma consulta a mais em todo webhook.
+const TAG_POR_PRODUTO: Record<string, string> = {
+  "3400278": "e8807a0a-c698-4cef-88e9-96e2d93b7a77", // Modelos de Contrato Visual
+  "7963090": "9a89d002-937c-4ab2-a045-e9a5f3ef092f", // Blindagem
+  "5246538": "d97f8506-d82c-4a69-9a07-f60492bf3b1f", // Mensagens que Vendem
+  "7521047": "d97f8506-d82c-4a69-9a07-f60492bf3b1f", // Mensagens que Vendem (APP): mesmo produto, outra oferta
+  "5176655": "9b54244e-69f6-408a-a7e5-608afda1f909", // Pack Pro Lightroom
+  "4394655": "e46342d5-54c2-4b46-b0d0-de2c9f7bdae0", // Cenários Natalinos
+  "6276039": "33adb7b1-26f5-4e04-9263-41bbccdad654", // Combo de Presets
+};
+
 // Mapeamento de evento → status na tabela vendas
 const STATUS_MAP: Record<string, string> = {
   // Compras
@@ -534,6 +550,14 @@ Deno.serve(async (req) => {
     }
   }
 
+  // Tag do produto: vale pra QUALQUER produto aprovado, não só o MCV (que é
+  // o único com boas-vindas automática). Roda depois da boas-vindas de
+  // propósito: se o contato do Khronus tiver acabado de nascer ali, a tag
+  // já encontra ele.
+  if (status === "aprovada" && telefoneFinal && produtoIdStr) {
+    await marcarTagDoProduto(produtoIdStr, telefoneFinal);
+  }
+
   console.log("Venda salva:", transactionId, status, "ADS:", adsNumero);
   return new Response(
     JSON.stringify({ ok: true, transaction: transactionId, status, adsNumero }),
@@ -647,6 +671,55 @@ function normalizarTelefoneKhronus(bruto: string): string | null {
   }
   if (local.length !== 10) return null;
   return `55${local}`;
+}
+
+// Marca o contato do Khronus com a tag do produto comprado. Idempotente: se
+// a pessoa já tem aquela tag, não duplica (e reativa uma que tenha sido
+// removida antes, porque comprar de novo é uma marcação nova de verdade).
+// Silenciosa de propósito: falhar em marcar tag nunca pode derrubar o
+// registro da venda, que é o que realmente importa nesse webhook.
+async function marcarTagDoProduto(produtoId: string, telefoneRaw: string) {
+  const tagId = TAG_POR_PRODUTO[produtoId];
+  const telefone = normalizarTelefoneKhronus(telefoneRaw);
+  if (!tagId || !telefone) return;
+
+  try {
+    const { data: contato } = await khronus
+      .from("crm_whatsapp_contatos")
+      .select("id")
+      .eq("studio_id", STUDIO_ID_KHRONUS)
+      .eq("telefone", telefone)
+      .maybeSingle();
+    // Sem contato no Khronus não há o que marcar. Não cria contato só pra
+    // pendurar tag: quem cria é o fluxo de mensagem (boas-vindas), e aí a
+    // marcação acontece na venda seguinte ou no backfill.
+    if (!contato?.id) return;
+
+    const { data: existente } = await khronus
+      .from("crm_whatsapp_contato_tags")
+      .select("id, removida_em")
+      .eq("studio_id", STUDIO_ID_KHRONUS)
+      .eq("contato_id", contato.id)
+      .eq("tag_id", tagId)
+      .maybeSingle();
+
+    if (existente?.id) {
+      if (existente.removida_em) {
+        await khronus.from("crm_whatsapp_contato_tags")
+          .update({ removida_em: null, aplicada_em: new Date().toISOString() })
+          .eq("id", existente.id);
+      }
+      return;
+    }
+
+    await khronus.from("crm_whatsapp_contato_tags").insert({
+      studio_id: STUDIO_ID_KHRONUS,
+      contato_id: contato.id,
+      tag_id: tagId,
+    });
+  } catch (err) {
+    console.error("Erro ao marcar tag do produto:", produtoId, err);
+  }
 }
 
 // Manda a boas-vindas de aluno novo pelo número de suporte, via fila do
