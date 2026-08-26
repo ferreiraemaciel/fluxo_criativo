@@ -27,7 +27,11 @@ const STATUS_MAP: Record<string, string> = {
   PURCHASE_COMPLETE:             "aprovada",
   PURCHASE_REFUNDED:             "reembolsada",
   PURCHASE_CANCELED:             "cancelada",
-  PURCHASE_EXPIRED:              "cancelada",
+  // Corrigido em 2026-08-26: estava junto com "cancelada", conflando duas
+  // coisas diferentes (venda cancelada de propósito x boleto que só venceu
+  // sem pagamento). O backfill retroativo do mesmo dia já separou os casos
+  // antigos usando o transaction_status real da Hotmart.
+  PURCHASE_EXPIRED:              "expirada",
   PURCHASE_CHARGEBACK:           "chargeback",
   PURCHASE_PROTEST:              "protesto",
   PURCHASE_DELAYED:              "pendente",

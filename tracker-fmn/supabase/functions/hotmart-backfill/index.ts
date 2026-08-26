@@ -25,8 +25,14 @@ const supabase = createClient(
 const HOTMART_CLIENT_ID     = Deno.env.get("HOTMART_CLIENT_ID")!;
 const HOTMART_CLIENT_SECRET = Deno.env.get("HOTMART_CLIENT_SECRET")!;
 
+// Bug corrigido em 2026-08-26: REFUNDED mapeava pra "reembolso", valor que
+// nunca existiu na constraint de vendas.status (o valor certo é
+// "reembolsada"). E como o insert do lote inteiro ia num upsert só, uma
+// linha com status inválido (isso ou qualquer um dos outros abaixo, que
+// também não estavam na constraint até agora) derrubava o lote inteiro
+// silenciosamente — nenhuma venda daquele lote entrava, nem as boas.
 const STATUS_MAP: Record<string, string> = {
-  APPROVED: "aprovada", CANCELLED: "cancelada", REFUNDED: "reembolso",
+  APPROVED: "aprovada", CANCELLED: "cancelada", REFUNDED: "reembolsada",
   CHARGEBACK: "chargeback", PENDING: "pendente", OVERDUE: "atrasada",
   BLOCKED: "bloqueada", PRE_ORDER: "pre_aprovada", REFUSED: "recusada",
   EXPIRED: "expirada", COMPLETE: "aprovada", PRINTED_BILLET: "pendente",
@@ -189,14 +195,18 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Linha por linha, não em lote: bug real corrigido em 2026-08-26 — um
+    // upsert em lote é uma única instrução, e uma linha com problema (status
+    // fora da constraint, valor inesperado) derrubava o lote inteiro sem
+    // avisar, descartando também as vendas boas que vieram junto.
     let inseridas = 0;
-    if (faltantes.length) {
-      const { error } = await supabase
-        .from("vendas")
-        .upsert(faltantes, { onConflict: "hotmart_transaction_id" });
-      if (error) console.error("upsert faltantes erro:", error.message);
-      else inseridas = faltantes.length;
+    const falhas: { transacao: string; erro: string }[] = [];
+    for (const v of faltantes) {
+      const { error } = await supabase.from("vendas").upsert(v, { onConflict: "hotmart_transaction_id" });
+      if (error) falhas.push({ transacao: v.hotmart_transaction_id, erro: error.message });
+      else inseridas++;
     }
+    if (falhas.length) console.error("Falhas ao inserir venda (individual):", JSON.stringify(falhas.slice(0, 20)));
 
     // Rede de segurança: vendas aprovadas recentes (qualquer origem, inclusive
     // webhook em tempo real) que ainda ficaram sem telefone/estado.
@@ -227,7 +237,7 @@ Deno.serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ ok: true, retornadas: items.length, inseridas, enriquecidas }),
+      JSON.stringify({ ok: true, retornadas: items.length, inseridas, falhas: falhas.length, enriquecidas }),
       { headers: { "Content-Type": "application/json" } },
     );
   } catch (e) {

@@ -68,14 +68,26 @@ STATUS_MAP = {
     "APPROVED":   "aprovada",
     "COMPLETE":   "aprovada",
     "REFUNDED":   "reembolsada",
-    "CHARGEBACK": "reembolsada",
+    "CHARGEBACK": "chargeback",
     "CANCELLED":  "cancelada",
     "CANCELED":   "cancelada",
-    "OVERDUE":    "pendente",
+    "OVERDUE":    "atrasada",
     "WAITING_PAYMENT": "pendente",
+    "PRINTED_BILLET":  "pendente",
+    # Ampliados em 2026-08-26 pra bater com a constraint ampliada de
+    # vendas.status. Antes qualquer um desses caía no default "pendente" —
+    # EXPIRED (boleto vencido, não é mais recuperável do mesmo jeito que um
+    # pendente de verdade) rodou errado uma vez antes desta correção.
+    "EXPIRED":    "expirada",
+    "BLOCKED":    "bloqueada",
+    "PRE_ORDER":  "pre_aprovada",
 }
 
-def fetch_hotmart_sales(token, start_date: datetime, end_date: datetime):
+def fetch_hotmart_sales(token, start_date: datetime, end_date: datetime, transaction_status: str = None):
+    # Sem transaction_status, a Hotmart só devolve venda APPROVED — confirmado
+    # em 2026-08-26 rodando 561 dias sem filtro e recebendo só aprovada, com
+    # CANCELLED (168) e EXPIRED (62) reais ficando de fora silenciosamente.
+    # Pra puxar outro status, precisa pedir explicitamente, um de cada vez.
     start_ms = int(start_date.timestamp() * 1000)
     end_ms   = int(end_date.timestamp() * 1000)
 
@@ -88,6 +100,8 @@ def fetch_hotmart_sales(token, start_date: datetime, end_date: datetime):
             "end_date":   end_ms,
             "max_results": 500,
         }
+        if transaction_status:
+            params["transaction_status"] = transaction_status
         if page_token:
             params["page_token"] = page_token
 
@@ -352,16 +366,26 @@ def fetch_buyer_details(token: str, transaction: str) -> dict:
 
 
 def enrich_estados(token: str, days: int = 90):
-    """Busca na Hotmart telefone + endereço de vendas aprovadas que ainda não
-    têm. Roda sempre (não é mais opt-in) — os três caminhos que gravam vendas
-    (webhook, hotmart-sync na nuvem e este script local) agora têm o mesmo
-    enriquecimento, pra nenhum ficar sem telefone/estado."""
+    """Busca na Hotmart telefone + endereço de vendas que ainda não têm. Roda
+    sempre (não é mais opt-in) — os três caminhos que gravam vendas (webhook,
+    hotmart-sync na nuvem e este script local) agora têm o mesmo
+    enriquecimento, pra nenhum ficar sem telefone/estado.
+
+    Ampliado em 2026-08-26 pra além de 'aprovada': pendente, cancelada,
+    recusada, expirada, atrasada, bloqueada, pre_aprovada, recuperacao são
+    exatamente os leads mais quentes pra recuperação (chegaram perto de
+    comprar), e sem telefone essa recuperação não tem como acontecer."""
     import time
 
+    status_recuperaveis = (
+        "aprovada", "pendente", "cancelada", "recusada", "expirada",
+        "atrasada", "bloqueada", "pre_aprovada", "recuperacao",
+    )
+    status_in = ",".join(status_recuperaveis)
     url = (
         f"{SUPABASE_URL}/rest/v1/vendas"
         f"?select=hotmart_transaction_id"
-        f"&status=eq.aprovada"
+        f"&status=in.({status_in})"
         f"&or=(comprador_estado.is.null,comprador_telefone.is.null)"
         f"&order=created_at.desc"
         f"&limit=200"
@@ -445,19 +469,22 @@ def enrich_estados(token: str, days: int = 90):
 def main():
     parser = argparse.ArgumentParser(description="Sincroniza vendas Hotmart → Supabase")
     parser.add_argument("--days",   type=int,            default=30,    help="Quantos dias para trás buscar (padrão: 30)")
+    parser.add_argument("--status", type=str,            default=None,
+        help="transaction_status da Hotmart (ex: CANCELLED, EXPIRED). Sem isso, a API só devolve APPROVED.")
     args = parser.parse_args()
 
     end_date   = datetime.now(timezone.utc)
     start_date = end_date - timedelta(days=args.days)
 
-    print(f"Buscando vendas de {start_date.strftime('%Y-%m-%d')} até {end_date.strftime('%Y-%m-%d')}...")
+    print(f"Buscando vendas de {start_date.strftime('%Y-%m-%d')} até {end_date.strftime('%Y-%m-%d')}"
+          + (f" (status={args.status})" if args.status else "") + "...")
 
     print("Obtendo token Hotmart...")
     token = get_hotmart_token()
     print("  Token obtido.")
 
     print("Buscando histórico de vendas...")
-    sales = fetch_hotmart_sales(token, start_date, end_date)
+    sales = fetch_hotmart_sales(token, start_date, end_date, transaction_status=args.status)
     print(f"  {len(sales)} vendas encontradas.")
 
     if not sales:
