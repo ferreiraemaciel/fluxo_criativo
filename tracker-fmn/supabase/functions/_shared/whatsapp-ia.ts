@@ -204,18 +204,27 @@ export async function processarComIA(supabase: any, telefoneRaw: string, nomeLea
   // duas rodam em paralelo e o lead recebe resposta duplicada. Só uma por
   // vez; se já tem uma rodando, essa aqui desiste (a próxima mensagem real
   // dele já vai puxar o histórico atualizado de qualquer forma).
+  //
+  // A trava expira sozinha depois de LOCK_TRAVADO_MS. Sem isso, se a function
+  // for encerrada à força pela plataforma no meio do processamento (estourou
+  // o tempo limite de execução), o `finally` abaixo nunca roda, e o contato
+  // fica com ia_processando=true PRA SEMPRE — mudo pro Claudinho em qualquer
+  // mensagem futura, sem erro nenhum aparecer. Achado real em produção com a
+  // Drica Rocha em 2026-08-27, enquanto ela tentava finalizar uma compra.
+  const LOCK_TRAVADO_MS = 5 * 60 * 1000;
+  const travadoDesde = new Date(Date.now() - LOCK_TRAVADO_MS).toISOString();
   const { data: travou } = await supabase
     .from("whatsapp_contatos")
-    .update({ ia_processando: true })
+    .update({ ia_processando: true, ia_processando_desde: new Date().toISOString() })
     .eq("telefone", telefone)
-    .eq("ia_processando", false)
+    .or(`ia_processando.eq.false,ia_processando_desde.lt.${travadoDesde}`)
     .select("telefone");
   if (!travou?.length) return;
 
   try {
     await processarComIAInterno(supabase, telefone, nomeLead, mensagemId, contato);
   } finally {
-    await supabase.from("whatsapp_contatos").update({ ia_processando: false }).eq("telefone", telefone);
+    await supabase.from("whatsapp_contatos").update({ ia_processando: false, ia_processando_desde: null }).eq("telefone", telefone);
   }
 }
 
