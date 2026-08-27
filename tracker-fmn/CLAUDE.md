@@ -2,6 +2,20 @@
 
 > Instruções específicas do Tracker FMN. Complementa o CLAUDE.md da raiz do fluxo-criativo (regras gerais do workshop), mas essas aqui valem só dentro desta pasta.
 
+## Atribuição herdada do quiz quando a Hotmart não repassa o rastreio (2026-08-27)
+
+> Combinado com Felipe em 2026-08-27, janela de 7 dias definida por ele.
+
+**A Hotmart nem sempre devolve o nosso `sck`.** Em alguns caminhos dela (Agente de Vendas, e-mail de recuperação dela, página de produto) o rastreio é sobrescrito pelo dela, e a venda entra sem anúncio nenhum, como se tivesse vindo do nada. **Caso real que motivou:** Drica Rocha passou pelo quiz pelo ADS 356 às 14:57 e comprou 1h37 depois; a venda chegou com `sck=HOTMART_SALES_AGENT`, sem `meta_ad_id`, e aparecia no Financeiro como "Tráfego" sem contexto.
+
+**Como o `hotmart-webhook` resolve agora:** quando a compra chega sem `meta_ad_id`, ele procura o quiz mais recente do mesmo e-mail feito **até 7 dias antes** da venda e herda dali o anúncio e os UTMs que estiverem faltando. Nunca sobrescreve UTM que veio de verdade na compra (`coalesce`), e o campo `atribuicao_fonte` registra a diferença: `'direta'` (veio no sck da própria compra) x `'quiz'` (deduzido). Na tela, essa venda ganha a etiqueta roxa "via quiz", pra nunca se passar por rastreio direto.
+
+**Agente de Vendas da Hotmart:** `vendas.hotmart_sales_agent` marca que ele entrou no caminho, mas **o caminho original é mantido** (o anúncio herdado do quiz continua sendo a origem). São duas informações diferentes e as duas importam: quem trouxe (o anúncio) e quem ajudou a fechar (o agente). Etiqueta amarela "agente Hotmart" na tela.
+
+**Backfill rodado uma vez:** 307 vendas aprovadas ganharam anúncio pelo cruzamento com o quiz (79 delas casaram com um ADS ainda cadastrado na tabela `ads`; o resto tem `meta_ad_id` de anúncio já removido, o que é normal). 6 vendas marcadas como auxílio do agente.
+
+**Efeito colateral pra ter em mente:** recuperar essas vendas melhora o CPA dos anúncios afetados, e as regras G1/G5 pausam por CPA. Anúncio que parecia caro pode passar a parecer saudável. É a verdade aparecendo, mas muda o gatilho das pausas automáticas.
+
 ## O corte de 1.000 linhas do Supabase (armadilha que mordeu 3 vezes no mesmo dia)
 
 **O Supabase corta toda consulta em 1.000 linhas por padrão.** O `.limit()` do client só REDUZ esse teto, nunca aumenta: pedir `.limit(5000)` devolve 1.000 e nada avisa que faltou. Não é erro, não é warning, a tela simplesmente mostra menos dado do que existe e parece correta.

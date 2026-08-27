@@ -408,6 +408,56 @@ Deno.serve(async (req) => {
     if (/^\d{10,}$/.test(adId)) metaAdId = adId;
   }
 
+  // O Agente de Vendas da Hotmart sobrescreve o nosso rastreio pelo dele
+  // (sck vira "HOTMART_SALES_AGENT"). Combinado com Felipe em 2026-08-27: o
+  // caminho original do anúncio é mantido (recuperado logo abaixo pelo
+  // quiz), e isso aqui só registra que o agente entrou no meio.
+  const agenteHotmart = String(sck || "").toUpperCase().includes("HOTMART_SALES_AGENT");
+
+  // Atribuição herdada do quiz quando a compra chega sem anúncio nenhum.
+  //
+  // Por que existe: a Hotmart nem sempre repassa o nosso sck. Ela apaga em
+  // alguns caminhos dela (agente de vendas, e-mail de recuperação dela,
+  // página de produto), e aí a venda entra como se tivesse vindo do nada,
+  // mesmo tendo sido o anúncio que trouxe a pessoa. Caso real que motivou
+  // isso: Drica Rocha passou pelo quiz pelo ADS 356 às 14:57 e comprou
+  // 1h37 depois, e a venda chegou marcada como HOTMART_SALES_AGENT, sem
+  // anúncio nenhum.
+  //
+  // Janela de 7 dias, definida pelo Felipe: quiz mais antigo que isso não
+  // credita mais a venda ao anúncio. Fica registrado em `atribuicao_fonte`
+  // que a origem foi deduzida, nunca se passa por rastreio direto.
+  let atribuicaoFonte = "direta";
+  let utmSourceFinal   = utmSource;
+  let utmMediumFinal   = utmMedium;
+  let utmCampaignFinal = utmCampaign;
+  let utmContentFinal  = utmContent;
+
+  if (!metaAdId && comprador?.email) {
+    const seteDiasAntes = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+    const { data: lead } = await supabase
+      .from("quiz_leads")
+      .select("utm_source, utm_medium, utm_campaign, utm_content, created_at")
+      .ilike("email", comprador.email)
+      .not("utm_content", "is", null)
+      .gte("created_at", seteDiasAntes)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    const conteudo = lead?.utm_content || "";
+    const idDoAnuncio = conteudo.includes("|") ? conteudo.split("|").pop()!.trim() : "";
+    if (/^\d{10,}$/.test(idDoAnuncio)) {
+      metaAdId = idDoAnuncio;
+      atribuicaoFonte  = "quiz";
+      utmSourceFinal   = utmSourceFinal   || lead!.utm_source;
+      utmMediumFinal   = utmMediumFinal   || lead!.utm_medium;
+      utmCampaignFinal = utmCampaignFinal || lead!.utm_campaign;
+      utmContentFinal  = utmContentFinal  || lead!.utm_content;
+      console.log("Atribuição herdada do quiz:", transactionId, comprador.email, idDoAnuncio);
+    }
+  }
+
   // Resolver ADS interno a partir do meta_ad_id
   let adsNumero: number | null = null;
   if (metaAdId) {
@@ -474,13 +524,15 @@ Deno.serve(async (req) => {
       is_order_bump:          compra?.order_bump?.is_order_bump ?? false,
       order_bump_parent_transaction: compra?.order_bump?.parent_purchase_transaction || null,
       desconto_cupom:         descontoCupom,
-      utm_source:             utmSource,
-      utm_campaign:           utmCampaign,
-      utm_medium:             utmMedium,
-      utm_content:            utmContent,
+      utm_source:             utmSourceFinal,
+      utm_campaign:           utmCampaignFinal,
+      utm_medium:             utmMediumFinal,
+      utm_content:            utmContentFinal,
       utm_term:               utmTerm,
       meta_ad_id:             metaAdId,
       ads_numero:             adsNumero,
+      atribuicao_fonte:       atribuicaoFonte,
+      hotmart_sales_agent:    agenteHotmart,
       comprador_pais:         comprador?.address?.country_iso || comprador?.locale?.country || "BR",
       comprador_estado:       comprador?.address?.state     || null,
       comprador_cidade:       comprador?.address?.city      || null,
