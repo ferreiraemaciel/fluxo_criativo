@@ -27,6 +27,8 @@ Mandar a mensagem de recuperação (aba Funis) **abre automaticamente uma negoci
 
 **Produto novo precisa entrar em `PRODUTOS`**, senão a mensagem sai normalmente mas sem abrir negociação.
 
+**Detalhe que custou uma ida e volta: a etapa do funil mora no CONTATO, não na negociação.** A tela de Propostas agrupa por `crm_whatsapp_contatos.coluna_id`; `crm_whatsapp_negociacoes.coluna_id` existe mas não é o que ela lê (conferido em dois contatos que já apareciam certos em "Comercial": os dois tinham a coluna no contato e `coluna_id` nulo na negociação). Escrever só na negociação deixa o card em "Sem etapa". A function agora grava no contato, e **só quando ele ainda não tem etapa** — quem já foi classificado à mão não é rebaixado por uma mensagem automática. Também cria o item em `crm_whatsapp_negociacao_itens`, que é o que aparece detalhado ao abrir a proposta.
+
 ## Atribuição herdada do quiz quando a Hotmart não repassa o rastreio (2026-08-27)
 
 > Combinado com Felipe em 2026-08-27, janela de 7 dias definida por ele.

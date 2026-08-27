@@ -75,6 +75,13 @@ function variantesTelefoneKhronus(bruto: string): string[] {
 // Coluna "Comercial" do funil de negociações do Khronus (estúdio FMN).
 // Combinado com Felipe em 2026-08-27: mandar mensagem de recuperação já abre
 // uma negociação do produto certo, direto nessa etapa.
+//
+// ATENÇÃO, detalhe que custou uma ida e volta: a etapa do funil que a tela de
+// Propostas mostra vive em `crm_whatsapp_contatos.coluna_id`, NÃO em
+// `crm_whatsapp_negociacoes.coluna_id`. Contato que aparece em "Comercial" na
+// tela tem a coluna no CONTATO e `coluna_id` nulo na negociação (conferido em
+// dois contatos que já estavam certos, Julia Danziger e Patrícia Paulokun).
+// Escrever só na negociação deixa o card em "Sem etapa".
 const COLUNA_COMERCIAL = "8e8d5531-9092-4439-b9a7-bf18310d2b75";
 
 // Valor da negociação por produto. O nome vem do `produto_nome` da venda ou
@@ -204,14 +211,31 @@ Deno.serve(async (req) => {
               titulo: produto.titulo,
               valor: produto.valor,
               status: "pendente",
-              coluna_id: COLUNA_COMERCIAL,
               observacoes: "Aberta automaticamente pela mensagem de recuperação de venda (Tracker FMN).",
             })
             .select("id")
             .single();
           if (errNeg) throw new Error(errNeg.message);
           negociacaoId = nova.id;
+
+          // Item da proposta: é o que aparece detalhado ao abrir a negociação.
+          await khronus.from("crm_whatsapp_negociacao_itens").insert({
+            studio_id: STUDIO_ID,
+            negociacao_id: negociacaoId,
+            nome: produto.titulo,
+            valor: produto.valor,
+            quantidade: 1,
+          });
         }
+
+        // A etapa do funil mora no contato (ver comentário no topo). Só move
+        // quem ainda não tem etapa: contato que alguém já classificou à mão
+        // não é rebaixado por uma mensagem automática.
+        await khronus
+          .from("crm_whatsapp_contatos")
+          .update({ coluna_id: COLUNA_COMERCIAL })
+          .eq("id", contatoId)
+          .is("coluna_id", null);
       } catch (e) {
         // Negociação é registro de apoio: nunca pode derrubar o envio, que é
         // o que o Felipe realmente pediu ao clicar no botão.
