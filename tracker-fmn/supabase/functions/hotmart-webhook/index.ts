@@ -744,19 +744,36 @@ function normalizarTelefoneWhatsapp(raw: string): string {
   return d;
 }
 
-// Mesma lógica de contratovisual/src/lib/khronus-whatsapp.ts. O Khronus
-// guarda telefone SEM o 9º dígito (12 dígitos: 55+DDD+8) — é assim que o
-// WhatsApp normaliza por baixo. Diferente de normalizarTelefoneWhatsapp
-// acima (que mantém o 9 e é usado só pra bookkeeping local do Tracker).
-function normalizarTelefoneKhronus(bruto: string): string | null {
+// Telefone no Khronus: NÃO dá pra adivinhar se o número canônico do WhatsApp
+// tem ou não o nono dígito.
+//
+// Bug real de 2026-08-27: a primeira versão disso sempre removia o 9 (regra
+// tirada de um comentário do Blindagem, que tinha observado contatos com 12
+// dígitos). Só que "o 9 que sobra" e "o 9 que faz parte do número" são
+// indistinguíveis olhando só os dígitos: Elisabete Petry é 51 92000-4406, e
+// remover o 9 gerou 51 2000-4406, um número que não existe. A Ponte foi
+// perguntar ao WhatsApp e voltou "esse número não tem WhatsApp", corretamente.
+//
+// Regra certa: guardar o número COMO ELE É (55 + DDD + 9 dígitos, quando for
+// celular) e deixar o WhatsApp dizer qual é o identificador de verdade, via
+// queryExists na Ponte. Na hora de PROCURAR um contato que já existe, tentar
+// as duas variantes, porque contato antigo pode ter sido salvo sem o 9.
+function variantesTelefoneKhronus(bruto: string): string[] {
   const digitos = String(bruto || "").replace(/\D/g, "");
-  if (!digitos) return null;
-  let local = digitos.startsWith("55") && digitos.length > 11 ? digitos.slice(2) : digitos;
+  if (!digitos) return [];
+  const local = digitos.startsWith("55") && digitos.length > 11 ? digitos.slice(2) : digitos;
+
+  const variantes: string[] = [];
   if (local.length === 11 && local[2] === "9") {
-    local = local.slice(0, 2) + local.slice(3);
+    variantes.push(`55${local}`);                                  // com o 9 (o número de verdade)
+    variantes.push(`55${local.slice(0, 2)}${local.slice(3)}`);      // sem o 9 (formato antigo)
+  } else if (local.length === 10) {
+    variantes.push(`55${local}`);                                  // já veio sem o 9
+    variantes.push(`55${local.slice(0, 2)}9${local.slice(2)}`);     // com o 9 acrescentado
+  } else if (local.length >= 10) {
+    variantes.push(`55${local}`);
   }
-  if (local.length !== 10) return null;
-  return `55${local}`;
+  return variantes;
 }
 
 // Marca o contato do Khronus com a tag do produto comprado. Idempotente: se
@@ -766,16 +783,16 @@ function normalizarTelefoneKhronus(bruto: string): string | null {
 // registro da venda, que é o que realmente importa nesse webhook.
 async function marcarTagDoProduto(produtoId: string, telefoneRaw: string) {
   const tagId = TAG_POR_PRODUTO[produtoId];
-  const telefone = normalizarTelefoneKhronus(telefoneRaw);
-  if (!tagId || !telefone) return;
+  const variantes = variantesTelefoneKhronus(telefoneRaw);
+  if (!tagId || !variantes.length) return;
 
   try {
-    const { data: contato } = await khronus
+    const { data: achados } = await khronus
       .from("crm_whatsapp_contatos")
       .select("id")
       .eq("studio_id", STUDIO_ID_KHRONUS)
-      .eq("telefone", telefone)
-      .maybeSingle();
+      .in("telefone", variantes);
+    const contato = (achados || [])[0];
     // Sem contato no Khronus não há o que marcar. Não cria contato só pra
     // pendurar tag: quem cria é o fluxo de mensagem (boas-vindas), e aí a
     // marcação acontece na venda seguinte ou no backfill.
@@ -818,7 +835,10 @@ async function enviarBoasVindasMcv(transactionId: string, telefoneRaw: string, n
     return;
   }
   const to = normalizarTelefoneWhatsapp(telefoneRaw);
-  const telefoneKhronus = normalizarTelefoneKhronus(telefoneRaw);
+  const variantesKhronus = variantesTelefoneKhronus(telefoneRaw);
+  // A primeira variante é o número como ele é de verdade; é ela que vai pra
+  // fila. As outras só ajudam a reconhecer contato salvo em formato antigo.
+  const telefoneKhronus = variantesKhronus[0] || null;
   const primeiroNome = (nome || "").trim().split(/\s+/)[0] || "tudo bem";
   const corpo = renderCorpoTemplate("boas_vindas_mcv", [primeiroNome, WHATSAPP_GRUPO_LINK_MCV]);
 
@@ -830,14 +850,13 @@ async function enviarBoasVindasMcv(transactionId: string, telefoneRaw: string, n
     if (!telefoneKhronus) {
       console.log("Boas-vindas MCV pulada, telefone inválido:", transactionId, to);
     } else {
-      const { data: existente } = await khronus
+      const { data: achados } = await khronus
         .from("crm_whatsapp_contatos")
         .select("id")
         .eq("studio_id", STUDIO_ID_KHRONUS)
-        .eq("telefone", telefoneKhronus)
-        .maybeSingle();
+        .in("telefone", variantesKhronus);
 
-      let contatoId = existente?.id;
+      let contatoId = (achados || [])[0]?.id;
       if (!contatoId) {
         const { data: novo, error: errContato } = await khronus
           .from("crm_whatsapp_contatos")

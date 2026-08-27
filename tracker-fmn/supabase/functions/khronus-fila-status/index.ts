@@ -14,19 +14,36 @@ const khronus = createClient(
 
 const STUDIO_ID = "d00109c7-84ec-4905-b39d-cbe0da66af75"; // "Fotografia é o Meu Negócio" (número de suporte do FMN)
 
-// Mesma lógica de contratovisual/src/lib/khronus-whatsapp.ts. O Khronus
-// guarda telefone SEM o 9º dígito (12 dígitos: 55+DDD+8) — sem isso, a
-// consulta nunca bate com o que a Ponte já reconhece. Ver o comentário
-// completo em enviar-recuperacao-khronus/index.ts.
-function normalizarTelefoneKhronus(bruto: string): string | null {
+// Telefone no Khronus: NÃO dá pra adivinhar se o número canônico do WhatsApp
+// tem ou não o nono dígito.
+//
+// Bug real de 2026-08-27: a primeira versão disso sempre removia o 9 (regra
+// tirada de um comentário do Blindagem, que tinha observado contatos com 12
+// dígitos). Só que "o 9 que sobra" e "o 9 que faz parte do número" são
+// indistinguíveis olhando só os dígitos: Elisabete Petry é 51 92000-4406, e
+// remover o 9 gerou 51 2000-4406, um número que não existe. A Ponte foi
+// perguntar ao WhatsApp e voltou "esse número não tem WhatsApp", corretamente.
+//
+// Regra certa: guardar o número COMO ELE É (55 + DDD + 9 dígitos, quando for
+// celular) e deixar o WhatsApp dizer qual é o identificador de verdade, via
+// queryExists na Ponte. Na hora de PROCURAR um contato que já existe, tentar
+// as duas variantes, porque contato antigo pode ter sido salvo sem o 9.
+function variantesTelefoneKhronus(bruto: string): string[] {
   const digitos = String(bruto || "").replace(/\D/g, "");
-  if (!digitos) return null;
-  let local = digitos.startsWith("55") && digitos.length > 11 ? digitos.slice(2) : digitos;
+  if (!digitos) return [];
+  const local = digitos.startsWith("55") && digitos.length > 11 ? digitos.slice(2) : digitos;
+
+  const variantes: string[] = [];
   if (local.length === 11 && local[2] === "9") {
-    local = local.slice(0, 2) + local.slice(3);
+    variantes.push(`55${local}`);                                  // com o 9 (o número de verdade)
+    variantes.push(`55${local.slice(0, 2)}${local.slice(3)}`);      // sem o 9 (formato antigo)
+  } else if (local.length === 10) {
+    variantes.push(`55${local}`);                                  // já veio sem o 9
+    variantes.push(`55${local.slice(0, 2)}9${local.slice(2)}`);     // com o 9 acrescentado
+  } else if (local.length >= 10) {
+    variantes.push(`55${local}`);
   }
-  if (local.length !== 10) return null;
-  return `55${local}`;
+  return variantes;
 }
 
 const CORS = {
@@ -57,7 +74,9 @@ Deno.serve(async (req) => {
     });
   }
 
-  const candidatos = [...new Set(telefones.map(normalizarTelefoneKhronus).filter(Boolean) as string[])];
+  // Todas as variantes de cada telefone: contato/fila podem estar salvos com
+  // ou sem o nono dígito, e não dá pra saber qual sem perguntar ao WhatsApp.
+  const candidatos = [...new Set(telefones.flatMap(variantesTelefoneKhronus))];
 
   try {
     // Um telefone por status mais recente: se a última tentativa falhou, o

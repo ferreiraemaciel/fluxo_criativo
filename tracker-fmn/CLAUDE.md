@@ -2,6 +2,31 @@
 
 > Instruções específicas do Tracker FMN. Complementa o CLAUDE.md da raiz do fluxo-criativo (regras gerais do workshop), mas essas aqui valem só dentro desta pasta.
 
+## Telefone: nunca adivinhar o nono dígito (bug real, 2026-08-27)
+
+**A regra "o Khronus guarda telefone sem o nono dígito" era falsa como generalização**, e virou bug. Ela saiu de um comentário do Blindagem que tinha observado contatos com 12 dígitos, mas "o 9 que sobra" e "o 9 que faz parte do número" são indistinguíveis olhando só os dígitos.
+
+**Caso real:** Elisabete Petry é `51 92000-4406`. Removendo o 9 virou `51 2000-4406`, um número que não existe. A mensagem foi enfileirada, a Ponte perguntou ao WhatsApp e voltou corretamente `esse número não tem WhatsApp`. (Só ficou visível porque a Ponte tinha ganhado o `queryExists` no dia anterior; antes daria erro genérico.)
+
+**Regra certa, aplicada nas Edge Functions e no frontend:**
+- **Gravar** o número como ele é (55 + DDD + 9 dígitos quando é celular). Quem decide o identificador final é o WhatsApp, via `queryExists` na Ponte.
+- **Procurar** contato existente testando as DUAS variantes (`variantesTelefoneKhronus` nas functions), porque contato antigo pode ter sido salvo no formato sem o 9.
+- **Comparar** entre Tracker e Khronus por uma chave que ignora esse dígito: `55 + DDD + últimos 8` (`chaveTel` no `funis.jsx`).
+
+Varredura feita depois da correção: a Elisabete foi o único contato afetado.
+
+## Mensagem de recuperação abre negociação no funil (2026-08-27)
+
+> Combinado com Felipe em 2026-08-27.
+
+Mandar a mensagem de recuperação (aba Funis) **abre automaticamente uma negociação** no Khronus pro contato, com o produto da venda que ficou para trás, direto na coluna **Comercial** (`COLUNA_COMERCIAL` em `enviar-recuperacao-khronus/index.ts`). O produto vem do `produto_nome` da venda/abandono, que é texto livre da Hotmart, então o de-para é por palavra-chave (`PRODUTOS`), com o valor de cada um.
+
+**Idempotente:** se já existe negociação em aberto (`status='pendente'`) do mesmo produto pra essa pessoa, não cria outra. Mandar uma segunda mensagem não é uma segunda negociação.
+
+**Nunca derruba o envio:** falha ao criar negociação é engolida e logada. O que o Felipe pediu ao clicar no botão foi mandar a mensagem; a negociação é registro de apoio.
+
+**Produto novo precisa entrar em `PRODUTOS`**, senão a mensagem sai normalmente mas sem abrir negociação.
+
 ## Atribuição herdada do quiz quando a Hotmart não repassa o rastreio (2026-08-27)
 
 > Combinado com Felipe em 2026-08-27, janela de 7 dias definida por ele.

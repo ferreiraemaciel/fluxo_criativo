@@ -513,11 +513,26 @@ const tel11 = s => String(s || '').replace(/\D/g, '').slice(-11);
 // Descoberto em 2026-08-26: a Ponte só reconhece contato nesse formato,
 // diferente de tel11 (usado pra whatsapp_mensagens/API oficial, que mantém
 // o 9). Retorna null se não der pra normalizar (telefone incompleto).
-const telKhronus = raw => {
+// Chave estável pra COMPARAR telefone entre Tracker e Khronus: 55 + DDD +
+// últimos 8 dígitos. Não dá pra saber se o número canônico do WhatsApp tem ou
+// não o nono dígito (bug real de 2026-08-27: Elisabete Petry é 51 92000-4406,
+// e remover o 9 gerava 51 2000-4406, número que não existe), então a
+// comparação ignora esse dígito em vez de tentar adivinhar.
+const chaveTel = raw => {
   let d = String(raw || '').replace(/\D/g, '');
   d = d.startsWith('55') && d.length > 11 ? d.slice(2) : d;
-  if (d.length === 11 && d[2] === '9') d = d.slice(0, 2) + d.slice(3);
-  return d.length === 10 ? '55' + d : null;
+  if (d.length < 10) return null;
+  return '55' + d.slice(0, 2) + d.slice(-8);
+};
+
+// As duas formas possíveis, pra CONSULTAR: contato pode estar salvo com ou
+// sem o 9. Quem decide qual é a real é o WhatsApp, na Ponte.
+const variantesTel = raw => {
+  let d = String(raw || '').replace(/\D/g, '');
+  d = d.startsWith('55') && d.length > 11 ? d.slice(2) : d;
+  if (d.length < 10) return [];
+  const ddd = d.slice(0, 2), fim = d.slice(-8);
+  return [`55${ddd}9${fim}`, `55${ddd}${fim}`];
 };
 
 const SITUACAO_INFO = {
@@ -564,7 +579,7 @@ function EnviarRecuperacaoModal({ item, onClose }) {
       const r = await fetch(`${SUPA_URL}/functions/v1/enviar-recuperacao-khronus`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${SUPA_KEY}` },
-        body: JSON.stringify({ telefone: item.telefone, nome: item.nome, corpo }),
+        body: JSON.stringify({ telefone: item.telefone, nome: item.nome, corpo, produto: item.produto_nome }),
       });
       const d = await r.json().catch(() => ({}));
       if (!r.ok || d.erro) throw new Error(d.erro || `Erro HTTP ${r.status}`);
@@ -711,7 +726,7 @@ function CarrinhoTable({ itens, recuperados, contatadosOficial, contatadosSuport
               const quente = dias != null && dias <= 7;
               const sit = SITUACAO_INFO[it.situacao] || { label: it.situacao || '—', cor: '#94a3b8' };
               const jaContatado   = it.telefone && contatadosOficial.has(tel11(it.telefone));
-              const telK          = telKhronus(it.telefone);
+              const telK          = chaveTel(it.telefone);
               const statusSuporte = telK ? contatadosSuporte.get(telK) : null;
               const jaSuporte     = !!statusSuporte;
               const falhouSuporte = statusSuporte === 'falhou';
@@ -943,7 +958,7 @@ function FunisScreen({ onNavigate }) {
   const [carrinho, setCarrinho]           = useState([]);
   const [recuperados, setRecuperados]     = useState(new Set());
   const [contatadosOficial, setContatadosOficial] = useState(new Set());
-  const [contatadosSuporte, setContatadosSuporte] = useState(new Map()); // telKhronus -> status
+  const [contatadosSuporte, setContatadosSuporte] = useState(new Map()); // chaveTel -> status
   const [loadingCarrinho, setLoadingCarrinho] = useState(false);
   const [extraAgg, setExtraAgg]     = useState({});
   const [funnel, setFunnel]         = useState('all');
@@ -1080,7 +1095,7 @@ function FunisScreen({ onNavigate }) {
       // existe), pra sinalizar "falhou" (ex: número sem WhatsApp) separado
       // de "pendente"/"enviado" — pedido do Felipe no mesmo dia, depois de
       // um caso real de erro "contato sem identificador de chat".
-      const telefonesKhronus = [...new Set(itens.map(i => telKhronus(i.telefone)).filter(Boolean))];
+      const telefonesKhronus = [...new Set(itens.flatMap(i => variantesTel(i.telefone)))];
       if (telefonesKhronus.length) {
         try {
           const r = await fetch(`${window.db.supabaseUrl}/functions/v1/khronus-fila-status`, {
@@ -1090,7 +1105,7 @@ function FunisScreen({ onNavigate }) {
           });
           const d = await r.json().catch(() => ({}));
           const porTel = new Map();
-          (d.telefones || []).forEach(({ telefone, status }) => porTel.set(telefone, status));
+          (d.telefones || []).forEach(({ telefone, status }) => porTel.set(chaveTel(telefone), status));
           setContatadosSuporte(porTel);
         } catch {
           setContatadosSuporte(new Map());
