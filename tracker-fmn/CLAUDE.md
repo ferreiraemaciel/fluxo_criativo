@@ -14,6 +14,10 @@
 
 **Backfill rodado uma vez:** 307 vendas aprovadas ganharam anúncio pelo cruzamento com o quiz (79 delas casaram com um ADS ainda cadastrado na tabela `ads`; o resto tem `meta_ad_id` de anúncio já removido, o que é normal). 6 vendas marcadas como auxílio do agente.
 
+**Auxílio do WhatsApp (2026-08-27, mesma sessão).** Mesma lógica do agente da Hotmart, agora pro nosso lado: `vendas.whatsapp_auxilio` registra **quem falou com a pessoa no WhatsApp até 7 dias antes da compra**, sem nunca substituir a origem do anúncio. Valores: `'ia'` (só o Claudinho, mensagens com `origem` em `ia`/`ia_retomada`), `'humano'` (só atendimento humano, `origem='manual'`), `'ambos'`, `'automatico'` (só disparo automático sem atendimento: resultado do quiz, follow-up de checkout) e `NULL` (não houve mensagem). Na tela, etiqueta verde "Claudinho", "atendimento humano" ou "Claudinho + humano"; `automatico` não vira etiqueta pra não inflar o crédito do time, mas fica no banco.
+
+As três marcações convivem na mesma venda de propósito: **quem trouxe** (anúncio, direto ou via quiz), **quem ajudou a fechar** (Claudinho ou humano) e **quem entrou no meio** (agente da Hotmart). Backfill rodado uma vez: 32 vendas com auxílio identificado no histórico (5 com Claudinho e humano juntos, 3 só humano, 1 só Claudinho, 23 automático).
+
 **Efeito colateral pra ter em mente:** recuperar essas vendas melhora o CPA dos anúncios afetados, e as regras G1/G5 pausam por CPA. Anúncio que parecia caro pode passar a parecer saudável. É a verdade aparecendo, mas muda o gatilho das pausas automáticas.
 
 ## O corte de 1.000 linhas do Supabase (armadilha que mordeu 3 vezes no mesmo dia)

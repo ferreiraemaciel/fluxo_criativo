@@ -1585,7 +1585,7 @@ function useRecentSales(limit = 10) {
     async function load(isUpdate) {
       const { data: rows } = await window.db
         .from('vendas')
-        .select('id,hotmart_transaction_id,valor_bruto,status,created_at,utm_source,utm_medium,utm_campaign,utm_content,meta_ad_id,ads_numero,produto_nome,hotmart_event,comprador_nome,comprador_telefone,parcelas,metodo_pagamento,atribuicao_fonte,hotmart_sales_agent')
+        .select('id,hotmart_transaction_id,valor_bruto,status,created_at,utm_source,utm_medium,utm_campaign,utm_content,meta_ad_id,ads_numero,produto_nome,hotmart_event,comprador_nome,comprador_telefone,parcelas,metodo_pagamento,atribuicao_fonte,hotmart_sales_agent,whatsapp_auxilio')
         .in('status', ['aprovada','reembolsada','recuperacao'])
         .order('created_at', { ascending: false })
         .limit(limit);
@@ -1852,28 +1852,6 @@ function RecentSalesFeed({ sales }) {
                       title={sale.ads_titulo || ('ADS ' + sale.ads_numero)}>
                       {sale.ads_titulo || `ADS ${sale.ads_numero}`}
                     </span>
-                    {/* A Hotmart nem sempre repassa o nosso rastreio. Quando o
-                        anúncio foi deduzido pelo quiz (mesmo e-mail, até 7 dias
-                        antes da compra), isso fica explícito: é atribuição
-                        indireta, não rastreio direto. */}
-                    {sale.atribuicao_fonte === 'quiz' && (
-                      <span title="Anúncio deduzido pelo quiz (mesmo e-mail, até 7 dias antes da compra). A Hotmart não repassou o rastreio nessa venda."
-                        style={{ flexShrink:0, fontSize:9, fontFamily:'Roboto,sans-serif', fontWeight:700,
-                          padding:'1px 5px', borderRadius:4, whiteSpace:'nowrap',
-                          color:'#a78bfa', background:'rgba(167,139,250,.12)',
-                          border:'1px solid rgba(167,139,250,.3)' }}>
-                        via quiz
-                      </span>
-                    )}
-                    {sale.hotmart_sales_agent && (
-                      <span title="O Agente de Vendas da Hotmart entrou no caminho dessa venda. O anúncio de origem continua sendo o mostrado aqui."
-                        style={{ flexShrink:0, fontSize:9, fontFamily:'Roboto,sans-serif', fontWeight:700,
-                          padding:'1px 5px', borderRadius:4, whiteSpace:'nowrap',
-                          color:'#fbbf24', background:'rgba(251,191,36,.12)',
-                          border:'1px solid rgba(251,191,36,.3)' }}>
-                        agente Hotmart
-                      </span>
-                    )}
                   </>
                 ) : ctx ? (
                   <span style={{ display:'inline-flex', alignItems:'center', gap:5, minWidth:0 }}>
@@ -1884,6 +1862,45 @@ function RecentSalesFeed({ sales }) {
                   </span>
                 ) : (
                   <span style={{ fontSize:11, fontFamily:'Roboto,sans-serif', color:'var(--text-3)' }}>—</span>
+                )}
+                {/* A Hotmart nem sempre repassa o nosso rastreio. Quando o
+                    anúncio foi deduzido pelo quiz (mesmo e-mail, até 7 dias
+                    antes da compra), isso fica explícito: é atribuição
+                    indireta, não rastreio direto. */}
+                {sale.atribuicao_fonte === 'quiz' && (
+                  <span title="Anúncio deduzido pelo quiz (mesmo e-mail, até 7 dias antes da compra). A Hotmart não repassou o rastreio nessa venda."
+                    style={{ flexShrink:0, fontSize:9, fontFamily:'Roboto,sans-serif', fontWeight:700,
+                      padding:'1px 5px', borderRadius:4, whiteSpace:'nowrap',
+                      color:'#a78bfa', background:'rgba(167,139,250,.12)',
+                      border:'1px solid rgba(167,139,250,.3)' }}>
+                    via quiz
+                  </span>
+                )}
+                {/* Auxílio do WhatsApp: soma à origem do anúncio, nunca
+                    substitui. Uma venda pode ter vindo do anúncio E ter
+                    tido o Claudinho ou um humano conversando no meio. */}
+                {sale.whatsapp_auxilio && sale.whatsapp_auxilio !== 'automatico' && (
+                  <span title={
+                      sale.whatsapp_auxilio === 'ambos'  ? 'Teve conversa no WhatsApp com o Claudinho e com atendimento humano antes da compra.'
+                    : sale.whatsapp_auxilio === 'humano' ? 'Teve atendimento humano no WhatsApp antes da compra.'
+                    : 'O Claudinho conversou com essa pessoa no WhatsApp antes da compra.'}
+                    style={{ flexShrink:0, fontSize:9, fontFamily:'Roboto,sans-serif', fontWeight:700,
+                      padding:'1px 5px', borderRadius:4, whiteSpace:'nowrap',
+                      color:'#4ade80', background:'rgba(74,222,128,.12)',
+                      border:'1px solid rgba(74,222,128,.3)' }}>
+                    {sale.whatsapp_auxilio === 'ambos'  ? 'Claudinho + humano'
+                   : sale.whatsapp_auxilio === 'humano' ? 'atendimento humano'
+                   : 'Claudinho'}
+                  </span>
+                )}
+                {sale.hotmart_sales_agent && (
+                  <span title="O Agente de Vendas da Hotmart entrou no caminho dessa venda. O anúncio de origem continua sendo o mostrado aqui."
+                    style={{ flexShrink:0, fontSize:9, fontFamily:'Roboto,sans-serif', fontWeight:700,
+                      padding:'1px 5px', borderRadius:4, whiteSpace:'nowrap',
+                      color:'#fbbf24', background:'rgba(251,191,36,.12)',
+                      border:'1px solid rgba(251,191,36,.3)' }}>
+                    agente Hotmart
+                  </span>
                 )}
               </div>
 

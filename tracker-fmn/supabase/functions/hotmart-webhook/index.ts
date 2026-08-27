@@ -458,6 +458,39 @@ Deno.serve(async (req) => {
     }
   }
 
+  // Quem falou com essa pessoa no WhatsApp antes da compra.
+  //
+  // Combinado com Felipe em 2026-08-27, mesma ideia do agente da Hotmart:
+  // isso NÃO substitui a atribuição do anúncio, soma a ela. Uma venda pode
+  // ter vindo do ADS 356 E ter tido o Claudinho conversando no meio do
+  // caminho, e as duas informações importam (quem trouxe x quem ajudou a
+  // fechar). Mesma janela de 7 dias da atribuição pelo quiz.
+  let whatsappAuxilio: string | null = null;
+  const telefoneComprador = comprador?.checkout_phone || comprador?.phone || comprador?.mobile_phone || null;
+  if (telefoneComprador) {
+    const telWa = normalizarTelefoneWhatsapp(telefoneComprador);
+    const seteDias = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+    const { data: msgs } = await supabase
+      .from("whatsapp_mensagens")
+      .select("origem")
+      .eq("telefone", telWa)
+      .eq("direcao", "saida")
+      .gte("created_at", seteDias);
+
+    const origens = new Set((msgs || []).map((m: any) => m.origem));
+    const teveIa     = origens.has("ia") || origens.has("ia_retomada");
+    const teveHumano = origens.has("manual");
+    // Disparo automático (resultado do quiz, follow-up de checkout) não é
+    // atendimento, mas também empurrou a venda — fica registrado separado
+    // pra não inflar o crédito do time nem sumir do histórico.
+    const teveAutomatico = origens.has("quiz") || origens.has("followup_checkout");
+
+    if (teveIa && teveHumano)      whatsappAuxilio = "ambos";
+    else if (teveIa)               whatsappAuxilio = "ia";
+    else if (teveHumano)           whatsappAuxilio = "humano";
+    else if (teveAutomatico)       whatsappAuxilio = "automatico";
+  }
+
   // Resolver ADS interno a partir do meta_ad_id
   let adsNumero: number | null = null;
   if (metaAdId) {
@@ -533,6 +566,7 @@ Deno.serve(async (req) => {
       ads_numero:             adsNumero,
       atribuicao_fonte:       atribuicaoFonte,
       hotmart_sales_agent:    agenteHotmart,
+      whatsapp_auxilio:       whatsappAuxilio,
       comprador_pais:         comprador?.address?.country_iso || comprador?.locale?.country || "BR",
       comprador_estado:       comprador?.address?.state     || null,
       comprador_cidade:       comprador?.address?.city      || null,
