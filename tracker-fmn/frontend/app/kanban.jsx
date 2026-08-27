@@ -481,9 +481,17 @@ function brlToCents(s) {
   return Number.isFinite(n) ? Math.round(n * 100) : 0;
 }
 
+// Link de destino por produto: cada um tem o seu quiz, e mandar tráfego de
+// Blindagem pro quiz do MCV queimaria verba levando a pessoa pro funil errado.
+// Combinado com Felipe em 2026-08-27, quando os anúncios de Blindagem entraram.
+const LINK_POR_PRODUTO = {
+  MCV: 'https://www.fotografoprotegido.fotografiaeomeunegocio.com.br',
+  BLI: 'https://www.diagnostico.fotografiaeomeunegocio.com.br',
+};
+
 function MetaAdModal({ card, onClose }) {
   // Link de destino limpo. O rastreamento (UTM) vai no campo "Parâmetros de URL".
-  const LINK_DEFAULT = `https://www.fotografoprotegido.fotografiaeomeunegocio.com.br`;
+  const LINK_DEFAULT = LINK_POR_PRODUTO[(card.raw || {}).produto] || LINK_POR_PRODUTO.MCV;
 
   // listas e seleção
   const [campaigns, setCampaigns]       = useState([]);

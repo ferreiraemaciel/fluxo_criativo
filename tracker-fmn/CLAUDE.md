@@ -105,6 +105,15 @@ O ticket do Blindagem é o plano anual/à vista (R$397), escolha do Felipe: as v
 
 **Como o código resolve** (`verificarRegraG1` e `verificarRegraG5` em `meta-sync/index.ts`): a consulta ao `insights_cache` usa o **menor** limite entre os produtos (só pra não varrer a tabela inteira), e o limite exato é conferido depois, ad a ad, já sabendo o `ads.produto` daquele anúncio. Os valores soltos na raiz de `parametros` (`ticket`, `cpa_limite`) continuam existindo como fallback pra ADS sem produto reconhecido. A mensagem do alerta e o `dados_snapshot` agora carregam o produto, pra ficar claro qual limite foi aplicado.
 
+**Link de destino do anúncio segue o produto** (2026-08-27). Cada produto tem o seu quiz, e mandar tráfego de Blindagem pro quiz do MCV queimaria verba levando a pessoa pro funil errado. `LINK_POR_PRODUTO` em `kanban.jsx` pré-preenche o modal de publicar conforme `ads.produto`:
+
+| Produto | Quiz | Projeto Cloudflare Pages |
+|---|---|---|
+| MCV | `www.fotografoprotegido.fotografiaeomeunegocio.com.br` | `quiz-fotografo-protegido` |
+| BLI | `www.diagnostico.fotografiaeomeunegocio.com.br` | `quiz-blindagem` |
+
+O campo continua editável no modal, pra teste pontual. Código-fonte dos dois quizzes: `~/Documents/quiz-fotografo-protegido` e `~/Documents/quiz-blindagem` (o `funnelSlug` em `quiz-config.js` é o que amarra o lead ao funil em `quiz_leads.funnel_slug`).
+
 **Na tela:** seletor MCV/BLI no cabeçalho do card (dourado pra MCV, azul pra BLI) e badge azul "BLI" no card da lista. Só o BLI ganha badge: a conta é quase toda MCV, destacar a exceção é o que ajuda a achar.
 
 
