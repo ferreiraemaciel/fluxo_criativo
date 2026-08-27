@@ -54,13 +54,19 @@ async function modoTreinamentoAtivo(supabase: any): Promise<boolean> {
   return data?.valor === true;
 }
 
+// Decide pelo TAMANHO TOTAL do número, nunca pelo prefixo "55": DDD 55 (Rio
+// Grande do Sul) é idêntico ao código do país, então "começa com 55" não diz
+// se o código do país já está presente. Bug real em 2026-08-27 (Jonathan/Jho
+// Ferreira Fotografia, DDD 55): a versão antiga assumia "já tem código do
+// país" e corrompia o número de dois jeitos diferentes, um pra cada telefone
+// bruto (quiz vs Meta), virando dois contatos pra mesma pessoa.
 function normalizarTelefoneWhatsapp(raw: string): string {
   let d = String(raw || "").replace(/\D/g, "");
   if (d.startsWith("0")) d = d.replace(/^0+/, "");
-  if (!d.startsWith("55")) d = "55" + d;
-  const resto = d.slice(2);
-  if (resto.length === 10) d = "55" + resto.slice(0, 2) + "9" + resto.slice(2);
-  return d;
+  if (d.length === 10) d = "55" + d.slice(0, 2) + "9" + d.slice(2); // DDD+8, sem DDI e sem o 9
+  else if (d.length === 11) d = "55" + d; // DDD+9, sem DDI
+  else if (d.length === 12) d = d.slice(0, 4) + "9" + d.slice(4); // DDI+DDD+8, falta o 9
+  return d; // 13 dígitos: já está no formato certo (DDI+DDD+9+8)
 }
 
 async function buscarFunnelSlug(supabase: any, telefone: string): Promise<string> {
