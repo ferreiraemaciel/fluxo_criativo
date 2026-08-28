@@ -1409,6 +1409,317 @@ Saem as tarefas de sondar, escolher e negociar parceiros. Entram, no lugar:
 
 ---
 
+# PARTE 9. AULA 3: RECUPERAÇÃO DE VENDAS 1 A 1 NA BLACK
+
+Palestrante: **Rafael**, gestor comercial do time do Fluxo. Quarta Black Friday dele. Trajetória: vendeu internet porta a porta, passou por Vivo e Cielo, três anos de call center fazendo 70 a 80 ligações por dia, e hoje é gestor da área.
+
+## 9.1 Glossário do canal
+
+| Termo | O que é |
+|---|---|
+| **API oficial** | Canal homologado pela Meta. A analogia dele: estrada pavimentada com pedágio. Mais cara, mas **não corre risco de banimento**, permite vários atendentes no mesmo número e tem conta verificada |
+| **API não oficial** | Estrada de terra. Barata e rápida, mas o número **pode ser banido**, é instável e não tem suporte nem garantia |
+| **Template** | Mensagem pré-aprovada pela Meta, obrigatória para iniciar conversa na API oficial |
+| **Sessão aberta** | Quando a pessoa responde, abrem-se **24 horas** para conversar livremente, contadas sempre a partir da última resposta dela |
+| **Recepção ativa** | Quando o lead chama você. Muito mais fácil vender assim |
+| **Efeito novidade** | Reativar quem disse não antes, quando surge uma condição nova |
+| **SLA** | Tempo de resposta do atendente. Quanto menor, mais se vende |
+
+**As duas categorias de template, e por que importam:**
+
+| Categoria | O que é | Custo | Risco |
+|---|---|---|---|
+| **Utility** | Dá continuidade a uma ação que a pessoa já começou: pedido em aberto, pagamento aprovado, checkout iniciado. Não oferta nada | Mais barata | Aprova mais fácil, entrega mais estável |
+| **Marketing** | Gera demanda, oferta, promoção, reativação de base | Mais cara | **Tem limite.** Volume alto derruba a qualidade do número, porque a Meta entende como spam |
+
+**Recomendação dele: sempre que possível, aprovar como Utility.**
+
+## 9.2 O dado mais forte da palestra
+
+O time do Fluxo recebia 1.000 leads e só conseguia falar com 400. A equipe de marketing mudou os botões da página para que **as pessoas chamassem eles** em vez de o time ter que abordar.
+
+| Antes | Depois |
+|---|---|
+| 40% de contato efetivo | **mais de 75%** |
+| 400 conversas em 1.000 leads | 750 conversas em 1.000 leads |
+
+"Se antes eu falava com 400 de 1.000 e hoje falo com 750, a chance de vender é muito maior."
+
+O motivo técnico: quem chama abre a sessão de 24 horas sozinho, e você não gasta template nem depende de aprovação para responder.
+
+## 9.3 Captura antes da conversa
+
+Na página de vendas, o botão abre um **pop-up pedindo nome, e-mail e telefone** antes de mandar para o WhatsApp. Com validador de número, se houver.
+
+**Por que o pop-up importa:** se a pessoa preenche e depois não clica para conversar, você ainda tem o contato dela e pode voltar depois. Sem o pop-up, quem não mandar mensagem some para sempre.
+
+**A alternativa simples:** botão direto para o WhatsApp, sem pop-up. Perde o contato de quem não escrever, mas é melhor do que não fazer. "É melhor você começar simples e fazer o que consegue do que não fazer esperando as melhores condições."
+
+## 9.4 Aquecimento de chip, se for canal não oficial
+
+Não acontece de um dia para o outro. Começar com antecedência.
+
+- Colocar **foto, nome do negócio e descrição**. Número sem nada disso é lido como robô pelo algoritmo
+- Começar a falar com pessoas de forma **crescente**, nunca em rajada. Ele já derrubou um número mandando dez mensagens de uma vez
+- **O que aquece é a resposta, não o envio**
+- Pedir para as pessoas salvarem o seu número
+- **Nunca enviar mensagens idênticas em sequência.** Isso é lido como spam e derruba
+- Ter **vários números de reserva**, para substituir quando um cair
+
+O Fluxo usa API oficial como canal principal e mantém números não oficiais como backup para quando há problema de entrega.
+
+**Sobre banimento:** banimento leve tira o número por 24 a 48 horas. Banimento total faz perder os dados.
+
+## 9.5 Templates que eles conseguiram aprovar
+
+**Utility, com a variável de nome entre chaves:**
+
+> Identificamos o seu atendimento sobre {{1}} que ainda não foi concluído. Para dar continuidade ao processo, confirme abaixo.
+
+> Identificamos um cadastro relacionado a {{1}}. Para manter seu atendimento ativo, basta confirmar abaixo.
+
+> Seu atendimento de recuperação em {{1}} permanece disponível. Caso ainda queira dar continuidade, confirme abaixo.
+
+**A regra que ele destacou: sempre dois botões, um para continuar e um para encerrar contato.** Se a pessoa clica em encerrar, você não volta nela, e evita que ela bloqueie o número e derrube a sua qualidade.
+
+**Marketing:**
+
+> {{1}}, aqui é o Rafael, do time do Leandro Ladeira. Vi que você acessou o site do Venda Todo Santo Dia. Foi isso mesmo?
+> Botões: [Foi isso] [Já sou aluno] [Não tenho interesse]
+
+**O alerta sobre quantidade de templates.** A esposa dele trabalhou no lançamento de um player grande que tinha apenas **dois templates aprovados**. Isso atrapalhou a venda dela e a do produto. A recomendação: aprovar vários modelos com antecedência, para poder variar.
+
+## 9.6 Cadência de follow up
+
+**Com a sessão aberta**, ou seja, a pessoa já respondeu alguma vez:
+
+| Passo | Espera |
+|---|---|
+| 1º follow | até 2 horas desde a última resposta dela |
+| 2º follow | mais 4 horas |
+| 3º follow | mais 8 horas |
+
+De 2 a 3 follows por sessão aberta.
+
+**Com a sessão fechada**, usando template:
+
+| Passo | Espera |
+|---|---|
+| 1º template | após o fechamento da sessão |
+| 2º | 12 horas |
+| 3º | mais 24 horas |
+| 4º | mais 48 horas |
+| Depois | pausa, e volta dias depois |
+
+"Se você sair mandando uma atrás da outra, a qualidade do seu número diminui. Se for não oficial, o número pode ser banido."
+
+**Como devem ser as mensagens de follow:** curtas, **sem oferta nova**, com botão de saída. O objetivo do follow não é vender, é reabrir a conversa.
+
+Exemplos que eles usam:
+
+> Fiquei sem resposta. Prefere que eu volte mais tarde ou não tem interesse?
+
+> Não recebi seu contato anteriormente. Consegue me dar um retorno?
+
+> Se eu ganhasse uma moeda toda vez que você visualiza e não responde, já dava para comprar um café. Bora conversar?
+
+> Imagino que deve estar corrido por aí, mas até para entender se faz sentido continuar tentando contato: {{1}} ainda é tema do seu interesse, ou posso finalizar o seu atendimento?
+
+**Na reta final da campanha**, e só nela, entram as mensagens mais apelativas:
+
+> O fim está próximo. Você tem 6 horas para decidir de uma vez se entra nesta oferta ou se vai deixar a oportunidade passar e lidar com o arrependimento depois. A escolha é sua. Mas para te ajudar, eu preparei uma proposta. Te mostro sem compromisso.
+
+> Separamos algumas vagas para quem já tinha decidido a compra.
+
+**O aviso junto:** se começar apelativo desde o início, você queima a base antes da hora.
+
+## 9.7 Velocidade é conversão
+
+**78% dos clientes compram da primeira empresa que responde.** Num período em que todo mundo está anunciando, quem responde primeiro vende.
+
+## 9.8 O método de venda: DEF
+
+Método do Neto Simões, três etapas: **Descoberta, Encantamento, Fechamento.** Primeiro entendo o que a pessoa quer, depois resolvo as dores dela, depois fecho.
+
+**Os 4 movimentos na abertura de carrinho**, onde o ciclo é curto:
+
+1. **SLA baixo**, responde rápido. Todo o resto depende disso
+2. Pergunta direta: **"o que falta para você começar?"**
+3. Se aparecer dúvida, esclarece e confirma: **"era só isso mesmo?"**
+4. Faz a proposta e manda o link
+
+É um looping rápido. **Toda vez que houver dúvida, não avance.**
+
+**O princípio que sustenta tudo: primeiro pergunta, depois resolve.** A pessoa precisa verbalizar o problema. Não pode ser você dizendo qual é o problema dela.
+
+**A técnica da permissão.** Antes de fazer perguntas, pedir licença: "tudo bem se eu te fizer algumas perguntas?" Sem isso, a pessoa estranha o interrogatório e para de responder. É o erro clássico de quem vende por WhatsApp mandando rajada de áudio.
+
+**A técnica de levar para o desconhecido**, para quando a pessoa chega perguntando o preço no perpétuo: "é importante saber o preço, mas só me tira uma dúvida: você entendeu tudo sobre {{o produto}}, ou tem alguma dúvida?" Se entendeu tudo, vem o "o que falta para começar, é só a parte financeira?" e só então o preço. Na Black isso quase não acontece, porque o preço já está na página.
+
+## 9.9 Priorização de leads: a analogia do pão francês
+
+"O lead lembra o pão francês: sai quentinho, mas esfria e endurece."
+
+O erro comum é atender por ordem de chegada. O certo é priorizar por temperatura:
+
+| Prioridade | Quem é |
+|---|---|
+| 1ª | Quem teve **problema de pagamento**. Já tentou comprar e não conseguiu |
+| 2ª | Quem tem **dúvida de pagamento**. Está com a mão no bolso |
+| 3ª | Quem tem uma **dúvida pontual** |
+| 4ª | Quem está **perdido**, perguntando coisa vaga |
+
+Ninguém fica sem resposta. Muda só a ordem.
+
+**A frase que resume:** "o melhor vendedor num lançamento não é o mais técnico nem o mais persuasivo. É o mais organizado e ágil, porque consegue interagir com mais gente e segmentar melhor."
+
+**Exceção importante:** se o volume na abertura for alto e muita gente estiver só pedindo o link, **manda o link.** Não segura para fazer venda consultiva quando a pessoa já decidiu.
+
+## 9.10 A geladeira
+
+Etapa da pipeline para quem não compra agora mas pode comprar depois. Não é lead perdido, e o motivo fica anotado no CRM.
+
+O exemplo real que ele mostrou: um lead parou por dificuldade financeira e foi para a geladeira com essa anotação. Meses depois, ao ver a promoção, ele mesmo voltou e comprou. "Não era um lead ruim, era o momento errado."
+
+## 9.11 Dimensionamento de time
+
+**O cálculo:** número de leads × taxa de sessão aberta = pessoas para atender. Exemplo: 1.000 leads com 50% abrindo sessão dá 500 conversas.
+
+| Contexto | Conversas abertas por atendente, por dia |
+|---|---|
+| Perpétuo, ideal | 15 a 20 |
+| Perpétuo, aceitável | 20 a 30 |
+| Perpétuo, sobrecarga | acima de 30 |
+| **Black, ideal** | **30 a 40** |
+| Black, aceitável | 40 a 50 |
+| Black, sobrecarga | acima de 50 |
+
+Lembrar que abertura e fechamento de carrinho concentram volume. O meio do período é mais estável.
+
+**Freelancer de vendas** custa em torno de R$ 100 por dia, e o ecossistema do método DEF tem gente disponível. "Não é nada de outro mundo contratar um freela."
+
+## 9.12 O que ele disse sobre IA vendedora
+
+Perguntado se dá para trocar o botão de WhatsApp por um agente de IA:
+
+> "Pode ser um caminho viável, mas não escolha entre um ou outro, tenha os dois. Já vi operações tirando os vendedores para só ter IA atendendo, e sempre falta alguma coisa. **Eu não faria esse teste na Black.** Testaria antes."
+
+E depois: "funciona, mas tem que ser uma IA bem treinada, que direcione a conversa para onde você quer."
+
+**Como o Fluxo divide hoje:** produto de cerca de R$ 3.000 vai para atendimento humano via API oficial. Produto de R$ 300 a R$ 400 vai para checkout direto ou para a IA deles, chamada Márcia.
+
+**A regra que decide entre API oficial e não oficial não é o preço do produto, é o volume de leads.** Como a Black concentra volume, a recomendação é oficial.
+
+## 9.13 Detalhes operacionais
+
+- **Fim de semana:** aos domingos, só interagir com quem está interagindo. Não iniciar follow com quem não respondeu
+- **Sessão de 24h fechada** significa recomeçar o fluxo por template
+- **Controle:** planilha serve, CRM ajuda muito. O importante é ter controle de alguma forma
+- **Aula de API oficial com Rafa Neaime em 18 de setembro de 2026**, sobre aquecer número, escrever modelo que passa na aprovação e automatizar a cadência
+
+**A frase de fechamento, do Samuel complementando:** "você tem que escolher a luta que quer lutar. Ou a luta de seguir as regras da Meta, que dá risco menor, ou a luta de correr o risco de perder tudo que você tem."
+
+---
+
+# PARTE 10. O QUE A AULA 3 MUDA NO NOSSO PLANO
+
+## 10.1 Boa notícia: já estamos no canal certo
+
+Fui verificar a infraestrutura do Claudinho. As variáveis no `tracker-fmn/.env` são `WHATSAPP_BUSINESS_ACCOUNT_ID` e `WHATSAPP_PHONE_NUMBER_ID`, que são da **API oficial da Meta**, a WhatsApp Business Platform.
+
+Isso significa que:
+- **Não corremos risco de banimento por volume**, que é o maior medo da palestra
+- Não precisamos aquecer chip nem manter números de reserva
+- Podemos ter vários atendentes no mesmo número
+
+Pulamos direto para o problema que sobra: **templates aprovados**.
+
+## 10.2 A pendência que vira urgente: quantos templates temos aprovados
+
+O alerta mais concreto da palestra foi o caso do player grande que entrou num lançamento com apenas **dois templates aprovados** e teve a venda prejudicada por isso.
+
+Precisamos auditar quantos templates o nosso número tem aprovados hoje, e em que categoria. E aprovar os que faltam com antecedência, porque aprovação leva tempo e pode ser recusada.
+
+**A grade mínima, cruzando esta palestra com a grade de 12 disparos do playbook:**
+
+| Momento | Mensagem | Categoria provável |
+|---|---|---|
+| Captação | Convite para a inscrição da Black | Marketing |
+| Captação | Convite com benefício exclusivo, para os 973 compradores | Marketing |
+| Aquecimento | Lembrete da aula que a pessoa se inscreveu | Utility possível |
+| Aquecimento | Lembrete de que estamos ao vivo | Utility possível |
+| Abertura | Carrinho aberto | Marketing |
+| Carrinho | Bônus relâmpago | Marketing |
+| Carrinho | Quebra de objeção para quem clicou e não comprou | Marketing |
+| Recuperação | Atendimento não concluído, com dois botões | **Utility** |
+| Recuperação | Cadastro identificado, manter ou sair | **Utility** |
+| Follow | Fiquei sem resposta, volto mais tarde ou não tem interesse | Utility possível |
+| Encerramento | Últimas horas | Marketing |
+| Encerramento | Fecha em X horas, carrinho abandonado | Marketing |
+
+## 10.3 A mudança de botão que pode dobrar nosso alcance
+
+O salto de 40% para 75% veio de uma decisão simples: fazer o lead chamar em vez de ser chamado.
+
+**Mas atenção à distinção que o próprio Rafael fez, e que se aplica exatamente a nós:** produto de R$ 300 a R$ 400 vai para checkout ou IA. Produto de R$ 3.000 vai para humano.
+
+Nossa tradução:
+
+| Produto | Caminho |
+|---|---|
+| MCV avulso, R$ 197 | **Checkout direto.** Colocar conversa no meio só atrasa a compra |
+| Blindagem avulso, R$ 297 | Checkout direto |
+| **Combo Infinito, R$ 997** | **Vale a conversa.** É aqui que o botão de WhatsApp com pop-up faz sentido |
+
+O ticket do combo justifica atendimento; o do MCV não. Mandar todo mundo para conversa seria copiar o Fluxo sem copiar o raciocínio dele.
+
+## 10.4 O Claudinho é a nossa Márcia, e isso resolve o dimensionamento
+
+Aplicando o cálculo dele ao nosso cenário de 4.500 leads:
+
+| | |
+|---|---|
+| Leads captados | 4.500 |
+| Taxa de sessão aberta, estimada em 50% | 2.250 conversas |
+| Diluídas em 20 dias de carrinho | cerca de 112 conversas por dia |
+| Capacidade de um atendente na Black | 30 a 40 por dia |
+| **Atendentes necessários** | **cerca de 3** |
+
+Não temos três pessoas para isso, e contratar freelancer a R$ 100 por dia por 20 dias sairia perto de R$ 6.000.
+
+**O Claudinho cobre exatamente esse buraco**, do mesmo jeito que a Márcia cobre no Fluxo. Ele tria, responde o volume e escala para humano o que for do combo.
+
+**Mas o alerta do Rafael vale para nós:** "não faria esse teste na Black". No nosso caso não é teste, o Claudinho já roda em produção há meses. O que ele precisa é de **treinamento específico para a Black** antes de novembro: a oferta nova, o preço, os bônus, a regra de crédito para quem já comprou e a data de encerramento.
+
+## 10.5 A cadência de follow vira regra do Claudinho
+
+A cadência dele é implementável diretamente:
+
+- Sessão aberta: follow em 2h, depois 4h, depois 8h. Máximo de 3 por sessão
+- Sessão fechada: template, depois 12h, 24h, 48h, e então pausa
+- Follows curtos, **sem oferta nova**, com saída fácil
+- Apelativo só na reta final
+- Domingo: responder quem escreve, não iniciar follow
+
+## 10.6 A priorização por temperatura entra no Tracker
+
+A ordem dele é: problema de pagamento, dúvida de pagamento, dúvida pontual, perdido.
+
+Na Black, com volume alto, isso precisa estar visível na tela de atendimento, não na cabeça de quem atende. É um ajuste no painel do Claudinho a fazer antes de novembro.
+
+E a regra da exceção: **se muita gente está só pedindo o link, manda o link.** Não transformar em consultiva quem já decidiu.
+
+## 10.7 Convergência com o que já temos
+
+Duas coisas da palestra já existem no nosso projeto:
+
+- O **método DEF** é a moldura do nosso `/comercial-playbook`, que já cobre Descoberta, Encantamento e Fechamento e o Framework dos 7 Argumentos
+- A **geladeira** tem equivalente no nosso funil, e as objeções já estão mapeadas no `idconsumidor.md`
+
+O que falta é ligar as duas coisas à campanha da Black, com o **efeito novidade** como gatilho: quem disse não ao MCV durante o ano recebe a condição do combo como novidade, não como insistência.
+
+---
+
 # PARTE 8. RISCOS E DECISÕES EM ABERTO
 
 ## 8.1 Risco: revolta do comprador antigo
@@ -1464,3 +1775,9 @@ Alerta direto do Gabriel. Na semana de abertura aparecem perfis clonados oferece
 - [x] Conferir feriados de novembro antes de fixar as datas das lives (feito, ver 7.9: 20/11 é feriado numa sexta)
 - [ ] Decidir a extensão do carrinho até 30/11, para fugir do feriadão e pegar a Black Friday oficial
 - [ ] Definir a oferta de dezembro: barata para quem não comprou, cara para quem comprou
+- [ ] Auditar quantos templates de WhatsApp temos aprovados hoje e em qual categoria
+- [ ] Aprovar a grade de 12 templates da Black com antecedência (ver 10.2)
+- [ ] Treinar o Claudinho para a Black: oferta, preço, bônus, crédito de quem já comprou, data de encerramento
+- [ ] Implementar a cadência de follow no Claudinho (2h, 4h, 8h e depois 12h, 24h, 48h)
+- [ ] Colocar a priorização por temperatura visível no painel de atendimento
+- [ ] Decidir o caminho por produto: checkout direto no MCV, conversa no combo
