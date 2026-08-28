@@ -552,22 +552,38 @@ const SITUACAO_INFO = {
 // copy de venda. Envia pelo número de suporte, via fila do Khronus (Ponte,
 // WhatsApp Web automatizado — não é a API oficial, essa é a linha do
 // Claudinho). Ver enviar-recuperacao-khronus/index.ts.
+// Nome do produto pra usar dentro da mensagem, nas duas formas que o texto
+// precisa: com artigo ("o Blindagem") e com a preposição ("do Blindagem").
+// Vem do `produto_nome` da venda/abandono, que é texto livre da Hotmart.
+// Corrigido em 2026-08-28: antes as mensagens diziam "Modelos de Contrato
+// Visual" fixo, então quem abandonou o Blindagem recebia mensagem falando do
+// produto errado.
+const produtoNaFrase = bruto => {
+  const t = String(bruto || '');
+  if (/blindagem/i.test(t))                return { o: 'o Blindagem',                do: 'do Blindagem' };
+  if (/mensagens\s*que\s*vendem/i.test(t)) return { o: 'o Mensagens que Vendem',    do: 'do Mensagens que Vendem' };
+  if (/lightroom/i.test(t))                return { o: 'o Pack Pro Lightroom',       do: 'do Pack Pro Lightroom' };
+  if (/natalin/i.test(t))                  return { o: 'os Cenários Natalinos',      do: 'dos Cenários Natalinos' };
+  if (/presets/i.test(t))                  return { o: 'o Combo de Presets',         do: 'do Combo de Presets' };
+  return { o: 'os Modelos de Contrato Visual', do: 'dos Modelos de Contrato Visual' };
+};
+
 const MSG_SITUACAO = {
-  abandonou:    n => `Oi, ${n}. Vi aqui que você chegou a abrir o checkout dos Modelos de Contrato Visual e não finalizou. Ficou alguma dúvida no meio do caminho ou foi só falta de tempo mesmo?`,
-  pendente:     n => `Oi, ${n}. Seu pagamento dos Modelos de Contrato Visual ainda está pendente aqui do nosso lado. Se foi Pix ou boleto, às vezes a confirmação demora um pouco. Já conseguiu finalizar ou posso te ajudar com alguma coisa?`,
-  recusada:     n => `Oi, ${n}. Algum imprevisto aconteceu com seu cartão na hora de fechar os Modelos de Contrato Visual. Geralmente é algo simples de resolver, limite, dado digitado errado ou o banco barrando por segurança mesmo. Quer que eu gere um link novo pra tentar de novo ou prefere outra forma de pagamento?`,
-  expirada:     n => `Oi, ${n}. O boleto dos Modelos de Contrato Visual venceu sem pagamento. Vamos dar andamento na evolução do seu negócio, posso emitir um novo link para você?`,
-  cancelada:    n => `Oi, ${n}. Vi que a sua compra dos Modelos de Contrato Visual acabou sendo cancelada. Rolou algum problema no meio do caminho ou foi decisão sua mesmo? Abre teu coração e me conta, quero te ajudar nisso, ok?`,
-  atrasada:     n => `Oi, ${n}. Seu pagamento dos Modelos de Contrato Visual está com algum contratempo. Ainda dá tempo de regularizar, quer que eu te mande o link de novo?`,
-  bloqueada:    n => `Oi, ${n}. Sua compra dos Modelos de Contrato Visual ficou bloqueada por segurança do meio de pagamento. Normalmente é rápido de resolver. Posso te ajudar a tentar de novo?`,
-  pre_aprovada: n => `Oi, ${n}. Sua compra dos Modelos de Contrato Visual está quase lá, só falta a confirmação final. O que eu posso fazer para te ajudar nisso?`,
-  recuperacao:  n => `Oi, ${n}. Ainda dá tempo de fechar os Modelos de Contrato Visual, faltou tão pouco para você ter tanta melhoria aí pro seu lado, então bora finalizarmos essa etapa?`,
+  abandonou:    (n, p) => `Oi, ${n}. Vi aqui que você chegou a abrir o checkout ${p.do} e não finalizou. Ficou alguma dúvida no meio do caminho ou foi só falta de tempo mesmo?`,
+  pendente:     (n, p) => `Oi, ${n}. Seu pagamento ${p.do} ainda está pendente aqui do nosso lado. Se foi Pix ou boleto, às vezes a confirmação demora um pouco. Já conseguiu finalizar ou posso te ajudar com alguma coisa?`,
+  recusada:     (n, p) => `Oi, ${n}. Algum imprevisto aconteceu com seu cartão na hora de fechar ${p.o}. Geralmente é algo simples de resolver, limite, dado digitado errado ou o banco barrando por segurança mesmo. Quer que eu gere um link novo pra tentar de novo ou prefere outra forma de pagamento?`,
+  expirada:     (n, p) => `Oi, ${n}. O boleto ${p.do} venceu sem pagamento. Vamos dar andamento na evolução do seu negócio, posso emitir um novo link para você?`,
+  cancelada:    (n, p) => `Oi, ${n}. Vi que a sua compra ${p.do} acabou sendo cancelada. Rolou algum problema no meio do caminho ou foi decisão sua mesmo? Abre teu coração e me conta, quero te ajudar nisso, ok?`,
+  atrasada:     (n, p) => `Oi, ${n}. Seu pagamento ${p.do} está com algum contratempo. Ainda dá tempo de regularizar, quer que eu te mande o link de novo?`,
+  bloqueada:    (n, p) => `Oi, ${n}. Sua compra ${p.do} ficou bloqueada por segurança do meio de pagamento. Normalmente é rápido de resolver. Posso te ajudar a tentar de novo?`,
+  pre_aprovada: (n, p) => `Oi, ${n}. Sua compra ${p.do} está quase lá, só falta a confirmação final. O que eu posso fazer para te ajudar nisso?`,
+  recuperacao:  (n, p) => `Oi, ${n}. Ainda dá tempo de fechar ${p.o}, faltou tão pouco para você ter tanta melhoria aí pro seu lado, então bora finalizarmos essa etapa?`,
 };
 
 /* ── Modal de envio (Recuperação de Venda → número de suporte via Khronus) */
 function EnviarRecuperacaoModal({ item, onClose }) {
   const primeiroNome = (item.nome || '').trim().split(/\s+/)[0] || 'tudo bem';
-  const [corpo, setCorpo] = useState((MSG_SITUACAO[item.situacao] || MSG_SITUACAO.abandonou)(primeiroNome));
+  const [corpo, setCorpo] = useState((MSG_SITUACAO[item.situacao] || MSG_SITUACAO.abandonou)(primeiroNome, produtoNaFrase(item.produto_nome)));
   const [status, setStatus] = useState('idle'); // idle | enviando | ok | erro
   const [erro, setErro] = useState('');
 
@@ -1043,7 +1059,18 @@ function FunisScreen({ onNavigate }) {
         telefone: v.comprador_telefone, produto_nome: v.produto_nome, created_at: v.created_at,
         utm_source: v.utm_source, meta_ad_id: v.meta_ad_id, situacao: v.status,
       }));
-      const itens = [...itensAband, ...itensVenda].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      // O seletor de funil do topo (Todos / Fotógrafo Protegido / Blindagem)
+      // também vale aqui: cada funil vende um produto, e olhar recuperação de
+      // um sem o outro é o uso normal quando as duas campanhas rodam juntas.
+      // Combinado com Felipe em 2026-08-28, quando o Blindagem entrou no ar.
+      const doFunil = it => {
+        if (funnel === 'all') return true;
+        const ehBli = /blindagem/i.test(it.produto_nome || '');
+        return funnel === 'blindagem' ? ehBli : !ehBli;
+      };
+      const itens = [...itensAband, ...itensVenda]
+        .filter(doFunil)
+        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
       setCarrinho(itens);
 
       // Marca como recuperado quem aparece de novo em vendas com status aprovada.
@@ -1114,7 +1141,7 @@ function FunisScreen({ onNavigate }) {
         setContatadosSuporte(new Map());
       }
     });
-  }, [periodo, customFrom, customTo, aba]);
+  }, [periodo, customFrom, customTo, aba, funnel]);
 
   useEffect(() => {
     if (!window.db || aba !== 'analise') return;
