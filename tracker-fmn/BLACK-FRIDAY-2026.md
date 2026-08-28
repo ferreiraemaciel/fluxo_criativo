@@ -1294,6 +1294,56 @@ D0 é o dia em que o carrinho abre. Tudo se conta a partir dele.
 
 Com essas duas amarras, a escolha do D0 vira uma conta simples de fazer na hora do ajuste, sem precisar refazer o plano inteiro.
 
+## 7.13 Agenda do Felipe: ausência de 31/08 a 06/09
+
+> Informado em 28/08/2026. Palestra em Natal e depois alguns dias de férias. Retomada a partir de 07/09, na prática **terça, 08/09**, porque 07/09 é segunda e feriado.
+
+**O impacto medido, tomando 11/11 como D0 de referência:**
+
+| | |
+|---|---|
+| Dias disponíveis a partir de 08/09 | 64 |
+| Dias que a régua pede (D-70) | 70 |
+| **Folga perdida** | **6 dias** |
+
+Perde-se a primeira semana da fase de organização, que na régua é D-70 e D-63: definir produto e preços, e montar o combo.
+
+**Por que isso não é grave.** A fase de organização é justamente a mais compressível, porque é trabalho de escritório: definir preço, montar combo, escrever narrativa e trailer. E é a parte em que eu consigo adiantar quase tudo enquanto ele está fora, deixando pronto para ele decidir em vez de construir do zero.
+
+### O que não pode esperar o dia 8
+
+**Sondar os parceiros.** É a única decisão que depende de outras pessoas, e por isso é a mais lenta: mensagem, resposta, proposta, negociação e fechamento levam de duas a três semanas. Se a primeira mensagem só sair em 08/09, os parceiros fecham no fim de setembro, em cima de D-42, sem folga nenhuma para produzir material com eles.
+
+Mandar a sondagem antes de viajar custa poucos minutos e faz as respostas chegarem durante a ausência. É o maior ganho disponível hoje.
+
+O método do Gabriel para essa conversa: perguntar quanto custaria comprar um lote de acessos do produto do parceiro, com valor fixo, em vez de propor permuta vaga.
+
+### A viagem é matéria-prima, não tempo perdido
+
+Regra do Gabriel: **todas as ações viram conteúdo**. Ele contou na aula que viu uma pessoa fotografar a própria palestra e usar aquilo como conteúdo depois, e comentou que o certo é registrar agora para publicar duas ou três semanas à frente.
+
+Palestrar é autoridade em estado puro, e é exatamente o insumo que falta para dois pedaços da campanha:
+
+- O **movimento 6 do manifesto**, a autoridade que aparece só depois de conquistar a atenção
+- A fase de **antecipação**, que pede bastidor e preparação sem falar de venda
+
+O que registrar em Natal: foto e vídeo do palco, plateia, bastidor, e uma fala curta em vídeo sobre o que está sendo preparado. Nada precisa ser publicado agora.
+
+### O que eu adianto durante a ausência
+
+Tudo que não depende de decisão dele:
+
+1. Lista de parceiros possíveis do nicho de fotografia, com o que cada um poderia entregar
+2. Ângulos de buzz por público, puxando das Urgências Ocultas do MCV e dos artigos do blog da FMN
+3. Rascunho completo dos 11 movimentos do manifesto aplicados ao nosso nicho
+4. Estrutura da página de inscrição, com captura de WhatsApp
+5. Planilha de metas com as fórmulas ligadas, no modelo do Samuel
+6. Roteiros dos criativos de captação, mirando o mínimo de 15
+
+**O que fica parado à espera dele:** preço final do combo, o que entra no vitalício, o mote da campanha, o nível de operação e a data de abertura.
+
+**O que não faço sem aprovação:** criar os públicos personalizados no Meta é operação de escrita na conta e passa pelo gate de confirmação. E o ajuste da regra G5 mexe em banco do Tracker, que por combinação vive em outra conversa.
+
 ---
 
 # PARTE 8. RISCOS E DECISÕES EM ABERTO
@@ -1324,6 +1374,8 @@ Alerta direto do Gabriel. Na semana de abertura aparecem perfis clonados oferece
 - [ ] Anotar a parte da tarde da aula (conteúdo) quando a transcrição chegar
 - [ ] Transcrever o trailer "01. Antecipação Trailer Ultra Black Infinita 01" (Drive, 59,7 MB). Chave Groq disponível no tracker-fmn/.env, custo aproximado de US$ 0,01, aguardando confirmação
 - [ ] Confirmar datas oficiais do primeiro e segundo turno de 2026 no TSE
+- [ ] URGENTE, antes de viajar: mandar a sondagem inicial aos parceiros, para as respostas chegarem durante a ausência
+- [ ] Registrar foto e vídeo da palestra em Natal, para usar como conteúdo de antecipação e autoridade
 - [ ] Montar lista de parceiros possíveis do nicho de fotografia
 - [ ] Escrever a página de inscrição, com captura de WhatsApp obrigatória
 - [ ] Montar os ângulos de buzz por público
