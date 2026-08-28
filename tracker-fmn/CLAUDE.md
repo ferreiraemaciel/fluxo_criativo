@@ -60,6 +60,22 @@ As três marcações convivem na mesma venda de propósito: **quem trouxe** (an�
 
 **Regra pra qualquer consulta nova:** se a tabela pode passar de 1.000 linhas no período consultado, ou pagina, ou filtra por chave específica (`.in()`, `.eq()`). Nunca confie em `.limit()` alto, e desconfie sempre de um total que dá exatamente 1.000.
 
+## Agregado de vida inteira do card nunca é escrito a partir de um ad_id só (bug real, 2026-08-27)
+
+**Sintoma:** ADS em "Campeões" mostrando 1 venda e CPA absurdo (ADS 22 com CPA de R$7.912). Parecia que anúncio ruim tinha virado campeão; era o contrário, campeão legítimo com a contagem de vendas destruída.
+
+**Causa:** `processar-pausas` (e o `sync_insights.py`) gravavam `vendas_total`/`gasto_total`/`cpa_historico` no card usando o `insights_cache` de **um único `meta_ad_id`**, o que estava sendo pausado naquele momento. Mas esses três campos são o agregado de **vida inteira do número**, somando TODO ad_id que já usou aquele "ADS N" (é o `kanban-sync` que calcula, agrupando por número extraído do nome). Resultado: o total da vida inteira era trocado pelo número de um relançamento sozinho.
+
+**O que amplificou:** o G5 re-alertava o mesmo ADS a cada 6h (bug irmão, corrigido em 2026-08-25). Cada ciclo reescrevia o total de novo. O ADS 22 tem 40 vendas na vida inteira; o ad_id pausado tinha 3; o card acabou em 1.
+
+**Tamanho do estrago:** 38 anúncios com contagem errada, **144 vendas escondidas** no total (663 registradas contra 807 reais no Meta). O gasto ficava certo por coincidência em vários casos, o que tornava a inconsistência menos óbvia.
+
+**Correção:** `processar-pausas` e `sync_insights.py` não escrevem mais esses três campos. Eles continuam **lendo** a métrica do ad_id pra classificar (é ela que diz se ESTE criativo merece ser pausado), só pararam de gravar o agregado. Quem escreve `vendas_total`/`gasto_total`/`cpa_historico` é só o `kanban-sync`, que soma por número.
+
+**Como recuperar quando acontecer de novo:** `POST /functions/v1/kanban-sync?scope=completo` recalcula os agregados de todos os anúncios direto do Meta (`date_preset=maximum`, agrupado por número) e reclassifica. Foi o que corrigiu os 307 de uma vez.
+
+**Regra pra qualquer código novo:** métrica de `insights_cache` é por `meta_ad_id`. Card do Kanban é por `numero`. Um número pode ter muitos ad_ids (relançamento). Nunca escrever agregado de card a partir de uma linha de `insights_cache`.
+
 ## "Tem mídia" é mídia entregue, nunca pasta cadastrada (bug real, 2026-08-26)
 
 ADS 341, 342, 346 e 348 voltavam sozinhos pra "Feito" a cada 15 minutos, mesmo depois de Felipe arrastar de volta pra "Fazendo", e apareciam com a etiqueta "sem preview".

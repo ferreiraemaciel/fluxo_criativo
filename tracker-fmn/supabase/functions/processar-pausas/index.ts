@@ -88,14 +88,29 @@ Deno.serve(async (req) => {
         "Ruim": "arquivado",
       };
 
+      // NUNCA sobrescrever gasto_total/vendas_total/cpa_historico aqui.
+      //
+      // Bug real, achado em 2026-08-27: esses três campos são o agregado de
+      // VIDA INTEIRA do card, somando TODO ad_id que já usou aquele "ADS N"
+      // (é o kanban-sync que calcula isso, agrupando por número do nome). Aqui
+      // a métrica vem do `insights_cache` de UM ad_id só, o que está sendo
+      // pausado agora — então gravar isso no card trocava o total da vida
+      // inteira pelo número de um relançamento sozinho.
+      //
+      // Estrago que isso causou: o ADS 22 tem 40 vendas na vida inteira, mas o
+      // ad_id pausado tinha 3. Como o G5 re-alertava o mesmo ADS a cada 6h
+      // (outro bug, corrigido em 2026-08-25), esta função reescrevia o total a
+      // cada ciclo. O card acabou mostrando 1 venda e CPA de R$7.912 num
+      // criativo cujo CPA real é R$197, e o mesmo aconteceu com outros 37
+      // anúncios, escondendo 144 vendas no total.
+      //
+      // A classificação continua usando a métrica do ad_id (é ela que diz se
+      // ESTE criativo merece ser pausado), só a gravação dos agregados saiu.
       const adsPatch: Record<string, unknown> = {
         status: colDestino[classificacao] || "arquivado",
         tag: classificacao,
         observacoes: obsNova,
       };
-      if (vendas) adsPatch.vendas_total = vendas;
-      if (cpa) adsPatch.cpa_historico = cpa;
-      if (gasto) adsPatch.gasto_total = gasto;
 
       await supabase.from("ads").update(adsPatch).eq("numero", adsNum);
 

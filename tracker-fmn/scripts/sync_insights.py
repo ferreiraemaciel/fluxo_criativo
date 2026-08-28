@@ -543,17 +543,18 @@ def processar_pausas_pendentes():
                 "Ruim":             "arquivado",
             }.get(classificacao, "arquivado")
 
+            # NUNCA sobrescrever gasto_total/vendas_total/cpa_historico aqui:
+            # eles são o agregado de VIDA INTEIRA do card (soma de todo ad_id
+            # que já usou aquele "ADS N"), e a métrica daqui é de um ad_id só.
+            # Mesmo bug que estava no processar-pausas, achado em 2026-08-27:
+            # trocava o total da vida inteira pelo número de um relançamento
+            # sozinho (ADS 22 caiu de 40 vendas pra 1, CPA "subiu" de R$197
+            # pra R$7.912). Ver comentário completo em processar-pausas.
             ads_patch = {
                 "status": col_destino,
                 "tag":    classificacao,
                 "observacoes": obs_nova,
             }
-            if vendas:
-                ads_patch["vendas_total"] = vendas
-            if cpa:
-                ads_patch["cpa_historico"] = cpa
-            if gasto:
-                ads_patch["gasto_total"] = gasto
 
             _supabase_patch(f"ads?numero=eq.{ads_num}", ads_patch)
             print(f"  ADS {ads_num}: arquivado no Kanban como '{classificacao}'.")
