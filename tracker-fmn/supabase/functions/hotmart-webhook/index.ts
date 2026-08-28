@@ -25,6 +25,13 @@ const HOTMART_TOKEN = Deno.env.get("HOTMART_WEBHOOK_TOKEN");
 
 const WHATSAPP_GRUPO_LINK_MCV  = Deno.env.get("WHATSAPP_GRUPO_LINK_MCV");
 const PRODUTO_ID_MCV            = "3400278";
+// Boas-vindas do Blindagem reaproveita a mesma mensagem e o mesmo grupo do
+// MCV (combinado com Felipe em 2026-08-28): o Blindagem inclui os Modelos de
+// Contrato Visual por dentro, então "você tem acesso aos Modelos de Contrato
+// Visual" continua verdadeiro pra quem comprou o Blindagem. Só vale pra venda
+// de hoje em diante (primeira venda real do produto); as 4 vendas anteriores
+// (11 a 19/08) não foram retroagidas, decisão do Felipe.
+const PRODUTO_ID_BLINDAGEM      = "7963090";
 
 // Combinado com Felipe em 2026-08-26: quem compra sai marcado no Khronus com
 // a tag do produto que adquiriu, pra dar pra filtrar o atendimento por
@@ -617,13 +624,14 @@ Deno.serve(async (req) => {
     telefoneFinal = await enriquecerTelefone(transactionId, comprador?.email || null);
   }
 
-  // Boas-vindas automática do MCV: só na aprovação de fato (não em reativação
-  // de assinatura nem em atualização de logística), só produto MCV, só uma vez.
+  // Boas-vindas automática: só na aprovação de fato (não em reativação de
+  // assinatura nem em atualização de logística), só produto MCV ou Blindagem,
+  // só uma vez.
   const produtoIdStr = String(produto?.id || "");
   if (
     status === "aprovada" &&
     (evento === "PURCHASE_APPROVED" || evento === "PURCHASE_COMPLETE") &&
-    produtoIdStr === PRODUTO_ID_MCV &&
+    (produtoIdStr === PRODUTO_ID_MCV || produtoIdStr === PRODUTO_ID_BLINDAGEM) &&
     telefoneFinal
   ) {
     const { data: vendaAtual } = await supabase
