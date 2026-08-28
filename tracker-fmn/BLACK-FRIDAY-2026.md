@@ -1201,9 +1201,57 @@ E vale colocar o **evento de implementação dentro da oferta da Black** justame
 
 **Sobre a mentoria no combo.** O Gabriel disse que mentoria como bônus não costuma funcionar bem. O que funciona é incluir poucos encontros para a pessoa sentir o gostinho, com o valor explícito. A Mentoria XP Sala Preta, que hoje está no nosso combo a R$ 497, deve entrar assim: alguns encontros, com o preço cheio declarado e explicado.
 
-**Sobre feriado.** 15 de novembro de 2026 é domingo e 20 de novembro, Consciência Negra, é sexta-feira. Vale conferir na hora de posicionar a live de abertura e a de encerramento, pela regra de que feriado é furada.
+**Sobre feriado.** Confirmado no calendário e detalhado na seção 7.9 abaixo: 20 de novembro cai numa sexta e é feriado nacional, bem em cima do que seria o nosso encerramento.
+
+
+## 7.9 Auditoria de datas, feita com o calendário na mão
+
+Conferi os dias da semana em vez de estimar. Resultado:
+
+| Data | Dia da semana | Observação |
+|---|---|---|
+| 04/10/2026 | domingo | primeiro turno |
+| 25/10/2026 | domingo | segundo turno |
+| 10/11/2026 | terça | |
+| **11/11/2026** | **quarta** | mesma posição de semana que o Nobre usou em 2025 |
+| 15/11/2026 | domingo | Proclamação da República cai no domingo, não atrapalha |
+| **20/11/2026** | **sexta** | **Consciência Negra, feriado nacional** |
+| 21/11/2026 | sábado | |
+| 27/11/2026 | sexta | Black Friday oficial |
+| 30/11/2026 | segunda | Cyber Monday |
+
+**O problema que isso revelou.** No calendário que eu tinha desenhado, 20/11 era a live de replay com o pitch de último dia, e 21/11 era o encerramento. Ou seja, os dois dias mais decisivos da campanha caem em feriado nacional e no sábado logo depois, no meio de um feriadão. Contraria diretamente a regra do Gabriel de que feriado é furada.
+
+**Correção recomendada: esticar o carrinho até 30 de novembro.** Isso resolve três coisas de uma vez:
+
+1. Tira o encerramento de cima do feriadão de 20 e 21 de novembro
+2. Faz a campanha passar pela **Black Friday oficial em 27/11**, que é sexta, e pela Cyber Monday em 30/11, que é segunda
+3. Atende ao arrependimento do Gabriel, que encerrou com dez dias e achou pouco, e à recomendação do Samuel de deixar o remarketing rodando o mês inteiro
+
+Com isso o carrinho fica aberto de 11 a 30 de novembro, vinte dias, com dois picos naturais: a abertura e a semana da Black Friday de verdade. E resolve a pergunta que estava em aberto sobre deixar a data oficial de fora.
+
+## 7.10 Recursos citados que ainda não tínhamos registrado
+
+- **Severino:** ferramenta citada no playbook para produzir volume de conteúdo sem depender de equipe grande. A meta declarada com ela é um post por dia, com dois como ideal
+- **Formação Claude:** citada por Gabriel e Samuel como a base para construir as plataformas e usar as skills. É de onde saíram as plataformas que ele colocou como bônus da oferta
+- **Material de tráfego da Ângela**, da Black do ano anterior: o Samuel recomendou usar como referência complementar à palestra dele
+- **Desafio de conteúdo em outubro**, dentro da mentoria, para ajudar a manter volume de publicação na fase de captação
+- **Pesquisa na página de obrigado:** o Samuel confirmou que continua valendo, e serve para qualificar o lead e comparar com o perfil real do comprador
+- **Aula prática de API e automação com Rafael Neaime, em 18 de setembro de 2026:** como aquecer número, escrever modelo que passa na aprovação e automatizar a cadência da campanha
+
+## 7.11 Uma divergência entre as fontes, para decidirmos
+
+Sobre administradores por grupo de WhatsApp:
+
+| Fonte | Recomendação |
+|---|---|
+| Gabriel, na palestra da manhã | pelo menos 10 administradores |
+| Playbook oficial | mínimo 5, com números diferentes, e quanto mais melhor |
+
+Não é contradição, é a mesma lógica em graus diferentes. Para nós, com poucos grupos previstos, 5 administradores resolve, e o ponto que realmente importa é que sejam **chips diferentes**, para o grupo sobreviver se um número cair ou for banido.
 
 ---
+
 # PARTE 8. RISCOS E DECISÕES EM ABERTO
 
 ## 8.1 Risco: revolta do comprador antigo
@@ -1251,5 +1299,6 @@ Alerta direto do Gabriel. Na semana de abertura aparecem perfis clonados oferece
 - [ ] Instalar evento de Lead na página de inscrição e na de obrigado
 - [ ] Produzir os 15 criativos de captação e as 6 peças de lembrete
 - [ ] Publicar a página de oferta especial antes do dia da abertura
-- [ ] Conferir feriados de novembro antes de fixar as datas das lives
+- [x] Conferir feriados de novembro antes de fixar as datas das lives (feito, ver 7.9: 20/11 é feriado numa sexta)
+- [ ] Decidir a extensão do carrinho até 30/11, para fugir do feriadão e pegar a Black Friday oficial
 - [ ] Definir a oferta de dezembro: barata para quem não comprou, cara para quem comprou
