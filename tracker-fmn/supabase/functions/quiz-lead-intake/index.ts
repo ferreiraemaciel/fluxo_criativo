@@ -19,6 +19,21 @@ const COLS = [
   "fbp", "fbc", "completou_quiz",
 ];
 
+// Colunas text[] no banco. O quiz do fotografo-protegido manda array nelas
+// (perguntas multi), mas o do blindagem usa temas_dominados como pergunta de
+// escolha unica e manda string -- o Postgres rejeita com "malformed array
+// literal" e o upsert inteiro falha (500), derrubando junto o nome/e-mail do
+// lead. Normalizar aqui protege qualquer funil, atual ou futuro, que reuse uma
+// dessas colunas com pergunta de resposta unica.
+const COLS_ARRAY = ["situacoes", "sentimentos", "temas_dominados"];
+
+function normalizarArrays(row: Record<string, unknown>) {
+  for (const k of COLS_ARRAY) {
+    const v = row[k];
+    if (typeof v === "string") row[k] = v.trim() ? [v] : null;
+  }
+}
+
 async function sha256hex(str: string): Promise<string> {
   const data = new TextEncoder().encode(str);
   const hash = await crypto.subtle.digest("SHA-256", data);
@@ -36,6 +51,7 @@ Deno.serve(async (req) => {
 
     const row: Record<string, unknown> = { funnel_slug: body.funnel_slug || "fotografo-protegido", origem: "novo" };
     for (const k of COLS) if (k in body) row[k] = body[k];
+    normalizarArrays(row);
 
     const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
     const { error } = await sb.from("quiz_leads").upsert(row, { onConflict: "funnel_slug,code" });
