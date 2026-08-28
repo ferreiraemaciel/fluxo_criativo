@@ -440,21 +440,446 @@ O Gabriel disse que não inventa nada. Nós temos acesso ao material completo da
 
 ---
 
-# PARTE 4. RISCOS E DECISÕES EM ABERTO
+# PARTE 4. O PLAYBOOK OFICIAL, ESTUDADO BLOCO A BLOCO
 
-## 4.1 Risco: revolta do comprador antigo
+Fonte: https://playbook-black-friday.vercel.app · versão 3.0, atualizada em 26/08/2026. 17 blocos, 63 referências, 8 documentos, 4 skills para baixar.
+
+Casos que o playbook estuda: **Nobre 2025** (mercado financeiro) e **Priscila 2025** (Super Black). Mais o caso **Mikaele / Método Mulher Milionária**.
+
+## 4.1 A estrutura de três meses
+
+"Black Friday não é uma campanha de novembro. É um trimestre. Quem começa a pensar nela em cima da hora vende o que sobra."
+
+| Mês | Fase | O que acontece |
+|---|---|---|
+| Setembro | Organizar e relacionar ao extremo | Oferta, combo, narrativa e trailer. Conteúdo de relacionamento. **Nada de venda ainda** |
+| Outubro | Captação | A parte mais importante depois da oferta. Disparos, grupos e orgânico empurrando para página mais grupo |
+| Novembro | Vendas | Aquecimento, grande dia, carrinho aberto, potencializadores, encerramento |
+
+**Cronograma macro semana a semana:**
+
+| Mês | Semana | Entrega |
+|---|---|---|
+| Set | S1 | Definir produto, preço fora da Black e preço da Black. Decidir sobre vitalício, com cálculo |
+| Set | S2 | Montar combo: bônus, itens físicos, depoimentos |
+| Set | S3 | Escrever narrativa e roteiro do trailer |
+| Set | S4 | Relacionamento ao extremo. Preparar página e grupo |
+| Out | S1 | Abrir os grupos, de até 200 pessoas, e apontar todos os canais para eles |
+| Out | S2 | Disparos para bases antigas e alunos. Banner nas comunidades |
+| Out | S3 | SMS e URA entram |
+| Out | S4 | Última semana de captação forte. Vídeo de boas vindas em cada grupo cheio |
+| Nov | S1 | Soltar o trailer. Antecipação da condição |
+| Nov | S2 | Casos, depoimentos, itens físicos, contagem regressiva |
+| Nov | S3 | Aula de vendas e abertura do carrinho |
+| Nov | S3 e S4 | Potencializadores e disparos |
+| Nov | S4 | Encerramento sem prorrogar |
+| Dez | S1 | Debriefing |
+
+## 4.2 Escolha do nível de operação (decisão que precisamos tomar)
+
+O playbook diz para não tentar a operação inteira. "Faça o nível de baixo bem feito antes de subir."
+
+| Nível | Para quem | Operação mínima |
+|---|---|---|
+| **Essencial** | Solo ou equipe pequena | Oferta e combo, **um** grupo de WhatsApp, conteúdo diário e **uma** live de abertura. "Só isso já é uma Black inteira" |
+| **Crescimento** | Equipe média | Tudo do essencial mais API de WhatsApp, e-mail e aulas de aquecimento |
+| **Escala** | Operação robusta | Tudo do crescimento mais URA, várias lives e 3 disparos por dia |
+
+## 4.3 Engenharia reversa da data
+
+Marcos contados a partir de D0 (dia da abertura do carrinho):
+
+| Marco | Dia |
+|---|---|
+| Começa a antecipação | D-28 |
+| Abre a captação | D-21 |
+| Primeira aula de aquecimento | D-6 |
+| Grande dia, abre o carrinho | D0 |
+| Encerramento | D+10 |
+
+**Recomendação oficial do playbook: abrir entre 10 e 15 de novembro.** É a janela que Mikaele e Nobre usaram em 2025.
+
+## 4.4 Oferta e combo
+
+**Ordem correta:** diagnosticar o público, depois montar o combo, depois definir o preço. Nessa ordem.
+
+**Diagnóstico do público (3 perguntas):**
+
+| Pergunta | Se sim | Se não |
+|---|---|---|
+| O público é sensível a preço? | Decida por dado da sua base, não por perfil demográfico | Capriche nos bônus. Dá para aumentar o preço e ainda vender |
+| A oferta fora da Black é de pelo menos R$ 997? | Vitalício pode fazer sentido, com cálculo | **Não fazer só vitalício** |
+| Já tem funil desenhado para mentoria? | Vitalício como porta de entrada pode funcionar | Foco em desconto mais bônus |
+
+**Estrutura do combo em 7 linhas.** A pergunta que decide cada bônus: **isso já existe e já vende?**
+
+| Item | Tipo | Regra |
+|---|---|---|
+| Produto principal | Principal | O centro da oferta |
+| Evento ao vivo online | Bônus | Data marcada e nome próprio |
+| Evento presencial | Bônus | Só para os X primeiros, para não onerar |
+| Outro curso seu | Bônus | Precisa já existir e já ser vendido |
+| Curso de parceiro | Bônus | Valor percebido vem do parceiro |
+| Item físico | Físico | Aparece em vídeo, vira conteúdo |
+| Depoimentos com itens físicos | Prova | Prova que a entrega é real |
+
+**Regra de piso:** nunca vender abaixo de R$ 97 quando a operação depende de mídia e equipe.
+
+**A economia da oferta em 7 perguntas** (responder com a planilha do lado, antes de anunciar):
+
+1. Qual a margem depois da taxa de gateway e do parcelamento?
+2. Quanto custa cada bônus por aluno, em dinheiro e em hora?
+3. Seu suporte aguenta o volume previsto na primeira semana?
+4. Quantas vagas o bônus presencial suporta sem quebrar a entrega?
+5. Qual o reembolso projetado e ele já entrou na conta?
+6. Quantas vendas pagam o custo fixo da campanha?
+7. A ancoragem resiste a quem comparar com a sua última oferta?
+
+**Os 4 erros de oferta:**
+1. Ancorar mal: prometer mega desconto e entregar 20%. Se prometeu super desconto, entregue super desconto
+2. Falar que vai ser barato demais, e a pessoa imaginar um preço ainda menor
+3. Bônus sem valor: curso que não existe ou nunca foi vendido
+4. Bônus que o público não quer. Olhe o que mais pediram no ano e pergunte na caixinha
+
+## 4.5 Narrativa e trailer
+
+"É a narrativa que joga sangue para o resto do corpo funcionar. Sem ela, a campanha vira uma sequência de posts com desconto."
+
+**Regra que muda tudo:** o trailer **não fala preço, não fala desconto e não mostra o produto**. Ele vende a decisão de comparecer, não a compra. O preço só entra na aula de vendas.
+
+**Os 11 movimentos do manifesto** (roteiro real da Black COE, 639 palavras):
+
+| # | Movimento | O que faz |
+|---|---|---|
+| 1 | Cenário | Abre no caos. **Ninguém é o vilão, o inimigo é o cenário** |
+| 2 | Pergunta | Vira a câmera para o lead e cobra resposta interna |
+| 3 | A separação | Cria dois grupos e deixa claro em qual dá orgulho estar |
+| 4 | A acomodação | Dá voz à desculpa que o lead usa, para em seguida derrubar |
+| 5 | O que está em jogo | Sai do dinheiro e vai para as pessoas. A música corta, fica só a voz |
+| 6 | Autoridade | Se apresenta **só depois** de já ter a atenção, nunca antes |
+| 7 | O convite | Anuncia que vem algo, sem entregar tudo |
+| 8 | A quebra do padrão | "Em alguns dias eu vou fazer o que nunca fiz" |
+| 9 | Prova | Depoimento encaixado **antes** da data, não depois |
+| 10 | A data | Diz exatamente quando e o que vai acontecer |
+| 11 | Bordão e CTA | Frase da marca e um comando único |
+
+**Roteiro do trailer em 6 blocos:** Gancho, Promessa, Condição (o que é a Black), Prova e resultado futuro, Urgência (nunca mais), CTA para página e grupo.
+
+**Os 4 obrigatórios:** promessa forte na condição, a melhor da história, nunca mais se repete, vender o resultado futuro.
+
+**Termos que ativam o modo Black:** BLACK FRIDAY, SUPER DESCONTO, VITALÍCIO.
+
+## 4.6 Calendário de stories e feed
+
+**De onde sai o conteúdo:** "Nenhuma dessas séries foi inventada. Elas vieram da leitura das mensagens da própria audiência, agrupadas por dor, desejo e crença. **O texto que converte já está escrito nas caixinhas e nos comentários do seu perfil.**"
+
+**O padrão de toda série:** começa na dor com nome e sobrenome, passa pela prova de que a pessoa não está sozinha, e termina em caixinha ou comentário. **O CTA quase nunca é para comprar, é para responder.** É a resposta que aquece o perfil e alimenta o conteúdo do dia seguinte.
+
+**Mecânica "Comente BLACK":** o post pede o comentário, o comentário dispara a automação, a pessoa cai na captação. Alimenta a fase 2 sem parecer anúncio.
+
+## 4.7 Captação
+
+"Todos os canais apontam para o mesmo lugar: **página mais grupo**. Sem exceção."
+
+**A decisão canal por canal, com métrica de corte:**
+
+| Canal | Público | CTA | Métrica de corte |
+|---|---|---|---|
+| Orgânico | quem já te segue | entrar no grupo | leads por dia vindos do link |
+| API de WhatsApp | base com consentimento | confirmar presença | taxa de leitura e resposta |
+| Grupos de WhatsApp | lead que aceitou o convite | entrar e ativar aviso | presença na live por grupo |
+| Banner em comunidade | aluno ativo | clicar e entrar | cliques por mil visualizações |
+| E-mail | base que ainda abre | reservar a vaga | cliques únicos por envio |
+| SMS | base que não responde no WhatsApp | salvar a data | cliques por mil enviados |
+| URA | base com telefone e sem engajamento | apertar 1 para receber o link | contatos válidos por mil ligações |
+
+**Padrão dos criativos de captação:** prova primeiro, promessa de desconto depois, CTA sempre para a inscrição. **O tamanho do desconto nunca é revelado.** É ele que segura a curiosidade até a aula de vendas.
+
+## 4.8 Grupos de WhatsApp
+
+"O grupo é o ativo da Black. É para lá que todo canal aponta, e é de lá que sai a conversão."
+
+- **200 por grupo**, por decisão operacional. O WhatsApp permite 1.024, mas grupo menor dá moderação viável e sensação de proximidade
+- **Mínimo 5 administradores por grupo, com números diferentes.** Se um chip cair ou for banido, o grupo continua com a equipe
+- Só administradores falam até a abertura
+- Ativar aprovação de entrada e desligar o convite por link quando encher
+- Fixar o aviso antifraude no topo: a equipe nunca chama no privado pedindo pagamento
+- Publicar as regras na criação
+- Registrar consentimento e remover na hora quem pedir saída
+- Manter um grupo reserva e um canal de aviso
+- Alguém responsável por varrer perfis clones e denunciar no mesmo dia
+- Vídeo de boas vindas em todo grupo cheio, que aquece e protege de golpe
+
+## 4.9 Aquecimento
+
+O período entre encher o grupo e abrir o carrinho. A captação trouxe a pessoa, o aquecimento faz ela aparecer no grande dia.
+
+**A janela do Nobre foram 16 dias.** Repare na sobreposição: a captação ainda roda enquanto o aquecimento começa.
+
+**A contagem regressiva na aba Posts do YouTube:** 15, 10, 7, 5 e 3 dias, fechando com "é amanhã" na véspera. "É a rotina diária do backlog aplicada a um canal que quase ninguém usa, e custa cinco minutos por post."
+
+**Os presentes aparecem antes do preço.** No Nobre, foi em D-3.
+
+## 4.10 As 7 fases e o modelo de lives
+
+| Fase | Objetivo único |
+|---|---|
+| Antecipação | Avisar que vem e que será a melhor da história. Soltar o trailer |
+| Captação | Levar todo mundo para página e grupo |
+| Aquecimento | Aumentar desejo: depoimentos, itens físicos, bastidores, contagem |
+| Grande Dia | Aula de vendas. Evento focado na oferta, não no conteúdo |
+| Grande Abertura | Abrir com força total: disparos, stories, grupo, e-mail |
+| Carrinho aberto | Potencializadores: bônus relâmpago, lives de dúvidas, provas novas todo dia |
+| Encerramento | Escassez real, últimos disparos, fechamento sem prorrogar |
+
+"Se um conteúdo não serve ao objetivo da fase em que está, ele sai."
+
+**Modelo Nobre de lives:** CPL 1, 2, 3 e 3.1 em D-6 a D-2. Live de abertura em D0. Lives de vendas em D+3 e D+7. Live de replay em D+9. Encerramento em D+10.
+
+## 4.11 Roteiro da live de abertura, os 14 blocos
+
+| # | Bloco | O que faz |
+|---|---|---|
+| 1 | Countdown | Junta a audiência antes de começar. Tela de 10 minutos |
+| 2 | Trailer | Já entra vendendo a condição |
+| 3 | Boas vindas | Energia alta, reconhece cada grupo, avisa do sorteio |
+| 4 | O que vai acontecer hoje | Agenda em 5 itens, terminando em liberar as vagas |
+| 5 | Avisos | Fone e caderno, promete valor além do dinheiro, desativa o chat |
+| 6 | Promessa | Uma frase forte com a objeção principal já quebrada dentro |
+| 7 | Dores | Descreve como era e pede confirmação da audiência |
+| 8 | Benefícios | Responde ao "mas você fez diferente" e ancora o valor |
+| 9 | Looping e over delivery | Mostra demanda maior que a oferta e abre um loop |
+| 10 | Prova | **Depoimentos organizados por objeção, não aleatórios** |
+| 11 | História | Origem do zero mais um framework que dá controle ao público |
+| 12 | Conteúdo | Por que funciona e por que é rápido, com números comparados |
+| 13 | Pitch | Gatilho emocional, produto, bônus por velocidade, ancoragem tripla, ROI |
+| 14 | Dúvidas | Responde de um doc pré pronto enquanto o público se inscreve |
+
+**Pontos de tsunami (bônus por velocidade).** Compras por impulso concentradas nos primeiros minutos, cada bônus mirando uma janela de tempo diferente. No exemplo: iPhone para a primeira compradora (R$ 7.200), sorteio de R$ 1.000 nas primeiras 24h, encontro presencial para as 25 primeiras, viagem sorteada entre todas (R$ 15.000, revelada por último). **Total ancorado de R$ 24.200.**
+
+**Nota de 2026 do próprio playbook:** "Este ano não dá para vender agente de GPT como bônus. O que dá, e converte melhor, é entregar **uma plataforma feita no Claude**: uma ferramenta com a sua cara, que o aluno usa todo dia."
+
+**A ancoragem de preço em 6 camadas:**
+
+| Camada | O que é |
+|---|---|
+| 1 | Valor justo, o que deveria custar |
+| 2 | Valor do site, o preço que qualquer um encontra |
+| 3 | Valor da Black, só hoje |
+| 4 | Comparação banal: um Uber, um lanche. A parcela vira nada |
+| 5 | ROI com um resultado: um cliente paga o curso cinco vezes |
+| 6 | Os 2 lugares daqui a um ano: mesmo emprego se arrependendo, ou vida nova agradecendo |
+
+Existe ainda um **rundown minuto a minuto** com ativo necessário, CTA e **plano B** para cada faixa de tempo, incluindo o que fazer se o checkout cair (mandar link reserva nos grupos).
+
+## 4.12 Disparos
+
+"É aqui que a Black do Nobre se separou das anteriores."
+
+| Momento | Cadência |
+|---|---|
+| Dias de aula ao vivo | **2 disparos por dia**, mais URA, API e e-mail |
+| Carrinho aberto | **3 disparos por dia**, todos os dias |
+| Dia da abertura | 10 mensagens das 10h às 22h. O preço só aparece às 14h30. A lista de presentes se repete quatro vezes |
+
+**URA do Nobre em números:** 1.494 ligações, 1.051 minutos, 4.246 contatos válidos. Status no playbook: "EXPLODIU A CONVERSÃO".
+
+**O aviso que vem junto, e que precisa ser respeitado:** aquele volume rodou em base própria e quente, que já tinha se inscrito e esperava a oferta. Foi só no dia do pico, não é a média. Cada envio tem custo de reputação. **"Comece pela metade da cadência, olhe descadastro e bloqueio a cada envio e só suba se os números aguentarem."**
+
+**Checklist obrigatório antes de qualquer disparo:**
+1. Cada número entrou com consentimento registrado, com data, origem e texto do aceite
+2. Separar a base por origem, nunca misturar lista comprada com base própria
+3. Definir teto de mensagens por pessoa por dia e respeitar na campanha inteira
+4. Saída fácil em toda mensagem, processada no mesmo dia
+5. Monitorar bloqueio, denúncia e qualidade do número todo dia
+6. Suprimir quem já comprou antes de cada disparo de venda
+7. Testar em base de 200 a 500 contatos antes de liberar o disparo cheio
+8. Registrar entregues, lidos, respostas, cliques e saídas na mesma planilha
+
+**Categoria no WhatsApp oficial:** convite de Black, bônus e carrinho aberto são conteúdo promocional, ou seja **marketing**. Lembrete só tende a ser utility quando a pessoa pediu aquela comunicação e a mensagem não carrega oferta.
+
+**De e-mail para WhatsApp em 3 cortes:** o assunto vira a primeira linha em caixa alta. Corta tudo que for explicação e deixa promessa, lista curta e link. Troca a assinatura por uma pergunta ou comando único. "O e-mail suporta escada longa, o WhatsApp só suporta uma ideia por mensagem."
+
+## 4.13 Caso Nobre 2025
+
+**Linha do tempo:** 03/10 começa a distribuição de depoimentos. 20/10 captação orgânica pelas aulas. 30/10 captação por API. 05, 06, 07 e 09/11 as quatro aulas. 11/11 abertura. 14 e 18/11 lives de vendas. 20/11 replay e pitch final. 21/11 encerramento.
+
+Cerca de **40 dias** entre o primeiro depoimento e a abertura. **Dez dias** de carrinho aberto.
+
+**Resultado orgânico no YouTube em 90 dias:** 153 mil visualizações, alta de 213%. 60 mil visualizações intencionais, alta de 135%.
+
+**Detalhes que fizeram diferença:** camisa, caneca e caixa secreta como itens físicos. Dois manifestos com foco em aumento de consciência. **Mudança de foto de perfil e de bio.** Três postagens fixadas no Instagram.
+
+O playbook é honesto sobre o que ainda falta nesse caso: tamanho da base, leads captados, custo por lead, vendas, ticket e faturamento líquido estão marcados como "a preencher". "Um caso vira benchmark quando tem denominador."
+
+## 4.14 Caso Priscila 2025
+
+**O aprendizado central:** "a narrativa do trailer, a melhor da história que nunca mais se repete, vira uma **linha editorial de posts** semanas antes. Não é só um vídeo."
+
+**O mote da campanha:** "para fazer uma oferta dessas a Pri só pode estar ficando louca." Repetido em toda peça pré Black, dá unidade sem revelar a oferta.
+
+**O arco em 12 posts**, com função definida para cada um: antecipação sem revelar, anúncio da data já captando por comentário, promessa de superlativo comparando com a própria campanha anterior, o mote da loucura, bastidor pessoal para descansar o feed sem parar a venda, ativação no dia, oferta com ancoragem, empilhamento de bônus (um por card, com nome, para quem serve e valor), contagem regressiva, prova social com nome e contexto, e encerramento com hora exata do corte.
+
+**Um post está marcado como "não copie":** o de número 9, que repetiu o empilhamento. "Repetir empilhamento queima uma peça: ali cabia quebra de objeção, preço, prazo ou falta de tempo."
+
+## 4.15 Ritmo e ferramentas
+
+**Ritmo mínimo declarado:** 1 post por dia é o piso, **2 é o alvo**.
+
+**Skills disponíveis para baixar** (usar em claude.ai, em Configurações, Capacidades, Skills):
+1. Cronograma geral da Black, de D-70 ao debriefing em D+17
+2. Manifesto e trailer, nos 6 blocos e nos 11 movimentos
+3. Cronograma de conteúdo, planilha diária de stories e feed
+4. Copy e criativo de captação, nos 5 ângulos
+
+## 4.16 Debriefing
+
+**Os 9 indicadores:** faturamento, vendas, ticket médio, leads no grupo, verba investida, CPL, CAC, ROAS e conversão de grupo em venda.
+
+**As 9 perguntas:** o que funcionou melhor na captação, qual conteúdo vendeu mais, a narrativa gerou mesmo a sensação de melhor da história, o combo tinha bônus que o público queria, a ancoragem foi bem feita, o que os disparos trouxeram, quais coisas novas foram aplicadas e com qual resultado, o que não repetir, o que repetir com certeza.
+
+---
+
+# PARTE 5. O QUE O PLAYBOOK MUDA NO NOSSO PLANO
+
+## 5.1 Diagnóstico do público, feito com os nossos dados
+
+O playbook manda decidir sensibilidade a preço por número, não por perfil demográfico. Fui ao banco.
+
+| Forma de pagamento do MCV | Vendas | Percentual | Ticket médio |
+|---|---|---|---|
+| À vista | 515 | **52,6%** | R$ 254,77 |
+| 2 a 6 vezes | 225 | 23,0% | R$ 274,34 |
+| 7 vezes ou mais | 239 | 24,4% | **R$ 315,13** |
+
+**Leitura:** mais da metade paga à vista, e quem parcela longo compra ticket maior, não menor. Pelo critério do playbook, o nosso público **não é sensível a preço** do jeito que se imagina no nicho.
+
+**Consequência direta:** a regra é "capriche nos bônus, dá para aumentar o preço e ainda vender". Ou seja, não descer o preço do combo. Investir em empilhamento.
+
+## 5.2 O alerta sobre vitalício mordeu o nosso plano
+
+Segunda pergunta do diagnóstico: a oferta fora da Black é de pelo menos R$ 997? A nossa não é. MCV custa R$ 297 e Blindagem R$ 397. Resposta: não. Recomendação do playbook: **não fazer só vitalício**, e sim desconto mais bônus.
+
+O Combo Infinito a R$ 997 empilhando seis produtos tem lastro e passa. **O problema específico é o Blindagem.** Transformar uma assinatura em acesso vitalício dentro de um combo de R$ 997 é exatamente o caso que o playbook manda calcular antes.
+
+**Encaminhamento:** o Blindagem entra no combo como **12 meses**, não como vitalício. Se o aluno quiser vitalício, vira um degrau à parte, com cálculo do valor presente da assinatura.
+
+## 5.3 O trailer não pode falar preço
+
+Eu tinha desenhado os dois trailers com a condição e o tamanho do desconto dentro. O playbook é categórico: o trailer não fala preço, não fala desconto e não mostra o produto. Vende a decisão de comparecer.
+
+Isso vale também para a página de captura e para todos os criativos de captação: **o tamanho do desconto nunca é revelado**. É ele que segura a curiosidade até a aula de vendas.
+
+**Correção:** nossa página de inscrição anuncia que vai ter Black Friday e que será a maior, mas não diz o preço nem a porcentagem.
+
+## 5.4 Os 11 movimentos aplicados ao nosso nicho
+
+O movimento 1 resolve um problema que temos: **ninguém é o vilão, o inimigo é o cenário**. No nosso caso o inimigo não pode ser o cliente do fotógrafo, senão a peça fica amarga e afasta. O inimigo é a informalidade do mercado, o combinado que ficou no WhatsApp, a falta de documento.
+
+Rascunho da escada:
+
+| # | Movimento | Nossa versão |
+|---|---|---|
+| 1 | Cenário | O mercado de fotografia funciona no fio do combinado verbal |
+| 2 | Pergunta | Quantas vezes você entregou o trabalho antes de receber |
+| 3 | A separação | O fotógrafo profissional e o fotógrafo que ainda trabalha na base da confiança |
+| 4 | A acomodação | "Nunca aconteceu nada comigo" |
+| 5 | O que está em jogo | Não é o cachê. É o mês que você não fecha e a conta que não fecha junto |
+| 6 | Autoridade | Felipe, fotógrafo e advogado, só depois de já ter a atenção |
+| 7 | O convite | Em novembro vai ter algo que eu nunca fiz |
+| 8 | A quebra do padrão | Nunca juntei tudo que eu vendo em um lugar só |
+| 9 | Prova | Depoimento de quem usou o contrato e não levou calote |
+| 10 | A data | Dia e hora exatos |
+| 11 | Bordão e CTA | Comando único |
+
+## 5.5 O nível de operação que cabe em nós
+
+Pela tabela do playbook, hoje somos **Crescimento**, com uma vantagem e uma limitação.
+
+**Vantagem:** já temos API de WhatsApp funcionando e o Claudinho, que faz o trabalho que o Nobre pagou de R$ 15 a R$ 25 a hora em call center.
+
+**Limitação:** temos 2.100 telefones. A URA do Nobre fez 1.494 ligações e gerou 4.246 contatos válidos porque a base dele era grande. Rodar URA em 2.100 contatos entrega pouco.
+
+**Recomendação:** rodar **Crescimento bem feito** em vez de fingir Escala. Ou seja: oferta e combo, grupos de WhatsApp, conteúdo diário, API, e-mail, aulas de aquecimento e uma live de abertura forte. Deixar URA e a cadência de 3 disparos por dia para 2027, quando a base comportar.
+
+## 5.6 A cadência de disparo que a nossa base aguenta
+
+O playbook mostra 10 mensagens em 12 horas no dia da abertura, e no parágrafo seguinte manda começar pela metade. Com 2.100 WhatsApps e uma base que nunca recebeu disparo em volume, o número real para nós é menor ainda.
+
+| Momento | Nobre | Nós na primeira Black |
+|---|---|---|
+| Dia de aula | 2 por dia | 1 por dia |
+| Carrinho aberto | 3 por dia | 1 a 2 por dia |
+| Dia da abertura | 10 mensagens | 4 a 5 mensagens |
+
+E o checklist de consentimento dos oito itens não é opcional para nós. **Somos a marca que vende segurança jurídica para fotógrafo.** Um disparo sem consentimento registrado, ou sem saída fácil, é um problema de reputação muito maior aqui do que seria em outro nicho.
+
+## 5.7 A ancoragem em 6 camadas, com a nossa camada 5 sendo a mais forte
+
+| Camada | Nossa versão |
+|---|---|
+| 1. Valor justo | Cerca de R$ 3.000, somando tudo com os parceiros |
+| 2. Valor do site | R$ 1.477,80, a soma real do que já vendemos hoje |
+| 3. Valor da Black | R$ 997, ou parcelado |
+| 4. Comparação banal | Menos de um terço de um ensaio |
+| 5. **ROI com um resultado** | **Um único cliente que dá calote custa mais que o combo inteiro** |
+| 6. Os 2 lugares em um ano | Continuar fechando no print do WhatsApp, ou ter documento em todo trabalho |
+
+A camada 5 no nosso caso é mais forte que no exemplo do playbook, porque no nosso nicho o prejuízo evitado é concreto e todo fotógrafo já viveu.
+
+## 5.8 A plataforma no Claude como bônus, que já temos
+
+A nota de 2026 do playbook diz que o bônus de tecnologia que converte agora é uma plataforma feita no Claude, com a cara da marca, que o aluno usa todo dia.
+
+Nós não precisamos construir isso do zero: **o Blindagem já é essa plataforma**. E dá para criar uma segunda ferramenta específica de Black, pequena, como bônus por velocidade.
+
+## 5.9 O mote da campanha, que ainda não temos
+
+O caso Priscila mostra que o mote repetido em toda peça pré Black dá unidade sem revelar a oferta. Ainda não temos o nosso.
+
+O mote precisa funcionar em Reels, em story, em carrossel e na boca do Felipe, e sustentar de 4 a 6 semanas de conteúdo.
+
+## 5.10 Ajuste final do calendário
+
+Cruzando a recomendação do playbook (abrir entre 10 e 15 de novembro, D-28 antecipação, D-21 captação) com a restrição eleitoral:
+
+Se **D0 for 11 de novembro**, D-28 cai em 14 de outubro e D-21 em 21 de outubro. Os dois caem em plena campanha do segundo turno.
+
+**Solução:** puxar a antecipação e a captação para setembro, que é quando o calendário eleitoral ainda não domina a atenção, e usar a última semana de outubro como retomada.
+
+| Fase | Nossa data | Observação |
+|---|---|---|
+| Organizar | 1 a 20 de setembro | Oferta, combo, narrativa, parceiros |
+| Antecipação | a partir de 21 de setembro | Antecipado em relação ao padrão |
+| Captação forte | 21 de setembro a 3 de outubro | Antes da eleição dominar |
+| Marcha lenta | 4 a 25 de outubro | Só orgânico, sem mídia pesada |
+| Retomada | 26 de outubro | Eleição acabou |
+| Trailer no ar | 28 de outubro | |
+| Aulas de aquecimento | 5, 6 e 7 de novembro | D-6 a D-4 |
+| **Grande dia** | **11 de novembro** | Dentro da janela recomendada |
+| Carrinho aberto | 11 a 21 de novembro | |
+| Lives de vendas | 14 e 18 de novembro | D+3 e D+7 |
+| Encerramento | 21 de novembro | D+10 |
+| Debriefing | 28 de novembro | |
+
+Fica uma pergunta em aberto: **encerrar em 21/11 deixa a Black Friday oficial (27/11) de fora.** Duas saídas possíveis, a decidir: encerrar em 21 e fazer uma segunda janela curta na semana oficial, que é o que o Gabriel fez com duas Blacks, ou esticar o carrinho até 30 de novembro.
+
+---
+# PARTE 6. RISCOS E DECISÕES EM ABERTO
+
+## 6.1 Risco: revolta do comprador antigo
 
 Os 973 que compraram o MCV a R$ 297 vão ver um combo de R$ 997 com o MCV dentro. No nicho de fotografia isso circula rápido em grupo.
 
 **Solução:** crédito integral. Quem tem MCV entra por R$ 700. Quem tem MCV e Blindagem entra por R$ 400.
 
-## 4.2 Risco: golpista no WhatsApp
+## 6.2 Risco: golpista no WhatsApp
 
 Alerta direto do Gabriel. Na semana de abertura aparecem perfis clonados oferecendo o produto mais barato.
 
 **Providências:** grupos com pelo menos 10 administradores, administradores diferentes entre grupos, e aviso fixado sobre o único canal oficial de pagamento.
 
-## 4.3 Decisões que travam o resto
+## 6.3 Decisões que travam o resto
 
 1. **Quem são os parceiros.** Sem eles a meta de R$ 100 mil não fecha. Depende de outras pessoas, então começa primeiro. O método do Gabriel: perguntar quanto custa comprar 100 acessos do produto do parceiro.
 2. **O que entra no vitalício.** Se o Blindagem entrar como acesso para sempre, abrimos mão de assinatura recorrente futura em troca de caixa agora. É escolha de negócio.
@@ -474,3 +899,11 @@ Alerta direto do Gabriel. Na semana de abertura aparecem perfis clonados oferece
 - [ ] Roteiro dos dois trailers
 - [ ] Planilha em Excel com as fórmulas ligadas
 - [ ] Baixar e modelar o material completo da Black do Gabriel quando for liberado
+- [ ] Escolher o nível de operação (recomendação: Crescimento bem feito, sem URA nesta edição)
+- [ ] Definir o mote da campanha, o nosso equivalente ao "a Pri só pode estar ficando louca"
+- [ ] Decidir se o Blindagem entra como 12 meses ou vitalício, com o cálculo do valor da assinatura
+- [ ] Decidir se encerra em 21/11 e faz segunda janela na semana oficial, ou estica até 30/11
+- [ ] Responder as 7 perguntas da economia da oferta com a planilha do lado
+- [ ] Baixar as 4 skills do playbook (cronograma, manifesto e trailer, cronograma de conteúdo, captação)
+- [ ] Montar o checklist de consentimento dos 8 itens antes de qualquer disparo
+- [ ] Ler as caixinhas e comentários do perfil para extrair as dores reais, base do conteúdo de stories
