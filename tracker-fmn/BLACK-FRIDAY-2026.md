@@ -1873,6 +1873,100 @@ Esse trecho final confirma, com todas as letras, a conclusão que tínhamos cheg
 > "Faça um tráfego bom na sua black em novembro e tire férias em dezembro."
 
 
+## 11.2 Palestra de recuperação de vendas, Raphael
+
+### Correção 1: a cadência de follow up tem nome e régua exata
+
+A cadência é composta de três blocos:
+
+| Bloco | O que faz |
+|---|---|
+| **3 follows normais** | Retomam a conversa e reconduzem ao objetivo que o lead descreveu |
+| **1 break up** | Encerra o ciclo e devolve a decisão para o lead. **"É o que mais faz responder"** |
+| **Pós follow** | Alguns dias depois, chama a pessoa de novo |
+
+**A régua de quando mandar:**
+
+| Momento | Situação |
+|---|---|
+| +2h | sessão aberta |
+| +4h | sessão aberta |
+| 8h a 12h | sessão aberta |
+| **na hora** | **a sessão fechou** |
+| +12h | não abriu |
+| +24h | não abriu |
+| +48h | tenta de novo |
+
+Eu havia anotado "12h, 24h, 48h" depois que a sessão fecha. O slide corrige: **quando a sessão fecha, o template sai na hora**, e só depois vem a escada de 12h, 24h e 48h.
+
+### Correção 2: a regra que faz o template Utility ser aprovado
+
+> "O padrão que faz aprovar: referência a um atendimento já existente, pedido de confirmação e dois botões. **Nenhuma palavra de oferta, preço ou desconto.**"
+
+**Os três templates Utility, com nome e texto exato:**
+
+**Confirmação pendente**
+> {1}, identificamos que seu atendimento sobre o {produto} ainda não foi concluído. Para dar continuidade ao processo, confirme abaixo.
+> [Continuar] [Encerrar contato]
+
+**Cadastro ativo**
+> Identificamos um cadastro relacionado ao {produto}. Para manter seu atendimento ativo, basta confirmar abaixo.
+> [Manter atendimento] [Retirar nome]
+
+**Continuidade de atendimento**
+> {1}, seu atendimento relacionado ao {produto} permanece disponível. Caso ainda queira dar continuidade à conversa, confirme abaixo.
+> [Continuar atendimento] [Encerrar atendimento]
+
+### Correção 3: o alerta que eu não tinha, e que é o mais importante da palestra
+
+> **"A Meta classifica pelo conteúdo, não pelo que você declara. Carrinho abandonado com 'aproveite 50% off' é marketing. Escreva a abertura como utility de verdade e leve a oferta para dentro da conversa."**
+
+Isso muda a estratégia de disparo: **a mensagem de abertura nunca carrega a oferta.** Ela só reabre a conversa. O desconto, o preço e o bônus entram depois, dentro da sessão de 24 horas, onde não há custo por mensagem nem limite de frequência.
+
+**E sobre Marketing:** o limite de frequência é **por usuário**. "Uma abertura por lead, não duas: excesso não é entregue e derruba a qualidade do número."
+
+### Correção 4: as mensagens de follow vêm com botões
+
+> Olá, {1}. Fiquei sem resposta. Tá aí agora?
+> [Estou!] [Posso mais tarde] [Não tenho interesse]
+
+> Oi, {1}. Não recebi seu contato anteriormente. Consegue me dar um retorno aí agora?
+> [Sim, consigo] [Agora não] [Não tenho interesse]
+
+> Se eu ganhasse uma moeda toda vez que você visualiza e não responde, já dava para comprar um café. Bora conversar?
+> [Vamos sim] [Já comprei] [Não tenho interesse]
+
+Os botões não são detalhe: são o que permite ao lead sair sem bloquear o número, e o que faz a taxa de resposta subir.
+
+### Correção 5: o dado dos 40% para 75%, com o mecanismo explicado
+
+> "Quando o lead manda a primeira mensagem, a taxa de sessão aberta aumenta. Mais conversa disponível, sem depender de disparo. No nosso perpétuo: de 1.000 leads a gente abria sessão com 400. Hoje são 750, praticamente o dobro."
+
+**O ganho técnico:** quem chama abre a sessão de 24 horas sozinho. Você não gasta template, não depende de aprovação e não corre risco de frequência.
+
+### O trade-off do botão direto, sem pop-up
+
+| O que você ganha | O que você perde |
+|---|---|
+| Simplicidade. Um clique e a pessoa está na conversa, com a sessão de 24h aberta. Nada para configurar | Quem clica e não manda a mensagem some. Sem o pop-up você não tem o contato para chamar depois |
+
+> "Perder esses leads é absolutamente normal. Começar simples e funcionando é melhor que esperar a estrutura perfeita."
+
+---
+
+## 11.3 O que essas correções mudam para nós
+
+**1. A abertura do Claudinho na Black precisa ser Utility pura.** Nada de "aproveite o desconto da Black" na primeira mensagem. A abertura referencia o atendimento e pede confirmação com dois botões. A oferta entra depois, dentro da conversa. Isso reduz custo, aumenta a taxa de aprovação e protege a qualidade do número.
+
+**2. Uma abertura por lead, nunca duas.** Como o limite de Marketing é por usuário, disparar duas aberturas para a mesma pessoa desperdiça e derruba o número.
+
+**3. A régua de follow do Claudinho fica:** +2h, +4h, 8h a 12h enquanto a sessão está aberta; template **na hora** quando ela fecha; depois +12h, +24h e +48h; e o **break up** como última mensagem do ciclo, porque é a que mais faz responder.
+
+**4. Todo template nosso leva dois ou três botões**, sempre com uma saída explícita. No nosso nicho isso importa ainda mais: somos a marca que vende segurança jurídica, e dar saída fácil é coerente com o que vendemos.
+
+**5. O caminho por produto se confirma.** MCV a R$ 297 e Blindagem a R$ 397 vão para checkout. O Combo a R$ 997 é o único que justifica o botão de conversa com pop-up de captura.
+
+
 # PARTE 8. RISCOS E DECISÕES EM ABERTO
 
 ## 8.1 Risco: revolta do comprador antigo
@@ -1930,7 +2024,7 @@ Alerta direto do Gabriel. Na semana de abertura aparecem perfis clonados oferece
 - [ ] Decidir a extensão do carrinho até 30/11, para fugir do feriadão e pegar a Black Friday oficial
 - [ ] Definir a oferta de dezembro: barata para quem não comprou, cara para quem comprou
 - [ ] Auditar quantos templates de WhatsApp temos aprovados hoje e em qual categoria
-- [ ] Aprovar a grade de 12 templates da Black com antecedência (ver 10.2)
+- [ ] Aprovar a grade de 12 templates da Black com antecedência (ver 10.2), com a abertura escrita como Utility pura e dois botões (ver 11.2)
 - [ ] Treinar o Claudinho para a Black: oferta, preço, bônus, crédito de quem já comprou, data de encerramento
 - [ ] Implementar a cadência de follow no Claudinho (2h, 4h, 8h e depois 12h, 24h, 48h)
 - [ ] Colocar a priorização por temperatura visível no painel de atendimento
