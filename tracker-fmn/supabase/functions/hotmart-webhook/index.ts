@@ -163,7 +163,7 @@ Deno.serve(async (req) => {
     }
     const { data: venda } = await supabase
       .from("vendas")
-      .select("comprador_telefone, comprador_nome, whatsapp_boas_vindas_enviado")
+      .select("comprador_telefone, comprador_nome, produto_id, whatsapp_boas_vindas_enviado")
       .eq("hotmart_transaction_id", transactionId)
       .single();
     if (!venda) {
@@ -182,6 +182,15 @@ Deno.serve(async (req) => {
       });
     }
     await enviarBoasVindasMcv(transactionId, venda.comprador_telefone, venda.comprador_nome);
+    // Bug real em 2026-08-28 (Adriel de Oliveira, primeira venda do
+    // Blindagem): esse endpoint reenviava só a boas-vindas, nunca a tag do
+    // produto. No fluxo normal do webhook as duas rodam em sequência (a
+    // boas-vindas cria o contato no Khronus se ele não existir, e a tag
+    // depende desse contato já existir pra achar quem marcar) — reenviar só
+    // metade deixa o aluno sem tag nenhuma, silenciosamente.
+    if (venda.produto_id) {
+      await marcarTagDoProduto(venda.produto_id, venda.comprador_telefone);
+    }
     return new Response(JSON.stringify({ ok: true }), { headers: { "Content-Type": "application/json" } });
   }
 
