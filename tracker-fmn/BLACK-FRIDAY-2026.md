@@ -1967,6 +1967,132 @@ Os botões não são detalhe: são o que permite ao lead sair sem bloquear o nú
 **5. O caminho por produto se confirma.** MCV a R$ 297 e Blindagem a R$ 397 vão para checkout. O Combo a R$ 997 é o único que justifica o botão de conversa com pop-up de captura.
 
 
+# PARTE 12. AS PÁGINAS DO LADEIRA, DISSECADAS
+
+## 12.1 Página de vendas da Black Vitalícia (BF 2023)
+
+> **Essa página resolve a nossa dúvida em aberto sobre o Blindagem.** Ver 12.2 para a tradução.
+
+### A estrutura, de cima para baixo
+
+**1. Barra de contador no topo, com escassez de lote, não de data**
+> "Faltam X dias, X horas e X segundos para o primeiro lote virar e ficar mais caro."
+
+A escassez não é o carrinho fechando. É o **preço subindo**. Isso permite carrinho longo com urgência real o tempo inteiro.
+
+**2. A headline, que é um aviso funcionando como convite**
+> "CUIDADO: ler esta página com atenção pode fazer você sair dela com acesso infinito a todos os meus cursos."
+
+**3. O nome da oferta e o estado do lote:** "BLACK FRIDAY INFINITA. Primeiro lote liberado."
+
+**4. Os quatro bullets da promessa**, em pares de afirmação e consequência:
+- Acesso vitalício e ilimitado a todos os meus cursos online
+- Nunca mais vai precisar gastar para comprar um curso meu
+- Acesso vitalício a qualquer novo curso que eu lançar no futuro
+- Nem nenhum outro curso de marketing, se assim quiser
+
+**5. O CTA duplo, repetido quatro vezes na página**
+> [LIBERAR ACESSO INFINITO]
+> [Tirar minhas dúvidas via WhatsApp]
+> *Normalmente respondemos em menos de 2 minutos
+
+O botão de WhatsApp da palestra do Raphael aparece aqui na prática, **com o SLA declarado na própria página**. Prometer resposta em 2 minutos é parte da oferta.
+
+### 6. A tabela comparativa, que é o coração da página
+
+| OFERTA NORMAL | OFERTA BLACK INFINITA |
+|---|---|
+| **Acesso de um ano (12 meses)** | **Acesso vitalício (para sempre)** |
+| VTSD R$ 2.500 | VTSD R$ 2.500 |
+| Light Copy R$ 2.000 | Light Copy R$ 2.000 |
+| Stories 10x R$ 1.000 | Stories 10x R$ 1.000 |
+| Total R$ 5.500 | Tráfego Avançado (novo) R$ 2.000 |
+| Renovação ano 1: R$ 3.000 | Automa Pro (novo) R$ 2.000 |
+| **Renovação, ano 1: R$ 8.500** | Imersão Retiro online R$ 5.000 |
+| | Stories 10x Plus R$ 500 |
+| | 10 palestras do Fluxo: exclusivo |
+| | Documentário de anúncio: exclusivo |
+| | Acesso a novos cursos para sempre: inédito |
+| | **Total R$ 15.000** |
+
+**O movimento que faz a oferta funcionar:** ele não ancora o vitalício contra o preço do produto. Ancora contra **o custo de renovar**. A linha "esse seria o valor total que gastaria após 1 ano: R$ 8.500" é o argumento inteiro.
+
+Preço: **12x R$ 349,57 para aluno** e **12x R$ 466,49 para não aluno**.
+
+### 7. A escada de lotes, mostrada aberta na página
+
+| Lote | Aluno | Não aluno |
+|---|---|---|
+| Lote Especial | 12x R$ 349,57 | 12x R$ 466,49 | **ENCERRADO** |
+| Lote 1 | 12x R$ 466,49 | 12x R$ 583,40 |
+| Último lote | 12x R$ 583,40 | 12x R$ 700,31 |
+
+Ele **mostra os três lotes e marca o anterior como encerrado**. Quem chega vê, com os próprios olhos, que o preço já subiu uma vez e vai subir de novo. É prova visual de escassez, não promessa.
+
+**E o preço é diferente para aluno.** Isso valida a nossa regra de crédito para quem já comprou.
+
+### 8. Prova social por produto, nunca genérica
+
+Para cada curso dentro do combo, ele abre uma seção: "mas será que o {produto} dá resultado?" e responde com depoimentos daquele produto específico, incluindo nomes de peso do mercado.
+
+Tem ainda uma seção dedicada à objeção mais provável: **"E para perfil pequeno, funciona?"**
+
+### 9. Cinco bônus, cada um ancorado contra um preço real
+
+O Retiro Online "é vendido por 5 mil reais, você que entrar recebe de graça". As 10 palestras vêm com "a mentoria Fluxo custa 40 mil reais anual". Nenhum bônus aparece sem um número ao lado.
+
+### 10. Autoridade só no fim, e o fecho emocional
+
+A apresentação do Leandro vem depois de toda a oferta, confirmando o movimento 6 do manifesto. E o fecho:
+
+> "Eu sei, a vida é curta. Mas, enquanto ela durar, você terá acesso a todos os meus cursos para construir a vida que sempre sonhou. Conte comigo."
+
+É a camada 6 da ancoragem (os dois lugares daqui a um ano) em versão emocional.
+
+**E o obrigatório da narrativa aparece literal:** "Literalmente, essa é a oferta mais forte que eu já fiz em toda minha carreira."
+
+---
+
+## 12.2 A tradução que resolve o nosso impasse do vitalício
+
+Estava em aberto desde a seção 5.2: o Blindagem é assinatura, e transformá-lo em vitalício dentro de um combo de R$ 997 parecia queimar receita recorrente sem contrapartida.
+
+**A página do Ladeira mostra o enquadramento que faltava: o vitalício não se vende contra o preço do produto, se vende contra o custo de renovar.**
+
+Nossa versão da tabela:
+
+| OFERTA NORMAL | COMBO INFINITO FMN |
+|---|---|
+| **Blindagem: acesso de 12 meses** | **Blindagem: acesso vitalício** |
+| MCV R$ 297 | MCV R$ 297 |
+| Blindagem, 1 ano R$ 397 | Blindagem vitalício R$ 397 |
+| Mensagens que Vendem R$ 197 | Mensagens que Vendem R$ 197 |
+| Presets R$ 59,90 | Mentoria XP Sala Preta R$ 497 |
+| Cenários Natalinos R$ 29,90 | Presets R$ 59,90 |
+| Total hoje: R$ 980,80 | Cenários Natalinos R$ 29,90 |
+| **Renovação do Blindagem, ano 1: +R$ 397** | Bônus próprios: evento ao vivo, aulas de objeção, ferramenta |
+| **Total após 1 ano: R$ 1.377,80** | |
+| **Após 3 anos: R$ 2.171,80** | |
+
+**O argumento fica assim:** o fotógrafo que compra hoje e mantém o Blindagem por três anos gasta R$ 2.171,80. No combo, ele paga R$ 997 uma vez e nunca mais renova.
+
+**A decisão de negócio que sobra para você**, e agora com o número na mesa: cada venda do combo com Blindagem vitalício abre mão de aproximadamente **R$ 397 por ano de recorrência**. A 70 combos, são R$ 27.790 de receita anual recorrente trocados por caixa hoje. Se o cliente ficaria 3 anos em média, a troca é de cerca de R$ 83 mil de recorrência futura por R$ 69.790 de caixa imediato.
+
+**Duas saídas, e a segunda é a que eu recomendo:**
+
+**A. Vitalício de verdade**, como o Ladeira. Mais forte de vender, e o número acima é o custo.
+
+**B. Ancorar contra a renovação sem dar vitalício.** O combo entrega **3 anos de Blindagem** em vez de 12 meses. A tabela comparativa continua funcionando ("normal: 1 ano; combo: 3 anos, você economiza R$ 794 de renovação"), o argumento fica quase tão forte, e você preserva a recorrência a partir do quarto ano.
+
+## 12.3 Três mecanismos dessa página que valem copiar
+
+**1. Escassez por lote, não por data.** Resolve o problema que a gente tinha de carrinho longo perdendo urgência. Com lotes, o carrinho pode ficar aberto de 11 a 30 de novembro e ter urgência real o tempo todo, porque o preço sobe no meio do caminho.
+
+**2. Mostrar o lote encerrado na página.** Prova visual de que o preço já subiu, em vez de promessa de que vai subir.
+
+**3. SLA declarado no botão de WhatsApp.** "Normalmente respondemos em menos de 2 minutos" é oferta, não detalhe operacional. E no nosso caso o Claudinho consegue cumprir isso melhor que qualquer humano.
+
+
 # PARTE 8. RISCOS E DECISÕES EM ABERTO
 
 ## 8.1 Risco: revolta do comprador antigo
@@ -2008,7 +2134,8 @@ Alerta direto do Gabriel. Na semana de abertura aparecem perfis clonados oferece
 - [ ] Escolher item físico e sorteio
 - [ ] Refazer a ancoragem com valor declarado item por item (Saída A ou B, ver 7.14)
 - [ ] Definir o mote da campanha, o nosso equivalente ao "a Pri só pode estar ficando louca"
-- [ ] Decidir se o Blindagem entra como 12 meses ou vitalício, com o cálculo do valor da assinatura
+- [ ] Decidir o Blindagem no combo: vitalício de verdade ou 3 anos ancorado contra a renovação (ver 12.2, recomendação é 3 anos)
+- [ ] Decidir se usamos escada de lotes em vez de preço único (ver 12.3)
 - [ ] Decidir se encerra em 21/11 e faz segunda janela na semana oficial, ou estica até 30/11
 - [ ] Responder as 7 perguntas da economia da oferta com a planilha do lado
 - [ ] Baixar as 4 skills do playbook (cronograma, manifesto e trailer, cronograma de conteúdo, captação)
