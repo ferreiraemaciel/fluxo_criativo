@@ -302,6 +302,8 @@ Depois de reembolso (8%) e taxas Hotmart mais imposto (18%), sobram 75,4% do bru
 
 ## 2.4 Combo Infinito FMN
 
+> **SUPERADO EM PARTE.** A linha de parceiros saiu com a decisão de 28/08 de fazer a Black sozinho. O valor empilhado real é R$ 1.477,80, e a ancoragem foi recalculada na seção 7.14.
+
 | O que entra | Preço avulso hoje |
 |---|---|
 | Modelos de Contrato Visual | R$ 297 |
@@ -311,8 +313,8 @@ Depois de reembolso (8%) e taxas Hotmart mais imposto (18%), sobram 75,4% do bru
 | Combo Packs de Presets | R$ 59,90 |
 | 40 Ideias de Cenários Natalinos | R$ 29,90 |
 | **Soma do que já vendemos** | **R$ 1.477,80** |
-| Produtos de 3 a 5 parceiros do nicho | + R$ 1.500 de valor percebido |
-| **Valor empilhado** | **cerca de R$ 3.000** |
+| ~~Produtos de parceiros~~ | ~~+ R$ 1.500~~ removido em 28/08 |
+| **Valor empilhado real** | **R$ 1.477,80**, a ser elevado com bônus próprios (ver 7.14) |
 
 Preço na abertura antecipada: R$ 697. Preço na Black Friday: R$ 997.
 
@@ -321,6 +323,8 @@ Preço na abertura antecipada: R$ 697. Preço na Black Friday: R$ 997.
 Argumento que sustenta: o fotógrafo profissional para de comprar contrato, script de venda, preset e ideia de ensaio avulso pelo resto da carreira. É categoria, não desconto.
 
 ## 2.5 Cenário para R$ 50 mil de lucro
+
+> Cenário mantido como alvo real da edição 2026, ver 7.14.
 
 | Produto | Preço | Unidades | Faturamento |
 |---|---|---|---|
@@ -334,6 +338,8 @@ Líquido R$ 87.299. Mídia R$ 32.000. **Lucro R$ 55.299.**
 70 combos são 7% dos nossos 986 compradores.
 
 ## 2.6 Cenário para R$ 100 mil de lucro
+
+> **SUPERADO.** Este cenário dependia da audiência dos parceiros. Sem eles, vira teto de um cenário muito bom, não meta. Ver 7.14.
 
 | Produto | Preço | Unidades | Faturamento |
 |---|---|---|---|
@@ -757,6 +763,8 @@ O playbook manda decidir sensibilidade a preço por número, não por perfil dem
 **Consequência direta:** a regra é "capriche nos bônus, dá para aumentar o preço e ainda vender". Ou seja, não descer o preço do combo. Investir em empilhamento.
 
 ## 5.2 O alerta sobre vitalício mordeu o nosso plano
+
+> Segue valendo, e ficou mais apertado: sem parceiros, o lastro do combo é só o nosso acervo. Ver 7.14.
 
 Segunda pergunta do diagnóstico: a oferta fora da Black é de pelo menos R$ 997? A nossa não é. MCV custa R$ 297 e Blindagem R$ 397. Resposta: não. Recomendação do playbook: **não fazer só vitalício**, e sim desconto mais bônus.
 
