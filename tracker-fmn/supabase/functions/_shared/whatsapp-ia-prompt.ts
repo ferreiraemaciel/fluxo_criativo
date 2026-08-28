@@ -7,7 +7,7 @@
 // SYSTEM_PROMPT_MCV mudar, no mesmo commit/deploy da alteração. É o que
 // alimenta o carimbo "Última atualização" no modal Prompt do Claudinho no
 // Tracker (ver whatsapp-prompt-atual/index.ts e conversas.jsx).
-export const PROMPT_ATUALIZADO_EM = "2026-08-26T13:48:04-03:00";
+export const PROMPT_ATUALIZADO_EM = "2026-08-28T19:55:24-03:00";
 
 // Bloco injetado ao final do system prompt quando o lead veio do quiz do
 // Blindagem. Sobrepõe a seção "## O produto" do SYSTEM_PROMPT_MCV com as
@@ -27,7 +27,7 @@ Criado por Felipe Ferreira, advogado especializado em fotografia, mestre em Gest
 
 **Quadro (transformação que o produto entrega)**: ter cada contrato gerado, assinado e organizado de forma profissional, sem depender de WhatsApp, papel ou e-mail.
 
-**Preço, formato obrigatório**: sempre mostre o valor PARCELADO primeiro, depois o à vista, nessa ordem. Frase padrão: "apenas 12x de R$ 41,42 (ou R$ 397,00 à vista)". Sempre use "apenas" antes do parcelado. Anuncie com transição ("Sobre o investimento:"), nunca solte o preço sem introdução. O produto é **licença anual** — nunca diga "acesso vitalício" pro Blindagem, diga "licença anual" ou "um ano de acesso completo".
+**Preço, formato obrigatório**: sempre mostre o valor PARCELADO primeiro, depois o à vista, nessa ordem. Frase padrão: "apenas 12x de R$ 41,06 (ou R$ 397,00 à vista)". Sempre use "apenas" antes do parcelado. Anuncie com transição ("Sobre o investimento:"), nunca solte o preço sem introdução. O produto é **licença anual** — nunca diga "acesso vitalício" pro Blindagem, diga "licença anual" ou "um ano de acesso completo".
 
 **Link de checkout do Blindagem (use exatamente este, nunca o link do MCV):**
 https://pay.hotmart.com/C106394543X?checkoutMode=10&sck=whatsapp-cl
@@ -40,7 +40,7 @@ Assim que o lead demonstrar intenção de fechar, mande esse link na mesma mensa
 
 "É diferente do MCV?" → Sim. O MCV é o arsenal de modelos pra editar no Canva. O Blindagem é o sistema completo: você gera o contrato lá dentro, manda direto pro cliente assinar digitalmente e acompanha o status em tempo real. São complementares — quem usa o MCV encontra os mesmos contratos visuais dentro do Blindagem, mais a gestão completa em cima.
 
-"Tá caro" → Em 12x de R$ 41,42 por mês, é menos que um jantar com cliente. E sem contrato assinado de forma profissional, um único cancelamento sem multa já ultrapassa muito esse valor.
+"Tá caro" → Em 12x de R$ 41,06 por mês, é menos que um jantar com cliente. E sem contrato assinado de forma profissional, um único cancelamento sem multa já ultrapassa muito esse valor.
 
 **Palavras que conectam para o Blindagem:** sistema de contratos, assinar digitalmente, organizado por cliente, status em tempo real, processo profissional, sem depender do WhatsApp, nunca mais perder contrato, Blindagem, fechar com segurança.
 `.trim();
