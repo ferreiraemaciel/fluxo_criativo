@@ -1344,6 +1344,61 @@ Tudo que não depende de decisão dele:
 
 **O que não faço sem aprovação:** criar os públicos personalizados no Meta é operação de escrita na conta e passa pelo gate de confirmação. E o ajuste da regra G5 mexe em banco do Tracker, que por combinação vive em outra conversa.
 
+## 7.14 DECISÃO: Black sem parceiros, edição 2026
+
+> Decidido pelo Felipe em 28/08/2026. Motivo: depender de outras pessoas pode travar a campanha inteira, e nesta edição o risco não compensa.
+
+### O que essa decisão resolve
+
+**Sai a dependência mais lenta da régua.** Fechar parceiro leva de duas a três semanas entre sondagem, proposta e acerto, e nada disso está sob nosso controle. Era o único item que precisava começar antes da viagem, e era ele que ia consumir os 6 dias de folga perdidos com a ausência de 31/08 a 06/09. **Sem parceiros, a retomada em 08/09 volta a caber na régua sem atraso.**
+
+Ganhos diretos:
+- Margem integral, sem lote de acessos comprado nem divisão de receita
+- Nenhum alinhamento de entrega, prazo ou suporte com terceiro
+- Nenhuma peça de conteúdo parada esperando aprovação de outra marca
+- O cronograma passa a depender só da nossa execução
+
+### O que essa decisão custa
+
+**O valor empilhado cai de cerca de R$ 3.000 para R$ 1.477,80**, que é a soma real do que já vendemos. Isso mexe direto na ancoragem: R$ 997 sobre R$ 1.477,80 é um desconto de 33%, e o playbook alerta contra prometer super desconto e entregar pouco. A ancoragem precisa ser refeita.
+
+**Some a audiência emprestada.** Todos os leads passam a vir de nós: orgânico, base própria e mídia. Isso reforça a conclusão da seção 7.2, agora sem alternativa: o orgânico decide a campanha.
+
+**A meta de R$ 100 mil fica muito difícil nesta edição.** Ela exigia 630 vendas, o que a 8% de conversão significa quase 7.900 leads captados apenas por nós. A meta de R$ 50 mil passa a ser o alvo real, e os R$ 100 mil viram o teto de um cenário muito bom.
+
+### O que substitui os parceiros no combo
+
+O playbook proíbe bônus que não existe e nunca foi vendido. Mas ele lista quatro tipos de item que dependem só de quem faz a campanha, e todos estão ao nosso alcance:
+
+| Item | Por que serve no nosso caso |
+|---|---|
+| **Evento online ao vivo, com data marcada e nome próprio** | Não é curso inventado, é encontro com data. Entra como bônus legítimo |
+| **Aulas que resolvem as objeções mapeadas** | Aqui está a nossa vantagem real: o Felipe é advogado e fotógrafo. Nenhum concorrente do nicho consegue gravar essas aulas. Era exatamente para isso que o Gabriel precisava convidar gente de fora |
+| **Plataforma feita no Claude** | A nota de 2026 do próprio playbook diz que é o bônus de tecnologia que converte agora. Já temos o Blindagem, e dá para criar uma ferramenta menor específica da Black |
+| **Item físico e sorteio** | Depende de compra, não de negociação. Fotógrafo compra equipamento por impulso |
+
+**A leitura que importa:** o que o Gabriel resolvia chamando parceiro para matar objeção, nós resolvemos com o próprio repertório do Felipe. A dupla fotógrafo e advogado é o ativo que substitui a audiência emprestada.
+
+### A ancoragem precisa ser recalculada
+
+Duas saídas possíveis, a decidir na volta:
+
+**Saída A, manter R$ 997 e empilhar bônus próprios.** É o que o dado do nosso banco sustenta: 52,6% dos compradores pagam à vista e quem parcela longo compra ticket maior, ou seja, o público não é sensível a preço do jeito que se imagina. A regra do playbook para esse caso é caprichar nos bônus em vez de baixar o preço. Se os bônus próprios levarem o valor declarado a cerca de R$ 2.500, o desconto real fica perto de 60% e sustenta a promessa de super desconto.
+
+**Saída B, baixar para R$ 697.** Sobre R$ 1.477,80 dá 53% de desconto sem precisar de bônus nenhum para sustentar a ancoragem. Mais simples de comunicar, e derruba o faturamento por venda em 30%.
+
+Recomendação: **Saída A**, porque o dado do banco aponta para ela e porque os bônus próprios que precisamos criar são os mesmos que já queríamos ter no combo.
+
+### O que muda nas pendências
+
+Saem as tarefas de sondar, escolher e negociar parceiros. Entram, no lugar:
+
+- Definir quais objeções do idconsumidor viram aula gravada pelo Felipe
+- Definir o evento online ao vivo: nome, data e formato
+- Definir a ferramenta no Claude que entra como bônus
+- Escolher o item físico e o sorteio
+- Refazer a ancoragem com o valor declarado item por item
+
 ---
 
 # PARTE 8. RISCOS E DECISÕES EM ABERTO
@@ -1374,15 +1429,18 @@ Alerta direto do Gabriel. Na semana de abertura aparecem perfis clonados oferece
 - [ ] Anotar a parte da tarde da aula (conteúdo) quando a transcrição chegar
 - [ ] Transcrever o trailer "01. Antecipação Trailer Ultra Black Infinita 01" (Drive, 59,7 MB). Chave Groq disponível no tracker-fmn/.env, custo aproximado de US$ 0,01, aguardando confirmação
 - [ ] Confirmar datas oficiais do primeiro e segundo turno de 2026 no TSE
-- [ ] URGENTE, antes de viajar: mandar a sondagem inicial aos parceiros, para as respostas chegarem durante a ausência
 - [ ] Registrar foto e vídeo da palestra em Natal, para usar como conteúdo de antecipação e autoridade
-- [ ] Montar lista de parceiros possíveis do nicho de fotografia
 - [ ] Escrever a página de inscrição, com captura de WhatsApp obrigatória
 - [ ] Montar os ângulos de buzz por público
 - [ ] Roteiro dos dois trailers
 - [ ] Planilha em Excel com as fórmulas ligadas
 - [ ] Baixar e modelar o material completo da Black do Gabriel quando for liberado
 - [ ] Escolher o nível de operação (recomendação: Crescimento bem feito, sem URA nesta edição)
+- [ ] Definir quais objeções do idconsumidor viram aula gravada pelo Felipe
+- [ ] Definir o evento online ao vivo do combo: nome, data e formato
+- [ ] Definir a ferramenta feita no Claude que entra como bônus
+- [ ] Escolher item físico e sorteio
+- [ ] Refazer a ancoragem com valor declarado item por item (Saída A ou B, ver 7.14)
 - [ ] Definir o mote da campanha, o nosso equivalente ao "a Pri só pode estar ficando louca"
 - [ ] Decidir se o Blindagem entra como 12 meses ou vitalício, com o cálculo do valor da assinatura
 - [ ] Decidir se encerra em 21/11 e faz segunda janela na semana oficial, ou estica até 30/11
