@@ -16,6 +16,36 @@
 
 ---
 
+## ⏸ PONTO DE RETOMADA
+
+> Trabalho pausado em **28/08/2026**. Felipe palestra em Natal e tira alguns dias de férias entre 31/08 e 06/09.
+> Retomada a partir de **08/09/2026**, terça (07/09 é feriado).
+
+**O que já está pronto neste documento:** as três aulas do retiro anotadas, o playbook oficial estudado nos 17 blocos, os números reais da nossa operação puxados do Tracker, a régua de prazos e as contas das duas metas.
+
+**Duas decisões já tomadas, para não reabrir:**
+1. **Sem parceiros nesta edição** (28/08). Bônus próprios substituem, ver 7.14
+2. **Preços oficiais:** MCV R$ 297, Blindagem R$ 397, ver 2.0
+
+**As cinco decisões que travam a execução, todas suas:**
+1. A data de abertura (D0), respeitando as duas amarras da régua em 7.12: captação fora da janela eleitoral, e nem abertura nem encerramento em feriado
+2. O preço do combo: Saída A, manter R$ 997 e empilhar bônus, ou Saída B, baixar para R$ 697. Ver 7.14
+3. O que entra no vitalício, com a ressalva do Blindagem em 5.2
+4. O mote da campanha, o nosso equivalente ao "a Pri só pode estar ficando louca"
+5. O nível de operação: recomendação é Crescimento bem feito, sem URA. Ver 5.5
+
+**O que eu adianto assim que você mandar:** lista de ângulos de buzz por público, os 11 movimentos do manifesto aplicados ao nicho, estrutura da página de inscrição, planilha de metas com fórmulas ligadas, e os roteiros dos criativos de captação.
+
+**Duas coisas urgentes que não dependem de decisão nenhuma:**
+- Auditar quantos templates de WhatsApp temos aprovados hoje (ver 10.2). O alerta do Rafael sobre o player que entrou num lançamento com só dois templates vale para nós
+- Criar os públicos personalizados no Meta, para amadurecerem até novembro (ver 7.5)
+
+**Pendência que ficou sem resposta:** transcrever o trailer "01. Antecipação Trailer Ultra Black Infinita 01", que está no Drive. Custo aproximado de US$ 0,01 pela Groq, aguardando seu ok.
+
+---
+
+---
+
 # PARTE 1. AULA DO RETIRO, MANHÃ DE 28/08
 
 Palestrante: **Gabriel Vilas Boas**, coprodutor. Nicho principal mostrado: mercado financeiro (Especialista em Opções). Trouxe também cases de outros nichos (banho e tosa, Mulher Milionária, e alunas da mentoria).
