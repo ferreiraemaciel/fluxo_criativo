@@ -865,21 +865,360 @@ Se **D0 for 11 de novembro**, D-28 cai em 14 de outubro e D-21 em 21 de outubro.
 Fica uma pergunta em aberto: **encerrar em 21/11 deixa a Black Friday oficial (27/11) de fora.** Duas saídas possíveis, a decidir: encerrar em 21 e fazer uma segunda janela curta na semana oficial, que é o que o Gabriel fez com duas Blacks, ou esticar o carrinho até 30 de novembro.
 
 ---
-# PARTE 6. RISCOS E DECISÕES EM ABERTO
+# PARTE 6. AULA DA TARDE, 28/08
 
-## 6.1 Risco: revolta do comprador antigo
+Duas palestras: continuação do **Gabriel Vilas Boas** (Q&A mais conteúdo por fase) e a palestra de tráfego do **Samuel**, navegador do Fluxo.
+
+## 6.1 Q&A do Gabriel, respostas que valem para nós
+
+**Não abrir carrinho em feriado.** "Feriado é furada, feriado é problema."
+
+**Ticket acima de R$ 10 mil na Black é mais complexo.** Exige desconto muito expressivo para a pessoa perceber a vantagem, e a oferta corre risco de ficar sem lucro.
+
+**Mentoria como bônus não costuma funcionar bem.** O que funciona é incluir poucos encontros para a pessoa sentir o gostinho, e **deixar o valor explícito**: "essa mentoria custa R$ 6 mil, e eu vou explicar por que ela custa isso".
+
+**Fazer um pico em setembro não atrapalha a Black.** Público diferente, e ainda deixa o produto em evidência. Mas encerrar no máximo no fim de setembro, porque outubro é para a Black.
+
+**Cuidado com oferta barata para a base geral perto da Black.** A pessoa compara preço e a Black perde força. Se for fazer algo em setembro, fazer interno, só para quem já é aluno e já conhece o preço.
+
+**Concorrência não é problema.** "Muito poucos aqui precisam se preocupar com isso." Quem antecipa mais e capta mais ganha.
+
+**Eleição:** ele repetiu a decisão. "Prefiro abrir em novembro do que correr o risco de abrir durante o pico da eleição. Prefiro esperar passar a fumaça das loucuras de outubro."
+
+**Com pouco dinheiro:** captação no orgânico e, na abertura, cerca de R$ 1.000 por dia, subindo devagar conforme o retorno.
+
+**A meta dele para 2026:** entre R$ 500 e R$ 800 mil, com R$ 1 milhão como sonho. "Na minha projeção mais sincera, se eu fizer 5 ou 8, fico muito feliz."
+
+**Público mais sensível a preço em 2026:** para quem está nessa situação, ele recomendou baixar o preço e fazer o melhor preço da história.
+
+**Revelar a oferta ao vivo na live** sempre deu bom resultado para ele, e vai continuar fazendo.
+
+## 6.2 Conteúdo por fase, o núcleo da tarde
+
+**A postura do ano:** "Esse ano eu quero ser extremamente exagerado. Queria que vocês fizessem o mesmo." O argumento: "o Instagram e as redes sociais estão valorizando quem posta muito".
+
+**O novo jeito de trabalhar a planilha de conteúdo.** Ele entregou a planilha completa das três fases mais stories, e disse para **não preencher à mão**: exportar, mandar para o Claude junto com a narrativa e a oferta, e deixar ele montar. "Esse é o primeiro ano que a gente não precisa mais trabalhar sozinho."
+
+**Lives.** Ele fez 4 a 5 lives por semana no ano passado. Live diária é o ideal para quem aguenta. Não se prender ao Instagram: fazer no YouTube também, e quem tem audiência menor pode chamar para o Google Meet, onde a sala vazia não fica exposta.
+
+### Antecipação, em setembro
+
+- Mostrar a preparação, os bastidores do que está sendo montado
+- Fazer aula com os alunos e citar o que está preparando
+- Para quem tem produto de ticket alto: marcar uma mentoria em grupo com tema chamativo e avisar da Black durante ela
+- **Disparo de API para os alunos.** "É mais barato disparar e avisar o povo do que fazer captação nova"
+- Banner na área de membros
+- **Todas as ações viram conteúdo.** Fez aula para os alunos, faz conteúdo sobre isso
+- Blusa, caneca e boné aparecendo. Stories tomando café na caneca todo dia
+- Enquete no stories sobre a dor: ansiedade de fim de ano, sensação de ter perdido o ano
+- A fala modelo: "nesse último mês eu venho preparando uma novidade para vocês, dessa vez com um desconto e alguns presentes que eu nunca dei antes"
+- **"Não compre nada ainda, combinado?"** Frase de antecipação que ele destacou
+- **Nem todo dia é dia de chamada.** Alternar conteúdo puro com chamada, e deixar chamadas sutis aparecendo no meio
+
+### Captação
+
+- Todo dia tem que ter uma chamada
+- Mas manter também conteúdo normal, com a chamada só no final
+- Tráfego 100% focado na Black. O orgânico mantém o conteúdo normal com chamada no fim
+- **Conteúdo de comparação:** comparar o seu produto com os demais do mercado, item por item. Deu muito resultado
+- **Conteúdo de evolução do aluno:** mostrar a escada do básico ao avançado e onde o seu produto entra. Foi o que mais converteu na campanha dele
+- Criativo clássico que funciona: "não compre o curso X antes de ver isso"
+
+### Aquecimento
+
+- Revelar detalhes da oferta, um bônus por vez, segredos e vantagens
+- Muitos depoimentos e resultados de aluno
+- **Trabalho de setembro:** gerar resultado nos alunos, para ter depoimento novo e fresco na Black
+- Live semanal a partir de setembro, já avisando da Black
+
+### Carrinho aberto
+
+- Explicar muito o produto, conteúdo diário
+- "Se dê a liberdade de ter vários dias de Instagram chato"
+- Mostrar resultado o tempo todo
+
+### Encerramento
+
+- **O arrependimento dele:** encerrou enquanto ainda vendia. "Deixa rodando enquanto vende"
+- No quarto e quinto dia, quando as vendas caíram, ele chamou o pessoal para uma nova live e reaqueceu
+- O encerramento precisa de movimento próprio: conteúdo avisando o último dia, live de último dia, **um bônus revelado só no último dia** e sorteio dedicado a quem deixou para cima da hora
+
+### Pós Black, em dezembro
+
+"Dezembro é hora de vender coisa barata para quem não comprou, e coisa cara para quem comprou."
+
+Para quem comprou: imersão, mentoria, evento de implementação. Ele vai colocar evento de implementação na oferta deste ano justamente para ter esse degrau depois.
+
+**A frase que fecha a palestra dele:** "A maior parte do meu faturamento do ano não vem da Black Friday. Mas as principais tarefas que eu faço no ano seguinte, principalmente os picos de vendas, surgem por conta da Black Friday."
+
+---
+
+## 6.3 Palestra de tráfego, com Samuel
+
+**Cases citados:** Amanda investiu R$ 79 mil e fez R$ 832 mil, ROAS 10. Outros mentorados: R$ 150 mil em 13 horas de carrinho aberto, R$ 129 mil em menos de 24 horas, R$ 100 mil no primeiro dia.
+
+**Quatro fases do tráfego:** planejamento e metas, antecipação, captação e relacionamento, remarketing.
+
+### Fase 1. Planejamento e metas
+
+Existe uma planilha com duas abas, planejamento e orçamento, que calcula sozinha a partir de poucos campos.
+
+**Os números de referência que ele deu, e que valem ouro:**
+
+| Métrica | Referência |
+|---|---|
+| **Conversão de lead em venda na Black** | **5% a 10%. O mínimo é 5%** |
+| Conversão em pico de vendas fora da Black | 1% a 1,5% |
+| **CPL na Black** | **2 a 3 vezes mais caro que fora da Black** |
+| Tempo mínimo de captação | **14 dias** |
+| Duração do remarketing | O mês de novembro inteiro |
+
+**Trabalhar sempre com o ticket líquido**, já descontada a taxa da plataforma.
+
+"O custo por lead da Black é mais alto, naturalmente. Você vai pagar duas ou três vezes mais. Não se assuste. A taxa de conversão compensa."
+
+**A taxa de conversão é a métrica que você controla**, pelas ações que faz depois de abrir o carrinho. O CPL você não controla.
+
+**Instalar o evento de Lead na página de captura ou de obrigado.** Sem isso você não sabe quais leads vieram do tráfego nem qual é o CPL real. Ele deixou tutorial para WordPress, Google e páginas em HTML.
+
+Sobre remarketing durar novembro inteiro: "não tem melhor desculpa para vender em novembro do que a Black".
+
+### Fase 2. Antecipação
+
+- Objetivo de campanha: **engajamento**, com tipo visualização de vídeo. Alcance também serve, mas ele prefere engajamento para gerar comentário
+- Pré-requisito: 1 a 3 vídeos teaser com mistério proposital, e os públicos personalizados já criados
+- **Estrutura 1-3-3:** uma campanha, três conjuntos, três anúncios por conjunto
+- Orçamento **ABO** (a nível de conjunto), dividido igualmente
+- **Advantage+ desligado**
+- É a fase mais barata do tráfego inteiro
+
+**Os três conjuntos de público:**
+
+| Conjunto | Público |
+|---|---|
+| 1 | Envolvimento 30 dias + viu 75% dos vídeos em 30 dias + enviou direct em 30 dias |
+| 2 | Visitantes da página de vendas + checkout 90 dias + leads de picos passados |
+| 3 | Envolvimento 180 dias + viu 75% dos vídeos em 180 dias + direct em 180 dias |
+
+Não precisa excluir públicos entre conjuntos. "Já testamos e não faz diferença."
+
+É campanha de subir e deixar rodar, quase sem otimização.
+
+### Fase 3. Captação
+
+**Pré-requisitos:** página de captura com evento de lead, página de obrigado com evento, ferramenta de e-mail vinculada ao formulário, grupo de WhatsApp vinculado na página de obrigado, e **no mínimo 15 criativos**.
+
+- Objetivo: Leads, com evento de conversão Lead
+- 5 a 8 criativos por conjunto, misturando estático e vídeo
+- Advantage+ desligado, porque as campanhas da Black são só para público quente
+- Orçamento CBO, com a verba diária vinda da planilha
+
+**Os quatro conjuntos:**
+
+| Conjunto | Público |
+|---|---|
+| 1 | Visitantes da página de captura + viu 15 segundos + alunos |
+| 2 | Visitantes da página de vendas + checkout 90 dias + leads de picos passados |
+| 3 | Envolvimento 180 dias + 75% dos vídeos + direct 180 dias |
+| 4 | Públicos quentes amplos: 365 dias, listas antigas e seguidores |
+
+Sobre Advantage+: só usar com um percentual pequeno de verba de guerra, e conferindo na pesquisa se a idade e a renda dos leads batem com o perfil do comprador. A recomendação padrão é não usar.
+
+### Os 6 passos de otimização da captação
+
+**Essa é a fase que exige mais atenção.** "O resto pode nem estar tão bem otimizado. Mas nessa você precisa estar sempre de olho."
+
+1. **Orçamento, todo dia.** Se o CPL está dentro da meta, aumentar o orçamento da campanha em 20%
+2. **Público, a cada 3 a 4 dias.** Conjunto dentro da meta continua. Conjunto muito acima, pausa
+3. **Criativo, a cada 2 a 3 dias.** Pausa o ruim, mantém o bom, e **sobe um novo sempre que pausar**, mantendo de 6 a 8 anúncios ativos por conjunto
+4. **A exceção que evita o erro mais comum.** Não pausar o anúncio que traz o **volume** de leads só porque ele está R$ 1 a R$ 3 acima da meta. "Seu melhor anúncio não é necessariamente o que traz o lead mais barato." Ele disse ter visto muita gente cometer esse erro na Black
+5. **Métricas secundárias**, só olhar se o CPL estiver muito acima da meta:
+
+| Métrica | Referência |
+|---|---|
+| CTR | acima de 2% |
+| CPC | até R$ 3,50 |
+| **Connect rate** | **mínimo 70%.** Abaixo disso é problema de carregamento da página |
+| **Conversão da página de captura** | **mínimo 40%.** Abaixo disso é problema de copy |
+
+6. **Métricas fora do tráfego:**
+
+| Métrica | Referência |
+|---|---|
+| Qualificação | comparar a pesquisa dos leads com o perfil real do comprador: idade, renda, dores |
+| **Entrada nos grupos de WhatsApp** | **mínimo 70% dos leads captados** |
+| **Abertura do primeiro e-mail** | **mínimo 15%** |
+
+Aviso importante: se o CPL está dentro da meta, **não fique mexendo em página e criativo**.
+
+### Fase 4. Relacionamento, que roda em paralelo com a captação
+
+Dividida em duas frentes, com orçamento **50/50**.
+
+**Lembrete:**
+- Objetivo: reconhecimento de marca, meta de desempenho maximizar alcance
+- **Orçamento total, não diário**
+- **Uma campanha por dia de lembrete**, programada para rodar da meia-noite às 23h59 daquele dia
+- **Programar tudo com antecedência.** Se você programar no próprio dia, a campanha começa a gastar só à tarde e o lembrete não cumpre a função
+- Distribuição crescente: faltam 7 dias leva 7% da verba de lembrete, faltam 5 dias leva 10%, faltam 3 dias leva 15%, e os dias finais levam mais
+- 6 peças: faltam 7, faltam 5, faltam 3, é amanhã, é hoje, estamos ao vivo
+- Contagem regressiva criativa, aproveitando meme ou assunto do momento, funciona melhor que a arte padrão
+
+**Aquecimento:**
+- Objetivo: engajamento, visualização de vídeo
+- Vídeos mais longos, até 5 minutos: quebra de objeção, depoimento, trecho de live
+- 3 a 6 vídeos
+- Otimização: analisar o custo por view de 50%, e pausar só o anúncio que estiver muito acima dos demais
+- **Acompanhar os comentários dos anúncios** no Meta Business Suite, na caixa de entrada. "Custo por view baixo pode ser sinal de alguma mensagem do seu público"
+
+**Dica extra:** dá para fazer tráfego para a live do Instagram, separando uma verba para o Instagram distribuir a live ao público quente.
+
+### Fase 5. Remarketing, o carrinho aberto
+
+**Pré-requisito que ele destacou:** a **página de oferta especial publicada antes do dia**. "Cuidado para não chegar no dia da abertura, ao meio-dia, começando a fazer a página."
+
+Essa página compara a oferta normal, com a ancoragem e os bônus, com o preço da oferta especial. Sem ela, os anúncios de remarketing ficam sem destino.
+
+- Objetivo: Vendas, evento de conversão Compra
+- Mínimo 6 criativos. Ângulos: inscrições abertas, depoimentos, bônus, oferta especial no ar, desconto
+- Advantage+ desligado
+- Orçamento CBO, verba total dividida pelos dias de remarketing
+- Conjunto 1: visitantes da página + checkout + cadastrados. Depois segue a mesma escada de públicos
+
+**Otimização do remarketing:** após 72 horas, se o CPA estiver **até 50% do valor do ticket da oferta especial**, aumentar 20% do orçamento. Se estiver acima de 50% do ticket, reduzir 20%.
+
+**Sobre o perpétuo:** não precisa pausar. Dá para reduzir a verba do perpétuo e manter rodando.
+
+---
+
+# PARTE 7. O QUE A TARDE MUDA NA NOSSA CONTA
+
+## 7.1 A métrica que faltava: quantos leads a meta exige
+
+Até agora eu vinha projetando vendas sem saber quantos leads elas exigem. O Samuel deu o número: **5% de conversão de lead em venda é o piso na Black**, e 10% é o teto de quem faz muito bem feito.
+
+Aplicando às nossas metas:
+
+| Meta | Vendas necessárias | A 5% | A 8% | A 10% |
+|---|---|---|---|---|
+| R$ 50 mil de lucro | 360 | 7.200 leads | 4.500 leads | 3.600 leads |
+| R$ 100 mil de lucro | 630 | 12.600 leads | 7.875 leads | 6.300 leads |
+
+**Esse é o número que muda a conversa.** Nossa base acionável hoje é de cerca de 15.500 e-mails e 2.100 WhatsApps, e leads captados para a Black são outra coisa: são pessoas que entram no grupo.
+
+## 7.2 O custo dessa captação, e por que o orgânico decide
+
+CPL na Black é de 2 a 3 vezes o normal. Se o nosso CPL fora da Black gira em torno de R$ 3, na Black fica entre R$ 6 e R$ 9. Vou usar R$ 7.
+
+Cenário da meta de R$ 50 mil, a 8% de conversão, que é razoável porque temos 986 compradores na base:
+
+| Item | Valor |
+|---|---|
+| Leads necessários | 4.500 |
+| Se **todos** vierem de mídia, a R$ 7 | R$ 31.500 só de captação |
+| Sobra para remarketing e antecipação | quase nada |
+
+**Agora com o orgânico entregando metade:**
+
+| Item | Valor |
+|---|---|
+| Leads do orgânico e da base própria | 2.250 (custo zero de mídia) |
+| Leads pagos | 2.250 a R$ 7 = R$ 15.750 |
+| Antecipação | R$ 3.000 |
+| Remarketing no carrinho aberto | R$ 13.000 |
+| **Total de mídia** | **R$ 31.750** |
+
+Fecha dentro dos R$ 32 mil que já tínhamos projetado.
+
+**A conclusão é dura e clara: a meta de R$ 50 mil depende do orgânico entregar metade dos leads.** Não é uma questão de verba, é de volume de conteúdo. É exatamente o que o Ladeira martelou de manhã com os Reels diários e o que o Gabriel chamou de ser extremamente exagerado.
+
+Se o orgânico não entregar, ou a verba sobe para perto de R$ 50 mil, ou a meta cai.
+
+## 7.3 O calendário ficou apertado, e precisa de captação em setembro
+
+O mínimo recomendado é **14 dias de captação**. No calendário que desenhamos, a retomada é em 26 de outubro e a abertura em 11 de novembro. São 16 dias. Passa, mas sem folga nenhuma para otimizar.
+
+**Correção:** rodar captação também em setembro, antes da eleição dominar a atenção, e tratar a janela de 26/10 a 10/11 como a segunda onda. Assim temos dois blocos de captação em vez de um apertado.
+
+Isso conversa com o que o Gabriel respondeu no Q&A: fazer movimento em setembro não atrapalha a Black, desde que encerre no fim do mês e outubro seja da Black.
+
+## 7.4 Os números de controle que passamos a ter
+
+Antes eu não tinha referência para dizer se a campanha estava boa. Agora temos:
+
+| Onde | Métrica | Nosso alvo |
+|---|---|---|
+| Anúncio | CTR | acima de 2% |
+| Anúncio | CPC | até R$ 3,50 |
+| Página | Connect rate | mínimo 70% |
+| Página | Conversão da captura | mínimo 40% |
+| Grupo | Entrada no WhatsApp | mínimo 70% dos leads |
+| E-mail | Abertura do primeiro e-mail | mínimo 15% |
+| Venda | Conversão de lead em venda | mínimo 5%, alvo 8% |
+| Remarketing | CPA | até 50% do ticket da oferta |
+
+O CPA de até 50% do ticket é bem mais folgado que a nossa regra atual do perpétuo, que é R$ 207,90 sobre um ticket de R$ 297, ou seja 70%. Com o combo a R$ 997, 50% dá **R$ 498 de CPA aceitável no remarketing da Black**. Isso abre muito espaço de escala que hoje a nossa regra G5 cortaria automaticamente.
+
+**Atenção operacional:** a regra G5 do Tracker pausa qualquer anúncio com CPA acima de R$ 207,90 em 3 e 5 dias. Durante a Black, com ticket de R$ 997, essa regra vai pausar anúncios saudáveis. Precisa ser ajustada antes da campanha, ou os anúncios do combo serão desligados sozinhos.
+
+## 7.5 A estrutura de campanha que já podemos montar
+
+Os públicos personalizados não dependem de decisão nenhuma sobre a oferta. Dá para criar hoje no Gerenciador e deixar amadurecendo:
+
+1. Envolvimento 30 dias, 180 dias e 365 dias
+2. Viu 75% dos vídeos em 30 e em 180 dias
+3. Enviou direct em 30 e em 180 dias
+4. Visitantes da página de vendas e checkout, 90 dias
+5. Lista de compradores (986)
+6. Lista de leads do quiz
+7. Seguidores
+
+Quanto mais cedo criados, mais população eles têm quando a campanha subir.
+
+**Advantage+ desligado em tudo.** Vale registrar porque a tendência do Meta hoje é empurrar o contrário, e as campanhas da Black são só para público quente.
+
+## 7.6 Coisas que já sabemos que precisam existir antes do dia
+
+- Evento de Lead instalado na página de inscrição e na de obrigado
+- Página de oferta especial publicada **antes** da abertura, com a comparação entre a oferta normal e a da Black
+- Grupo de WhatsApp vinculado na página de obrigado
+- Ferramenta de e-mail ligada ao formulário
+- **Mínimo 15 criativos de captação**
+- 6 peças de lembrete: faltam 7, faltam 5, faltam 3, é amanhã, é hoje, estamos ao vivo
+- As campanhas de lembrete **programadas com antecedência**, uma por dia, com orçamento total
+
+## 7.7 Dezembro entra no plano
+
+"Dezembro é hora de vender coisa barata para quem não comprou e coisa cara para quem comprou."
+
+Para nós isso desenha sozinho:
+- **Para quem não comprou o combo:** oferta de entrada barata, o MCV avulso ou um dos produtos menores
+- **Para quem comprou:** o degrau de cima. Mentoria, imersão ou um encontro de implementação
+
+E vale colocar o **evento de implementação dentro da oferta da Black** justamente para criar esse degrau, como o Gabriel vai fazer.
+
+## 7.8 Duas correções pontuais na nossa oferta
+
+**Sobre a mentoria no combo.** O Gabriel disse que mentoria como bônus não costuma funcionar bem. O que funciona é incluir poucos encontros para a pessoa sentir o gostinho, com o valor explícito. A Mentoria XP Sala Preta, que hoje está no nosso combo a R$ 497, deve entrar assim: alguns encontros, com o preço cheio declarado e explicado.
+
+**Sobre feriado.** 15 de novembro de 2026 é domingo e 20 de novembro, Consciência Negra, é sexta-feira. Vale conferir na hora de posicionar a live de abertura e a de encerramento, pela regra de que feriado é furada.
+
+---
+# PARTE 8. RISCOS E DECISÕES EM ABERTO
+
+## 8.1 Risco: revolta do comprador antigo
 
 Os 973 que compraram o MCV a R$ 297 vão ver um combo de R$ 997 com o MCV dentro. No nicho de fotografia isso circula rápido em grupo.
 
 **Solução:** crédito integral. Quem tem MCV entra por R$ 700. Quem tem MCV e Blindagem entra por R$ 400.
 
-## 6.2 Risco: golpista no WhatsApp
+## 8.2 Risco: golpista no WhatsApp
 
 Alerta direto do Gabriel. Na semana de abertura aparecem perfis clonados oferecendo o produto mais barato.
 
 **Providências:** grupos com pelo menos 10 administradores, administradores diferentes entre grupos, e aviso fixado sobre o único canal oficial de pagamento.
 
-## 6.3 Decisões que travam o resto
+## 8.3 Decisões que travam o resto
 
 1. **Quem são os parceiros.** Sem eles a meta de R$ 100 mil não fecha. Depende de outras pessoas, então começa primeiro. O método do Gabriel: perguntar quanto custa comprar 100 acessos do produto do parceiro.
 2. **O que entra no vitalício.** Se o Blindagem entrar como acesso para sempre, abrimos mão de assinatura recorrente futura em troca de caixa agora. É escolha de negócio.
@@ -907,3 +1246,10 @@ Alerta direto do Gabriel. Na semana de abertura aparecem perfis clonados oferece
 - [ ] Baixar as 4 skills do playbook (cronograma, manifesto e trailer, cronograma de conteúdo, captação)
 - [ ] Montar o checklist de consentimento dos 8 itens antes de qualquer disparo
 - [ ] Ler as caixinhas e comentários do perfil para extrair as dores reais, base do conteúdo de stories
+- [ ] Ajustar a regra G5 do Tracker antes da Black (CPA de R$ 207,90 vai pausar anúncio saudável de combo de R$ 997)
+- [ ] Criar hoje os públicos personalizados no Gerenciador, para amadurecerem até novembro
+- [ ] Instalar evento de Lead na página de inscrição e na de obrigado
+- [ ] Produzir os 15 criativos de captação e as 6 peças de lembrete
+- [ ] Publicar a página de oferta especial antes do dia da abertura
+- [ ] Conferir feriados de novembro antes de fixar as datas das lives
+- [ ] Definir a oferta de dezembro: barata para quem não comprou, cara para quem comprou
