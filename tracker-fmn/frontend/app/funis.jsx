@@ -752,6 +752,33 @@ function CarrinhoTable({ itens, recuperados, contatadosOficial, contatadosSuport
                   <td style={td}>
                     <div style={{ fontSize:12 }}>{it.email || '—'}</div>
                     {it.telefone && <div style={{ fontSize:11, color:'var(--text-3)' }}>{it.telefone}</div>}
+                    {/* Produto da linha. Com MCV e Blindagem rodando juntos,
+                        não dá pra saber de qual funil é a pessoa sem isso.
+                        Sai do `produto_nome`, que já existe em todo registro
+                        (inclusive nos antigos), então vale retroativo sem
+                        precisar preencher nada. */}
+                    {(() => {
+                      const ehBli = /blindagem/i.test(it.produto_nome || '');
+                      const rotulo = ehBli ? 'Blindagem'
+                        : /mensagens\s*que\s*vendem/i.test(it.produto_nome || '') ? 'Mensagens que Vendem'
+                        : /lightroom/i.test(it.produto_nome || '')                 ? 'Pack Pro Lightroom'
+                        : /natalin/i.test(it.produto_nome || '')                   ? 'Cenários Natalinos'
+                        : /presets/i.test(it.produto_nome || '')                   ? 'Combo de Presets'
+                        : /contrato\s*visual/i.test(it.produto_nome || '')         ? 'MCV'
+                        : null;
+                      if (!rotulo) return null;
+                      const cor = ehBli ? '#60a5fa' : 'var(--fmn-gold)';
+                      const fundo = ehBli ? 'rgba(96,165,250,.12)' : 'rgba(234,170,65,.12)';
+                      const borda = ehBli ? 'rgba(96,165,250,.35)' : 'rgba(234,170,65,.35)';
+                      return (
+                        <div title={it.produto_nome || ''}
+                          style={{ display:'inline-block', marginTop:3, marginRight:4, padding:'1px 7px',
+                            borderRadius:999, fontSize:9.5, fontWeight:700, fontFamily:'Roboto,sans-serif',
+                            whiteSpace:'nowrap', color:cor, background:fundo, border:`1px solid ${borda}` }}>
+                          {rotulo}
+                        </div>
+                      );
+                    })()}
                     <div style={{ display:'flex', gap:4, flexWrap:'wrap', marginTop: (jaContatado || jaSuporte) ? 3 : 0 }}>
                       {jaContatado && (
                         <div style={{ display:'inline-block', padding:'1px 7px', borderRadius:999,
