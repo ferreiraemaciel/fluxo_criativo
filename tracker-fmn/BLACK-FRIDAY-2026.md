@@ -258,6 +258,26 @@ Preencher o debriefing depois da Black, com todas as perguntas do material, e ma
 
 # PARTE 2. NOSSA OPERAÇÃO, NÚMEROS REAIS
 
+## 2.0 Tabela de preços oficial dos nossos produtos
+
+> **Fonte de verdade. Corrigido pelo Felipe em 28/08/2026.** Qualquer número neste documento que divirja daqui está errado.
+
+| Produto | Preço |
+|---|---|
+| **Modelos de Contrato Visual (MCV)** | **R$ 297** |
+| **Blindagem (plano anual, à vista)** | **R$ 397** |
+| Mensagens que Vendem | R$ 197 |
+| Mentoria XP Sala Preta | R$ 497 |
+| Combo Packs de Presets | R$ 59,90 |
+| 40 Ideias de Cenários Natalinos | R$ 29,90 |
+| **Soma de tudo** | **R$ 1.477,80** |
+
+**Preço proposto para a Black:** o Combo Infinito a R$ 997. Os produtos avulsos entram a preço cheio, com o desconto concentrado no combo.
+
+**Decisão ainda em aberto:** se haverá desconto também nos avulsos durante a Black. Por padrão, não. Concentrar o desconto no combo mantém a ancoragem limpa e evita canibalizar a oferta principal.
+
+**Observação sobre o Blindagem.** É assinatura, e as vendas reais variam de R$ 99,98 a R$ 397 conforme o plano. O R$ 397 é o anual à vista, e é o valor que usamos como referência, seguindo o mesmo critério já adotado no `tracker-fmn/CLAUDE.md`.
+
 ## 2.1 Linha de base (março a agosto de 2026, dados do Tracker)
 
 | Indicador | Valor real |
@@ -329,12 +349,12 @@ Argumento que sustenta: o fotógrafo profissional para de comprar contrato, scri
 | Produto | Preço | Unidades | Faturamento |
 |---|---|---|---|
 | Combo Infinito | R$ 997 | 70 | R$ 69.790 |
-| MCV avulso | R$ 197 | 150 | R$ 29.550 |
-| Blindagem avulso | R$ 297 | 40 | R$ 11.880 |
+| MCV avulso | R$ 297 | 150 | R$ 44.550 |
+| Blindagem avulso | R$ 397 | 40 | R$ 15.880 |
 | Order bumps | R$ 45 | 100 | R$ 4.500 |
-| **Total** | ticket médio R$ 321 | **360** | **R$ 115.720** |
+| **Total** | ticket médio R$ 374 | **360** | **R$ 134.720** |
 
-Líquido R$ 87.299. Mídia R$ 32.000. **Lucro R$ 55.299.**
+Líquido R$ 101.633. Mídia R$ 32.000. **Lucro R$ 69.633.** ROAS 4,21.
 70 combos são 7% dos nossos 986 compradores.
 
 ## 2.6 Cenário para R$ 100 mil de lucro
@@ -344,13 +364,13 @@ Líquido R$ 87.299. Mídia R$ 32.000. **Lucro R$ 55.299.**
 | Produto | Preço | Unidades | Faturamento |
 |---|---|---|---|
 | Combo Infinito | R$ 997 | 140 | R$ 139.580 |
-| MCV avulso | R$ 197 | 250 | R$ 49.250 |
-| Blindagem avulso | R$ 297 | 60 | R$ 17.820 |
+| MCV avulso | R$ 297 | 250 | R$ 74.250 |
+| Blindagem avulso | R$ 397 | 60 | R$ 23.820 |
 | Order bumps | R$ 45 | 180 | R$ 8.100 |
-| **Total** | ticket médio R$ 341 | **630** | **R$ 214.750** |
+| **Total** | ticket médio R$ 390 | **630** | **R$ 245.750** |
 
-Líquido R$ 162.006. Mídia R$ 55.000. **Lucro R$ 107.006.**
-140 combos são 14% dos compradores. Esse é o número que exige os parceiros.
+Líquido R$ 185.393. Mídia R$ 55.000. **Lucro R$ 130.393.**
+140 combos são 14% dos compradores.
 
 ---
 
@@ -436,7 +456,7 @@ Isso resolve dois problemas ao mesmo tempo: mata a objeção e traz o convidado,
 
 "50% do faturamento do ano passado veio dos alunos."
 
-Nossos 973 compradores do MCV são a fila mais barata da campanha. O crédito integral que já tínhamos desenhado (quem tem MCV entra por R$ 700, quem tem MCV e Blindagem entra por R$ 400) deixa de ser só uma proteção contra revolta e passa a ser a principal fonte de faturamento projetada.
+Nossos 973 compradores do MCV são a fila mais barata da campanha. O crédito integral que já tínhamos desenhado (quem tem MCV entra por R$ 700, quem tem MCV e Blindagem entra por R$ 300) deixa de ser só uma proteção contra revolta e passa a ser a principal fonte de faturamento projetada.
 
 ## 3.9 Modelar, não inventar
 
@@ -1107,10 +1127,14 @@ Até agora eu vinha projetando vendas sem saber quantos leads elas exigem. O Sam
 
 Aplicando às nossas metas:
 
+Refazendo a conta reversa com os preços corretos dos nossos produtos (MCV a R$ 297 e Blindagem a R$ 397), o ticket médio do mix sobe para cerca de R$ 374, e a meta passa a exigir menos vendas:
+
 | Meta | Vendas necessárias | A 5% | A 8% | A 10% |
 |---|---|---|---|---|
-| R$ 50 mil de lucro | 360 | 7.200 leads | 4.500 leads | 3.600 leads |
-| R$ 100 mil de lucro | 630 | 12.600 leads | 7.875 leads | 6.300 leads |
+| R$ 50 mil de lucro | **291** | 5.820 leads | **3.638 leads** | 2.910 leads |
+| R$ 100 mil de lucro | **527** | 10.540 leads | **6.588 leads** | 5.270 leads |
+
+> Cálculo: lucro igual a 0,7544 vezes o bruto, menos a mídia. Para R$ 50 mil de lucro com R$ 32 mil de mídia, o bruto precisa ser de R$ 108.696, que ao ticket médio de R$ 374 dá 291 vendas. Para R$ 100 mil com R$ 55 mil de mídia, o bruto é de R$ 205.461, que ao ticket de R$ 390 dá 527 vendas.
 
 **Esse é o número que muda a conversa.** Nossa base acionável hoje é de cerca de 15.500 e-mails e 2.100 WhatsApps, e leads captados para a Black são outra coisa: são pessoas que entram no grupo.
 
@@ -1122,25 +1146,25 @@ Cenário da meta de R$ 50 mil, a 8% de conversão, que é razoável porque temos
 
 | Item | Valor |
 |---|---|
-| Leads necessários | 4.500 |
-| Se **todos** vierem de mídia, a R$ 7 | R$ 31.500 só de captação |
-| Sobra para remarketing e antecipação | quase nada |
+| Leads necessários | 3.638 |
+| Se **todos** vierem de mídia, a R$ 7 | R$ 25.466 só de captação |
+| Sobra para antecipação e remarketing | R$ 6.534, apertado |
 
 **Agora com o orgânico entregando metade:**
 
 | Item | Valor |
 |---|---|
-| Leads do orgânico e da base própria | 2.250 (custo zero de mídia) |
-| Leads pagos | 2.250 a R$ 7 = R$ 15.750 |
+| Leads do orgânico e da base própria | 1.819 (custo zero de mídia) |
+| Leads pagos | 1.819 a R$ 7 = R$ 12.733 |
 | Antecipação | R$ 3.000 |
-| Remarketing no carrinho aberto | R$ 13.000 |
-| **Total de mídia** | **R$ 31.750** |
+| Remarketing no carrinho aberto | R$ 16.000 |
+| **Total de mídia** | **R$ 31.733** |
 
-Fecha dentro dos R$ 32 mil que já tínhamos projetado.
+Fecha dentro dos R$ 32 mil que já tínhamos projetado, e agora com folga real para o remarketing, que é onde a venda acontece.
 
 **A conclusão é dura e clara: a meta de R$ 50 mil depende do orgânico entregar metade dos leads.** Não é uma questão de verba, é de volume de conteúdo. É exatamente o que o Ladeira martelou de manhã com os Reels diários e o que o Gabriel chamou de ser extremamente exagerado.
 
-Se o orgânico não entregar, ou a verba sobe para perto de R$ 50 mil, ou a meta cai.
+Se o orgânico não entregar, ou a verba sobe para perto de R$ 45 mil, ou a meta cai.
 
 ## 7.3 O calendário ficou apertado, e precisa de captação em setembro
 
@@ -1667,8 +1691,8 @@ Nossa tradução:
 
 | Produto | Caminho |
 |---|---|
-| MCV avulso, R$ 197 | **Checkout direto.** Colocar conversa no meio só atrasa a compra |
-| Blindagem avulso, R$ 297 | Checkout direto |
+| MCV avulso, R$ 297 | **Checkout direto.** Colocar conversa no meio só atrasa a compra |
+| Blindagem avulso, R$ 397 | Checkout direto |
 | **Combo Infinito, R$ 997** | **Vale a conversa.** É aqui que o botão de WhatsApp com pop-up faz sentido |
 
 O ticket do combo justifica atendimento; o do MCV não. Mandar todo mundo para conversa seria copiar o Fluxo sem copiar o raciocínio dele.
@@ -1726,7 +1750,7 @@ O que falta é ligar as duas coisas à campanha da Black, com o **efeito novidad
 
 Os 973 que compraram o MCV a R$ 297 vão ver um combo de R$ 997 com o MCV dentro. No nicho de fotografia isso circula rápido em grupo.
 
-**Solução:** crédito integral. Quem tem MCV entra por R$ 700. Quem tem MCV e Blindagem entra por R$ 400.
+**Solução:** crédito integral. Quem tem MCV entra por R$ 700 (997 menos 297). Quem tem MCV e Blindagem entra por R$ 300 (997 menos 297 menos 397, arredondado).
 
 ## 8.2 Risco: golpista no WhatsApp
 
