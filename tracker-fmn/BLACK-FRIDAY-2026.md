@@ -1774,6 +1774,105 @@ O que falta é ligar as duas coisas à campanha da Black, com o **efeito novidad
 
 ---
 
+# PARTE 11. SLIDES OFICIAIS: CORREÇÕES SOBRE AS TRANSCRIÇÕES
+
+> Recebidos em 28/08/2026. Os slides são a fonte precisa; as transcrições automáticas tinham erros de reconhecimento. Onde houver divergência, **vale o slide**.
+
+## 11.1 Palestra de tráfego, Samuel Florêncio (navegador do Fluxo)
+
+### Correção 1: são cinco fases, não quatro
+
+| Fase | Nome oficial |
+|---|---|
+| 1 | Planejamento e Metas |
+| 2 | **Antecipação (Tiro de Alerta)** |
+| 3 | Captação |
+| 4 | Relacionamento |
+| 5 | Remarketing |
+
+Eu havia juntado captação e relacionamento numa fase só. São separadas, e o relacionamento roda **em paralelo** com a captação.
+
+### Correção 2: o case da Amanda, com os números exatos
+
+| Indicador | Valor |
+|---|---|
+| Vendas | 423 |
+| Faturamento bruto | R$ 872.629,19 |
+| Reembolsos | 14, no valor de R$ 13.844,22 |
+| Chargebacks | 3, no valor de R$ 3.993,36 |
+| **Balanço** | **R$ 854.791,61** |
+| Investimento em tráfego | R$ 79.000 |
+| **ROAS** | **10,8** |
+| **ROI** | **7,6** |
+
+Outros cases mostrados: R$ 150 mil das 9h às 22h; R$ 45.039,95 em uma hora de carrinho aberto; R$ 129.226,63 em 96 vendas entre 18 e 19/11; R$ 100.329,91 com 94 vendas no dia da abertura, com 0% de reembolso.
+
+**Nota sobre reembolso:** o índice real da Amanda foi de 3,3% (14 em 423), bem abaixo dos 8% que usei nas nossas projeções. Nossa taxa histórica é 5,7%. Mantive os 8% por prudência, já que Black costuma elevar o índice.
+
+### Correção 3: os eventos de pixel por página
+
+| Página | Eventos que precisam estar instalados |
+|---|---|
+| Página de captura | **Page View** |
+| Página de obrigado | **Page View e Lead/Cadastro** |
+
+Eu havia anotado "evento de Lead na página de captura", que está errado. O Lead dispara na página de obrigado.
+
+### Correção 4: a estrutura de campanha, fase por fase
+
+**Fase 2, Antecipação:** objetivo Engajamento. Estrutura **1-3-3**. Orçamento **ABO**. Advantage+ desligado.
+
+| Conjunto | Público |
+|---|---|
+| 1 | Envolvimento 30D + viu 75% dos vídeos 30D + enviou direct 30D |
+| 2 | Visitante da página de vendas + checkout 90D + leads de picos passados |
+| 3 | Envolvimento 180D + viu 75% dos vídeos 180D + enviou direct 180D |
+
+**Fase 3, Captação:** objetivo Leads/Cadastro, evento de conversão Lead. De 5 a 8 criativos, estáticos e vídeos. Advantage+ desligado. Orçamento **CBO, igual à verba total de captação dividida pelos dias de captação**. Mínimo de **15 criativos** produzidos.
+
+| Conjunto | Público |
+|---|---|
+| 1 | Visitantes da página de captura + quem viu 15s dos anúncios da Black |
+| 2 | Visitante da página de vendas + checkout 90D + leads de picos passados |
+| 3 | Envolvimento 180D + viu 75% dos vídeos 180D + enviou direct 180D |
+| 4 | Públicos quentes amplos + leads de pico passado + seguidores |
+
+Os mesmos seis anúncios (AD01 a AD06) rodam em todos os conjuntos.
+
+**Fase 4, Relacionamento.** Divide-se em duas, com orçamento 50/50.
+
+*Lembrete:* objetivo **Reconhecimento de Marca**, meta maximizar alcance, **ABO com orçamento total**. Conjunto 1 passa a ser "visitantes da página de captura + cadastrados". Uma peça por conjunto, o AD LEMBRETE do dia.
+
+*Aquecimento:* objetivo **Engajamento**, tipo visualizações do vídeo, **CBO**. Mesmos quatro conjuntos, com AD01, 02 e 03. Vídeos de até 5 minutos: quebra de objeção, depoimentos, trechos de live.
+
+**Fase 5, Remarketing:** objetivo **Vendas**, evento de conversão **Compra**, **CBO igual ao orçamento da fase dividido pelos dias de remarketing**. Mínimo de 6 criativos. Ângulos: inscrições abertas, depoimentos e bônus, desconto e bônus.
+
+### Correção 5: a distribuição completa do orçamento de lembrete
+
+Eu só tinha os três primeiros. A grade completa é:
+
+| Campanha | Percentual do orçamento de lembrete |
+|---|---|
+| Faltam 7 dias | 7% |
+| Faltam 5 dias | 10% |
+| Faltam 3 dias | 15% |
+| É amanhã | 15% |
+| É hoje | 25% |
+| **Estou ao vivo** | **28%** |
+
+Repare que **mais da metade da verba de lembrete (53%) fica nos dois últimos disparos**, no dia da abertura. Cada uma dessas é uma campanha separada, programada para rodar só das 00:00 às 23:59 daquele dia.
+
+### O Passo 4 da otimização, no texto exato do slide
+
+> "O seu melhor anúncio não necessariamente é aquele que só traz lead barato. Se o seu único anúncio que traz volume de lead estiver com R$1/R$2/R$3 mais caro do que sua meta, não pause. Entenda que a Black pode sim ter um custo por lead mais alto do que a sua meta e **utilize o orgânico/API oficial para alcançar sua meta de leads totais sem precisar gastar mais em tráfego**."
+
+Esse trecho final confirma, com todas as letras, a conclusão que tínhamos chegado na seção 7.2: o orgânico e a base própria são o que fecha a meta de leads sem estourar a verba.
+
+### A frase que fecha a palestra
+
+> "Faça um tráfego bom na sua black em novembro e tire férias em dezembro."
+
+
 # PARTE 8. RISCOS E DECISÕES EM ABERTO
 
 ## 8.1 Risco: revolta do comprador antigo
@@ -1824,7 +1923,8 @@ Alerta direto do Gabriel. Na semana de abertura aparecem perfis clonados oferece
 - [ ] Ajustar a regra G5 do Tracker antes da Black (CPA de R$ 207,90 vai pausar anúncio saudável de combo de R$ 997)
 - [ ] Criar hoje os públicos personalizados no Gerenciador, para amadurecerem até novembro
 - [ ] Instalar evento de Lead na página de inscrição e na de obrigado
-- [ ] Produzir os 15 criativos de captação e as 6 peças de lembrete
+- [ ] Produzir os 15 criativos de captação e as 6 peças de lembrete (faltam 7, 5, 3, é amanhã, é hoje, estou ao vivo)
+- [ ] Instalar Page View na página de captura e Page View mais Lead na de obrigado
 - [ ] Publicar a página de oferta especial antes do dia da abertura
 - [x] Conferir feriados de novembro antes de fixar as datas das lives (feito, ver 7.9: 20/11 é feriado numa sexta)
 - [ ] Decidir a extensão do carrinho até 30/11, para fugir do feriadão e pegar a Black Friday oficial
