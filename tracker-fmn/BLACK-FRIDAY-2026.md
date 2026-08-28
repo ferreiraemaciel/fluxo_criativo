@@ -2072,7 +2072,7 @@ Nossa versão da tabela:
 | Total hoje: R$ 980,80 | Cenários Natalinos R$ 29,90 |
 | **Renovação do Blindagem, ano 1: +R$ 397** | Bônus próprios: evento ao vivo, aulas de objeção, ferramenta |
 | **Total após 1 ano: R$ 1.377,80** | |
-| **Após 3 anos: R$ 2.171,80** | |
+| **Após 3 anos (2 renovações): R$ 1.774,80** | |
 
 **O argumento fica assim:** o fotógrafo que compra hoje e mantém o Blindagem por três anos gasta R$ 2.171,80. No combo, ele paga R$ 997 uma vez e nunca mais renova.
 
