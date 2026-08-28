@@ -350,7 +350,7 @@ Líquido R$ 162.006. Mídia R$ 55.000. **Lucro R$ 107.006.**
 
 # PARTE 3. INTELIGÊNCIA: O QUE ISSO MUDA NO NOSSO PLANO
 
-## 3.1 O calendário estava errado por causa da eleição
+## 3.1 O calendário estava errado por causa da eleição (datas provisórias, ver 7.12)
 
 **Este é o achado mais importante da manhã para nós.**
 
@@ -839,7 +839,7 @@ O caso Priscila mostra que o mote repetido em toda peça pré Black dá unidade 
 
 O mote precisa funcionar em Reels, em story, em carrossel e na boca do Felipe, e sustentar de 4 a 6 semanas de conteúdo.
 
-## 5.10 Ajuste final do calendário
+## 5.10 Ajuste do calendário (PROVISÓRIO, ver a régua de prazos em 7.12)
 
 Cruzando a recomendação do playbook (abrir entre 10 e 15 de novembro, D-28 antecipação, D-21 captação) com a restrição eleitoral:
 
@@ -1249,6 +1249,50 @@ Sobre administradores por grupo de WhatsApp:
 | Playbook oficial | mínimo 5, com números diferentes, e quanto mais melhor |
 
 Não é contradição, é a mesma lógica em graus diferentes. Para nós, com poucos grupos previstos, 5 administradores resolve, e o ponto que realmente importa é que sejam **chips diferentes**, para o grupo sobreviver se um número cair ou for banido.
+
+## 7.12 Régua de prazos, a fonte de verdade do cronograma
+
+> **Decisão do Felipe em 28/08/2026:** o que vale é o intervalo entre os marcos, não a data no calendário. As datas fixas ao longo deste documento são projeção provisória e serão ajustadas juntos depois. Esta régua é a referência.
+
+D0 é o dia em que o carrinho abre. Tudo se conta a partir dele.
+
+| Marco | Prazo | Fonte |
+|---|---|---|
+| Começa a organização: produto, preço, decisão sobre vitalício | D-70 | playbook |
+| Montar o combo, com valor percebido item por item | D-63 | playbook |
+| Escrever narrativa e roteiro do trailer | D-56 | playbook |
+| Preparar página e grupo. Relacionamento ao extremo no orgânico | D-49 | playbook |
+| Abrir os grupos e ligar a captação | D-42 | playbook |
+| Início da distribuição de depoimentos com foco em Black | D-40 | Nobre real |
+| Disparos para bases antigas e alunos, banner nas comunidades | D-35 | playbook |
+| **Começa a antecipação diária** | **D-28** | playbook |
+| SMS e URA entram, se houver base para isso | D-28 a D-14 | playbook |
+| Soltar o trailer | D-25 | playbook |
+| **Abre a captação** | **D-21** | playbook |
+| Piso de duração da captação | **14 dias no mínimo** | Samuel |
+| Começa o aquecimento, sobrepondo a captação | D-16 | Nobre real |
+| Contagem regressiva pública: 15, 10, 7, 5, 3 dias e "é amanhã" | D-15 a D-1 | playbook |
+| Vídeo de boas vindas nos grupos cheios | D-10 | playbook |
+| **Começa o backlog da semana da abertura** | **D-7** | playbook |
+| Aulas de aquecimento (CPL 1, 2, 3 e a extra) | D-6 a D-2 | Nobre real |
+| Presentes e vantagens aparecem, **antes do preço** | D-3 | Nobre real |
+| Metralhadora de depoimentos e "amanhã é o grande dia" | D-1 | playbook |
+| **GRANDE DIA: live de abertura, carrinho abre** | **D0** | todas |
+| Primeira live de vendas | D+3 | Nobre real |
+| Segunda live de vendas | D+7 | Nobre real |
+| Live de replay e pitch de último dia | D+9 | Nobre real |
+| Encerramento mínimo praticado | D+10 | Nobre real |
+| **Encerramento recomendado para nós** | **D+15 a D+20** | ver nota abaixo |
+| Debriefing, com a memória fresca | D+17 | playbook |
+
+**Por que o encerramento vai além do D+10.** Três fontes empurram na mesma direção: o Gabriel se arrependeu de encerrar em D+10 quando ainda estava vendendo e considera deixar o mês inteiro; o Samuel recomenda remarketing por novembro inteiro, porque não há desculpa melhor para vender no mês; e no nosso caso específico o D+10 caía em cima de um feriadão, além de deixar a Black Friday oficial de fora da janela.
+
+**As duas amarras que a régua precisa respeitar no nosso caso:**
+
+1. **A captação não pode acontecer dentro da janela eleitoral.** Como o piso é de 14 dias e o ideal é o bloco de D-21 a D0, a data de abertura precisa ser escolhida de forma que esse bloco caia depois do segundo turno. Alternativa que já levantamos: rodar um bloco de captação antecipado, ainda em setembro, e tratar a janela pós-eleição como segunda onda
+2. **Nem o D0 nem o encerramento podem cair em feriado.** Regra do Gabriel: feriado é furada
+
+Com essas duas amarras, a escolha do D0 vira uma conta simples de fazer na hora do ajuste, sem precisar refazer o plano inteiro.
 
 ---
 
