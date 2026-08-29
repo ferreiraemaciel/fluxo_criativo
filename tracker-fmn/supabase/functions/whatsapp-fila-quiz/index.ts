@@ -51,15 +51,28 @@ Deno.serve(async (_req) => {
         continue;
       }
 
-      // Mesmo número já recebeu o resultado antes (quiz preenchido de novo,
-      // com outro nome/code)? Trata como a mesma pessoa, nunca manda 2x pro
-      // mesmo telefone.
+      // Mesmo número já recebeu o resultado DESTE MESMO quiz antes (refez o
+      // quiz com outro nome/code)? Não manda de novo.
+      //
+      // A trava é por FUNIL, não só por telefone. Corrigido em 2026-08-28:
+      // antes bastava ter recebido qualquer resultado de quiz alguma vez pra
+      // nunca mais receber nenhum. Como quase todo lead que entra no funil do
+      // Blindagem já tinha feito o quiz do MCV antes (8 dos 10 abandonos do
+      // dia eram desse perfil), a base mais qualificada que existe estava
+      // sendo silenciosamente excluída do novo funil. Achado num teste real
+      // do próprio Felipe: ele completou o quiz do Blindagem, o registro foi
+      // marcado como enviado, e a mensagem nunca saiu porque ele tinha
+      // recebido o resultado do quiz do MCV em 11/07.
+      //
+      // São diagnósticos diferentes, de produtos diferentes: quem faz os dois
+      // deve receber os dois.
       const tel = normalizarTelefoneWhatsapp(lead.whatsapp);
       const { data: jaRecebeu } = await supabase
         .from("whatsapp_mensagens")
         .select("id")
         .eq("telefone", tel)
         .eq("template_nome", "resultado_quiz_mcv")
+        .eq("funnel_slug", lead.funnel_slug)
         .eq("status", "enviado")
         .limit(1)
         .maybeSingle();

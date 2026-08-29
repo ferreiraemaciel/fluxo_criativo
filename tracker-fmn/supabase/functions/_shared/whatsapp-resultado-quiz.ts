@@ -109,6 +109,10 @@ export async function enviarResultadoQuizWhatsapp(
       template_nome: janelaJaAberta ? null : "resultado_quiz_mcv",
       wa_message_id: d?.messages?.[0]?.id || null, status: "enviado", origem: "quiz", raw: d,
       custo_usd: custo,
+      // Guarda de qual quiz veio: é o que permite a trava "não mandar o
+      // resultado do MESMO quiz duas vezes" sem bloquear o resultado de um
+      // quiz diferente pra mesma pessoa (ver whatsapp-fila-quiz).
+      funnel_slug: funnelSlug,
     });
     await sb.from("quiz_leads").update({ whatsapp_resultado_enviado: true }).eq("funnel_slug", funnelSlug).eq("code", code);
     await upsertContato(sb, to, nome, "lead_novo", { iaElegivel: true });

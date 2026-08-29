@@ -670,7 +670,7 @@ function CarrinhoTable({ itens, recuperados, contatadosOficial, contatadosSuport
   };
 
   const lista = itens.filter(it => {
-    const rec = recuperados.has((it.email || '').trim().toLowerCase());
+    const rec = recuperados.has(it.id);
     if (filtro === 'pendente'   && rec) return false;
     if (filtro === 'recuperado' && !rec) return false;
     if (situacaoFiltro !== 'todas' && it.situacao !== situacaoFiltro) return false;
@@ -736,7 +736,7 @@ function CarrinhoTable({ itens, recuperados, contatadosOficial, contatadosSuport
               </td></tr>
             )}
             {lista.map(it => {
-              const rec  = recuperados.has((it.email || '').trim().toLowerCase());
+              const rec  = recuperados.has(it.id);
               const dias = diasAtras(it.created_at);
               // Abandono/pendência esfria rápido: até 7 dias ainda é quente pra recuperar.
               const quente = dias != null && dias <= 7;
@@ -1100,20 +1100,49 @@ function FunisScreen({ onNavigate }) {
         .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
       setCarrinho(itens);
 
-      // Marca como recuperado quem aparece de novo em vendas com status aprovada.
+      // Marca como recuperado quem, DEPOIS de abandonar, comprou O MESMO
+      // produto. As duas condições importam:
+      //
+      //   - data: sem comparar data, qualquer compra antiga do e-mail marcava
+      //     a linha como recuperada. Arthur Passos comprou em 17/03/26 e
+      //     abandonou em 29/08/26, e aparecia como "Comprou depois" de um
+      //     abandono cinco meses posterior à compra.
+      //   - produto: ele havia comprado o MCV e abandonou o Blindagem. Comprar
+      //     um produto não recupera o abandono de outro, ainda mais agora que
+      //     as duas campanhas rodam juntas.
+      //
       // Bug corrigido em 2026-08-26: filtrava por `email`, coluna que não existe
       // em `vendas` (o campo certo é `comprador_email`) — a checagem nunca achava
       // ninguém, "Comprou depois" nunca aparecia mesmo quando era verdade.
+      // Bug corrigido em 2026-08-29: passou a exigir data posterior e mesmo
+      // produto, senão errava para o outro lado, marcando recuperado quem não era.
+      const normProd = p => String(p || '').trim().toLowerCase();
       const emails = [...new Set(itens.map(i => (i.email || '').trim().toLowerCase()).filter(Boolean))];
-      const rec = new Set();
+      const comprasPorEmail = new Map(); // email -> [{ t, prod }]
       if (emails.length) {
         // Em lotes: lista muito grande estoura o tamanho da URL do filtro `in`.
         for (let i = 0; i < emails.length; i += 200) {
           const { data: v } = await window.db.from('vendas')
-            .select('comprador_email').eq('status', 'aprovada').in('comprador_email', emails.slice(i, i + 200));
-          (v || []).forEach(r => r.comprador_email && rec.add(r.comprador_email.trim().toLowerCase()));
+            .select('comprador_email,produto_nome,created_at')
+            .eq('status', 'aprovada').in('comprador_email', emails.slice(i, i + 200));
+          (v || []).forEach(r => {
+            const e = (r.comprador_email || '').trim().toLowerCase();
+            if (!e) return;
+            if (!comprasPorEmail.has(e)) comprasPorEmail.set(e, []);
+            comprasPorEmail.get(e).push({ t: new Date(r.created_at).getTime(), prod: normProd(r.produto_nome) });
+          });
         }
       }
+      // Agora a chave é o item, não o e-mail: a mesma pessoa pode ter
+      // abandonado o MCV (e recuperado) e o Blindagem (e não).
+      const rec = new Set();
+      itens.forEach(it => {
+        const compras = comprasPorEmail.get((it.email || '').trim().toLowerCase());
+        if (!compras) return;
+        const quandoAbandonou = new Date(it.created_at).getTime();
+        const prodDoItem = normProd(it.produto_nome);
+        if (compras.some(c => c.t > quandoAbandonou && c.prod === prodDoItem)) rec.add(it.id);
+      });
       setRecuperados(rec);
       setLoadingCarrinho(false);
 
@@ -1286,7 +1315,7 @@ function FunisScreen({ onNavigate }) {
                 </div>
               : (() => {
                   const total = carrinho.length;
-                  const rec   = carrinho.filter(i => recuperados.has((i.email || '').trim().toLowerCase())).length;
+                  const rec   = carrinho.filter(i => recuperados.has(i.id)).length;
                   const quentes = carrinho.filter(i => i.created_at && (Date.now() - new Date(i.created_at)) / 86400000 <= 7).length;
                   const taxa = total ? Math.round(rec / total * 100) : 0;
                   return (<>
