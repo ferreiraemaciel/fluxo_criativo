@@ -189,7 +189,7 @@ Deno.serve(async (req) => {
     // depende desse contato já existir pra achar quem marcar) — reenviar só
     // metade deixa o aluno sem tag nenhuma, silenciosamente.
     if (venda.produto_id) {
-      await marcarTagDoProduto(venda.produto_id, venda.comprador_telefone);
+      await marcarTagDoProduto(venda.produto_id, venda.comprador_telefone, venda.comprador_nome || null);
     }
     return new Response(JSON.stringify({ ok: true }), { headers: { "Content-Type": "application/json" } });
   }
@@ -658,7 +658,7 @@ Deno.serve(async (req) => {
   // propósito: se o contato do Khronus tiver acabado de nascer ali, a tag
   // já encontra ele.
   if (status === "aprovada" && telefoneFinal && produtoIdStr) {
-    await marcarTagDoProduto(produtoIdStr, telefoneFinal);
+    await marcarTagDoProduto(produtoIdStr, telefoneFinal, comprador?.name || null);
   }
 
   console.log("Venda salva:", transactionId, status, "ADS:", adsNumero);
@@ -805,7 +805,7 @@ function variantesTelefoneKhronus(bruto: string): string[] {
 // removida antes, porque comprar de novo é uma marcação nova de verdade).
 // Silenciosa de propósito: falhar em marcar tag nunca pode derrubar o
 // registro da venda, que é o que realmente importa nesse webhook.
-async function marcarTagDoProduto(produtoId: string, telefoneRaw: string) {
+async function marcarTagDoProduto(produtoId: string, telefoneRaw: string, nome: string | null = null) {
   const tagId = TAG_POR_PRODUTO[produtoId];
   const variantes = variantesTelefoneKhronus(telefoneRaw);
   if (!tagId || !variantes.length) return;
@@ -816,11 +816,39 @@ async function marcarTagDoProduto(produtoId: string, telefoneRaw: string) {
       .select("id")
       .eq("studio_id", STUDIO_ID_KHRONUS)
       .in("telefone", variantes);
-    const contato = (achados || [])[0];
-    // Sem contato no Khronus não há o que marcar. Não cria contato só pra
-    // pendurar tag: quem cria é o fluxo de mensagem (boas-vindas), e aí a
-    // marcação acontece na venda seguinte ou no backfill.
-    if (!contato?.id) return;
+    let contatoId = (achados || [])[0]?.id;
+
+    /* Quem comprou e ainda não existe no Khronus passa a ser criado aqui.
+       Antes a função desistia nesse ponto, e a tag simplesmente não
+       acontecia, em silêncio. Resultado real medido em 2026-09-08: 18 dos 38
+       compradores do Blindagem não constavam como alunos, e ninguém tinha
+       como saber disso olhando a tela.
+
+       Por que o buraco existia: a marcação dependia de o contato já ter sido
+       criado pelo fluxo de boas-vindas, que só existe para MCV e Blindagem, e
+       que no Blindagem só passou a valer em 2026-08-28. Quem comprou antes
+       disso, quem comprou outro produto, ou quem veio sem telefone no
+       payload, ficava de fora.
+
+       Nasce como "aluno" porque é exatamente o que a pessoa é: pagou. E sem
+       wa_chat_id de propósito, igual ao fluxo de boas-vindas: quem descobre o
+       identificador do WhatsApp é a Ponte, na primeira tentativa de envio. */
+    if (!contatoId) {
+      const { data: novo, error: errNovo } = await khronus
+        .from("crm_whatsapp_contatos")
+        .insert({
+          studio_id: STUDIO_ID_KHRONUS,
+          telefone: variantes[0],
+          nome,
+          etapa: "aluno",
+        })
+        .select("id")
+        .single();
+      if (errNovo) throw new Error(`Criar contato para a tag: ${errNovo.message}`);
+      contatoId = novo.id;
+      console.log("Contato criado no Khronus para marcar a tag:", variantes[0], produtoId);
+    }
+    const contato = { id: contatoId };
 
     const { data: existente } = await khronus
       .from("crm_whatsapp_contato_tags")
