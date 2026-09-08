@@ -2201,12 +2201,26 @@ function CalendarioView({ items, onOpen, onNewWithDate, onReschedule, onEditSche
   const prevMes = () => { if (mes === 0) { setMes(11); setAno(a=>a-1); } else setMes(m=>m-1); };
   const nextMes = () => { if (mes === 11) { setMes(0); setAno(a=>a+1); } else setMes(m=>m+1); };
 
-  // Células: espaços vazios + dias do mês
+  // Células da grade. As bordas da grade não ficam vazias: quando o mês começa
+  // numa quarta, a segunda e a terça mostram os dias do mês anterior, com o que
+  // estiver agendado neles, e o mesmo vale pra sobra do fim. Combinado com
+  // Felipe em 2026-08-29: a semana que atravessa a virada do mês é uma semana
+  // real de trabalho, e escondê-la fazia parecer que não tinha nada publicado
+  // ali. Os dias de fora aparecem mais apagados que sábado e domingo, pra
+  // continuar óbvio qual é o mês em foco.
   const cells = [];
-  for (let i = 0; i < primeiroDia; i++) cells.push(null);
-  for (let d = 1; d <= diasNoMes; d++) cells.push(d);
-  // Preenche última linha até completar 7
-  while (cells.length % 7 !== 0) cells.push(null);
+  const antes = new Date(ano, mes, 0);            // último dia do mês anterior
+  const diasAntes = antes.getDate();
+  for (let i = primeiroDia; i > 0; i--) {
+    cells.push({ ano: antes.getFullYear(), mes: antes.getMonth(), dia: diasAntes - i + 1, fora: true });
+  }
+  for (let d = 1; d <= diasNoMes; d++) cells.push({ ano, mes, dia: d, fora: false });
+  // Completa a última linha com os primeiros dias do mês seguinte
+  const depois = new Date(ano, mes + 1, 1);
+  let proximo = 1;
+  while (cells.length % 7 !== 0) {
+    cells.push({ ano: depois.getFullYear(), mes: depois.getMonth(), dia: proximo++, fora: true });
+  }
 
   return (
     <div style={{ flex:1, display:'flex', flexDirection:'column', overflow:'hidden', padding:'0 20px 16px' }}>
@@ -2251,24 +2265,22 @@ function CalendarioView({ items, onOpen, onNewWithDate, onReschedule, onEditSche
         {/* Células — gridAutoRows:'1fr' preenche toda a altura disponível */}
         <div style={{ flex:1, display:'grid', gridTemplateColumns:'repeat(7,1fr)',
           gridAutoRows:'1fr', gap:4 }}>
-          {cells.map((dia, idx) => {
+          {cells.map((cel, idx) => {
+            const { dia, fora } = cel;
             const colIdx = idx % 7; // 0=segunda...6=domingo
             const isWeekend = colIdx === 5 || colIdx === 6;
-            if (!dia) return (
-              <div key={`e${idx}`} style={{
-                background: isWeekend ? 'rgba(255,255,255,.01)' : 'transparent',
-                borderRadius:8 }}/>
-            );
-            const dateStr = `${ano}-${String(mes+1).padStart(2,'0')}-${String(dia).padStart(2,'0')}`;
+            const dateStr = `${cel.ano}-${String(cel.mes+1).padStart(2,'0')}-${String(dia).padStart(2,'0')}`;
             const dayItems = byDate[dateStr] || [];
             const isToday  = dateStr === todayStr;
 
             let bgColor = 'var(--app-surface-2)';
             if (isToday)    bgColor = 'rgba(234,170,65,.06)';
+            else if (fora)  bgColor = 'transparent';
             else if (isWeekend) bgColor = 'rgba(255,255,255,.015)';
 
             let borderColor = 'var(--app-border)';
             if (isToday)        borderColor = 'rgba(234,170,65,.45)';
+            else if (fora)      borderColor = 'rgba(255,255,255,.035)';
             else if (isWeekend) borderColor = 'rgba(255,255,255,.06)';
 
             const isDragOver = dragOverDate === dateStr;
@@ -2288,14 +2300,16 @@ function CalendarioView({ items, onOpen, onNewWithDate, onReschedule, onEditSche
                   borderRadius:8, padding:'7px 8px',
                   background: isDragOver ? 'rgba(234,170,65,.1)' : bgColor,
                   cursor:'pointer', display:'flex', flexDirection:'column', gap:4,
-                  overflow:'hidden', transition:'border-color 150ms, background 150ms',
-                  opacity: isWeekend && !isToday ? 0.7 : 1 }}
+                  overflow:'hidden', transition:'border-color 150ms, background 150ms, opacity 150ms',
+                  opacity: isToday ? 1 : fora ? 0.34 : isWeekend ? 0.7 : 1 }}
+                onMouseOver={e => { if (fora) e.currentTarget.style.opacity = 0.75; }}
+                onMouseOut={e => { if (fora && !isToday) e.currentTarget.style.opacity = 0.34; }}
                 onMouseEnter={e => { if (!isToday && !isDragOver) e.currentTarget.style.borderColor='rgba(255,255,255,.18)'; }}
                 onMouseLeave={e => { if (!isDragOver) e.currentTarget.style.borderColor = borderColor; }}>
 
                 {/* Número do dia */}
                 <span style={{ fontSize:11, fontFamily:'Roboto,sans-serif', fontWeight:900,
-                  color: isToday ? 'var(--fmn-gold)' : isWeekend ? 'rgba(148,163,184,.5)' : 'var(--text-3)',
+                  color: isToday ? 'var(--fmn-gold)' : fora ? 'rgba(148,163,184,.4)' : isWeekend ? 'rgba(148,163,184,.5)' : 'var(--text-3)',
                   background: isToday ? 'rgba(234,170,65,.15)' : 'transparent',
                   borderRadius:5, padding: isToday ? '1px 5px' : '0',
                   alignSelf:'flex-start', lineHeight:1.6, flexShrink:0 }}>
@@ -2376,7 +2390,7 @@ function CalendarioView({ items, onOpen, onNewWithDate, onReschedule, onEditSche
                   <span style={{ fontSize:9.5, fontFamily:'Roboto,sans-serif', color:'var(--text-3)',
                     paddingLeft:4 }}>+{dayItems.length-4} mais</span>
                 )}
-                {dayItems.length === 0 && (
+                {dayItems.length === 0 && !fora && (
                   <span style={{ fontSize:9, fontFamily:'Roboto,sans-serif',
                     color: isWeekend ? 'rgba(255,255,255,.06)' : 'rgba(255,255,255,.1)',
                     marginTop:'auto', textAlign:'center' }}>+ novo</span>
