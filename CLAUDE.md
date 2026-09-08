@@ -44,6 +44,30 @@ O hook automático em `scripts/verificar-acentuacao.py` roda ao fim de cada gera
 
 ---
 
+## TOM DE VOZ DO FELIPE (REGRA GLOBAL)
+
+> Combinada em 2026-08-29. Aplica-se a 100% do conteudo gerado no projeto, em qualquer conversa,
+> presente e futura. Tem prioridade sobre conveniencia de geracao rapida.
+
+**Antes de gerar qualquer texto assinado pelo Felipe, carregar `.claude/rules/tom-de-voz-felipe.md`
+e aplicar a regra inteira.** Vale para artigo, Reels, carrossel, imagem estatica, legenda, e-mail,
+roteiro, card de ideia no Tracker e descricao de criativo.
+
+O objetivo e um so: o texto nao pode ter cara de IA. Precisa soar como ele.
+
+**Varredura mecanica obrigatoria antes de entregar qualquer texto:**
+
+1. `, e ` ligando duas oracoes. **Proibido, e o vicio que mais incomoda ele.** Cortar a virgula ou
+   quebrar em duas frases.
+2. Travessao. Proibido, ja e regra global do projeto.
+3. Ponto de exclamacao. Proibido.
+4. Virgula entre sujeito e verbo. Proibido.
+
+Se o texto for artigo de blog, ler antes o conteudo real do artigo mais recente publicado no
+Supabase, porque a memoria e resumo e o texto publicado e a cadencia real dele.
+
+---
+
 ## TRACKER FMN — LANÇAR AD (REGRA GLOBAL)
 
 > Aplica-se a qualquer pedido de lançar, registrar ou adicionar um AD no Tracker FMN, em qualquer conversa.
