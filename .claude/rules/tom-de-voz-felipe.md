@@ -20,12 +20,34 @@ grep -n ", e \|—\|!" arquivo
 
 | Padrão | Situação | Como corrigir |
 |---|---|---|
-| `, e ` ligando duas orações | **Proibido. É o "cara de IA" número um pra ele** | Cortar a vírgula, ou quebrar em duas frases com ponto |
+| `, e ` ligando duas orações | **Proibido. É o "cara de IA" número um pra ele** | Cortar só a vírgula. Nunca virar ponto seguido de E |
 | Travessão `—` | Proibido em todo o projeto | Vírgula, ponto, dois pontos ou parênteses |
 | Ponto de exclamação | Proibido | Ponto final |
 | Vírgula entre sujeito e verbo | Proibido, mesmo com sujeito longo | Remover |
+| `. E ` cortando frase | **Uso raro, nunca como conector padrão** | Ver seção abaixo |
 
 **Não existe exceção para enumeração de 3 ou mais itens.** Português não usa vírgula de Oxford.
+
+### Ponto seguido de E, a regra da raridade
+
+Correção dele em 2026-08-29, a partir do ORG 112: **ele não corta a frase com ponto e recomeça com
+E.** Faz isso só quando é realmente necessário, e isso é muito raro.
+
+O que ele rejeitou foi o E usado como conector automático, tapando buraco de ritmo:
+
+> Configuração, luz, composição, edição, direção de pose. E nunca treinou um item da lista do técnico.
+
+O que ele usa de verdade, como batida retórica deliberada, no começo de parágrafo e nunca em série:
+
+> E olha, isso não é discurso de superação.
+> E aí aparece o efeito colateral bom.
+
+**Regra prática:** no máximo uma ocorrência por peça, sempre abrindo parágrafo, nunca colando duas
+frases da mesma ideia. Se o E está ali só para emendar, apagar o E e deixar a frase começar direto,
+ou juntar as duas com vírgula sem conjunção, que é o outro padrão dele.
+
+**E cuidado ao corrigir `, e`:** a saída correta é tirar a vírgula, não virar ponto seguido de E.
+Trocar um vício pelo outro foi o erro cometido nesse mesmo lote.
 
 **O que é permitido e ele usa de propósito:**
 - Vírgula antes de "mas" ligando duas frases
