@@ -368,10 +368,10 @@ function BlocoImaginacao({ metricas, onSalvar }) {
      verba da etapa / dias da etapa    → verba por dia
 ──────────────────────────────────────────────────────────────────*/
 const ETAPAS_MIDIA = [
-  { chave:'antecipacao',    label:'Antecipação',    campo:'pct_antecipacao',    cor:'#38bdf8', objetivo:'Engajamento, 1-3-3, ABO' },
-  { chave:'captacao',       label:'Captação',       campo:'pct_captacao',       cor:'#a78bfa', objetivo:'Leads, CBO, 4 conjuntos' },
-  { chave:'relacionamento', label:'Relacionamento', campo:'pct_relacionamento', cor:'#fbbf24', objetivo:'Aquecimento e lembrete, 50/50' },
-  { chave:'remarketing',    label:'Remarketing',    campo:'pct_remarketing',    cor:'#4ade80', objetivo:'Vendas, evento Compra, CBO' },
+  { chave:'teaser',      label:'Teaser',      cor:'#38bdf8', objetivo:'Engajamento, 1-3-3, ABO',        dias:'dias_teaser',      fixa:'pct_teaser' },
+  { chave:'captacao',    label:'Captura de Leads', cor:'#a78bfa', objetivo:'Leads, CBO, 4 conjuntos',   dias:'dias_captacao',    fixa:null },
+  { chave:'aquecimento', label:'Aquecimento', cor:'#fbbf24', objetivo:'Relacionamento e lembrete, 50/50', dias:'dias_aquecimento', fixa:'pct_aquecimento' },
+  { chave:'remarketing', label:'Remarketing', cor:'#4ade80', objetivo:'Vendas, evento Compra, CBO',     dias:'dias_remarketing', fixa:null },
 ];
 
 /* Rateio das 6 campanhas de lembrete, direto do slide do retiro. */
@@ -379,6 +379,13 @@ const RATEIO_LEMBRETE = [
   ['Faltam 7 dias', .07], ['Faltam 5 dias', .10], ['Faltam 3 dias', .15],
   ['É amanhã', .15],      ['É hoje', .25],        ['Estamos ao vivo', .28],
 ];
+
+/* Fórmula da planilha oficial: o remarketing sobe conforme os dias,
+   de 27,5% em 7 dias até 41% em 20 dias, interpolado. */
+function pctRemarketing(dias) {
+  const d = Number(dias) || 7;
+  return Math.min(0.41, Math.max(0.275, 0.275 + ((d - 7) / 13) * (0.41 - 0.275)));
+}
 
 function CampoNum({ label, valor, onSalvar, sufixo, dica, passo }) {
   return (
@@ -388,7 +395,7 @@ function CampoNum({ label, valor, onSalvar, sufixo, dica, passo }) {
         borderBottom: dica ? '1px dotted var(--app-border)' : 'none' }}>{label}</span>
       <input type="number" step={passo || 'any'} defaultValue={valor ?? ''}
         onBlur={e => onSalvar(e.target.value === '' ? null : Number(e.target.value))}
-        style={{ width:96, textAlign:'right', padding:'5px 7px', borderRadius:6,
+        style={{ width:92, textAlign:'right', padding:'5px 7px', borderRadius:6,
           border:'1px solid var(--app-border)', background:'rgba(255,255,255,.03)',
           color:'var(--text-1)', fontSize:12, fontFamily:'Roboto,sans-serif',
           fontVariantNumeric:'tabular-nums' }}/>
@@ -415,30 +422,36 @@ function LinhaCalc({ label, valor, destaque, alerta, dica }) {
 function BlocoPlanoMidia({ plano, onSalvar }) {
   const p = plano || {};
   const set = (k) => (v) => onSalvar({ ...p, [k]: v });
-
-  const ticket   = Number(p.ticket_liquido) || 0;
-  const vendas   = Number(p.vendas_meta) || 0;
-  const taxa     = Number(p.taxa_conversao) || 0;
-  const cpl      = Number(p.cpl_meta) || 0;
-  const dCap     = Number(p.dias_captacao) || 0;
-  const dRmk     = Number(p.dias_remarketing) || 0;
-  const imposto  = Number(p.imposto_meta) || 0;
-
-  const faturamento = vendas * ticket;
-  const leads       = taxa > 0 ? Math.ceil(vendas / taxa) : 0;
-  const verbaCapt   = leads * cpl;
-  const pctCapt     = Number(p.pct_captacao) || 0;
-  const verbaBase   = pctCapt > 0 ? verbaCapt / pctCapt : 0;
-  const verbaTotal  = verbaBase * (1 + imposto);
-  const roas        = verbaTotal > 0 ? faturamento / verbaTotal : 0;
-  const cac         = vendas > 0 ? verbaTotal / vendas : 0;
-
-  const somaPct = ETAPAS_MIDIA.reduce((a,e) => a + (Number(p[e.campo]) || 0), 0);
-  const pctFecha = Math.abs(somaPct - 1) < 0.001;
-
-  const diasDaEtapa = { antecipacao:14, captacao:dCap, relacionamento:16, remarketing:dRmk };
   const brl = v => window.fmtBRL ? window.fmtBRL(v) : ('R$ ' + (v||0).toFixed(2));
-  const verbaLembrete = verbaBase * (Number(p.pct_relacionamento)||0) * 0.5;
+
+  const ticket  = Number(p.ticket_liquido) || 0;
+  const vendas  = Number(p.vendas_meta) || 0;
+  const taxa    = Number(p.taxa_conversao) || 0;
+  const cpl     = Number(p.cpl_meta) || 0;
+  const imposto = Number(p.imposto_meta) || 0;
+
+  /* A escada da planilha oficial:
+       leads = vendas / conversão
+       verba de captação = leads × CPL
+       investimento em mídia = verba de captação / % da captação
+     A captação é o que sobra depois de teaser, aquecimento e remarketing. */
+  const pctTeaser = Number(p.pct_teaser) ?? 0.04;
+  const pctAquec  = Number(p.pct_aquecimento) ?? 0.05;
+  const pctRmk    = pctRemarketing(p.dias_remarketing);
+  const pctCapt   = 1 - pctTeaser - pctAquec - pctRmk;
+
+  const leads       = taxa > 0 ? Math.ceil(vendas / taxa) : 0;
+  const faturamento = vendas * ticket;
+  const verbaCapt   = leads * cpl;
+  const midia       = pctCapt > 0 ? verbaCapt / pctCapt : 0;
+  const impostoRS   = midia * imposto;
+  const totalComImp = midia + impostoRS;
+  const roas        = midia > 0 ? faturamento / midia : 0;   // sobre mídia, sem imposto
+  const cac         = vendas > 0 ? totalComImp / vendas : 0;
+
+  const pctDaEtapa = { teaser:pctTeaser, captacao:pctCapt, aquecimento:pctAquec, remarketing:pctRmk };
+  const verbaLembrete = midia * pctAquec * 0.5;
+  const dRmk = Number(p.dias_remarketing) || 0;
 
   return (
     <SectionCard title="Plano de mídia"
@@ -447,59 +460,56 @@ function BlocoPlanoMidia({ plano, onSalvar }) {
 
       <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(230px,1fr))', gap:16 }}>
 
-        {/* O que você define */}
         <div style={{ display:'flex', flexDirection:'column', gap:7 }}>
           <div style={{ fontSize:10.5, fontFamily:'Roboto,sans-serif', fontWeight:700,
             color:'var(--text-3)', letterSpacing:.4, textTransform:'uppercase' }}>Você define</div>
-          <CampoNum label="Ticket líquido" valor={p.ticket_liquido} onSalvar={set('ticket_liquido')}
+          <CampoNum label="Vendas esperadas" valor={p.vendas_meta} onSalvar={set('vendas_meta')} sufixo="un"/>
+          <CampoNum label="Ticket do produto" valor={p.ticket_liquido} onSalvar={set('ticket_liquido')}
             sufixo="R$" dica="Já descontada a taxa da plataforma. É o que entra de verdade."/>
-          <CampoNum label="Vendas na meta" valor={p.vendas_meta} onSalvar={set('vendas_meta')} sufixo="un"/>
-          <CampoNum label="Conversão de lead" valor={p.taxa_conversao} onSalvar={set('taxa_conversao')}
-            sufixo="%" passo="0.01" dica="No pico fica entre 5% e 10%. O piso é 5%. Use 0.05 para 5%."/>
-          <CampoNum label="CPL na meta" valor={p.cpl_meta} onSalvar={set('cpl_meta')}
-            sufixo="R$" dica="No pico o lead custa de 2 a 3 vezes o normal. Não se assuste."/>
-          <CampoNum label="Dias de captação" valor={p.dias_captacao} onSalvar={set('dias_captacao')}
-            sufixo="d" dica="Piso recomendado de 14 dias, para dar tempo de otimizar."/>
-          <CampoNum label="Dias de remarketing" valor={p.dias_remarketing} onSalvar={set('dias_remarketing')}
-            sufixo="d" dica="Recomendação: o mês inteiro, enquanto o carrinho estiver aberto."/>
+          <CampoNum label="Conversão de leads" valor={p.taxa_conversao} onSalvar={set('taxa_conversao')}
+            sufixo="%" passo="0.01" dica="No pico fica entre 5% e 10%. O piso é 5%, a planilha usa 7%. Digite 0.07 para 7%."/>
+          <CampoNum label="Custo por lead" valor={p.cpl_meta} onSalvar={set('cpl_meta')}
+            sufixo="R$" dica="No pico o lead custa de 2 a 3 vezes o normal."/>
           <CampoNum label="Imposto do Meta" valor={p.imposto_meta} onSalvar={set('imposto_meta')}
-            sufixo="%" passo="0.01" dica="Use 0.05 para 5%. Entra por cima da verba."/>
-          {dCap > 0 && dCap < 14 && (
+            sufixo="%" passo="0.0001" dica="A planilha usa 0.1215, ou seja 12,15%."/>
+          <CampoNum label="Dias de remarketing" valor={p.dias_remarketing} onSalvar={set('dias_remarketing')}
+            sufixo="d" dica="Entre 7 e 20. O percentual da fase se ajusta sozinho, de 27,5% a 41%."/>
+          <CampoNum label="Quantidade de anúncios" valor={p.qtd_anuncios} onSalvar={set('qtd_anuncios')}
+            sufixo="un" dica="A referência do retiro é 20 anúncios."/>
+          {dRmk > 0 && (dRmk < 7 || dRmk > 20) && (
             <div style={{ fontSize:10.5, color:'#fb923c', fontFamily:'Roboto,sans-serif',
               lineHeight:1.4 }}>
-              Abaixo de 14 dias sobra pouco tempo para ajustar o tráfego.
+              A planilha trabalha entre 7 e 20 dias de remarketing.
             </div>
           )}
         </div>
 
-        {/* O que sai da conta */}
         <div style={{ display:'flex', flexDirection:'column' }}>
           <div style={{ fontSize:10.5, fontFamily:'Roboto,sans-serif', fontWeight:700,
             color:'var(--text-3)', letterSpacing:.4, textTransform:'uppercase',
             marginBottom:4 }}>A conta devolve</div>
-          <LinhaCalc label="Faturamento" valor={brl(faturamento)} destaque/>
           <LinhaCalc label="Leads necessários" valor={leads ? leads.toLocaleString('pt-BR') : '—'}
             dica="Vendas divididas pela taxa de conversão."/>
-          <LinhaCalc label="Verba de captação" valor={brl(verbaCapt)}
-            dica="Leads multiplicados pelo CPL."/>
-          <LinhaCalc label="Verba total" valor={brl(verbaTotal)} destaque
-            dica="Captação dividida pelo percentual dela, mais o imposto."/>
-          <LinhaCalc label="ROAS projetado" valor={roas ? roas.toFixed(2) : '—'}
-            alerta={roas > 0 && roas < 2}/>
+          <LinhaCalc label="Faturamento líquido" valor={brl(faturamento)} destaque/>
+          <LinhaCalc label="Investimento em mídia" valor={brl(midia)} destaque
+            dica="Verba de captação dividida pelo percentual da captação."/>
+          <LinhaCalc label="Imposto do Meta" valor={brl(impostoRS)}/>
+          <LinhaCalc label="Investimento total" valor={brl(totalComImp)} destaque/>
+          <LinhaCalc label="ROAS sobre mídia" valor={roas ? roas.toFixed(2) : '—'}
+            alerta={roas > 0 && roas < 2} dica="Faturamento dividido pela mídia, sem o imposto."/>
           <LinhaCalc label="CAC" valor={cac ? brl(cac) : '—'}
-            dica="Verba total dividida pelas vendas."/>
+            dica="Investimento total dividido pelas vendas."/>
         </div>
 
-        {/* Rateio por etapa */}
         <div style={{ display:'flex', flexDirection:'column', gap:5 }}>
           <div style={{ fontSize:10.5, fontFamily:'Roboto,sans-serif', fontWeight:700,
             color:'var(--text-3)', letterSpacing:.4, textTransform:'uppercase' }}>
-            Verba por etapa
+            Verba por fase
           </div>
           {ETAPAS_MIDIA.map(e => {
-            const pct = Number(p[e.campo]) || 0;
-            const verba = verbaBase * pct;
-            const dias = diasDaEtapa[e.chave] || 0;
+            const pct = pctDaEtapa[e.chave] || 0;
+            const verba = midia * pct;
+            const dias = Number(p[e.dias]) || 0;
             return (
               <div key={e.chave} style={{ padding:'6px 8px', borderRadius:7,
                 background:'rgba(255,255,255,.025)', border:'1px solid var(--app-border)' }}>
@@ -507,11 +517,22 @@ function BlocoPlanoMidia({ plano, onSalvar }) {
                   <span style={{ width:6, height:6, borderRadius:99, background:e.cor }}/>
                   <span style={{ flex:1, fontSize:11.5, fontFamily:'Roboto,sans-serif',
                     fontWeight:700, color:'var(--text-1)' }}>{e.label}</span>
-                  <input type="number" step="0.01" defaultValue={pct}
-                    onBlur={ev => set(e.campo)(Number(ev.target.value))}
-                    style={{ width:52, textAlign:'right', padding:'2px 5px', borderRadius:5,
-                      border:'1px solid var(--app-border)', background:'transparent',
-                      color:'var(--text-2)', fontSize:11, fontFamily:'Roboto,sans-serif' }}/>
+                  {e.fixa ? (
+                    <input type="number" step="0.01" defaultValue={pct}
+                      onBlur={ev => set(e.fixa)(Number(ev.target.value))}
+                      style={{ width:50, textAlign:'right', padding:'2px 5px', borderRadius:5,
+                        border:'1px solid var(--app-border)', background:'transparent',
+                        color:'var(--text-2)', fontSize:11, fontFamily:'Roboto,sans-serif' }}/>
+                  ) : (
+                    <span title={e.chave === 'captacao'
+                        ? 'Calculada: o que sobra das outras tres'
+                        : 'Calculada pelos dias de remarketing'}
+                      style={{ width:50, textAlign:'right', fontSize:11, fontWeight:700,
+                        fontFamily:'Roboto,sans-serif', color:'var(--text-3)',
+                        fontVariantNumeric:'tabular-nums' }}>
+                      {(pct*100).toFixed(1)}%
+                    </span>
+                  )}
                 </div>
                 <div style={{ display:'flex', justifyContent:'space-between', gap:6,
                   fontSize:11, fontFamily:'Roboto,sans-serif', color:'var(--text-3)',
@@ -524,15 +545,14 @@ function BlocoPlanoMidia({ plano, onSalvar }) {
               </div>
             );
           })}
-          {!pctFecha && (
-            <div style={{ fontSize:10.5, color:'#fb923c', fontFamily:'Roboto,sans-serif' }}>
-              Os percentuais somam {(somaPct*100).toFixed(0)}%, precisam somar 100%.
+          {pctCapt <= 0 && (
+            <div style={{ fontSize:10.5, color:'#f87171', fontFamily:'Roboto,sans-serif' }}>
+              As outras fases consumiram tudo. Não sobra verba para a captação.
             </div>
           )}
         </div>
       </div>
 
-      {/* As 6 campanhas de lembrete */}
       {verbaLembrete > 0 && (
         <div style={{ marginTop:14, paddingTop:12, borderTop:'1px solid var(--app-border)' }}>
           <div style={{ fontSize:10.5, fontFamily:'Roboto,sans-serif', fontWeight:700,
@@ -540,7 +560,7 @@ function BlocoPlanoMidia({ plano, onSalvar }) {
             marginBottom:7 }}>
             As 6 campanhas de lembrete, com orçamento total
           </div>
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(120px,1fr))',
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(118px,1fr))',
             gap:7 }}>
             {RATEIO_LEMBRETE.map(([nome, pct]) => (
               <div key={nome} style={{ padding:'6px 8px', borderRadius:7,
@@ -566,8 +586,8 @@ function BlocoPlanoMidia({ plano, onSalvar }) {
 
       <div style={{ fontSize:10.5, fontFamily:'Roboto,sans-serif', color:'var(--text-3)',
         marginTop:11, lineHeight:1.45 }}>
-        Os percentuais por etapa são estimativa nossa, não os da planilha original do retiro.
-        Ajuste conforme o seu histórico.
+        Percentuais e fórmulas da planilha oficial do retiro. Teaser e aquecimento são fixos,
+        o remarketing sobe conforme os dias, e a captação é o que sobra.
       </div>
     </SectionCard>
   );

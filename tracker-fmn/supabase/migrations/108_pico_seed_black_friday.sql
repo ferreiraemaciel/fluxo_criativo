@@ -132,7 +132,10 @@ begin
   (v_tpl, 'organizar', 'mentoria', 'Definir onde os encontros acontecem', 'Plataforma, gravação, e o que fica disponível depois', -58, 'c', 'Ladeira', 'mentoria', false, 102),
   (v_tpl, 'organizar', 'mentoria', 'Escrever como a mentoria aparece na oferta', 'Com valor declarado e o motivo do valor, nunca como bônus solto', -56, 'e', 'Gabriel', 'mentoria', false, 103),
   (v_tpl, 'antecipacao', 'mentoria', 'Preparar o material de apoio do primeiro encontro', 'Pronto antes de vender, não depois', -30, 'c', 'Ladeira', 'mentoria', false, 104),
-  (v_tpl, 'pos', 'mentoria', 'Primeiro encontro com quem comprou', 'Realizado dentro do prazo prometido', 7, 'e', 'Ladeira', 'mentoria', false, 105);
+  (v_tpl, 'pos', 'mentoria', 'Primeiro encontro com quem comprou', 'Realizado dentro do prazo prometido', 7, 'e', 'Ladeira', 'mentoria', false, 105),
+  (v_tpl, 'organizar', 'trafego', 'Definir a quantidade de anuncios do pico', 'Numero fechado. A referencia do retiro e 20 anuncios', -60, 'e', 'Samuel', null, false, 900),
+  (v_tpl, 'organizar', 'trafego', 'Definir a data de entrega dos anuncios e das paginas', 'Datas acordadas com quem produz, antes da captacao comecar', -58, 'e', 'Samuel', null, false, 901),
+  (v_tpl, 'organizar', 'paginas', 'Definir as tres paginas do funil', 'Captura, obrigado e venda, cada uma com link e responsavel', -55, 'e', 'Samuel', null, false, 902);
 
   raise notice 'Template Black Friday: % tarefas gravadas',
     (select count(*) from pico_template_tarefas where template_id = v_tpl);

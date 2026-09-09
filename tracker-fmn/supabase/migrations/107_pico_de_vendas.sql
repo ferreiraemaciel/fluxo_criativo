@@ -89,15 +89,16 @@ create table if not exists pico_projetos (
   plano_midia       jsonb not null default '{
     "ticket_liquido": null,
     "vendas_meta": null,
-    "taxa_conversao": 0.05,
+    "taxa_conversao": 0.07,
     "cpl_meta": null,
-    "dias_captacao": 21,
-    "dias_remarketing": 20,
-    "imposto_meta": 0.0,
-    "pct_antecipacao": 0.10,
-    "pct_captacao": 0.45,
-    "pct_relacionamento": 0.15,
-    "pct_remarketing": 0.30
+    "dias_teaser": 8,
+    "dias_captacao": 14,
+    "dias_aquecimento": 14,
+    "dias_remarketing": 14,
+    "imposto_meta": 0.1215,
+    "pct_teaser": 0.04,
+    "pct_aquecimento": 0.05,
+    "qtd_anuncios": 20
   }'::jsonb,
   observacoes       text,
   criado_em         timestamptz not null default now(),
@@ -113,7 +114,7 @@ comment on column pico_projetos.data_abertura is
 comment on column pico_projetos.cpa_limite is
   'CPA aceitável dos anúncios deste pico. Sobrepõe o limite por produto das regras G1/G5.';
 comment on column pico_projetos.plano_midia is
-  'Parametros do plano de midia. Os percentuais por etapa sao estimativa nossa, nao os da planilha original do retiro, e ficam editaveis na tela.';
+  'Parametros do plano de midia, com os valores da planilha oficial do retiro. Teaser e aquecimento tem percentual fixo; remarketing e interpolado pelos dias; captacao e o que sobra.';
 
 -- ----------------------------------------------------------------------------
 -- 4. TAREFAS DO PROJETO: cópia editável do template
