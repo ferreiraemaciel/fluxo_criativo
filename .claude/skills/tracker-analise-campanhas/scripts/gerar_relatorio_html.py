@@ -227,11 +227,15 @@ def sec_orcamento(d):
                              "estimativa a partir do ritmo 5d")
                        + kpi("ROAS, vida inteira dos ativos", f'{p["roas_vida_ativos"]}x' if p["roas_vida_ativos"] else "-",
                              f'{money(p["receita_vida_ativos"])} / {money(p["gasto_vida_ativos"])}')
-                       + "</div>")
-    aviso = next(iter(o.get("por_produto", {}).values()), {}).get("aviso_gasto_estimado", "")
+                       + "</div>"
+                       # Nota por PRODUTO, nunca uma nota global só do primeiro produto da lista
+                       # (bug real, achado em 2026-09-09: BLI vem antes de MCV na ordenação e
+                       # tem 0 ativos, então a nota de "sem ritmo pra projetar" dele aparecia
+                       # embaixo do bloco do MCV, que tem 10 ativos e nota bem diferente).
+                       + f'<div style="font-size:11px;color:var(--text-faint);margin:-4px 0 14px">{p["aviso_gasto_estimado"]}</div>')
     sem_atrib = o.get("receita_sem_atribuicao_na_janela")
     return f"""<div class="sec"><h2>Orçamento e receita real</h2>{"".join(blocos)}
-    <div class="card" style="font-size:12px;color:var(--text-faint)">{aviso}<br><br>
+    <div class="card" style="font-size:12px;color:var(--text-faint)">
     Receita sem atribuição a anúncio, mesma janela ({o.get("janela_vendas","")}):
     <b style="color:var(--text-dim)">{money(sem_atrib)}</b> (orgânico, direto, WhatsApp).</div></div>"""
 
