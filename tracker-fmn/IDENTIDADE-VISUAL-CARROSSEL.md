@@ -143,6 +143,13 @@ dela. A arte falava linguagem de alerta e de punição. Num tema de proteção i
 alimenta exatamente o pânico que a peça existe para desmontar, e faz o fotógrafo sentir que levou
 bronca antes de ler a primeira linha. Refeito em creme, azul sereno e traço fino de caderno.
 
+**Exemplo de referência: o ORG 088.** Ele é o carrossel que faz isso certo, e foi feito antes desta
+regra existir. O tema é orçamento, então a peça inteira é um orçamento anotado à mão: fundo bege de
+papel #EDE4D3, todo desenho a caneta esferográfica azul, elemento pequeno e muito espaço vazio. A
+quebra do fecho é a mesma caneta ocupando a tela, em azul-caneta cheio #2C4A7C. Nada ali foi escolhido
+por ser bonito, tudo foi escolhido por ser aquilo de que o assunto é feito. Quando estiver em dúvida
+sobre uma direção visual, abrir o ORG 088 e perguntar qual é o objeto físico do assunto desta peça.
+
 ### Ponto de partida por tipo de tema
 
 Sugestão para não começar do zero toda vez. Não é camisa de força, o conteúdo específico manda.
