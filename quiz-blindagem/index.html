@@ -105,10 +105,9 @@
      alturas ficam idênticas sem chutar pixel. No celular empilham, e o
      tamanho passa a vir da ALTURA da tela, para o print inteiro caber de uma
      vez. svh porque a barra do navegador do celular aparece e some. */
-  .depo-par{display:flex;gap:14px;align-items:flex-start;margin:0 0 20px}
+  .depo-par{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));
+    gap:14px;align-items:start;margin:0 0 20px}
   .depo-item{margin:0;min-width:0}
-  .depo-video{flex:5625 0 0}
-  .depo-print{flex:4613 0 0}
   .depo-moldura{position:relative;border-radius:14px;overflow:hidden;
     border:1px solid var(--line);background:#000}
   .depo-video .depo-moldura{aspect-ratio:9/16}
@@ -118,8 +117,7 @@
   .depo-item figcaption{font-size:12px;line-height:1.45;color:var(--ink-2);
     text-align:center;margin-top:10px}
   @media (max-width:520px){
-    .depo-par{flex-direction:column;align-items:center;gap:26px}
-    .depo-item{flex:0 0 auto;width:auto}
+    .depo-par{grid-template-columns:1fr;justify-items:center;gap:26px}
     .depo-video{width:min(100%,calc(76svh * 9 / 16))}
     .depo-print{width:min(100%,calc(76svh * 1080 / 2341))}
   }
@@ -797,6 +795,12 @@ function rPrecheckout(){
         <img src="https://imagens.ferreiraemaciel.com.br/fmn/blindagem/depoimento-romy-tanaka.webp" alt="Mensagem da fotógrafa Romy Tanaka contando que travava na assinatura pelo gov.br e resolveu com o Blindagem" loading="lazy" width="1080" height="2341">
       </div>
       <figcaption>"A assinatura digital resolveu justamente o que me travava antes." Romy Tanaka, fotógrafa, que veio dos contratos no Canva para o app.</figcaption>
+    </figure>
+    <figure class="depo-item depo-print">
+      <div class="depo-moldura">
+        <img src="https://imagens.ferreiraemaciel.com.br/fmn/blindagem/depoimento-prisma-fotografia.webp" alt="Mensagem do Prisma Fotografia contando que já usava os contratos visuais e passou a fechar contrato assinado em poucos minutos com o Blindagem" loading="lazy" width="1080" height="2341">
+      </div>
+      <figcaption>"Hoje, o cliente fecha e, em poucos minutos, já está com o contrato pronto e assinado." Prisma Fotografia, que já usava os contratos visuais e travava no tempo de preencher um por um.</figcaption>
     </figure>
   </div>`));
 
