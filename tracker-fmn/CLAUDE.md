@@ -481,6 +481,9 @@ com quem vai enviar. Se fui eu que escrevi o texto pra outra pessoa mandar, é `
 
 ## Link da página de vendas do MCV pra venda orgânica no WhatsApp (atendimento humano)
 
+> A tag deste link segue a regra global "QUEM APERTA ENVIAR DECIDE" acima: `-ah-lp` quando um humano
+> manda, `-cl-lp` quando o Claudinho manda sozinho. O que esta seção acrescenta é o gatilho de uso.
+
 > Combinado em 2026-08-14. Alternativa ao link direto de checkout quando o lead se beneficia de ver a página de vendas completa antes de decidir (objeção não resolvida, quer entender melhor o produto, pediu prova social), sempre em envio manual, nunca pelo Claudinho ao vivo.
 
 A página de vendas (`https://www.contratos.fotografiaeomeunegocio.com.br`) já tem um script embutido que repassa o `sck` recebido na URL da própria página direto pro botão de checkout, sem precisar de nada além disso. **O link certo pra colar numa mensagem manual carrega só o `sck`, sem `utm_*` junto** (os `utm_*` são redundantes aqui: só alimentam GA4/Pixel da própria página, o log de pageview do Tracker não lê `utm_*`, e o `sck` sozinho já é o que decide a atribuição na tabela `vendas`):
