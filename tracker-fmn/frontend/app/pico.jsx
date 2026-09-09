@@ -79,6 +79,16 @@ const FERIADOS = {
 };
 const feriadoDe = iso => iso ? FERIADOS[iso.slice(5)] : null;
 
+/* Datas que atrapalham um pico sem serem feriado. Eleição rouba a atenção
+   do país inteiro e encarece o CPM, então vale ver antes de marcar. */
+const DATAS_ATENCAO = {
+  '2026-10-04': 'Eleição, 1º turno',
+  '2026-10-25': 'Eleição, 2º turno',
+  '2026-11-27': 'Black Friday',
+  '2026-11-30': 'Cyber Monday',
+};
+const atencaoDe = iso => DATAS_ATENCAO[iso] || null;
+
 /* ── Barra de progresso ─────────────────────────────────────────*/
 function Progresso({ feitas, total, cor = '#4ade80', altura = 6 }) {
   const p = total > 0 ? Math.round((feitas / total) * 100) : 0;
@@ -593,6 +603,188 @@ function BlocoPlanoMidia({ plano, onSalvar }) {
   );
 }
 
+
+/* ── Calendário ─────────────────────────────────────────────────
+   Mês a mês, com as tarefas nos dias. Marca feriado, datas de
+   atenção e o D0, para a decisão de data acontecer olhando o mapa.
+──────────────────────────────────────────────────────────────────*/
+const MESES = ['janeiro','fevereiro','março','abril','maio','junho',
+  'julho','agosto','setembro','outubro','novembro','dezembro'];
+
+function Calendario({ tarefas, d0, onAbrir }) {
+  const inicial = d0 ? d0.slice(0, 7) : hojeISO().slice(0, 7);
+  const [mes, setMes] = useState(inicial);
+  const [diaAberto, setDiaAberto] = useState(null);
+
+  const [ano, m] = mes.split('-').map(Number);
+  const primeiro = new Date(ano, m - 1, 1);
+  const totalDias = new Date(ano, m, 0).getDate();
+  const vazios = primeiro.getDay();
+
+  const porDia = useMemo(() => {
+    const g = {};
+    tarefas.forEach(t => { if (t.data_prevista) (g[t.data_prevista] ||= []).push(t); });
+    return g;
+  }, [tarefas]);
+
+  /* Só navega entre meses que têm tarefa, mais o mês do D0. */
+  const mesesComTarefa = useMemo(() => {
+    const set = new Set(tarefas.filter(t=>t.data_prevista).map(t => t.data_prevista.slice(0,7)));
+    if (d0) set.add(d0.slice(0,7));
+    return [...set].sort();
+  }, [tarefas, d0]);
+
+  const idx = mesesComTarefa.indexOf(mes);
+  const irPara = (delta) => {
+    const novo = mesesComTarefa[idx + delta];
+    if (novo) { setMes(novo); setDiaAberto(null); }
+  };
+
+  const hoje = hojeISO();
+  const celulas = [];
+  for (let i = 0; i < vazios; i++) celulas.push(null);
+  for (let d = 1; d <= totalDias; d++) {
+    celulas.push(`${ano}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`);
+  }
+
+  const tarefasDoDia = diaAberto ? (porDia[diaAberto] || []) : [];
+
+  return (
+    <SectionCard
+      title={
+        <span style={{ display:'flex', alignItems:'center', gap:10 }}>
+          <button onClick={()=>irPara(-1)} disabled={idx <= 0}
+            style={{ background:'none', border:'none', cursor: idx>0?'pointer':'default',
+              color: idx>0?'var(--text-2)':'var(--text-3)', opacity: idx>0?1:.35,
+              padding:2, display:'flex' }}>
+            <LucideIcon icon="chevron-left" size={16}/>
+          </button>
+          <span style={{ textTransform:'capitalize', minWidth:130 }}>
+            {MESES[m-1]} de {ano}
+          </span>
+          <button onClick={()=>irPara(1)} disabled={idx >= mesesComTarefa.length-1}
+            style={{ background:'none', border:'none',
+              cursor: idx<mesesComTarefa.length-1?'pointer':'default',
+              color: idx<mesesComTarefa.length-1?'var(--text-2)':'var(--text-3)',
+              opacity: idx<mesesComTarefa.length-1?1:.35, padding:2, display:'flex' }}>
+            <LucideIcon icon="chevron-right" size={16}/>
+          </button>
+        </span>
+      }
+      right={
+        <div style={{ display:'flex', gap:9, flexWrap:'wrap', alignItems:'center' }}>
+          {FASES.filter(f => tarefas.some(t => t.fase===f.id &&
+              t.data_prevista && t.data_prevista.slice(0,7)===mes)).map(f => (
+            <span key={f.id} style={{ display:'flex', alignItems:'center', gap:4,
+              fontSize:10, fontFamily:'Roboto,sans-serif', color:'var(--text-3)' }}>
+              <span style={{ width:6, height:6, borderRadius:99, background:f.cor }}/>
+              {f.label}
+            </span>
+          ))}
+        </div>
+      }
+    >
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', gap:4 }}>
+        {['dom','seg','ter','qua','qui','sex','sáb'].map(d => (
+          <div key={d} style={{ textAlign:'center', fontSize:10, fontWeight:700,
+            fontFamily:'Roboto,sans-serif', color:'var(--text-3)', padding:'2px 0',
+            textTransform:'uppercase', letterSpacing:.3 }}>{d}</div>
+        ))}
+
+        {celulas.map((iso, i) => {
+          if (!iso) return <div key={'v'+i}/>;
+          const lista = porDia[iso] || [];
+          const fer = feriadoDe(iso);
+          const ate = atencaoDe(iso);
+          const ehD0 = iso === d0;
+          const ehHoje = iso === hoje;
+          const feitas = lista.filter(t => t.status === 'feito').length;
+          const todasFeitas = lista.length > 0 && feitas === lista.length;
+
+          return (
+            <div key={iso}
+              onClick={()=>lista.length && setDiaAberto(diaAberto === iso ? null : iso)}
+              style={{ minHeight:74, padding:'5px 6px', borderRadius:8,
+                cursor: lista.length ? 'pointer' : 'default',
+                background: ehD0 ? 'rgba(248,113,113,.12)'
+                          : diaAberto === iso ? 'rgba(255,255,255,.07)'
+                          : lista.length ? 'rgba(255,255,255,.025)' : 'transparent',
+                border:'1px solid ' + (ehD0 ? 'rgba(248,113,113,.45)'
+                          : ehHoje ? 'rgba(56,189,248,.45)'
+                          : fer || ate ? 'rgba(251,146,60,.3)'
+                          : 'var(--app-border)'),
+                display:'flex', flexDirection:'column', gap:3, overflow:'hidden' }}>
+
+              <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between',
+                gap:3 }}>
+                <span style={{ fontSize:11, fontFamily:'Roboto,sans-serif',
+                  fontWeight: ehD0 || ehHoje ? 700 : 400,
+                  color: ehD0 ? '#f87171' : ehHoje ? '#38bdf8' : 'var(--text-2)',
+                  fontVariantNumeric:'tabular-nums' }}>
+                  {Number(iso.slice(8))}
+                </span>
+                {ehD0 && <span style={{ fontSize:8.5, fontWeight:700, color:'#f87171',
+                  fontFamily:'Roboto,sans-serif', letterSpacing:.3 }}>D0</span>}
+                {!ehD0 && (fer || ate) && (
+                  <span title={fer || ate} style={{ color:'#fb923c', display:'flex' }}>
+                    <LucideIcon icon="alert-triangle" size={9}/>
+                  </span>
+                )}
+                {todasFeitas && <LucideIcon icon="check" size={10} style={{ color:'#4ade80' }}/>}
+              </div>
+
+              {lista.slice(0, 3).map(t => {
+                const f = FASE_MAP[t.fase] || {};
+                return (
+                  <div key={t.id} title={t.titulo}
+                    style={{ fontSize:9, fontFamily:'Roboto,sans-serif', lineHeight:1.25,
+                      padding:'1px 3px', borderRadius:3, background: (f.cor||'#666') + '22',
+                      color: t.status === 'feito' ? 'var(--text-3)' : 'var(--text-2)',
+                      textDecoration: t.status === 'feito' ? 'line-through' : 'none',
+                      borderLeft:'2px solid ' + (f.cor || '#666'),
+                      whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>
+                    {t.titulo}
+                  </div>
+                );
+              })}
+              {lista.length > 3 && (
+                <div style={{ fontSize:8.5, fontFamily:'Roboto,sans-serif',
+                  color:'var(--text-3)', paddingLeft:3 }}>
+                  mais {lista.length - 3}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Detalhe do dia clicado */}
+      {diaAberto && tarefasDoDia.length > 0 && (
+        <div style={{ marginTop:12, paddingTop:11, borderTop:'1px solid var(--app-border)' }}>
+          <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:7 }}>
+            <span style={{ fontSize:12, fontFamily:'Roboto,sans-serif', fontWeight:700,
+              color:'var(--text-1)' }}>
+              {fmtData(diaAberto)}, {diaSemana(diaAberto)}
+            </span>
+            {feriadoDe(diaAberto) && <Badge tone="warn">{feriadoDe(diaAberto)}</Badge>}
+            {atencaoDe(diaAberto) && <Badge tone="warn">{atencaoDe(diaAberto)}</Badge>}
+            <span style={{ fontSize:11, color:'var(--text-3)',
+              fontFamily:'Roboto,sans-serif' }}>
+              {tarefasDoDia.length} tarefa{tarefasDoDia.length>1?'s':''}
+            </span>
+          </div>
+          <div style={{ display:'flex', flexDirection:'column', gap:1 }}>
+            {tarefasDoDia.map(t => (
+              <LinhaTarefa key={t.id} t={t} onToggle={onAbrir.toggle}
+                onAbrir={()=>{}} mostrarTrilha/>
+            ))}
+          </div>
+        </div>
+      )}
+    </SectionCard>
+  );
+}
+
 /* ── Tela principal ─────────────────────────────────────────────*/
 function PicoScreen() {
   const [projetos, setProjetos]   = useState([]);
@@ -701,6 +893,7 @@ function PicoScreen() {
   const diasParaD0 = projeto?.data_abertura ? diasEntre(hojeISO(), projeto.data_abertura) : null;
 
   const porGrupo = useMemo(() => {
+    if (visao === 'calendario') return {};
     const chave = visao === 'trilha' ? 'trilha' : 'fase';
     const g = {};
     visiveis.forEach(t => { (g[t[chave]] ||= []).push(t); });
@@ -803,7 +996,7 @@ function PicoScreen() {
           marginBottom:11 }}>
           <div style={{ display:'flex', gap:4, padding:3, borderRadius:8,
             background:'rgba(255,255,255,.04)' }}>
-            {[['fase','Por fase'],['trilha','Por trilha']].map(([id,lb]) => (
+            {[['fase','Por fase'],['trilha','Por trilha'],['calendario','Calendário']].map(([id,lb]) => (
               <button key={id} onClick={()=>setVisao(id)}
                 style={{ padding:'5px 11px', borderRadius:6, cursor:'pointer', border:'none',
                   fontSize:11.5, fontFamily:'Roboto,sans-serif', fontWeight:700,
@@ -831,6 +1024,10 @@ function PicoScreen() {
         </div>
 
         {/* Execução */}
+        {visao === 'calendario' ? (
+          <Calendario tarefas={visiveis} d0={projeto?.data_abertura}
+            onAbrir={{ toggle: alternarTarefa }}/>
+        ) : (
         <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
           {ordemGrupos.map(gid => {
             const lista = porGrupo[gid];
@@ -860,6 +1057,7 @@ function PicoScreen() {
             );
           })}
         </div>
+        )}
       </div>
     </div>
   );
