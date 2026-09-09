@@ -129,35 +129,55 @@ tecer mais cedo no texto, ou cortar.
 
 ## 8. Legenda de rede social, orgânico e pago
 
-> Combinado com Felipe em 09/09/2026, depois dos ORG 127 e 128. Vale para TODO conteúdo de rede
-> social, orgânico ou pago: legenda de post, carrossel, Reels, imagem estática e copy de anúncio.
+> Combinado com Felipe em 09/09/2026, nos ORG 127 e 128, e CORRIGIDO por ele no mesmo dia depois
+> da primeira tentativa. Vale para TODO conteúdo de rede social, orgânico ou pago: legenda de post,
+> carrossel, Reels, imagem estática e copy de anúncio.
 
-Artigo pede precisão de advogado. Legenda pede o Felipe do balcão, conversando. As duas vozes são
-dele, mas o registro muda, e o erro mais comum é escrever legenda com cadência de artigo.
+Artigo pede precisão de advogado. Legenda pede o Felipe conversando. As duas vozes são dele, e o
+erro mais comum é escrever legenda com cadência de artigo.
 
-**Como escreve na legenda:**
+### "Sem tanta pontuação" quer dizer MENOS PONTO FINAL, não frase curta
 
-- **Menos pontuação.** Frase curta, direta, ponto final. Cortar a subordinada em vez de encaixá-la
-  com vírgula. Onde o artigo faria uma frase-rio costurada, a legenda faz três frases secas.
-- **Mais informal.** Contração à vontade (tá, pra, tô, cê quando couber), gíria natural, o jeito
-  de quem fala e não de quem redige.
-- **Humor inteligente, nunca piada pronta.** A graça vem do detalhe reconhecível e específico:
-  a pasta chamada "final_final_2", o áudio que entra com barulho de trânsito, a frase que
-  importava sendo a mais banal de todas. Detalhe específico demais para ter sido inventado é o
-  que faz o leitor rir e se ver ali.
-- **Sacada que puxa leitura.** Abertura que promete um reconhecimento, não uma tese. A primeira
-  linha existe para o cara parar de rolar.
-- **Fecho que gera ação.** Pergunta, marcação, confissão coletiva. "Chuta aí embaixo quantas
-  entregas estão te esperando. Eu prometo não julgar" funciona. "Comente o que achou" não.
-- **Ritmo de fala.** Depois de escrever, ler em voz alta mentalmente. Se soar institucional,
-  soltar mais.
+Este é o ponto que eu errei na primeira versão e que precisa ficar cravado: ele **emenda com
+vírgula**, não corta com ponto. Excesso de ponto final é o que dá cara de IA, porque fragmenta a
+fala em pedacinhos que ninguém fala assim.
 
-**O que não muda:** todas as proibições da seção 1 continuam valendo aqui, sem exceção. Nada de
-`, e` ligando orações, travessão, exclamação, vírgula entre sujeito e verbo. Ponto seguido de E
-continua raro.
+| Errado, fragmentado | Certo, como ele escreve |
+|---|---|
+| A gente entra nessa pelo clique. Pela luz que aparece do nada. Pelo pai que chora. | A gente entra nessa pelo clique, pela luz que aparece do nada, pelo pai que chora |
+| Você manda uma pergunta de uma linha. Ele responde com sete áudios. | Você manda uma pergunta de uma linha, ele responde com sete áudios |
+| Ele não tá te enrolando. Tá dirigindo. Só que o seu orçamento fica pendurado nisso. | Ele não tá te enrolando, tá dirigindo, com o filho no banco de trás, resolvendo a vida dele, só que o seu orçamento fica pendurado nisso |
 
-**O que não fazer:** encher de emoji, forçar gíria que ele não usa, virar coach, ou escrever
-"parágrafo de artigo com quebra de linha" e chamar de legenda.
+**Régua medida nos textos que ele mesmo reescreveu:**
+
+- **11 a 14 palavras por frase**, em média. Abaixo de 10 está fragmentado demais.
+- **4 a 7 vírgulas** num texto de legenda. Se tiver 1 ou 2, faltou emenda.
+- Enumeração corre com vírgula até o fim, sem virar frases separadas.
+
+Depois de escrever, contar: número de palavras dividido por número de frases. Se der menos que 10,
+juntar frases com vírgula antes de entregar.
+
+### O resto do registro
+
+- **Informal de verdade.** Contração à vontade (tá, pra, tô), gíria natural, jeito de quem fala.
+- **Risada escrita quando couber.** Ele usa "kkkkkk" no fim de tirada, principalmente no fecho.
+- **Humor pelo detalhe específico, nunca piada pronta.** A pasta "final_final_2", o áudio com
+  barulho de trânsito, a frase que importava sendo a mais banal de todas. Detalhe específico
+  demais para ter sido inventado é o que faz o leitor rir e se ver ali.
+- **Expressão de criança e de intimidade.** "promessa de dedinho: não vou julgar" no lugar de
+  "prometo não julgar". O jeito torto é mais dele que o jeito correto.
+- **Sacada que puxa leitura.** A primeira linha existe para o cara parar de rolar, e promete um
+  reconhecimento, não uma tese.
+- **Fecho que gera ação.** Pergunta, marcação, confissão coletiva. "Marca aqui o fotógrafo que tem
+  um cliente assim, ou assume, se o cliente for você kkkkkk" funciona. "Comente o que achou" não.
+
+**O que não muda:** todas as proibições da seção 1 continuam valendo. Nada de `, e` ligando
+orações, travessão, exclamação, vírgula entre sujeito e verbo. Ponto seguido de E continua raro.
+Repare que vírgula emendando orações SEM conjunção é o padrão dele, e sempre foi permitida na
+seção 1. O proibido é a vírgula seguida de "e".
+
+**O que não fazer:** encher de emoji, forçar gíria que ele não usa, virar coach, ou picar o texto
+em frases de cinco palavras achando que isso é ser informal.
 
 ---
 
