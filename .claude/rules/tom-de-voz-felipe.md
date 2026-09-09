@@ -127,7 +127,41 @@ tecer mais cedo no texto, ou cortar.
 
 ---
 
-## 8. Reels
+## 8. Legenda de rede social, orgânico e pago
+
+> Combinado com Felipe em 09/09/2026, depois dos ORG 127 e 128. Vale para TODO conteúdo de rede
+> social, orgânico ou pago: legenda de post, carrossel, Reels, imagem estática e copy de anúncio.
+
+Artigo pede precisão de advogado. Legenda pede o Felipe do balcão, conversando. As duas vozes são
+dele, mas o registro muda, e o erro mais comum é escrever legenda com cadência de artigo.
+
+**Como escreve na legenda:**
+
+- **Menos pontuação.** Frase curta, direta, ponto final. Cortar a subordinada em vez de encaixá-la
+  com vírgula. Onde o artigo faria uma frase-rio costurada, a legenda faz três frases secas.
+- **Mais informal.** Contração à vontade (tá, pra, tô, cê quando couber), gíria natural, o jeito
+  de quem fala e não de quem redige.
+- **Humor inteligente, nunca piada pronta.** A graça vem do detalhe reconhecível e específico:
+  a pasta chamada "final_final_2", o áudio que entra com barulho de trânsito, a frase que
+  importava sendo a mais banal de todas. Detalhe específico demais para ter sido inventado é o
+  que faz o leitor rir e se ver ali.
+- **Sacada que puxa leitura.** Abertura que promete um reconhecimento, não uma tese. A primeira
+  linha existe para o cara parar de rolar.
+- **Fecho que gera ação.** Pergunta, marcação, confissão coletiva. "Chuta aí embaixo quantas
+  entregas estão te esperando. Eu prometo não julgar" funciona. "Comente o que achou" não.
+- **Ritmo de fala.** Depois de escrever, ler em voz alta mentalmente. Se soar institucional,
+  soltar mais.
+
+**O que não muda:** todas as proibições da seção 1 continuam valendo aqui, sem exceção. Nada de
+`, e` ligando orações, travessão, exclamação, vírgula entre sujeito e verbo. Ponto seguido de E
+continua raro.
+
+**O que não fazer:** encher de emoji, forçar gíria que ele não usa, virar coach, ou escrever
+"parágrafo de artigo com quebra de linha" e chamar de legenda.
+
+---
+
+## 9. Reels
 
 Roteiro em pegada natural de fala, nunca de texto lido em voz alta. Frases curtas, contrações
 ("tava", "tá"), pausas reais, jeito de contar caso. Depois de escrever, reler em voz alta
@@ -135,14 +169,14 @@ mentalmente: se soar institucional, soltar mais.
 
 ---
 
-## 9. Rotina obrigatória antes de escrever artigo
+## 10. Rotina obrigatória antes de escrever artigo
 
 Ler o texto real do último artigo publicado, puxando direto do Supabase, e não apenas confiar em
 resumo ou memória. A memória é resumo, o texto publicado é a cadência real dele.
 
 ---
 
-## 10. Onde mais isso vive
+## 11. Onde mais isso vive
 
 Esta regra é a versão operacional. O histórico completo de correções feitas por ele, artigo a artigo,
 está na memória do projeto em `user_tom-de-voz-artigos.md`. Quando surgir correção nova, atualizar
