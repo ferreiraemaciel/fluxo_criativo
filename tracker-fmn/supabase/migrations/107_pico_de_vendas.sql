@@ -82,6 +82,23 @@ create table if not exists pico_projetos (
   -- em vez do ticket do produto. Sem isso a regra G5 pausa anúncio saudável.
   ticket            numeric,
   cpa_limite        numeric,
+  -- Plano de midia: os parametros da planilha de planejamento do retiro.
+  -- Fica em jsonb porque sao muitos campos de calculo e eles evoluem.
+  -- Chaves: ticket_liquido, taxa_conversao, cpl_meta, dias_captacao,
+  -- dias_remarketing, imposto_meta, e o rateio por etapa em pct_*.
+  plano_midia       jsonb not null default '{
+    "ticket_liquido": null,
+    "vendas_meta": null,
+    "taxa_conversao": 0.05,
+    "cpl_meta": null,
+    "dias_captacao": 21,
+    "dias_remarketing": 20,
+    "imposto_meta": 0.0,
+    "pct_antecipacao": 0.10,
+    "pct_captacao": 0.45,
+    "pct_relacionamento": 0.15,
+    "pct_remarketing": 0.30
+  }'::jsonb,
   observacoes       text,
   criado_em         timestamptz not null default now(),
   atualizado_em     timestamptz not null default now(),
@@ -95,6 +112,8 @@ comment on column pico_projetos.data_abertura is
   'D0. Âncora de todas as datas do projeto. Mudar aqui recalcula as tarefas não travadas.';
 comment on column pico_projetos.cpa_limite is
   'CPA aceitável dos anúncios deste pico. Sobrepõe o limite por produto das regras G1/G5.';
+comment on column pico_projetos.plano_midia is
+  'Parametros do plano de midia. Os percentuais por etapa sao estimativa nossa, nao os da planilha original do retiro, e ficam editaveis na tela.';
 
 -- ----------------------------------------------------------------------------
 -- 4. TAREFAS DO PROJETO: cópia editável do template
