@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Teste — Análise de Campanhas</title>
+  <link rel="stylesheet" href="app/tokens.css?v=2" />
+  <style>body{background:var(--app-bg);color:var(--text-1)}#root{height:100vh}</style>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js"></script>
+</head>
+<body>
+  <div id="root"></div>
+  <script src="app/supabase.js?v=26"></script>
+  <script type="text/babel" src="app/shared.jsx?v=55"></script>
+  <script type="text/babel" src="app/trafego.jsx?v=72"></script>
+  <script type="text/babel">
+    const { createRoot } = ReactDOM;
+    createRoot(document.getElementById('root')).render(<window.TrafficScreen/>);
+    if (window.lucide) window.lucide.createIcons();
+  </script>
+</body>
+</html>

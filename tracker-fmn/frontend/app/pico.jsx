@@ -114,7 +114,8 @@ async function criarCardDaTarefa(tarefa, projeto) {
     const { error } = await window.db.from('conteudo_organico').insert({
       tema: tarefa.titulo,
       plataforma: 'Reels',
-      status: 'Fazer',
+      // O Organico nao tem coluna "Fazer": a primeira e "Fazendo".
+      status: 'Fazendo',
       pico_projeto_id: projeto.id,
     });
     if (error) throw new Error(error.message);

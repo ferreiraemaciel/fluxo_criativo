@@ -438,11 +438,46 @@ Se o lead pedir pra parcelar no boleto ou no Pix (parcelamento fora do cartão),
 
 **Link especial de parcelamento (uso exclusivo humano).** Existe um segundo link de checkout do MCV, com o parâmetro `off=2zbq8e15`, que libera a condição de parcelamento nativa da Hotmart (boleto/pix parcelado) — é a resposta pro handoff acima. Esse link **nunca** deve ser enviado pelo Claudinho, só por um humano depois do handoff. Vive em `frontend/app/conversas.jsx` como `LINK_CHECKOUT_MCV_PARCELADO`, com `sck=whatsapp-ah` (mesma tag de rastreio de atendimento humano do link padrão), disponível como mensagem pronta ("Link com parcelado Hotmart") no painel de Conversas. O Claudinho não tem acesso a esse arquivo, mas se um dia esse link precisar aparecer em qualquer lugar que o Claudinho lê (`whatsapp-ia-prompt.ts`, `whatsapp-ia.ts`), a restrição continua valendo.
 
-## Claudinho — tag de rastreio do link de checkout ao rascunhar mensagem pra envio manual (treino)
+## TAG DE RASTREIO DO LINK DE CHECKOUT — QUEM APERTA ENVIAR DECIDE (REGRA GLOBAL)
 
-> Combinado em 2026-07-31.
+> Combinada em 2026-07-31, generalizada por Felipe em 2026-09-09 depois de eu entregar um rascunho
+> com a tag errada. Aplica-se a QUALQUER link de checkout ou de página de vendas que eu monte, em
+> qualquer conversa, skill ou agente, presente e futuro. Não é regra de uma skill só.
 
-O link de checkout padrão do MCV que vive em `whatsapp-ia-prompt.ts` usa `sck=whatsapp-cl` (rastreio do Claudinho, IA ao vivo). Isso está correto pro prompt, porque ali é sempre a IA que manda. **Mas quando eu (Claude Code) rascunho uma mensagem com esse link durante uma sessão de `/tracker-treinar-claudinho` pra Felipe ou Amanda colarem e mandarem manualmente no WhatsApp**, isso não é a IA ao vivo mandando, é atendimento humano, então o rastreio certo é `sck=whatsapp-ah`, não `whatsapp-cl`. Trocar o final da URL antes de entregar o rascunho: `https://pay.hotmart.com/W87258826R?checkoutMode=10&sck=whatsapp-ah`. O `whatsapp-cl` continua reservado só pro link que a função `whatsapp-ia.ts` manda sozinha, sem intervenção humana.
+**A pergunta é uma só, e ela não tem exceção: quem vai apertar enviar?**
+
+| Quem envia | Tag | Quando |
+|---|---|---|
+| Um humano (Felipe, Amanda, qualquer pessoa do time) | `whatsapp-ah` | Todo link que eu rascunho pra alguém copiar e mandar |
+| O Claudinho sozinho, sem ninguém no meio | `whatsapp-cl` | Só o link que a função `whatsapp-ia.ts` dispara por conta própria |
+
+**Regra dura:** todo link que eu escrevo numa mensagem pra um humano copiar e colar leva `-ah`,
+sempre, sem precisar pedir. Não importa a skill, o comando, a conversa ou o motivo. Se eu montei o
+texto e outra pessoa vai mandar, é atendimento humano.
+
+**Erro real que gerou a generalização:** em 09/09/2026 rascunhei uma mensagem pro lead Shadow com
+`sck=whatsapp-cl`, porque copiei o link direto do `whatsapp-ia-prompt.ts` (fonte certa pro texto,
+errada pro rastreio) e porque a versão antiga desta regra falava só de `/tracker-treinar-claudinho`.
+Felipe teve que pedir a troca à mão. A fonte do texto nunca decide a tag, quem envia decide.
+
+**Os quatro links, já com a tag certa de cada lado:**
+
+| Destino | Humano envia | Claudinho envia |
+|---|---|---|
+| Checkout MCV | `https://pay.hotmart.com/W87258826R?checkoutMode=10&sck=whatsapp-ah` | `...&sck=whatsapp-cl` |
+| Página de vendas MCV | `https://www.contratos.fotografiaeomeunegocio.com.br/?sck=whatsapp-ah-lp` | `...?sck=whatsapp-cl-lp` |
+
+O sufixo `-lp` separa quem recebeu a página de vendas de quem recebeu o link direto de pagamento,
+é o dado que mostra qual dos dois converte melhor. O `sck` tem limite de 30 caracteres na Hotmart.
+
+**Só do humano, o Claudinho nunca manda:** o link com `off=2zbq8e15`, que libera o parcelamento
+nativo da Hotmart (boleto/pix parcelado). Vive em `frontend/app/conversas.jsx` como
+`LINK_CHECKOUT_MCV_PARCELADO` e está no painel de Conversas como mensagem pronta ("Link com
+parcelado Hotmart"). Se um dia esse link precisar aparecer em algum arquivo que o Claudinho lê
+(`whatsapp-ia-prompt.ts`, `whatsapp-ia.ts`), a proibição continua valendo.
+
+**Verificação antes de entregar qualquer rascunho com link:** reler a URL e conferir se a tag bate
+com quem vai enviar. Se fui eu que escrevi o texto pra outra pessoa mandar, é `-ah`.
 
 ## Link da página de vendas do MCV pra venda orgânica no WhatsApp (atendimento humano)
 

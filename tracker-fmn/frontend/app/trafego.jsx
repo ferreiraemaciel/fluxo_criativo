@@ -2095,6 +2095,295 @@ function SubstituirModal({ adNum, defaultAdsetId, defaultAdsetName, defaultCampI
   );
 }
 
+/* ── Análise de Campanhas ──────────────────────────────────────────
+   Botão "Analisar campanhas" chama a Edge Function analise-campanhas
+   (cálculo 100% determinístico, sem IA, ver o arquivo da function pra
+   detalhe de cada regra) e renderiza o diagnóstico aqui embaixo da
+   tabela de criativos, no mesmo design system do resto do app. Nada
+   de HTML solto nem PDF: é uma seção nativa da tela.
+------------------------------------------------------------------*/
+const GARGALO_INFO = {
+  saudavel:          { label: 'Saudável',           tone: 'success' },
+  gargalo_criativo:  { label: 'Criativo',            tone: 'danger'  },
+  gargalo_pagina:    { label: 'Página',              tone: 'danger'  },
+  gargalo_conversao: { label: 'Oferta/copy',         tone: 'danger'  },
+  gargalo_checkout:  { label: 'Checkout',            tone: 'danger'  },
+  sem_dado:          { label: 'Sem dado',            tone: 'default' },
+};
+
+function MiniTable({ cols, rows, empty }) {
+  if (!rows || rows.length === 0) {
+    return <div style={{ fontSize:12, color:'var(--text-3)', fontFamily:'Roboto,sans-serif', padding:'8px 0' }}>{empty}</div>;
+  }
+  return (
+    <div style={{ overflowX:'auto' }}>
+      <table style={{ width:'100%', borderCollapse:'collapse', fontSize:12.5, fontFamily:'Roboto,sans-serif' }}>
+        <thead>
+          <tr>
+            {cols.map(c => (
+              <th key={c.key} style={{ textAlign: c.right ? 'right' : 'left', padding:'6px 10px',
+                fontSize:10, fontWeight:700, letterSpacing:'0.06em', textTransform:'uppercase',
+                color:'var(--text-3)', borderBottom:'1px solid var(--app-border)', whiteSpace:'nowrap' }}>
+                {c.label}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row, i) => (
+            <tr key={i}>
+              {cols.map(c => (
+                <td key={c.key} style={{ textAlign: c.right ? 'right' : 'left', padding:'7px 10px',
+                  borderBottom:'1px solid var(--app-border)', color:'var(--text-2)', whiteSpace: c.wrap ? 'normal' : 'nowrap' }}>
+                  {c.render ? c.render(row) : row[c.key]}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function AnaliseCampanhas() {
+  const [aberto, setAberto]         = useState(false);
+  const [carregando, setCarregando] = useState(false);
+  const [erro, setErro]             = useState(null);
+  const [dados, setDados]           = useState(null);
+
+  const rodar = async () => {
+    setCarregando(true); setErro(null); setAberto(true);
+    try {
+      const r = await fetch(`${window.db.supabaseUrl}/functions/v1/analise-campanhas`, {
+        method: 'POST',
+        headers: { 'Content-Type':'application/json', 'Authorization':`Bearer ${window.db.supabaseKey}` },
+      });
+      const j = await r.json();
+      if (j.error) throw new Error(j.error);
+      setDados(j);
+    } catch (e) { setErro(e.message || String(e)); }
+    setCarregando(false);
+  };
+
+  return (
+    <div style={{ background:'var(--app-surface)', border:'1px solid var(--app-border)',
+      borderRadius:14, flexShrink:0, overflow:'hidden' }}>
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'12px 18px' }}>
+        <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+          <LucideIcon icon="sparkles" size={15} color="var(--fmn-gold)"/>
+          <span style={{ fontSize:13, fontFamily:'Roboto,sans-serif', fontWeight:700, color:'var(--text-1)' }}>
+            Análise de campanhas
+          </span>
+          {dados && (
+            <span style={{ fontSize:11, color:'var(--text-3)', fontFamily:'Roboto,sans-serif' }}>
+              gerado em {dados.gerado_em_brasilia}
+              {dados.frescor_dos_dados?.pode_estar_desatualizado && (
+                <span style={{ color:'var(--clr-warn)', marginLeft:6 }}>· dado pode estar desatualizado</span>
+              )}
+            </span>
+          )}
+        </div>
+        <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+          <Btn variant="secondary" size="sm" icon={carregando ? 'loader' : 'sparkles'} onClick={rodar} disabled={carregando}>
+            {carregando ? 'Analisando...' : dados ? 'Atualizar análise' : 'Analisar campanhas'}
+          </Btn>
+          {dados && (
+            <button onClick={() => setAberto(v => !v)}
+              style={{ display:'flex', alignItems:'center', justifyContent:'center', width:28, height:28,
+                borderRadius:7, background:'rgba(255,255,255,.05)', color:'var(--text-2)' }}>
+              <LucideIcon icon={aberto ? 'chevron-up' : 'chevron-down'} size={15}/>
+            </button>
+          )}
+        </div>
+      </div>
+
+      {aberto && erro && (
+        <div style={{ padding:'0 18px 16px', fontSize:12.5, color:'var(--clr-neg)', fontFamily:'Roboto,sans-serif' }}>
+          {erro}
+        </div>
+      )}
+
+      {aberto && dados && (
+        <div style={{ maxHeight:'55vh', overflow:'auto', padding:'0 18px 18px', display:'flex', flexDirection:'column', gap:18 }}>
+
+          {/* Resumo executivo */}
+          {Object.entries(dados.resumo_por_produto || {}).map(([produto, r]) => (
+            <div key={produto}>
+              <div style={{ fontSize:11, fontWeight:700, color:'var(--fmn-gold)', fontFamily:'Roboto,sans-serif',
+                letterSpacing:'0.06em', textTransform:'uppercase', marginBottom:8 }}>{produto}</div>
+              <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(150px,1fr))', gap:10 }}>
+                <CardKPI label="Ativos" value={r.ativos}/>
+                <CardKPI label="Gasto 5d" value={window.fmtBRL(r.gasto_5d)}/>
+                <CardKPI label="Vendas 5d" value={r.vendas_5d}/>
+                <CardKPI label="Histórico (ativos)" value={window.fmtBRL(r.gasto_total_ativos)} delta={`${r.vendas_total_ativos} vendas`}/>
+                <CardKPI label="Perto de pausar" value={r.perto_de_pausar.length}
+                  delta={r.perto_de_pausar.length ? 'G1/G5' : 'nenhum agora'}/>
+              </div>
+            </div>
+          ))}
+          {Object.keys(dados.resumo_por_produto || {}).length === 0 && (
+            <div style={{ fontSize:12.5, color:'var(--text-3)', fontFamily:'Roboto,sans-serif' }}>Nenhum anúncio ativo hoje.</div>
+          )}
+
+          {/* Radar de regras */}
+          <SectionCard title="Radar de regras (G1 a G7)" noPad>
+            <div style={{ padding:'0 0 6px' }}>
+              <div style={{ fontSize:11.5, fontWeight:700, color:'var(--text-2)', fontFamily:'Roboto,sans-serif', padding:'8px 18px 0' }}>
+                Pendentes em anúncio ativo
+              </div>
+              <div style={{ padding:'0 18px' }}>
+                <MiniTable
+                  cols={[{ key:'ads_numero', label:'ADS' }, { key:'regra_codigo', label:'Regra' }, { key:'mensagem', label:'Mensagem', wrap:true }]}
+                  rows={dados.radar_regras.pendentes_em_ads_ativos}
+                  empty="Nenhum alerta pendente em anúncio ativo."
+                />
+              </div>
+              {dados.radar_regras.pendentes_orfaos_count > 0 && (
+                <div style={{ fontSize:11, color:'var(--text-3)', fontFamily:'Roboto,sans-serif', padding:'6px 18px 0' }}>
+                  {dados.radar_regras.pendentes_orfaos_count} alertas de anúncios que já saíram do ar (não exigem ação).
+                </div>
+              )}
+              <div style={{ fontSize:11.5, fontWeight:700, color:'var(--text-2)', fontFamily:'Roboto,sans-serif', padding:'14px 18px 0' }}>
+                Pausas automáticas, últimos 14 dias
+              </div>
+              <div style={{ padding:'0 18px' }}>
+                <MiniTable
+                  cols={[
+                    { key:'created_at', label:'Data', render: r => r.created_at.slice(0,10) },
+                    { key:'ads_numero', label:'ADS', render: r => r.ads_numero ?? <Badge tone="warning">não identificado</Badge> },
+                    { key:'regra_codigo', label:'Regra' },
+                    { key:'mensagem', label:'Mensagem', wrap:true },
+                  ]}
+                  rows={dados.radar_regras.resolvidos_14d}
+                  empty="Nenhuma pausa automática nos últimos 14 dias."
+                />
+              </div>
+            </div>
+          </SectionCard>
+
+          {/* Funil + leitura VTSD */}
+          <SectionCard title="Funil (janela de 7 dias) + leitura VTSD" noPad>
+            <div style={{ padding:'0 18px 8px' }}>
+              <MiniTable
+                cols={[
+                  { key:'numero', label:'ADS' },
+                  { key:'titulo', label:'Título', wrap:true },
+                  { key:'produto', label:'Produto' },
+                  { key:'ctr_7d', label:'CTR', right:true, render: r => r.ctr_7d != null ? `${(r.ctr_7d*100).toFixed(2)}%` : '—' },
+                  { key:'gargalo', label:'Gargalo', render: r => {
+                      const info = GARGALO_INFO[r.gargalo] || { label:r.gargalo, tone:'default' };
+                      return <Badge tone={info.tone}>{info.label}</Badge>;
+                    } },
+                  { key:'gargalo_detalhe', label:'Leitura', wrap:true },
+                ]}
+                rows={dados.funil}
+                empty="Sem anúncio ativo pra avaliar."
+              />
+            </div>
+            <div style={{ padding:'8px 18px 4px', fontSize:11, color:'var(--text-3)', fontFamily:'Roboto,sans-serif' }}>
+              {dados.leitura_vtsd.aviso_hot_cold}
+            </div>
+          </SectionCard>
+
+          {/* Fadiga x escala */}
+          <SectionCard title="Fadiga x candidatos a escalar" noPad>
+            <div style={{ padding:'0 18px' }}>
+              <div style={{ fontSize:11.5, fontWeight:700, color:'var(--text-2)', fontFamily:'Roboto,sans-serif', padding:'8px 0 0' }}>Fadiga</div>
+              <MiniTable
+                cols={[
+                  { key:'numero', label:'ADS' }, { key:'titulo', label:'Título', wrap:true }, { key:'produto', label:'Produto' },
+                  { key:'frequencia_7d', label:'Freq.', right:true, render: r => r.frequencia_7d.toFixed(1) },
+                ]}
+                rows={dados.fadiga}
+                empty="Nenhum candidato a fadiga agora."
+              />
+              <div style={{ fontSize:11.5, fontWeight:700, color:'var(--text-2)', fontFamily:'Roboto,sans-serif', padding:'10px 0 0' }}>Candidatos a escala</div>
+              <MiniTable
+                cols={[
+                  { key:'numero', label:'ADS' }, { key:'titulo', label:'Título', wrap:true }, { key:'produto', label:'Produto' },
+                  { key:'cpa_historico', label:'CPA histórico', right:true, render: r => window.fmtBRL(r.cpa_historico) },
+                  { key:'vendas_total', label:'Vendas', right:true },
+                ]}
+                rows={dados.candidatos_escala}
+                empty="Nenhum candidato a escala agora."
+              />
+            </div>
+          </SectionCard>
+
+          {/* Lifecycle */}
+          <SectionCard title="Lifecycle" noPad>
+            <div style={{ padding:'0 18px' }}>
+              <div style={{ fontSize:11.5, fontWeight:700, color:'var(--text-2)', fontFamily:'Roboto,sans-serif', padding:'8px 0 0' }}>
+                Ativos rodando há 45+ dias (ad_id atual)
+              </div>
+              <MiniTable
+                cols={[{ key:'numero', label:'ADS' }, { key:'titulo', label:'Título', wrap:true }, { key:'produto', label:'Produto' },
+                  { key:'dias_rodando', label:'Dias', right:true }]}
+                rows={dados.lifecycle.ativos_rodando_45d_ou_mais}
+                empty="Nenhum ativo há 45+ dias sem refresh."
+              />
+              <div style={{ fontSize:11.5, fontWeight:700, color:'var(--text-2)', fontFamily:'Roboto,sans-serif', padding:'10px 0 0' }}>
+                Campeões atuais ({dados.lifecycle.campeoes_atuais.length})
+              </div>
+              <MiniTable
+                cols={[{ key:'numero', label:'ADS' }, { key:'titulo', label:'Título', wrap:true }, { key:'produto', label:'Produto' },
+                  { key:'cpa_historico', label:'CPA histórico', right:true, render: r => window.fmtBRL(r.cpa_historico) },
+                  { key:'vendas_total', label:'Vendas', right:true }]}
+                rows={[...dados.lifecycle.campeoes_atuais].sort((a,b) => (a.cpa_historico ?? 9e9) - (b.cpa_historico ?? 9e9)).slice(0,10)}
+                empty="Nenhum campeão hoje."
+              />
+              <div style={{ fontSize:11.5, fontWeight:700, color:'var(--text-2)', fontFamily:'Roboto,sans-serif', padding:'10px 0 0' }}>
+                Arquivados reativáveis ({dados.lifecycle.arquivados_reativaveis.length})
+              </div>
+              <MiniTable
+                cols={[{ key:'numero', label:'ADS' }, { key:'titulo', label:'Título', wrap:true }, { key:'produto', label:'Produto' },
+                  { key:'tag', label:'Tag' },
+                  { key:'cpa_historico', label:'CPA histórico', right:true, render: r => window.fmtBRL(r.cpa_historico) }]}
+                rows={[...dados.lifecycle.arquivados_reativaveis].sort((a,b) => (a.cpa_historico ?? 9e9) - (b.cpa_historico ?? 9e9)).slice(0,10)}
+                empty="Nenhum arquivado reativável."
+              />
+            </div>
+          </SectionCard>
+
+          {/* Orçamento e receita real */}
+          <SectionCard title={`Orçamento e receita real (janela ${dados.orcamento_receita.janela_vendas})`} noPad>
+            <div style={{ padding:'0 18px 12px' }}>
+              {Object.entries(dados.orcamento_receita.por_produto || {}).map(([produto, p]) => (
+                <div key={produto} style={{ marginBottom:12 }}>
+                  <div style={{ fontSize:11, fontWeight:700, color:'var(--fmn-gold)', fontFamily:'Roboto,sans-serif',
+                    letterSpacing:'0.06em', textTransform:'uppercase', margin:'10px 0 6px' }}>
+                    {produto} ({p.ativos_hoje} ativo{p.ativos_hoje === 1 ? '' : 's'} hoje)
+                  </div>
+                  <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(150px,1fr))', gap:10 }}>
+                    <CardKPI label="Ritmo diário (5d)" value={window.fmtBRL(p.media_diaria_5d)}/>
+                    <CardKPI label="Projeção resto do mês" value={window.fmtBRL(p.projecao_resto_do_mes)}
+                      delta={`${dados.orcamento_receita.dias_restantes_no_mes} dias restantes`}/>
+                    <CardKPI label="Receita líquida" value={window.fmtBRL(p.receita_liquida_janela)} delta={`${p.n_vendas_janela} vendas`}/>
+                    <CardKPI label="Gasto estimado, mesma janela" value={window.fmtBRL(p.gasto_estimado_mesma_janela)}/>
+                    <CardKPI label="ROAS, vida dos ativos" value={p.roas_vida_ativos != null ? `${p.roas_vida_ativos}x` : '—'}
+                      delta={`${window.fmtBRL(p.receita_vida_ativos)} / ${window.fmtBRL(p.gasto_vida_ativos)}`}/>
+                  </div>
+                  <div style={{ fontSize:11, color:'var(--text-3)', fontFamily:'Roboto,sans-serif', marginTop:6 }}>
+                    {p.aviso_gasto_estimado}
+                    {p.vendas_total_vida_ativos_meta !== p.n_vendas_vida_ativos_hotmart && (
+                      <> · Meta reporta {p.vendas_total_vida_ativos_meta} vendas pra esses ativos, a Hotmart aprovou {p.n_vendas_vida_ativos_hotmart} com esse ADS atribuído.</>
+                    )}
+                  </div>
+                </div>
+              ))}
+              <div style={{ fontSize:11.5, color:'var(--text-3)', fontFamily:'Roboto,sans-serif', marginTop:6 }}>
+                Receita sem atribuição a anúncio, mesma janela: <b style={{ color:'var(--text-2)' }}>{window.fmtBRL(dados.orcamento_receita.receita_sem_atribuicao_na_janela)}</b> (orgânico, direto, WhatsApp).
+              </div>
+            </div>
+          </SectionCard>
+
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ── TrafficScreen ──────────────────────────────────────────────*/
 function TrafficScreen() {
   const [mostrarDesativados, setMostrarDesativados] = useState(false);
@@ -2548,6 +2837,9 @@ function TrafficScreen() {
             Ticket ref. {window.fmtBRL(TICKET)} · limite CPA {window.fmtBRL(CPA_LIMITE)}
           </span>
         </div>
+
+        {/* Análise de Campanhas */}
+        <AnaliseCampanhas/>
 
         <div style={{ height:16 }}/>
       </div>

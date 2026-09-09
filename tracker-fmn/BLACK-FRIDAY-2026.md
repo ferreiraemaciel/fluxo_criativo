@@ -2168,6 +2168,37 @@ E logo depois: "se você for aluno de qualquer um dos nossos cursos, um desconto
 
 ---
 
+# PARTE 14. PENDÊNCIA TÉCNICA: O CPA LIMITE DO PICO
+
+> Registrado em 09/09/2026. **Resolver só depois que a oferta estiver definida.**
+
+## 14.1 O problema
+
+As regras G1 e G5 do Tracker pausam automaticamente qualquer anúncio cujo CPA passe do limite do produto. Hoje esses limites são R$ 207,90 para o MCV e R$ 277,90 para o Blindagem, ambos 70% do ticket.
+
+Um anúncio de pico vende outra coisa, com outro ticket. Se a oferta do pico custar mais que o produto avulso, o CPA aceitável é maior, e **a automação vai pausar sozinha os anúncios mais saudáveis da campanha**, sem avisar. O playbook coloca o teto em 50% do ticket da oferta especial.
+
+## 14.2 Por que está parado
+
+A oferta ainda não existe. Não se sabe o preço, e nem se vai ser um combo. Preencher um CPA limite agora seria transformar um chute em decisão, e ele ficaria valendo escondido no banco lá em novembro.
+
+**O campo `pico_projetos.cpa_limite` está deliberadamente vazio.** Enquanto estiver, tudo segue pelo limite do produto, como sempre foi.
+
+## 14.3 O que fazer quando a oferta estiver definida
+
+1. Preencher `ticket` e `cpa_limite` do projeto. A referência do playbook é 50% do ticket da oferta
+2. Ajustar `verificarRegraG1` e `verificarRegraG5` em `supabase/functions/meta-sync/index.ts` para, quando o ADS tiver `pico_projeto_id`, usar o limite do projeto em vez do limite do produto
+3. Redeployar o `meta-sync`
+4. Conferir num ADS de teste antes de deixar rodando sozinho
+
+**Cuidado necessário:** o `meta-sync` roda quatro vezes por dia e pausa anúncio de verdade. Mudança ali não é de passagem, e o gate de confirmação vale.
+
+## 14.4 O que fica valendo até lá
+
+Anúncio de pico continua sendo julgado pelo limite do produto. Se a oferta do pico for mais cara, isso vai parecer rigoroso demais, e o sintoma será anúncio bom sendo pausado. **Se isso começar a acontecer em novembro, é esta pendência.**
+
+---
+
 # PARTE 8. RISCOS E DECISÕES EM ABERTO
 
 ## 8.1 Risco: revolta do comprador antigo
@@ -2217,7 +2248,7 @@ Alerta direto do Gabriel. Na semana de abertura aparecem perfis clonados oferece
 - [ ] Baixar as 4 skills do playbook (cronograma, manifesto e trailer, cronograma de conteúdo, captação)
 - [ ] Montar o checklist de consentimento dos 8 itens antes de qualquer disparo
 - [ ] Ler as caixinhas e comentários do perfil para extrair as dores reais, base do conteúdo de stories
-- [ ] Ajustar a regra G5 do Tracker antes da Black (CPA de R$ 207,90 vai pausar anúncio saudável de combo de R$ 997)
+- [ ] Ajustar G1 e G5 para o CPA limite do pico, **depois que a oferta estiver definida** (ver Parte 14)
 - [ ] Criar hoje os públicos personalizados no Gerenciador, para amadurecerem até novembro
 - [ ] Instalar evento de Lead na página de inscrição e na de obrigado
 - [ ] Produzir os 15 criativos de captação e as 6 peças de lembrete (faltam 7, 5, 3, é amanhã, é hoje, estou ao vivo)
