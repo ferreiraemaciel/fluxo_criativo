@@ -99,6 +99,30 @@
   .case .ttl{font-size:14.5px;font-weight:600;margin:6px 0 10px}
   .case .val{font-size:22px;font-weight:800;color:var(--danger)}
   .case .nt{font-size:11.5px;color:var(--ink-2)}
+  /* Par de depoimentos: vídeo e print com a mesma altura, lado a lado.
+     Cada um recebe flex-grow igual à própria proporção (9/16 no vídeo,
+     1080/2341 no print). Com base zero as larguras saem proporcionais, e as
+     alturas ficam idênticas sem chutar pixel. No celular empilham, e o
+     tamanho passa a vir da ALTURA da tela, para o print inteiro caber de uma
+     vez. svh porque a barra do navegador do celular aparece e some. */
+  .depo-par{display:flex;gap:14px;align-items:flex-start;margin:0 0 20px}
+  .depo-item{margin:0;min-width:0}
+  .depo-video{flex:5625 0 0}
+  .depo-print{flex:4613 0 0}
+  .depo-moldura{position:relative;border-radius:14px;overflow:hidden;
+    border:1px solid var(--line);background:#000}
+  .depo-video .depo-moldura{aspect-ratio:9/16}
+  .depo-print .depo-moldura{aspect-ratio:1080/2341}
+  .depo-moldura iframe,.depo-moldura img{
+    position:absolute;inset:0;width:100%;height:100%;border:none;display:block;object-fit:cover}
+  .depo-item figcaption{font-size:12px;line-height:1.45;color:var(--ink-2);
+    text-align:center;margin-top:10px}
+  @media (max-width:520px){
+    .depo-par{flex-direction:column;align-items:center;gap:26px}
+    .depo-item{flex:0 0 auto;width:auto}
+    .depo-video{width:min(100%,calc(76svh * 9 / 16))}
+    .depo-print{width:min(100%,calc(76svh * 1080 / 2341))}
+  }
   /* form */
   .field{margin-top:14px}
   .field label{display:block;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
@@ -761,14 +785,20 @@ function rPrecheckout(){
 
   // — depoimentos
   stage.appendChild(el(`<div class="pco-section-title">A transformação de quem já usa:</div>`));
-  stage.appendChild(el(`<div style="max-width:280px;margin:0 auto 18px">
-    <div style="border-radius:14px;overflow:hidden;aspect-ratio:9/16;background:#000">
-      <iframe src="https://www.youtube.com/embed/WzozsP2pJHo" title="Depoimento real: 25 contratos enviados e 22 assinados no mesmo dia" loading="lazy" style="width:100%;height:100%;border:none;display:block" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-    </div>
-    <p style="font-size:12px;color:var(--ink-2);text-align:center;margin-top:10px">"25 contratos enviados, 22 assinados no mesmo dia." Depoimento real de aluna que usa o Blindagem.</p>
+  stage.appendChild(el(`<div class="depo-par">
+    <figure class="depo-item depo-video">
+      <div class="depo-moldura">
+        <iframe src="https://www.youtube.com/embed/WzozsP2pJHo" title="Depoimento real: 25 contratos enviados e 22 assinados no mesmo dia" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+      </div>
+      <figcaption>"25 contratos enviados, 22 assinados no mesmo dia." Depoimento real de aluna que usa o Blindagem.</figcaption>
+    </figure>
+    <figure class="depo-item depo-print">
+      <div class="depo-moldura">
+        <img src="https://imagens.ferreiraemaciel.com.br/fmn/blindagem/depoimento-romy-tanaka.webp" alt="Mensagem da fotógrafa Romy Tanaka contando que travava na assinatura pelo gov.br e resolveu com o Blindagem" loading="lazy" width="1080" height="2341">
+      </div>
+      <figcaption>Romy Tanaka, fotógrafa. Mensagem recebida no direct, publicada com autorização.</figcaption>
+    </figure>
   </div>`));
-  ['assets/depo-01.jpg','assets/depo-02.jpg','assets/depo-04.jpg'].forEach(src =>
-    stage.appendChild(el(`<img src="${src}" alt="" style="width:100%;border-radius:14px;margin-bottom:14px">`)));
 
   // — preço final + 2º botão
   stage.appendChild(el(`<img src="assets/mockup-app-celular-mao.webp" alt="" style="width:70%;display:block;margin:0 auto 18px">`));
