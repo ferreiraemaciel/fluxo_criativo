@@ -847,6 +847,268 @@ function Calendario({ tarefas, d0, onAbrir }) {
   );
 }
 
+
+/* ── Debriefing ─────────────────────────────────────────────────
+   Os 9 indicadores e as 9 perguntas do playbook. O que dá para
+   puxar do banco vem sozinho; o resto é preenchido à mão.
+
+   De onde vem cada número automático:
+     faturamento e vendas → tabela `vendas`, na janela do projeto
+     verba e compras      → `insights_cache` periodo=maximum dos
+                            anúncios marcados com este projeto
+   Anúncio de pico só existe durante o pico, então o gasto de vida
+   inteira dele é o gasto do pico. É mais preciso que `gasto_diario`,
+   que soma a conta toda e misturaria o perpétuo.
+──────────────────────────────────────────────────────────────────*/
+const INDICADORES_DEBRIEF = [
+  { chave:'faturamento',  label:'Faturamento',        unidade:'R$', auto:true,  calc:false },
+  { chave:'vendas',       label:'Vendas',             unidade:'un', auto:true,  calc:false },
+  { chave:'ticket_medio', label:'Ticket médio',       unidade:'R$', auto:false, calc:true,
+    formula:'faturamento / vendas' },
+  { chave:'leads_grupo',  label:'Leads no grupo',     unidade:'un', auto:false, calc:false,
+    dica:'Total de pessoas nos grupos no dia da abertura. Não tem como puxar sozinho.' },
+  { chave:'verba',        label:'Verba investida',    unidade:'R$', auto:true,  calc:false },
+  { chave:'cpl',          label:'CPL',                unidade:'R$', auto:false, calc:true,
+    formula:'verba / leads no grupo' },
+  { chave:'cac',          label:'CAC',                unidade:'R$', auto:false, calc:true,
+    formula:'verba / vendas' },
+  { chave:'roas',         label:'ROAS',               unidade:'x',  auto:false, calc:true,
+    formula:'faturamento / verba' },
+  { chave:'conv_grupo',   label:'Conversão do grupo', unidade:'%',  auto:false, calc:true,
+    formula:'vendas / leads no grupo' },
+];
+
+const PERGUNTAS_DEBRIEF = [
+  'O que funcionou melhor na captação?',
+  'Qual conteúdo vendeu mais?',
+  'A narrativa gerou mesmo a sensação de melhor da história?',
+  'O combo tinha bônus que o público queria?',
+  'A ancoragem de preço foi bem feita?',
+  'O que os disparos trouxeram?',
+  'Quais coisas novas foram aplicadas e qual foi o resultado?',
+  'O que não repetir na próxima?',
+  'O que repetir com certeza?',
+];
+
+function BlocoDebriefing({ projeto, metricas, tarefas, onSalvar, onSalvarResposta, respostas }) {
+  const [puxando, setPuxando] = useState(false);
+  const [msg, setMsg] = useState(null);
+  const brl = v => window.fmtBRL ? window.fmtBRL(v) : ('R$ ' + (v||0).toFixed(2));
+
+  const val = (momento, chave) => {
+    const m = metricas.find(x => x.momento === momento && x.indicador === chave && !x.cenario);
+    return m && m.valor != null ? Number(m.valor) : null;
+  };
+  const meta = c => val('meta_debrief', c);
+  const real = c => val('debriefing', c);
+
+  /* Os derivados nunca são digitados, saem dos outros quatro. */
+  const derivar = (chave, fonte) => {
+    const f = fonte('faturamento'), v = fonte('vendas'),
+          vb = fonte('verba'), lg = fonte('leads_grupo');
+    switch (chave) {
+      case 'ticket_medio': return v > 0 ? f / v : null;
+      case 'cpl':          return lg > 0 ? vb / lg : null;
+      case 'cac':          return v > 0 ? vb / v : null;
+      case 'roas':         return vb > 0 ? f / vb : null;
+      case 'conv_grupo':   return lg > 0 ? (v / lg) * 100 : null;
+      default:             return null;
+    }
+  };
+
+  const mostrar = (chave, momento) => {
+    const ind = INDICADORES_DEBRIEF.find(i => i.chave === chave);
+    const fonte = momento === 'debriefing' ? real : meta;
+    const v = ind.calc ? derivar(chave, c => fonte(c) || 0) : fonte(chave);
+    if (v == null || !isFinite(v)) return '—';
+    if (ind.unidade === 'R$') return brl(v);
+    if (ind.unidade === '%')  return v.toFixed(1) + '%';
+    if (ind.unidade === 'x')  return v.toFixed(2);
+    return Math.round(v).toLocaleString('pt-BR');
+  };
+
+  /* Puxa do banco o que dá: faturamento, vendas e verba do pico. */
+  const puxarRealizado = async () => {
+    if (!projeto?.data_abertura) { setMsg({ t:'erro', x:'Defina a data de abertura antes.' }); return; }
+    setPuxando(true);
+    try {
+      const inicio = projeto.data_abertura;
+      const fim = projeto.data_encerramento
+        || tarefas.filter(t => t.fase === 'encerramento' && t.data_prevista)
+             .map(t => t.data_prevista).sort().pop()
+        || projeto.data_abertura;
+
+      const { data: vendas } = await window.db.from('vendas')
+        .select('valor_bruto')
+        .eq('status', 'aprovada')
+        .gte('hotmart_order_date', inicio)
+        .lte('hotmart_order_date', fim + 'T23:59:59');
+
+      const fat = (vendas || []).reduce((a, v) => a + (Number(v.valor_bruto) || 0), 0);
+      const qtd = (vendas || []).length;
+
+      const { data: ads } = await window.db.from('ads')
+        .select('meta_ad_id').eq('pico_projeto_id', projeto.id).not('meta_ad_id','is',null);
+      const ids = (ads || []).map(a => a.meta_ad_id);
+
+      let verba = 0;
+      if (ids.length) {
+        const { data: ins } = await window.db.from('insights_cache')
+          .select('gasto').eq('periodo','maximum').in('meta_ad_id', ids);
+        verba = (ins || []).reduce((a, i) => a + (Number(i.gasto) || 0), 0);
+      }
+
+      await Promise.all([
+        onSalvar('faturamento', fat),
+        onSalvar('vendas', qtd),
+        onSalvar('verba', verba),
+      ]);
+      setMsg({ t:'ok', x: ids.length
+        ? `Puxado de ${inicio} a ${fim}. ${qtd} vendas e ${ids.length} anúncios do pico.`
+        : `Puxado de ${inicio} a ${fim}. ${qtd} vendas. Nenhum anúncio marcado com este pico ainda, então a verba veio zerada.` });
+    } catch (e) {
+      setMsg({ t:'erro', x:e.message });
+    }
+    setPuxando(false);
+    setTimeout(()=>setMsg(null), 8000);
+  };
+
+  return (
+    <SectionCard title="Debriefing"
+      right={
+        <button onClick={puxarRealizado} disabled={puxando}
+          style={{ padding:'5px 11px', borderRadius:7, cursor: puxando?'default':'pointer',
+            border:'1px solid var(--app-border)', background:'rgba(255,255,255,.05)',
+            color:'var(--text-2)', fontSize:11.5, fontFamily:'Roboto,sans-serif',
+            fontWeight:700, display:'flex', alignItems:'center', gap:5 }}>
+          <LucideIcon icon={puxando ? 'loader' : 'download'} size={12}
+            style={puxando ? { animation:'spin 1s linear infinite' } : undefined}/>
+          {puxando ? 'puxando' : 'puxar o realizado'}
+        </button>
+      }>
+
+      {msg && (
+        <div style={{ marginBottom:10, padding:'7px 10px', borderRadius:7, fontSize:11.5,
+          fontFamily:'Roboto,sans-serif', color:'var(--text-1)',
+          background: msg.t==='ok' ? 'rgba(74,222,128,.1)' : 'rgba(248,113,113,.1)',
+          border:'1px solid ' + (msg.t==='ok' ? 'rgba(74,222,128,.3)' : 'rgba(248,113,113,.3)') }}>
+          {msg.x}
+        </div>
+      )}
+
+      <div style={{ overflowX:'auto' }}>
+        <table style={{ width:'100%', borderCollapse:'collapse', minWidth:460 }}>
+          <thead>
+            <tr>
+              <th style={{ textAlign:'left', padding:'5px 8px', fontSize:10.5,
+                fontFamily:'Roboto,sans-serif', color:'var(--text-3)', fontWeight:700,
+                textTransform:'uppercase', letterSpacing:.3 }}>Indicador</th>
+              <th style={{ textAlign:'right', padding:'5px 8px', fontSize:10.5,
+                fontFamily:'Roboto,sans-serif', color:'var(--text-3)', fontWeight:700,
+                textTransform:'uppercase', letterSpacing:.3 }}>Meta</th>
+              <th style={{ textAlign:'right', padding:'5px 8px', fontSize:10.5,
+                fontFamily:'Roboto,sans-serif', color:'var(--text-3)', fontWeight:700,
+                textTransform:'uppercase', letterSpacing:.3 }}>Realizado</th>
+              <th style={{ textAlign:'right', padding:'5px 8px', fontSize:10.5,
+                fontFamily:'Roboto,sans-serif', color:'var(--text-3)', fontWeight:700,
+                textTransform:'uppercase', letterSpacing:.3 }}>Variação</th>
+            </tr>
+          </thead>
+          <tbody>
+            {INDICADORES_DEBRIEF.map(ind => {
+              const m = ind.calc ? derivar(ind.chave, c => meta(c) || 0) : meta(ind.chave);
+              const r = ind.calc ? derivar(ind.chave, c => real(c) || 0) : real(ind.chave);
+              const varia = (m && r && isFinite(m) && isFinite(r) && m !== 0)
+                ? ((r - m) / m) * 100 : null;
+              return (
+                <tr key={ind.chave} style={{ borderTop:'1px solid var(--app-border)' }}>
+                  <td style={{ padding:'5px 8px', fontSize:12, fontFamily:'Roboto,sans-serif',
+                    color:'var(--text-2)', whiteSpace:'nowrap' }}>
+                    <span title={ind.formula ? 'Calculado: ' + ind.formula : ind.dica}
+                      style={{ cursor: (ind.formula || ind.dica) ? 'help' : 'default',
+                        borderBottom: (ind.formula || ind.dica) ? '1px dotted var(--app-border)' : 'none' }}>
+                      {ind.label}
+                    </span>
+                    {ind.auto && (
+                      <span title="Vem do banco" style={{ marginLeft:5, fontSize:9,
+                        color:'#4ade80', fontFamily:'Roboto,sans-serif', fontWeight:700 }}>auto</span>
+                    )}
+                  </td>
+                  <td style={{ padding:'3px 8px', textAlign:'right' }}>
+                    {ind.calc ? (
+                      <span style={{ fontSize:12, fontFamily:'Roboto,sans-serif',
+                        color:'var(--text-3)', fontVariantNumeric:'tabular-nums' }}>
+                        {mostrar(ind.chave, 'meta_debrief')}
+                      </span>
+                    ) : (
+                      <input type="number" defaultValue={meta(ind.chave) ?? ''}
+                        onBlur={e => onSalvar(ind.chave, e.target.value === '' ? null : Number(e.target.value), 'meta_debrief')}
+                        style={{ width:92, textAlign:'right', padding:'4px 6px', borderRadius:6,
+                          border:'1px solid var(--app-border)', background:'rgba(255,255,255,.03)',
+                          color:'var(--text-2)', fontSize:12, fontFamily:'Roboto,sans-serif',
+                          fontVariantNumeric:'tabular-nums' }}/>
+                    )}
+                  </td>
+                  <td style={{ padding:'3px 8px', textAlign:'right' }}>
+                    {ind.calc ? (
+                      <span style={{ fontSize:12.5, fontFamily:'Roboto,sans-serif', fontWeight:700,
+                        color:'var(--text-1)', fontVariantNumeric:'tabular-nums' }}>
+                        {mostrar(ind.chave, 'debriefing')}
+                      </span>
+                    ) : (
+                      <input type="number" defaultValue={real(ind.chave) ?? ''}
+                        onBlur={e => onSalvar(ind.chave, e.target.value === '' ? null : Number(e.target.value))}
+                        style={{ width:92, textAlign:'right', padding:'4px 6px', borderRadius:6,
+                          border:'1px solid var(--app-border)', background:'rgba(255,255,255,.05)',
+                          color:'var(--text-1)', fontSize:12, fontFamily:'Roboto,sans-serif',
+                          fontWeight:700, fontVariantNumeric:'tabular-nums' }}/>
+                    )}
+                  </td>
+                  <td style={{ padding:'5px 8px', textAlign:'right', fontSize:11.5,
+                    fontFamily:'Roboto,sans-serif', fontWeight:700,
+                    fontVariantNumeric:'tabular-nums',
+                    color: varia == null ? 'var(--text-3)' : varia >= 0 ? '#4ade80' : '#f87171' }}>
+                    {varia == null ? '—' : (varia >= 0 ? '+' : '') + varia.toFixed(0) + '%'}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      <div style={{ marginTop:15, paddingTop:12, borderTop:'1px solid var(--app-border)' }}>
+        <div style={{ fontSize:10.5, fontFamily:'Roboto,sans-serif', fontWeight:700,
+          color:'var(--text-3)', letterSpacing:.4, textTransform:'uppercase',
+          marginBottom:9 }}>As 9 perguntas</div>
+        <div style={{ display:'flex', flexDirection:'column', gap:9 }}>
+          {PERGUNTAS_DEBRIEF.map((q, i) => (
+            <div key={i}>
+              <div style={{ fontSize:12, fontFamily:'Roboto,sans-serif', fontWeight:600,
+                color:'var(--text-2)', marginBottom:3 }}>{i+1}. {q}</div>
+              <textarea defaultValue={respostas[i] || ''}
+                onBlur={e => onSalvarResposta(i, e.target.value)}
+                placeholder="responda com a memória fresca"
+                rows={2}
+                style={{ width:'100%', padding:'7px 9px', borderRadius:7, resize:'vertical',
+                  border:'1px solid var(--app-border)', background:'rgba(255,255,255,.03)',
+                  color:'var(--text-1)', fontSize:12, fontFamily:'Roboto,sans-serif',
+                  lineHeight:1.45 }}/>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div style={{ fontSize:10.5, fontFamily:'Roboto,sans-serif', color:'var(--text-3)',
+        marginTop:11, lineHeight:1.45 }}>
+        Faturamento, vendas e verba vêm do banco. A verba soma só os anúncios marcados com
+        este pico, então o perpétuo não entra na conta. Leads no grupo é o único que precisa
+        ser contado à mão.
+      </div>
+    </SectionCard>
+  );
+}
+
 /* ── Tela principal ─────────────────────────────────────────────*/
 function PicoScreen() {
   const [projetos, setProjetos]   = useState([]);
@@ -907,6 +1169,37 @@ function PicoScreen() {
     await window.db.from('pico_decisoes')
       .update({ escolha, decidido_em: escolha ? new Date().toISOString() : null })
       .eq('id', d.id);
+  };
+
+  /* Salvar indicador do debriefing (realizado ou meta) */
+  const salvarDebrief = async (indicador, valor, momento = 'debriefing') => {
+    const existente = metricas.find(m =>
+      m.momento === momento && m.indicador === indicador && !m.cenario);
+    if (existente) {
+      setMetricas(ms => ms.map(m => m.id === existente.id ? { ...m, valor } : m));
+      await window.db.from('pico_metricas').update({ valor }).eq('id', existente.id);
+    } else {
+      const { data } = await window.db.from('pico_metricas').insert({
+        projeto_id: projetoId, momento, cenario: null, indicador, valor,
+      }).select().single();
+      if (data) setMetricas(ms => [...ms, data]);
+    }
+  };
+
+  /* As 9 respostas ficam no proprio projeto, em observacoes */
+  const respostas = (() => {
+    try { return JSON.parse(projeto?.observacoes || '{}').debrief || []; }
+    catch { return []; }
+  })();
+  const salvarResposta = async (i, texto) => {
+    let obj = {};
+    try { obj = JSON.parse(projeto?.observacoes || '{}'); } catch { obj = {}; }
+    const arr = obj.debrief || [];
+    arr[i] = texto;
+    obj.debrief = arr;
+    const novo = JSON.stringify(obj);
+    setProjetos(ps => ps.map(p => p.id === projetoId ? { ...p, observacoes: novo } : p));
+    await window.db.from('pico_projetos').update({ observacoes: novo }).eq('id', projetoId);
   };
 
   /* Salvar métrica da imaginação primária */
@@ -1086,6 +1379,12 @@ function PicoScreen() {
 
         <div style={{ marginBottom:14 }}>
           <BlocoPlanoMidia plano={projeto?.plano_midia} onSalvar={salvarPlano}/>
+        </div>
+
+        <div style={{ marginBottom:14 }}>
+          <BlocoDebriefing projeto={projeto} metricas={metricas} tarefas={tarefas}
+            onSalvar={salvarDebrief} onSalvarResposta={salvarResposta}
+            respostas={respostas}/>
         </div>
 
         {/* Controles da execução */}

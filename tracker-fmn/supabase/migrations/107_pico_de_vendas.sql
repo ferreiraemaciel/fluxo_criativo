@@ -178,7 +178,8 @@ comment on column pico_decisoes.regra is
 create table if not exists pico_metricas (
   id          uuid primary key default gen_random_uuid(),
   projeto_id  uuid not null references pico_projetos(id) on delete cascade,
-  -- 'imaginacao' (antes) ou 'debriefing' (depois).
+  -- 'imaginacao' (o plano, antes), 'meta_debrief' (a meta declarada)
+  -- ou 'debriefing' (o realizado, depois).
   momento     text not null default 'imaginacao',
   -- 'conservador', 'alvo', 'otimista', ou null no debriefing.
   cenario     text,
@@ -187,7 +188,7 @@ create table if not exists pico_metricas (
   unidade     text,
   ordem       integer not null default 0,
   constraint pico_metricas_momento_check
-    check (momento in ('imaginacao','debriefing'))
+    check (momento in ('imaginacao','meta_debrief','debriefing'))
 );
 
 create index if not exists idx_pico_metricas_projeto on pico_metricas(projeto_id, momento, cenario);
