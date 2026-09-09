@@ -117,6 +117,55 @@ vantagem competitiva, não falta de referência pra copiar.
 
 ---
 
+## A identidade acompanha o tema, não o contrário (aprovado 2026-09-08)
+
+> Regra de prioridade alta. Vale para todo carrossel novo, e vence qualquer paleta que já tenha sido
+> usada num carrossel anterior.
+
+**Não existe paleta padrão do perfil.** Cada carrossel monta a própria identidade visual a partir do
+assunto que ele trata. Reaproveitar a paleta do carrossel anterior por comodidade é o erro que esta
+regra existe para evitar.
+
+**O que dá coerência ao perfil não é a cor, é a estrutura.** Progresso e seta de swipe, arroba na capa
+e no CTA, tipografia coesa dentro da peça, respiro, área segura 3:4, capa como slide mais forte, CTA
+quebrando o padrão. Isso se repete sempre. A cor, a ilustração e o peso do traço mudam conforme o
+assunto.
+
+**Teste obrigatório antes de escrever os prompts.** Descreva em duas ou três palavras o tom do texto
+daquele carrossel (tranquilizador, urgente, indignado, didático, comemorativo). Depois olhe a direção
+visual escolhida e pergunte se ela comunica a mesma coisa. Se o texto acalma e a arte alarma, a arte
+está errada, mesmo que esteja bonita e mesmo que siga todas as outras regras deste documento.
+
+**Origem da regra.** O ORG 099, sobre o ECA Digital e fotografia de criança, foi gerado em charcoal
+quase preto, com engrenagens douradas de metal industrial e um carimbo vermelho de cartório por cima.
+O texto do carrossel é tranquilizador: a lei não é o que estão dizendo, o seu ensaio pontual está fora
+dela. A arte falava linguagem de alerta e de punição. Num tema de proteção infantil, esse tratamento
+alimenta exatamente o pânico que a peça existe para desmontar, e faz o fotógrafo sentir que levou
+bronca antes de ler a primeira linha. Refeito em creme, azul sereno e traço fino de caderno.
+
+### Ponto de partida por tipo de tema
+
+Sugestão para não começar do zero toda vez. Não é camisa de força, o conteúdo específico manda.
+
+| Tema | Direção | Cor de destaque |
+|---|---|---|
+| Criança, luto, saúde, violência, qualquer assunto sensível | Fundo claro, traço fino, tom sóbrio e acolhedor. Sem vermelho, sem preto sujo, sem carimbo, sem nada que lembre autuação | Azul sereno #1D4E6F |
+| Caso real com condenação, prejuízo, erro que custou caro | Peso e contraste altos são adequados aqui, o assunto é grave de verdade | Vermelho profundo #991B1B |
+| Precificação, dinheiro, imposto, margem | Limpo e analítico, cara de planilha bem feita | Ciano profundo #0E7490 |
+| Comportamento de mercado, posicionamento, comparação | Editorial, sóbrio | Rosa profundo #9D174D |
+| Processo, método, o que fazer na segunda-feira | Prático, quase manual de instruções | Laranja queimado #9A3412 |
+| Contrato, cláusula, lei explicada sem gravidade | Neutro e didático | Amber #E0A82E |
+
+### O que continua valendo em qualquer paleta
+
+- **Quebra de fundo marca virada real de conteúdo**, nunca enfeite. Quando houver mais de uma quebra
+  na mesma peça, cada uma sai numa cor diferente, senão as duas se confundem e nenhuma significa nada.
+- **O CTA sempre quebra o padrão** do restante do carrossel.
+- **Nada pode parecer feito por IA.** Fundo com grão leve, traço com imperfeição humana, nunca nove
+  slides idênticos de tipografia sobre cor chapada.
+
+---
+
 ## Liberdade permitida
 
 - Pode usar ícone, ilustração simples, figura de linguagem visual pra facilitar entendimento.
@@ -145,6 +194,10 @@ vantagem competitiva, não falta de referência pra copiar.
   ("As 8 cláusulas..."), decidido usar um conceito visual sem o personagem (selo de cera lacrando um
   documento) por ser mais chamativo pro tema daquele carrossel especificamente. Foto dele continua
   válida quando fizer sentido, só deixou de ser regra fixa.
+
+- 2026-09-08: **A identidade visual passa a nascer do tema de cada carrossel**, não de uma paleta fixa
+  do perfil (ver seção própria acima). Decisão do Felipe a partir da capa gerada do ORG 099, cuja arte
+  contradizia o texto. Incluída tabela de ponto de partida por tipo de tema.
 
 ---
 
