@@ -2,6 +2,7 @@
 //
 // POST /functions/v1/meta-publicos-sync
 //   { action: "preview",  produto? }                    → SÓ LÊ. Não escreve nada no Meta.
+// produto: "compradores" (padrão, MCV + Blindagem), "mcv" ou "todos".
 //   { action: "listar" }                                → lista os públicos da conta
 //   { action: "atualizar", audience_id, produto? }      → manda os compradores pro público existente
 //   { action: "criar", nome?, semelhante?, produto? }   → cria público novo (+ semelhante 1%)
@@ -21,11 +22,22 @@ const AD_ACCOUNT_ID = Deno.env.get("FB_AD_ACCOUNT_ID")!;
 const GRAPH         = "https://graph.facebook.com/v25.0";
 
 const PRODUTO_ID_MCV = "3400278";
+// O Blindagem tem DOIS cadastros na Hotmart: 7963090 (o que vende hoje) e
+// 7759955 (antigo, com 1 venda). Os dois precisam entrar, senão o comprador
+// do cadastro velho fica de fora do público sem ninguém perceber.
+const PRODUTOS_ID_BLINDAGEM = ["7963090", "7759955"];
+// Recorte "compradores": MCV + Blindagem, que são os produtos do funil.
+// Combinado com Felipe em 2026-09-08. Fica de fora quem só comprou produto
+// avulso (presets, packs, ideias de Natal), que não é público de aquisição.
+const PRODUTOS_COMPRADORES = [PRODUTO_ID_MCV, ...PRODUTOS_ID_BLINDAGEM];
 // Transação de teste da Hotmart que ficou no banco. Nunca entra em público.
 const PRODUTOS_IGNORADOS = new Set(["123"]);
 
 const LOTE = 5000;          // o Meta aceita até 10.000 por requisição
 const PAGINA_SUPABASE = 1000;
+
+// Recortes aceitos no corpo da requisição.
+type Recorte = "mcv" | "compradores" | "todos";
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -214,7 +226,7 @@ function supa() {
 
 // Busca todos os compradores aprovados, deduplicados por e-mail (fica o registro
 // mais recente, que tem mais chance de ter endereço e telefone atualizados).
-async function buscarCompradores(produto: "mcv" | "todos") {
+async function buscarCompradores(produto: Recorte) {
   const sb = supa();
   const linhas: (Comprador & { produto_id: string })[] = [];
   let de = 0;
@@ -230,6 +242,7 @@ async function buscarCompradores(produto: "mcv" | "todos") {
       .range(de, de + PAGINA_SUPABASE - 1);
 
     if (produto === "mcv") q = q.eq("produto_id", PRODUTO_ID_MCV);
+    else if (produto === "compradores") q = q.in("produto_id", PRODUTOS_COMPRADORES);
 
     const { data, error } = await q;
     if (error) throw new Error(`Supabase: ${error.message}`);
@@ -292,12 +305,14 @@ async function enviarUsuarios(audienceId: string, compradores: Comprador[]) {
 // código. Trocar o público alvo vira um UPDATE, não um deploy.
 const CHAVE_CONFIG = "meta_publico_compradores";
 
-async function alvoPadrao(): Promise<{ audience_id: string; produto: "mcv" | "todos" } | null> {
+async function alvoPadrao(): Promise<{ audience_id: string; produto: Recorte } | null> {
   const { data } = await supa()
     .from("app_config").select("valor").eq("chave", CHAVE_CONFIG).maybeSingle();
   const v = data?.valor as { audience_id?: string; produto?: string } | undefined;
   if (!v?.audience_id) return null;
-  return { audience_id: String(v.audience_id), produto: v.produto === "todos" ? "todos" : "mcv" };
+  const p = String(v.produto ?? "");
+  const produto: Recorte = p === "todos" ? "todos" : p === "mcv" ? "mcv" : "compradores";
+  return { audience_id: String(v.audience_id), produto };
 }
 
 async function carimbar(status: "ok" | "erro", mensagem: string, segundos: number) {
@@ -315,7 +330,7 @@ async function carimbar(status: "ok" | "erro", mensagem: string, segundos: numbe
 /* ──────────────────────────── Ações ──────────────────────────── */
 
 // Diagnóstico completo SEM tocar na conta de anúncios.
-async function preview(produto: "mcv" | "todos", audienceId?: string) {
+async function preview(produto: Recorte, audienceId?: string) {
   const { unicos, total_linhas, descartados_teste, descartados_sem_email } =
     await buscarCompradores(produto);
 
@@ -395,7 +410,7 @@ async function listar() {
   return { ok: true, publicos: r.data || [] };
 }
 
-async function atualizar(audienceId: string, produto: "mcv" | "todos") {
+async function atualizar(audienceId: string, produto: Recorte) {
   const t0 = Date.now();
   const alvo = await graphGet(`/${audienceId}`, { fields: "id,name,subtype" });
   if (alvo.error) throw new Error(`Público não encontrado: ${alvo.error.message}`);
@@ -413,7 +428,7 @@ async function atualizar(audienceId: string, produto: "mcv" | "todos") {
   return { ok: true, publico: { id: alvo.id, nome: alvo.name }, ...r, duracao_s: Number(seg.toFixed(1)) };
 }
 
-async function criar(nome: string, semelhante: boolean, produto: "mcv" | "todos") {
+async function criar(nome: string, semelhante: boolean, produto: Recorte) {
   const t0 = Date.now();
   const { unicos } = await buscarCompradores(produto);
   if (unicos.length === 0) throw new Error("Nenhum comprador encontrado. Criação cancelada.");
@@ -468,9 +483,11 @@ Deno.serve(async (req) => {
     // que a rotina semanal usa: ela chama com {"action":"atualizar"} e pronto.
     const padrao = await alvoPadrao();
     const audienceId = body.audience_id ? String(body.audience_id) : padrao?.audience_id;
-    const produto: "mcv" | "todos" = body.produto
-      ? (body.produto === "todos" ? "todos" : "mcv")
-      : (padrao?.produto ?? "mcv");
+    const produto: Recorte = body.produto
+      ? (["todos", "compradores", "mcv"].includes(String(body.produto))
+          ? (String(body.produto) as Recorte)
+          : "compradores")
+      : (padrao?.produto ?? "compradores");
 
     if (action === "preview")  return json(await preview(produto, audienceId));
     if (action === "listar")   return json(await listar());
