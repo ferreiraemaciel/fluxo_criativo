@@ -41,6 +41,14 @@ Deno.serve(async (req) => {
     const regra = row.regra_codigo || "?";
 
     if (!adId) {
+      // Sem meta_ad_id não tem como pausar no Meta. Sem isto, o alerta ficava
+      // pendente pra sempre, sendo reprocessado (e reportado como erro) em
+      // todo ciclo de 5min, indefinidamente (achado real em 2026-09-09, 1 caso
+      // órfão desde 16/06 — ver backfill na mesma data). Marca resolvido, com
+      // o motivo registrado em acao_tomada, pra não repetir o problema.
+      await supabase.from("alertas")
+        .update({ resolvido: true, acao_pendente: null, acao_tomada: "erro_sem_meta_ad_id" })
+        .eq("id", alertaId);
       erros.push({ ads_numero: adsNum, erro: "sem meta_ad_id" });
       continue;
     }

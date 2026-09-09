@@ -2,6 +2,18 @@
 
 > Instruções específicas do Tracker FMN. Complementa o CLAUDE.md da raiz do fluxo-criativo (regras gerais do workshop), mas essas aqui valem só dentro desta pasta.
 
+## Alerta pendente sem `meta_ad_id` ficava travado pra sempre — corrigido em 2026-09-09
+
+> Achado ao construir a skill `tracker-analise-campanhas` (fluxo-criativo), que lê `alertas` direto do Supabase pra montar o relatório de campanhas.
+
+**Sintoma:** 76 alertas com `resolvido=false` no banco, mas nenhum pertencia a um ADS ainda ativo — todos órfãos de anúncios já pausados/arquivados há semanas.
+
+**Causa raiz, duas partes:**
+1. **73 dos 76** são resíduo histórico de antes de 17/08 (quando a regra G5 só criava o alerta com `acao_tomada: 'alertado'`, sem nunca setar `acao_pendente`, e mais 3 de antes do G1 ter implementação real em 25/08 — ver seções "Regra G5" e "Regra G1" acima). Como `processar-pausas` só processa `acao_pendente='pausar'`, esses nunca foram varridos, mesmo o anúncio já tendo sido decidido por outro caminho (manual, ou outra reclassificação). Sem bug de código ativo aqui, é sujeira histórica de dado — resolvido com backfill único (`update alertas set resolvido=true where resolvido=false and ads_numero aponta pra um ad cujo status já não é 'ativo'`, preservando o `acao_tomada` original quando já existia).
+2. **1 caso real de bug ainda ativo hoje:** `processar-pausas/index.ts` encontrava um alerta com `acao_pendente='pausar'` mas sem `meta_ad_id`, e só fazia `erros.push(...)` e `continue` — nunca marcava `resolvido`. Esse alerta ficaria sendo reprocessado (e reportado como erro) a cada ciclo de 5 minutos, pra sempre. Corrigido: agora marca `resolvido=true` com `acao_tomada: 'erro_sem_meta_ad_id'` antes de pular, então um caso assim se resolve sozinho no próximo ciclo em vez de acumular pra sempre.
+
+**Se esse padrão aparecer de novo** (alerta pendente cujo ADS já não está ativo), é sinal de que algum caminho novo de decisão (reclassificação manual, nova regra) não está passando por um lugar que marca `resolvido=true`. Rodar o mesmo backfill acima resolve o sintoma; vale achar o caminho que deixou de fechar o alerta.
+
 ## Telefone: nunca adivinhar o nono dígito (bug real, 2026-08-27)
 
 **A regra "o Khronus guarda telefone sem o nono dígito" era falsa como generalização**, e virou bug. Ela saiu de um comentário do Blindagem que tinha observado contatos com 12 dígitos, mas "o 9 que sobra" e "o 9 que faz parte do número" são indistinguíveis olhando só os dígitos.

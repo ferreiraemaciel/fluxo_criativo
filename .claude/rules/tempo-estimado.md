@@ -79,6 +79,14 @@
 
 ---
 
+## Tráfego — Tracker FMN
+
+| Operação | Tempo estimado | Unidade |
+|----------|----------------|---------|
+| Análise de campanhas via Tracker (coleta + processamento + narração) | cerca de 45 segundos | segundos |
+
+---
+
 ## Dashboards
 
 | Operação | Tempo estimado | Unidade |
