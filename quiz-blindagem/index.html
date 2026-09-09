@@ -753,9 +753,9 @@ function rPrecheckout(){
   stage.appendChild(el(`<div class="pco-recebe-label">Tenha acesso imediato a:</div>`));
   stage.appendChild(el(`<div style="background:linear-gradient(135deg,#0c2820,#112d22);border:2px solid var(--ok);border-radius:14px;padding:16px 18px;margin-bottom:14px;display:flex;align-items:center;gap:12px"><span style="font-size:28px;flex-shrink:0">🎨</span><div><strong style="display:block;font-size:14px;font-weight:800;color:var(--ok);margin-bottom:3px">+200 Modelos de Contrato Visual inclusos</strong><span style="font-size:12.5px;color:var(--ink-2);line-height:1.4">Fotografia, vídeo, ensaio, evento e muito mais. Todos prontos para usar e personalizar, direto no sistema.</span></div></div>`));
   const recebe = [
-    { img:'assets/mockup-app-macbook.webp', title:'⭐ Geração de Contratos Profissionais', body:'Crie contratos adaptados ao seu nicho em minutos, sem precisar de advogado para cada um.' },
+    { img:'assets/mockup-app-macbook.webp?v=2', title:'⭐ Geração de Contratos Profissionais', body:'Crie contratos adaptados ao seu nicho em minutos, sem precisar de advogado para cada um.' },
     { img:'assets/mockup-app-celular.webp', pos:'top', title:'⭐ Assinatura Digital com Validade Jurídica', body:'Envie para o cliente assinar digitalmente. Sem papel, sem impressora, sem demora.' },
-    { img:'assets/mockup-app-macbook.webp', title:'⭐ Organização por Cliente e Evento', body:'Todos os contratos centralizados e fáceis de encontrar quando o cliente ligar às 23h.' },
+    { img:'assets/mockup-app-macbook.webp?v=2', title:'⭐ Organização por Cliente e Evento', body:'Todos os contratos centralizados e fáceis de encontrar quando o cliente ligar às 23h.' },
     { img:'assets/mockup-app-celular-mao.webp', pos:'top', title:'⭐ Acompanhamento de Status em Tempo Real', body:'Saiba quais contratos estão pendentes, assinados ou vencidos, sem precisar ligar pro cliente.' },
   ];
   const rgrid = el('<div class="recebe-grid"></div>');
@@ -763,7 +763,7 @@ function rPrecheckout(){
     rgrid.appendChild(el(`<div class="recebe-card"><img class="recebe-img" src="${o.img}" alt="" style="${o.pos?`object-position:center ${o.pos}`:''}"><div class="recebe-card-body"><strong>${o.title}</strong><p>${o.body}</p></div></div>`));
   });
   stage.appendChild(rgrid);
-  stage.appendChild(el(`<img src="assets/mockup-app-macbook.webp" alt="" style="width:85%;display:block;margin:18px auto 4px;border-radius:10px">`));
+  stage.appendChild(el(`<img src="assets/mockup-app-macbook.webp?v=2" alt="Painel do Blindagem aberto no navegador de um MacBook" style="width:92%;display:block;margin:14px auto 4px">`));
   stage.appendChild(el(`<p style="font-size:12px;color:var(--ink-2);text-align:center;margin-bottom:20px">Acesse em qualquer dispositivo, a qualquer hora.</p>`));
 
   // — quem fez
@@ -796,7 +796,7 @@ function rPrecheckout(){
       <div class="depo-moldura">
         <img src="https://imagens.ferreiraemaciel.com.br/fmn/blindagem/depoimento-romy-tanaka.webp" alt="Mensagem da fotógrafa Romy Tanaka contando que travava na assinatura pelo gov.br e resolveu com o Blindagem" loading="lazy" width="1080" height="2341">
       </div>
-      <figcaption>Romy Tanaka, fotógrafa. Mensagem recebida no direct, publicada com autorização.</figcaption>
+      <figcaption>"A assinatura digital resolveu justamente o que me travava antes." Romy Tanaka, fotógrafa, que veio dos contratos no Canva para o app.</figcaption>
     </figure>
   </div>`));
 
