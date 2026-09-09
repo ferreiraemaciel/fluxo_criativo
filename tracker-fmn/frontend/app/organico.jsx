@@ -1509,7 +1509,7 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
               {saveStatus === 'saving' && (
                 <span style={{ display:'flex', alignItems:'center', gap:5, fontSize:11,
                   fontFamily:'Roboto,sans-serif', color:'var(--text-3)' }}>
-                  <LucideIcon icon="loader" size={11} style={{ animation:'spin 1s linear infinite' }}/>
+                  <LucideIcon className="carregando-girando" icon="loader" size={11} style={{ animation:'spin 1s linear infinite' }}/>
                   Salvando...
                 </span>
               )}

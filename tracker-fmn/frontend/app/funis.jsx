@@ -1300,7 +1300,7 @@ function FunisScreen({ onNavigate }) {
           <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
             {loadingLeads
               ? <div style={{ padding:'60px 0', textAlign:'center', color:'var(--text-3)', fontSize:13 }}>
-                  <LucideIcon icon="loader" size={22}/><div style={{ marginTop:8 }}>Carregando leads...</div>
+                  <LucideIcon className="carregando-girando" icon="loader" size={22}/><div style={{ marginTop:8 }}>Carregando leads...</div>
                 </div>
               : <LeadsTable leads={leads} adsMap={adsMap}/>}
           </div>
@@ -1311,7 +1311,7 @@ function FunisScreen({ onNavigate }) {
           <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
             {loadingCarrinho
               ? <div style={{ padding:'60px 0', textAlign:'center', color:'var(--text-3)', fontSize:13 }}>
-                  <LucideIcon icon="loader" size={22}/><div style={{ marginTop:8 }}>Carregando...</div>
+                  <LucideIcon className="carregando-girando" icon="loader" size={22}/><div style={{ marginTop:8 }}>Carregando...</div>
                 </div>
               : (() => {
                   const total = carrinho.length;
@@ -1333,7 +1333,7 @@ function FunisScreen({ onNavigate }) {
 
         {/* ABA ANÁLISE */}
         {aba === 'analise' && (<div style={{ display:'flex', flexDirection:'column', gap:16 }}>
-        {loadingAnalise && <div style={{ padding: '60px 0', textAlign: 'center', color: 'var(--text-3)', fontSize: 13 }}><LucideIcon icon="loader" size={22} /><div style={{ marginTop: 8 }}>Carregando dados...</div></div>}
+        {loadingAnalise && <div style={{ padding: '60px 0', textAlign: 'center', color: 'var(--text-3)', fontSize: 13 }}><LucideIcon className="carregando-girando" icon="loader" size={22} /><div style={{ marginTop: 8 }}>Carregando dados...</div></div>}
         {!loadingAnalise && data && (<>
           <InsightCard onNavigate={onNavigate} />
 

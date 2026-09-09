@@ -37,7 +37,7 @@ function melhorThumbAd(adThumbUrl, mediaFiles, driveUrl) {
 }
 
 /* ── Icon ──────────────────────────────────────────────────────── */
-function LucideIcon({ icon, size = 18, color, style = {} }) {
+function LucideIcon({ icon, size = 18, color, style = {}, className }) {
   const ref = useRef(null);
   useEffect(() => {
     const el = ref.current;
@@ -52,7 +52,7 @@ function LucideIcon({ icon, size = 18, color, style = {} }) {
     window.lucide.createIcons({ nodes: [i] });
   }, [icon, size]);
   return (
-    <span ref={ref} style={{
+    <span ref={ref} className={className} style={{
       display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
       width: size, height: size, flexShrink: 0, color: color || 'currentColor', ...style
     }} />
@@ -631,7 +631,7 @@ function BarraProgresso({ pct = 0, etapa = '' }) {
       <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:8 }}>
         <span style={{ display:'flex', alignItems:'center', gap:6, color:'#38bdf8',
           fontFamily:'Roboto,sans-serif', fontWeight:700, fontSize:11, lineHeight:1.3 }}>
-          <LucideIcon icon="loader" size={12} style={{ animation:'spin 1s linear infinite', flexShrink:0 }}/>
+          <LucideIcon className="carregando-girando" icon="loader" size={12} style={{ animation:'spin 1s linear infinite', flexShrink:0 }}/>
           {etapa || 'Otimizando'} · {tempo}
         </span>
         <span style={{ color:'#38bdf8', fontFamily:'Roboto,sans-serif', fontWeight:700,

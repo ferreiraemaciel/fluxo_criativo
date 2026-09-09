@@ -1064,7 +1064,7 @@ function MetaAdModal({ card, onClose }) {
                   fontFamily:'Roboto,sans-serif', fontWeight:700, fontSize:13,
                   cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:8 }}>
                 {status==='loading'
-                  ? <><LucideIcon icon="loader" size={16}/>{loadingMsg || 'Criando…'}</>
+                  ? <><LucideIcon className="carregando-girando" icon="loader" size={16}/>{loadingMsg || 'Criando…'}</>
                   : <><LucideIcon icon="check" size={16}/>Confirmar e criar</>}
               </button>
             </div>
@@ -1793,7 +1793,7 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
               {saveStatus === 'saving' && (
                 <span style={{ display:'flex', alignItems:'center', gap:5, fontSize:11,
                   fontFamily:'Roboto,sans-serif', color:'var(--text-3)' }}>
-                  <LucideIcon icon="loader" size={11} style={{ animation:'spin 1s linear infinite' }}/>Salvando...
+                  <LucideIcon className="carregando-girando" icon="loader" size={11} style={{ animation:'spin 1s linear infinite' }}/>Salvando...
                 </span>
               )}
               {saveStatus === 'saved' && (
