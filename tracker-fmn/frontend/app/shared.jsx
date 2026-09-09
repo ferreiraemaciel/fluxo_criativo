@@ -243,6 +243,7 @@ function Sidebar({ activePage, onNavigate, collapsed = false, onToggle }) {
     { id: 'funis',      icon: 'filter',             label: 'Funis' },
     { id: 'conversas',  icon: 'message-circle',     label: 'Conversas' },
     { id: 'financeiro', icon: 'wallet',             label: 'Financeiro' },
+    { id: 'pico',       icon: 'calendar-clock',    label: 'Picos de Venda' },
     { id: 'site',       icon: 'globe',              label: 'Site'       },
   ];
 

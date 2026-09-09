@@ -1,0 +1,618 @@
+/* ================================================================
+   Tracker FMN — Picos de Venda v1
+   Planejamento e execução de Black Friday, lançamento e qualquer
+   abertura de carrinho, com o método do retiro Fluxo 2026.
+
+   Conceito: as datas nunca são digitadas. Cada tarefa tem um prazo
+   em D-X, e a data real vem do D0 do projeto. Mudou o D0, tudo se
+   move junto, exceto o que estiver travado.
+   ================================================================ */
+const { useState, useEffect, useMemo } = React;
+const { LucideIcon, Btn, Badge, TopBar, SectionCard, CardKPI, fmtBRL } = window;
+
+/* ── Vocabulário ────────────────────────────────────────────────*/
+const FASES = [
+  { id:'organizar',       label:'Organizar',       cor:'#94a3b8' },
+  { id:'antecipacao',     label:'Antecipação',     cor:'#38bdf8' },
+  { id:'captacao',        label:'Captação',        cor:'#a78bfa' },
+  { id:'aquecimento',     label:'Aquecimento',     cor:'#fbbf24' },
+  { id:'grande_dia',      label:'Grande Dia',      cor:'#f87171' },
+  { id:'carrinho_aberto', label:'Carrinho aberto', cor:'#4ade80' },
+  { id:'encerramento',    label:'Encerramento',    cor:'#fb923c' },
+  { id:'pos',             label:'Pós',             cor:'#64748b' },
+];
+const FASE_MAP = Object.fromEntries(FASES.map(f => [f.id, f]));
+
+const TRILHAS = [
+  { id:'oferta',     label:'Oferta e Narrativa', icon:'gift',           cor:'#fbbf24' },
+  { id:'conteudo',   label:'Conteúdo',           icon:'megaphone',      cor:'#a78bfa' },
+  { id:'trafego',    label:'Tráfego',            icon:'trending-up',    cor:'#38bdf8' },
+  { id:'comercial',  label:'Comercial',          icon:'message-circle', cor:'#4ade80' },
+  { id:'paginas',    label:'Páginas',            icon:'layout',         cor:'#f472b6' },
+  { id:'mentoria',   label:'Mentoria',           icon:'users',          cor:'#fb923c' },
+  { id:'debriefing', label:'Debriefing',         icon:'clipboard-list', cor:'#94a3b8' },
+];
+const TRILHA_MAP = Object.fromEntries(TRILHAS.map(t => [t.id, t]));
+
+const NIVEIS = [
+  { id:'e', label:'Essencial',   desc:'Oferta, um grupo, conteúdo diário e uma live. Já é um pico inteiro.' },
+  { id:'c', label:'Crescimento', desc:'Mais API de WhatsApp, e-mail e aulas de aquecimento.' },
+  { id:'x', label:'Escala',      desc:'Mais URA, várias lives e cadência de 3 disparos por dia.' },
+];
+
+const STATUS_CFG = {
+  pendente: { label:'Pendente', cor:'#94a3b8', bg:'rgba(148,163,184,.12)' },
+  fazendo:  { label:'Fazendo',  cor:'#38bdf8', bg:'rgba(56,189,248,.12)'  },
+  feito:    { label:'Feito',    cor:'#4ade80', bg:'rgba(74,222,128,.12)'  },
+  pulada:   { label:'Pulada',   cor:'#64748b', bg:'rgba(100,116,139,.12)' },
+};
+
+/* ── Datas ──────────────────────────────────────────────────────*/
+const hojeISO = () => new Date().toISOString().slice(0, 10);
+
+function fmtData(iso) {
+  if (!iso) return '';
+  const [a, m, d] = iso.split('-');
+  return `${d}/${m}`;
+}
+function diaSemana(iso) {
+  if (!iso) return '';
+  const dt = new Date(iso + 'T12:00:00');
+  return ['dom','seg','ter','qua','qui','sex','sáb'][dt.getDay()];
+}
+function diasEntre(a, b) {
+  if (!a || !b) return null;
+  const ms = new Date(b + 'T12:00:00') - new Date(a + 'T12:00:00');
+  return Math.round(ms / 86400000);
+}
+function rotuloD(offset) {
+  if (offset === 0) return 'D0';
+  return offset < 0 ? `D${offset}` : `D+${offset}`;
+}
+
+/* Feriados nacionais fixos e o que mais atrapalha um pico.
+   Serve para avisar antes de marcar abertura ou encerramento em cima. */
+const FERIADOS = {
+  '01-01':'Confraternização', '04-21':'Tiradentes', '05-01':'Trabalho',
+  '09-07':'Independência', '10-12':'Padroeira', '11-02':'Finados',
+  '11-15':'Proclamação', '11-20':'Consciência Negra', '12-25':'Natal',
+};
+const feriadoDe = iso => iso ? FERIADOS[iso.slice(5)] : null;
+
+/* ── Barra de progresso ─────────────────────────────────────────*/
+function Progresso({ feitas, total, cor = '#4ade80', altura = 6 }) {
+  const p = total > 0 ? Math.round((feitas / total) * 100) : 0;
+  return (
+    <div style={{ display:'flex', alignItems:'center', gap:8, minWidth:0 }}>
+      <div style={{ flex:1, height:altura, borderRadius:99,
+        background:'rgba(255,255,255,.07)', overflow:'hidden', minWidth:40 }}>
+        <div style={{ width:`${p}%`, height:'100%', borderRadius:99, background:cor,
+          transition:'width 350ms cubic-bezier(.2,.7,.2,1)' }}/>
+      </div>
+      <span style={{ fontSize:11, fontFamily:'Roboto,sans-serif', fontWeight:700,
+        color:'var(--text-3)', fontVariantNumeric:'tabular-nums', flexShrink:0 }}>
+        {feitas}/{total}
+      </span>
+    </div>
+  );
+}
+
+/* ── Linha de tarefa ────────────────────────────────────────────*/
+function LinhaTarefa({ t, onToggle, onAbrir, mostrarTrilha }) {
+  const [hov, setHov] = useState(false);
+  const feito   = t.status === 'feito';
+  const pulada  = t.status === 'pulada';
+  const trilha  = TRILHA_MAP[t.trilha] || {};
+  const atrasada = !feito && !pulada && t.data_prevista && t.data_prevista < hojeISO();
+  const fer = feriadoDe(t.data_prevista);
+
+  return (
+    <div
+      onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}
+      style={{ display:'flex', alignItems:'flex-start', gap:10, padding:'9px 11px',
+        borderRadius:9, background: hov ? 'rgba(255,255,255,.035)' : 'transparent',
+        border:'1px solid ' + (atrasada ? 'rgba(248,113,113,.28)' : 'transparent'),
+        transition:'background 120ms', cursor:'pointer' }}
+      onClick={()=>onAbrir(t)}
+    >
+      <button
+        onClick={(e)=>{ e.stopPropagation(); onToggle(t); }}
+        title={feito ? 'Desmarcar' : 'Marcar como feito'}
+        style={{ width:19, height:19, borderRadius:6, flexShrink:0, marginTop:1,
+          border:'1.5px solid ' + (feito ? '#4ade80' : 'var(--app-border)'),
+          background: feito ? '#4ade80' : 'transparent', cursor:'pointer',
+          display:'flex', alignItems:'center', justifyContent:'center', padding:0 }}>
+        {feito && <LucideIcon icon="check" size={12} style={{ color:'#0b0b0d' }}/>}
+      </button>
+
+      <div style={{ flex:1, minWidth:0 }}>
+        <div style={{ display:'flex', alignItems:'center', gap:7, flexWrap:'wrap' }}>
+          <span style={{ fontSize:12.5, fontFamily:'Roboto,sans-serif', fontWeight:600,
+            color: feito || pulada ? 'var(--text-3)' : 'var(--text-1)',
+            textDecoration: feito || pulada ? 'line-through' : 'none' }}>
+            {t.titulo}
+          </span>
+          {t.nivel_minimo !== 'e' && (
+            <span style={{ fontSize:9.5, fontFamily:'Roboto,sans-serif', fontWeight:700,
+              padding:'1px 5px', borderRadius:4, background:'rgba(255,255,255,.06)',
+              color:'var(--text-3)', letterSpacing:.3 }}>
+              {t.nivel_minimo === 'c' ? 'CRESC' : 'ESCALA'}
+            </span>
+          )}
+        </div>
+        {t.criterio_pronto && (
+          <div style={{ fontSize:11, fontFamily:'Roboto,sans-serif', color:'var(--text-3)',
+            marginTop:2, lineHeight:1.4 }}>
+            {t.criterio_pronto}
+          </div>
+        )}
+      </div>
+
+      <div style={{ display:'flex', alignItems:'center', gap:8, flexShrink:0 }}>
+        {mostrarTrilha && trilha.label && (
+          <span title={trilha.label} style={{ display:'flex', alignItems:'center',
+            color:trilha.cor, opacity:.75 }}>
+            <LucideIcon icon={trilha.icon} size={13}/>
+          </span>
+        )}
+        {fer && (
+          <span title={`Feriado: ${fer}`} style={{ color:'#fb923c', display:'flex' }}>
+            <LucideIcon icon="alert-triangle" size={12}/>
+          </span>
+        )}
+        <span style={{ fontSize:10.5, fontFamily:'Roboto,sans-serif', fontWeight:700,
+          color:'var(--text-3)', fontVariantNumeric:'tabular-nums', minWidth:34,
+          textAlign:'right' }}>
+          {rotuloD(t.offset_dias)}
+        </span>
+        <span style={{ fontSize:11, fontFamily:'Roboto,sans-serif',
+          color: atrasada ? '#f87171' : 'var(--text-3)',
+          fontVariantNumeric:'tabular-nums', minWidth:52, textAlign:'right' }}>
+          {t.data_prevista ? `${fmtData(t.data_prevista)} ${diaSemana(t.data_prevista)}` : ''}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+/* ── Bloco de decisões-gate ─────────────────────────────────────*/
+function BlocoDecisoes({ decisoes, onEscolher }) {
+  const pendentes = decisoes.filter(d => !d.escolha).length;
+  return (
+    <SectionCard
+      title="Decisões que travam o resto"
+      right={pendentes > 0
+        ? <Badge tone="warn">{pendentes} pendente{pendentes > 1 ? 's' : ''}</Badge>
+        : <Badge tone="ok">Todas decididas</Badge>}
+    >
+      <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+        {decisoes.map(d => {
+          const opcoes = Array.isArray(d.opcoes) ? d.opcoes : [];
+          return (
+            <div key={d.id} style={{ padding:'10px 12px', borderRadius:9,
+              background: d.escolha ? 'rgba(74,222,128,.05)' : 'rgba(251,191,36,.05)',
+              border:'1px solid ' + (d.escolha ? 'rgba(74,222,128,.18)' : 'rgba(251,191,36,.2)') }}>
+              <div style={{ fontSize:12.5, fontFamily:'Roboto,sans-serif', fontWeight:700,
+                color:'var(--text-1)', marginBottom: d.regra ? 3 : 7 }}>
+                {d.pergunta}
+              </div>
+              {d.regra && (
+                <div style={{ fontSize:11, fontFamily:'Roboto,sans-serif', color:'var(--text-3)',
+                  marginBottom:7, lineHeight:1.4, fontStyle:'italic' }}>
+                  {d.regra}
+                </div>
+              )}
+              <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
+                {opcoes.map(op => {
+                  const ativa = d.escolha === op;
+                  return (
+                    <button key={op} onClick={()=>onEscolher(d, ativa ? null : op)}
+                      style={{ padding:'5px 11px', borderRadius:7, cursor:'pointer',
+                        fontSize:11.5, fontFamily:'Roboto,sans-serif', fontWeight:700,
+                        border:'1px solid ' + (ativa ? '#4ade80' : 'var(--app-border)'),
+                        background: ativa ? 'rgba(74,222,128,.14)' : 'transparent',
+                        color: ativa ? '#4ade80' : 'var(--text-2)' }}>
+                      {ativa && '✓ '}{op}
+                    </button>
+                  );
+                })}
+              </div>
+              {d.fonte && (
+                <div style={{ fontSize:10, fontFamily:'Roboto,sans-serif',
+                  color:'var(--text-3)', marginTop:6, opacity:.7 }}>
+                  {d.fonte}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </SectionCard>
+  );
+}
+
+/* ── Imaginação primária ────────────────────────────────────────*/
+const INDICADORES_IMAGINACAO = [
+  { chave:'vendas',       label:'Quantidade de vendas', unidade:'un'  },
+  { chave:'ticket',       label:'Ticket médio',         unidade:'R$'  },
+  { chave:'investimento', label:'Investimento',         unidade:'R$'  },
+];
+const CENARIOS = ['conservador','alvo','otimista'];
+
+function BlocoImaginacao({ metricas, onSalvar }) {
+  const valor = (cen, ch) => {
+    const m = metricas.find(x => x.cenario === cen && x.indicador === ch);
+    return m ? m.valor : '';
+  };
+  const faturamento = cen => {
+    const v = Number(valor(cen,'vendas')) || 0;
+    const t = Number(valor(cen,'ticket')) || 0;
+    return v * t;
+  };
+  const roas = cen => {
+    const i = Number(valor(cen,'investimento')) || 0;
+    return i > 0 ? (faturamento(cen) / i) : 0;
+  };
+  // Leads necessários pela taxa do Samuel: piso de 5%, alvo de 8%.
+  const leads = (cen, taxa) => {
+    const v = Number(valor(cen,'vendas')) || 0;
+    return taxa > 0 ? Math.round(v / taxa) : 0;
+  };
+
+  return (
+    <SectionCard title="Imaginação primária"
+      right={<span style={{ fontSize:11, color:'var(--text-3)',
+        fontFamily:'Roboto,sans-serif' }}>preencha antes de qualquer tarefa</span>}>
+      <div style={{ overflowX:'auto' }}>
+        <table style={{ width:'100%', borderCollapse:'collapse', minWidth:520 }}>
+          <thead>
+            <tr>
+              <th style={{ textAlign:'left', padding:'6px 8px', fontSize:11,
+                fontFamily:'Roboto,sans-serif', color:'var(--text-3)', fontWeight:700 }}></th>
+              {CENARIOS.map(c => (
+                <th key={c} style={{ textAlign:'right', padding:'6px 8px', fontSize:11,
+                  fontFamily:'Roboto,sans-serif', color:'var(--text-2)', fontWeight:700,
+                  textTransform:'capitalize' }}>{c}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {INDICADORES_IMAGINACAO.map(ind => (
+              <tr key={ind.chave}>
+                <td style={{ padding:'5px 8px', fontSize:12, fontFamily:'Roboto,sans-serif',
+                  color:'var(--text-2)', whiteSpace:'nowrap' }}>{ind.label}</td>
+                {CENARIOS.map(c => (
+                  <td key={c} style={{ padding:'3px 8px', textAlign:'right' }}>
+                    <input
+                      type="number" defaultValue={valor(c, ind.chave)}
+                      onBlur={e => onSalvar(c, ind.chave, e.target.value, ind.unidade)}
+                      style={{ width:'100%', maxWidth:120, textAlign:'right', padding:'5px 7px',
+                        borderRadius:6, border:'1px solid var(--app-border)',
+                        background:'rgba(255,255,255,.03)', color:'var(--text-1)',
+                        fontSize:12, fontFamily:'Roboto,sans-serif',
+                        fontVariantNumeric:'tabular-nums' }}/>
+                  </td>
+                ))}
+              </tr>
+            ))}
+            <tr style={{ borderTop:'1px solid var(--app-border)' }}>
+              <td style={{ padding:'7px 8px', fontSize:12, fontFamily:'Roboto,sans-serif',
+                color:'var(--text-1)', fontWeight:700 }}>Faturamento</td>
+              {CENARIOS.map(c => (
+                <td key={c} style={{ padding:'7px 8px', textAlign:'right', fontSize:12.5,
+                  fontFamily:'Roboto,sans-serif', fontWeight:700, color:'#4ade80',
+                  fontVariantNumeric:'tabular-nums' }}>
+                  {fmtBRL ? fmtBRL(faturamento(c)) : faturamento(c)}
+                </td>
+              ))}
+            </tr>
+            <tr>
+              <td style={{ padding:'5px 8px', fontSize:12, fontFamily:'Roboto,sans-serif',
+                color:'var(--text-2)' }}>ROAS</td>
+              {CENARIOS.map(c => (
+                <td key={c} style={{ padding:'5px 8px', textAlign:'right', fontSize:12,
+                  fontFamily:'Roboto,sans-serif', color:'var(--text-2)',
+                  fontVariantNumeric:'tabular-nums' }}>
+                  {roas(c) ? roas(c).toFixed(2) : '—'}
+                </td>
+              ))}
+            </tr>
+            <tr>
+              <td style={{ padding:'5px 8px', fontSize:12, fontFamily:'Roboto,sans-serif',
+                color:'var(--text-2)' }} title="Conversão de lead em venda: piso de 5% na Black">
+                Leads a 5%
+              </td>
+              {CENARIOS.map(c => (
+                <td key={c} style={{ padding:'5px 8px', textAlign:'right', fontSize:12,
+                  fontFamily:'Roboto,sans-serif', color:'var(--text-2)',
+                  fontVariantNumeric:'tabular-nums' }}>
+                  {leads(c, .05) || '—'}
+                </td>
+              ))}
+            </tr>
+            <tr>
+              <td style={{ padding:'5px 8px', fontSize:12, fontFamily:'Roboto,sans-serif',
+                color:'var(--text-2)' }}>Leads a 8%</td>
+              {CENARIOS.map(c => (
+                <td key={c} style={{ padding:'5px 8px', textAlign:'right', fontSize:12,
+                  fontFamily:'Roboto,sans-serif', color:'var(--text-2)',
+                  fontVariantNumeric:'tabular-nums' }}>
+                  {leads(c, .08) || '—'}
+                </td>
+              ))}
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div style={{ fontSize:10.5, fontFamily:'Roboto,sans-serif', color:'var(--text-3)',
+        marginTop:9, lineHeight:1.45 }}>
+        Faturamento, ROAS e leads se calculam sozinhos. A conversão de lead em venda no pico
+        fica entre 5% e 10%, com 5% como piso.
+      </div>
+    </SectionCard>
+  );
+}
+
+/* ── Tela principal ─────────────────────────────────────────────*/
+function PicoScreen() {
+  const [projetos, setProjetos]   = useState([]);
+  const [projetoId, setProjetoId] = useState(null);
+  const [tarefas, setTarefas]     = useState([]);
+  const [decisoes, setDecisoes]   = useState([]);
+  const [metricas, setMetricas]   = useState([]);
+  const [visao, setVisao]         = useState('fase');   // fase | trilha | calendario
+  const [filtroTrilha, setFiltroTrilha] = useState('todas');
+  const [ocultarFeitas, setOcultarFeitas] = useState(false);
+  const [carregando, setCarregando] = useState(true);
+
+  const projeto = projetos.find(p => p.id === projetoId) || null;
+
+  /* Carregar projetos */
+  useEffect(() => {
+    (async () => {
+      const { data } = await window.db.from('pico_projetos')
+        .select('*').order('criado_em', { ascending:false });
+      setProjetos(data || []);
+      if (data && data.length && !projetoId) setProjetoId(data[0].id);
+      setCarregando(false);
+    })();
+  }, []);
+
+  /* Carregar o conteúdo do projeto escolhido */
+  useEffect(() => {
+    if (!projetoId) { setTarefas([]); setDecisoes([]); setMetricas([]); return; }
+    (async () => {
+      const [t, d, m] = await Promise.all([
+        window.db.from('pico_tarefas').select('*')
+          .eq('projeto_id', projetoId).order('offset_dias').order('ordem'),
+        window.db.from('pico_decisoes').select('*')
+          .eq('projeto_id', projetoId).order('ordem'),
+        window.db.from('pico_metricas').select('*')
+          .eq('projeto_id', projetoId),
+      ]);
+      setTarefas(t.data || []);
+      setDecisoes(d.data || []);
+      setMetricas(m.data || []);
+    })();
+  }, [projetoId]);
+
+  /* Marcar tarefa */
+  const alternarTarefa = async (t) => {
+    const novo = t.status === 'feito' ? 'pendente' : 'feito';
+    setTarefas(ts => ts.map(x => x.id === t.id
+      ? { ...x, status:novo, data_conclusao: novo === 'feito' ? hojeISO() : null } : x));
+    await window.db.from('pico_tarefas')
+      .update({ status:novo, data_conclusao: novo === 'feito' ? hojeISO() : null })
+      .eq('id', t.id);
+  };
+
+  /* Escolher decisão */
+  const escolherDecisao = async (d, escolha) => {
+    setDecisoes(ds => ds.map(x => x.id === d.id
+      ? { ...x, escolha, decidido_em: escolha ? new Date().toISOString() : null } : x));
+    await window.db.from('pico_decisoes')
+      .update({ escolha, decidido_em: escolha ? new Date().toISOString() : null })
+      .eq('id', d.id);
+  };
+
+  /* Salvar métrica da imaginação primária */
+  const salvarMetrica = async (cenario, indicador, valor, unidade) => {
+    const v = valor === '' ? null : Number(valor);
+    const existente = metricas.find(m =>
+      m.cenario === cenario && m.indicador === indicador && m.momento === 'imaginacao');
+    if (existente) {
+      setMetricas(ms => ms.map(m => m.id === existente.id ? { ...m, valor:v } : m));
+      await window.db.from('pico_metricas').update({ valor:v }).eq('id', existente.id);
+    } else {
+      const { data } = await window.db.from('pico_metricas').insert({
+        projeto_id: projetoId, momento:'imaginacao', cenario, indicador, valor:v, unidade,
+      }).select().single();
+      if (data) setMetricas(ms => [...ms, data]);
+    }
+  };
+
+  /* Trocar o D0: o banco recalcula as datas não travadas sozinho */
+  const mudarAbertura = async (novaData) => {
+    if (!projeto) return;
+    setProjetos(ps => ps.map(p => p.id === projetoId ? { ...p, data_abertura:novaData } : p));
+    await window.db.from('pico_projetos')
+      .update({ data_abertura: novaData }).eq('id', projetoId);
+    const { data } = await window.db.from('pico_tarefas').select('*')
+      .eq('projeto_id', projetoId).order('offset_dias').order('ordem');
+    setTarefas(data || []);
+  };
+
+  /* Recortes */
+  const visiveis = useMemo(() => tarefas.filter(t =>
+    (filtroTrilha === 'todas' || t.trilha === filtroTrilha) &&
+    (!ocultarFeitas || t.status !== 'feito')
+  ), [tarefas, filtroTrilha, ocultarFeitas]);
+
+  const feitas = tarefas.filter(t => t.status === 'feito').length;
+  const atrasadas = tarefas.filter(t =>
+    t.status !== 'feito' && t.status !== 'pulada' &&
+    t.data_prevista && t.data_prevista < hojeISO()).length;
+  const diasParaD0 = projeto?.data_abertura ? diasEntre(hojeISO(), projeto.data_abertura) : null;
+
+  const porGrupo = useMemo(() => {
+    const chave = visao === 'trilha' ? 'trilha' : 'fase';
+    const g = {};
+    visiveis.forEach(t => { (g[t[chave]] ||= []).push(t); });
+    return g;
+  }, [visiveis, visao]);
+
+  const ordemGrupos = visao === 'trilha'
+    ? TRILHAS.map(t => t.id)
+    : FASES.map(f => f.id);
+
+  if (carregando) {
+    return (
+      <div style={{ display:'flex', flexDirection:'column', height:'100%' }}>
+        <TopBar title="Picos de Venda"/>
+        <div style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'center',
+          color:'var(--text-3)', fontFamily:'Roboto,sans-serif', fontSize:13 }}>
+          Carregando
+        </div>
+      </div>
+    );
+  }
+
+  if (!projetos.length) {
+    return (
+      <div style={{ display:'flex', flexDirection:'column', height:'100%' }}>
+        <TopBar title="Picos de Venda"/>
+        <div style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'center',
+          justifyContent:'center', gap:14, color:'var(--text-3)' }}>
+          <LucideIcon icon="calendar-clock" size={30}/>
+          <div style={{ textAlign:'center', maxWidth:380 }}>
+            <div style={{ fontSize:14, fontFamily:'Roboto,sans-serif', fontWeight:700,
+              color:'var(--text-2)', marginBottom:6 }}>Nenhum pico criado ainda</div>
+            <div style={{ fontSize:12, fontFamily:'Roboto,sans-serif', lineHeight:1.5 }}>
+              Um pico de vendas nasce de um template, com uma data de abertura.
+              Todas as tarefas se posicionam sozinhas a partir dela.
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ display:'flex', flexDirection:'column', height:'100%', overflow:'hidden' }}>
+      <TopBar title="Picos de Venda"/>
+
+      <div style={{ flex:1, overflowY:'auto', padding:'14px 18px 30px' }}>
+
+        {/* Cabeçalho: projeto, D0 e progresso */}
+        <div style={{ display:'flex', alignItems:'center', gap:10, flexWrap:'wrap',
+          marginBottom:14 }}>
+          <select value={projetoId || ''} onChange={e=>setProjetoId(e.target.value)}
+            style={{ padding:'7px 11px', borderRadius:8, border:'1px solid var(--app-border)',
+              background:'rgba(255,255,255,.04)', color:'var(--text-1)', fontSize:13,
+              fontFamily:'Roboto,sans-serif', fontWeight:700, cursor:'pointer' }}>
+            {projetos.map(p => <option key={p.id} value={p.id}>{p.nome}</option>)}
+          </select>
+
+          <div style={{ display:'flex', alignItems:'center', gap:7 }}>
+            <span style={{ fontSize:11.5, fontFamily:'Roboto,sans-serif',
+              color:'var(--text-3)' }}>Abre em</span>
+            <input type="date" value={projeto?.data_abertura || ''}
+              onChange={e=>mudarAbertura(e.target.value)}
+              style={{ padding:'6px 9px', borderRadius:7, border:'1px solid var(--app-border)',
+                background:'rgba(255,255,255,.04)', color:'var(--text-1)', fontSize:12,
+                fontFamily:'Roboto,sans-serif' }}/>
+            {projeto?.data_abertura && feriadoDe(projeto.data_abertura) && (
+              <Badge tone="warn">feriado: {feriadoDe(projeto.data_abertura)}</Badge>
+            )}
+          </div>
+
+          {diasParaD0 !== null && (
+            <Badge tone={diasParaD0 < 0 ? 'ok' : diasParaD0 < 15 ? 'warn' : 'neutral'}>
+              {diasParaD0 > 0 ? `faltam ${diasParaD0} dias`
+                : diasParaD0 === 0 ? 'é hoje'
+                : `carrinho aberto há ${Math.abs(diasParaD0)} dias`}
+            </Badge>
+          )}
+          {atrasadas > 0 && <Badge tone="danger">{atrasadas} atrasada{atrasadas>1?'s':''}</Badge>}
+
+          <div style={{ flex:1, minWidth:120, maxWidth:260 }}>
+            <Progresso feitas={feitas} total={tarefas.length}/>
+          </div>
+        </div>
+
+        {/* Imaginação primária e decisões */}
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(340px,1fr))',
+          gap:14, marginBottom:14 }}>
+          <BlocoImaginacao metricas={metricas.filter(m=>m.momento==='imaginacao')}
+            onSalvar={salvarMetrica}/>
+          <BlocoDecisoes decisoes={decisoes} onEscolher={escolherDecisao}/>
+        </div>
+
+        {/* Controles da execução */}
+        <div style={{ display:'flex', alignItems:'center', gap:8, flexWrap:'wrap',
+          marginBottom:11 }}>
+          <div style={{ display:'flex', gap:4, padding:3, borderRadius:8,
+            background:'rgba(255,255,255,.04)' }}>
+            {[['fase','Por fase'],['trilha','Por trilha']].map(([id,lb]) => (
+              <button key={id} onClick={()=>setVisao(id)}
+                style={{ padding:'5px 11px', borderRadius:6, cursor:'pointer', border:'none',
+                  fontSize:11.5, fontFamily:'Roboto,sans-serif', fontWeight:700,
+                  background: visao===id ? 'rgba(255,255,255,.08)' : 'transparent',
+                  color: visao===id ? 'var(--text-1)' : 'var(--text-3)' }}>{lb}</button>
+            ))}
+          </div>
+
+          <select value={filtroTrilha} onChange={e=>setFiltroTrilha(e.target.value)}
+            style={{ padding:'6px 10px', borderRadius:7, border:'1px solid var(--app-border)',
+              background:'rgba(255,255,255,.04)', color:'var(--text-2)', fontSize:11.5,
+              fontFamily:'Roboto,sans-serif', cursor:'pointer' }}>
+            <option value="todas">Todas as trilhas</option>
+            {TRILHAS.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
+          </select>
+
+          <button onClick={()=>setOcultarFeitas(v=>!v)}
+            style={{ padding:'6px 11px', borderRadius:7, cursor:'pointer',
+              border:'1px solid var(--app-border)', fontSize:11.5,
+              fontFamily:'Roboto,sans-serif', fontWeight:700,
+              background: ocultarFeitas ? 'rgba(74,222,128,.12)' : 'transparent',
+              color: ocultarFeitas ? '#4ade80' : 'var(--text-3)' }}>
+            {ocultarFeitas ? 'Mostrando pendentes' : 'Ocultar feitas'}
+          </button>
+        </div>
+
+        {/* Execução */}
+        <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
+          {ordemGrupos.map(gid => {
+            const lista = porGrupo[gid];
+            if (!lista || !lista.length) return null;
+            const cfg = visao === 'trilha' ? TRILHA_MAP[gid] : FASE_MAP[gid];
+            const gf = lista.filter(t => t.status === 'feito').length;
+            return (
+              <SectionCard key={gid}
+                title={
+                  <span style={{ display:'flex', alignItems:'center', gap:8 }}>
+                    <span style={{ width:8, height:8, borderRadius:99,
+                      background: cfg?.cor || 'var(--text-3)' }}/>
+                    {cfg?.label || gid}
+                  </span>
+                }
+                right={<div style={{ width:120 }}>
+                  <Progresso feitas={gf} total={lista.length} cor={cfg?.cor} altura={5}/>
+                </div>}
+              >
+                <div style={{ display:'flex', flexDirection:'column', gap:1 }}>
+                  {lista.map(t => (
+                    <LinhaTarefa key={t.id} t={t} onToggle={alternarTarefa}
+                      onAbrir={()=>{}} mostrarTrilha={visao === 'fase'}/>
+                  ))}
+                </div>
+              </SectionCard>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+window.PicoScreen = PicoScreen;
