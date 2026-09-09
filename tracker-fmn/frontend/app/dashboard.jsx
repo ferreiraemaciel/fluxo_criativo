@@ -2213,6 +2213,17 @@ function UpsellFunnelCard({ data }) {
 const ALARME_HORAS = 2;   // limite pra considerar que o lead está esperando
 const ALARME_URGENTE = 6; // acima disso o card fica vermelho, não âmbar
 
+/* Resposta automática do WhatsApp Business do próprio fotógrafo ("estamos fora
+   do horário", "retornaremos assim que possível"). Não é gente esperando, é o
+   robô dele acusando recebimento do nosso template, então não vira alarme.
+
+   Medido em 09/09/2026: 73 dos 280 leads que "responderam" ao template desde
+   julho eram só isso, 26% do volume. Sem este filtro o alarme nasceria cheio de
+   ruído e ia virar paisagem em uma semana, que é exatamente o que ele existe
+   pra evitar. O teste roda só na ÚLTIMA mensagem da conversa: se a última fala
+   é do robô, não há ninguém do outro lado aguardando. */
+const RE_AUTO_RESPOSTA = /fora do hor[áa]rio|assim que poss[íi]vel|retornarem|retorno assim|agradece(mos)? (seu|o seu) contato|deixe sua mensagem|n[ãa]o estamos dispon[íi]vel|obrigad. por entrar em contato|responderemos|em breve retorn|mensagem autom[áa]tica|neste momento n[ãa]o/i;
+
 function useAlarmeAtendimento() {
   const [alarme, setAlarme] = useState({ carregando: true, humano: [], mudo: [] });
 
@@ -2233,7 +2244,7 @@ function useAlarmeAtendimento() {
         // cliente: conversa parada há mais de 30 dias não é alarme, é arquivo.
         const desde = new Date(Date.now() - 30*24*60*60*1000).toISOString();
         const { data: msgs } = await window.db.from('whatsapp_mensagens')
-          .select('telefone,direcao,created_at')
+          .select('telefone,direcao,created_at,corpo,transcricao')
           .gte('created_at', desde).order('created_at', { ascending:false }).limit(5000);
 
         const ultima = new Map();
@@ -2247,7 +2258,9 @@ function useAlarmeAtendimento() {
           if (c.precisa_humano) { humano.push({ ...c, horas }); return; }
           if (c.ia_pausada) return;
           // Última palavra foi do lead e ninguém respondeu dentro do prazo.
-          if (u && u.direcao === 'entrada' && horas >= ALARME_HORAS) mudo.push({ ...c, horas });
+          if (!u || u.direcao !== 'entrada' || horas < ALARME_HORAS) return;
+          if (RE_AUTO_RESPOSTA.test(u.corpo || u.transcricao || '')) return;
+          mudo.push({ ...c, horas });
         });
         const porEspera = (a,b) => (b.horas || 0) - (a.horas || 0);
         setAlarme({ carregando:false, humano: humano.sort(porEspera), mudo: mudo.sort(porEspera) });
@@ -2311,7 +2324,7 @@ function AlarmeAtendimento({ onNavigate }) {
         <div style={{ display:'flex', flexDirection:'column', gap:4, borderTop:`1px solid ${cor}33`, paddingTop:9 }}>
           {[...humano.map(i => ({ ...i, tag:'pediu humano' })),
             ...mudo.map(i => ({ ...i, tag:'sem resposta' }))].slice(0, 12).map(i => (
-            <div key={i.telefone} onClick={() => onNavigate && onNavigate('conversas')}
+            <div key={i.telefone} onClick={() => onNavigate && onNavigate('conversas', i.telefone)}
               style={{ display:'flex', alignItems:'center', gap:8, cursor:'pointer',
                 padding:'4px 6px', borderRadius:6, fontFamily:'Roboto,sans-serif', fontSize:11.5 }}
               onMouseEnter={e => e.currentTarget.style.background='rgba(255,255,255,.04)'}

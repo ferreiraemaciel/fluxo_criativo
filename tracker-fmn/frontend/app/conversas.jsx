@@ -1004,7 +1004,7 @@ const MENSAGENS_PRONTAS = [
     texto: 'Que alegria te ter com a gente! Agora é só acessar os modelos e começar a proteger cada trabalho novo. Qualquer dúvida no acesso ou nos contratos, é só chamar por aqui.' },
 ];
 
-function ConversasScreen() {
+function ConversasScreen({ telefoneAlvo = null, onConsumirAlvo } = {}) {
   const [msgs, setMsgs]           = useState([]);
   // Janela de mensagens carregada pra lista e métricas. Cresce sozinha quando
   // as Métricas pedem um período mais antigo que o que já está em memória.
@@ -1140,6 +1140,15 @@ function ConversasScreen() {
   }
 
   useEffect(() => { carregar(); const t = setInterval(carregar, 15000); return () => clearInterval(t); }, []);
+
+  // Chegou de outra tela pedindo um contato específico (alarme da Visão Geral):
+  // abre a conversa dele e limpa o alvo, pra não reabrir sozinho depois.
+  useEffect(() => {
+    if (!telefoneAlvo) return;
+    setModo('lista');
+    setSelecionado(telefoneAlvo);
+    onConsumirAlvo && onConsumirAlvo();
+  }, [telefoneAlvo]);
 
   // Métricas pedindo período mais antigo que o carregado: amplia a janela e
   // recarrega uma vez. Sem isso o número apareceria menor do que a realidade,

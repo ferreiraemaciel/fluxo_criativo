@@ -47,10 +47,13 @@
     const [dateRange, setDateRange]         = useState({ from:'2026-06-03', to:'2026-06-10' });
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     const [targetAd, setTargetAd]           = useState(null);
+    // Contato que a navegação quer abrir já selecionado em Conversas (hoje vem
+    // do alarme de atendimento da Visão Geral, clicando num nome da lista).
+    const [telefoneAlvo, setTelefoneAlvo]   = useState(null);
 
-    const navigate = (pg, ad = null) => {
+    const navigate = (pg, alvo = null) => {
       setScreen(pg);
-      if (ad != null) setTargetAd(ad);
+      if (alvo != null) { if (pg === 'conversas') setTelefoneAlvo(alvo); else setTargetAd(alvo); }
       if (window.location.hash.slice(1) !== pg) window.location.hash = pg;
     };
 
@@ -72,7 +75,7 @@
         case 'criativos':  return <KanbanScreen targetAd={targetAd} onConsumeTarget={() => setTargetAd(null)}/>;
         case 'trafego':    return <TrafficScreen/>;
         case 'funis':      return <FunisScreen onNavigate={navigate}/>;
-        case 'conversas':  return <ConversasScreen/>;
+        case 'conversas':  return <ConversasScreen telefoneAlvo={telefoneAlvo} onConsumirAlvo={() => setTelefoneAlvo(null)}/>;
         case 'financeiro': return <FinancialScreen/>;
         case 'pico':       return <PicoScreen/>;
         case 'site':       return <SiteScreen/>;
