@@ -134,6 +134,7 @@ entregas/instagram-dashboard/dashboard.html
 entregas/instagram-dashboard/insights.json
 entregas/instagram-dashboard/log.txt
 entregas/instagram-dashboard/imagens/
+tracker-fmn/relatorio-campanhas.html
 
 # Certificados e chaves privadas (nunca versionar)
 *.key

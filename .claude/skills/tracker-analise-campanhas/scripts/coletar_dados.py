@@ -88,10 +88,14 @@ def main():
                   "vendas_3d,cpa_3d,gasto_5d,vendas_5d,cpa_5d,isento_regra,observacoes,"
                   "posicionamento,created_at,updated_at")
 
+    # supa_get já pagina sozinho (limit=1000 por página), então um "&limit=N" aqui na
+    # query seria ignorado/sobrescrito por isso, é melhor nem fingir um teto: traz
+    # TODOS os arquivados mesmo (achado real em 2026-09-09: um limit=60 posto aqui
+    # antes nunca funcionou de verdade, o retorno já vinha completo).
     ads_ativos = supa_get(f"ads?status=eq.ativo&select={campos_ads}")
     ads_campeoes = supa_get(f"ads?status=eq.campeoes&select={campos_ads}")
     ads_arquivados = supa_get(
-        f"ads?status=eq.arquivado&select={campos_ads}&order=updated_at.desc&limit=60"
+        f"ads?status=eq.arquivado&select={campos_ads}&order=updated_at.desc"
     )
 
     meta_ad_ids = [a["meta_ad_id"] for a in ads_ativos if a.get("meta_ad_id")]
@@ -105,19 +109,23 @@ def main():
             f"insights_cache?meta_ad_id=in.{filtro}"
             f"&periodo=in.({','.join(periodos)})"
             f"&select=meta_ad_id,meta_ad_name,meta_adset_id,meta_campaign_id,"
-            f"meta_campaign_name,periodo,gasto,impressoes,cliques,link_clicks,"
-            f"landing_page_views,compras,valor_compras,initiate_checkout,cpa,roas,"
-            f"ctr_unico,cpm,frequencia,connect_rate,conv_pagina,checkout_rate,"
-            f"hook_rate,hold_rate,status_meta"
+            f"meta_campaign_name,periodo,data_inicio,data_fim,gasto,impressoes,cliques,"
+            f"link_clicks,landing_page_views,compras,valor_compras,initiate_checkout,cpa,"
+            f"roas,ctr_unico,cpm,frequencia,connect_rate,conv_pagina,checkout_rate,"
+            f"hook_rate,hold_rate,status_meta,atualizado_em"
         ))
 
+    # meta_ad_id vai junto: alguns alertas do meta-sync gravam ads_numero nulo mesmo
+    # com meta_ad_id preenchido (achado real em 2026-09-09), então o processamento
+    # resolve o número certo cruzando com o meta_ad_id dos ativos antes de decidir
+    # se o alerta é "de um ativo" ou "órfão".
     alertas_pendentes = supa_get(
-        "alertas?resolvido=eq.false&select=id,ads_numero,regra_codigo,mensagem,"
+        "alertas?resolvido=eq.false&select=id,ads_numero,meta_ad_id,regra_codigo,mensagem,"
         "acao_tomada,acao_pendente,dados_snapshot,created_at&order=created_at.desc"
     )
     alertas_recentes = supa_get(
         f"alertas?resolvido=eq.true&created_at=gte.{desde_14d}"
-        "&select=id,ads_numero,regra_codigo,mensagem,acao_tomada,created_at"
+        "&select=id,ads_numero,meta_ad_id,regra_codigo,mensagem,acao_tomada,created_at"
         "&order=created_at.desc&limit=80"
     )
 
@@ -128,9 +136,28 @@ def main():
         "&select=ads_numero,produto_nome,valor_liquido,created_at"
     )
 
-    # numero -> produto de TODO ads já cadastrado (não só ativos), pra atribuir
-    # corretamente a receita de vendas cujo anúncio já saiu do ar.
-    ads_numero_produto = supa_get("ads?select=numero,produto")
+    # numero + produto + meta_ad_id de TODO ads já cadastrado (não só ativos), pra
+    # atribuir corretamente a receita de vendas e resolver o número de alertas cujo
+    # ads_numero veio nulo (o anúncio pode já ter sido pausado/arquivado entre o
+    # alerta ser gravado e esta coleta rodar).
+    ads_numero_produto = supa_get("ads?select=numero,produto,meta_ad_id")
+
+    # Receita de VIDA INTEIRA dos anúncios ativos hoje, sem filtro de data. Existe
+    # porque `insights_cache periodo=30d` só tem 58 linhas na conta inteira (só o que
+    # está sendo sincronizado ativamente agora), então somar gasto por ad_id nesse
+    # período sempre fica abaixo do real quando o anúncio já foi relançado (ad_id
+    # trocou). gasto_total/vendas_total do card (ads) já são confiáveis, agregados
+    # por número; esta consulta traz o valor em R$ correspondente, pra dar ROAS real
+    # de vida inteira em vez de um "ROAS 30d" artificialmente inflado.
+    numeros_ativos = [a["numero"] for a in ads_ativos]
+    vendas_vida_ativos = []
+    for lote in batched(numeros_ativos, 150):
+        if not lote:
+            continue
+        filtro = urllib.parse.quote(in_clause(lote), safe="(),")
+        vendas_vida_ativos.extend(supa_get(
+            f"vendas?ads_numero=in.{filtro}&status=eq.aprovada&select=ads_numero,valor_liquido"
+        ))
 
     saida = {
         "gerado_em": agora.isoformat(),
@@ -144,6 +171,7 @@ def main():
         "alertas_resolvidos_14d": alertas_recentes,
         "vendas_30d": vendas_30d,
         "ads_numero_produto": ads_numero_produto,
+        "vendas_vida_ativos": vendas_vida_ativos,
     }
     return saida
 
