@@ -2191,6 +2191,158 @@ function UpsellFunnelCard({ data }) {
   );
 }
 
+/* ── Alarme de atendimento ───────────────────────────────────────*/
+/* Aparece no topo da Visão Geral e responde uma pergunta só: tem lead
+   esperando resposta agora?
+
+   Nasceu de um buraco real: entre 13/07 e 17/08 de 2026 o Claudinho ficou
+   preso numa trava de segurança (`ia_elegivel` só ligava na mão) e 133 leads
+   responderam ao template sem receber nada de volta. Ninguém percebeu por
+   seis semanas, porque nada avisava. Este alarme existe pra que esse tipo de
+   silêncio dure horas, não semanas.
+
+   Dois motivos disparam, e eles são diferentes de propósito:
+     - PEDIU HUMANO: o próprio Claudinho passou a bola (precisa_humano). É o
+       mais urgente, porque a IA já decidiu que não dá conta sozinha.
+     - SEM RESPOSTA: a última mensagem da conversa é do lead e já passou do
+       prazo. Pega tanto Claudinho mudo quanto conversa esquecida no manual.
+
+   Fora da conta, e cada um por um motivo: spam, aluno (já comprou, o assunto
+   é outro), IA pausada à mão e quem já está marcado como precisa_humano (esse
+   já entra no primeiro balde, não conta duas vezes). */
+const ALARME_HORAS = 2;   // limite pra considerar que o lead está esperando
+const ALARME_URGENTE = 6; // acima disso o card fica vermelho, não âmbar
+
+function useAlarmeAtendimento() {
+  const [alarme, setAlarme] = useState({ carregando: true, humano: [], mudo: [] });
+
+  useEffect(() => {
+    if (!window.db) return;
+    let vivo = true;
+
+    async function carregar() {
+      try {
+        // Só contatos que podem virar alerta. is_spam e aluno saem já na
+        // consulta pra não trazer a base inteira pro navegador.
+        const { data: contatos } = await window.db.from('whatsapp_contatos')
+          .select('telefone,nome,etapa,precisa_humano,ia_pausada,is_spam')
+          .neq('is_spam', true).neq('etapa', 'aluno').limit(2000);
+        if (!vivo || !contatos?.length) { setAlarme({ carregando:false, humano:[], mudo:[] }); return; }
+
+        // Última mensagem de cada telefone. Puxa uma janela recente e reduz no
+        // cliente: conversa parada há mais de 30 dias não é alarme, é arquivo.
+        const desde = new Date(Date.now() - 30*24*60*60*1000).toISOString();
+        const { data: msgs } = await window.db.from('whatsapp_mensagens')
+          .select('telefone,direcao,created_at')
+          .gte('created_at', desde).order('created_at', { ascending:false }).limit(5000);
+
+        const ultima = new Map();
+        (msgs || []).forEach(m => { if (!ultima.has(m.telefone)) ultima.set(m.telefone, m); });
+
+        const agora = Date.now();
+        const humano = [], mudo = [];
+        contatos.forEach(c => {
+          const u = ultima.get(c.telefone);
+          const horas = u ? (agora - new Date(u.created_at).getTime()) / 36e5 : null;
+          if (c.precisa_humano) { humano.push({ ...c, horas }); return; }
+          if (c.ia_pausada) return;
+          // Última palavra foi do lead e ninguém respondeu dentro do prazo.
+          if (u && u.direcao === 'entrada' && horas >= ALARME_HORAS) mudo.push({ ...c, horas });
+        });
+        const porEspera = (a,b) => (b.horas || 0) - (a.horas || 0);
+        setAlarme({ carregando:false, humano: humano.sort(porEspera), mudo: mudo.sort(porEspera) });
+      } catch {
+        if (vivo) setAlarme({ carregando:false, humano:[], mudo:[] });
+      }
+    }
+
+    carregar();
+    const t = setInterval(carregar, 3*60*1000); // reavalia sozinho a cada 3 min
+    return () => { vivo = false; clearInterval(t); };
+  }, []);
+
+  return alarme;
+}
+
+function AlarmeAtendimento({ onNavigate }) {
+  const { carregando, humano, mudo } = useAlarmeAtendimento();
+  const [aberto, setAberto] = useState(false);
+  if (carregando) return null;
+
+  const total = humano.length + mudo.length;
+  // Silêncio quando não há nada. Alarme que aparece sempre vira paisagem.
+  if (!total) return null;
+
+  const espera = [...humano, ...mudo].reduce((m, i) => Math.max(m, i.horas || 0), 0);
+  const urgente = humano.length > 0 || espera >= ALARME_URGENTE;
+  const cor = urgente ? '#f87171' : '#eaaa41';
+  const fmtEspera = h => h == null ? '' : h < 24 ? `${Math.floor(h)}h` : `${Math.floor(h/24)}d`;
+
+  const partes = [];
+  if (humano.length) partes.push(`${humano.length} pediu atendimento humano`);
+  if (mudo.length)   partes.push(`${mudo.length} sem resposta há mais de ${ALARME_HORAS}h`);
+
+  return (
+    <div style={{ border:`1px solid ${cor}55`, background:`${cor}12`, borderRadius:10,
+      padding:'12px 14px', display:'flex', flexDirection:'column', gap:aberto ? 10 : 0 }}>
+      <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+        <LucideIcon icon={urgente ? 'alert-triangle' : 'clock'} size={17} style={{ color:cor, flexShrink:0 }}/>
+        <div style={{ flex:1, minWidth:0 }}>
+          <div style={{ fontFamily:'Roboto,sans-serif', fontWeight:900, fontSize:13, color:cor }}>
+            {total === 1 ? '1 lead esperando resposta' : `${total} leads esperando resposta`}
+          </div>
+          <div style={{ fontFamily:'Roboto,sans-serif', fontSize:11.5, color:'var(--text-2)', marginTop:2 }}>
+            {partes.join(' · ')}{espera >= 1 ? ` · o mais antigo espera ${fmtEspera(espera)}` : ''}
+          </div>
+        </div>
+        <button onClick={() => setAberto(v => !v)}
+          style={{ background:'transparent', border:`1px solid ${cor}55`, color:cor, cursor:'pointer',
+            borderRadius:7, padding:'5px 10px', fontSize:11, fontWeight:700, fontFamily:'Roboto,sans-serif' }}>
+          {aberto ? 'Fechar' : 'Ver quem'}
+        </button>
+        <button onClick={() => onNavigate && onNavigate('conversas')}
+          style={{ background:cor, border:'none', color:'#1a1a1a', cursor:'pointer',
+            borderRadius:7, padding:'5px 12px', fontSize:11, fontWeight:900, fontFamily:'Roboto,sans-serif' }}>
+          Abrir Conversas
+        </button>
+      </div>
+
+      {aberto && (
+        <div style={{ display:'flex', flexDirection:'column', gap:4, borderTop:`1px solid ${cor}33`, paddingTop:9 }}>
+          {[...humano.map(i => ({ ...i, tag:'pediu humano' })),
+            ...mudo.map(i => ({ ...i, tag:'sem resposta' }))].slice(0, 12).map(i => (
+            <div key={i.telefone} onClick={() => onNavigate && onNavigate('conversas')}
+              style={{ display:'flex', alignItems:'center', gap:8, cursor:'pointer',
+                padding:'4px 6px', borderRadius:6, fontFamily:'Roboto,sans-serif', fontSize:11.5 }}
+              onMouseEnter={e => e.currentTarget.style.background='rgba(255,255,255,.04)'}
+              onMouseLeave={e => e.currentTarget.style.background='transparent'}>
+              <span style={{ color:'var(--text-1)', fontWeight:700, whiteSpace:'nowrap',
+                overflow:'hidden', textOverflow:'ellipsis', maxWidth:190 }}>
+                {i.nome || i.telefone}
+              </span>
+              <span style={{ padding:'1px 7px', borderRadius:99, fontSize:9.5, fontWeight:700,
+                whiteSpace:'nowrap',
+                background: i.tag === 'pediu humano' ? 'rgba(248,113,113,.14)' : 'rgba(234,170,65,.12)',
+                border: `1px solid ${i.tag === 'pediu humano' ? 'rgba(248,113,113,.4)' : 'rgba(234,170,65,.35)'}`,
+                color: i.tag === 'pediu humano' ? '#f87171' : 'var(--fmn-gold)' }}>
+                {i.tag}
+              </span>
+              <span style={{ marginLeft:'auto', color:'var(--text-3)', whiteSpace:'nowrap' }}>
+                {fmtEspera(i.horas)}
+              </span>
+            </div>
+          ))}
+          {total > 12 && (
+            <span style={{ fontSize:10.5, fontFamily:'Roboto,sans-serif', color:'var(--text-3)', paddingLeft:6 }}>
+              e mais {total - 12}, a lista completa está em Conversas
+            </span>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ── DashboardScreen ─────────────────────────────────────────────*/
 function DashboardScreen({ period, onPeriodChange, dateRange, onDateRangeChange, onNavigate }) {
   // Captura o mapa com fallback: se ainda não estava no window no primeiro render,
@@ -2266,6 +2418,10 @@ function DashboardScreen({ period, onPeriodChange, dateRange, onDateRangeChange,
 
       <div style={{ flex:1, overflowY:'auto', padding:'18px 24px', display:'flex',
         flexDirection:'column', gap:12, width:'100%', minWidth:0, boxSizing:'border-box' }}>
+
+        {/* Alarme de atendimento: primeira coisa da tela quando existe lead
+            esperando. Some sozinho quando não há nada pendente. */}
+        <AlarmeAtendimento onNavigate={onNavigate}/>
 
         {/* KPIs reais — linha 1 */}
         <div style={{ display:'flex', gap:12 }}>
@@ -2434,6 +2590,6 @@ function EmptyState({ icon, label }) {
 // de duplicar garante que o número impresso é sempre o mesmo que está na
 // tela, porque é literalmente o mesmo componente.
 Object.assign(window, {
-  DashboardScreen, BreakdownTable, FlowFunnel, WeeklySalesChart, SalesByPeriod,
+  DashboardScreen, AlarmeAtendimento, BreakdownTable, FlowFunnel, WeeklySalesChart, SalesByPeriod,
   SalesList, CircularProgress, periodToDates,
 });
