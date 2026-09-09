@@ -708,8 +708,32 @@ function periodoRapido(dias) {
   return { from: fromStr, to: fmt(to) };
 }
 
-function MetricasView({ contatosDb, msgs }) {
+/* Puxa uma consulta inteira, página por página.
+
+   O PostgREST devolve no máximo 1000 linhas por requisição e ignora um .limit()
+   maior, sem erro nenhum: a resposta simplesmente vem cortada. Toda consulta que
+   pode passar de 1000 linhas precisa passar por aqui. */
+async function buscarTudo(query, tamanhoPagina = 1000) {
+  const tudo = [];
+  for (let pagina = 0; ; pagina++) {
+    const de = pagina * tamanhoPagina;
+    const { data, error } = await query.range(de, de + tamanhoPagina - 1);
+    if (error || !data?.length) break;
+    tudo.push(...data);
+    if (data.length < tamanhoPagina) break;
+    if (pagina > 200) break; // trava de segurança, nunca deve chegar aqui
+  }
+  return tudo;
+}
+
+function MetricasView({ contatosDb, msgs, onPrecisaJanela }) {
   const [from, setFrom] = useState(periodoRapido(30).from);
+  // Avisa o pai qual profundidade de histórico este período exige.
+  useEffect(() => {
+    if (!onPrecisaJanela || !from) return;
+    const dias = Math.ceil((Date.now() - new Date(from).getTime()) / 864e5);
+    if (dias > 0) onPrecisaJanela(dias + 7); // folga, pra não recarregar a cada ajuste fino
+  }, [from]);
   const [to, setTo]     = useState(periodoRapido(30).to);
   const [quizLeads, setQuizLeads] = useState([]);
   const [custoRealMeta, setCustoRealMeta] = useState(null);
@@ -982,6 +1006,13 @@ const MENSAGENS_PRONTAS = [
 
 function ConversasScreen() {
   const [msgs, setMsgs]           = useState([]);
+  // Janela de mensagens carregada pra lista e métricas. Cresce sozinha quando
+  // as Métricas pedem um período mais antigo que o que já está em memória.
+  const [janelaDias, setJanelaDias] = useState(90);
+  const janelaRef = useRef(90);
+  // Histórico completo de conversas abertas, por telefone. Buscado sob demanda
+  // e guardado aqui pra não repetir a consulta a cada clique.
+  const [historico, setHistorico]   = useState({});
   const [contatosDb, setContatosDb] = useState([]);
   const [produtosPorTelefone, setProdutosPorTelefone] = useState({}); // chaveTelefone -> [{label,cor}]
   const [loading, setLoading]     = useState(true);
@@ -1025,23 +1056,33 @@ function ConversasScreen() {
   const SUPA_URL = window.db?.supabaseUrl || '';
   const SUPA_KEY = window.db?.supabaseKey  || '';
 
-  function carregar() {
+  async function carregar() {
     if (!window.db) return;
     // Contatos marcados como spam nunca aparecem na Lista, Kanban ou Métricas.
     // Precisa filtrar também as mensagens desses telefones, senão a conversa
     // reaparece de volta pela lista de mensagens mesmo com o contato oculto.
-    window.db.from('whatsapp_contatos').select('*').order('updated_at', { ascending: false }).limit(5000)
-      .then(({ data, error }) => {
-        if (error) return;
-        const todos = data || [];
-        const spamSet = new Set(todos.filter(c => c.is_spam).map(c => c.telefone));
-        setContatosDb(todos.filter(c => !c.is_spam));
-        window.db.from('whatsapp_mensagens').select('*').order('created_at', { ascending: false }).limit(5000)
-          .then(({ data: msgsData, error: msgsError }) => {
-            if (!msgsError) setMsgs((msgsData || []).filter(m => !spamSet.has(m.telefone)));
-            setLoading(false);
-          });
-      });
+    //
+    // Os dois selects abaixo paginam de verdade com .range(). O Supabase corta
+    // em 1000 linhas por página mesmo pedindo limit maior, e um .limit(5000)
+    // seco entregava só as 1000 mais recentes sem avisar. Custou caro: em
+    // 2026-09-09 a tela mostrava 1.000 das 3.459 mensagens, tudo anterior a
+    // 16/08 tinha sumido, e 940 das 1.213 conversas nem apareciam na lista.
+    // Quem já tinha sido atendido em julho voltava parecendo lead novo.
+    const todos = await buscarTudo(window.db.from('whatsapp_contatos').select('*').order('updated_at', { ascending: false }));
+    const spamSet = new Set(todos.filter(c => c.is_spam).map(c => c.telefone));
+    setContatosDb(todos.filter(c => !c.is_spam));
+
+    // Mensagens vêm por janela de tempo, não por contagem. A lista e as
+    // métricas só precisam do período visível; o histórico antigo de uma
+    // conversa específica é buscado sob demanda quando ela é aberta (ver
+    // carregarHistorico). Assim a tela não fica mais lenta conforme a base
+    // cresce, que era o problema de simplesmente paginar tudo.
+    const desde = new Date(Date.now() - janelaRef.current * 24 * 60 * 60 * 1000).toISOString();
+    const msgsData = await buscarTudo(
+      window.db.from('whatsapp_mensagens').select('*').gte('created_at', desde).order('created_at', { ascending: false })
+    );
+    setMsgs(msgsData.filter(m => !spamSet.has(m.telefone)));
+    setLoading(false);
     window.db.from('app_config').select('valor').eq('chave', 'whatsapp_ia_ativa').single()
       .then(({ data }) => { if (data) setIaAtivaGlobal(data.valor === true); });
     window.db.from('app_config').select('valor').eq('chave', 'whatsapp_modo_treinamento').single()
@@ -1099,6 +1140,16 @@ function ConversasScreen() {
   }
 
   useEffect(() => { carregar(); const t = setInterval(carregar, 15000); return () => clearInterval(t); }, []);
+
+  // Métricas pedindo período mais antigo que o carregado: amplia a janela e
+  // recarrega uma vez. Sem isso o número apareceria menor do que a realidade,
+  // que é pior do que demorar um pouco mais pra carregar.
+  function garantirJanela(dias) {
+    if (dias <= janelaRef.current) return;
+    janelaRef.current = dias;
+    setJanelaDias(dias);
+    carregar();
+  }
   useEffect(() => { const t = setInterval(() => setTick(x => x + 1), 30000); return () => clearInterval(t); }, []);
 
   function moverEtapa(telefone, etapa) {
@@ -1193,10 +1244,30 @@ function ConversasScreen() {
   }, [contatos, ordemLista]);
   const etapasVisiveis = ETAPAS;
 
+  // Abrir uma conversa busca o histórico inteiro daquele telefone, sem depender
+  // da janela carregada pra lista. É o que garante que uma conversa de meses
+  // atrás apareça completa em vez de começar no meio.
+  useEffect(() => {
+    if (!selecionado || !window.db || historico[selecionado]) return;
+    let vivo = true;
+    (async () => {
+      const antigas = await buscarTudo(
+        window.db.from('whatsapp_mensagens').select('*').eq('telefone', selecionado).order('created_at', { ascending: false })
+      );
+      if (vivo) setHistorico(h => ({ ...h, [selecionado]: antigas }));
+    })();
+    return () => { vivo = false; };
+  }, [selecionado]);
+
   const thread = useMemo(() => {
     if (!selecionado) return [];
-    return msgs.filter(m => m.telefone === selecionado).slice().reverse();
-  }, [msgs, selecionado]);
+    // Junta as duas fontes por id: a janela recente traz o que acabou de
+    // chegar (inclusive via realtime), o histórico traz o passado inteiro.
+    const porId = new Map();
+    for (const m of (historico[selecionado] || [])) porId.set(m.id, m);
+    for (const m of msgs) if (m.telefone === selecionado) porId.set(m.id, m);
+    return [...porId.values()].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+  }, [msgs, historico, selecionado]);
 
   const contatoAtivo = contatos.find(c => c.telefone === selecionado);
   const custoConversaAtiva = thread.reduce((s, m) => s + (Number(m.custo_usd) || 0), 0);
@@ -1207,10 +1278,10 @@ function ConversasScreen() {
 
   useEffect(() => {
     if (!selecionado || !window.db) return;
-    const idsNaoLidas = msgs.filter(m => m.telefone === selecionado && m.direcao === 'entrada' && !m.lida_pelo_time).map(m => m.id);
+    const idsNaoLidas = thread.filter(m => m.direcao === 'entrada' && !m.lida_pelo_time).map(m => m.id);
     if (!idsNaoLidas.length) return;
     window.db.from('whatsapp_mensagens').update({ lida_pelo_time: true }).in('id', idsNaoLidas).then(() => carregar());
-  }, [selecionado, msgs]);
+  }, [selecionado, thread]);
 
   // Esc: fecha o que estiver mais "em cima" primeiro (modal, anexo pendente,
   // menu de anexo, painel de mensagens prontas) e só por último sai da
@@ -1473,7 +1544,7 @@ function ConversasScreen() {
           onAbrir={(telefone) => { setSelecionado(telefone); setModo('lista'); }} />
       )}
       {modo === 'metricas' && (
-        <MetricasView contatosDb={contatosDb} msgs={msgs} />
+        <MetricasView contatosDb={contatosDb} msgs={msgs} onPrecisaJanela={garantirJanela} />
       )}
       {modo === 'lista' && (
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden', minHeight: 0 }}>
