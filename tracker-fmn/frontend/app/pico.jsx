@@ -89,6 +89,40 @@ const DATAS_ATENCAO = {
 };
 const atencaoDe = iso => DATAS_ATENCAO[iso] || null;
 
+
+/* ── Virar card no kanban ───────────────────────────────────────
+   Tarefa de tráfego vira ADS, tarefa de conteúdo vira card de
+   Orgânico. O card já nasce marcado com o projeto, e é isso que
+   separa o pico do perpétuo depois, nas métricas e nas regras.
+──────────────────────────────────────────────────────────────────*/
+async function criarCardDaTarefa(tarefa, projeto) {
+  if (tarefa.trilha === 'trafego') {
+    const { data } = await window.db.from('ads').select('numero');
+    const usados = new Set((data || []).map(r => r.numero));
+    let n = 1; while (usados.has(n)) n++;
+    const { error } = await window.db.from('ads').insert({
+      numero: n,
+      titulo: `ADS ${String(n).padStart(3,'0')} - ${tarefa.titulo}`,
+      tipo: 'imagem',
+      status: 'fazer',
+      pico_projeto_id: projeto.id,
+    });
+    if (error) throw new Error(error.message);
+    return { tipo:'Anúncios', rotulo:`ADS ${String(n).padStart(3,'0')}`, hash:'#criativos' };
+  }
+  if (tarefa.trilha === 'conteudo') {
+    const { error } = await window.db.from('conteudo_organico').insert({
+      tema: tarefa.titulo,
+      plataforma: 'Reels',
+      status: 'Fazer',
+      pico_projeto_id: projeto.id,
+    });
+    if (error) throw new Error(error.message);
+    return { tipo:'Orgânico', rotulo:tarefa.titulo, hash:'#organico' };
+  }
+  throw new Error('Só tarefas de Tráfego e Conteúdo viram card.');
+}
+
 /* ── Barra de progresso ─────────────────────────────────────────*/
 function Progresso({ feitas, total, cor = '#4ade80', altura = 6 }) {
   const p = total > 0 ? Math.round((feitas / total) * 100) : 0;
@@ -108,8 +142,11 @@ function Progresso({ feitas, total, cor = '#4ade80', altura = 6 }) {
 }
 
 /* ── Linha de tarefa ────────────────────────────────────────────*/
-function LinhaTarefa({ t, onToggle, onAbrir, mostrarTrilha }) {
+function LinhaTarefa({ t, onToggle, onAbrir, mostrarTrilha, onVirarCard }) {
   const [hov, setHov] = useState(false);
+  const [criando, setCriando] = useState(false);
+  const podeVirarCard = onVirarCard && (t.trilha === 'trafego' || t.trilha === 'conteudo')
+    && !t.entregavel_url;
   const feito   = t.status === 'feito';
   const pulada  = t.status === 'pulada';
   const trilha  = TRILHA_MAP[t.trilha] || {};
@@ -159,6 +196,30 @@ function LinhaTarefa({ t, onToggle, onAbrir, mostrarTrilha }) {
       </div>
 
       <div style={{ display:'flex', alignItems:'center', gap:8, flexShrink:0 }}>
+        {t.entregavel_url && (
+          <span title={`Card criado: ${t.entregavel_url}`}
+            style={{ color:'#4ade80', display:'flex' }}>
+            <LucideIcon icon="link" size={12}/>
+          </span>
+        )}
+        {podeVirarCard && (hov || criando) && (
+          <button
+            onClick={async (e) => {
+              e.stopPropagation();
+              if (criando) return;
+              setCriando(true);
+              try { await onVirarCard(t); } finally { setCriando(false); }
+            }}
+            title={t.trilha === 'trafego' ? 'Criar card em Anúncios' : 'Criar card em Orgânico'}
+            style={{ padding:'2px 7px', borderRadius:5, cursor:'pointer',
+              border:'1px solid var(--app-border)', background:'rgba(255,255,255,.05)',
+              color:'var(--text-2)', fontSize:10, fontFamily:'Roboto,sans-serif',
+              fontWeight:700, display:'flex', alignItems:'center', gap:3 }}>
+            <LucideIcon icon={criando ? 'loader' : 'plus'} size={10}
+              style={criando ? { animation:'spin 1s linear infinite' } : undefined}/>
+            {criando ? 'criando' : 'card'}
+          </button>
+        )}
         {mostrarTrilha && trilha.label && (
           <span title={trilha.label} style={{ display:'flex', alignItems:'center',
             color:trilha.cor, opacity:.75 }}>
@@ -776,7 +837,7 @@ function Calendario({ tarefas, d0, onAbrir }) {
           <div style={{ display:'flex', flexDirection:'column', gap:1 }}>
             {tarefasDoDia.map(t => (
               <LinhaTarefa key={t.id} t={t} onToggle={onAbrir.toggle}
-                onAbrir={()=>{}} mostrarTrilha/>
+                onAbrir={()=>{}} mostrarTrilha onVirarCard={onAbrir.virarCard}/>
             ))}
           </div>
         </div>
@@ -863,6 +924,25 @@ function PicoScreen() {
     }
   };
 
+  /* Tarefa vira card no kanban, já marcada com o projeto */
+  const [aviso, setAviso] = useState(null);
+  const virarCard = async (t) => {
+    try {
+      const r = await criarCardDaTarefa(t, projeto);
+      const marca = `${r.tipo}: ${r.rotulo}`;
+      await window.db.from('pico_tarefas')
+        .update({ entregavel_url: marca, status: t.status === 'pendente' ? 'fazendo' : t.status })
+        .eq('id', t.id);
+      setTarefas(ts => ts.map(x => x.id === t.id
+        ? { ...x, entregavel_url: marca, status: x.status === 'pendente' ? 'fazendo' : x.status }
+        : x));
+      setAviso({ tipo:'ok', texto:`Card criado em ${r.tipo}: ${r.rotulo}`, hash:r.hash });
+    } catch (e) {
+      setAviso({ tipo:'erro', texto: e.message });
+    }
+    setTimeout(() => setAviso(null), 6000);
+  };
+
   /* Salvar o plano de mídia */
   const salvarPlano = async (novo) => {
     setProjetos(ps => ps.map(p => p.id === projetoId ? { ...p, plano_midia:novo } : p));
@@ -941,6 +1021,22 @@ function PicoScreen() {
       <TopBar title="Picos de Venda"/>
 
       <div style={{ flex:1, overflowY:'auto', padding:'14px 18px 30px' }}>
+
+        {aviso && (
+          <div style={{ marginBottom:11, padding:'8px 12px', borderRadius:8,
+            display:'flex', alignItems:'center', gap:9,
+            background: aviso.tipo === 'ok' ? 'rgba(74,222,128,.1)' : 'rgba(248,113,113,.1)',
+            border:'1px solid ' + (aviso.tipo === 'ok' ? 'rgba(74,222,128,.3)' : 'rgba(248,113,113,.3)') }}>
+            <LucideIcon icon={aviso.tipo === 'ok' ? 'check-circle' : 'alert-circle'} size={14}
+              style={{ color: aviso.tipo === 'ok' ? '#4ade80' : '#f87171' }}/>
+            <span style={{ flex:1, fontSize:12, fontFamily:'Roboto,sans-serif',
+              color:'var(--text-1)' }}>{aviso.texto}</span>
+            {aviso.hash && (
+              <a href={aviso.hash} style={{ fontSize:11.5, fontFamily:'Roboto,sans-serif',
+                fontWeight:700, color:'#4ade80', textDecoration:'none' }}>abrir</a>
+            )}
+          </div>
+        )}
 
         {/* Cabeçalho: projeto, D0 e progresso */}
         <div style={{ display:'flex', alignItems:'center', gap:10, flexWrap:'wrap',
@@ -1026,7 +1122,7 @@ function PicoScreen() {
         {/* Execução */}
         {visao === 'calendario' ? (
           <Calendario tarefas={visiveis} d0={projeto?.data_abertura}
-            onAbrir={{ toggle: alternarTarefa }}/>
+            onAbrir={{ toggle: alternarTarefa, virarCard }}/>
         ) : (
         <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
           {ordemGrupos.map(gid => {
@@ -1050,7 +1146,8 @@ function PicoScreen() {
                 <div style={{ display:'flex', flexDirection:'column', gap:1 }}>
                   {lista.map(t => (
                     <LinhaTarefa key={t.id} t={t} onToggle={alternarTarefa}
-                      onAbrir={()=>{}} mostrarTrilha={visao === 'fase'}/>
+                      onAbrir={()=>{}} mostrarTrilha={visao === 'fase'}
+                      onVirarCard={virarCard}/>
                   ))}
                 </div>
               </SectionCard>

@@ -119,7 +119,7 @@ function useAdsCards() {
     setLoading(true);
     const { data: adsList } = await window.db
       .from('ads')
-      .select('numero,titulo,status,produto,tag,etapa,tipo,headline,hook_copy,hook_visual,desenvolvimento_cta,roteiro,estetica_visual,prompt,slides,texto_principal,titulo_ad,descricao_ad,posicionamento,media_drive_url,media_tipo,media_files,meta_ad_id,meta_ad_url,vendas_total,cpa_historico,gasto_total,isento_regra,observacoes,referencia,thumb_url,media_url,media_preview_url,meta_image_hash,meta_video_id,meta_campaign_id,meta_adset_id,meta_publish_status,ordem_manual')
+      .select('numero,titulo,status,produto,tag,etapa,tipo,headline,hook_copy,hook_visual,desenvolvimento_cta,roteiro,estetica_visual,prompt,slides,texto_principal,titulo_ad,descricao_ad,posicionamento,media_drive_url,media_tipo,media_files,meta_ad_id,meta_ad_url,vendas_total,cpa_historico,gasto_total,isento_regra,observacoes,referencia,thumb_url,media_url,media_preview_url,meta_image_hash,meta_video_id,meta_campaign_id,meta_adset_id,meta_publish_status,ordem_manual,pico_projeto_id')
       .order('numero', { ascending: false });
 
     const { data: insights } = await window.db
@@ -343,6 +343,17 @@ function KanbanCard({ card, col, onOpen, onDragStart, podeArrastar, onDropAntes,
             </span>
           );
         })()}
+        {/* Pico de vendas: separa o que e de campanha do que e perpetuo.
+            Card sem essa marca continua sendo perpetuo, como sempre foi. */}
+        {card.raw?.pico_projeto_id && (
+          <span title="Anúncio de um pico de vendas"
+            style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700,
+              letterSpacing:'0.04em', borderRadius:5, padding:'2px 7px',
+              color:'#c084fc', background:'rgba(192,132,252,.12)',
+              border:'1px solid rgba(192,132,252,.35)' }}>
+            PICO
+          </span>
+        )}
         {hasMedia
           ? card.formats.map(f => <Badge key={f} tone={FORMAT_TONE[f]||'default'}>{f}</Badge>)
           : <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:500,
@@ -2505,6 +2516,7 @@ function KanbanScreen({ targetAd, onConsumeTarget }) {
   const [selectedCard, setSelectedCard] = useState(null);
   const [showNovoAds, setShowNovoAds]   = useState(false);
   const [prodFilter, setProdFilter]     = useState('Todos');
+  const [origemFilter, setOrigemFilter] = useState('Todos');
   const [fmtFilter, setFmtFilter]       = useState('Todos');
   const [tagFilter, setTagFilter]       = useState('Todas');
   const [searchQuery, setSearchQuery]   = useState('');
@@ -2656,6 +2668,8 @@ function KanbanScreen({ targetAd, onConsumeTarget }) {
     // Card sem produto gravado conta como MCV: foi o único produto até o
     // Blindagem entrar, em 26/08/2026, e é o mesmo default usado no card.
     if (prodFilter !== 'Todos' && (c.raw?.produto || 'MCV') !== prodFilter) return false;
+    if (origemFilter === 'Pico'     && !c.raw?.pico_projeto_id) return false;
+    if (origemFilter === 'Perpétuo' &&  c.raw?.pico_projeto_id) return false;
     if (fmtFilter !== 'Todos' && !c.formats.includes(fmtFilter)) return false;
     if (tagFilter !== 'Todas' && c.tag !== tagFilter) return false;
     if (searchQuery.trim()) {
@@ -2667,7 +2681,7 @@ function KanbanScreen({ targetAd, onConsumeTarget }) {
     return true;
   });
 
-  const hasActiveFilters = prodFilter !== 'Todos' || fmtFilter !== 'Todos' || tagFilter !== 'Todas' || searchQuery.trim() !== '';
+  const hasActiveFilters = prodFilter !== 'Todos' || origemFilter !== 'Todos' || fmtFilter !== 'Todos' || tagFilter !== 'Todas' || searchQuery.trim() !== '';
 
   function handleUpdate(updatedCard) {
     if (updatedCard.deleted) { setSelectedCard(null); reload(); return; }
@@ -2768,6 +2782,16 @@ function KanbanScreen({ targetAd, onConsumeTarget }) {
         <div style={{ width:1, height:16, background:'var(--app-border)' }}/>
         <div style={{ display:'flex', alignItems:'center', gap:6 }}>
           <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700,
+            letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)', whiteSpace:'nowrap' }}>Origem</span>
+          <div style={{ display:'flex', gap:4 }}>
+            {['Todos','Perpétuo','Pico'].map(o => (
+              <FilterPill key={o} label={o} active={origemFilter===o} onClick={()=>setOrigemFilter(o)}/>
+            ))}
+          </div>
+        </div>
+        <div style={{ width:1, height:16, background:'var(--app-border)' }}/>
+        <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+          <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700,
             letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)', whiteSpace:'nowrap' }}>Formato</span>
           <div style={{ display:'flex', gap:4 }}>
             {['Todos','Reels','Imagem','Carrossel'].map(f => (
@@ -2823,7 +2847,7 @@ function KanbanScreen({ targetAd, onConsumeTarget }) {
           )}
         </div>
         {hasActiveFilters && (
-          <button onClick={()=>{ setProdFilter('Todos'); setFmtFilter('Todos'); setTagFilter('Todas'); setSearchQuery(''); }}
+          <button onClick={()=>{ setProdFilter('Todos'); setOrigemFilter('Todos'); setFmtFilter('Todos'); setTagFilter('Todas'); setSearchQuery(''); }}
             style={{ display:'flex', alignItems:'center', gap:4, padding:'4px 8px', borderRadius:6,
               background:'rgba(248,113,113,.08)', border:'1px solid rgba(248,113,113,.2)',
               color:'var(--clr-neg)', fontSize:10.5, fontFamily:'Roboto,sans-serif', fontWeight:700, cursor:'pointer' }}>
