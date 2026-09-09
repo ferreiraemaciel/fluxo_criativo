@@ -124,6 +124,78 @@ async function criarCardDaTarefa(tarefa, projeto) {
   throw new Error('Só tarefas de Tráfego e Conteúdo viram card.');
 }
 
+
+/* ── Campos de número com máscara ───────────────────────────────
+   Moeda entra por centavos, da direita para a esquerda, como em
+   qualquer caixa: digitar 1 0 0 0 0 vira R$ 100,00. E percentual
+   é digitado como as pessoas falam, 7 em vez de 0.07, guardando
+   a fração no banco.
+──────────────────────────────────────────────────────────────────*/
+const fmtMoeda = v => (Number(v) || 0).toLocaleString('pt-BR',
+  { style:'currency', currency:'BRL' });
+
+function CampoMoeda({ valor, onSalvar, largura = 120, alinhamento = 'right', estilo }) {
+  const [txt, setTxt] = useState(valor == null ? '' : fmtMoeda(valor));
+  const [focado, setFocado] = useState(false);
+
+  /* Enquanto o campo não está em foco, ele reflete o que veio de fora.
+     Sem isso, um valor puxado do banco não apareceria. */
+  useEffect(() => {
+    if (!focado) setTxt(valor == null ? '' : fmtMoeda(valor));
+  }, [valor, focado]);
+
+  const digitar = (e) => {
+    const digitos = e.target.value.replace(/\D/g, '');
+    if (!digitos) { setTxt(''); return; }
+    setTxt(fmtMoeda(Number(digitos) / 100));
+  };
+
+  const sair = () => {
+    setFocado(false);
+    const digitos = txt.replace(/\D/g, '');
+    const novo = digitos ? Number(digitos) / 100 : null;
+    if (novo !== valor) onSalvar(novo);
+  };
+
+  return (
+    <input type="text" inputMode="numeric" value={txt} placeholder="R$ 0,00"
+      onChange={digitar} onFocus={()=>setFocado(true)} onBlur={sair}
+      style={{ width:largura, textAlign:alinhamento, padding:'5px 7px', borderRadius:6,
+        border:'1px solid var(--app-border)', background:'rgba(255,255,255,.03)',
+        color:'var(--text-1)', fontSize:12, fontFamily:'Roboto,sans-serif',
+        fontVariantNumeric:'tabular-nums', ...estilo }}/>
+  );
+}
+
+function CampoPercent({ valor, onSalvar, largura = 92, casas = 2 }) {
+  /* No banco fica a fração (0.07). Na tela aparece o que se fala (7). */
+  const paraTela = v => v == null ? '' : String(Number((v * 100).toFixed(casas)));
+  const [txt, setTxt] = useState(paraTela(valor));
+  const [focado, setFocado] = useState(false);
+
+  useEffect(() => { if (!focado) setTxt(paraTela(valor)); }, [valor, focado]);
+
+  const sair = () => {
+    setFocado(false);
+    const limpo = txt.replace(',', '.').replace(/[^\d.]/g, '');
+    const novo = limpo === '' ? null : Number(limpo) / 100;
+    if (novo !== valor) onSalvar(novo);
+  };
+
+  return (
+    <div style={{ display:'flex', alignItems:'center', gap:3 }}>
+      <input type="text" inputMode="decimal" value={txt} placeholder="0"
+        onChange={e=>setTxt(e.target.value)} onFocus={()=>setFocado(true)} onBlur={sair}
+        style={{ width:largura, textAlign:'right', padding:'5px 7px', borderRadius:6,
+          border:'1px solid var(--app-border)', background:'rgba(255,255,255,.03)',
+          color:'var(--text-1)', fontSize:12, fontFamily:'Roboto,sans-serif',
+          fontVariantNumeric:'tabular-nums' }}/>
+      <span style={{ fontSize:11, color:'var(--text-3)',
+        fontFamily:'Roboto,sans-serif' }}>%</span>
+    </div>
+  );
+}
+
 /* ── Barra de progresso ─────────────────────────────────────────*/
 function Progresso({ feitas, total, cor = '#4ade80', altura = 6 }) {
   const p = total > 0 ? Math.round((feitas / total) * 100) : 0;
@@ -355,14 +427,19 @@ function BlocoImaginacao({ metricas, onSalvar }) {
                   color:'var(--text-2)', whiteSpace:'nowrap' }}>{ind.label}</td>
                 {CENARIOS.map(c => (
                   <td key={c} style={{ padding:'3px 8px', textAlign:'right' }}>
-                    <input
-                      type="number" defaultValue={valor(c, ind.chave)}
-                      onBlur={e => onSalvar(c, ind.chave, e.target.value, ind.unidade)}
-                      style={{ width:'100%', maxWidth:120, textAlign:'right', padding:'5px 7px',
-                        borderRadius:6, border:'1px solid var(--app-border)',
-                        background:'rgba(255,255,255,.03)', color:'var(--text-1)',
-                        fontSize:12, fontFamily:'Roboto,sans-serif',
-                        fontVariantNumeric:'tabular-nums' }}/>
+                    {ind.unidade === 'R$' ? (
+                      <CampoMoeda valor={valor(c, ind.chave) === '' ? null : Number(valor(c, ind.chave))}
+                        onSalvar={v => onSalvar(c, ind.chave, v == null ? '' : v, ind.unidade)}
+                        largura="100%" estilo={{ maxWidth:120 }}/>
+                    ) : (
+                      <input type="number" defaultValue={valor(c, ind.chave)}
+                        onBlur={e => onSalvar(c, ind.chave, e.target.value, ind.unidade)}
+                        style={{ width:'100%', maxWidth:120, textAlign:'right', padding:'5px 7px',
+                          borderRadius:6, border:'1px solid var(--app-border)',
+                          background:'rgba(255,255,255,.03)', color:'var(--text-1)',
+                          fontSize:12, fontFamily:'Roboto,sans-serif',
+                          fontVariantNumeric:'tabular-nums' }}/>
+                    )}
                   </td>
                 ))}
               </tr>
@@ -459,20 +536,28 @@ function pctRemarketing(dias) {
   return Math.min(0.41, Math.max(0.275, 0.275 + ((d - 7) / 13) * (0.41 - 0.275)));
 }
 
-function CampoNum({ label, valor, onSalvar, sufixo, dica, passo }) {
+function CampoNum({ label, valor, onSalvar, sufixo, dica, passo, tipo }) {
   return (
     <div style={{ display:'flex', alignItems:'center', gap:8, minWidth:0 }}>
       <span title={dica} style={{ flex:1, fontSize:12, fontFamily:'Roboto,sans-serif',
         color:'var(--text-2)', minWidth:0, cursor: dica ? 'help' : 'default',
         borderBottom: dica ? '1px dotted var(--app-border)' : 'none' }}>{label}</span>
-      <input type="number" step={passo || 'any'} defaultValue={valor ?? ''}
-        onBlur={e => onSalvar(e.target.value === '' ? null : Number(e.target.value))}
-        style={{ width:92, textAlign:'right', padding:'5px 7px', borderRadius:6,
-          border:'1px solid var(--app-border)', background:'rgba(255,255,255,.03)',
-          color:'var(--text-1)', fontSize:12, fontFamily:'Roboto,sans-serif',
-          fontVariantNumeric:'tabular-nums' }}/>
-      {sufixo && <span style={{ fontSize:11, color:'var(--text-3)', width:22,
-        fontFamily:'Roboto,sans-serif' }}>{sufixo}</span>}
+      {tipo === 'moeda' ? (
+        <CampoMoeda valor={valor} onSalvar={onSalvar} largura={114}/>
+      ) : tipo === 'percent' ? (
+        <CampoPercent valor={valor} onSalvar={onSalvar}/>
+      ) : (
+        <>
+          <input type="number" step={passo || 'any'} defaultValue={valor ?? ''}
+            onBlur={e => onSalvar(e.target.value === '' ? null : Number(e.target.value))}
+            style={{ width:92, textAlign:'right', padding:'5px 7px', borderRadius:6,
+              border:'1px solid var(--app-border)', background:'rgba(255,255,255,.03)',
+              color:'var(--text-1)', fontSize:12, fontFamily:'Roboto,sans-serif',
+              fontVariantNumeric:'tabular-nums' }}/>
+          {sufixo && <span style={{ fontSize:11, color:'var(--text-3)', width:22,
+            fontFamily:'Roboto,sans-serif' }}>{sufixo}</span>}
+        </>
+      )}
     </div>
   );
 }
@@ -494,7 +579,7 @@ function LinhaCalc({ label, valor, destaque, alerta, dica }) {
 function BlocoPlanoMidia({ plano, onSalvar }) {
   const p = plano || {};
   const set = (k) => (v) => onSalvar({ ...p, [k]: v });
-  const brl = v => window.fmtBRL ? window.fmtBRL(v) : ('R$ ' + (v||0).toFixed(2));
+  const brl = v => window.fmtBRL ? window.fmtBRL(v) : fmtMoeda(v);
 
   const ticket  = Number(p.ticket_liquido) || 0;
   const vendas  = Number(p.vendas_meta) || 0;
@@ -537,13 +622,13 @@ function BlocoPlanoMidia({ plano, onSalvar }) {
             color:'var(--text-3)', letterSpacing:.4, textTransform:'uppercase' }}>Você define</div>
           <CampoNum label="Vendas esperadas" valor={p.vendas_meta} onSalvar={set('vendas_meta')} sufixo="un"/>
           <CampoNum label="Ticket do produto" valor={p.ticket_liquido} onSalvar={set('ticket_liquido')}
-            sufixo="R$" dica="Já descontada a taxa da plataforma. É o que entra de verdade."/>
+            tipo="moeda" dica="Já descontada a taxa da plataforma. É o que entra de verdade."/>
           <CampoNum label="Conversão de leads" valor={p.taxa_conversao} onSalvar={set('taxa_conversao')}
-            sufixo="%" passo="0.01" dica="No pico fica entre 5% e 10%. O piso é 5%, a planilha usa 7%. Digite 0.07 para 7%."/>
+            tipo="percent" dica="No pico fica entre 5% e 10%, e o piso é 5%. A planilha usa 7%."/>
           <CampoNum label="Custo por lead" valor={p.cpl_meta} onSalvar={set('cpl_meta')}
-            sufixo="R$" dica="No pico o lead custa de 2 a 3 vezes o normal."/>
+            tipo="moeda" dica="No pico o lead custa de 2 a 3 vezes o normal."/>
           <CampoNum label="Imposto do Meta" valor={p.imposto_meta} onSalvar={set('imposto_meta')}
-            sufixo="%" passo="0.0001" dica="A planilha usa 0.1215, ou seja 12,15%."/>
+            tipo="percent" dica="A planilha do retiro usa 12,15%."/>
           <CampoNum label="Dias de remarketing" valor={p.dias_remarketing} onSalvar={set('dias_remarketing')}
             sufixo="d" dica="Entre 7 e 20. O percentual da fase se ajusta sozinho, de 27,5% a 41%."/>
           <CampoNum label="Quantidade de anúncios" valor={p.qtd_anuncios} onSalvar={set('qtd_anuncios')}
@@ -590,11 +675,7 @@ function BlocoPlanoMidia({ plano, onSalvar }) {
                   <span style={{ flex:1, fontSize:11.5, fontFamily:'Roboto,sans-serif',
                     fontWeight:700, color:'var(--text-1)' }}>{e.label}</span>
                   {e.fixa ? (
-                    <input type="number" step="0.01" defaultValue={pct}
-                      onBlur={ev => set(e.fixa)(Number(ev.target.value))}
-                      style={{ width:50, textAlign:'right', padding:'2px 5px', borderRadius:5,
-                        border:'1px solid var(--app-border)', background:'transparent',
-                        color:'var(--text-2)', fontSize:11, fontFamily:'Roboto,sans-serif' }}/>
+                    <CampoPercent valor={pct} onSalvar={v => set(e.fixa)(v)} largura={44} casas={1}/>
                   ) : (
                     <span title={e.chave === 'captacao'
                         ? 'Calculada: o que sobra das outras tres'
@@ -893,7 +974,7 @@ const PERGUNTAS_DEBRIEF = [
 function BlocoDebriefing({ projeto, metricas, tarefas, onSalvar, onSalvarResposta, respostas }) {
   const [puxando, setPuxando] = useState(false);
   const [msg, setMsg] = useState(null);
-  const brl = v => window.fmtBRL ? window.fmtBRL(v) : ('R$ ' + (v||0).toFixed(2));
+  const brl = v => window.fmtBRL ? window.fmtBRL(v) : fmtMoeda(v);
 
   const val = (momento, chave) => {
     const m = metricas.find(x => x.momento === momento && x.indicador === chave && !x.cenario);
@@ -1041,12 +1122,17 @@ function BlocoDebriefing({ projeto, metricas, tarefas, onSalvar, onSalvarRespost
                         {mostrar(ind.chave, 'meta_debrief')}
                       </span>
                     ) : (
+                      ind.unidade === 'R$' ? (
+                        <CampoMoeda valor={meta(ind.chave)} largura={112}
+                          onSalvar={v => onSalvar(ind.chave, v, 'meta_debrief')}/>
+                      ) : (
                       <input type="number" defaultValue={meta(ind.chave) ?? ''}
                         onBlur={e => onSalvar(ind.chave, e.target.value === '' ? null : Number(e.target.value), 'meta_debrief')}
                         style={{ width:92, textAlign:'right', padding:'4px 6px', borderRadius:6,
                           border:'1px solid var(--app-border)', background:'rgba(255,255,255,.03)',
                           color:'var(--text-2)', fontSize:12, fontFamily:'Roboto,sans-serif',
                           fontVariantNumeric:'tabular-nums' }}/>
+                      )
                     )}
                   </td>
                   <td style={{ padding:'3px 8px', textAlign:'right' }}>
@@ -1056,12 +1142,18 @@ function BlocoDebriefing({ projeto, metricas, tarefas, onSalvar, onSalvarRespost
                         {mostrar(ind.chave, 'debriefing')}
                       </span>
                     ) : (
+                      ind.unidade === 'R$' ? (
+                        <CampoMoeda valor={real(ind.chave)} largura={112}
+                          onSalvar={v => onSalvar(ind.chave, v)}
+                          estilo={{ fontWeight:700, background:'rgba(255,255,255,.05)' }}/>
+                      ) : (
                       <input type="number" defaultValue={real(ind.chave) ?? ''}
                         onBlur={e => onSalvar(ind.chave, e.target.value === '' ? null : Number(e.target.value))}
                         style={{ width:92, textAlign:'right', padding:'4px 6px', borderRadius:6,
                           border:'1px solid var(--app-border)', background:'rgba(255,255,255,.05)',
                           color:'var(--text-1)', fontSize:12, fontFamily:'Roboto,sans-serif',
                           fontWeight:700, fontVariantNumeric:'tabular-nums' }}/>
+                      )
                     )}
                   </td>
                   <td style={{ padding:'5px 8px', textAlign:'right', fontSize:11.5,

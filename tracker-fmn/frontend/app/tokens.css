@@ -51,6 +51,28 @@ input[type="date"], input[type="text"] {
 }
 input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.6); cursor: pointer; }
 
+/* Campo numérico sem as setinhas do navegador.
+   O spinner nativo vem com fundo claro e não acompanha o tema escuro,
+   além de roubar espaço do número. Quem precisa ajustar usa o teclado
+   ou digita, que é como esses campos são usados de verdade aqui. */
+input[type="number"] {
+  color-scheme: dark;
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  appearance: none;
+  margin: 0;
+}
+
+/* Foco visível nos campos, no lugar do outline padrão que foi removido
+   no reset acima. Sem isso não dá para saber onde se está digitando. */
+input:focus, textarea:focus, select:focus {
+  border-color: var(--fmn-gold, #eaaa41) !important;
+}
+
 #root {
   display: flex;
   height: 100vh;

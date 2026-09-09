@@ -712,8 +712,15 @@ function periodoRapido(dias) {
 
    O PostgREST devolve no máximo 1000 linhas por requisição e ignora um .limit()
    maior, sem erro nenhum: a resposta simplesmente vem cortada. Toda consulta que
-   pode passar de 1000 linhas precisa passar por aqui. */
-async function buscarTudo(query, tamanhoPagina = 1000) {
+   pode passar de 1000 linhas precisa passar por aqui.
+
+   O nome tem sufixo porque funis.jsx já tem uma `buscarTudo` própria, com outra
+   assinatura (recebe uma função que monta a query, não a query pronta). Os
+   arquivos .jsx do Tracker são carregados como scripts soltos no mesmo escopo
+   global, sem módulos, então duas funções de mesmo nome não convivem: a última
+   carregada vence. Foi o que aconteceu em 09/09/2026, esta aqui sobrescreveu a
+   do funis e a aba Leads ficou girando pra sempre no "Carregando leads...". */
+async function paginarConsultaConversas(query, tamanhoPagina = 1000) {
   const tudo = [];
   for (let pagina = 0; ; pagina++) {
     const de = pagina * tamanhoPagina;
@@ -1068,7 +1075,7 @@ function ConversasScreen({ telefoneAlvo = null, onConsumirAlvo } = {}) {
     // 2026-09-09 a tela mostrava 1.000 das 3.459 mensagens, tudo anterior a
     // 16/08 tinha sumido, e 940 das 1.213 conversas nem apareciam na lista.
     // Quem já tinha sido atendido em julho voltava parecendo lead novo.
-    const todos = await buscarTudo(window.db.from('whatsapp_contatos').select('*').order('updated_at', { ascending: false }));
+    const todos = await paginarConsultaConversas(window.db.from('whatsapp_contatos').select('*').order('updated_at', { ascending: false }));
     const spamSet = new Set(todos.filter(c => c.is_spam).map(c => c.telefone));
     setContatosDb(todos.filter(c => !c.is_spam));
 
@@ -1078,7 +1085,7 @@ function ConversasScreen({ telefoneAlvo = null, onConsumirAlvo } = {}) {
     // carregarHistorico). Assim a tela não fica mais lenta conforme a base
     // cresce, que era o problema de simplesmente paginar tudo.
     const desde = new Date(Date.now() - janelaRef.current * 24 * 60 * 60 * 1000).toISOString();
-    const msgsData = await buscarTudo(
+    const msgsData = await paginarConsultaConversas(
       window.db.from('whatsapp_mensagens').select('*').gte('created_at', desde).order('created_at', { ascending: false })
     );
     setMsgs(msgsData.filter(m => !spamSet.has(m.telefone)));
@@ -1260,7 +1267,7 @@ function ConversasScreen({ telefoneAlvo = null, onConsumirAlvo } = {}) {
     if (!selecionado || !window.db || historico[selecionado]) return;
     let vivo = true;
     (async () => {
-      const antigas = await buscarTudo(
+      const antigas = await paginarConsultaConversas(
         window.db.from('whatsapp_mensagens').select('*').eq('telefone', selecionado).order('created_at', { ascending: false })
       );
       if (vivo) setHistorico(h => ({ ...h, [selecionado]: antigas }));
