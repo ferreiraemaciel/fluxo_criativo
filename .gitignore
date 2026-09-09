@@ -160,3 +160,7 @@ supabase/.temp/
 # NUNCA podem ir para o remote "mentoria" (espelho compartilhado com alunos).
 # A trava esta no hook .githooks/pre-push.
 # ══════════════════════════════════════════
+
+# Materiais de referência da Black Friday: vivem no R2 (bucket fmn-referencias),
+# cópia local não versionada. Índice em tracker-fmn/REFERENCIAS-BF.md
+tracker-fmn/referencias-bf/

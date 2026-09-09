@@ -2093,6 +2093,81 @@ Nossa versão da tabela:
 **3. SLA declarado no botão de WhatsApp.** "Normalmente respondemos em menos de 2 minutos" é oferta, não detalhe operacional. E no nosso caso o Claudinho consegue cumprir isso melhor que qualquer humano.
 
 
+# PARTE 13. O SEGREDO DA OFERTA (DEBRIEFING DO LADEIRA)
+
+> Fonte: `referencias-bf/debriefing/debriefing-blackfridays-ret.pdf`, apresentação do Leandro Ladeira no retiro de 2026. Debriefing das 3 maiores Blacks da Hotmart nos últimos 3 anos.
+
+## 13.1 A decisão que vem antes de todas as outras
+
+O Ladeira fecha a apresentação com uma bifurcação, e ela precisa ser decidida antes de montar qualquer coisa:
+
+| Se o público **É** sensível a preço | Se o público **NÃO É** sensível a preço |
+|---|---|
+| **Desconto de 30% a 50%** | **Aumento de valor e aumento de preço até 3x** |
+
+E, para o segundo caminho, ele diz exatamente com o que se ancora:
+
+> **ANCORANDO COM MAIS PRODUTOS E NOVOS ENTREGÁVEIS: Eventos · Mentorias · Acesso vitalício**
+
+## 13.2 A nossa resposta já estava no banco
+
+O playbook manda decidir isso por número, não por perfil, e a gente já tinha feito essa checagem na seção 7.1:
+
+| Forma de pagamento do MCV | Vendas | % | Ticket médio |
+|---|---|---|---|
+| À vista | 515 | **52,6%** | R$ 254,77 |
+| 2 a 6 vezes | 225 | 23,0% | R$ 274,34 |
+| 7 vezes ou mais | 239 | 24,4% | **R$ 315,13** |
+
+Mais da metade paga à vista, e quem parcela longo compra ticket **maior**, não menor.
+
+**Conclusão: o nosso público não é sensível a preço.** O caminho é o da direita.
+
+## 13.3 O que isso decide, na prática
+
+**Não vamos dar desconto. Vamos ancorar.** Isso encerra a dúvida que estava aberta desde 28/08 entre a Saída A e a Saída B da seção 7.14, e confirma a Saída A com o argumento do próprio Ladeira, não só com o nosso dado.
+
+E os três itens de ancoragem que ele lista são exatamente os que já tínhamos escolhido como bônus próprios, sem parceiros:
+
+| O que ele lista | O que já temos desenhado |
+|---|---|
+| **Eventos** | Evento online ao vivo, com data e nome próprio |
+| **Mentorias** | Mentoria XP Sala Preta, entrando como poucos encontros com valor declarado |
+| **Acesso vitalício** | A questão do Blindagem, resolvida na 12.2 |
+
+**Sobre o "preço até 3x".** O ticket do nosso carro-chefe é R$ 297. Três vezes isso dá R$ 891. O Combo Infinito a R$ 997 fica logo acima dessa régua, o que é coerente porque ele carrega seis produtos, não um. **O preço de R$ 997 está validado por dois caminhos independentes**, o dado do nosso banco e a régua do Ladeira.
+
+## 13.4 As outras três lições do fecho
+
+**"Lead fica mais caro mesmo."** Ele afirma isso como fato da Black, não como problema a resolver. Reforça o que o Samuel disse sobre CPL de 2 a 3 vezes o normal, e o que já registramos na seção 7.2.
+
+**"Produto sem consciência → comprar lead para aula."** Quando o público ainda não sabe que tem o problema, não se compra lead para a oferta, se compra lead para uma aula. No nosso caso o fotógrafo raramente sabe que precisa de contrato antes de levar um calote, o que empurra para o modelo de aula de aquecimento em vez de anúncio direto para a oferta.
+
+**"Lead mais barato e menos qualificado."** O aviso de que baratear o lead tem preço, e ele se paga na conversão lá na frente.
+
+## 13.5 Os números reais da Black do Ladeira em 2025
+
+| Indicador | Valor |
+|---|---|
+| Leads | 104.580 |
+| Investimento em tráfego | R$ 19.482.183,35 |
+| Faturamento | R$ 60 milhões |
+| ROAS | cerca de 3,1 |
+
+Vale reparar: **o ROAS dele foi 3,1**, bem abaixo dos 10,8 da Amanda e dos 12 do Gabriel. Em escala grande, o ROAS cai. A nossa projeção de ROAS 4,2 no cenário de R$ 50 mil está numa faixa saudável e realista para o nosso tamanho.
+
+## 13.6 A estrutura da oferta dele, do carrossel de vendas
+
+O carrossel "A oferta mais insana" mostra a ancoragem em três movimentos:
+
+1. **O empilhamento**, curso por curso, com o que cada um entrega
+2. **A soma:** "se você fosse comprar cada curso separadamente, teria que desembolsar mais de R$ 30.000,00. Sem contar as renovações e atualizações"
+3. **A virada:** "na Ultra Black Friday Infinita você leva tudo por um preço surreal de menor. E o seu investimento para renovar vai ser ZERO"
+
+E logo depois: "se você for aluno de qualquer um dos nossos cursos, um desconto exclusivo te espera", que é a mesma regra de crédito para quem já comprou que desenhamos na 8.1.
+
+---
+
 # PARTE 8. RISCOS E DECISÕES EM ABERTO
 
 ## 8.1 Risco: revolta do comprador antigo
@@ -2132,7 +2207,8 @@ Alerta direto do Gabriel. Na semana de abertura aparecem perfis clonados oferece
 - [ ] Definir o evento online ao vivo do combo: nome, data e formato
 - [ ] Definir a ferramenta feita no Claude que entra como bônus
 - [ ] Escolher item físico e sorteio
-- [ ] Refazer a ancoragem com valor declarado item por item (Saída A ou B, ver 7.14)
+- [x] Decidir desconto x ancoragem: **DECIDIDO, ancoragem** (ver 13.1 a 13.3). Público não é sensível a preço, então entra aumento de valor com eventos, mentorias e vitalício
+- [ ] Refazer a ancoragem com valor declarado item por item, no formato do carrossel dele (ver 13.6)
 - [ ] Definir o mote da campanha, o nosso equivalente ao "a Pri só pode estar ficando louca"
 - [ ] Decidir o Blindagem no combo: vitalício de verdade ou 3 anos ancorado contra a renovação (ver 12.2, recomendação é 3 anos)
 - [ ] Decidir se usamos escada de lotes em vez de preço único (ver 12.3)
