@@ -215,9 +215,17 @@ function Progresso({ feitas, total, cor = '#4ade80', altura = 6 }) {
 }
 
 /* ── Linha de tarefa ────────────────────────────────────────────*/
-function LinhaTarefa({ t, onToggle, onAbrir, mostrarTrilha, onVirarCard }) {
+function LinhaTarefa({ t, onToggle, onAbrir, mostrarTrilha, onVirarCard, onDefinir }) {
   const [hov, setHov] = useState(false);
   const [criando, setCriando] = useState(false);
+  const [aberto, setAberto] = useState(false);
+  const temCampos = Array.isArray(t.campos) && t.campos.length > 0;
+  const preenchidos = temCampos
+    ? t.campos.filter(c => {
+        const v = (t.definicoes || {})[c.chave];
+        return v != null && v !== '' && !(Array.isArray(v) && v.length === 0);
+      }).length
+    : 0;
   const podeVirarCard = onVirarCard && (t.trilha === 'trafego' || t.trilha === 'conteudo')
     && !t.entregavel_url;
   const feito   = t.status === 'feito';
@@ -227,13 +235,14 @@ function LinhaTarefa({ t, onToggle, onAbrir, mostrarTrilha, onVirarCard }) {
   const fer = feriadoDe(t.data_prevista);
 
   return (
+    <>
     <div
       onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}
       style={{ display:'flex', alignItems:'flex-start', gap:10, padding:'9px 11px',
-        borderRadius:9, background: hov ? 'rgba(255,255,255,.035)' : 'transparent',
+        borderRadius:9, background: hov || aberto ? 'rgba(255,255,255,.035)' : 'transparent',
         border:'1px solid ' + (atrasada ? 'rgba(248,113,113,.28)' : 'transparent'),
-        transition:'background 120ms', cursor:'pointer' }}
-      onClick={()=>onAbrir(t)}
+        transition:'background 120ms', cursor: temCampos ? 'pointer' : 'default' }}
+      onClick={()=>{ if (temCampos) setAberto(a => !a); else onAbrir(t); }}
     >
       <button
         onClick={(e)=>{ e.stopPropagation(); onToggle(t); }}
@@ -269,6 +278,19 @@ function LinhaTarefa({ t, onToggle, onAbrir, mostrarTrilha, onVirarCard }) {
       </div>
 
       <div style={{ display:'flex', alignItems:'center', gap:8, flexShrink:0 }}>
+        {temCampos && (
+          <span title={preenchidos ? `${preenchidos} de ${t.campos.length} definidos`
+                                   : 'Registrar o que foi definido'}
+            style={{ display:'flex', alignItems:'center', gap:3, fontSize:10,
+              fontFamily:'Roboto,sans-serif', fontWeight:700,
+              padding:'1px 6px', borderRadius:4,
+              color: preenchidos ? '#4ade80' : 'var(--text-3)',
+              background: preenchidos ? 'rgba(74,222,128,.1)' : 'rgba(255,255,255,.05)',
+              border:'1px solid ' + (preenchidos ? 'rgba(74,222,128,.25)' : 'var(--app-border)') }}>
+            <LucideIcon icon={aberto ? 'chevron-up' : 'sliders-horizontal'} size={9}/>
+            {preenchidos ? `${preenchidos}/${t.campos.length}` : 'definir'}
+          </span>
+        )}
         {t.entregavel_url && (
           <span title={`Card criado: ${t.entregavel_url}`}
             style={{ color:'#4ade80', display:'flex' }}>
@@ -314,6 +336,177 @@ function LinhaTarefa({ t, onToggle, onAbrir, mostrarTrilha, onVirarCard }) {
           fontVariantNumeric:'tabular-nums', minWidth:52, textAlign:'right' }}>
           {t.data_prevista ? `${fmtData(t.data_prevista)} ${diaSemana(t.data_prevista)}` : ''}
         </span>
+      </div>
+    </div>
+    {aberto && temCampos && (
+      <PainelDefinicao tarefa={t} onFechar={()=>setAberto(false)}
+        onSalvar={vals => onDefinir(t, vals)}/>
+    )}
+    </>
+  );
+}
+
+
+/* ── Painel de definição da tarefa ──────────────────────────────
+   Onde a decisão fica registrada, junto da tarefa que a gerou.
+   Campo com "alimenta" no schema copia o valor para o plano do
+   projeto, então o número nunca é digitado duas vezes.
+──────────────────────────────────────────────────────────────────*/
+function calcularCampo(campo, vals) {
+  const n = k => Number(vals[k]) || 0;
+  if (campo.tipo === 'soma_lista') {
+    const l = vals[campo.origem];
+    return Array.isArray(l) ? l.reduce((a, i) => a + (Number(i.valor) || 0), 0) : 0;
+  }
+  if (campo.tipo !== 'calculado') return null;
+  const f = campo.formula || '';
+  if (f === '1 - preco_pico/preco_normal')
+    return n('preco_normal') > 0 ? (1 - n('preco_pico') / n('preco_normal')) * 100 : null;
+  if (f === 'vendas_meta/taxa')
+    return n('taxa') > 0 ? Math.ceil(n('vendas_meta') / n('taxa')) : null;
+  if (f === 'custo_item+custo_sorteio') return n('custo_item') + n('custo_sorteio');
+  return null;
+}
+
+function CampoLista({ itens, onSalvar }) {
+  const lista = Array.isArray(itens) ? itens : [];
+  const mudar = (i, chave, v) => {
+    const novo = lista.map((x, j) => j === i ? { ...x, [chave]: v } : x);
+    onSalvar(novo);
+  };
+  return (
+    <div style={{ display:'flex', flexDirection:'column', gap:5 }}>
+      {lista.map((it, i) => (
+        <div key={i} style={{ display:'flex', gap:6, alignItems:'center' }}>
+          <input value={it.nome || ''} placeholder="item"
+            onChange={e => mudar(i, 'nome', e.target.value)}
+            style={{ flex:1, padding:'5px 8px', borderRadius:6,
+              border:'1px solid var(--app-border)', background:'rgba(255,255,255,.03)',
+              color:'var(--text-1)', fontSize:12, fontFamily:'Roboto,sans-serif' }}/>
+          <CampoMoeda valor={it.valor ?? null} largura={112}
+            onSalvar={v => mudar(i, 'valor', v)}/>
+          <button onClick={() => onSalvar(lista.filter((_, j) => j !== i))}
+            title="Remover" style={{ padding:3, display:'flex', color:'var(--text-3)',
+              background:'none', border:'none', cursor:'pointer' }}>
+            <LucideIcon icon="x" size={13}/>
+          </button>
+        </div>
+      ))}
+      <button onClick={() => onSalvar([...lista, { nome:'', valor:null }])}
+        style={{ alignSelf:'flex-start', padding:'4px 9px', borderRadius:6,
+          border:'1px dashed var(--app-border)', background:'transparent',
+          color:'var(--text-3)', fontSize:11, fontFamily:'Roboto,sans-serif',
+          fontWeight:700, cursor:'pointer', display:'flex', alignItems:'center', gap:4 }}>
+        <LucideIcon icon="plus" size={11}/> item
+      </button>
+    </div>
+  );
+}
+
+function PainelDefinicao({ tarefa, onSalvar, onFechar }) {
+  const campos = Array.isArray(tarefa.campos) ? tarefa.campos : [];
+  const [vals, setVals] = useState(tarefa.definicoes || {});
+  const brl = v => window.fmtBRL ? window.fmtBRL(v) : fmtMoeda(v);
+
+  const set = (chave, v) => {
+    const novo = { ...vals, [chave]: v };
+    setVals(novo);
+    onSalvar(novo);
+  };
+
+  const base = { width:'100%', padding:'6px 9px', borderRadius:7,
+    border:'1px solid var(--app-border)', background:'rgba(255,255,255,.03)',
+    color:'var(--text-1)', fontSize:12, fontFamily:'Roboto,sans-serif' };
+
+  return (
+    <div onClick={e => e.stopPropagation()}
+      style={{ marginTop:2, marginBottom:6, marginLeft:29, padding:'12px 14px',
+        borderRadius:9, background:'rgba(255,255,255,.03)',
+        border:'1px solid var(--app-border)' }}>
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between',
+        marginBottom:10 }}>
+        <span style={{ fontSize:10.5, fontFamily:'Roboto,sans-serif', fontWeight:700,
+          color:'var(--text-3)', letterSpacing:.4, textTransform:'uppercase' }}>
+          O que foi definido
+        </span>
+        <button onClick={onFechar} style={{ background:'none', border:'none',
+          cursor:'pointer', color:'var(--text-3)', display:'flex', padding:2 }}>
+          <LucideIcon icon="chevron-up" size={14}/>
+        </button>
+      </div>
+
+      <div style={{ display:'grid',
+        gridTemplateColumns:'repeat(auto-fit,minmax(210px,1fr))', gap:10 }}>
+        {campos.map(c => {
+          const largo = c.tipo === 'texto_longo' || c.tipo === 'lista';
+          const derivado = c.tipo === 'calculado' || c.tipo === 'soma_lista';
+          const dv = derivado ? calcularCampo(c, vals) : null;
+          return (
+            <div key={c.chave} style={{ gridColumn: largo ? '1 / -1' : 'auto' }}>
+              <label title={c.dica} style={{ display:'block', fontSize:11,
+                fontFamily:'Roboto,sans-serif', color:'var(--text-3)', marginBottom:3,
+                cursor: c.dica ? 'help' : 'default',
+                borderBottom: c.dica ? '1px dotted transparent' : 'none' }}>
+                {c.label}
+                {c.alimenta && (
+                  <span title={`Alimenta ${c.alimenta} automaticamente`}
+                    style={{ marginLeft:5, fontSize:9, color:'#4ade80', fontWeight:700 }}>
+                    entra no plano
+                  </span>
+                )}
+              </label>
+
+              {derivado ? (
+                <div style={{ padding:'6px 9px', borderRadius:7,
+                  background:'rgba(74,222,128,.07)', border:'1px solid rgba(74,222,128,.2)',
+                  fontSize:12.5, fontFamily:'Roboto,sans-serif', fontWeight:700,
+                  color:'#4ade80', fontVariantNumeric:'tabular-nums' }}>
+                  {dv == null ? '—'
+                    : c.unidade === '%' ? dv.toFixed(1) + '%'
+                    : c.unidade === 'un' ? Math.round(dv).toLocaleString('pt-BR')
+                    : brl(dv)}
+                </div>
+              ) : c.tipo === 'moeda' ? (
+                <CampoMoeda valor={vals[c.chave] ?? null} largura="100%"
+                  onSalvar={v => set(c.chave, v)}/>
+              ) : c.tipo === 'percent' ? (
+                <CampoPercent valor={vals[c.chave] ?? null} largura="100%"
+                  onSalvar={v => set(c.chave, v)}/>
+              ) : c.tipo === 'lista' ? (
+                <CampoLista itens={vals[c.chave]} onSalvar={v => set(c.chave, v)}/>
+              ) : c.tipo === 'opcao' ? (
+                <div style={{ display:'flex', gap:5, flexWrap:'wrap' }}>
+                  {(c.opcoes || []).map(op => {
+                    const ativa = vals[c.chave] === op;
+                    return (
+                      <button key={op} onClick={() => set(c.chave, ativa ? null : op)}
+                        style={{ padding:'5px 11px', borderRadius:7, cursor:'pointer',
+                          fontSize:11.5, fontFamily:'Roboto,sans-serif', fontWeight:700,
+                          border:'1px solid ' + (ativa ? '#4ade80' : 'var(--app-border)'),
+                          background: ativa ? 'rgba(74,222,128,.14)' : 'transparent',
+                          color: ativa ? '#4ade80' : 'var(--text-2)' }}>
+                        {ativa && '✓ '}{op}
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : c.tipo === 'texto_longo' ? (
+                <textarea defaultValue={vals[c.chave] || ''} rows={2}
+                  onBlur={e => set(c.chave, e.target.value)}
+                  style={{ ...base, resize:'vertical', lineHeight:1.45 }}/>
+              ) : (
+                <input type={c.tipo === 'data' ? 'date' : c.tipo === 'numero' ? 'number' : 'text'}
+                  defaultValue={vals[c.chave] ?? ''}
+                  placeholder={c.tipo === 'link' ? 'https://' : ''}
+                  onBlur={e => set(c.chave,
+                    c.tipo === 'numero'
+                      ? (e.target.value === '' ? null : Number(e.target.value))
+                      : e.target.value)}
+                  style={base}/>
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -919,7 +1112,8 @@ function Calendario({ tarefas, d0, onAbrir }) {
           <div style={{ display:'flex', flexDirection:'column', gap:1 }}>
             {tarefasDoDia.map(t => (
               <LinhaTarefa key={t.id} t={t} onToggle={onAbrir.toggle}
-                onAbrir={()=>{}} mostrarTrilha onVirarCard={onAbrir.virarCard}/>
+                onAbrir={()=>{}} mostrarTrilha onVirarCard={onAbrir.virarCard}
+                onDefinir={onAbrir.definirTarefa}/>
             ))}
           </div>
         </div>
@@ -928,6 +1122,168 @@ function Calendario({ tarefas, d0, onAbrir }) {
   );
 }
 
+
+
+/* ── Auditoria: o plano contra o real ───────────────────────────
+   Pega o que foi planejado no plano de mídia e confronta com o que
+   o Meta gastou de verdade nos anúncios marcados com este pico.
+   O gasto vem de `insights_cache`, que o meta-sync atualiza sozinho
+   quatro vezes por dia, então isso acompanha a campanha rodando.
+──────────────────────────────────────────────────────────────────*/
+function BlocoAuditoria({ projeto, tarefas }) {
+  const [dados, setDados] = useState(null);
+  const [carregando, setCarregando] = useState(false);
+  const brl = v => window.fmtBRL ? window.fmtBRL(v) : fmtMoeda(v);
+
+  const auditar = async () => {
+    setCarregando(true);
+    try {
+      const { data: ads } = await window.db.from('ads')
+        .select('numero,titulo,meta_ad_id,status')
+        .eq('pico_projeto_id', projeto.id);
+      const comId = (ads || []).filter(a => a.meta_ad_id);
+
+      let gasto = 0, compras = 0, porAd = [];
+      if (comId.length) {
+        const { data: ins } = await window.db.from('insights_cache')
+          .select('meta_ad_id,gasto,compras')
+          .eq('periodo', 'maximum')
+          .in('meta_ad_id', comId.map(a => a.meta_ad_id));
+        const mapa = Object.fromEntries((ins || []).map(i => [i.meta_ad_id, i]));
+        porAd = comId.map(a => ({
+          numero: a.numero, titulo: a.titulo, status: a.status,
+          gasto: Number(mapa[a.meta_ad_id]?.gasto) || 0,
+          compras: Number(mapa[a.meta_ad_id]?.compras) || 0,
+        })).sort((x, y) => y.gasto - x.gasto);
+        gasto   = porAd.reduce((a, x) => a + x.gasto, 0);
+        compras = porAd.reduce((a, x) => a + x.compras, 0);
+      }
+      setDados({ total: (ads || []).length, comId: comId.length, gasto, compras, porAd });
+    } catch (e) {
+      setDados({ erro: e.message });
+    }
+    setCarregando(false);
+  };
+
+  useEffect(() => { if (projeto?.id) auditar(); }, [projeto?.id]);
+
+  /* O planejado vem da mesma escada do plano de mídia. */
+  const p = projeto?.plano_midia || {};
+  const pctRmk  = pctRemarketing(p.dias_remarketing);
+  const pctCapt = 1 - (Number(p.pct_teaser)||0) - (Number(p.pct_aquecimento)||0) - pctRmk;
+  const leads   = Number(p.taxa_conversao) > 0
+    ? Math.ceil((Number(p.vendas_meta)||0) / Number(p.taxa_conversao)) : 0;
+  const planejado = pctCapt > 0 ? (leads * (Number(p.cpl_meta)||0)) / pctCapt : 0;
+
+  const gasto = dados?.gasto || 0;
+  const consumo = planejado > 0 ? (gasto / planejado) * 100 : null;
+  const cpaReal = dados?.compras > 0 ? gasto / dados.compras : null;
+
+  return (
+    <SectionCard title="Plano contra o real"
+      right={
+        <button onClick={auditar} disabled={carregando}
+          style={{ padding:'5px 11px', borderRadius:7, cursor: carregando?'default':'pointer',
+            border:'1px solid var(--app-border)', background:'rgba(255,255,255,.05)',
+            color:'var(--text-2)', fontSize:11.5, fontFamily:'Roboto,sans-serif',
+            fontWeight:700, display:'flex', alignItems:'center', gap:5 }}>
+          <LucideIcon icon={carregando ? 'loader' : 'refresh-cw'} size={12}
+            style={carregando ? { animation:'spin 1s linear infinite' } : undefined}/>
+          {carregando ? 'lendo' : 'atualizar'}
+        </button>
+      }>
+
+      {dados?.erro && (
+        <div style={{ fontSize:12, color:'#f87171', fontFamily:'Roboto,sans-serif' }}>
+          {dados.erro}
+        </div>
+      )}
+
+      {dados && !dados.erro && dados.total === 0 && (
+        <div style={{ fontSize:12, fontFamily:'Roboto,sans-serif', color:'var(--text-3)',
+          lineHeight:1.5 }}>
+          Nenhum anúncio marcado com este pico ainda. Use o botão "card" numa tarefa de
+          Tráfego, ou marque um anúncio existente, e o gasto real aparece aqui.
+        </div>
+      )}
+
+      {dados && !dados.erro && dados.total > 0 && (
+        <>
+          <div style={{ display:'grid',
+            gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))', gap:10, marginBottom:12 }}>
+            {[
+              ['Verba planejada', brl(planejado), 'var(--text-1)'],
+              ['Gasto real', brl(gasto), '#38bdf8'],
+              ['Consumo', consumo == null ? '—' : consumo.toFixed(0) + '%',
+                consumo > 100 ? '#f87171' : '#4ade80'],
+              ['Vendas no Meta', String(dados.compras), 'var(--text-1)'],
+              ['CPA real', cpaReal ? brl(cpaReal) : '—', 'var(--text-1)'],
+            ].map(([lb, v, cor]) => (
+              <div key={lb} style={{ padding:'8px 10px', borderRadius:8,
+                background:'rgba(255,255,255,.025)', border:'1px solid var(--app-border)' }}>
+                <div style={{ fontSize:10, fontFamily:'Roboto,sans-serif',
+                  color:'var(--text-3)', marginBottom:2 }}>{lb}</div>
+                <div style={{ fontSize:14, fontFamily:'Roboto,sans-serif', fontWeight:700,
+                  color:cor, fontVariantNumeric:'tabular-nums' }}>{v}</div>
+              </div>
+            ))}
+          </div>
+
+          {consumo != null && (
+            <div style={{ marginBottom:12 }}>
+              <div style={{ height:7, borderRadius:99, background:'rgba(255,255,255,.07)',
+                overflow:'hidden' }}>
+                <div style={{ width: Math.min(100, consumo) + '%', height:'100%',
+                  borderRadius:99, background: consumo > 100 ? '#f87171' : '#38bdf8',
+                  transition:'width 350ms' }}/>
+              </div>
+              {consumo > 100 && (
+                <div style={{ fontSize:11, color:'#f87171', fontFamily:'Roboto,sans-serif',
+                  marginTop:4 }}>
+                  O gasto passou do planejado em {brl(gasto - planejado)}.
+                </div>
+              )}
+            </div>
+          )}
+
+          <div style={{ fontSize:10.5, fontFamily:'Roboto,sans-serif', fontWeight:700,
+            color:'var(--text-3)', letterSpacing:.4, textTransform:'uppercase',
+            marginBottom:6 }}>
+            Anúncios deste pico ({dados.total}
+            {dados.comId < dados.total ? `, ${dados.total - dados.comId} ainda sem publicar` : ''})
+          </div>
+          <div style={{ display:'flex', flexDirection:'column', gap:1 }}>
+            {dados.porAd.map(a => (
+              <div key={a.numero} style={{ display:'flex', alignItems:'center', gap:8,
+                padding:'5px 8px', borderRadius:6, fontSize:11.5,
+                fontFamily:'Roboto,sans-serif' }}>
+                <span style={{ color:'var(--text-3)', fontWeight:700, minWidth:52,
+                  fontVariantNumeric:'tabular-nums' }}>
+                  ADS {String(a.numero).padStart(3,'0')}
+                </span>
+                <span style={{ flex:1, color:'var(--text-2)', overflow:'hidden',
+                  textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{a.titulo}</span>
+                <span style={{ color:'var(--text-3)', minWidth:38, textAlign:'right' }}>
+                  {a.compras} {a.compras === 1 ? 'venda' : 'vendas'}
+                </span>
+                <span style={{ color:'var(--text-1)', fontWeight:700, minWidth:86,
+                  textAlign:'right', fontVariantNumeric:'tabular-nums' }}>
+                  {brl(a.gasto)}
+                </span>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
+      <div style={{ fontSize:10.5, fontFamily:'Roboto,sans-serif', color:'var(--text-3)',
+        marginTop:11, lineHeight:1.45 }}>
+        O gasto vem do Meta pelos anúncios marcados com este pico, e o Tracker
+        sincroniza sozinho quatro vezes por dia. O perpétuo não entra na conta.
+      </div>
+    </SectionCard>
+  );
+}
 
 /* ── Debriefing ─────────────────────────────────────────────────
    Os 9 indicadores e as 9 perguntas do playbook. O que dá para
@@ -1310,6 +1666,30 @@ function PicoScreen() {
     }
   };
 
+  /* Registrar o que foi definido numa tarefa.
+     Campo marcado com "alimenta" copia o valor para o plano do projeto,
+     para o número não precisar ser digitado de novo lá em cima. */
+  const definirTarefa = async (t, vals) => {
+    setTarefas(ts => ts.map(x => x.id === t.id ? { ...x, definicoes: vals } : x));
+    await window.db.from('pico_tarefas').update({ definicoes: vals }).eq('id', t.id);
+
+    const campos = Array.isArray(t.campos) ? t.campos : [];
+    let plano = null, proj = null;
+    campos.forEach(c => {
+      if (!c.alimenta) return;
+      const v = vals[c.chave];
+      if (v == null || v === '') return;
+      const [onde, chave] = c.alimenta.split('.');
+      if (onde === 'plano')   plano = { ...(plano || projeto.plano_midia || {}), [chave]: v };
+      if (onde === 'projeto') proj  = { ...(proj || {}), [chave]: v };
+    });
+    if (plano || proj) {
+      const patch = { ...(proj || {}), ...(plano ? { plano_midia: plano } : {}) };
+      setProjetos(ps => ps.map(p => p.id === projetoId ? { ...p, ...patch } : p));
+      await window.db.from('pico_projetos').update(patch).eq('id', projetoId);
+    }
+  };
+
   /* Tarefa vira card no kanban, já marcada com o projeto */
   const [aviso, setAviso] = useState(null);
   const virarCard = async (t) => {
@@ -1474,6 +1854,10 @@ function PicoScreen() {
         </div>
 
         <div style={{ marginBottom:14 }}>
+          <BlocoAuditoria projeto={projeto} tarefas={tarefas}/>
+        </div>
+
+        <div style={{ marginBottom:14 }}>
           <BlocoDebriefing projeto={projeto} metricas={metricas} tarefas={tarefas}
             onSalvar={salvarDebrief} onSalvarResposta={salvarResposta}
             respostas={respostas}/>
@@ -1514,7 +1898,7 @@ function PicoScreen() {
         {/* Execução */}
         {visao === 'calendario' ? (
           <Calendario tarefas={visiveis} d0={projeto?.data_abertura}
-            onAbrir={{ toggle: alternarTarefa, virarCard }}/>
+            onAbrir={{ toggle: alternarTarefa, virarCard, definirTarefa }}/>
         ) : (
         <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
           {ordemGrupos.map(gid => {
@@ -1539,7 +1923,7 @@ function PicoScreen() {
                   {lista.map(t => (
                     <LinhaTarefa key={t.id} t={t} onToggle={alternarTarefa}
                       onAbrir={()=>{}} mostrarTrilha={visao === 'fase'}
-                      onVirarCard={virarCard}/>
+                      onVirarCard={virarCard} onDefinir={definirTarefa}/>
                   ))}
                 </div>
               </SectionCard>
