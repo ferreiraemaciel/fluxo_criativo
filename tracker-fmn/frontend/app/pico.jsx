@@ -569,6 +569,10 @@ function PainelDefinicao({ tarefa, onSalvar, onFechar }) {
 /* ── Bloco de decisões-gate ─────────────────────────────────────*/
 function BlocoDecisoes({ decisoes, onEscolher }) {
   const pendentes = decisoes.filter(d => !d.escolha).length;
+  /* Guarda qual explicação está aberta, no formato "idDaDecisao|opcao".
+     Uma por vez, para o bloco não virar um paredão de texto. */
+  const [aberta, setAberta] = useState(null);
+
   return (
     <SectionCard
       title="Decisões que travam o resto"
@@ -579,6 +583,7 @@ function BlocoDecisoes({ decisoes, onEscolher }) {
       <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
         {decisoes.map(d => {
           const opcoes = Array.isArray(d.opcoes) ? d.opcoes : [];
+          const expl = d.explicacoes || {};
           return (
             <div key={d.id} style={{ padding:'10px 12px', borderRadius:9,
               background: d.escolha ? 'rgba(74,222,128,.05)' : 'rgba(251,191,36,.05)',
@@ -593,21 +598,66 @@ function BlocoDecisoes({ decisoes, onEscolher }) {
                   {d.regra}
                 </div>
               )}
+
               <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
                 {opcoes.map(op => {
                   const ativa = d.escolha === op;
+                  const chaveExp = d.id + '|' + op;
+                  const temExp = !!expl[op];
+                  const mostrando = aberta === chaveExp;
                   return (
-                    <button key={op} onClick={()=>onEscolher(d, ativa ? null : op)}
-                      style={{ padding:'5px 11px', borderRadius:7, cursor:'pointer',
-                        fontSize:11.5, fontFamily:'Roboto,sans-serif', fontWeight:700,
-                        border:'1px solid ' + (ativa ? '#4ade80' : 'var(--app-border)'),
-                        background: ativa ? 'rgba(74,222,128,.14)' : 'transparent',
-                        color: ativa ? '#4ade80' : 'var(--text-2)' }}>
-                      {ativa && '✓ '}{op}
-                    </button>
+                    <div key={op} style={{ display:'flex', alignItems:'stretch',
+                      borderRadius:7, overflow:'hidden',
+                      border:'1px solid ' + (ativa ? '#4ade80' : 'var(--app-border)'),
+                      background: ativa ? 'rgba(74,222,128,.14)' : 'transparent' }}>
+                      <button onClick={()=>onEscolher(d, ativa ? null : op)}
+                        style={{ padding:'5px 10px', cursor:'pointer', border:'none',
+                          background:'transparent', fontSize:11.5,
+                          fontFamily:'Roboto,sans-serif', fontWeight:700,
+                          color: ativa ? '#4ade80' : 'var(--text-2)' }}>
+                        {ativa && '✓ '}{op}
+                      </button>
+                      {temExp && (
+                        <button
+                          onClick={()=>setAberta(mostrando ? null : chaveExp)}
+                          title="O que isso quer dizer"
+                          style={{ padding:'0 7px', cursor:'pointer', border:'none',
+                            borderLeft:'1px solid ' + (ativa ? 'rgba(74,222,128,.4)' : 'var(--app-border)'),
+                            background: mostrando ? 'rgba(56,189,248,.18)' : 'transparent',
+                            color: mostrando ? '#38bdf8' : 'var(--text-3)',
+                            display:'flex', alignItems:'center' }}>
+                          <LucideIcon icon="info" size={12}/>
+                        </button>
+                      )}
+                    </div>
                   );
                 })}
               </div>
+
+              {/* Explicação da opção que teve o "i" clicado */}
+              {opcoes.map(op => {
+                if (aberta !== d.id + '|' + op) return null;
+                return (
+                  <div key={'e'+op} style={{ marginTop:8, padding:'9px 11px', borderRadius:8,
+                    background:'rgba(56,189,248,.07)', border:'1px solid rgba(56,189,248,.22)',
+                    display:'flex', gap:8, alignItems:'flex-start' }}>
+                    <LucideIcon icon="info" size={13}
+                      style={{ color:'#38bdf8', flexShrink:0, marginTop:1 }}/>
+                    <div style={{ flex:1, minWidth:0 }}>
+                      <div style={{ fontSize:11.5, fontFamily:'Roboto,sans-serif',
+                        fontWeight:700, color:'#38bdf8', marginBottom:3 }}>{op}</div>
+                      <div style={{ fontSize:12, fontFamily:'Roboto,sans-serif',
+                        color:'var(--text-2)', lineHeight:1.5 }}>{expl[op]}</div>
+                    </div>
+                    <button onClick={()=>setAberta(null)}
+                      style={{ background:'none', border:'none', cursor:'pointer',
+                        color:'var(--text-3)', display:'flex', padding:2, flexShrink:0 }}>
+                      <LucideIcon icon="x" size={12}/>
+                    </button>
+                  </div>
+                );
+              })}
+
               {d.fonte && (
                 <div style={{ fontSize:10, fontFamily:'Roboto,sans-serif',
                   color:'var(--text-3)', marginTop:6, opacity:.7 }}>
@@ -993,6 +1043,87 @@ function BlocoPlanoMidia({ plano, onSalvar }) {
   );
 }
 
+
+
+/* ── Grupo recolhível ───────────────────────────────────────────
+   Cada fase ou trilha vira uma seção que fecha, com percentual e
+   contagem no cabeçalho. O que está recolhido fica guardado no
+   navegador, então uma fase concluída não volta aberta amanhã.
+──────────────────────────────────────────────────────────────────*/
+function GrupoRecolhivel({ id, titulo, cor, feitas, total, comando, children }) {
+  const chave = 'pico:recolhido:' + id;
+  const [fechado, setFechado] = useState(() => {
+    try { return localStorage.getItem(chave) === '1'; } catch { return false; }
+  });
+
+  /* comando vem do botão de abrir ou fechar tudo, e traz um contador
+     junto para o mesmo comando poder ser dado duas vezes seguidas. */
+  useEffect(() => {
+    if (!comando || !comando.acao) return;
+    const novo = comando.acao === 'fechar';
+    setFechado(novo);
+    try { localStorage.setItem(chave, novo ? '1' : '0'); } catch {}
+  }, [comando]);
+
+  const alternar = () => {
+    setFechado(f => {
+      const novo = !f;
+      try { localStorage.setItem(chave, novo ? '1' : '0'); } catch {}
+      return novo;
+    });
+  };
+
+  const pct = total > 0 ? Math.round((feitas / total) * 100) : 0;
+  const completo = total > 0 && feitas === total;
+
+  return (
+    <div style={{ borderRadius:12, background:'var(--app-surface)',
+      border:'1px solid var(--app-border)', overflow:'hidden' }}>
+      <div onClick={alternar}
+        style={{ display:'flex', alignItems:'center', gap:10, padding:'11px 14px',
+          cursor:'pointer', userSelect:'none' }}>
+        <LucideIcon icon={fechado ? 'chevron-right' : 'chevron-down'} size={14}
+          style={{ color:'var(--text-3)', flexShrink:0 }}/>
+        <span style={{ width:8, height:8, borderRadius:99, background:cor || 'var(--text-3)',
+          flexShrink:0 }}/>
+        <span style={{ fontSize:13, fontFamily:'Roboto,sans-serif', fontWeight:700,
+          color:'var(--text-1)', flexShrink:0 }}>{titulo}</span>
+
+        {completo && (
+          <LucideIcon icon="check-circle" size={14} style={{ color:'#4ade80', flexShrink:0 }}/>
+        )}
+
+        <div style={{ flex:1 }}/>
+
+        <span style={{ fontSize:12, fontFamily:'Roboto,sans-serif', fontWeight:700,
+          color: completo ? '#4ade80' : 'var(--text-2)',
+          fontVariantNumeric:'tabular-nums', flexShrink:0, minWidth:38,
+          textAlign:'right' }}>
+          {pct}%
+        </span>
+        <span style={{ fontSize:11.5, fontFamily:'Roboto,sans-serif',
+          color:'var(--text-3)', fontVariantNumeric:'tabular-nums', flexShrink:0,
+          minWidth:44, textAlign:'right' }}>
+          {feitas}/{total}
+        </span>
+        <div style={{ width:90, flexShrink:0 }}>
+          <div style={{ height:5, borderRadius:99, background:'rgba(255,255,255,.07)',
+            overflow:'hidden' }}>
+            <div style={{ width:`${pct}%`, height:'100%', borderRadius:99,
+              background: cor || '#4ade80',
+              transition:'width 350ms cubic-bezier(.2,.7,.2,1)' }}/>
+          </div>
+        </div>
+      </div>
+
+      {!fechado && (
+        <div style={{ padding:'0 12px 11px' }}>
+          {children}
+        </div>
+      )}
+    </div>
+  );
+}
 
 /* ── Calendário ─────────────────────────────────────────────────
    Mês a mês, com as tarefas nos dias. Marca feriado, datas de
@@ -1621,6 +1752,7 @@ function PicoScreen() {
   const [visao, setVisao]         = useState('fase');   // fase | trilha | calendario
   const [filtroTrilha, setFiltroTrilha] = useState('todas');
   const [ocultarFeitas, setOcultarFeitas] = useState(false);
+  const [comandoGrupos, setComandoGrupos] = useState({ acao:null, n:0 });
   const [carregando, setCarregando] = useState(true);
 
   const projeto = projetos.find(p => p.id === projetoId) || null;
@@ -1939,6 +2071,16 @@ function PicoScreen() {
             {TRILHAS.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
           </select>
 
+          <button onClick={()=>setComandoGrupos(c => ({
+              acao: c.acao === 'fechar' ? 'abrir' : 'fechar', n: (c.n || 0) + 1
+            }))}
+            title="Abrir ou fechar todas as seções"
+            style={{ padding:'6px 9px', borderRadius:7, cursor:'pointer',
+              border:'1px solid var(--app-border)', background:'transparent',
+              color:'var(--text-3)', display:'flex', alignItems:'center' }}>
+            <LucideIcon icon={comandoGrupos.acao === 'fechar' ? 'chevrons-up-down' : 'chevrons-down-up'} size={13}/>
+          </button>
+
           <button onClick={()=>setOcultarFeitas(v=>!v)}
             style={{ padding:'6px 11px', borderRadius:7, cursor:'pointer',
               border:'1px solid var(--app-border)', fontSize:11.5,
@@ -1961,18 +2103,9 @@ function PicoScreen() {
             const cfg = visao === 'trilha' ? TRILHA_MAP[gid] : FASE_MAP[gid];
             const gf = lista.filter(t => t.status === 'feito').length;
             return (
-              <SectionCard key={gid}
-                title={
-                  <span style={{ display:'flex', alignItems:'center', gap:8 }}>
-                    <span style={{ width:8, height:8, borderRadius:99,
-                      background: cfg?.cor || 'var(--text-3)' }}/>
-                    {cfg?.label || gid}
-                  </span>
-                }
-                right={<div style={{ width:120 }}>
-                  <Progresso feitas={gf} total={lista.length} cor={cfg?.cor} altura={5}/>
-                </div>}
-              >
+              <GrupoRecolhivel key={gid} id={`${visao}:${gid}`}
+                titulo={cfg?.label || gid} cor={cfg?.cor}
+                feitas={gf} total={lista.length} comando={comandoGrupos}>
                 <div style={{ display:'flex', flexDirection:'column', gap:1 }}>
                   {lista.map(t => (
                     <LinhaTarefa key={t.id} t={t} onToggle={alternarTarefa}
@@ -1980,7 +2113,7 @@ function PicoScreen() {
                       onVirarCard={virarCard} onDefinir={definirTarefa}/>
                   ))}
                 </div>
-              </SectionCard>
+              </GrupoRecolhivel>
             );
           })}
         </div>
