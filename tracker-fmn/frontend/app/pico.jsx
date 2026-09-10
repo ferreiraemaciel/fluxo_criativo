@@ -368,6 +368,18 @@ function calcularCampo(campo, vals) {
   return null;
 }
 
+/* Preço e desconto são espelho: mexer em um recalcula o outro, usando
+   o preço de base. Assim dá para pensar por onde for mais natural. */
+function espelharPreco(campo, valor, vals) {
+  const base = Number(vals[campo.base_de]) || 0;
+  if (!base) return {};
+  if (campo.par_percent && valor != null)
+    return { [campo.par_percent]: Math.max(0, 1 - Number(valor) / base) };
+  if (campo.par_valor && valor != null)
+    return { [campo.par_valor]: Number((base * (1 - Number(valor))).toFixed(2)) };
+  return {};
+}
+
 function CampoLista({ itens, onSalvar }) {
   const lista = Array.isArray(itens) ? itens : [];
   const mudar = (i, chave, v) => {
@@ -409,7 +421,8 @@ function PainelDefinicao({ tarefa, onSalvar, onFechar }) {
   const brl = v => window.fmtBRL ? window.fmtBRL(v) : fmtMoeda(v);
 
   const set = (chave, v) => {
-    const novo = { ...vals, [chave]: v };
+    const campo = campos.find(c => c.chave === chave) || {};
+    const novo = { ...vals, [chave]: v, ...espelharPreco(campo, v, { ...vals, [chave]: v }) };
     setVals(novo);
     onSalvar(novo);
   };
@@ -437,8 +450,12 @@ function PainelDefinicao({ tarefa, onSalvar, onFechar }) {
 
       <div style={{ display:'grid',
         gridTemplateColumns:'repeat(auto-fit,minmax(210px,1fr))', gap:10 }}>
-        {campos.map(c => {
-          const largo = c.tipo === 'texto_longo' || c.tipo === 'lista';
+        {campos.filter(c => {
+          if (!c.so_quando) return true;
+          return Object.entries(c.so_quando).every(([k, v]) => vals[k] === v);
+        }).map(c => {
+          const largo = c.tipo === 'texto_longo' || c.tipo === 'lista'
+            || c.tipo === 'resumo_preco';
           const derivado = c.tipo === 'calculado' || c.tipo === 'soma_lista';
           const dv = derivado ? calcularCampo(c, vals) : null;
           return (
@@ -456,7 +473,44 @@ function PainelDefinicao({ tarefa, onSalvar, onFechar }) {
                 )}
               </label>
 
-              {derivado ? (
+              {c.tipo === 'resumo_preco' ? (() => {
+                const pn = Number(vals.preco_normal) || 0;
+                const pp = Number(vals.preco_pico) || 0;
+                const dc = Number(vals.desconto_pct) || 0;
+                if (!pn || !pp) return (
+                  <div style={{ fontSize:11.5, fontFamily:'Roboto,sans-serif',
+                    color:'var(--text-3)' }}>
+                    Preencha o preço normal e o do pico.
+                  </div>
+                );
+                return (
+                  <div style={{ display:'flex', alignItems:'center', gap:10, flexWrap:'wrap',
+                    padding:'9px 11px', borderRadius:8, background:'rgba(74,222,128,.07)',
+                    border:'1px solid rgba(74,222,128,.2)' }}>
+                    <span style={{ fontSize:12.5, fontFamily:'Roboto,sans-serif',
+                      color:'var(--text-3)', textDecoration:'line-through' }}>{brl(pn)}</span>
+                    <LucideIcon icon="arrow-right" size={13} style={{ color:'var(--text-3)' }}/>
+                    <span style={{ fontSize:16, fontFamily:'Roboto,sans-serif', fontWeight:700,
+                      color:'#4ade80', fontVariantNumeric:'tabular-nums' }}>{brl(pp)}</span>
+                    <span style={{ fontSize:11.5, fontFamily:'Roboto,sans-serif', fontWeight:700,
+                      padding:'2px 8px', borderRadius:5, color:'#4ade80',
+                      background:'rgba(74,222,128,.15)' }}>
+                      {(dc * 100).toFixed(0)}% off
+                    </span>
+                    <span style={{ fontSize:11.5, fontFamily:'Roboto,sans-serif',
+                      color:'var(--text-3)' }}>
+                      economia de {brl(pn - pp)}
+                    </span>
+                    {dc > 0 && dc < 0.3 && (
+                      <span title="O retiro fala em 30% a 50% quando o publico e sensivel a preco"
+                        style={{ fontSize:10.5, color:'#fb923c',
+                          fontFamily:'Roboto,sans-serif' }}>
+                        abaixo dos 30% que o retiro sugere para desconto
+                      </span>
+                    )}
+                  </div>
+                );
+              })() : derivado ? (
                 <div style={{ padding:'6px 9px', borderRadius:7,
                   background:'rgba(74,222,128,.07)', border:'1px solid rgba(74,222,128,.2)',
                   fontSize:12.5, fontFamily:'Roboto,sans-serif', fontWeight:700,
