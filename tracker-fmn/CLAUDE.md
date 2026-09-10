@@ -2,6 +2,23 @@
 
 > Instruções específicas do Tracker FMN. Complementa o CLAUDE.md da raiz do fluxo-criativo (regras gerais do workshop), mas essas aqui valem só dentro desta pasta.
 
+## Venda por anúncio: o MAIOR entre Meta e Hotmart, nunca uma fonte só (2026-09-10)
+
+> Decidido em 2026-09-10, depois de a primeira tentativa (só Hotmart) destruir o CPA histórico dos campeões.
+
+**Nenhuma das duas fontes é a verdade sozinha, e as duas só erram pra baixo.**
+
+| Fonte | O que ela perde | Caso real |
+|---|---|---|
+| Meta (`insights_cache.compras`, `ads.vendas_*`) | Compra que a Hotmart não entrega ao pixel (cerca de 1 em 3 do MCV em ago/2026) e compra que o Meta não liga ao clique | ADS 309 vendeu às 08:29 de 10/09 e o Meta mostrava 0 |
+| Hotmart (`vendas.meta_ad_id` / `vendas.ads_numero`) | O anúncio, sempre que o rastreio (`sck`) cai no caminho: WhatsApp, recuperação, agente Hotmart | Em ago/2026 só 6 de 45 vendas chegaram com ADS; ADS 205 tem 39 no Meta e 0 na Hotmart |
+
+**Regra:** por anúncio e por período, vendas = o maior dos dois; receita = a maior entre a da Hotmart e a atribuída pelo Meta. CPA e ROAS saem daí. Somar as duas fontes seria errado (a mesma venda aparece nas duas); ficar com uma só perde venda real.
+
+**Onde vale:** aba Tráfego (`mkMetrics` em `trafego.jsx`), página pública do pico (`trafego-publico`) e análise de campanhas (`analise-campanhas`: 3d/5d pelo `meta_ad_id` atual, total e CPA histórico pelo `ads_numero`, mesma régua do `gasto_total` do card). O número do Meta continua guardado à parte (`vendas_meta`, `vendas_total_meta`) pra comparação.
+
+**Ainda não vale:** as regras automáticas G1/G5 (`meta-sync`) seguem lendo só o Meta. Trocar a fonte delas é decisão separada, porque mexe em pausa de verdade na conta de anúncios.
+
 ## Alerta pendente sem `meta_ad_id` ficava travado pra sempre — corrigido em 2026-09-09
 
 > Achado ao construir a skill `tracker-analise-campanhas` (fluxo-criativo), que lê `alertas` direto do Supabase pra montar o relatório de campanhas.

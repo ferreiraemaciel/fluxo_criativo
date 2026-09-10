@@ -9,9 +9,9 @@
  * valida o token do pico e devolve só números de anúncio, sempre somente leitura.
  *
  * O que sai daqui: campanha, conjunto e anúncio com as métricas de cada período
- * (hoje, 3, 5, 7 dias e total) e a miniatura do criativo. Vendas e receita vêm
- * da Hotmart pelo rastreio do anúncio (vendas.meta_ad_id), mesma regra da aba
- * Tráfego desde 10/09/2026. Nenhum dado de comprador sai do servidor: da tabela
+ * (hoje, 3, 5, 7 dias e total) e a miniatura do criativo. Vendas e receita são
+ * o maior entre o Meta e a Hotmart (vendas.meta_ad_id na janela), mesma regra da
+ * aba Tráfego e da análise desde 10/09/2026. Nenhum dado de comprador sai do servidor: da tabela
  * vendas só se lê o ID do anúncio, a data, o valor e se é complemento.
  *
  * Uso: GET /trafego-publico?t=TOKEN   Revogar: trocar o token_publico do pico.
@@ -47,9 +47,13 @@ function metricas(pares: { row: Linha; vendas: Venda[] }[]) {
     cliques += Number(row.link_clicks) || 0;
     lp += Number(row.landing_page_views) || 0;
     init += Number(row.initiate_checkout) || 0;
-    vendasMeta += Number(row.compras) || 0;
-    vendas += vs.filter((v) => !v.bump).length;
-    receita += vs.reduce((t, v) => t + v.valor, 0);
+    // Por anúncio, o MAIOR entre Meta e Hotmart: as duas fontes só erram pra baixo
+    // (o Meta perde compra que a Hotmart não entrega; a Hotmart perde o anúncio
+    // quando o rastreio cai no caminho). Mesma regra da aba Tráfego e da análise.
+    const vm = Number(row.compras) || 0;
+    vendasMeta += vm;
+    vendas += Math.max(vs.filter((v) => !v.bump).length, vm);
+    receita += Math.max(vs.reduce((t, v) => t + v.valor, 0), Number(row.valor_compras) || 0);
     cpmW += (Number(row.cpm) || 0) * g;
     ctrW += (Number(row.ctr_unico) || 0) * g;
     freqW += (Number(row.frequencia) || 0) * g;
@@ -143,7 +147,7 @@ Deno.serve(async (req) => {
 
   const [{ data: cache, error: e1 }, { data: ads, error: e2 }] = await Promise.all([
     db.from("insights_cache")
-      .select("meta_ad_id,meta_campaign_id,meta_campaign_name,meta_adset_id,meta_adset_name,periodo,data_inicio,data_fim,gasto,compras,impressoes,link_clicks,landing_page_views,initiate_checkout,cpm,ctr_unico,frequencia,connect_rate,hook_rate,atualizado_em")
+      .select("meta_ad_id,meta_campaign_id,meta_campaign_name,meta_adset_id,meta_adset_name,periodo,data_inicio,data_fim,gasto,compras,valor_compras,impressoes,link_clicks,landing_page_views,initiate_checkout,cpm,ctr_unico,frequencia,connect_rate,hook_rate,atualizado_em")
       .eq("status_meta", "ativo").in("periodo", PERIODOS),
     db.from("ads").select("numero,titulo,meta_ad_id,thumb_url,media_files,media_tipo").not("meta_ad_id", "is", null),
   ]);

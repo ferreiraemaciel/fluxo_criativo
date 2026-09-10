@@ -10,7 +10,13 @@ const TICKET = 297;
 const CPA_LIMITE = +(TICKET * 0.7).toFixed(2); // 207,90
 
 /* ── Helpers de métricas ────────────────────────────────────────*/
-/* Vendas, CPA e ROAS vêm da HOTMART, não do Meta.
+/* Vendas, CPA e ROAS: o MAIOR entre Meta e Hotmart, por anúncio e período.
+   Revisto no mesmo 10/09/2026: as duas fontes só erram pra baixo (o Meta perde
+   compra que a Hotmart não entrega; a Hotmart perde o anúncio quando o rastreio
+   cai no WhatsApp, recuperação ou agente). O maior dos dois é o mais perto da
+   verdade. Histórico da primeira versão, só Hotmart, abaixo.
+
+   Vendas, CPA e ROAS vêm da HOTMART, não do Meta.
 
    Até 10/09/2026 esta tabela copiava `compras` do insights_cache, que é o que o
    Meta consegue atribuir ao anúncio. Só que parte das compras nem chega ao Meta
@@ -26,7 +32,10 @@ function mkMetrics(row, hotmart) {
   if (!row) return null;
   const gasto      = row.gasto       != null ? +Number(row.gasto).toFixed(2)  : null;
   const linkClicks = row.link_clicks != null ? Number(row.link_clicks)        : null;
-  const vendas     = hotmart ? hotmart.vendas : (row.compras != null ? Number(row.compras) : null);
+  const vendasMeta = row.compras != null ? Number(row.compras) : null;
+  const vendas     = hotmart ? Math.max(hotmart.vendas, vendasMeta || 0) : vendasMeta;
+  // Receita segue a mesma regra: a maior entre a Hotmart e a que o Meta atribuiu.
+  const receita    = hotmart ? Math.max(hotmart.receita, (row.roas != null && gasto) ? Number(row.roas) * gasto : 0) : null;
   const lpViews    = row.landing_page_views != null ? Number(row.landing_page_views) : null;
   const initCheck  = row.initiate_checkout  != null ? Number(row.initiate_checkout)  : null;
   return {
@@ -42,7 +51,7 @@ function mkMetrics(row, hotmart) {
     cpa_mais1:   (gasto != null && gasto > 0 && vendas != null)
                    ? +(gasto / (vendas + 1)).toFixed(2) : null,
     roas:        hotmart
-                   ? ((gasto != null && gasto > 0) ? +(hotmart.receita / gasto).toFixed(2) : null)
+                   ? ((gasto != null && gasto > 0) ? +(receita / gasto).toFixed(2) : null)
                    : (row.roas != null ? +Number(row.roas).toFixed(2) : null),
     cpm:         row.cpm                != null ? +Number(row.cpm).toFixed(2)          : null,
     ctr:         row.ctr_unico          != null ? +Number(row.ctr_unico).toFixed(4)    : null,

@@ -176,16 +176,21 @@ Deno.serve(async (req) => {
       buscarTudo<{ numero: number; produto: string | null; meta_ad_id: string | null }>((de, ate) => sb.from("ads").select("numero,produto,meta_ad_id").range(de, ate)),
     ]);
 
-    /* ───────────── Vendas reais da Hotmart (desde 10/09/2026) ─────────────
-       Os campos de venda da tabela ads (vendas_3d/5d/total, cpa_3d/5d/historico)
-       são o que o Meta conseguiu atribuir. Parte das compras nem chega ao Meta,
-       então a análise mostrava 0 venda em anúncio que vendeu (ADS 309, 10/09).
-       Aqui eles passam a vir das vendas aprovadas na Hotmart:
-         - 3d e 5d: pelo ID do anúncio atual (vendas.meta_ad_id), na janela;
-         - total e CPA histórico: pelo número do ADS (vendas.ads_numero), somando
-           todo relançamento, que é a mesma régua do gasto_total do card.
-       Complemento de pedido (order bump) não conta como venda. O número do Meta
-       fica guardado em vendas_total_meta, pra comparação no bloco de orçamento. */
+    /* ───────────── Vendas: o MAIOR entre Meta e Hotmart (10/09/2026) ─────────────
+       Nenhuma das duas fontes é a verdade sozinha, e as duas só erram pra baixo:
+         - o Meta perde compra que a Hotmart não entrega pelo pixel (cerca de uma
+           em cada três do MCV) e compra que ele não liga ao clique (ADS 309 vendeu
+           em 10/09 e o Meta mostrava 0);
+         - a Hotmart perde o anúncio sempre que o rastreio cai no caminho (WhatsApp,
+           recuperação, agente). Em ago/2026 só 6 de 45 vendas chegaram com ADS; o
+           ADS 205 tem 39 vendas no Meta e 0 identificadas na Hotmart.
+       Primeira versão usava só a Hotmart e destruiu o CPA histórico dos campeões
+       (ADS 87 com CPA de R$ 1.501). Por anúncio, fica o maior dos dois:
+         - 3d e 5d: Hotmart pelo ID do anúncio atual (vendas.meta_ad_id), na janela;
+         - total e CPA histórico: Hotmart pelo número do ADS (vendas.ads_numero),
+           mesma régua do gasto_total do card.
+       Order bump não conta como venda. O número do Meta fica em vendas_total_meta,
+       pra comparação no bloco de orçamento. */
     const vendasHotmart = await buscarTudo<{ meta_ad_id: string | null; ads_numero: number | null; created_at: string }>(
       (de, ate) => sb.from("vendas").select("meta_ad_id,ads_numero,created_at")
         .eq("status", "aprovada").or("is_order_bump.is.null,is_order_bump.eq.false").range(de, ate));
@@ -202,13 +207,14 @@ Deno.serve(async (req) => {
     const cpa = (g: number | null, n: number) => (n > 0 && g != null ? Math.round((Number(g) / n) * 100) / 100 : null);
     for (const ad of [...adsAtivos, ...adsCampeoes, ...adsArquivados]) {
       (ad as any).vendas_total_meta = ad.vendas_total;
-      const total = vendasPorNumero.get(ad.numero) || 0;
+      const total = Math.max(vendasPorNumero.get(ad.numero) || 0, Number(ad.vendas_total || 0));
       ad.vendas_total = total;
       ad.cpa_historico = cpa(ad.gasto_total, total);
     }
     for (const ad of adsAtivos) {
       const dias = diasPorAdId.get(ad.meta_ad_id || "") || [];
-      const v3 = dias.filter((d) => d >= d3).length, v5 = dias.filter((d) => d >= d5).length;
+      const v3 = Math.max(dias.filter((d) => d >= d3).length, Number(ad.vendas_3d || 0));
+      const v5 = Math.max(dias.filter((d) => d >= d5).length, Number(ad.vendas_5d || 0));
       ad.vendas_3d = v3; ad.vendas_5d = v5;
       ad.cpa_3d = cpa(ad.gasto_3d, v3); ad.cpa_5d = cpa(ad.gasto_5d, v5);
     }
