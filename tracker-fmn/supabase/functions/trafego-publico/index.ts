@@ -86,6 +86,49 @@ function miniatura(ad: Linha | undefined): string | null {
   return img ? `https://drive.google.com/thumbnail?id=${img.file_id}&sz=w200` : null;
 }
 
+// ── Análise de campanhas (a última gerada, a mesma que aparece na aba Tráfego) ──
+// Copia só os campos listados aqui, um por um. A análise hoje não tem dado de
+// comprador, mas o link é público: se um campo novo entrar nela no futuro, ele
+// fica fora daqui até alguém decidir que pode sair.
+const pick = (o: any, ks: string[]) =>
+  Object.fromEntries(ks.filter((k) => o && o[k] !== undefined).map((k) => [k, o[k]]));
+const lista = (a: any, ks: string[]) => (Array.isArray(a) ? a.map((x: any) => pick(x, ks)) : []);
+
+function limparAnalise(v: any, mini: Record<string, string | null>) {
+  const comMini = (arr: any[], chave = "numero") => arr.map((r) => ({ ...r, miniatura: mini[r[chave]] || null }));
+  const orc = v.orcamento_receita;
+  return {
+    gerado_em: v.gerado_em || null,
+    gerado_em_brasilia: v.gerado_em_brasilia || null,
+    resumo_por_produto: Object.fromEntries(Object.entries(v.resumo_por_produto || {}).map(([prod, r]: any) => [prod, {
+      ...pick(r, ["ativos", "gasto_5d", "vendas_5d", "gasto_total_ativos", "vendas_total_ativos"]),
+      perto_de_pausar: lista(r.perto_de_pausar, ["numero", "titulo", "produto", "gasto_5d", "vendas_5d", "cpa_3d", "cpa_5d", "motivo"]),
+    }])),
+    radar: {
+      pendentes: comMini(lista(v.radar_regras?.pendentes_em_ads_ativos, ["ads_numero", "regra_codigo", "mensagem"]), "ads_numero"),
+      pausas_14d: comMini(lista(v.radar_regras?.resolvidos_14d, ["created_at", "ads_numero", "regra_codigo", "mensagem"]), "ads_numero"),
+      orfaos: Number(v.radar_regras?.pendentes_orfaos_count) || 0,
+    },
+    funil: comMini(lista(v.funil, ["numero", "titulo", "produto", "ctr_7d", "gargalo", "gargalo_detalhe"])),
+    aviso_hot_cold: v.leitura_vtsd?.aviso_hot_cold || null,
+    fadiga: comMini(lista(v.fadiga, ["numero", "titulo", "produto", "frequencia_7d"])),
+    candidatos_escala: comMini(lista(v.candidatos_escala, ["numero", "titulo", "produto", "cpa_historico", "vendas_total"])),
+    lifecycle: {
+      rodando_45d: comMini(lista(v.lifecycle?.ativos_rodando_45d_ou_mais, ["numero", "titulo", "produto", "dias_rodando"])),
+      campeoes: comMini(lista(v.lifecycle?.campeoes_atuais, ["numero", "titulo", "produto", "cpa_historico", "vendas_total"])),
+      arquivados: comMini(lista(v.lifecycle?.arquivados_reativaveis, ["numero", "titulo", "produto", "tag", "cpa_historico"])),
+    },
+    orcamento: orc ? {
+      ...pick(orc, ["janela_vendas", "dias_restantes_no_mes", "receita_sem_atribuicao_na_janela"]),
+      por_produto: Object.fromEntries(Object.entries(orc.por_produto || {}).map(([prod, x]: any) => [prod, pick(x, [
+        "ativos_hoje", "media_diaria_5d", "projecao_resto_do_mes", "receita_liquida_janela", "n_vendas_janela",
+        "gasto_estimado_mesma_janela", "roas_vida_ativos", "receita_vida_ativos", "gasto_vida_ativos",
+        "aviso_gasto_estimado", "vendas_total_vida_ativos_meta", "n_vendas_vida_ativos_hotmart",
+      ])])),
+    } : null,
+  };
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
 
@@ -168,5 +211,10 @@ Deno.serve(async (req) => {
     return { nome: c.nome, limite, periodos: porPeriodo(todas), conjuntos };
   }).sort((x: any, y: any) => (y.periodos["7d"]?.gasto || 0) - (x.periodos["7d"]?.gasto || 0));
 
-  return json({ atualizado_em: atualizado || null, cpa_limite: Number(projeto.cpa_limite) || null, campanhas });
+  const miniPorNumero: Record<string, string | null> = {};
+  for (const a of ads || []) if (a.numero != null) miniPorNumero[a.numero] = miniatura(a);
+  const { data: cfg } = await db.from("app_config").select("valor").eq("chave", "analise_campanhas_ultima").maybeSingle();
+  const analise = cfg?.valor?.gerado_em ? limparAnalise(cfg.valor, miniPorNumero) : null;
+
+  return json({ atualizado_em: atualizado || null, cpa_limite: Number(projeto.cpa_limite) || null, campanhas, analise });
 });

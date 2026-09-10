@@ -153,6 +153,24 @@
   .num-ad{font-size:10px;font-weight:900;color:var(--gold)}
   .tit-ad{overflow:hidden;text-overflow:ellipsis;font-size:12px}
   .bom{color:var(--ok)} .ruim{color:var(--verm)}
+
+  /* ── Análise de campanhas dentro da aba Tráfego ── */
+  .an-topo{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:26px 0 12px}
+  .an-topo h1{font-size:17px}
+  .an-quando{font-size:12px;color:var(--t3)}
+  .selo{font-size:11.5px;font-weight:700;padding:2px 9px;border-radius:99px;
+    background:rgba(234,170,65,.14);border:1px solid rgba(234,170,65,.45);color:var(--gold)}
+  .an-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:9px;margin-bottom:10px}
+  .an-prod{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--gold);margin:4px 0 8px}
+  .an-sub{font-size:11.5px;font-weight:700;color:var(--t2);margin:12px 0 4px}
+  .an-tab{overflow-x:auto}
+  .an-tab td,.an-tab th{text-align:left;white-space:nowrap;padding:6px 8px;border-bottom:1px solid var(--border);font-size:12px}
+  .an-tab th{font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--t3);font-weight:700}
+  .an-tab td.r,.an-tab th.r{text-align:right}
+  .an-tab td.w{white-space:normal;min-width:220px;color:var(--t2)}
+  .an-vazio,.an-nota{font-size:12px;color:var(--t3);padding:6px 0}
+  .gar{font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:99px;border:1px solid var(--border);color:var(--t2)}
+  .gar.ok{color:var(--ok);border-color:rgba(74,222,128,.4)} .gar.mal{color:var(--verm);border-color:rgba(248,113,113,.4)}
 </style>
 </head>
 <body>
@@ -563,6 +581,101 @@ function celTrf(m, [k,,tipo]) {
 function linhaTrf(cls, nome, m) {
   return `<tr class="${cls}"><td>${nome}</td>${COL_TRF.map(c => celTrf(m, c)).join('')}</tr>`;
 }
+
+/* ── Análise de campanhas: a última gerada no Tracker, sempre a mesma que aparece lá ── */
+function tempoDesdeAn(iso) {
+  let min = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 60000));
+  const meses = Math.floor(min / 43200); min -= meses * 43200;
+  const dias = Math.floor(min / 1440); min -= dias * 1440;
+  const horas = Math.floor(min / 60); min -= horas * 60;
+  const p = [];
+  if (meses) p.push(meses + (meses === 1 ? ' mês' : ' meses'));
+  if (meses || dias) p.push(dias + 'd');
+  if (meses || dias || horas) p.push(horas + 'h');
+  p.push(min + 'min');
+  return p.join(' ');
+}
+const GARGALO = { saudavel:['Saudável','ok'], criativo:['Criativo','mal'], checkout:['Checkout','mal'], pagina:['Página','mal'],
+  connect:['Connect','mal'], sem_dado:['Sem dado',''] };
+function adsAn(numero, mini) {
+  if (numero == null) return '<span class="gar">não identificado</span>';
+  return `<div class="nome-ad"><span class="mini">${mini ? `<img src="${esc(mini)}" alt="" loading="lazy" onerror="this.remove()">` : ''}</span><span class="num-ad">${String(numero).padStart(3,'0')}</span></div>`;
+}
+function tabAn(cols, rows, vazio) {
+  if (!rows || !rows.length) return `<div class="an-vazio">${vazio}</div>`;
+  return `<div class="an-tab"><table><thead><tr>${cols.map(c => `<th class="${c.r?'r':''}">${c.h}</th>`).join('')}</tr></thead><tbody>${
+    rows.map(r => `<tr>${cols.map(c => `<td class="${c.r?'r':''}${c.w?' w':''}">${c.f(r)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+}
+const cAds = { h:'ADS', f: r => adsAn(r.numero, r.miniatura) };
+const cTit = { h:'Título', w:true, f: r => esc(r.titulo || '') };
+const cProd = { h:'Produto', f: r => esc(r.produto || '') };
+function kpiAn(rot, val, det) {
+  return `<div class="kpi"><div class="lb">${rot}</div><div class="vl">${val}</div>${det ? `<div class="an-vazio" style="padding:2px 0 0">${det}</div>` : ''}</div>`;
+}
+function renderAnalise(an) {
+  if (!an) return `<div class="an-topo"><h1>Análise de campanhas</h1></div><div class="an-vazio">Nenhuma análise gerada ainda.</div>`;
+  let h = `<div class="an-topo"><h1>Análise de campanhas</h1><span class="an-quando">gerada em ${esc(an.gerado_em_brasilia || '')}</span>${
+    an.gerado_em ? `<span class="selo">há ${tempoDesdeAn(an.gerado_em)}</span>` : ''}</div>`;
+
+  h += `<div class="card"><h2>Resumo por produto</h2>`;
+  for (const [prod, r] of Object.entries(an.resumo_por_produto || {})) {
+    h += `<div class="an-prod">${esc(prod)}</div><div class="an-kpis">${
+      kpiAn('Ativos', r.ativos ?? '—')}${kpiAn('Gasto 5d', fmtR(r.gasto_5d))}${kpiAn('Vendas 5d', r.vendas_5d ?? '—')}${
+      kpiAn('Histórico (ativos)', fmtR(r.gasto_total_ativos), `${r.vendas_total_ativos ?? 0} vendas`)}${
+      kpiAn('Perto de pausar', (r.perto_de_pausar || []).length, (r.perto_de_pausar || []).length ? 'G1/G5' : 'nenhum agora')}</div>`;
+  }
+  h += `</div>`;
+
+  h += `<div class="card"><h2>Radar de regras (G1 a G7)</h2><div class="an-sub">Pendentes em anúncio ativo</div>${
+    tabAn([{ h:'ADS', f: r => adsAn(r.ads_numero, r.miniatura) }, { h:'Regra', f: r => esc(r.regra_codigo) }, { h:'Mensagem', w:true, f: r => esc(r.mensagem) }],
+      an.radar.pendentes, 'Nenhum alerta pendente em anúncio ativo.')}${
+    an.radar.orfaos ? `<div class="an-nota">${an.radar.orfaos} alertas de anúncios que já saíram do ar (não exigem ação).</div>` : ''}
+    <div class="an-sub">Pausas automáticas, últimos 14 dias</div>${
+    tabAn([{ h:'Data', f: r => esc((r.created_at || '').slice(0,10).split('-').reverse().join('/')) },
+      { h:'ADS', f: r => adsAn(r.ads_numero, r.miniatura) }, { h:'Regra', f: r => esc(r.regra_codigo) }, { h:'Mensagem', w:true, f: r => esc(r.mensagem) }],
+      an.radar.pausas_14d, 'Nenhuma pausa automática nos últimos 14 dias.')}</div>`;
+
+  h += `<div class="card"><h2>Funil (janela de 7 dias) + leitura VTSD</h2>${
+    tabAn([cAds, cTit, cProd, { h:'CTR', r:true, f: r => r.ctr_7d != null ? (r.ctr_7d*100).toFixed(2).replace('.',',')+'%' : '—' },
+      { h:'Gargalo', f: r => { const g = GARGALO[r.gargalo] || [r.gargalo || '—','']; return `<span class="gar ${g[1]}">${esc(g[0])}</span>`; } },
+      { h:'Leitura', w:true, f: r => esc(r.gargalo_detalhe || '') }], an.funil, 'Sem anúncio ativo pra avaliar.')}${
+    an.aviso_hot_cold ? `<div class="an-nota">${esc(an.aviso_hot_cold)}</div>` : ''}</div>`;
+
+  h += `<div class="card"><h2>Fadiga x candidatos a escalar</h2><div class="an-sub">Fadiga</div>${
+    tabAn([cAds, cTit, cProd, { h:'Freq.', r:true, f: r => r.frequencia_7d != null ? Number(r.frequencia_7d).toFixed(1).replace('.',',') : '—' }],
+      an.fadiga, 'Nenhum candidato a fadiga agora.')}<div class="an-sub">Candidatos a escalar</div>${
+    tabAn([cAds, cTit, cProd, { h:'CPA histórico', r:true, f: r => fmtR(r.cpa_historico) }, { h:'Vendas', r:true, f: r => r.vendas_total ?? '—' }],
+      an.candidatos_escala, 'Nenhum candidato a escala agora.')}</div>`;
+
+  const porCpa = a => [...(a || [])].sort((x, y) => (x.cpa_historico ?? 9e9) - (y.cpa_historico ?? 9e9)).slice(0, 10);
+  h += `<div class="card"><h2>Lifecycle</h2><div class="an-sub">Ativos rodando há 45+ dias</div>${
+    tabAn([cAds, cTit, cProd, { h:'Dias', r:true, f: r => r.dias_rodando ?? '—' }], an.lifecycle.rodando_45d, 'Nenhum ativo há 45+ dias sem refresh.')}
+    <div class="an-sub">Campeões atuais (${(an.lifecycle.campeoes || []).length})</div>${
+    tabAn([cAds, cTit, cProd, { h:'CPA histórico', r:true, f: r => fmtR(r.cpa_historico) }, { h:'Vendas', r:true, f: r => r.vendas_total ?? '—' }],
+      porCpa(an.lifecycle.campeoes), 'Nenhum campeão hoje.')}
+    <div class="an-sub">Arquivados reativáveis (${(an.lifecycle.arquivados || []).length})</div>${
+    tabAn([cAds, cTit, cProd, { h:'Tag', f: r => esc(r.tag || '') }, { h:'CPA histórico', r:true, f: r => fmtR(r.cpa_historico) }],
+      porCpa(an.lifecycle.arquivados), 'Nenhum arquivado reativável.')}</div>`;
+
+  const o = an.orcamento;
+  if (o) {
+    h += `<div class="card"><h2>Orçamento e receita real (janela ${esc(o.janela_vendas || '')})</h2>`;
+    for (const [prod, x] of Object.entries(o.por_produto || {})) {
+      h += `<div class="an-prod">${esc(prod)} (${x.ativos_hoje ?? 0} ativo${x.ativos_hoje === 1 ? '' : 's'} hoje)</div><div class="an-kpis">${
+        kpiAn('Ritmo diário (5d)', fmtR(x.media_diaria_5d))}${
+        kpiAn('Projeção resto do mês', fmtR(x.projecao_resto_do_mes), `${o.dias_restantes_no_mes ?? '—'} dias restantes`)}${
+        kpiAn('Receita líquida', fmtR(x.receita_liquida_janela), `${x.n_vendas_janela ?? 0} vendas`)}${
+        kpiAn('Gasto estimado, mesma janela', fmtR(x.gasto_estimado_mesma_janela))}${
+        kpiAn('ROAS, vida dos ativos', x.roas_vida_ativos != null ? String(x.roas_vida_ativos).replace('.',',') + 'x' : '—',
+          `${fmtR(x.receita_vida_ativos)} / ${fmtR(x.gasto_vida_ativos)}`)}</div>${
+        x.aviso_gasto_estimado ? `<div class="an-nota">${esc(x.aviso_gasto_estimado)}${
+          x.vendas_total_vida_ativos_meta !== x.n_vendas_vida_ativos_hotmart
+            ? ` · Meta reporta ${x.vendas_total_vida_ativos_meta} vendas pra esses ativos, a Hotmart aprovou ${x.n_vendas_vida_ativos_hotmart} com esse ADS atribuído.` : ''}</div>` : ''}`;
+    }
+    h += `<div class="an-nota">Receita sem atribuição a anúncio, mesma janela: <b>${fmtR(o.receita_sem_atribuicao_na_janela)}</b></div></div>`;
+  }
+  return h;
+}
 function renderTrafego() {
   const alvo = document.getElementById('trafego');
   const quando = TRF.atualizado_em ? new Date(TRF.atualizado_em).toLocaleString('pt-BR', {day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}) : '—';
@@ -587,7 +700,7 @@ function renderTrafego() {
       }
     }
   }
-  h += `</tbody></table></div><div class="rod">Página de leitura. Nada aqui pode ser alterado.</div>`;
+  h += `</tbody></table></div>` + renderAnalise(TRF.analise) + `<div class="rod">Página de leitura. Nada aqui pode ser alterado.</div>`;
   alvo.innerHTML = h;
   alvo.querySelectorAll('.per button').forEach(b => b.onclick = () => { perTrf = b.dataset.per; renderTrafego(); });
 }
