@@ -2282,3 +2282,24 @@ Gravado no Tracker, aba Picos de Venda, ficha da campanha:
 **Fora desta edição:** combo (a estratégia é desconto acima de 30%, sem empilhar produtos) e a frase "não compre nada ainda". As duas tarefas foram marcadas como puladas.
 
 **Achado no histórico de vendas, que muda a promessa:** o pacote completo do MCV já foi vendido a R$ 198,99 na "Promoção 1000 Fotógrafos Protegidos" (07/05/2026, 29 vendas com cupom). Em 2024 houve ofertas menores, só de contratos para eventos, a R$ 147,00 e R$ 124,95. Com o preço da Black em R$ 197,00, a diferença para maio é de R$ 1,99: quem comprou em maio compara, e a pergunta 7 da economia da oferta ("a ancoragem resiste a quem comparar com a sua última oferta?") responde não. A promessa de "maior desconto" só se sustenta com o preço abaixo desse piso.
+
+## 15.1 Duas ofertas e o ticket da imaginação (10/09/2026)
+
+**Decidido pelo Felipe:** a Black tem duas ofertas.
+
+| Público | Produto | Fora do pico | No pico | Desconto |
+|---|---|---|---|---|
+| Não alunos | Modelos de Contrato Visual | R$ 297,00 | R$ 197,00 | 33,7% |
+| Alunos (compraram o MCV) | Blindagem, assinatura anual | R$ 397,00 | R$ 277,90 | 30% |
+
+A promessa fica "o menor preço do ano" por enquanto, a validar com o Samuel.
+
+**O ticket da imaginação.** O ticket de R$ 247,00 era a média simples de R$ 197,00 com R$ 297,00, o preço antigo do aluno. Média simples só vale se metade das vendas vier de cada oferta. Com o aluno a R$ 277,90, a média simples cai para R$ 237,45.
+
+Base de alunos medida no banco: 971 compradores do MCV, 39 já assinam o Blindagem, **941 podem receber a oferta de aluno**. Metade das vendas vindo de alunos é plausível no conservador (25 alunos, 2,7% da base) e no alvo (50, 5,3%). No otimista seriam 100 (10,6%), acima do razoável, então o cenário ficou em 75 alunos (8%) e 125 não alunos, mantendo o total de 200.
+
+O Tracker agora calcula o ticket médio ponderado sozinho, com os preços da ficha. Os leads contam só as vendas para não alunos, porque o aluno chega pela base, sem anúncio.
+
+**Pendente:** o plano de mídia ainda usa 100 vendas na meta (tarefa "Calcular quantos leads a meta exige"). Se 50 delas vêm de alunos, a mídia precisa captar leads só para as outras 50, e o investimento cai pela metade.
+
+**Achado:** R$ 277,90 é um preço que o Blindagem já teve em 12 vendas desde junho de 2026. Vale o mesmo cuidado da comparação com maio no MCV.
