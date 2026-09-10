@@ -2205,7 +2205,12 @@ function AnaliseCampanhas() {
       )}
 
       {aberto && dados && (
-        <div style={{ maxHeight:'55vh', overflow:'auto', padding:'0 18px 18px', display:'flex', flexDirection:'column', gap:18 }}>
+        /* Grid, não flex. Em coluna flex os filhos podem encolher, e como o
+           SectionCard tem overflow:hidden o navegador deixava cada seção
+           espremida pra caber na caixa em vez de rolar: o relatório aparecia
+           cortado e "não descia". A rolagem continua aqui dentro porque a tela
+           de Tráfego em si não rola (a tabela de anúncios ocupa o resto). */
+        <div style={{ maxHeight:'55vh', overflowY:'auto', padding:'0 18px 18px', display:'grid', gap:18, alignContent:'start', minWidth:0 }}>
 
           {/* Resumo executivo */}
           {Object.entries(dados.resumo_por_produto || {}).map(([produto, r]) => (
