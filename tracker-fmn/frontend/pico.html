@@ -637,7 +637,7 @@ function renderAnalise(an) {
 
   h += `<div class="card"><h2>Funil (janela de 7 dias) + leitura VTSD</h2>${
     tabAn([cAds, cTit, cProd, { h:'CTR', r:true, f: r => r.ctr_7d != null ? (r.ctr_7d*100).toFixed(2).replace('.',',')+'%' : '—' },
-      { h:'Gargalo', f: r => { const g = GARGALO[r.gargalo] || [r.gargalo || '—','']; return `<span class="gar ${g[1]}">${esc(g[0])}</span>`; } },
+      { h:'Gargalo', f: r => { const k = String(r.gargalo || '').replace(/^gargalo_/, ''); const g = GARGALO[k] || [k || '—','']; return `<span class="gar ${g[1]}">${esc(g[0])}</span>`; } },
       { h:'Leitura', w:true, f: r => esc(r.gargalo_detalhe || '') }], an.funil, 'Sem anúncio ativo pra avaliar.')}${
     an.aviso_hot_cold ? `<div class="an-nota">${esc(an.aviso_hot_cold)}</div>` : ''}</div>`;
 
