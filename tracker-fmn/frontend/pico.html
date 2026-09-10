@@ -291,6 +291,7 @@ function render(d) {
   const leads = Number(pm.taxa_conversao) > 0
     ? Math.ceil((Number(pm.vendas_meta)||0)/Number(pm.taxa_conversao)) : 0;
   const midia = capt > 0 ? (leads*(Number(pm.cpl_meta)||0))/capt : 0;
+  const quente = (Number(pm.verba_alunos_dia)||0) * (Number(pm.dias_alunos)||0);   // alunos, fora da meta
   const hoje = new Date().toISOString().slice(0,10);
   const dias = p.data_abertura
     ? Math.round((new Date(p.data_abertura+'T12:00:00') - new Date(hoje+'T12:00:00'))/864e5)
@@ -339,29 +340,34 @@ function render(d) {
     h += `</div>`;
   }
 
-  // ── Imaginação primária: duas ofertas, ticket ponderado ─────
+  // ── Imaginação primária: meta com não alunos, alunos como bônus ──
   const met = (mo, ce, ind) => {
     const m = (d.metricas||[]).find(x => x.momento===mo && x.cenario===ce && x.indicador===ind);
     return m && m.valor != null ? Number(m.valor) : null;
   };
   const CEN = ['conservador','alvo','otimista'];
   const pnI = Number(dec.preco_pico)||0, paI = Number(dec.preco_aluno)||0;
-  const vn = c => met('imaginacao',c,'vendas')||0, va = c => met('imaginacao',c,'vendas_alunos')||0;
-  const fat = c => (pnI||paI) ? vn(c)*pnI + va(c)*paI : (vn(c)+va(c))*(met('imaginacao',c,'ticket')||0);
+  const vn = c => (c === 'alvo' && pm.vendas_meta != null) ? Number(pm.vendas_meta) : (met('imaginacao',c,'vendas')||0);
+  const va = c => met('imaginacao',c,'vendas_alunos')||0;
   const inv = c => met('imaginacao',c,'investimento');
+  const fm = c => vn(c)*pnI, fb = c => va(c)*paI;
   if (CEN.some(c => vn(c) || va(c) || inv(c))) {
     const linha = (rot, f, cls) => `<tr><td${cls ? ' class="'+cls+'"' : ''}>${rot}</td>` +
       CEN.map(c => `<td${cls ? ' class="'+cls+'"' : ''}>${f(c)}</td>`).join('') + `</tr>`;
+    const sub = t => `<tr><td colspan="4" style="padding-top:13px;font-size:10.5px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.4px">${t}</td></tr>`;
     h += `<div class="card"><h2>Imaginação primária</h2>
-      <div style="font-size:11.5px;color:var(--t3);margin-bottom:8px">Não alunos: <b>${esc(dec.produto||'oferta principal')}</b> a ${pnI ? brl(pnI) : 'preço a definir'} · Alunos: <b>${esc(dec.produto_aluno||'oferta de aluno')}</b> a ${paI ? brl(paI) : 'preço a definir'}</div>
+      <div style="font-size:11.5px;color:var(--t3);margin-bottom:4px">Meta: <b>${esc(dec.produto||'oferta principal')}</b> a ${pnI ? brl(pnI) : 'preço a definir'} · Bônus: <b>${esc(dec.produto_aluno||'oferta de aluno')}</b> a ${paI ? brl(paI) : 'preço a definir'}</div>
       <table><thead><tr><th></th>` + CEN.map(c => `<th style="text-transform:capitalize">${c}</th>`).join('') + `</tr></thead><tbody>` +
+      sub('Meta: não alunos') +
       linha('Vendas para não alunos', c => vn(c)) +
-      linha('Vendas para alunos', c => va(c)) +
-      linha('Total de vendas', c => vn(c)+va(c), 'forte') +
-      linha('Ticket médio', c => (vn(c)+va(c)) ? brl(fat(c)/(vn(c)+va(c))) : '—') +
       linha('Investimento', c => inv(c)==null ? '—' : brl(inv(c))) +
-      linha('Faturamento', c => brl(fat(c)), 'verde') +
-      linha('ROAS', c => inv(c) ? (fat(c)/inv(c)).toFixed(2) : '—') +
+      linha('Ticket', () => pnI ? brl(pnI) : '—') +
+      linha('Faturamento da meta', c => brl(fm(c)), 'verde') +
+      linha('ROAS da meta', c => inv(c) ? (fm(c)/inv(c)).toFixed(2) : '—') +
+      sub('Bônus: alunos, fora da meta') +
+      linha('Vendas para alunos', c => va(c)) +
+      linha('Faturamento do bônus', c => brl(fb(c))) +
+      linha('Faturamento com o bônus', c => brl(fm(c)+fb(c)), 'forte') +
       `</tbody></table></div>`;
   }
 
@@ -407,13 +413,26 @@ function render(d) {
     h += `</div>`;
   }
 
+  // ── Público quente: alunos, fora da meta ───────────────────
+  if (quente > 0) {
+    h += `<div class="card"><h2>Público quente: alunos, fora da meta</h2>
+      <div class="kpis">
+        <div class="kpi"><div class="lb">Verba por dia</div><div class="vl">${brl(pm.verba_alunos_dia)}</div></div>
+        <div class="kpi"><div class="lb">Dias rodando</div><div class="vl">${Number(pm.dias_alunos)||0}</div></div>
+        <div class="kpi"><div class="lb">Verba total</div><div class="vl">${brl(quente)}</div></div>
+        <div class="kpi"><div class="lb">Com imposto</div><div class="vl">${brl(quente*(1+(Number(pm.imposto_meta)||0)))}</div></div>
+      </div>
+      <div style="font-size:10.5px;color:var(--t3);margin-top:9px;line-height:1.45">Anúncio só para compradores do MCV, sem quem já assina o Blindagem, vendendo a oferta de aluno. Fica fora da meta: o que vender aqui é bônus.</div></div>`;
+  }
+
   // ── Plano contra o real ─────────────────────────────────────
   if (d.anuncios > 0) {
-    const consumo = midia > 0 ? d.gasto/midia*100 : null;
+    const planejadoT = midia + quente;
+    const consumo = planejadoT > 0 ? d.gasto/planejadoT*100 : null;
     const cpa = d.compras > 0 ? d.gasto/d.compras : null;
     h += `<div class="card"><h2>Plano contra o real</h2>
       <div class="kpis">
-        <div class="kpi"><div class="lb">Verba planejada</div><div class="vl">${brl(midia)}</div></div>
+        <div class="kpi"><div class="lb">Verba planejada</div><div class="vl">${brl(midia + quente)}</div></div>
         <div class="kpi"><div class="lb">Gasto real</div><div class="vl" style="color:var(--azul)">${brl(d.gasto)}</div></div>
         <div class="kpi"><div class="lb">Consumo</div><div class="vl" style="color:${consumo>100?'var(--verm)':'var(--ok)'}">${consumo==null?'—':consumo.toFixed(0)+'%'}</div></div>
         <div class="kpi"><div class="lb">Vendas no Meta</div><div class="vl">${d.compras}</div></div>

@@ -2303,3 +2303,14 @@ O Tracker agora calcula o ticket médio ponderado sozinho, com os preços da fic
 **Pendente:** o plano de mídia ainda usa 100 vendas na meta (tarefa "Calcular quantos leads a meta exige"). Se 50 delas vêm de alunos, a mídia precisa captar leads só para as outras 50, e o investimento cai pela metade.
 
 **Achado:** R$ 277,90 é um preço que o Blindagem já teve em 12 vendas desde junho de 2026. Vale o mesmo cuidado da comparação com maio no MCV.
+
+## 15.2 Meta só com não alunos, alunos como bônus (10/09/2026)
+
+**Decidido pelo Felipe:** meta, investimento e leads contam só quem não é aluno (50, 100 e 200 vendas nos três cenários). Venda para aluno é bônus, com anúncio próprio para o público quente, fora da meta. Quem já assina o Blindagem fica fora das duas ofertas: não temos produto para eles e não vale investir nisso agora.
+
+No Tracker:
+- A imaginação separa "Meta: não alunos" de "Bônus: alunos, fora da meta". Bônus em 25, 50 e 75 vendas.
+- A venda do cenário alvo é a mesma do plano de mídia (100): mudou num, muda no outro.
+- O ticket do plano de mídia vem da ficha (R$ 197,00). Antes era um valor digitado à parte (R$ 247,00).
+- O plano de mídia ganhou o bloco "Público quente", com verba por dia e dias rodando. O plano contra o real soma essa verba ao planejado, porque o gasto real inclui esses anúncios.
+- Nova tarefa no D0: "Subir campanha para alunos, público quente". O orçamento diário dela alimenta o plano.

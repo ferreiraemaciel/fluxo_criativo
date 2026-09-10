@@ -920,29 +920,28 @@ function BlocoFicha({ declaracoes, onSalvar, semMentoria }) {
 }
 
 /* ── Imaginação primária ────────────────────────────────────────*/
-const INDICADORES_IMAGINACAO = [
-  { chave:'vendas',        label:'Vendas para não alunos', unidade:'un' },
-  { chave:'vendas_alunos', label:'Vendas para alunos',     unidade:'un' },
-  { chave:'investimento',  label:'Investimento',           unidade:'R$' },
-];
+const INDICADORES_IMAGINACAO = {
+  vendas:        { chave:'vendas',        label:'Vendas para não alunos', unidade:'un' },
+  investimento:  { chave:'investimento',  label:'Investimento',           unidade:'R$' },
+  vendas_alunos: { chave:'vendas_alunos', label:'Vendas para alunos',     unidade:'un' },
+};
 const CENARIOS = ['conservador','alvo','otimista'];
 
-/* Duas ofertas: quem não é aluno compra a principal, quem é aluno compra a
-   dele. O ticket médio sai da mistura, com os preços vindos da ficha. */
-function BlocoImaginacao({ metricas, onSalvar, precos = {} }) {
+/* A meta conta só quem não é aluno. Aluno é bônus: fica fora da meta, do
+   investimento e dos leads. Os preços vêm da ficha, e a venda do cenário
+   alvo é a mesma do plano de mídia. */
+function BlocoImaginacao({ metricas, onSalvar, precos = {}, metaPlano }) {
   const valor = (cen, ch) => {
+    if (cen === 'alvo' && ch === 'vendas' && metaPlano != null && metaPlano !== '') return metaPlano;
     const m = metricas.find(x => x.cenario === cen && x.indicador === ch);
     return m ? m.valor : '';
   };
   const pn = Number(precos.nao) || 0, pa = Number(precos.aluno) || 0;
   const vn = c => Number(valor(c, 'vendas')) || 0;
   const va = c => Number(valor(c, 'vendas_alunos')) || 0;
-  const faturamento = c => (pn || pa)
-    ? vn(c) * pn + va(c) * pa
-    : (vn(c) + va(c)) * (Number(valor(c, 'ticket')) || 0);
-  const ticket = c => { const t = vn(c) + va(c); return t ? faturamento(c) / t : 0; };
-  const roas = c => { const i = Number(valor(c, 'investimento')) || 0; return i > 0 ? faturamento(c) / i : 0; };
-  // Só quem não é aluno precisa de lead: o aluno chega pela base, não pelo anúncio.
+  const fatMeta  = c => vn(c) * pn;
+  const fatBonus = c => va(c) * pa;
+  const roas = c => { const i = Number(valor(c, 'investimento')) || 0; return i > 0 ? fatMeta(c) / i : 0; };
   const leads = (c, taxa) => taxa > 0 ? Math.round(vn(c) / taxa) : 0;
 
   const tdBase = { padding:'5px 8px', textAlign:'right', fontSize:12, fontFamily:'Roboto,sans-serif',
@@ -957,16 +956,42 @@ function BlocoImaginacao({ metricas, onSalvar, precos = {} }) {
       ))}
     </tr>
   );
+  const linhaInput = ind => (
+    <tr>
+      <td style={{ padding:'5px 8px', fontSize:12, fontFamily:'Roboto,sans-serif',
+        color:'var(--text-2)', whiteSpace:'nowrap' }}>{ind.label}</td>
+      {CENARIOS.map(c => (
+        <td key={c} style={{ padding:'3px 8px', textAlign:'right' }}>
+          {ind.unidade === 'R$' ? (
+            <CampoMoeda valor={valor(c, ind.chave) === '' ? null : Number(valor(c, ind.chave))}
+              onSalvar={v => onSalvar(c, ind.chave, v == null ? '' : v, ind.unidade)}
+              largura="100%" estilo={{ maxWidth:120 }}/>
+          ) : (
+            <input type="number" key={String(valor(c, ind.chave))} defaultValue={valor(c, ind.chave)}
+              onBlur={e => onSalvar(c, ind.chave, e.target.value, ind.unidade)}
+              style={{ width:'100%', maxWidth:120, textAlign:'right', padding:'5px 7px',
+                borderRadius:6, border:'1px solid var(--app-border)',
+                background:'rgba(255,255,255,.03)', color:'var(--text-1)',
+                fontSize:12, fontFamily:'Roboto,sans-serif', fontVariantNumeric:'tabular-nums' }}/>
+          )}
+        </td>
+      ))}
+    </tr>
+  );
+  const subtitulo = texto => (
+    <tr><td colSpan={4} style={{ padding:'14px 8px 4px', fontSize:10.5, fontFamily:'Roboto,sans-serif',
+      fontWeight:700, color:'var(--text-3)', letterSpacing:.4, textTransform:'uppercase' }}>{texto}</td></tr>
+  );
 
   return (
     <SectionCard recolhivel idRecolher="pico:imaginacao" title="Imaginação primária"
       headerRight={<span style={{ fontSize:11, color:'var(--text-3)',
         fontFamily:'Roboto,sans-serif' }}>preencha antes de qualquer tarefa</span>}>
       <div style={{ fontSize:11.5, fontFamily:'Roboto,sans-serif', color:'var(--text-3)',
-        marginBottom:9, lineHeight:1.5 }}>
-        Não alunos: <b style={{ color:'var(--text-2)' }}>{precos.prodNao || 'oferta principal'}</b> a {pn ? fmtMoeda(pn) : 'preço a definir'}
+        marginBottom:4, lineHeight:1.5 }}>
+        Meta: <b style={{ color:'var(--text-2)' }}>{precos.prodNao || 'oferta principal'}</b> a {pn ? fmtMoeda(pn) : 'preço a definir'}
         {'  ·  '}
-        Alunos: <b style={{ color:'var(--text-2)' }}>{precos.prodAluno || 'oferta de aluno'}</b> a {pa ? fmtMoeda(pa) : 'preço a definir'}
+        Bônus: <b style={{ color:'var(--text-2)' }}>{precos.prodAluno || 'oferta de aluno'}</b> a {pa ? fmtMoeda(pa) : 'preço a definir'}
       </div>
       <div style={{ overflowX:'auto' }}>
         <table style={{ width:'100%', borderCollapse:'collapse', minWidth:520 }}>
@@ -982,44 +1007,25 @@ function BlocoImaginacao({ metricas, onSalvar, precos = {} }) {
             </tr>
           </thead>
           <tbody>
-            {INDICADORES_IMAGINACAO.map(ind => (
-              <tr key={ind.chave}>
-                <td style={{ padding:'5px 8px', fontSize:12, fontFamily:'Roboto,sans-serif',
-                  color:'var(--text-2)', whiteSpace:'nowrap' }}>{ind.label}</td>
-                {CENARIOS.map(c => (
-                  <td key={c} style={{ padding:'3px 8px', textAlign:'right' }}>
-                    {ind.unidade === 'R$' ? (
-                      <CampoMoeda valor={valor(c, ind.chave) === '' ? null : Number(valor(c, ind.chave))}
-                        onSalvar={v => onSalvar(c, ind.chave, v == null ? '' : v, ind.unidade)}
-                        largura="100%" estilo={{ maxWidth:120 }}/>
-                    ) : (
-                      <input type="number" key={String(valor(c, ind.chave))} defaultValue={valor(c, ind.chave)}
-                        onBlur={e => onSalvar(c, ind.chave, e.target.value, ind.unidade)}
-                        style={{ width:'100%', maxWidth:120, textAlign:'right', padding:'5px 7px',
-                          borderRadius:6, border:'1px solid var(--app-border)',
-                          background:'rgba(255,255,255,.03)', color:'var(--text-1)',
-                          fontSize:12, fontFamily:'Roboto,sans-serif',
-                          fontVariantNumeric:'tabular-nums' }}/>
-                    )}
-                  </td>
-                ))}
-              </tr>
-            ))}
-            {linhaCalc('Total de vendas', c => (vn(c) + va(c)) || '—', true)}
-            {linhaCalc('Ticket médio', c => ticket(c) ? fmtMoeda(ticket(c)) : '—', false,
-              'Média ponderada: cada oferta pesa pelo número de vendas dela')}
-            {linhaCalc('Faturamento', c => fmtMoeda(faturamento(c)), true)}
-            {linhaCalc('ROAS', c => roas(c) ? roas(c).toFixed(2) : '—')}
-            {linhaCalc('Leads a 5%', c => leads(c, .05) || '—', false, 'Só as vendas para não alunos precisam de lead de anúncio')}
-            {linhaCalc('Leads a 8%', c => leads(c, .08) || '—', false, 'Só as vendas para não alunos precisam de lead de anúncio')}
+            {subtitulo('Meta: não alunos')}
+            {linhaInput(INDICADORES_IMAGINACAO.vendas)}
+            {linhaInput(INDICADORES_IMAGINACAO.investimento)}
+            {linhaCalc('Ticket', () => pn ? fmtMoeda(pn) : '—', false, 'Preço da oferta para não alunos, vem da ficha')}
+            {linhaCalc('Faturamento da meta', c => fmtMoeda(fatMeta(c)), true)}
+            {linhaCalc('ROAS da meta', c => roas(c) ? roas(c).toFixed(2) : '—')}
+            {linhaCalc('Leads a 5%', c => leads(c, .05) || '—')}
+            {linhaCalc('Leads a 8%', c => leads(c, .08) || '—')}
+            {subtitulo('Bônus: alunos, fora da meta')}
+            {linhaInput(INDICADORES_IMAGINACAO.vendas_alunos)}
+            {linhaCalc('Faturamento do bônus', c => fmtMoeda(fatBonus(c)))}
+            {linhaCalc('Faturamento com o bônus', c => fmtMoeda(fatMeta(c) + fatBonus(c)), true)}
           </tbody>
         </table>
       </div>
       <div style={{ fontSize:10.5, fontFamily:'Roboto,sans-serif', color:'var(--text-3)',
         marginTop:9, lineHeight:1.45 }}>
-        Os preços vêm da ficha da campanha: mudou lá, muda aqui. O ticket médio é a média
-        ponderada pelas vendas de cada oferta. Aluno compra pela base, sem anúncio, por isso
-        os leads contam só as vendas para não alunos.
+        A meta, o investimento e os leads contam só quem não é aluno. A venda do cenário alvo é
+        a mesma do plano de mídia: mudou aqui, muda lá. Vendas para alunos são bônus.
       </div>
     </SectionCard>
   );
@@ -1099,12 +1105,12 @@ function LinhaCalc({ label, valor, destaque, alerta, dica }) {
   );
 }
 
-function BlocoPlanoMidia({ plano, onSalvar }) {
+function BlocoPlanoMidia({ plano, onSalvar, precoFicha }) {
   const p = plano || {};
   const set = (k) => (v) => onSalvar({ ...p, [k]: v });
   const brl = v => window.fmtBRL ? window.fmtBRL(v) : fmtMoeda(v);
 
-  const ticket  = Number(p.ticket_liquido) || 0;
+  const ticket  = Number(precoFicha) || Number(p.ticket_liquido) || 0;   // a ficha manda
   const vendas  = Number(p.vendas_meta) || 0;
   const taxa    = Number(p.taxa_conversao) || 0;
   const cpl     = Number(p.cpl_meta) || 0;
@@ -1132,6 +1138,7 @@ function BlocoPlanoMidia({ plano, onSalvar }) {
   const pctDaEtapa = { teaser:pctTeaser, captacao:pctCapt, aquecimento:pctAquec, remarketing:pctRmk };
   const verbaLembrete = midia * pctAquec * 0.5;
   const dRmk = Number(p.dias_remarketing) || 0;
+  const verbaQuente = (Number(p.verba_alunos_dia) || 0) * (Number(p.dias_alunos) || 0);
 
   return (
     <SectionCard recolhivel idRecolher="pico:plano" title="Plano de mídia"
@@ -1144,8 +1151,13 @@ function BlocoPlanoMidia({ plano, onSalvar }) {
           <div style={{ fontSize:10.5, fontFamily:'Roboto,sans-serif', fontWeight:700,
             color:'var(--text-3)', letterSpacing:.4, textTransform:'uppercase' }}>Você define</div>
           <CampoNum label="Vendas esperadas" valor={p.vendas_meta} onSalvar={set('vendas_meta')} sufixo="un"/>
-          <CampoNum label="Ticket do produto" valor={p.ticket_liquido} onSalvar={set('ticket_liquido')}
-            tipo="moeda" dica="Já descontada a taxa da plataforma. É o que entra de verdade."/>
+          {precoFicha ? (
+            <LinhaCalc label="Ticket da oferta principal" valor={brl(ticket)}
+              dica="Vem da ficha da campanha, oferta para não alunos. Mudou lá, muda aqui."/>
+          ) : (
+            <CampoNum label="Ticket do produto" valor={p.ticket_liquido} onSalvar={set('ticket_liquido')}
+              tipo="moeda" dica="Já descontada a taxa da plataforma. É o que entra de verdade."/>
+          )}
           <CampoNum label="Conversão de leads" valor={p.taxa_conversao} onSalvar={set('taxa_conversao')}
             tipo="percent" dica="No pico fica entre 5% e 10%, e o piso é 5%. A planilha usa 7%."/>
           <CampoNum label="Custo por lead" valor={p.cpl_meta} onSalvar={set('cpl_meta')}
@@ -1259,6 +1271,27 @@ function BlocoPlanoMidia({ plano, onSalvar }) {
           </div>
         </div>
       )}
+
+      {/* Público quente: só alunos, verba própria, fora da meta */}
+      <div style={{ marginTop:14, paddingTop:12, borderTop:'1px solid var(--app-border)' }}>
+        <div style={{ fontSize:10.5, fontFamily:'Roboto,sans-serif', fontWeight:700,
+          color:'var(--text-3)', letterSpacing:.4, textTransform:'uppercase', marginBottom:8 }}>
+          Público quente: alunos, fora da meta
+        </div>
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(200px,1fr))', gap:8 }}>
+          <CampoNum label="Verba por dia" valor={p.verba_alunos_dia} onSalvar={set('verba_alunos_dia')}
+            tipo="moeda" dica="Público pequeno satura rápido: comece baixo e suba só se a frequência aguentar."/>
+          <CampoNum label="Dias rodando" valor={p.dias_alunos} onSalvar={set('dias_alunos')}
+            sufixo="d" dica="Normalmente os dias de carrinho aberto."/>
+          <LinhaCalc label="Verba total" valor={brl(verbaQuente)}/>
+          <LinhaCalc label="Com imposto" valor={brl(verbaQuente * (1 + imposto))}/>
+        </div>
+        <div style={{ fontSize:10.5, fontFamily:'Roboto,sans-serif', color:'var(--text-3)',
+          marginTop:7, lineHeight:1.45 }}>
+          Anúncio só para compradores do MCV, sem quem já assina o Blindagem, vendendo a oferta
+          de aluno. Não entra na meta nem no investimento acima: o que vender aqui é bônus.
+        </div>
+      </div>
 
       <div style={{ fontSize:10.5, fontFamily:'Roboto,sans-serif', color:'var(--text-3)',
         marginTop:11, lineHeight:1.45 }}>
@@ -1584,7 +1617,8 @@ function BlocoAuditoria({ projeto, tarefas }) {
   const pctCapt = 1 - (Number(p.pct_teaser)||0) - (Number(p.pct_aquecimento)||0) - pctRmk;
   const leads   = Number(p.taxa_conversao) > 0
     ? Math.ceil((Number(p.vendas_meta)||0) / Number(p.taxa_conversao)) : 0;
-  const planejado = pctCapt > 0 ? (leads * (Number(p.cpl_meta)||0)) / pctCapt : 0;
+  const planejado = (pctCapt > 0 ? (leads * (Number(p.cpl_meta)||0)) / pctCapt : 0)
+    + (Number(p.verba_alunos_dia)||0) * (Number(p.dias_alunos)||0);   // meta + público quente
 
   const gasto = dados?.gasto || 0;
   const consumo = planejado > 0 ? (gasto / planejado) * 100 : null;
@@ -2090,6 +2124,9 @@ function PicoScreen() {
       }
     }
     setMetricas(lista);
+    /* A venda do cenário alvo é a meta do plano de mídia */
+    if (cenario === 'alvo' && indicador === 'vendas' && v != null && projeto)
+      await salvarPlano({ ...(projeto.plano_midia || {}), vendas_meta: v });
   };
 
   /* Gravar na ficha da campanha. Preço do pico também vira o ticket do projeto. */
@@ -2303,14 +2340,15 @@ function PicoScreen() {
         <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(340px,1fr))',
           gap:14, marginBottom:14 }}>
           <BlocoImaginacao metricas={metricas.filter(m=>m.momento==='imaginacao')}
-            onSalvar={salvarMetrica}
+            onSalvar={salvarMetrica} metaPlano={projeto?.plano_midia?.vendas_meta}
             precos={{ nao: projeto?.declaracoes?.preco_pico, aluno: projeto?.declaracoes?.preco_aluno,
                       prodNao: projeto?.declaracoes?.produto, prodAluno: projeto?.declaracoes?.produto_aluno }}/>
           <BlocoDecisoes decisoes={decisoes} onEscolher={escolherDecisao}/>
         </div>
 
         <div style={{ marginBottom:14 }}>
-          <BlocoPlanoMidia plano={projeto?.plano_midia} onSalvar={salvarPlano}/>
+          <BlocoPlanoMidia plano={projeto?.plano_midia} onSalvar={salvarPlano}
+            precoFicha={projeto?.declaracoes?.preco_pico}/>
         </div>
 
         <div style={{ marginBottom:14 }}>
