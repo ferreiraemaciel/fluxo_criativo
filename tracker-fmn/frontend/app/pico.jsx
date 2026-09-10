@@ -465,6 +465,12 @@ function PainelDefinicao({ tarefa, onSalvar, onFechar }) {
                 cursor: c.dica ? 'help' : 'default',
                 borderBottom: c.dica ? '1px dotted transparent' : 'none' }}>
                 {c.label}
+                {c.vinculo && (
+                  <span title="Mesmo campo da ficha da campanha. Mudou aqui, muda lá e nas outras tarefas"
+                    style={{ marginLeft:5, fontSize:9, color:'#38bdf8', fontWeight:700 }}>
+                    na ficha
+                  </span>
+                )}
                 {c.alimenta && (
                   <span title={`Alimenta ${c.alimenta} automaticamente`}
                     style={{ marginLeft:5, fontSize:9, color:'#4ade80', fontWeight:700 }}>
@@ -574,7 +580,7 @@ function BlocoDecisoes({ decisoes, onEscolher }) {
   const [aberta, setAberta] = useState(null);
 
   return (
-    <SectionCard
+    <SectionCard recolhivel idRecolher="pico:decisoes"
       title="Decisões que travam o resto"
       right={pendentes > 0
         ? <Badge tone="warn">{pendentes} pendente{pendentes > 1 ? 's' : ''}</Badge>
@@ -672,6 +678,194 @@ function BlocoDecisoes({ decisoes, onEscolher }) {
   );
 }
 
+/* ── Declarações vinculadas ────────────────────────────────────
+   Tudo que se declara uma vez vive em projeto.declaracoes. Campo de
+   tarefa com "vinculo" lê e grava ali, então o mesmo valor aparece em
+   toda tarefa que usa e na ficha da campanha, sem redigitar.
+   A página do Samuel (pico.html) repete este registro para montar a ficha.
+──────────────────────────────────────────────────────────────────*/
+const VINCULOS = {
+  nome_campanha:        { grupo:'Campanha', label:'Nome da campanha', tipo:'texto' },
+  mote:                 { grupo:'Campanha', label:'Mote', tipo:'texto' },
+  mote_onde:            { grupo:'Campanha', label:'Onde o mote aparece', tipo:'texto_longo' },
+  promessa:             { grupo:'Campanha', label:'Promessa da condição', tipo:'texto_longo' },
+  inimigo:              { grupo:'Campanha', label:'Inimigo (o cenário)', tipo:'texto' },
+  palavra_chave:        { grupo:'Campanha', label:'Palavra do "comente a palavra"', tipo:'texto' },
+  objeto_antecipacao:   { grupo:'Campanha', label:'Objeto físico de antecipação', tipo:'texto' },
+  produto:              { grupo:'Oferta', label:'Produto ou combo', tipo:'texto' },
+  preco_normal:         { grupo:'Oferta', label:'Preço fora do pico', tipo:'moeda' },
+  preco_pico:           { grupo:'Oferta', label:'Preço no pico', tipo:'moeda', alimenta:'projeto.ticket' },
+  desconto_pct:         { grupo:'Oferta', label:'Desconto', tipo:'percent' },
+  publico_sensivel:     { grupo:'Oferta', label:'Público sensível a preço', tipo:'opcao', opcoes:['Sim','Não'] },
+  combo_itens:          { grupo:'Oferta', label:'Itens do combo', tipo:'lista' },
+  bonus_velocidade:     { grupo:'Oferta', label:'Bônus por velocidade', tipo:'lista' },
+  regra_credito:        { grupo:'Oferta', label:'Regra para quem já comprou', tipo:'texto_longo' },
+  preco_aluno:          { grupo:'Oferta', label:'Preço para quem já é aluno', tipo:'moeda' },
+  item_fisico:          { grupo:'Prêmios e bônus', label:'Item físico', tipo:'texto' },
+  sorteio:              { grupo:'Prêmios e bônus', label:'Sorteio', tipo:'texto' },
+  premio_primeira_compra:{ grupo:'Prêmios e bônus', label:'Prêmio da primeira compra', tipo:'texto' },
+  bonus_relampago:      { grupo:'Prêmios e bônus', label:'Bônus relâmpago', tipo:'texto' },
+  bonus_final:          { grupo:'Prêmios e bônus', label:'Bônus guardado para o fim', tipo:'texto' },
+  sorteio_final:        { grupo:'Prêmios e bônus', label:'Sorteio da última hora', tipo:'texto' },
+  mentoria_formato:     { grupo:'Mentoria', label:'Formato', tipo:'opcao', opcoes:['Degustação','Produto completo'] },
+  mentoria_encontros:   { grupo:'Mentoria', label:'Quantos encontros', tipo:'numero' },
+  mentoria_duracao:     { grupo:'Mentoria', label:'Duração de cada um', tipo:'texto' },
+  mentoria_preco:       { grupo:'Mentoria', label:'Preço cheio', tipo:'moeda' },
+  mentoria_vagas:       { grupo:'Mentoria', label:'Teto de vagas', tipo:'numero' },
+  mentoria_local:       { grupo:'Mentoria', label:'Onde acontece', tipo:'opcao', opcoes:['Zoom','Google Meet','Presencial','Área de membros'] },
+  mentoria_calendario:  { grupo:'Mentoria', label:'Datas dos encontros', tipo:'texto_longo' },
+  mentoria_plano:       { grupo:'Mentoria', label:'Plano de ação do mentorado', tipo:'texto_longo' },
+  mentoria_na_oferta:   { grupo:'Mentoria', label:'Como aparece na oferta', tipo:'texto_longo' },
+  aula1_tema:           { grupo:'Aulas de aquecimento', label:'Tema da aula 1', tipo:'texto' },
+  aula2_tema:           { grupo:'Aulas de aquecimento', label:'Tema da aula 2', tipo:'texto' },
+  aula3_tema:           { grupo:'Aulas de aquecimento', label:'Tema da aula 3', tipo:'texto' },
+  data_anuncios:        { grupo:'Operação', label:'Entrega dos anúncios', tipo:'data' },
+  data_paginas:         { grupo:'Operação', label:'Entrega das páginas', tipo:'data' },
+  responsavel_producao: { grupo:'Operação', label:'Quem produz', tipo:'texto' },
+  cadencia_follow:      { grupo:'Operação', label:'Cadência de follow', tipo:'texto_longo' },
+  templates_aprovados:  { grupo:'Operação', label:'Templates aprovados', tipo:'texto_longo' },
+  pagina_captura:       { grupo:'Links', label:'Página de captura', tipo:'link' },
+  pagina_obrigado:      { grupo:'Links', label:'Página de obrigado', tipo:'link' },
+  pagina_venda:         { grupo:'Links', label:'Página de venda', tipo:'link' },
+  checkout:             { grupo:'Links', label:'Checkout', tipo:'link' },
+  grupo_whatsapp:       { grupo:'Links', label:'Grupo de WhatsApp', tipo:'link' },
+  link_encontros:       { grupo:'Links', label:'Sala dos encontros', tipo:'link' },
+  manifesto_link:       { grupo:'Links', label:'Roteiro da narrativa', tipo:'link' },
+  trailer_link_1:       { grupo:'Links', label:'Trailer 1', tipo:'link' },
+  trailer_link_2:       { grupo:'Links', label:'Trailer 2', tipo:'link' },
+  pasta_depoimentos:    { grupo:'Links', label:'Depoimentos por objeção', tipo:'link' },
+  doc_objecoes:         { grupo:'Links', label:'Doc de dúvidas e objeções', tipo:'link' },
+};
+const GRUPOS_FICHA = ['Campanha','Oferta','Prêmios e bônus','Mentoria',
+  'Aulas de aquecimento','Operação','Links'];
+
+const vazio = v => v == null || v === '' || (Array.isArray(v) && v.length === 0);
+
+/* O que a tarefa mostra: o que foi gravado nela, por cima o que está
+   declarado no projeto (ficha) ou no plano de mídia, que é a fonte. */
+function defsEfetivas(t, projeto) {
+  const campos = Array.isArray(t.campos) ? t.campos : [];
+  if (!campos.length || !projeto) return t.definicoes || {};
+  const dec = projeto.declaracoes || {}, pm = projeto.plano_midia || {};
+  const out = { ...(t.definicoes || {}) };
+  campos.forEach(c => {
+    if (c.vinculo && !vazio(dec[c.vinculo])) { out[c.chave] = dec[c.vinculo]; return; }
+    if (c.alimenta) {
+      const [onde, k] = c.alimenta.split('.');
+      const v = onde === 'plano' ? pm[k] : onde === 'projeto' ? projeto[k] : undefined;
+      if (!vazio(v)) out[c.chave] = v;
+    }
+  });
+  return out;
+}
+
+/* Preço e desconto na ficha seguem a mesma regra da tarefa. */
+function espelharFicha(k, v, dec) {
+  const pn = Number(k === 'preco_normal' ? v : dec.preco_normal) || 0;
+  if (!pn || v == null) return {};
+  if (k === 'preco_pico')   return { desconto_pct: Math.max(0, 1 - Number(v) / pn) };
+  if (k === 'desconto_pct') return { preco_pico: Number((pn * (1 - Number(v))).toFixed(2)) };
+  if (k === 'preco_normal' && dec.preco_pico)
+    return { desconto_pct: Math.max(0, 1 - Number(dec.preco_pico) / pn) };
+  return {};
+}
+
+/* Um campo de declaração, do tipo que for. Texto grava ao sair do campo. */
+function CampoDeclarado({ campo, valor, onSalvar }) {
+  const base = { width:'100%', padding:'6px 9px', borderRadius:7,
+    border:'1px solid var(--app-border)', background:'rgba(255,255,255,.03)',
+    color:'var(--text-1)', fontSize:12, fontFamily:'Roboto,sans-serif' };
+  const t = campo.tipo;
+  if (t === 'moeda')   return <CampoMoeda valor={valor ?? null} largura="100%" onSalvar={onSalvar}/>;
+  if (t === 'percent') return <CampoPercent valor={valor ?? null} largura="100%" onSalvar={onSalvar}/>;
+  if (t === 'lista')   return <CampoLista itens={valor} onSalvar={onSalvar}/>;
+  if (t === 'opcao') return (
+    <div style={{ display:'flex', gap:5, flexWrap:'wrap' }}>
+      {(campo.opcoes || []).map(op => {
+        const ativa = valor === op;
+        return (
+          <button key={op} onClick={() => onSalvar(ativa ? null : op)}
+            style={{ padding:'5px 11px', borderRadius:7, cursor:'pointer',
+              fontSize:11.5, fontFamily:'Roboto,sans-serif', fontWeight:700,
+              border:'1px solid ' + (ativa ? '#4ade80' : 'var(--app-border)'),
+              background: ativa ? 'rgba(74,222,128,.14)' : 'transparent',
+              color: ativa ? '#4ade80' : 'var(--text-2)' }}>
+            {ativa && '✓ '}{op}
+          </button>
+        );
+      })}
+    </div>
+  );
+  if (t === 'texto_longo') return (
+    <textarea key={String(valor ?? '')} defaultValue={valor || ''} rows={2}
+      onBlur={e => { if (e.target.value !== (valor || '')) onSalvar(e.target.value); }}
+      style={{ ...base, resize:'vertical', lineHeight:1.45 }}/>
+  );
+  return (
+    <input key={String(valor ?? '')}
+      type={t === 'data' ? 'date' : t === 'numero' ? 'number' : 'text'}
+      defaultValue={valor ?? ''} placeholder={t === 'link' ? 'https://' : ''}
+      onBlur={e => {
+        const v = t === 'numero' ? (e.target.value === '' ? null : Number(e.target.value))
+                                 : e.target.value;
+        if (String(v ?? '') !== String(valor ?? '')) onSalvar(v);
+      }}
+      style={base}/>
+  );
+}
+
+/* ── Ficha da campanha ─────────────────────────────────────────
+   Tudo que se declara, num lugar só. Mexer aqui muda nas tarefas,
+   mexer nas tarefas muda aqui.
+──────────────────────────────────────────────────────────────────*/
+function BlocoFicha({ declaracoes, onSalvar, semMentoria }) {
+  const dec = declaracoes || {};
+  const chaves = Object.keys(VINCULOS).filter(k => !(semMentoria && VINCULOS[k].grupo === 'Mentoria'));
+  const cheios = chaves.filter(k => !vazio(dec[k])).length;
+  return (
+    <SectionCard recolhivel idRecolher="pico:ficha" title="Ficha da campanha"
+      headerRight={<span style={{ fontSize:11, color:'var(--text-3)',
+        fontFamily:'Roboto,sans-serif', fontVariantNumeric:'tabular-nums' }}>
+        {cheios} de {chaves.length} declarados</span>}>
+      <div style={{ fontSize:11, fontFamily:'Roboto,sans-serif', color:'var(--text-3)',
+        marginBottom:12, lineHeight:1.45 }}>
+        Preencha aqui ou dentro da tarefa, tanto faz: é o mesmo campo. O que estiver aqui
+        aparece em toda tarefa que usa e na página do Samuel.
+      </div>
+      {GRUPOS_FICHA.map(g => {
+        const ks = chaves.filter(k => VINCULOS[k].grupo === g);
+        if (!ks.length) return null;
+        const gc = ks.filter(k => !vazio(dec[k])).length;
+        return (
+          <div key={g} style={{ marginBottom:14 }}>
+            <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:8,
+              paddingBottom:5, borderBottom:'1px solid var(--app-border)' }}>
+              <span style={{ fontSize:10.5, fontFamily:'Roboto,sans-serif', fontWeight:700,
+                color:'var(--text-2)', letterSpacing:.4, textTransform:'uppercase' }}>{g}</span>
+              <span style={{ fontSize:10.5, fontFamily:'Roboto,sans-serif',
+                color: gc === ks.length ? '#4ade80' : 'var(--text-3)' }}>{gc}/{ks.length}</span>
+            </div>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(220px,1fr))',
+              gap:10 }}>
+              {ks.map(k => {
+                const c = VINCULOS[k];
+                const largo = c.tipo === 'texto_longo' || c.tipo === 'lista';
+                return (
+                  <div key={k} style={{ gridColumn: largo ? '1 / -1' : 'auto' }}>
+                    <label style={{ display:'block', fontSize:11, fontFamily:'Roboto,sans-serif',
+                      color:'var(--text-3)', marginBottom:3 }}>{c.label}</label>
+                    <CampoDeclarado campo={c} valor={dec[k]} onSalvar={v => onSalvar(k, v)}/>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })}
+    </SectionCard>
+  );
+}
+
 /* ── Imaginação primária ────────────────────────────────────────*/
 const INDICADORES_IMAGINACAO = [
   { chave:'vendas',       label:'Quantidade de vendas', unidade:'un'  },
@@ -701,8 +895,8 @@ function BlocoImaginacao({ metricas, onSalvar }) {
   };
 
   return (
-    <SectionCard title="Imaginação primária"
-      right={<span style={{ fontSize:11, color:'var(--text-3)',
+    <SectionCard recolhivel idRecolher="pico:imaginacao" title="Imaginação primária"
+      headerRight={<span style={{ fontSize:11, color:'var(--text-3)',
         fontFamily:'Roboto,sans-serif' }}>preencha antes de qualquer tarefa</span>}>
       <div style={{ overflowX:'auto' }}>
         <table style={{ width:'100%', borderCollapse:'collapse', minWidth:520 }}>
@@ -908,7 +1102,7 @@ function BlocoPlanoMidia({ plano, onSalvar }) {
   const dRmk = Number(p.dias_remarketing) || 0;
 
   return (
-    <SectionCard title="Plano de mídia"
+    <SectionCard recolhivel idRecolher="pico:plano" title="Plano de mídia"
       right={<span style={{ fontSize:11, color:'var(--text-3)',
         fontFamily:'Roboto,sans-serif' }}>a meta vira verba por dia</span>}>
 
@@ -1171,7 +1365,7 @@ function Calendario({ tarefas, d0, onAbrir }) {
   const tarefasDoDia = diaAberto ? (porDia[diaAberto] || []) : [];
 
   return (
-    <SectionCard
+    <SectionCard recolhivel idRecolher="pico:calendario"
       title={
         <span style={{ display:'flex', alignItems:'center', gap:10 }}>
           <button onClick={()=>irPara(-1)} disabled={idx <= 0}
@@ -1365,7 +1559,7 @@ function BlocoAuditoria({ projeto, tarefas }) {
   const cpaReal = dados?.compras > 0 ? gasto / dados.compras : null;
 
   return (
-    <SectionCard title="Plano contra o real"
+    <SectionCard recolhivel idRecolher="pico:auditoria" title="Plano contra o real"
       right={
         <button onClick={auditar} disabled={carregando}
           style={{ padding:'5px 11px', borderRadius:7, cursor: carregando?'default':'pointer',
@@ -1596,7 +1790,7 @@ function BlocoDebriefing({ projeto, metricas, tarefas, onSalvar, onSalvarRespost
   };
 
   return (
-    <SectionCard title="Debriefing"
+    <SectionCard recolhivel idRecolher="pico:debriefing" title="Debriefing"
       right={
         <button onClick={puxarRealizado} disabled={puxando}
           style={{ padding:'5px 11px', borderRadius:7, cursor: puxando?'default':'pointer',
@@ -1866,6 +2060,18 @@ function PicoScreen() {
     setMetricas(lista);
   };
 
+  /* Gravar na ficha da campanha. Preço do pico também vira o ticket do projeto. */
+  const salvarDeclaracoes = async (patch) => {
+    const atual = projeto?.declaracoes || {};
+    const novo = { ...atual, ...patch };
+    const extra = {};
+    if ('preco_pico' in patch) extra.ticket = patch.preco_pico ?? null;
+    setProjetos(ps => ps.map(p => p.id === projetoId ? { ...p, declaracoes: novo, ...extra } : p));
+    await window.db.from('pico_projetos').update({ declaracoes: novo, ...extra }).eq('id', projetoId);
+  };
+  const salvarDeclaracao = (k, v) =>
+    salvarDeclaracoes({ [k]: v, ...espelharFicha(k, v, projeto?.declaracoes || {}) });
+
   /* Registrar o que foi definido numa tarefa.
      Campo marcado com "alimenta" copia o valor para o plano do projeto,
      para o número não precisar ser digitado de novo lá em cima. */
@@ -1874,6 +2080,15 @@ function PicoScreen() {
     await window.db.from('pico_tarefas').update({ definicoes: vals }).eq('id', t.id);
 
     const campos = Array.isArray(t.campos) ? t.campos : [];
+    /* Campo vinculado que mudou sobe para a ficha, e dela para as outras tarefas */
+    const antes = t.definicoes || {};
+    const dec = {};
+    campos.forEach(c => {
+      if (c.vinculo && JSON.stringify(vals[c.chave] ?? null) !== JSON.stringify(antes[c.chave] ?? null))
+        dec[c.vinculo] = vals[c.chave] ?? null;
+    });
+    if (Object.keys(dec).length) await salvarDeclaracoes(dec);
+
     let plano = null, proj = null;
     campos.forEach(c => {
       if (!c.alimenta) return;
@@ -1926,11 +2141,16 @@ function PicoScreen() {
     setTarefas(data || []);
   };
 
-  /* Recortes */
-  const visiveis = useMemo(() => tarefas.filter(t =>
+  /* Recortes. Cada tarefa já chega com o que está declarado na ficha. */
+  const efetivas = useMemo(() => tarefas.map(t =>
+    Array.isArray(t.campos) && t.campos.length
+      ? { ...t, definicoes: defsEfetivas(t, projeto) } : t
+  ), [tarefas, projeto]);
+
+  const visiveis = useMemo(() => efetivas.filter(t =>
     (filtroTrilha === 'todas' || t.trilha === filtroTrilha) &&
     (!ocultarFeitas || t.status !== 'feito')
-  ), [tarefas, filtroTrilha, ocultarFeitas]);
+  ), [efetivas, filtroTrilha, ocultarFeitas]);
 
   const feitas = tarefas.filter(t => t.status === 'feito').length;
   const atrasadas = tarefas.filter(t =>
@@ -2041,6 +2261,12 @@ function PicoScreen() {
           </div>
         </div>
 
+        <div style={{ marginBottom:14 }}>
+          <BlocoFicha declaracoes={projeto?.declaracoes} onSalvar={salvarDeclaracao}
+            semMentoria={(decisoes.find(d => d.chave === 'mentoria')?.escolha || '')
+              .toLowerCase().startsWith('nao')}/>
+        </div>
+
         {/* Imaginação primária e decisões */}
         <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(340px,1fr))',
           gap:14, marginBottom:14 }}>
@@ -2055,12 +2281,6 @@ function PicoScreen() {
 
         <div style={{ marginBottom:14 }}>
           <BlocoAuditoria projeto={projeto} tarefas={tarefas}/>
-        </div>
-
-        <div style={{ marginBottom:14 }}>
-          <BlocoDebriefing projeto={projeto} metricas={metricas} tarefas={tarefas}
-            onSalvar={salvarDebrief} onSalvarResposta={salvarResposta}
-            respostas={respostas}/>
         </div>
 
         {/* Controles da execução */}
@@ -2085,9 +2305,11 @@ function PicoScreen() {
             {TRILHAS.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
           </select>
 
-          <button onClick={()=>setComandoGrupos(c => ({
-              acao: c.acao === 'fechar' ? 'abrir' : 'fechar', n: (c.n || 0) + 1
-            }))}
+          <button onClick={()=>setComandoGrupos(c => {
+              const acao = c.acao === 'fechar' ? 'abrir' : 'fechar';
+              window.dispatchEvent(new CustomEvent('secoes:recolher', { detail: acao }));
+              return { acao, n: (c.n || 0) + 1 };
+            })}
             title="Abrir ou fechar todas as seções"
             style={{ padding:'6px 9px', borderRadius:7, cursor:'pointer',
               border:'1px solid var(--app-border)', background:'transparent',
@@ -2132,6 +2354,13 @@ function PicoScreen() {
           })}
         </div>
         )}
+
+        {/* Debriefing por último, é a última coisa que acontece */}
+        <div style={{ marginTop:14 }}>
+          <BlocoDebriefing projeto={projeto} metricas={metricas} tarefas={tarefas}
+            onSalvar={salvarDebrief} onSalvarResposta={salvarResposta}
+            respostas={respostas}/>
+        </div>
       </div>
     </div>
   );

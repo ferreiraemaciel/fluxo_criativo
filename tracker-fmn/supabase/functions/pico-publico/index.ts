@@ -41,7 +41,7 @@ Deno.serve(async (req) => {
 
   const { data: projeto } = await db
     .from("pico_projetos")
-    .select("id,nome,data_abertura,data_encerramento,status,nivel_operacao,plano_midia,ticket,cpa_limite,observacoes")
+    .select("id,nome,data_abertura,data_encerramento,status,nivel_operacao,plano_midia,ticket,cpa_limite,observacoes,declaracoes")
     .eq("token_publico", token)
     .maybeSingle();
 

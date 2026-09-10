@@ -191,22 +191,54 @@ function CardKPI({ label, value, delta, deltaLabel, icon, accent = false, title 
   );
 }
 
-/* ── SectionCard ─────────────────────────────────────────────────*/
-function SectionCard({ title, children, style = {}, headerRight, noPad = false }) {
+/* ── SectionCard ─────────────────────────────────────────────────
+   Com "recolhivel", o título abre e fecha o card e a escolha fica
+   guardada por idRecolher. O evento "secoes:recolher" abre ou fecha
+   todos de uma vez. */
+function SectionCard({ title, children, style = {}, headerRight, noPad = false,
+                       recolhivel = false, idRecolher }) {
+  const chave = idRecolher ? 'secao:recolhida:' + idRecolher : null;
+  const [fechado, setFechado] = useState(() => {
+    if (!recolhivel || !chave) return false;
+    try { return localStorage.getItem(chave) === '1'; } catch { return false; }
+  });
+  const guardar = f => { try { chave && localStorage.setItem(chave, f ? '1' : '0'); } catch {} };
+
+  useEffect(() => {
+    if (!recolhivel) return;
+    const ouvir = e => { const f = e.detail === 'fechar'; setFechado(f); guardar(f); };
+    window.addEventListener('secoes:recolher', ouvir);
+    return () => window.removeEventListener('secoes:recolher', ouvir);
+  }, [recolhivel, chave]);
+
+  const alternar = () => setFechado(f => { guardar(!f); return !f; });
+
   return (
     <div style={{
       background: 'var(--app-surface)',
       borderRadius: 14, overflow: 'hidden', ...style
     }}>
       {title && (
-        <div style={{ padding: '12px 18px 8px',
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <span style={{ fontSize: 12.5, fontFamily: 'Roboto, sans-serif', fontWeight: 700,
-            letterSpacing: '0.02em', color: 'var(--text-1)' }}>{title}</span>
-          {headerRight}
+        <div onClick={recolhivel ? alternar : undefined}
+          style={{ padding: recolhivel && fechado ? '12px 18px' : '12px 18px 8px',
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10,
+            cursor: recolhivel ? 'pointer' : 'default', userSelect: recolhivel ? 'none' : 'auto' }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+            {recolhivel && (
+              <LucideIcon icon={fechado ? 'chevron-right' : 'chevron-down'} size={14}
+                style={{ color: 'var(--text-3)' }}/>
+            )}
+            <span style={{ fontSize: 12.5, fontFamily: 'Roboto, sans-serif', fontWeight: 700,
+              letterSpacing: '0.02em', color: 'var(--text-1)' }}>{title}</span>
+          </span>
+          {headerRight && (
+            <span onClick={e => recolhivel && e.stopPropagation()}>{headerRight}</span>
+          )}
         </div>
       )}
-      <div style={noPad ? {} : { padding: '10px 18px 18px' }}>{children}</div>
+      {!(recolhivel && fechado) && (
+        <div style={noPad ? {} : { padding: '10px 18px 18px' }}>{children}</div>
+      )}
     </div>
   );
 }

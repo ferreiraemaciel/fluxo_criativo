@@ -103,6 +103,19 @@
     border:1px solid rgba(56,189,248,.16)}
   .anun{display:flex;align-items:center;gap:8px;padding:5px 0;font-size:11.5px;
     border-top:1px solid var(--border)}
+  .card > h2.rec{cursor:pointer;user-select:none}
+  .card > h2.rec::before{content:'▾';color:var(--t3);font-size:12px;width:10px;display:inline-block}
+  .card.fechado > h2.rec::before{content:'▸'}
+  .card.fechado > h2{margin-bottom:0}
+  .card.fechado > :not(h2){display:none}
+  .ficha-g{font-size:10.5px;font-weight:700;color:var(--t2);letter-spacing:.4px;
+    text-transform:uppercase;margin:12px 0 7px;padding-bottom:4px;border-bottom:1px solid var(--border)}
+  .ficha-g:first-of-type{margin-top:0}
+  .ficha{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:9px}
+  .ficha .k{font-size:10.5px;color:var(--t3)}
+  .ficha .v{font-size:12.5px;color:var(--t1);font-weight:600;white-space:pre-wrap;word-break:break-word}
+  .ficha .v a{color:var(--azul);text-decoration:none}
+  .ficha .largo{grid-column:1/-1}
   @media(max-width:640px){
     .barra{display:none} .tar .cc{display:none} h1{font-size:16px}
   }
@@ -141,6 +154,81 @@ const RATEIO_LEMB = [
 
 const pctRmk = d => Math.min(.41, Math.max(.275, .275 + ((Number(d)||7)-7)/13*(.41-.275)));
 
+/* Registro copiado de app/pico.jsx. Mudou lá, trazer para cá. */
+const VINCULOS = {
+  nome_campanha:        { grupo:'Campanha', label:'Nome da campanha', tipo:'texto' },
+  mote:                 { grupo:'Campanha', label:'Mote', tipo:'texto' },
+  mote_onde:            { grupo:'Campanha', label:'Onde o mote aparece', tipo:'texto_longo' },
+  promessa:             { grupo:'Campanha', label:'Promessa da condição', tipo:'texto_longo' },
+  inimigo:              { grupo:'Campanha', label:'Inimigo (o cenário)', tipo:'texto' },
+  palavra_chave:        { grupo:'Campanha', label:'Palavra do "comente a palavra"', tipo:'texto' },
+  objeto_antecipacao:   { grupo:'Campanha', label:'Objeto físico de antecipação', tipo:'texto' },
+  produto:              { grupo:'Oferta', label:'Produto ou combo', tipo:'texto' },
+  preco_normal:         { grupo:'Oferta', label:'Preço fora do pico', tipo:'moeda' },
+  preco_pico:           { grupo:'Oferta', label:'Preço no pico', tipo:'moeda', alimenta:'projeto.ticket' },
+  desconto_pct:         { grupo:'Oferta', label:'Desconto', tipo:'percent' },
+  publico_sensivel:     { grupo:'Oferta', label:'Público sensível a preço', tipo:'opcao', opcoes:['Sim','Não'] },
+  combo_itens:          { grupo:'Oferta', label:'Itens do combo', tipo:'lista' },
+  bonus_velocidade:     { grupo:'Oferta', label:'Bônus por velocidade', tipo:'lista' },
+  regra_credito:        { grupo:'Oferta', label:'Regra para quem já comprou', tipo:'texto_longo' },
+  preco_aluno:          { grupo:'Oferta', label:'Preço para quem já é aluno', tipo:'moeda' },
+  item_fisico:          { grupo:'Prêmios e bônus', label:'Item físico', tipo:'texto' },
+  sorteio:              { grupo:'Prêmios e bônus', label:'Sorteio', tipo:'texto' },
+  premio_primeira_compra:{ grupo:'Prêmios e bônus', label:'Prêmio da primeira compra', tipo:'texto' },
+  bonus_relampago:      { grupo:'Prêmios e bônus', label:'Bônus relâmpago', tipo:'texto' },
+  bonus_final:          { grupo:'Prêmios e bônus', label:'Bônus guardado para o fim', tipo:'texto' },
+  sorteio_final:        { grupo:'Prêmios e bônus', label:'Sorteio da última hora', tipo:'texto' },
+  mentoria_formato:     { grupo:'Mentoria', label:'Formato', tipo:'opcao', opcoes:['Degustação','Produto completo'] },
+  mentoria_encontros:   { grupo:'Mentoria', label:'Quantos encontros', tipo:'numero' },
+  mentoria_duracao:     { grupo:'Mentoria', label:'Duração de cada um', tipo:'texto' },
+  mentoria_preco:       { grupo:'Mentoria', label:'Preço cheio', tipo:'moeda' },
+  mentoria_vagas:       { grupo:'Mentoria', label:'Teto de vagas', tipo:'numero' },
+  mentoria_local:       { grupo:'Mentoria', label:'Onde acontece', tipo:'opcao', opcoes:['Zoom','Google Meet','Presencial','Área de membros'] },
+  mentoria_calendario:  { grupo:'Mentoria', label:'Datas dos encontros', tipo:'texto_longo' },
+  mentoria_plano:       { grupo:'Mentoria', label:'Plano de ação do mentorado', tipo:'texto_longo' },
+  mentoria_na_oferta:   { grupo:'Mentoria', label:'Como aparece na oferta', tipo:'texto_longo' },
+  aula1_tema:           { grupo:'Aulas de aquecimento', label:'Tema da aula 1', tipo:'texto' },
+  aula2_tema:           { grupo:'Aulas de aquecimento', label:'Tema da aula 2', tipo:'texto' },
+  aula3_tema:           { grupo:'Aulas de aquecimento', label:'Tema da aula 3', tipo:'texto' },
+  data_anuncios:        { grupo:'Operação', label:'Entrega dos anúncios', tipo:'data' },
+  data_paginas:         { grupo:'Operação', label:'Entrega das páginas', tipo:'data' },
+  responsavel_producao: { grupo:'Operação', label:'Quem produz', tipo:'texto' },
+  cadencia_follow:      { grupo:'Operação', label:'Cadência de follow', tipo:'texto_longo' },
+  templates_aprovados:  { grupo:'Operação', label:'Templates aprovados', tipo:'texto_longo' },
+  pagina_captura:       { grupo:'Links', label:'Página de captura', tipo:'link' },
+  pagina_obrigado:      { grupo:'Links', label:'Página de obrigado', tipo:'link' },
+  pagina_venda:         { grupo:'Links', label:'Página de venda', tipo:'link' },
+  checkout:             { grupo:'Links', label:'Checkout', tipo:'link' },
+  grupo_whatsapp:       { grupo:'Links', label:'Grupo de WhatsApp', tipo:'link' },
+  link_encontros:       { grupo:'Links', label:'Sala dos encontros', tipo:'link' },
+  manifesto_link:       { grupo:'Links', label:'Roteiro da narrativa', tipo:'link' },
+  trailer_link_1:       { grupo:'Links', label:'Trailer 1', tipo:'link' },
+  trailer_link_2:       { grupo:'Links', label:'Trailer 2', tipo:'link' },
+  pasta_depoimentos:    { grupo:'Links', label:'Depoimentos por objeção', tipo:'link' },
+  doc_objecoes:         { grupo:'Links', label:'Doc de dúvidas e objeções', tipo:'link' },
+};
+const GRUPOS_FICHA = ['Campanha','Oferta','Prêmios e bônus','Mentoria',
+  'Aulas de aquecimento','Operação','Links'];
+
+const vazio = v => v == null || v === '' || (Array.isArray(v) && v.length === 0);
+
+function defsEfetivas(t, projeto) {
+  const campos = Array.isArray(t.campos) ? t.campos : [];
+  if (!campos.length || !projeto) return t.definicoes || {};
+  const dec = projeto.declaracoes || {}, pm = projeto.plano_midia || {};
+  const out = { ...(t.definicoes || {}) };
+  campos.forEach(c => {
+    if (c.vinculo && !vazio(dec[c.vinculo])) { out[c.chave] = dec[c.vinculo]; return; }
+    if (c.alimenta) {
+      const [onde, k] = c.alimenta.split('.');
+      const v = onde === 'plano' ? pm[k] : onde === 'projeto' ? projeto[k] : undefined;
+      if (!vazio(v)) out[c.chave] = v;
+    }
+  });
+  return out;
+}
+
+
 function render(d) {
   const p = d.projeto, pm = p.plano_midia || {};
   const feitas = d.tarefas.filter(t => t.status==='feito').length;
@@ -168,6 +256,34 @@ function render(d) {
     <div class="kpi"><div class="lb">Gasto até agora</div><div class="vl" style="color:var(--azul)">${brl(d.gasto)}</div></div>
     <div class="kpi"><div class="lb">Anúncios do pico</div><div class="vl">${d.anuncios}</div></div>
   </div></div>`;
+
+  // ── Ficha da campanha ───────────────────────────────────────
+  const dec = p.declaracoes || {};
+  const fmtDec = (c, v) => {
+    if (c.tipo === 'moeda') return brl(v);
+    if (c.tipo === 'percent') return (Number(v)*100).toFixed(1).replace('.0','') + '%';
+    if (c.tipo === 'data') return v.split('-').reverse().join('/');
+    if (c.tipo === 'lista') return v.map(i => esc(i.nome) + (i.valor ? ' (' + brl(i.valor) + ')' : '')).join('<br>')
+      + '<br><b>Total ' + brl(v.reduce((a,i)=>a+(Number(i.valor)||0),0)) + '</b>';
+    if (c.tipo === 'link') return `<a href="${esc(v)}" target="_blank" rel="noopener">${esc(v)}</a>`;
+    return esc(v);
+  };
+  const gruposF = [...new Set(Object.values(VINCULOS).map(c => c.grupo))];
+  const cheiosF = Object.keys(VINCULOS).filter(k => !vazio(dec[k]));
+  if (cheiosF.length) {
+    h += `<div class="card"><h2>Ficha da campanha</h2>`;
+    gruposF.forEach(g => {
+      const ks = cheiosF.filter(k => VINCULOS[k].grupo === g);
+      if (!ks.length) return;
+      h += `<div class="ficha-g">${g}</div><div class="ficha">` + ks.map(k => {
+        const c = VINCULOS[k];
+        const largo = c.tipo === 'texto_longo' || c.tipo === 'lista';
+        return `<div${largo ? ' class="largo"' : ''}><div class="k">${esc(c.label)}</div>
+          <div class="v">${fmtDec(c, dec[k])}</div></div>`;
+      }).join('') + `</div>`;
+    });
+    h += `</div>`;
+  }
 
   // ── Imaginação primária ─────────────────────────────────────
   const met = (mo, ce, ind) => {
@@ -300,7 +416,7 @@ function render(d) {
           <span class="dt">${t.data_prevista ? fmtD(t.data_prevista)+' '+semana(t.data_prevista) : ''}</span></span>
       </div>`;
       // O que foi definido na tarefa, quando houver
-      const defs = t.definicoes || {};
+      const defs = defsEfetivas(t, p);
       const campos = Array.isArray(t.campos) ? t.campos : [];
       const cheios = campos.filter(c => {
         const v = defs[c.chave];
@@ -313,6 +429,7 @@ function render(d) {
           if (c.tipo === 'moeda') v = brl(v);
           else if (c.tipo === 'percent') v = (Number(v)*100).toFixed(1).replace('.0','')+'%';
           else if (Array.isArray(v)) v = v.map(i => i.nome + (i.valor ? ' ('+brl(i.valor)+')' : '')).join(', ');
+          else if (c.tipo === 'data') v = String(v).split('-').reverse().join('/');
           h += `<div><div class="k">${esc(c.label)}</div><div class="v">${esc(v)}</div></div>`;
         });
         h += `</div>`;
@@ -371,6 +488,10 @@ function render(d) {
   h += `<div class="rod">Planejamento do pico, em tempo real.<br>
     Página de leitura. Nada aqui pode ser alterado.</div>`;
   document.getElementById('app').innerHTML = h;
+  document.querySelectorAll('.card > h2').forEach(t => {
+    t.classList.add('rec');
+    t.onclick = () => t.parentElement.classList.toggle('fechado');
+  });
 }
 
 (async () => {
