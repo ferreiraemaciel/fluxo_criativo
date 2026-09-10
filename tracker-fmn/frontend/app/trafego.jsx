@@ -2146,14 +2146,43 @@ function MiniTable({ cols, rows, empty }) {
   );
 }
 
+/* Tempo desde a última análise, só com as unidades que já existem:
+   "12min", "3h 12min", "2d 3h 12min", "1 mês 2d 3h 12min". */
+function tempoDesde(iso, agora = Date.now()) {
+  let min = Math.max(0, Math.floor((agora - new Date(iso).getTime()) / 60000));
+  const meses = Math.floor(min / (30 * 24 * 60)); min -= meses * 30 * 24 * 60;
+  const dias  = Math.floor(min / (24 * 60));      min -= dias * 24 * 60;
+  const horas = Math.floor(min / 60);             min -= horas * 60;
+  const partes = [];
+  if (meses) partes.push(`${meses} ${meses === 1 ? 'mês' : 'meses'}`);
+  if (meses || dias) partes.push(`${dias}d`);
+  if (meses || dias || horas) partes.push(`${horas}h`);
+  partes.push(`${min}min`);
+  return partes.join(' ');
+}
+
+// A análise fica guardada em app_config e aparece sempre, pra qualquer pessoa
+// que abrir o Tráfego, até alguém pedir uma nova, que substitui esta.
+const CHAVE_ANALISE = 'analise_campanhas_ultima';
+
 function AnaliseCampanhas() {
-  const [aberto, setAberto]         = useState(false);
+  const aberto = true;
   const [carregando, setCarregando] = useState(false);
   const [erro, setErro]             = useState(null);
   const [dados, setDados]           = useState(null);
+  const [, setTique]                = useState(0);
+
+  useEffect(() => {
+    if (!window.db) return;
+    window.db.from('app_config').select('valor').eq('chave', CHAVE_ANALISE).maybeSingle()
+      .then(({ data }) => { if (data?.valor?.gerado_em) setDados(data.valor); });
+    // Relógio do "há quanto tempo", avança de minuto em minuto.
+    const t = setInterval(() => setTique(x => x + 1), 60000);
+    return () => clearInterval(t);
+  }, []);
 
   const rodar = async () => {
-    setCarregando(true); setErro(null); setAberto(true);
+    setCarregando(true); setErro(null);
     try {
       const r = await fetch(`${window.db.supabaseUrl}/functions/v1/analise-campanhas`, {
         method: 'POST',
@@ -2162,6 +2191,8 @@ function AnaliseCampanhas() {
       const j = await r.json();
       if (j.error) throw new Error(j.error);
       setDados(j);
+      window.db.from('app_config').upsert({ chave: CHAVE_ANALISE, valor: j, updated_at: new Date().toISOString() }, { onConflict: 'chave' })
+        .then(({ error }) => { if (error) console.error('[analise] não salvou a análise:', error.message); });
     } catch (e) { setErro(e.message || String(e)); }
     setCarregando(false);
   };
@@ -2178,6 +2209,12 @@ function AnaliseCampanhas() {
           {dados && (
             <span style={{ fontSize:11, color:'var(--text-3)', fontFamily:'Roboto,sans-serif' }}>
               gerado em {dados.gerado_em_brasilia}
+              {dados.gerado_em && (
+                <span style={{ marginLeft:8, padding:'2px 8px', borderRadius:99, fontWeight:700,
+                  background:'rgba(234,170,65,.14)', border:'1px solid rgba(234,170,65,.45)', color:'var(--fmn-gold)' }}>
+                  há {tempoDesde(dados.gerado_em)}
+                </span>
+              )}
               {dados.frescor_dos_dados?.pode_estar_desatualizado && (
                 <span style={{ color:'var(--clr-warn)', marginLeft:6 }}>· dado pode estar desatualizado</span>
               )}
@@ -2188,13 +2225,6 @@ function AnaliseCampanhas() {
           <Btn variant="secondary" size="sm" icon={carregando ? 'loader' : 'sparkles'} onClick={rodar} disabled={carregando}>
             {carregando ? 'Analisando...' : dados ? 'Atualizar análise' : 'Analisar campanhas'}
           </Btn>
-          {dados && (
-            <button onClick={() => setAberto(v => !v)}
-              style={{ display:'flex', alignItems:'center', justifyContent:'center', width:28, height:28,
-                borderRadius:7, background:'rgba(255,255,255,.05)', color:'var(--text-2)' }}>
-              <LucideIcon icon={aberto ? 'chevron-up' : 'chevron-down'} size={15}/>
-            </button>
-          )}
         </div>
       </div>
 
@@ -2208,9 +2238,9 @@ function AnaliseCampanhas() {
         /* Grid, não flex. Em coluna flex os filhos podem encolher, e como o
            SectionCard tem overflow:hidden o navegador deixava cada seção
            espremida pra caber na caixa em vez de rolar: o relatório aparecia
-           cortado e "não descia". A rolagem continua aqui dentro porque a tela
-           de Tráfego em si não rola (a tabela de anúncios ocupa o resto). */
-        <div style={{ maxHeight:'55vh', overflowY:'auto', padding:'0 18px 18px', display:'grid', gap:18, alignContent:'start', minWidth:0 }}>
+           cortado e "não descia". Sem altura máxima: o relatório abre inteiro
+           e quem rola é a janela do Tráfego. */
+        <div style={{ padding:'0 18px 18px', display:'grid', gap:18, alignContent:'start', minWidth:0 }}>
 
           {/* Resumo executivo */}
           {Object.entries(dados.resumo_por_produto || {}).map(([produto, r]) => (
@@ -2685,7 +2715,10 @@ function TrafficScreen() {
           </div>
         }/>
 
-      <div style={{ flex:1,overflow:'hidden',padding:'20px 24px',display:'flex',flexDirection:'column',gap:16 }}>
+      {/* A janela inteira rola. Antes era overflow:hidden com a tabela ocupando
+          o resto (flex:1), e abrir a análise espremia a tabela numa caixinha
+          com rolagem própria. */}
+      <div style={{ flex:1,minHeight:0,overflowY:'auto',overflowX:'auto',padding:'20px 24px',display:'flex',flexDirection:'column',gap:16 }}>
 
         {/* ── Modo de visualização + seletor ── */}
         <div style={{ display:'flex', alignItems:'center', gap:10, flexWrap:'wrap' }}>
@@ -2770,7 +2803,7 @@ function TrafficScreen() {
         {/* overflowX é rede de segurança: em tela larga tudo cabe (a coluna de
             nome tem largura fixa e as métricas são estreitas); em tela menor
             vira rolagem lateral em vez de dado cortado fora da borda. */}
-        <div style={{ background:'var(--app-surface)',border:'1px solid var(--app-border)',borderRadius:14, overflow:'auto', flex:1, minHeight:0 }}>
+        <div style={{ background:'var(--app-surface)',border:'1px solid var(--app-border)',borderRadius:14, flexShrink:0 }}>
           {/* minWidth = soma das larguras das colunas. Sem ele, width:100% com
               tableLayout:fixed espremeria as colunas abaixo do tamanho pedido
               numa tela estreita e o texto vazaria da célula; com ele, a tabela
