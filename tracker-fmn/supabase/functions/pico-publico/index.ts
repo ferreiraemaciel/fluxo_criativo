@@ -9,6 +9,9 @@
  * Dar login a um convidado seria dar a chave da casa. Esta função devolve
  * apenas o que é do pico, sempre somente leitura, validada por token.
  *
+ * Devolve o mesmo que o dono ve na aba, menos o que e de outras areas do
+ * Tracker: nada de vendas individuais, conversas ou dado de comprador.
+ *
  * Uso: GET /pico-publico?t=TOKEN
  * Revogar: trocar ou apagar `token_publico` do projeto.
  */
@@ -38,7 +41,7 @@ Deno.serve(async (req) => {
 
   const { data: projeto } = await db
     .from("pico_projetos")
-    .select("id,nome,data_abertura,data_encerramento,status,nivel_operacao,plano_midia")
+    .select("id,nome,data_abertura,data_encerramento,status,nivel_operacao,plano_midia,ticket,cpa_limite,observacoes")
     .eq("token_publico", token)
     .maybeSingle();
 
@@ -48,7 +51,7 @@ Deno.serve(async (req) => {
     });
   }
 
-  const [tarefas, decisoes, ads] = await Promise.all([
+  const [tarefas, decisoes, ads, metricas] = await Promise.all([
     db.from("pico_tarefas")
       .select("id,fase,trilha,titulo,criterio_pronto,offset_dias,data_prevista,status,nivel_minimo,campos,definicoes")
       .eq("projeto_id", projeto.id)
@@ -60,24 +63,38 @@ Deno.serve(async (req) => {
     db.from("ads")
       .select("numero,titulo,status,meta_ad_id")
       .eq("pico_projeto_id", projeto.id),
+    db.from("pico_metricas")
+      .select("momento,cenario,indicador,valor,unidade")
+      .eq("projeto_id", projeto.id),
   ]);
 
   // Gasto dos anúncios deste pico. Nada de vendas nem de dado de comprador:
   // quem acompanha de fora vê o plano e o consumo de verba, não o financeiro.
-  let gasto = 0;
+  let gasto = 0, compras = 0;
+  let porAnuncio: Array<Record<string, unknown>> = [];
   const ids = (ads.data || []).map((a) => a.meta_ad_id).filter(Boolean);
   if (ids.length) {
     const { data: ins } = await db.from("insights_cache")
-      .select("gasto").eq("periodo", "maximum").in("meta_ad_id", ids);
-    gasto = (ins || []).reduce((a, i) => a + (Number(i.gasto) || 0), 0);
+      .select("meta_ad_id,gasto,compras").eq("periodo", "maximum").in("meta_ad_id", ids);
+    const mapa = Object.fromEntries((ins || []).map((i) => [i.meta_ad_id, i]));
+    porAnuncio = (ads.data || []).map((a) => ({
+      numero: a.numero, titulo: a.titulo, status: a.status,
+      gasto: Number(mapa[a.meta_ad_id!]?.gasto) || 0,
+      compras: Number(mapa[a.meta_ad_id!]?.compras) || 0,
+    })).sort((x, y) => (y.gasto as number) - (x.gasto as number));
+    gasto   = porAnuncio.reduce((a, x) => a + (x.gasto as number), 0);
+    compras = porAnuncio.reduce((a, x) => a + (x.compras as number), 0);
   }
 
   return new Response(JSON.stringify({
     projeto,
     tarefas: tarefas.data || [],
     decisoes: decisoes.data || [],
+    metricas: metricas.data || [],
     anuncios: (ads.data || []).length,
+    porAnuncio,
     gasto,
+    compras,
     lido_em: new Date().toISOString(),
   }), {
     headers: { ...cors, "Content-Type": "application/json", "Cache-Control": "no-store" },

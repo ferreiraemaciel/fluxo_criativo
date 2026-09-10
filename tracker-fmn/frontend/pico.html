@@ -74,6 +74,35 @@
   .rod{font-size:11px;color:var(--t3);text-align:center;margin-top:26px;line-height:1.7}
   .erro{background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3);
     border-radius:10px;padding:18px;text-align:center;font-size:13px}
+  table{width:100%;border-collapse:collapse}
+  th{font-size:10px;color:var(--t3);font-weight:700;text-transform:uppercase;
+    letter-spacing:.3px;padding:5px 8px;text-align:right}
+  th:first-child{text-align:left}
+  td{padding:5px 8px;font-size:12px;text-align:right;font-variant-numeric:tabular-nums;
+    border-top:1px solid var(--border)}
+  td:first-child{text-align:left;color:var(--t2)}
+  .forte{font-weight:700;color:var(--t1)}
+  .verde{color:var(--ok);font-weight:700}
+  .fase{background:var(--surface-2);border:1px solid var(--border);border-radius:8px;
+    padding:7px 9px}
+  .fase .n{font-size:11.5px;font-weight:700;display:flex;align-items:center;gap:6px}
+  .fase .v{font-size:11.5px;color:var(--t3);display:flex;justify-content:space-between;
+    gap:6px;margin-top:3px;font-variant-numeric:tabular-nums}
+  .fase .o{font-size:10px;color:var(--t3);opacity:.7;margin-top:2px}
+  .grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(126px,1fr));gap:7px}
+  .prog{height:7px;border-radius:99px;background:rgba(255,255,255,.07);overflow:hidden;
+    margin:10px 0}
+  .prog i{display:block;height:100%;border-radius:99px}
+  .perg{margin-bottom:9px}
+  .perg .q2{font-size:12px;font-weight:600;color:var(--t2);margin-bottom:2px}
+  .perg .a{font-size:12px;color:var(--t1);background:var(--surface-2);
+    border:1px solid var(--border);border-radius:7px;padding:6px 9px;white-space:pre-wrap}
+  .perg .vazio{font-size:11.5px;color:var(--t3);font-style:italic}
+  .exp{font-size:11px;color:var(--t3);line-height:1.5;margin-top:5px;
+    padding:6px 9px;border-radius:6px;background:rgba(56,189,248,.06);
+    border:1px solid rgba(56,189,248,.16)}
+  .anun{display:flex;align-items:center;gap:8px;padding:5px 0;font-size:11.5px;
+    border-top:1px solid var(--border)}
   @media(max-width:640px){
     .barra{display:none} .tar .cc{display:none} h1{font-size:16px}
   }
@@ -104,6 +133,12 @@ const rotD = o => o===0 ? 'D0' : (o<0 ? 'D'+o : 'D+'+o);
 
 /* Fórmula do plano de mídia, igual à do Tracker: o remarketing sobe
    conforme os dias e a captação é o que sobra. */
+/* Rateio das 6 campanhas de lembrete, do slide do retiro. */
+const RATEIO_LEMB = [
+  ['Faltam 7 dias', .07], ['Faltam 5 dias', .10], ['Faltam 3 dias', .15],
+  ['É amanhã', .15],      ['É hoje', .25],        ['Estamos ao vivo', .28],
+];
+
 const pctRmk = d => Math.min(.41, Math.max(.275, .275 + ((Number(d)||7)-7)/13*(.41-.275)));
 
 function render(d) {
@@ -134,13 +169,107 @@ function render(d) {
     <div class="kpi"><div class="lb">Anúncios do pico</div><div class="vl">${d.anuncios}</div></div>
   </div></div>`;
 
+  // ── Imaginação primária ─────────────────────────────────────
+  const met = (mo, ce, ind) => {
+    const m = (d.metricas||[]).find(x => x.momento===mo && x.cenario===ce && x.indicador===ind);
+    return m && m.valor != null ? Number(m.valor) : null;
+  };
+  const CEN = ['conservador','alvo','otimista'];
+  const temImag = CEN.some(c => ['vendas','ticket','investimento'].some(i => met('imaginacao',c,i) != null));
+  if (temImag) {
+    h += `<div class="card"><h2>Imaginação primária</h2><table><thead><tr><th></th>` +
+      CEN.map(c => `<th style="text-transform:capitalize">${c}</th>`).join('') + `</tr></thead><tbody>`;
+    [['vendas','Quantidade de vendas','un'],['ticket','Ticket médio','R$'],
+     ['investimento','Investimento','R$']].forEach(([k,lb,u]) => {
+      h += `<tr><td>${lb}</td>` + CEN.map(c => {
+        const v = met('imaginacao',c,k);
+        return `<td>${v==null?'—':(u==='R$'?brl(v):Math.round(v).toLocaleString('pt-BR'))}</td>`;
+      }).join('') + `</tr>`;
+    });
+    h += `<tr><td class="forte">Faturamento</td>` + CEN.map(c => {
+      const f = (met('imaginacao',c,'vendas')||0) * (met('imaginacao',c,'ticket')||0);
+      return `<td class="verde">${brl(f)}</td>`;
+    }).join('') + `</tr>`;
+    h += `<tr><td>ROAS</td>` + CEN.map(c => {
+      const f = (met('imaginacao',c,'vendas')||0) * (met('imaginacao',c,'ticket')||0);
+      const i = met('imaginacao',c,'investimento')||0;
+      return `<td>${i>0?(f/i).toFixed(2):'—'}</td>`;
+    }).join('') + `</tr></tbody></table></div>`;
+  }
+
+  // ── Plano de mídia ──────────────────────────────────────────
+  if (midia > 0) {
+    const imp = Number(pm.imposto_meta)||0;
+    const fases = [
+      ['Teaser', Number(pm.pct_teaser)||0, pm.dias_teaser, '#38bdf8', 'Engajamento, 1-3-3, ABO'],
+      ['Captura de Leads', capt, pm.dias_captacao, '#a78bfa', 'Leads, CBO, 4 conjuntos'],
+      ['Aquecimento', Number(pm.pct_aquecimento)||0, pm.dias_aquecimento, '#fbbf24', 'Relacionamento e lembrete, 50/50'],
+      ['Remarketing', rmk, pm.dias_remarketing, '#4ade80', 'Vendas, evento Compra, CBO'],
+    ];
+    h += `<div class="card"><h2>Plano de mídia</h2>
+      <div class="kpis" style="margin-bottom:12px">
+        <div class="kpi"><div class="lb">Leads necessários</div><div class="vl">${leads?leads.toLocaleString('pt-BR'):'—'}</div></div>
+        <div class="kpi"><div class="lb">Investimento em mídia</div><div class="vl">${brl(midia)}</div></div>
+        <div class="kpi"><div class="lb">Imposto do Meta</div><div class="vl">${brl(midia*imp)}</div></div>
+        <div class="kpi"><div class="lb">Investimento total</div><div class="vl" style="color:var(--ok)">${brl(midia*(1+imp))}</div></div>
+        <div class="kpi"><div class="lb">CPL na meta</div><div class="vl">${pm.cpl_meta?brl(pm.cpl_meta):'—'}</div></div>
+        <div class="kpi"><div class="lb">Conversão</div><div class="vl">${pm.taxa_conversao?(Number(pm.taxa_conversao)*100).toFixed(1).replace('.0','')+'%':'—'}</div></div>
+      </div>
+      <div class="grid3">` +
+      fases.map(([nm,pc,di,co,ob]) => `<div class="fase">
+        <div class="n"><span class="dot" style="background:${co}"></span>${nm}
+          <span style="margin-left:auto;color:var(--t3);font-weight:700">${(pc*100).toFixed(1)}%</span></div>
+        <div class="v"><span>${brl(midia*pc)}</span><span>${di?brl(midia*pc/Number(di))+' por dia':''}</span></div>
+        <div class="o">${ob}</div></div>`).join('') +
+      `</div>
+      <div style="font-size:10.5px;color:var(--t3);margin-top:9px;line-height:1.45">
+        Teaser e aquecimento têm percentual fixo, o remarketing sobe conforme os dias,
+        e a captação é o que sobra. Fórmula da planilha do retiro.</div>`;
+    const vLemb = midia * (Number(pm.pct_aquecimento)||0) * .5;
+    if (vLemb > 0) {
+      h += `<div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border)">
+        <div style="font-size:10.5px;font-weight:700;color:var(--t3);letter-spacing:.4px;
+          text-transform:uppercase;margin-bottom:7px">As 6 campanhas de lembrete, com orçamento total</div>
+        <div class="grid3">` +
+        RATEIO_LEMB.map(([nm,pc]) => `<div class="fase">
+          <div class="n">${nm}</div>
+          <div class="v"><span class="forte">${brl(vLemb*pc)}</span><span>${(pc*100).toFixed(0)}%</span></div>
+        </div>`).join('') + `</div></div>`;
+    }
+    h += `</div>`;
+  }
+
+  // ── Plano contra o real ─────────────────────────────────────
+  if (d.anuncios > 0) {
+    const consumo = midia > 0 ? d.gasto/midia*100 : null;
+    const cpa = d.compras > 0 ? d.gasto/d.compras : null;
+    h += `<div class="card"><h2>Plano contra o real</h2>
+      <div class="kpis">
+        <div class="kpi"><div class="lb">Verba planejada</div><div class="vl">${brl(midia)}</div></div>
+        <div class="kpi"><div class="lb">Gasto real</div><div class="vl" style="color:var(--azul)">${brl(d.gasto)}</div></div>
+        <div class="kpi"><div class="lb">Consumo</div><div class="vl" style="color:${consumo>100?'var(--verm)':'var(--ok)'}">${consumo==null?'—':consumo.toFixed(0)+'%'}</div></div>
+        <div class="kpi"><div class="lb">Vendas no Meta</div><div class="vl">${d.compras}</div></div>
+        <div class="kpi"><div class="lb">CPA real</div><div class="vl">${cpa?brl(cpa):'—'}</div></div>
+      </div>` +
+      (consumo!=null ? `<div class="prog"><i style="width:${Math.min(100,consumo)}%;background:${consumo>100?'var(--verm)':'var(--azul)'}"></i></div>` : '') +
+      (d.porAnuncio||[]).map(a => `<div class="anun">
+        <span style="color:var(--t3);font-weight:700;min-width:52px">ADS ${String(a.numero).padStart(3,'0')}</span>
+        <span class="cresce" style="color:var(--t2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(a.titulo)}</span>
+        <span style="color:var(--t3);min-width:38px;text-align:right">${a.compras} ${a.compras===1?'venda':'vendas'}</span>
+        <span class="forte" style="min-width:86px;text-align:right">${brl(a.gasto)}</span>
+      </div>`).join('') +
+      `</div>`;
+  }
+
   if (d.decisoes.length) {
     h += `<div class="card"><h2>Decisões</h2>`;
     d.decisoes.forEach(x => {
       h += `<div class="dec"><div class="q">${esc(x.pergunta)}</div>` +
         (x.escolha ? `<div class="e">✓ ${esc(x.escolha)}</div>`
                    : `<div class="p">ainda não decidido</div>`) +
-        (x.regra ? `<div class="r">${esc(x.regra)}</div>` : '') + `</div>`;
+        (x.regra ? `<div class="r">${esc(x.regra)}</div>` : '') +
+        (x.escolha && x.explicacoes && x.explicacoes[x.escolha]
+          ? `<div class="exp">${esc(x.explicacoes[x.escolha])}</div>` : '') + `</div>`;
     });
     h += `</div>`;
   }
@@ -191,6 +320,53 @@ function render(d) {
     });
     h += `</div></details>`;
   });
+
+  // ── Debriefing ──────────────────────────────────────────────
+  const rd = (() => { try { return JSON.parse(p.observacoes||'{}').debrief||[]; } catch { return []; } })();
+  const IND = [['faturamento','Faturamento','R$'],['vendas','Vendas','un'],
+    ['ticket_medio','Ticket médio','R$'],['leads_grupo','Leads no grupo','un'],
+    ['verba','Verba investida','R$'],['cpl','CPL','R$'],['cac','CAC','R$'],
+    ['roas','ROAS','x'],['conv_grupo','Conversão do grupo','%']];
+  const dbg = (mo,k) => met(mo,null,k);
+  const deriv = (k,fn) => {
+    const f=fn('faturamento')||0, v=fn('vendas')||0, vb=fn('verba')||0, lg=fn('leads_grupo')||0;
+    if(k==='ticket_medio') return v>0?f/v:null;
+    if(k==='cpl') return lg>0?vb/lg:null;
+    if(k==='cac') return v>0?vb/v:null;
+    if(k==='roas') return vb>0?f/vb:null;
+    if(k==='conv_grupo') return lg>0?v/lg*100:null;
+    return null;
+  };
+  const temDebrief = IND.some(([k]) => dbg('debriefing',k)!=null) || rd.some(x=>x&&x.trim());
+  if (temDebrief) {
+    h += `<div class="card"><h2>Debriefing</h2><table><thead><tr>
+      <th>Indicador</th><th>Meta</th><th>Realizado</th></tr></thead><tbody>`;
+    IND.forEach(([k,lb,u]) => {
+      const calc = ['ticket_medio','cpl','cac','roas','conv_grupo'].includes(k);
+      const m = calc ? deriv(k, c=>dbg('meta_debrief',c)||0) : dbg('meta_debrief',k);
+      const r = calc ? deriv(k, c=>dbg('debriefing',c)||0)   : dbg('debriefing',k);
+      const f = v => v==null||!isFinite(v) ? '—'
+        : u==='R$' ? brl(v) : u==='%' ? v.toFixed(1)+'%' : u==='x' ? v.toFixed(2)
+        : Math.round(v).toLocaleString('pt-BR');
+      h += `<tr><td>${lb}</td><td>${f(m)}</td><td class="forte">${f(r)}</td></tr>`;
+    });
+    h += `</tbody></table>`;
+    const PERG = ['O que funcionou melhor na captação?','Qual conteúdo vendeu mais?',
+      'A narrativa gerou mesmo a sensação de melhor da história?',
+      'O combo tinha bônus que o público queria?','A ancoragem de preço foi bem feita?',
+      'O que os disparos trouxeram?','Quais coisas novas foram aplicadas e qual foi o resultado?',
+      'O que não repetir na próxima?','O que repetir com certeza?'];
+    if (rd.some(x=>x&&x.trim())) {
+      h += `<div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border)">`;
+      PERG.forEach((q,i) => {
+        if (!rd[i] || !rd[i].trim()) return;
+        h += `<div class="perg"><div class="q2">${i+1}. ${q}</div>
+          <div class="a">${esc(rd[i])}</div></div>`;
+      });
+      h += `</div>`;
+    }
+    h += `</div>`;
+  }
 
   h += `<div class="rod">Planejamento do pico, em tempo real.<br>
     Página de leitura. Nada aqui pode ser alterado.</div>`;
