@@ -2224,6 +2224,11 @@ const ALARME_URGENTE = 6; // acima disso o card fica vermelho, não âmbar
    é do robô, não há ninguém do outro lado aguardando. */
 const RE_AUTO_RESPOSTA = /fora do hor[áa]rio|assim que poss[íi]vel|retornarem|retorno assim|agradece(mos)? (seu|o seu) contato|deixe sua mensagem|n[ãa]o estamos dispon[íi]vel|obrigad. por entrar em contato|responderemos|em breve retorn|mensagem autom[áa]tica|neste momento n[ãa]o/i;
 
+// Onde fica guardado quem já foi contatado por fora (ligação, celular pessoal,
+// outro número). Não mexe em precisa_humano: o Claudinho continua fora de quem
+// pediu humano, só o alarme para de cobrar.
+const CHAVE_DISPENSADOS = 'alarme_dispensados';
+
 function useAlarmeAtendimento() {
   const [alarme, setAlarme] = useState({ carregando: true, humano: [], mudo: [] });
 
@@ -2250,11 +2255,18 @@ function useAlarmeAtendimento() {
         const ultima = new Map();
         (msgs || []).forEach(m => { if (!ultima.has(m.telefone)) ultima.set(m.telefone, m); });
 
+        // "Já fiz contato": telefone -> quando foi marcado. Vale até a pessoa
+        // mandar mensagem nova; mensagem posterior à marcação traz o alarme de volta.
+        const { data: cfg } = await window.db.from('app_config').select('valor').eq('chave', CHAVE_DISPENSADOS).maybeSingle();
+        const dispensados = cfg?.valor || {};
+
         const agora = Date.now();
         const humano = [], mudo = [];
         contatos.forEach(c => {
           const u = ultima.get(c.telefone);
           const horas = u ? (agora - new Date(u.created_at).getTime()) / 36e5 : null;
+          const marcadoEm = dispensados[c.telefone] ? new Date(dispensados[c.telefone]).getTime() : 0;
+          if (marcadoEm && marcadoEm >= (u ? new Date(u.created_at).getTime() : 0)) return;
           if (c.precisa_humano) { humano.push({ ...c, horas }); return; }
           if (c.ia_pausada) return;
           // Última palavra foi do lead e ninguém respondeu dentro do prazo.
@@ -2274,11 +2286,25 @@ function useAlarmeAtendimento() {
     return () => { vivo = false; clearInterval(t); };
   }, []);
 
-  return alarme;
+  // Tira da tela na hora e grava a marcação pra todo mundo do time.
+  const dispensar = async (telefone) => {
+    setAlarme(a => ({ ...a,
+      humano: a.humano.filter(i => i.telefone !== telefone),
+      mudo:   a.mudo.filter(i => i.telefone !== telefone) }));
+    try {
+      const { data: cfg } = await window.db.from('app_config').select('valor').eq('chave', CHAVE_DISPENSADOS).maybeSingle();
+      const valor = { ...(cfg?.valor || {}), [telefone]: new Date().toISOString() };
+      const { error } = await window.db.from('app_config')
+        .upsert({ chave: CHAVE_DISPENSADOS, valor, updated_at: new Date().toISOString() }, { onConflict: 'chave' });
+      if (error) console.error('[alarme] não salvou a marcação:', error.message);
+    } catch (e) { console.error('[alarme] não salvou a marcação:', e); }
+  };
+
+  return { ...alarme, dispensar };
 }
 
 function AlarmeAtendimento({ onNavigate }) {
-  const { carregando, humano, mudo } = useAlarmeAtendimento();
+  const { carregando, humano, mudo, dispensar } = useAlarmeAtendimento();
   const [aberto, setAberto] = useState(false);
   if (carregando) return null;
 
@@ -2343,6 +2369,15 @@ function AlarmeAtendimento({ onNavigate }) {
               <span style={{ marginLeft:'auto', color:'var(--text-3)', whiteSpace:'nowrap' }}>
                 {fmtEspera(i.horas)}
               </span>
+              <button onClick={e => { e.stopPropagation(); dispensar(i.telefone); }}
+                title="Tira do alarme. Se a pessoa mandar mensagem nova, ela volta."
+                style={{ background:'transparent', border:'1px solid var(--app-border)', color:'var(--text-2)',
+                  cursor:'pointer', borderRadius:6, padding:'2px 8px', fontSize:10.5, fontWeight:700,
+                  fontFamily:'Roboto,sans-serif', whiteSpace:'nowrap' }}
+                onMouseEnter={e => { e.currentTarget.style.color='var(--clr-pos, #34d399)'; e.currentTarget.style.borderColor='rgba(52,211,153,.5)'; }}
+                onMouseLeave={e => { e.currentTarget.style.color='var(--text-2)'; e.currentTarget.style.borderColor='var(--app-border)'; }}>
+                ✓ Já fiz contato
+              </button>
             </div>
           ))}
           {total > 12 && (
