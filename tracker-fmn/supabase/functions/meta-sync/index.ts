@@ -155,6 +155,50 @@ async function processarEmParalelo<T>(
   await Promise.all(Array.from({ length: Math.min(concorrencia, items.length) }, consumidor));
 }
 
+// Anúncio que sai do ar some de fetchAdsAtivosNoMeta, e o loop acima só mexe em
+// anúncio ativo. Resultado: as linhas dos períodos curtos de um anúncio pausado
+// congelavam no último valor pra sempre. Em 10/09/2026, 39 das 58 linhas de "7d"
+// eram de julho, quem somava o cache via R$ 12.861 de gasto em 7 dias quando o
+// real era R$ 944, e as regras G1/G5 seguiam avaliando anúncio parado com número
+// velho (os G5 "não identificado" repetidos a cada sync vinham disso).
+//
+// Pra cada linha curta de anúncio que não está mais ativo:
+//  - parou antes do começo da janela: a janela não tem gasto dele, apaga;
+//  - parou dentro da janela: relê no Meta o valor real daquela janela.
+// atualizado_em NÃO muda na releitura: ele guarda o último momento em que o
+// anúncio estava ativo, e é isso que decide quando a janela passou inteira.
+// "maximum" fica de fora, vida inteira de anúncio parado é estável de verdade.
+async function reconciliarAnunciosParados(idsAtivos: Set<string>) {
+  const janelas = getPeriodosCurtos() as Record<string, { since: string; until: string }>;
+  const { data: linhas } = await supabase
+    .from("insights_cache")
+    .select("meta_ad_id, periodo, atualizado_em")
+    .neq("periodo", "maximum");
+  const paradas = (linhas || []).filter((l: any) => !idsAtivos.has(l.meta_ad_id) && janelas[l.periodo]);
+  let apagadas = 0, relidas = 0;
+  await processarEmParalelo(paradas, async (l: any) => {
+    const janela = janelas[l.periodo];
+    const apagar = async () => {
+      await supabase.from("insights_cache").delete().eq("meta_ad_id", l.meta_ad_id).eq("periodo", l.periodo);
+      apagadas++;
+    };
+    const ultimoDiaAtivo = l.atualizado_em
+      ? new Date(new Date(l.atualizado_em).getTime() - 3 * 3600 * 1000).toISOString().slice(0, 10)
+      : null;
+    if (!ultimoDiaAtivo || ultimoDiaAtivo < janela.since) return apagar();
+    const raw = await fetchInsights(l.meta_ad_id, janela as any);
+    if (!raw) return apagar();
+    await supabase.from("insights_cache").update({
+      ...calcularMetricas(raw),
+      data_inicio: raw.date_start || null,
+      data_fim:    raw.date_stop  || null,
+      status_meta: "pausado",
+    }).eq("meta_ad_id", l.meta_ad_id).eq("periodo", l.periodo);
+    relidas++;
+  });
+  return { avaliadas: paradas.length, apagadas, relidas };
+}
+
 Deno.serve(async (req) => {
   if (req.method !== "POST" && req.method !== "GET") {
     return new Response("Método não permitido", { status: 405 });
@@ -221,6 +265,13 @@ Deno.serve(async (req) => {
         }
       }
     });
+
+    // Trava: lista de ativos vazia quase sempre é falha na chamada ao Meta, não
+    // conta parada. Reconciliar com ela apagaria o cache inteiro.
+    if (adsAtivos.length > 0) {
+      const reconciliacao = await reconciliarAnunciosParados(new Set(adsAtivos.map((a) => a.id)));
+      console.log("[meta-sync] anúncios parados reconciliados:", JSON.stringify(reconciliacao));
+    }
 
     await sincronizarGastoDiarioHoje();
     await verificarRegraG1();
@@ -375,6 +426,7 @@ async function verificarRegraG1() {
     .from("insights_cache")
     .select("meta_ad_id, gasto, compras")
     .eq("periodo", "5d")
+    .eq("status_meta", "ativo")
     .eq("compras", 0)
     .gte("gasto", limiteMinimo);
 
@@ -437,12 +489,14 @@ async function verificarRegraG5() {
     .from("insights_cache")
     .select("meta_ad_id, cpa")
     .eq("periodo", "3d")
+    .eq("status_meta", "ativo")
     .not("cpa", "is", null);
 
   const { data: insights5d } = await supabase
     .from("insights_cache")
     .select("meta_ad_id, cpa")
     .eq("periodo", "5d")
+    .eq("status_meta", "ativo")
     .not("cpa", "is", null);
 
   const map5d = Object.fromEntries((insights5d || []).map((r) => [r.meta_ad_id, r.cpa]));

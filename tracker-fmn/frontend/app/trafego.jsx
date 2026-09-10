@@ -589,6 +589,39 @@ function MediaModal({ ad, onClose }) {
 }
 
 /* ── TrafficRow ─────────────────────────────────────────────────*/
+/* Miniatura do anúncio: 30x30, borda sutil, selo de play quando a prévia
+   toca. Usada na tabela de Métricas do Meta e nas colunas de ADS da Análise
+   de campanhas, pra ser literalmente a mesma peça nos dois lugares. */
+function MiniaturaAd({ row, onClick }) {
+  if (!row || !(row.thumb || row.files?.length > 0 || row.mediaTipo || row.previewUrl)) return null;
+    const hasVid  = row.files?.some(f => f.tipo === 'video')
+                 || ['reels','video'].includes(row.mediaTipo);
+    const showImg = !!row.thumb;
+    return (
+      <div onClick={() => onClick?.()}
+        title={row.previewUrl ? 'Ver mídia (toca a prévia)' : 'Ver mídia'}
+        style={{ position:'relative', width:30, height:30, borderRadius:4, flexShrink:0,
+          cursor:'pointer', border:'1px solid rgba(255,255,255,.1)', overflow:'hidden',
+          background:'rgba(255,255,255,.04)', display:'flex', alignItems:'center', justifyContent:'center' }}>
+        {showImg
+          ? <img src={row.thumb} alt=""
+              onError={e => { e.currentTarget.style.display='none'; }}
+              style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }}/>
+          : hasVid
+            ? <LucideIcon icon="play-circle" size={16} style={{ color:'rgba(255,255,255,.4)' }}/>
+            : <LucideIcon icon="image" size={14} style={{ color:'rgba(255,255,255,.3)' }}/>
+        }
+        {/* Selo de play sobre a thumb quando a prévia toca inline */}
+        {showImg && row.previewUrl && (
+          <div style={{ position:'absolute', inset:0, display:'flex', alignItems:'center',
+            justifyContent:'center', background:'rgba(0,0,0,.35)', pointerEvents:'none' }}>
+            <LucideIcon icon="play" size={12} style={{ color:'#fff' }}/>
+          </div>
+        )}
+      </div>
+    );
+}
+
 function TrafficRow({ row, depth=0, period, viewMode='periodo', metricCol, onCellHover, specificRules, pausedIds, pausingIds, focusIds, setFocusIds, onThumbClick, onAddRule, adAlerts, onBellClick, onPauseDirect }) {
   const [open, setOpen]   = useState(depth <= 1);
   const indent  = depth * 13;   // recuo menor: sobra largura pro nome do anúncio
@@ -652,34 +685,7 @@ function TrafficRow({ row, depth=0, period, viewMode='periodo', metricCol, onCel
               : !isAd ? <div style={{ width:16, flexShrink:0 }}/> : null}
 
             {/* Thumb (ads apenas) */}
-            {isAd && (row.thumb || row.files?.length > 0 || row.mediaTipo || row.previewUrl) && (() => {
-              const hasVid  = row.files?.some(f => f.tipo === 'video')
-                           || ['reels','video'].includes(row.mediaTipo);
-              const showImg = !!row.thumb;
-              return (
-                <div onClick={() => onThumbClick?.(row)}
-                  title={row.previewUrl ? 'Ver mídia (toca a prévia)' : 'Ver mídia'}
-                  style={{ position:'relative', width:30, height:30, borderRadius:4, flexShrink:0,
-                    cursor:'pointer', border:'1px solid rgba(255,255,255,.1)', overflow:'hidden',
-                    background:'rgba(255,255,255,.04)', display:'flex', alignItems:'center', justifyContent:'center' }}>
-                  {showImg
-                    ? <img src={row.thumb} alt=""
-                        onError={e => { e.currentTarget.style.display='none'; }}
-                        style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }}/>
-                    : hasVid
-                      ? <LucideIcon icon="play-circle" size={16} style={{ color:'rgba(255,255,255,.4)' }}/>
-                      : <LucideIcon icon="image" size={14} style={{ color:'rgba(255,255,255,.3)' }}/>
-                  }
-                  {/* Selo de play sobre a thumb quando a prévia toca inline */}
-                  {showImg && row.previewUrl && (
-                    <div style={{ position:'absolute', inset:0, display:'flex', alignItems:'center',
-                      justifyContent:'center', background:'rgba(0,0,0,.35)', pointerEvents:'none' }}>
-                      <LucideIcon icon="play" size={12} style={{ color:'#fff' }}/>
-                    </div>
-                  )}
-                </div>
-              );
-            })()}
+            {isAd && <MiniaturaAd row={row} onClick={() => onThumbClick?.(row)}/>}
 
             {/* Número do AD */}
             {isAd && (
@@ -2171,15 +2177,39 @@ function AnaliseCampanhas() {
   const [erro, setErro]             = useState(null);
   const [dados, setDados]           = useState(null);
   const [, setTique]                = useState(0);
+  const [adsInfo, setAdsInfo]       = useState({});
+  const [thumbModal, setThumbModal] = useState(null);
 
   useEffect(() => {
     if (!window.db) return;
     window.db.from('app_config').select('valor').eq('chave', CHAVE_ANALISE).maybeSingle()
       .then(({ data }) => { if (data?.valor?.gerado_em) setDados(data.valor); });
+    // Mídia de cada ADS pra miniatura das tabelas, com a mesma regra de thumb
+    // da tabela de Métricas (bestThumb).
+    window.db.from('ads')
+      .select('numero,media_drive_url,media_files,media_tipo,thumb_url,media_preview_url')
+      .then(({ data }) => {
+        const m = {};
+        (data || []).forEach(a => {
+          let files = [];
+          try { files = Array.isArray(a.media_files) ? a.media_files : (a.media_files ? JSON.parse(a.media_files) : []); } catch {}
+          m[a.numero] = { thumb: bestThumb(a.thumb_url, files, a.media_drive_url), files,
+            mediaTipo: a.media_tipo || null, previewUrl: a.media_preview_url || null };
+        });
+        setAdsInfo(m);
+      });
     // Relógio do "há quanto tempo", avança de minuto em minuto.
     const t = setInterval(() => setTique(x => x + 1), 60000);
     return () => clearInterval(t);
   }, []);
+
+  // Coluna ADS com a miniatura igual à da tabela de Métricas; clique abre a mídia.
+  const celAds = (numero) => (
+    <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+      <MiniaturaAd row={adsInfo[numero]} onClick={() => setThumbModal(adsInfo[numero])}/>
+      <span>{numero}</span>
+    </div>
+  );
 
   const rodar = async () => {
     setCarregando(true); setErro(null);
@@ -2200,6 +2230,7 @@ function AnaliseCampanhas() {
   return (
     <div style={{ background:'var(--app-surface)', border:'1px solid var(--app-border)',
       borderRadius:14, flexShrink:0, overflow:'hidden' }}>
+      {thumbModal && <MediaModal ad={thumbModal} onClose={() => setThumbModal(null)}/>}
       <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'12px 18px' }}>
         <div style={{ display:'flex', alignItems:'center', gap:10 }}>
           <LucideIcon icon="sparkles" size={15} color="var(--fmn-gold)"/>
@@ -2269,7 +2300,7 @@ function AnaliseCampanhas() {
               </div>
               <div style={{ padding:'0 18px' }}>
                 <MiniTable
-                  cols={[{ key:'ads_numero', label:'ADS' }, { key:'regra_codigo', label:'Regra' }, { key:'mensagem', label:'Mensagem', wrap:true }]}
+                  cols={[{ key:'ads_numero', label:'ADS', render: r => celAds(r.ads_numero) }, { key:'regra_codigo', label:'Regra' }, { key:'mensagem', label:'Mensagem', wrap:true }]}
                   rows={dados.radar_regras.pendentes_em_ads_ativos}
                   empty="Nenhum alerta pendente em anúncio ativo."
                 />
@@ -2286,7 +2317,7 @@ function AnaliseCampanhas() {
                 <MiniTable
                   cols={[
                     { key:'created_at', label:'Data', render: r => r.created_at.slice(0,10) },
-                    { key:'ads_numero', label:'ADS', render: r => r.ads_numero ?? <Badge tone="warning">não identificado</Badge> },
+                    { key:'ads_numero', label:'ADS', render: r => r.ads_numero != null ? celAds(r.ads_numero) : <Badge tone="warning">não identificado</Badge> },
                     { key:'regra_codigo', label:'Regra' },
                     { key:'mensagem', label:'Mensagem', wrap:true },
                   ]}
@@ -2302,7 +2333,7 @@ function AnaliseCampanhas() {
             <div style={{ padding:'0 18px 8px' }}>
               <MiniTable
                 cols={[
-                  { key:'numero', label:'ADS' },
+                  { key:'numero', label:'ADS', render: r => celAds(r.numero) },
                   { key:'titulo', label:'Título', wrap:true },
                   { key:'produto', label:'Produto' },
                   { key:'ctr_7d', label:'CTR', right:true, render: r => r.ctr_7d != null ? `${(r.ctr_7d*100).toFixed(2)}%` : '—' },
@@ -2327,7 +2358,7 @@ function AnaliseCampanhas() {
               <div style={{ fontSize:11.5, fontWeight:700, color:'var(--text-2)', fontFamily:'Roboto,sans-serif', padding:'8px 0 0' }}>Fadiga</div>
               <MiniTable
                 cols={[
-                  { key:'numero', label:'ADS' }, { key:'titulo', label:'Título', wrap:true }, { key:'produto', label:'Produto' },
+                  { key:'numero', label:'ADS', render: r => celAds(r.numero) }, { key:'titulo', label:'Título', wrap:true }, { key:'produto', label:'Produto' },
                   { key:'frequencia_7d', label:'Freq.', right:true, render: r => r.frequencia_7d.toFixed(1) },
                 ]}
                 rows={dados.fadiga}
@@ -2336,7 +2367,7 @@ function AnaliseCampanhas() {
               <div style={{ fontSize:11.5, fontWeight:700, color:'var(--text-2)', fontFamily:'Roboto,sans-serif', padding:'10px 0 0' }}>Candidatos a escala</div>
               <MiniTable
                 cols={[
-                  { key:'numero', label:'ADS' }, { key:'titulo', label:'Título', wrap:true }, { key:'produto', label:'Produto' },
+                  { key:'numero', label:'ADS', render: r => celAds(r.numero) }, { key:'titulo', label:'Título', wrap:true }, { key:'produto', label:'Produto' },
                   { key:'cpa_historico', label:'CPA histórico', right:true, render: r => window.fmtBRL(r.cpa_historico) },
                   { key:'vendas_total', label:'Vendas', right:true },
                 ]}
@@ -2353,7 +2384,7 @@ function AnaliseCampanhas() {
                 Ativos rodando há 45+ dias (ad_id atual)
               </div>
               <MiniTable
-                cols={[{ key:'numero', label:'ADS' }, { key:'titulo', label:'Título', wrap:true }, { key:'produto', label:'Produto' },
+                cols={[{ key:'numero', label:'ADS', render: r => celAds(r.numero) }, { key:'titulo', label:'Título', wrap:true }, { key:'produto', label:'Produto' },
                   { key:'dias_rodando', label:'Dias', right:true }]}
                 rows={dados.lifecycle.ativos_rodando_45d_ou_mais}
                 empty="Nenhum ativo há 45+ dias sem refresh."
@@ -2362,7 +2393,7 @@ function AnaliseCampanhas() {
                 Campeões atuais ({dados.lifecycle.campeoes_atuais.length})
               </div>
               <MiniTable
-                cols={[{ key:'numero', label:'ADS' }, { key:'titulo', label:'Título', wrap:true }, { key:'produto', label:'Produto' },
+                cols={[{ key:'numero', label:'ADS', render: r => celAds(r.numero) }, { key:'titulo', label:'Título', wrap:true }, { key:'produto', label:'Produto' },
                   { key:'cpa_historico', label:'CPA histórico', right:true, render: r => window.fmtBRL(r.cpa_historico) },
                   { key:'vendas_total', label:'Vendas', right:true }]}
                 rows={[...dados.lifecycle.campeoes_atuais].sort((a,b) => (a.cpa_historico ?? 9e9) - (b.cpa_historico ?? 9e9)).slice(0,10)}
@@ -2372,7 +2403,7 @@ function AnaliseCampanhas() {
                 Arquivados reativáveis ({dados.lifecycle.arquivados_reativaveis.length})
               </div>
               <MiniTable
-                cols={[{ key:'numero', label:'ADS' }, { key:'titulo', label:'Título', wrap:true }, { key:'produto', label:'Produto' },
+                cols={[{ key:'numero', label:'ADS', render: r => celAds(r.numero) }, { key:'titulo', label:'Título', wrap:true }, { key:'produto', label:'Produto' },
                   { key:'tag', label:'Tag' },
                   { key:'cpa_historico', label:'CPA histórico', right:true, render: r => window.fmtBRL(r.cpa_historico) }]}
                 rows={[...dados.lifecycle.arquivados_reativaveis].sort((a,b) => (a.cpa_historico ?? 9e9) - (b.cpa_historico ?? 9e9)).slice(0,10)}

@@ -991,6 +991,109 @@ function CrossList({ title, hint, rows, render, color }) {
   );
 }
 
+/* ── Custo por lead ─────────────────────────────────────────────
+   Gasto no Meta dividido por quem deixou WhatsApp E e-mail no quiz, por funil,
+   no período escolhido e nas últimas 8 semanas. Quem calcula é a Edge Function
+   custo-por-lead, que lê o gasto direto do Meta por campanha (o cache do Tracker
+   só tem janelas fixas e o gasto diário não separa campanha).
+   Nasceu em 10/09/2026, quando a pergunta "quanto custa um lead hoje" não tinha
+   onde ser respondida no Tracker. */
+const FUNIS_CPL = [
+  { slug: 'fotografo-protegido', label: 'MCV · Fotógrafo Protegido' },
+  { slug: 'blindagem',           label: 'Blindagem' },
+];
+
+function CardCustoPorLead({ range, funnel }) {
+  const [d, setD]       = useState(null);
+  const [erro, setErro] = useState(null);
+
+  useEffect(() => {
+    let vivo = true;
+    setD(null); setErro(null);
+    (async () => {
+      try {
+        const { data: s } = await window.db.auth.getSession();
+        const r = await fetch(`${window.db.supabaseUrl}/functions/v1/custo-por-lead`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', apikey: window.db.supabaseKey,
+            Authorization: `Bearer ${s?.session?.access_token || window.db.supabaseKey}` },
+          body: JSON.stringify({ since: range.p_from, until: range.p_to }),
+        });
+        const j = await r.json();
+        if (!r.ok || j.error) throw new Error(j.error || `erro ${r.status}`);
+        if (vivo) setD(j);
+      } catch (e) { if (vivo) setErro(e.message || String(e)); }
+    })();
+    return () => { vivo = false; };
+  }, [range.p_from, range.p_to]);
+
+  const funis = funnel === 'all' ? FUNIS_CPL : FUNIS_CPL.filter(f => f.slug === funnel);
+  if (!funis.length) return null;
+  const brl  = v => v == null ? '—' : window.fmtBRL(v);
+  const dm   = iso => iso ? iso.slice(8, 10) + '/' + iso.slice(5, 7) : '';
+  const tile = { background:'var(--app-bg)', border:'1px solid var(--app-border)', borderRadius:12, padding:'12px 14px', flex:1, minWidth:180 };
+  const rot  = { fontSize:10, fontWeight:700, letterSpacing:'0.06em', textTransform:'uppercase', color:'var(--text-3)', fontFamily:'Roboto,sans-serif' };
+
+  return (
+    <SectionCard title="Custo por lead"
+      headerRight={<span style={{ fontSize:11, color:'var(--text-3)', fontFamily:'Roboto,sans-serif' }}>
+        gasto no Meta ÷ quem deixou WhatsApp e e-mail{d ? ` · ${dm(d.periodo.since)} a ${dm(d.periodo.until)}` : ''}
+      </span>}>
+      {erro && <div style={{ fontSize:12.5, color:'var(--clr-neg)', fontFamily:'Roboto,sans-serif' }}>{erro}</div>}
+      {!erro && !d && <div style={{ fontSize:12.5, color:'var(--text-3)', fontFamily:'Roboto,sans-serif', display:'flex', alignItems:'center', gap:8 }}>
+        <LucideIcon className="carregando-girando" icon="loader" size={14}/> Buscando o gasto no Meta...
+      </div>}
+      {d && (<>
+        <div style={{ display:'flex', gap:12, flexWrap:'wrap' }}>
+          {funis.map(f => { const v = d.funis[f.slug]; return (
+            <div key={f.slug} style={tile}>
+              <div style={rot}>{f.label}</div>
+              <div style={{ fontSize:26, fontWeight:800, color:'var(--fmn-gold)', fontFamily:'Roboto,sans-serif', margin:'6px 0 2px' }}>{brl(v.cpl)}</div>
+              <div style={{ fontSize:11.5, color:'var(--text-2)', fontFamily:'Roboto,sans-serif' }}>
+                {brl(v.gasto)} de gasto · {v.leads} {v.leads === 1 ? 'lead' : 'leads'}
+              </div>
+            </div>
+          ); })}
+        </div>
+
+        <div style={{ ...rot, margin:'18px 0 8px' }}>Evolução semanal</div>
+        <div style={{ overflowX:'auto' }}>
+          <table style={{ width:'100%', borderCollapse:'collapse', fontSize:12.5, fontFamily:'Roboto,sans-serif' }}>
+            <thead><tr>
+              <th style={{ ...rot, textAlign:'left', padding:'6px 10px', borderBottom:'1px solid var(--app-border)' }}>Semana</th>
+              {funis.map(f => <th key={f.slug} style={{ ...rot, textAlign:'left', padding:'6px 10px', borderBottom:'1px solid var(--app-border)' }}>{f.label}</th>)}
+            </tr></thead>
+            <tbody>
+              {d.semanas.map((s, i) => (
+                <tr key={s.inicio}>
+                  <td style={{ padding:'7px 10px', borderBottom:'1px solid var(--app-border)', color:'var(--text-2)', whiteSpace:'nowrap' }}>
+                    {dm(s.inicio)} a {dm(s.fim)}{i === d.semanas.length - 1 && <span style={{ color:'var(--text-3)' }}> · em andamento</span>}
+                  </td>
+                  {funis.map(f => {
+                    const v = s.funis[f.slug];
+                    const max = Math.max(1, ...d.semanas.map(x => x.funis[f.slug].cpl || 0));
+                    return (
+                      <td key={f.slug} style={{ padding:'7px 10px', borderBottom:'1px solid var(--app-border)', color:'var(--text-2)' }}>
+                        <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+                          <div style={{ width:120, height:6, borderRadius:99, background:'rgba(255,255,255,.06)', flexShrink:0 }}>
+                            <div style={{ width:`${Math.round(((v.cpl || 0) / max) * 100)}%`, height:'100%', borderRadius:99, background:'var(--fmn-gold)' }}/>
+                          </div>
+                          <b style={{ color:'var(--text-1)', minWidth:70 }}>{brl(v.cpl)}</b>
+                          <span style={{ color:'var(--text-3)', whiteSpace:'nowrap' }}>{brl(v.gasto)} · {v.leads} leads</span>
+                        </div>
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </>)}
+    </SectionCard>
+  );
+}
+
 function FunisScreen({ onNavigate }) {
   const [periodo, setPeriodo]       = useState('30d');
   const [customFrom, setCustomFrom] = useState(() => { const d = new Date(); d.setDate(d.getDate()-30); return d.toISOString().slice(0,10); });
@@ -1343,6 +1446,8 @@ function FunisScreen({ onNavigate }) {
             <CardKPI label="Taxa de captura" value={taxa + '%'} icon="target" />
             <CardKPI label="Período" value={periodoTxt} icon="calendar" />
           </div>
+
+          <CardCustoPorLead range={range} funnel={funnel} />
 
           <div style={{ display: 'grid', gridTemplateColumns: '1.3fr 1fr', gap: 16 }}>
             <FunnelChart items={data.abandono || []} />
