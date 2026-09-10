@@ -53,7 +53,7 @@ Deno.serve(async (req) => {
 
   const [tarefas, decisoes, ads, metricas] = await Promise.all([
     db.from("pico_tarefas")
-      .select("id,fase,trilha,titulo,criterio_pronto,offset_dias,data_prevista,status,nivel_minimo,campos,definicoes")
+      .select("id,fase,trilha,titulo,criterio_pronto,offset_dias,data_prevista,status,nivel_minimo,campos,definicoes,referencias")
       .eq("projeto_id", projeto.id)
       .order("offset_dias").order("ordem"),
     db.from("pico_decisoes")

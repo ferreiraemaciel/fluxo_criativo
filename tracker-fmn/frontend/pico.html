@@ -116,6 +116,10 @@
   .ficha .v{font-size:12.5px;color:var(--t1);font-weight:600;white-space:pre-wrap;word-break:break-word}
   .ficha .v a{color:var(--azul);text-decoration:none}
   .ficha .largo{grid-column:1/-1}
+  .refs{margin:4px 0 2px 25px;display:flex;flex-direction:column;gap:3px}
+  .refs a{font-size:11.5px;color:var(--azul);text-decoration:none}
+  .refs a::before{content:'↗ ';opacity:.6}
+  .refs a span{color:var(--t3)}
   @media(max-width:640px){
     .barra{display:none} .tar .cc{display:none} h1{font-size:16px}
   }
@@ -415,6 +419,13 @@ function render(d) {
         <span class="meta"><span class="d">${rotD(t.offset_dias)}</span>
           <span class="dt">${t.data_prevista ? fmtD(t.data_prevista)+' '+semana(t.data_prevista) : ''}</span></span>
       </div>`;
+      // Referências do retiro para a tarefa
+      const refs = Array.isArray(t.referencias) ? t.referencias : [];
+      if (refs.length) {
+        h += `<div class="refs">` + refs.map(r =>
+          `<a href="${esc(r.url)}" target="_blank" rel="noopener">${esc(r.titulo)}${r.nota ? ' <span>· '+esc(r.nota)+'</span>' : ''}</a>`
+        ).join('') + `</div>`;
+      }
       // O que foi definido na tarefa, quando houver
       const defs = defsEfetivas(t, p);
       const campos = Array.isArray(t.campos) ? t.campos : [];

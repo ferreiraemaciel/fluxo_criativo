@@ -220,6 +220,8 @@ function LinhaTarefa({ t, onToggle, onAbrir, mostrarTrilha, onVirarCard, onDefin
   const [criando, setCriando] = useState(false);
   const [aberto, setAberto] = useState(false);
   const temCampos = Array.isArray(t.campos) && t.campos.length > 0;
+  const refs = Array.isArray(t.referencias) ? t.referencias : [];
+  const abre = temCampos || refs.length > 0;
   const preenchidos = temCampos
     ? t.campos.filter(c => {
         const v = (t.definicoes || {})[c.chave];
@@ -241,8 +243,8 @@ function LinhaTarefa({ t, onToggle, onAbrir, mostrarTrilha, onVirarCard, onDefin
       style={{ display:'flex', alignItems:'flex-start', gap:10, padding:'9px 11px',
         borderRadius:9, background: hov || aberto ? 'rgba(255,255,255,.035)' : 'transparent',
         border:'1px solid ' + (atrasada ? 'rgba(248,113,113,.28)' : 'transparent'),
-        transition:'background 120ms', cursor: temCampos ? 'pointer' : 'default' }}
-      onClick={()=>{ if (temCampos) setAberto(a => !a); else onAbrir(t); }}
+        transition:'background 120ms', cursor: abre ? 'pointer' : 'default' }}
+      onClick={()=>{ if (abre) setAberto(a => !a); else onAbrir(t); }}
     >
       <button
         onClick={(e)=>{ e.stopPropagation(); onToggle(t); }}
@@ -289,6 +291,15 @@ function LinhaTarefa({ t, onToggle, onAbrir, mostrarTrilha, onVirarCard, onDefin
               border:'1px solid ' + (preenchidos ? 'rgba(74,222,128,.25)' : 'var(--app-border)') }}>
             <LucideIcon icon={aberto ? 'chevron-up' : 'sliders-horizontal'} size={9}/>
             {preenchidos ? `${preenchidos}/${t.campos.length}` : 'definir'}
+          </span>
+        )}
+        {refs.length > 0 && (
+          <span title={`${refs.length} referência${refs.length > 1 ? 's' : ''} do retiro para esta tarefa`}
+            style={{ display:'flex', alignItems:'center', gap:3, fontSize:10,
+              fontFamily:'Roboto,sans-serif', fontWeight:700, padding:'1px 6px', borderRadius:4,
+              color:'#38bdf8', background:'rgba(56,189,248,.08)',
+              border:'1px solid rgba(56,189,248,.22)' }}>
+            <LucideIcon icon="book-open" size={9}/>{refs.length}
           </span>
         )}
         {t.entregavel_url && (
@@ -338,6 +349,7 @@ function LinhaTarefa({ t, onToggle, onAbrir, mostrarTrilha, onVirarCard, onDefin
         </span>
       </div>
     </div>
+    {aberto && refs.length > 0 && <ListaReferencias refs={refs}/>}
     {aberto && temCampos && (
       <PainelDefinicao tarefa={t} onFechar={()=>setAberto(false)}
         onSalvar={vals => onDefinir(t, vals)}/>
@@ -346,6 +358,40 @@ function LinhaTarefa({ t, onToggle, onAbrir, mostrarTrilha, onVirarCard, onDefin
   );
 }
 
+
+/* ── Referências da tarefa ─────────────────────────────────────
+   Os exemplos do retiro que servem para esta tarefa, abertos em nova aba.
+──────────────────────────────────────────────────────────────────*/
+const ICONE_REF = { video:'play-circle', post:'image', imagem:'image', pagina:'globe',
+  doc:'file-text', planilha:'table', skill:'sparkles', pasta:'folder', quadro:'layout' };
+
+function ListaReferencias({ refs }) {
+  return (
+    <div onClick={e => e.stopPropagation()}
+      style={{ marginTop:2, marginBottom:6, marginLeft:29, padding:'10px 12px',
+        borderRadius:9, background:'rgba(56,189,248,.04)',
+        border:'1px solid rgba(56,189,248,.16)' }}>
+      <div style={{ fontSize:10.5, fontFamily:'Roboto,sans-serif', fontWeight:700,
+        color:'var(--text-3)', letterSpacing:.4, textTransform:'uppercase', marginBottom:7 }}>
+        Referências do retiro
+      </div>
+      <div style={{ display:'flex', flexDirection:'column', gap:5 }}>
+        {refs.map((r, i) => (
+          <a key={i} href={r.url} target="_blank" rel="noopener noreferrer"
+            style={{ display:'flex', alignItems:'flex-start', gap:7, textDecoration:'none',
+              fontSize:12, fontFamily:'Roboto,sans-serif', color:'var(--text-1)', lineHeight:1.4 }}>
+            <LucideIcon icon={ICONE_REF[r.tipo] || 'link'} size={13}
+              style={{ color:'#38bdf8', flexShrink:0, marginTop:2 }}/>
+            <span>
+              {r.titulo}
+              {r.nota && <span style={{ color:'var(--text-3)', fontSize:11 }}> · {r.nota}</span>}
+            </span>
+          </a>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 /* ── Painel de definição da tarefa ──────────────────────────────
    Onde a decisão fica registrada, junto da tarefa que a gerou.
