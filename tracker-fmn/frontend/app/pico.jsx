@@ -738,15 +738,17 @@ const VINCULOS = {
   inimigo:              { grupo:'Campanha', label:'Inimigo (o cenário)', tipo:'texto' },
   palavra_chave:        { grupo:'Campanha', label:'Palavra do "comente a palavra"', tipo:'texto' },
   objeto_antecipacao:   { grupo:'Campanha', label:'Objeto físico de antecipação', tipo:'texto' },
-  produto:              { grupo:'Oferta', label:'Produto ou combo', tipo:'texto' },
-  preco_normal:         { grupo:'Oferta', label:'Preço fora do pico', tipo:'moeda' },
-  preco_pico:           { grupo:'Oferta', label:'Preço no pico', tipo:'moeda', alimenta:'projeto.ticket' },
-  desconto_pct:         { grupo:'Oferta', label:'Desconto', tipo:'percent' },
-  publico_sensivel:     { grupo:'Oferta', label:'Público sensível a preço', tipo:'opcao', opcoes:['Sim','Não'] },
-  combo_itens:          { grupo:'Oferta', label:'Itens do combo', tipo:'lista' },
-  bonus_velocidade:     { grupo:'Oferta', label:'Bônus por velocidade', tipo:'lista' },
-  regra_credito:        { grupo:'Oferta', label:'Regra para quem já comprou', tipo:'texto_longo' },
-  preco_aluno:          { grupo:'Oferta', label:'Preço para quem já é aluno', tipo:'moeda' },
+  produto:              { grupo:'Oferta para não alunos', label:'Produto', tipo:'texto' },
+  preco_normal:         { grupo:'Oferta para não alunos', label:'Preço fora do pico', tipo:'moeda' },
+  preco_pico:           { grupo:'Oferta para não alunos', label:'Preço no pico', tipo:'moeda', alimenta:'projeto.ticket' },
+  desconto_pct:         { grupo:'Oferta para não alunos', label:'Desconto', tipo:'percent' },
+  publico_sensivel:     { grupo:'Oferta para não alunos', label:'Público sensível a preço', tipo:'opcao', opcoes:['Sim','Não'] },
+  bonus_velocidade:     { grupo:'Prêmios e bônus', label:'Bônus por velocidade', tipo:'lista' },
+  produto_aluno:        { grupo:'Oferta para alunos', label:'Produto', tipo:'texto' },
+  preco_normal_aluno:   { grupo:'Oferta para alunos', label:'Preço fora do pico', tipo:'moeda' },
+  preco_aluno:          { grupo:'Oferta para alunos', label:'Preço no pico', tipo:'moeda' },
+  desconto_aluno_pct:   { grupo:'Oferta para alunos', label:'Desconto', tipo:'percent' },
+  regra_credito:        { grupo:'Oferta para alunos', label:'Quem conta como aluno e como a oferta chega', tipo:'texto_longo' },
   item_fisico:          { grupo:'Prêmios e bônus', label:'Item físico', tipo:'texto' },
   sorteio:              { grupo:'Prêmios e bônus', label:'Sorteio', tipo:'texto' },
   premio_primeira_compra:{ grupo:'Prêmios e bônus', label:'Prêmio da primeira compra', tipo:'texto' },
@@ -782,7 +784,7 @@ const VINCULOS = {
   pasta_depoimentos:    { grupo:'Links', label:'Depoimentos por objeção', tipo:'link' },
   doc_objecoes:         { grupo:'Links', label:'Doc de dúvidas e objeções', tipo:'link' },
 };
-const GRUPOS_FICHA = ['Campanha','Oferta','Prêmios e bônus','Mentoria',
+const GRUPOS_FICHA = ['Campanha','Oferta para não alunos','Oferta para alunos','Prêmios e bônus','Mentoria',
   'Aulas de aquecimento','Operação','Links'];
 
 const vazio = v => v == null || v === '' || (Array.isArray(v) && v.length === 0);
@@ -805,14 +807,19 @@ function defsEfetivas(t, projeto) {
   return out;
 }
 
-/* Preço e desconto na ficha seguem a mesma regra da tarefa. */
+/* Preço e desconto na ficha seguem a mesma regra da tarefa, nas duas ofertas. */
+const PARES_PRECO = [
+  { normal:'preco_normal',       pico:'preco_pico',  pct:'desconto_pct' },
+  { normal:'preco_normal_aluno', pico:'preco_aluno', pct:'desconto_aluno_pct' },
+];
 function espelharFicha(k, v, dec) {
-  const pn = Number(k === 'preco_normal' ? v : dec.preco_normal) || 0;
-  if (!pn || v == null) return {};
-  if (k === 'preco_pico')   return { desconto_pct: Math.max(0, 1 - Number(v) / pn) };
-  if (k === 'desconto_pct') return { preco_pico: Number((pn * (1 - Number(v))).toFixed(2)) };
-  if (k === 'preco_normal' && dec.preco_pico)
-    return { desconto_pct: Math.max(0, 1 - Number(dec.preco_pico) / pn) };
+  const par = PARES_PRECO.find(p => k === p.normal || k === p.pico || k === p.pct);
+  if (!par || v == null) return {};
+  const pn = Number(k === par.normal ? v : dec[par.normal]) || 0;
+  if (!pn) return {};
+  if (k === par.pico) return { [par.pct]: Math.max(0, 1 - Number(v) / pn) };
+  if (k === par.pct)  return { [par.pico]: Number((pn * (1 - Number(v))).toFixed(2)) };
+  if (dec[par.pico])  return { [par.pct]: Math.max(0, 1 - Number(dec[par.pico]) / pn) };
   return {};
 }
 
@@ -914,36 +921,53 @@ function BlocoFicha({ declaracoes, onSalvar, semMentoria }) {
 
 /* ── Imaginação primária ────────────────────────────────────────*/
 const INDICADORES_IMAGINACAO = [
-  { chave:'vendas',       label:'Quantidade de vendas', unidade:'un'  },
-  { chave:'ticket',       label:'Ticket médio',         unidade:'R$'  },
-  { chave:'investimento', label:'Investimento',         unidade:'R$'  },
+  { chave:'vendas',        label:'Vendas para não alunos', unidade:'un' },
+  { chave:'vendas_alunos', label:'Vendas para alunos',     unidade:'un' },
+  { chave:'investimento',  label:'Investimento',           unidade:'R$' },
 ];
 const CENARIOS = ['conservador','alvo','otimista'];
 
-function BlocoImaginacao({ metricas, onSalvar }) {
+/* Duas ofertas: quem não é aluno compra a principal, quem é aluno compra a
+   dele. O ticket médio sai da mistura, com os preços vindos da ficha. */
+function BlocoImaginacao({ metricas, onSalvar, precos = {} }) {
   const valor = (cen, ch) => {
     const m = metricas.find(x => x.cenario === cen && x.indicador === ch);
     return m ? m.valor : '';
   };
-  const faturamento = cen => {
-    const v = Number(valor(cen,'vendas')) || 0;
-    const t = Number(valor(cen,'ticket')) || 0;
-    return v * t;
-  };
-  const roas = cen => {
-    const i = Number(valor(cen,'investimento')) || 0;
-    return i > 0 ? (faturamento(cen) / i) : 0;
-  };
-  // Leads necessários pela taxa do Samuel: piso de 5%, alvo de 8%.
-  const leads = (cen, taxa) => {
-    const v = Number(valor(cen,'vendas')) || 0;
-    return taxa > 0 ? Math.round(v / taxa) : 0;
-  };
+  const pn = Number(precos.nao) || 0, pa = Number(precos.aluno) || 0;
+  const vn = c => Number(valor(c, 'vendas')) || 0;
+  const va = c => Number(valor(c, 'vendas_alunos')) || 0;
+  const faturamento = c => (pn || pa)
+    ? vn(c) * pn + va(c) * pa
+    : (vn(c) + va(c)) * (Number(valor(c, 'ticket')) || 0);
+  const ticket = c => { const t = vn(c) + va(c); return t ? faturamento(c) / t : 0; };
+  const roas = c => { const i = Number(valor(c, 'investimento')) || 0; return i > 0 ? faturamento(c) / i : 0; };
+  // Só quem não é aluno precisa de lead: o aluno chega pela base, não pelo anúncio.
+  const leads = (c, taxa) => taxa > 0 ? Math.round(vn(c) / taxa) : 0;
+
+  const tdBase = { padding:'5px 8px', textAlign:'right', fontSize:12, fontFamily:'Roboto,sans-serif',
+    color:'var(--text-2)', fontVariantNumeric:'tabular-nums' };
+  const linhaCalc = (rotulo, fn, destaque, dica) => (
+    <tr style={destaque ? { borderTop:'1px solid var(--app-border)' } : undefined}>
+      <td title={dica} style={{ ...tdBase, textAlign:'left', cursor: dica ? 'help' : 'default',
+        color: destaque ? 'var(--text-1)' : 'var(--text-2)', fontWeight: destaque ? 700 : 400 }}>{rotulo}</td>
+      {CENARIOS.map(c => (
+        <td key={c} style={{ ...tdBase, fontWeight: destaque ? 700 : 400,
+          fontSize: destaque ? 12.5 : 12, color: destaque ? '#4ade80' : 'var(--text-2)' }}>{fn(c)}</td>
+      ))}
+    </tr>
+  );
 
   return (
     <SectionCard recolhivel idRecolher="pico:imaginacao" title="Imaginação primária"
       headerRight={<span style={{ fontSize:11, color:'var(--text-3)',
         fontFamily:'Roboto,sans-serif' }}>preencha antes de qualquer tarefa</span>}>
+      <div style={{ fontSize:11.5, fontFamily:'Roboto,sans-serif', color:'var(--text-3)',
+        marginBottom:9, lineHeight:1.5 }}>
+        Não alunos: <b style={{ color:'var(--text-2)' }}>{precos.prodNao || 'oferta principal'}</b> a {pn ? fmtMoeda(pn) : 'preço a definir'}
+        {'  ·  '}
+        Alunos: <b style={{ color:'var(--text-2)' }}>{precos.prodAluno || 'oferta de aluno'}</b> a {pa ? fmtMoeda(pa) : 'preço a definir'}
+      </div>
       <div style={{ overflowX:'auto' }}>
         <table style={{ width:'100%', borderCollapse:'collapse', minWidth:520 }}>
           <thead>
@@ -969,7 +993,7 @@ function BlocoImaginacao({ metricas, onSalvar }) {
                         onSalvar={v => onSalvar(c, ind.chave, v == null ? '' : v, ind.unidade)}
                         largura="100%" estilo={{ maxWidth:120 }}/>
                     ) : (
-                      <input type="number" defaultValue={valor(c, ind.chave)}
+                      <input type="number" key={String(valor(c, ind.chave))} defaultValue={valor(c, ind.chave)}
                         onBlur={e => onSalvar(c, ind.chave, e.target.value, ind.unidade)}
                         style={{ width:'100%', maxWidth:120, textAlign:'right', padding:'5px 7px',
                           borderRadius:6, border:'1px solid var(--app-border)',
@@ -981,59 +1005,21 @@ function BlocoImaginacao({ metricas, onSalvar }) {
                 ))}
               </tr>
             ))}
-            <tr style={{ borderTop:'1px solid var(--app-border)' }}>
-              <td style={{ padding:'7px 8px', fontSize:12, fontFamily:'Roboto,sans-serif',
-                color:'var(--text-1)', fontWeight:700 }}>Faturamento</td>
-              {CENARIOS.map(c => (
-                <td key={c} style={{ padding:'7px 8px', textAlign:'right', fontSize:12.5,
-                  fontFamily:'Roboto,sans-serif', fontWeight:700, color:'#4ade80',
-                  fontVariantNumeric:'tabular-nums' }}>
-                  {fmtBRL ? fmtBRL(faturamento(c)) : faturamento(c)}
-                </td>
-              ))}
-            </tr>
-            <tr>
-              <td style={{ padding:'5px 8px', fontSize:12, fontFamily:'Roboto,sans-serif',
-                color:'var(--text-2)' }}>ROAS</td>
-              {CENARIOS.map(c => (
-                <td key={c} style={{ padding:'5px 8px', textAlign:'right', fontSize:12,
-                  fontFamily:'Roboto,sans-serif', color:'var(--text-2)',
-                  fontVariantNumeric:'tabular-nums' }}>
-                  {roas(c) ? roas(c).toFixed(2) : '—'}
-                </td>
-              ))}
-            </tr>
-            <tr>
-              <td style={{ padding:'5px 8px', fontSize:12, fontFamily:'Roboto,sans-serif',
-                color:'var(--text-2)' }} title="Conversão de lead em venda: piso de 5% na Black">
-                Leads a 5%
-              </td>
-              {CENARIOS.map(c => (
-                <td key={c} style={{ padding:'5px 8px', textAlign:'right', fontSize:12,
-                  fontFamily:'Roboto,sans-serif', color:'var(--text-2)',
-                  fontVariantNumeric:'tabular-nums' }}>
-                  {leads(c, .05) || '—'}
-                </td>
-              ))}
-            </tr>
-            <tr>
-              <td style={{ padding:'5px 8px', fontSize:12, fontFamily:'Roboto,sans-serif',
-                color:'var(--text-2)' }}>Leads a 8%</td>
-              {CENARIOS.map(c => (
-                <td key={c} style={{ padding:'5px 8px', textAlign:'right', fontSize:12,
-                  fontFamily:'Roboto,sans-serif', color:'var(--text-2)',
-                  fontVariantNumeric:'tabular-nums' }}>
-                  {leads(c, .08) || '—'}
-                </td>
-              ))}
-            </tr>
+            {linhaCalc('Total de vendas', c => (vn(c) + va(c)) || '—', true)}
+            {linhaCalc('Ticket médio', c => ticket(c) ? fmtMoeda(ticket(c)) : '—', false,
+              'Média ponderada: cada oferta pesa pelo número de vendas dela')}
+            {linhaCalc('Faturamento', c => fmtMoeda(faturamento(c)), true)}
+            {linhaCalc('ROAS', c => roas(c) ? roas(c).toFixed(2) : '—')}
+            {linhaCalc('Leads a 5%', c => leads(c, .05) || '—', false, 'Só as vendas para não alunos precisam de lead de anúncio')}
+            {linhaCalc('Leads a 8%', c => leads(c, .08) || '—', false, 'Só as vendas para não alunos precisam de lead de anúncio')}
           </tbody>
         </table>
       </div>
       <div style={{ fontSize:10.5, fontFamily:'Roboto,sans-serif', color:'var(--text-3)',
         marginTop:9, lineHeight:1.45 }}>
-        Faturamento, ROAS e leads se calculam sozinhos. A conversão de lead em venda no pico
-        fica entre 5% e 10%, com 5% como piso.
+        Os preços vêm da ficha da campanha: mudou lá, muda aqui. O ticket médio é a média
+        ponderada pelas vendas de cada oferta. Aluno compra pela base, sem anúncio, por isso
+        os leads contam só as vendas para não alunos.
       </div>
     </SectionCard>
   );
@@ -2317,7 +2303,9 @@ function PicoScreen() {
         <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(340px,1fr))',
           gap:14, marginBottom:14 }}>
           <BlocoImaginacao metricas={metricas.filter(m=>m.momento==='imaginacao')}
-            onSalvar={salvarMetrica}/>
+            onSalvar={salvarMetrica}
+            precos={{ nao: projeto?.declaracoes?.preco_pico, aluno: projeto?.declaracoes?.preco_aluno,
+                      prodNao: projeto?.declaracoes?.produto, prodAluno: projeto?.declaracoes?.produto_aluno }}/>
           <BlocoDecisoes decisoes={decisoes} onEscolher={escolherDecisao}/>
         </div>
 

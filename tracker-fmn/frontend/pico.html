@@ -215,15 +215,17 @@ const VINCULOS = {
   inimigo:              { grupo:'Campanha', label:'Inimigo (o cenário)', tipo:'texto' },
   palavra_chave:        { grupo:'Campanha', label:'Palavra do "comente a palavra"', tipo:'texto' },
   objeto_antecipacao:   { grupo:'Campanha', label:'Objeto físico de antecipação', tipo:'texto' },
-  produto:              { grupo:'Oferta', label:'Produto ou combo', tipo:'texto' },
-  preco_normal:         { grupo:'Oferta', label:'Preço fora do pico', tipo:'moeda' },
-  preco_pico:           { grupo:'Oferta', label:'Preço no pico', tipo:'moeda', alimenta:'projeto.ticket' },
-  desconto_pct:         { grupo:'Oferta', label:'Desconto', tipo:'percent' },
-  publico_sensivel:     { grupo:'Oferta', label:'Público sensível a preço', tipo:'opcao', opcoes:['Sim','Não'] },
-  combo_itens:          { grupo:'Oferta', label:'Itens do combo', tipo:'lista' },
-  bonus_velocidade:     { grupo:'Oferta', label:'Bônus por velocidade', tipo:'lista' },
-  regra_credito:        { grupo:'Oferta', label:'Regra para quem já comprou', tipo:'texto_longo' },
-  preco_aluno:          { grupo:'Oferta', label:'Preço para quem já é aluno', tipo:'moeda' },
+  produto:              { grupo:'Oferta para não alunos', label:'Produto', tipo:'texto' },
+  preco_normal:         { grupo:'Oferta para não alunos', label:'Preço fora do pico', tipo:'moeda' },
+  preco_pico:           { grupo:'Oferta para não alunos', label:'Preço no pico', tipo:'moeda', alimenta:'projeto.ticket' },
+  desconto_pct:         { grupo:'Oferta para não alunos', label:'Desconto', tipo:'percent' },
+  publico_sensivel:     { grupo:'Oferta para não alunos', label:'Público sensível a preço', tipo:'opcao', opcoes:['Sim','Não'] },
+  bonus_velocidade:     { grupo:'Prêmios e bônus', label:'Bônus por velocidade', tipo:'lista' },
+  produto_aluno:        { grupo:'Oferta para alunos', label:'Produto', tipo:'texto' },
+  preco_normal_aluno:   { grupo:'Oferta para alunos', label:'Preço fora do pico', tipo:'moeda' },
+  preco_aluno:          { grupo:'Oferta para alunos', label:'Preço no pico', tipo:'moeda' },
+  desconto_aluno_pct:   { grupo:'Oferta para alunos', label:'Desconto', tipo:'percent' },
+  regra_credito:        { grupo:'Oferta para alunos', label:'Quem conta como aluno e como a oferta chega', tipo:'texto_longo' },
   item_fisico:          { grupo:'Prêmios e bônus', label:'Item físico', tipo:'texto' },
   sorteio:              { grupo:'Prêmios e bônus', label:'Sorteio', tipo:'texto' },
   premio_primeira_compra:{ grupo:'Prêmios e bônus', label:'Prêmio da primeira compra', tipo:'texto' },
@@ -259,7 +261,7 @@ const VINCULOS = {
   pasta_depoimentos:    { grupo:'Links', label:'Depoimentos por objeção', tipo:'link' },
   doc_objecoes:         { grupo:'Links', label:'Doc de dúvidas e objeções', tipo:'link' },
 };
-const GRUPOS_FICHA = ['Campanha','Oferta','Prêmios e bônus','Mentoria',
+const GRUPOS_FICHA = ['Campanha','Oferta para não alunos','Oferta para alunos','Prêmios e bônus','Mentoria',
   'Aulas de aquecimento','Operação','Links'];
 
 const vazio = v => v == null || v === '' || (Array.isArray(v) && v.length === 0);
@@ -337,32 +339,30 @@ function render(d) {
     h += `</div>`;
   }
 
-  // ── Imaginação primária ─────────────────────────────────────
+  // ── Imaginação primária: duas ofertas, ticket ponderado ─────
   const met = (mo, ce, ind) => {
     const m = (d.metricas||[]).find(x => x.momento===mo && x.cenario===ce && x.indicador===ind);
     return m && m.valor != null ? Number(m.valor) : null;
   };
   const CEN = ['conservador','alvo','otimista'];
-  const temImag = CEN.some(c => ['vendas','ticket','investimento'].some(i => met('imaginacao',c,i) != null));
-  if (temImag) {
-    h += `<div class="card"><h2>Imaginação primária</h2><table><thead><tr><th></th>` +
-      CEN.map(c => `<th style="text-transform:capitalize">${c}</th>`).join('') + `</tr></thead><tbody>`;
-    [['vendas','Quantidade de vendas','un'],['ticket','Ticket médio','R$'],
-     ['investimento','Investimento','R$']].forEach(([k,lb,u]) => {
-      h += `<tr><td>${lb}</td>` + CEN.map(c => {
-        const v = met('imaginacao',c,k);
-        return `<td>${v==null?'—':(u==='R$'?brl(v):Math.round(v).toLocaleString('pt-BR'))}</td>`;
-      }).join('') + `</tr>`;
-    });
-    h += `<tr><td class="forte">Faturamento</td>` + CEN.map(c => {
-      const f = (met('imaginacao',c,'vendas')||0) * (met('imaginacao',c,'ticket')||0);
-      return `<td class="verde">${brl(f)}</td>`;
-    }).join('') + `</tr>`;
-    h += `<tr><td>ROAS</td>` + CEN.map(c => {
-      const f = (met('imaginacao',c,'vendas')||0) * (met('imaginacao',c,'ticket')||0);
-      const i = met('imaginacao',c,'investimento')||0;
-      return `<td>${i>0?(f/i).toFixed(2):'—'}</td>`;
-    }).join('') + `</tr></tbody></table></div>`;
+  const pnI = Number(dec.preco_pico)||0, paI = Number(dec.preco_aluno)||0;
+  const vn = c => met('imaginacao',c,'vendas')||0, va = c => met('imaginacao',c,'vendas_alunos')||0;
+  const fat = c => (pnI||paI) ? vn(c)*pnI + va(c)*paI : (vn(c)+va(c))*(met('imaginacao',c,'ticket')||0);
+  const inv = c => met('imaginacao',c,'investimento');
+  if (CEN.some(c => vn(c) || va(c) || inv(c))) {
+    const linha = (rot, f, cls) => `<tr><td${cls ? ' class="'+cls+'"' : ''}>${rot}</td>` +
+      CEN.map(c => `<td${cls ? ' class="'+cls+'"' : ''}>${f(c)}</td>`).join('') + `</tr>`;
+    h += `<div class="card"><h2>Imaginação primária</h2>
+      <div style="font-size:11.5px;color:var(--t3);margin-bottom:8px">Não alunos: <b>${esc(dec.produto||'oferta principal')}</b> a ${pnI ? brl(pnI) : 'preço a definir'} · Alunos: <b>${esc(dec.produto_aluno||'oferta de aluno')}</b> a ${paI ? brl(paI) : 'preço a definir'}</div>
+      <table><thead><tr><th></th>` + CEN.map(c => `<th style="text-transform:capitalize">${c}</th>`).join('') + `</tr></thead><tbody>` +
+      linha('Vendas para não alunos', c => vn(c)) +
+      linha('Vendas para alunos', c => va(c)) +
+      linha('Total de vendas', c => vn(c)+va(c), 'forte') +
+      linha('Ticket médio', c => (vn(c)+va(c)) ? brl(fat(c)/(vn(c)+va(c))) : '—') +
+      linha('Investimento', c => inv(c)==null ? '—' : brl(inv(c))) +
+      linha('Faturamento', c => brl(fat(c)), 'verde') +
+      linha('ROAS', c => inv(c) ? (fat(c)/inv(c)).toFixed(2) : '—') +
+      `</tbody></table></div>`;
   }
 
   // ── Plano de mídia ──────────────────────────────────────────
