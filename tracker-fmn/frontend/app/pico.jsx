@@ -1839,17 +1839,31 @@ function PicoScreen() {
   /* Salvar métrica da imaginação primária */
   const salvarMetrica = async (cenario, indicador, valor, unidade) => {
     const v = valor === '' ? null : Number(valor);
-    const existente = metricas.find(m =>
-      m.cenario === cenario && m.indicador === indicador && m.momento === 'imaginacao');
-    if (existente) {
-      setMetricas(ms => ms.map(m => m.id === existente.id ? { ...m, valor:v } : m));
-      await window.db.from('pico_metricas').update({ valor:v }).eq('id', existente.id);
-    } else {
-      const { data } = await window.db.from('pico_metricas').insert({
-        projeto_id: projetoId, momento:'imaginacao', cenario, indicador, valor:v, unidade,
-      }).select().single();
-      if (data) setMetricas(ms => [...ms, data]);
+
+    /* Ticket e investimento são os mesmos nos três cenários: o que muda de um
+       para o outro é o volume de vendas. Preencheu um, os que estão vazios
+       recebem o mesmo valor, sem precisar digitar três vezes. */
+    const acha = (lista, cen) => lista.find(m =>
+      m.momento === 'imaginacao' && m.cenario === cen && m.indicador === indicador);
+    const espelha = v != null && (indicador === 'ticket' || indicador === 'investimento');
+    const alvos = espelha
+      ? CENARIOS.filter(c => { const m = acha(metricas, c); return c === cenario || !m || m.valor == null; })
+      : [cenario];
+
+    let lista = metricas;
+    for (const cen of alvos) {
+      const ex = acha(lista, cen);
+      if (ex) {
+        lista = lista.map(m => m.id === ex.id ? { ...m, valor:v } : m);
+        await window.db.from('pico_metricas').update({ valor:v }).eq('id', ex.id);
+      } else {
+        const { data } = await window.db.from('pico_metricas').insert({
+          projeto_id: projetoId, momento:'imaginacao', cenario:cen, indicador, valor:v, unidade,
+        }).select().single();
+        if (data) lista = [...lista, data];
+      }
     }
+    setMetricas(lista);
   };
 
   /* Registrar o que foi definido numa tarefa.
