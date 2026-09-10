@@ -629,7 +629,10 @@ Deno.serve(async (req) => {
   // comprador preencheu no quiz (quiz_leads, casando por email).
   const telefoneWebhook = comprador?.checkout_phone || comprador?.phone || comprador?.mobile_phone || null;
   let telefoneFinal = telefoneWebhook;
-  if (!telefoneWebhook && status === "aprovada") {
+  // Também na devolução: é com o telefone que se acha o contato para tirar a
+  // tag, e a Hotmart manda o aviso de reembolso tão sem telefone quanto o de
+  // compra.
+  if (!telefoneWebhook && ["aprovada", "reembolsada", "chargeback", "cancelada"].includes(status)) {
     telefoneFinal = await enriquecerTelefone(transactionId, comprador?.email || null);
   }
 
@@ -659,6 +662,13 @@ Deno.serve(async (req) => {
   // já encontra ele.
   if (status === "aprovada" && telefoneFinal && produtoIdStr) {
     await marcarTagDoProduto(produtoIdStr, telefoneFinal, comprador?.name || null);
+  }
+
+  // O caminho de volta: reembolso, chargeback e cancelamento tiram a tag
+  // do produto. Pedido do Felipe em 2026-09-10. Sem isso, quem devolveu
+  // continuava aparecendo como aluno daquele produto no atendimento.
+  if (["reembolsada", "chargeback", "cancelada"].includes(status) && telefoneFinal && produtoIdStr) {
+    await retirarTagDoProduto(produtoIdStr, telefoneFinal, comprador?.email || null, transactionId);
   }
 
   console.log("Venda salva:", transactionId, status, "ADS:", adsNumero);
@@ -805,6 +815,64 @@ function variantesTelefoneKhronus(bruto: string): string[] {
 // removida antes, porque comprar de novo é uma marcação nova de verdade).
 // Silenciosa de propósito: falhar em marcar tag nunca pode derrubar o
 // registro da venda, que é o que realmente importa nesse webhook.
+/* Tira a tag do produto de quem pediu reembolso, deu chargeback ou teve a
+   compra cancelada.
+
+   Não apaga a linha: marca removida_em, que é o histórico que a tabela
+   existe para guardar ("foi aluno do Blindagem e devolveu" é informação).
+
+   Uma outra compra aprovada do mesmo produto segura a tag. Acontece com
+   quem comprou duas vezes, ou comprou de novo depois de devolver: a devolução
+   de uma compra não pode apagar a outra. Vale também entre ofertas do mesmo
+   produto que dão a mesma tag (Mensagens que Vendem e a versão APP). */
+async function retirarTagDoProduto(
+  produtoId: string, telefoneRaw: string, email: string | null, transactionId: string,
+) {
+  const tagId = TAG_POR_PRODUTO[produtoId];
+  const variantes = variantesTelefoneKhronus(telefoneRaw);
+  if (!tagId || !variantes.length) return;
+
+  try {
+    if (email) {
+      const produtosDaTag = Object.entries(TAG_POR_PRODUTO)
+        .filter(([, t]) => t === tagId).map(([p]) => p);
+      const { data: outras } = await supabase
+        .from("vendas")
+        .select("hotmart_transaction_id")
+        .eq("comprador_email", email)
+        .in("produto_id", produtosDaTag)
+        .eq("status", "aprovada")
+        .neq("hotmart_transaction_id", transactionId)
+        .limit(1);
+      if (outras?.length) {
+        console.log("Tag mantida, há outra compra aprovada do produto:", produtoId, email);
+        return;
+      }
+    }
+
+    const { data: achados } = await khronus
+      .from("crm_whatsapp_contatos")
+      .select("id")
+      .eq("studio_id", STUDIO_ID_KHRONUS)
+      .in("telefone", variantes);
+    const ids = (achados || []).map((c: { id: string }) => c.id);
+    if (!ids.length) return;
+
+    const { data: tiradas, error } = await khronus
+      .from("crm_whatsapp_contato_tags")
+      .update({ removida_em: new Date().toISOString() })
+      .eq("studio_id", STUDIO_ID_KHRONUS)
+      .in("contato_id", ids)
+      .eq("tag_id", tagId)
+      .is("removida_em", null)
+      .select("id");
+    if (error) throw new Error(error.message);
+    console.log("Tag do produto retirada:", produtoId, variantes[0], tiradas?.length || 0);
+  } catch (e) {
+    console.error("retirarTagDoProduto erro:", e);
+  }
+}
+
 async function marcarTagDoProduto(produtoId: string, telefoneRaw: string, nome: string | null = null) {
   const tagId = TAG_POR_PRODUTO[produtoId];
   const variantes = variantesTelefoneKhronus(telefoneRaw);
