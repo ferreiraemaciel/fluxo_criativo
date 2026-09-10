@@ -176,6 +176,43 @@ Deno.serve(async (req) => {
       buscarTudo<{ numero: number; produto: string | null; meta_ad_id: string | null }>((de, ate) => sb.from("ads").select("numero,produto,meta_ad_id").range(de, ate)),
     ]);
 
+    /* ───────────── Vendas reais da Hotmart (desde 10/09/2026) ─────────────
+       Os campos de venda da tabela ads (vendas_3d/5d/total, cpa_3d/5d/historico)
+       são o que o Meta conseguiu atribuir. Parte das compras nem chega ao Meta,
+       então a análise mostrava 0 venda em anúncio que vendeu (ADS 309, 10/09).
+       Aqui eles passam a vir das vendas aprovadas na Hotmart:
+         - 3d e 5d: pelo ID do anúncio atual (vendas.meta_ad_id), na janela;
+         - total e CPA histórico: pelo número do ADS (vendas.ads_numero), somando
+           todo relançamento, que é a mesma régua do gasto_total do card.
+       Complemento de pedido (order bump) não conta como venda. O número do Meta
+       fica guardado em vendas_total_meta, pra comparação no bloco de orçamento. */
+    const vendasHotmart = await buscarTudo<{ meta_ad_id: string | null; ads_numero: number | null; created_at: string }>(
+      (de, ate) => sb.from("vendas").select("meta_ad_id,ads_numero,created_at")
+        .eq("status", "aprovada").or("is_order_bump.is.null,is_order_bump.eq.false").range(de, ate));
+    const diaBrt = (iso: string) => new Date(new Date(iso).getTime() - 3 * 3600000).toISOString().slice(0, 10);
+    const hojeBrtStr = diaBrt(agora.toISOString());
+    const desdeDias = (n: number) => { const d = new Date(hojeBrtStr + "T00:00:00Z"); d.setUTCDate(d.getUTCDate() - (n - 1)); return d.toISOString().slice(0, 10); };
+    const d3 = desdeDias(3), d5 = desdeDias(5);
+    const vendasPorNumero = new Map<number, number>();
+    const diasPorAdId = new Map<string, string[]>();
+    for (const v of vendasHotmart) {
+      if (v.ads_numero != null) vendasPorNumero.set(v.ads_numero, (vendasPorNumero.get(v.ads_numero) || 0) + 1);
+      if (v.meta_ad_id) { const l = diasPorAdId.get(v.meta_ad_id) || []; l.push(diaBrt(v.created_at)); diasPorAdId.set(v.meta_ad_id, l); }
+    }
+    const cpa = (g: number | null, n: number) => (n > 0 && g != null ? Math.round((Number(g) / n) * 100) / 100 : null);
+    for (const ad of [...adsAtivos, ...adsCampeoes, ...adsArquivados]) {
+      (ad as any).vendas_total_meta = ad.vendas_total;
+      const total = vendasPorNumero.get(ad.numero) || 0;
+      ad.vendas_total = total;
+      ad.cpa_historico = cpa(ad.gasto_total, total);
+    }
+    for (const ad of adsAtivos) {
+      const dias = diasPorAdId.get(ad.meta_ad_id || "") || [];
+      const v3 = dias.filter((d) => d >= d3).length, v5 = dias.filter((d) => d >= d5).length;
+      ad.vendas_3d = v3; ad.vendas_5d = v5;
+      ad.cpa_3d = cpa(ad.gasto_3d, v3); ad.cpa_5d = cpa(ad.gasto_5d, v5);
+    }
+
     const metaAdIds = adsAtivos.map((a) => a.meta_ad_id).filter((x): x is string => !!x);
     const periodos = ["maximum", "3d", "5d", "7d", "14d", "30d"];
     const insightsCache: Insight[] = [];
@@ -194,7 +231,10 @@ Deno.serve(async (req) => {
       buscarTudo<Alerta>((de, ate) => sb.from("alertas").select("id,ads_numero,meta_ad_id,regra_codigo,mensagem,acao_tomada,created_at")
         .eq("resolvido", false).order("created_at", { ascending: false }).range(de, ate)),
       buscarTudo<Alerta>((de, ate) => sb.from("alertas").select("id,ads_numero,meta_ad_id,regra_codigo,mensagem,acao_tomada,created_at")
-        .eq("resolvido", true).gte("created_at", desde14d).order("created_at", { ascending: false }).range(de, ate)),
+        .eq("resolvido", true).gte("created_at", desde14d)
+        // Falso positivo do cache congelado (ver meta-sync, 10/09/2026): o registro fica no banco, fora do relatório.
+        .or("acao_tomada.is.null,acao_tomada.neq.falso_positivo_cache")
+        .order("created_at", { ascending: false }).range(de, ate)),
       buscarTudo<{ ads_numero: number | null; produto_nome: string | null; valor_liquido: number | null; created_at: string }>(
         (de, ate) => sb.from("vendas").select("ads_numero,produto_nome,valor_liquido,created_at")
           .eq("status", "aprovada").gte("created_at", desde30d).range(de, ate)),
@@ -245,7 +285,7 @@ Deno.serve(async (req) => {
     const pendentesOrfaosCount = alertasPendentes.length - pendentesRelevantes.length;
 
     /* ───────────── Resumo por produto + radar + funil + fadiga/escala + lifecycle ───────────── */
-    type Resumo = { ativos: number; gastoTotal: number; vendas5d: number; gastoTotalAtivos: number; vendasTotalAtivos: number; pertoDePausar: any[] };
+    type Resumo = { ativos: number; gastoTotal: number; vendas5d: number; gastoTotalAtivos: number; vendasTotalAtivos: number; vendasTotalAtivosMeta: number; pertoDePausar: any[] };
     const resumo = new Map<string, Resumo>();
     const funilRows: any[] = [];
     const fadiga: any[] = [];
@@ -256,13 +296,14 @@ Deno.serve(async (req) => {
     for (const ad of adsAtivos) {
       const produto = ad.produto || "MCV";
       const p = params[produto] || params.MCV;
-      if (!resumo.has(produto)) resumo.set(produto, { ativos: 0, gastoTotal: 0, vendas5d: 0, gastoTotalAtivos: 0, vendasTotalAtivos: 0, pertoDePausar: [] });
+      if (!resumo.has(produto)) resumo.set(produto, { ativos: 0, gastoTotal: 0, vendas5d: 0, gastoTotalAtivos: 0, vendasTotalAtivos: 0, vendasTotalAtivosMeta: 0, pertoDePausar: [] });
       const r = resumo.get(produto)!;
       r.ativos += 1;
       r.gastoTotal += num(ad.gasto_5d);
       r.vendas5d += Number(ad.vendas_5d || 0);
       r.gastoTotalAtivos += num(ad.gasto_total);
       r.vendasTotalAtivos += Number(ad.vendas_total || 0);
+      r.vendasTotalAtivosMeta += Number((ad as any).vendas_total_meta || 0);
 
       const gasto5d = num(ad.gasto_5d);
       const vendas5d = Number(ad.vendas_5d || 0);
@@ -348,7 +389,7 @@ Deno.serve(async (req) => {
 
     const porProduto: Record<string, any> = {};
     for (const produto of produtosConhecidos) {
-      const r = resumo.get(produto) || { ativos: 0, gastoTotal: 0, vendas5d: 0, gastoTotalAtivos: 0, vendasTotalAtivos: 0, pertoDePausar: [] };
+      const r = resumo.get(produto) || { ativos: 0, gastoTotal: 0, vendas5d: 0, gastoTotalAtivos: 0, vendasTotalAtivos: 0, vendasTotalAtivosMeta: 0, pertoDePausar: [] };
       const mediaDiaria5d = r.gastoTotal ? r.gastoTotal / 5 : 0;
       const gastoVidaAtivos = r.gastoTotalAtivos;
       const receitaVida = receitaVidaAtivos.get(produto) || 0;
@@ -365,7 +406,7 @@ Deno.serve(async (req) => {
         gasto_vida_ativos: Math.round(gastoVidaAtivos * 100) / 100,
         receita_vida_ativos: Math.round(receitaVida * 100) / 100,
         n_vendas_vida_ativos_hotmart: nVendasVidaAtivos.get(produto) || 0,
-        vendas_total_vida_ativos_meta: r.vendasTotalAtivos,
+        vendas_total_vida_ativos_meta: r.vendasTotalAtivosMeta,
         roas_vida_ativos: gastoVidaAtivos ? Math.round((receitaVida / gastoVidaAtivos) * 100) / 100 : null,
       };
     }
