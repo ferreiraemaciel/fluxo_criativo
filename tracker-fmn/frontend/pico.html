@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Pico de Vendas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0b0b0d; --surface:#131316; --surface-2:#1a1a1f; --border:#26262c;
+    --t1:#f2f2f3; --t2:#a9a9b2; --t3:#6b6b76; --gold:#eaaa41;
+    --ok:#4ade80; --azul:#38bdf8; --lilas:#a78bfa; --amb:#fbbf24;
+    --verm:#f87171; --laranja:#fb923c; --cinza:#94a3b8; --verde2:#4ade80;
+  }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--t1);font-family:Roboto,sans-serif;
+    font-size:14px;line-height:1.5;padding:22px 18px 60px}
+  .wrap{max-width:1080px;margin:0 auto}
+  .topo{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:6px}
+  h1{font-size:19px;font-weight:700}
+  .tag{font-size:11px;font-weight:700;padding:2px 9px;border-radius:6px;
+    background:rgba(234,170,65,.12);color:var(--gold);border:1px solid rgba(234,170,65,.3)}
+  .sub{font-size:12.5px;color:var(--t3);margin-bottom:20px}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:12px;
+    padding:14px 16px;margin-bottom:14px}
+  .card h2{font-size:13px;font-weight:700;margin-bottom:11px;display:flex;
+    align-items:center;gap:8px;flex-wrap:wrap}
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(132px,1fr));gap:9px}
+  .kpi{background:var(--surface-2);border:1px solid var(--border);border-radius:9px;padding:9px 11px}
+  .kpi .lb{font-size:10px;color:var(--t3);margin-bottom:2px}
+  .kpi .vl{font-size:15px;font-weight:700;font-variant-numeric:tabular-nums}
+  .dec{padding:9px 11px;border-radius:8px;margin-bottom:8px;
+    background:var(--surface-2);border:1px solid var(--border)}
+  .dec .q{font-size:12.5px;font-weight:700;margin-bottom:4px}
+  .dec .e{font-size:12px;font-weight:700;color:var(--ok)}
+  .dec .p{font-size:12px;color:var(--amb)}
+  .dec .r{font-size:11px;color:var(--t3);font-style:italic;margin-top:3px}
+  details{background:var(--surface);border:1px solid var(--border);
+    border-radius:12px;margin-bottom:10px;overflow:hidden}
+  summary{padding:11px 14px;cursor:pointer;display:flex;align-items:center;gap:10px;
+    list-style:none;user-select:none}
+  summary::-webkit-details-marker{display:none}
+  .dot{width:8px;height:8px;border-radius:99px;flex-shrink:0}
+  .nome{font-size:13px;font-weight:700;flex-shrink:0}
+  .cresce{flex:1}
+  .pct{font-size:12px;font-weight:700;font-variant-numeric:tabular-nums;min-width:38px;text-align:right}
+  .frac{font-size:11.5px;color:var(--t3);font-variant-numeric:tabular-nums;min-width:46px;text-align:right}
+  .barra{width:88px;height:5px;border-radius:99px;background:rgba(255,255,255,.07);
+    overflow:hidden;flex-shrink:0}
+  .barra i{display:block;height:100%;border-radius:99px}
+  .lista{padding:0 14px 12px}
+  .tar{display:flex;align-items:flex-start;gap:9px;padding:7px 0;
+    border-top:1px solid var(--border)}
+  .chk{width:16px;height:16px;border-radius:5px;border:1.5px solid var(--border);
+    flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;
+    font-size:10px;color:var(--bg)}
+  .chk.on{background:var(--ok);border-color:var(--ok)}
+  .tar .tt{font-size:12.5px;font-weight:600}
+  .tar .cc{font-size:11px;color:var(--t3);margin-top:1px}
+  .tar.feita .tt{color:var(--t3);text-decoration:line-through}
+  .meta{display:flex;align-items:center;gap:8px;flex-shrink:0;font-size:11px;
+    color:var(--t3);font-variant-numeric:tabular-nums}
+  .d{font-weight:700;min-width:34px;text-align:right}
+  .dt{min-width:52px;text-align:right}
+  .defs{margin:5px 0 2px 25px;padding:8px 10px;border-radius:7px;
+    background:rgba(74,222,128,.05);border:1px solid rgba(74,222,128,.16);
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:7px}
+  .defs div{font-size:11.5px}
+  .defs .k{color:var(--t3);font-size:10px}
+  .defs .v{color:var(--t1);font-weight:600}
+  .rod{font-size:11px;color:var(--t3);text-align:center;margin-top:26px;line-height:1.7}
+  .erro{background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3);
+    border-radius:10px;padding:18px;text-align:center;font-size:13px}
+  @media(max-width:640px){
+    .barra{display:none} .tar .cc{display:none} h1{font-size:16px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap" id="app">
+  <div class="sub">Carregando</div>
+</div>
+
+<script>
+const FASES = [
+  ['organizar','Organizar','#94a3b8'], ['antecipacao','Antecipação','#38bdf8'],
+  ['captacao','Captação','#a78bfa'], ['aquecimento','Aquecimento','#fbbf24'],
+  ['grande_dia','Grande Dia','#f87171'], ['carrinho_aberto','Carrinho aberto','#4ade80'],
+  ['encerramento','Encerramento','#fb923c'], ['pos','Pós','#64748b'],
+];
+const TRILHAS = { oferta:'Oferta', conteudo:'Conteúdo', trafego:'Tráfego',
+  comercial:'Comercial', paginas:'Páginas', mentoria:'Mentoria', debriefing:'Debriefing' };
+
+const brl = v => (Number(v)||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+const esc = t => String(t ?? '').replace(/[&<>"]/g, c =>
+  ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fmtD = iso => { if(!iso) return ''; const [,m,d]=iso.split('-'); return d+'/'+m; };
+const semana = iso => { if(!iso) return '';
+  return ['dom','seg','ter','qua','qui','sex','sáb'][new Date(iso+'T12:00:00').getDay()]; };
+const rotD = o => o===0 ? 'D0' : (o<0 ? 'D'+o : 'D+'+o);
+
+/* Fórmula do plano de mídia, igual à do Tracker: o remarketing sobe
+   conforme os dias e a captação é o que sobra. */
+const pctRmk = d => Math.min(.41, Math.max(.275, .275 + ((Number(d)||7)-7)/13*(.41-.275)));
+
+function render(d) {
+  const p = d.projeto, pm = p.plano_midia || {};
+  const feitas = d.tarefas.filter(t => t.status==='feito').length;
+  const rmk = pctRmk(pm.dias_remarketing);
+  const capt = 1 - (Number(pm.pct_teaser)||0) - (Number(pm.pct_aquecimento)||0) - rmk;
+  const leads = Number(pm.taxa_conversao) > 0
+    ? Math.ceil((Number(pm.vendas_meta)||0)/Number(pm.taxa_conversao)) : 0;
+  const midia = capt > 0 ? (leads*(Number(pm.cpl_meta)||0))/capt : 0;
+  const hoje = new Date().toISOString().slice(0,10);
+  const dias = p.data_abertura
+    ? Math.round((new Date(p.data_abertura+'T12:00:00') - new Date(hoje+'T12:00:00'))/864e5)
+    : null;
+
+  let h = `<div class="topo"><h1>${esc(p.nome)}</h1>
+    <span class="tag">somente leitura</span></div>
+    <div class="sub">Abre em ${p.data_abertura ? fmtD(p.data_abertura)+'/'+p.data_abertura.slice(0,4) : 'data a definir'}${
+      dias !== null ? (dias > 0 ? ' · faltam '+dias+' dias' : dias === 0 ? ' · é hoje' : ' · carrinho aberto há '+Math.abs(dias)+' dias') : ''}</div>`;
+
+  h += `<div class="card"><h2>Onde está</h2><div class="kpis">
+    <div class="kpi"><div class="lb">Tarefas</div><div class="vl">${feitas}/${d.tarefas.length}</div></div>
+    <div class="kpi"><div class="lb">Progresso</div><div class="vl" style="color:var(--ok)">${
+      d.tarefas.length ? Math.round(feitas/d.tarefas.length*100) : 0}%</div></div>
+    <div class="kpi"><div class="lb">Leads na meta</div><div class="vl">${leads ? leads.toLocaleString('pt-BR') : '—'}</div></div>
+    <div class="kpi"><div class="lb">Verba planejada</div><div class="vl">${midia ? brl(midia) : '—'}</div></div>
+    <div class="kpi"><div class="lb">Gasto até agora</div><div class="vl" style="color:var(--azul)">${brl(d.gasto)}</div></div>
+    <div class="kpi"><div class="lb">Anúncios do pico</div><div class="vl">${d.anuncios}</div></div>
+  </div></div>`;
+
+  if (d.decisoes.length) {
+    h += `<div class="card"><h2>Decisões</h2>`;
+    d.decisoes.forEach(x => {
+      h += `<div class="dec"><div class="q">${esc(x.pergunta)}</div>` +
+        (x.escolha ? `<div class="e">✓ ${esc(x.escolha)}</div>`
+                   : `<div class="p">ainda não decidido</div>`) +
+        (x.regra ? `<div class="r">${esc(x.regra)}</div>` : '') + `</div>`;
+    });
+    h += `</div>`;
+  }
+
+  FASES.forEach(([id, nome, cor]) => {
+    const lista = d.tarefas.filter(t => t.fase === id);
+    if (!lista.length) return;
+    const f = lista.filter(t => t.status==='feito').length;
+    const pct = Math.round(f/lista.length*100);
+    const completo = f === lista.length;
+    h += `<details${completo ? '' : ' open'}><summary>
+      <span class="dot" style="background:${cor}"></span>
+      <span class="nome">${nome}</span>${completo ? ' <span style="color:var(--ok)">✓</span>' : ''}
+      <span class="cresce"></span>
+      <span class="pct" style="color:${completo?'var(--ok)':'var(--t2)'}">${pct}%</span>
+      <span class="frac">${f}/${lista.length}</span>
+      <span class="barra"><i style="width:${pct}%;background:${cor}"></i></span>
+    </summary><div class="lista">`;
+
+    lista.forEach(t => {
+      const ok = t.status === 'feito';
+      h += `<div class="tar${ok?' feita':''}">
+        <span class="chk${ok?' on':''}">${ok?'✓':''}</span>
+        <span class="cresce"><span class="tt">${esc(t.titulo)}</span>
+          <span style="font-size:10px;color:var(--t3);margin-left:6px">${TRILHAS[t.trilha]||''}</span>
+          ${t.criterio_pronto ? `<div class="cc">${esc(t.criterio_pronto)}</div>` : ''}</span>
+        <span class="meta"><span class="d">${rotD(t.offset_dias)}</span>
+          <span class="dt">${t.data_prevista ? fmtD(t.data_prevista)+' '+semana(t.data_prevista) : ''}</span></span>
+      </div>`;
+      // O que foi definido na tarefa, quando houver
+      const defs = t.definicoes || {};
+      const campos = Array.isArray(t.campos) ? t.campos : [];
+      const cheios = campos.filter(c => {
+        const v = defs[c.chave];
+        return v != null && v !== '' && !(Array.isArray(v) && !v.length);
+      });
+      if (cheios.length) {
+        h += `<div class="defs">`;
+        cheios.forEach(c => {
+          let v = defs[c.chave];
+          if (c.tipo === 'moeda') v = brl(v);
+          else if (c.tipo === 'percent') v = (Number(v)*100).toFixed(1).replace('.0','')+'%';
+          else if (Array.isArray(v)) v = v.map(i => i.nome + (i.valor ? ' ('+brl(i.valor)+')' : '')).join(', ');
+          h += `<div><div class="k">${esc(c.label)}</div><div class="v">${esc(v)}</div></div>`;
+        });
+        h += `</div>`;
+      }
+    });
+    h += `</div></details>`;
+  });
+
+  h += `<div class="rod">Planejamento do pico, em tempo real.<br>
+    Página de leitura. Nada aqui pode ser alterado.</div>`;
+  document.getElementById('app').innerHTML = h;
+}
+
+(async () => {
+  const t = new URLSearchParams(location.search).get('t');
+  const alvo = document.getElementById('app');
+  if (!t) { alvo.innerHTML = '<div class="erro">Link incompleto.</div>'; return; }
+  try {
+    const r = await fetch('https://wntzzzuqoqmfcjebmzul.supabase.co/functions/v1/pico-publico?t=' + encodeURIComponent(t));
+    const d = await r.json();
+    if (!r.ok) { alvo.innerHTML = '<div class="erro">'+esc(d.erro||'Não foi possível abrir.')+'</div>'; return; }
+    document.title = d.projeto.nome;
+    render(d);
+  } catch (e) {
+    alvo.innerHTML = '<div class="erro">Não foi possível carregar agora.</div>';
+  }
+})();
+</script>
+</body>
+</html>
