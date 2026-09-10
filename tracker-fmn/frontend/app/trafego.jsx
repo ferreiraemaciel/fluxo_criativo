@@ -10,23 +10,40 @@ const TICKET = 297;
 const CPA_LIMITE = +(TICKET * 0.7).toFixed(2); // 207,90
 
 /* ── Helpers de métricas ────────────────────────────────────────*/
-function mkMetrics(row) {
+/* Vendas, CPA e ROAS vêm da HOTMART, não do Meta.
+
+   Até 10/09/2026 esta tabela copiava `compras` do insights_cache, que é o que o
+   Meta consegue atribuir ao anúncio. Só que parte das compras nem chega ao Meta
+   (a Hotmart deixa de entregar cerca de uma em cada três do MCV) e o Meta ainda
+   precisa ligar a compra ao clique. Resultado real: o ADS 309 vendeu às 08:29 de
+   10/09, a venda estava gravada aqui com o ID dele, e a tabela mostrava 0.
+
+   Agora a venda conta pelo rastreio que a Hotmart manda (sck = ID do anúncio,
+   gravado em vendas.meta_ad_id), dentro da janela exata do período (data_inicio
+   e data_fim da própria linha do cache). O número do Meta fica em vendas_meta,
+   pra comparação. */
+function mkMetrics(row, hotmart) {
   if (!row) return null;
   const gasto      = row.gasto       != null ? +Number(row.gasto).toFixed(2)  : null;
   const linkClicks = row.link_clicks != null ? Number(row.link_clicks)        : null;
-  const vendas     = row.compras            != null ? Number(row.compras)            : null;
+  const vendas     = hotmart ? hotmart.vendas : (row.compras != null ? Number(row.compras) : null);
   const lpViews    = row.landing_page_views != null ? Number(row.landing_page_views) : null;
   const initCheck  = row.initiate_checkout  != null ? Number(row.initiate_checkout)  : null;
   return {
     gasto,
     vendas,
-    cpa:         row.cpa                != null ? +Number(row.cpa).toFixed(2)          : null,
+    vendas_meta: row.compras != null ? Number(row.compras) : null,
+    cpa:         hotmart
+                   ? ((gasto != null && vendas > 0) ? +(gasto / vendas).toFixed(2) : null)
+                   : (row.cpa != null ? +Number(row.cpa).toFixed(2) : null),
     // CPA +1: simula o CPA com mais uma venda. Sempre calculável quando há
     // gasto (mesmo com 0 vendas, aí o divisor é 1) — é justamente o caso em
     // que mais interessa saber quanto a primeira venda "custaria".
     cpa_mais1:   (gasto != null && gasto > 0 && vendas != null)
                    ? +(gasto / (vendas + 1)).toFixed(2) : null,
-    roas:        row.roas               != null ? +Number(row.roas).toFixed(2)         : null,
+    roas:        hotmart
+                   ? ((gasto != null && gasto > 0) ? +(hotmart.receita / gasto).toFixed(2) : null)
+                   : (row.roas != null ? +Number(row.roas).toFixed(2) : null),
     cpm:         row.cpm                != null ? +Number(row.cpm).toFixed(2)          : null,
     ctr:         row.ctr_unico          != null ? +Number(row.ctr_unico).toFixed(4)    : null,
     impressoes:  row.impressoes         != null ? Number(row.impressoes)               : null,
@@ -100,7 +117,7 @@ function useTrafficData(mostrarDesativados) {
 
       const queries = [
         window.db.from('insights_cache')
-          .select('meta_ad_id,meta_ad_name,meta_campaign_id,meta_campaign_name,meta_adset_id,meta_adset_name,periodo,gasto,cpa,compras,roas,cpm,ctr_unico,impressoes,frequencia,connect_rate,link_clicks,landing_page_views,initiate_checkout,hook_rate')
+          .select('meta_ad_id,meta_ad_name,meta_campaign_id,meta_campaign_name,meta_adset_id,meta_adset_name,periodo,data_inicio,data_fim,gasto,cpa,compras,roas,cpm,ctr_unico,impressoes,frequencia,connect_rate,link_clicks,landing_page_views,initiate_checkout,hook_rate')
           .in('periodo', ['maximum','7d','5d','3d','hoje']),
         window.db.from('ads')
           .select('numero,titulo,status,meta_ad_id,media_drive_url,media_files,meta_ad_url,media_tipo,thumb_url,media_preview_url')
@@ -120,6 +137,29 @@ function useTrafficData(mostrarDesativados) {
       }
 
       const [{ data: insights, error: e1 }, { data: adsList, error: e2 }, inativosResp] = await Promise.all(queries);
+
+      // Vendas reais da Hotmart por anúncio: dia (Brasília) e valor de cada uma.
+      // Complemento de pedido (order bump) soma na receita mas não conta como
+      // venda, senão um pedido com dois complementos viraria três vendas.
+      const vendasPorAd = {};
+      for (let pag = 0; pag < 50; pag++) {
+        const { data: vs, error: ev } = await window.db.from('vendas')
+          .select('meta_ad_id,created_at,valor_bruto,is_order_bump')
+          .eq('status', 'aprovada').not('meta_ad_id', 'is', null)
+          .range(pag * 1000, pag * 1000 + 999);
+        if (ev) { console.error('[Tráfego] vendas Hotmart:', ev); break; }
+        (vs || []).forEach(v => {
+          const dia = new Date(new Date(v.created_at).getTime() - 3 * 3600e3).toISOString().slice(0, 10);
+          (vendasPorAd[v.meta_ad_id] ||= []).push({ dia, valor: Number(v.valor_bruto) || 0, bump: !!v.is_order_bump });
+        });
+        if (!vs || vs.length < 1000) break;
+      }
+      const hotmartNaJanela = (aid, row) => {
+        if (!row) return null;
+        const lista = (vendasPorAd[aid] || []).filter(v =>
+          row.periodo === 'maximum' || !row.data_inicio || (v.dia >= row.data_inicio && v.dia <= (row.data_fim || row.data_inicio)));
+        return { vendas: lista.filter(v => !v.bump).length, receita: lista.reduce((t, v) => t + v.valor, 0) };
+      };
       const adsListInativos = inativosResp?.data || [];
       if (inativosResp?.error) console.error('[Tráfego] ads (inativos):', inativosResp.error);
 
@@ -261,11 +301,11 @@ function useTrafficData(mostrarDesativados) {
               mediaTipo: info?.media_tipo || null,
               previewUrl: info?.media_preview_url || null,
               metaAdUrl: aid ? `https://adsmanager.facebook.com/adsmanager/manage/ads?selected_ad_ids=${aid}` : null,
-              hist:    mkMetrics(periods['maximum']),
-              d7:      mkMetrics(periods['7d']),
-              d5:      mkMetrics(periods['5d']),
-              d3:      mkMetrics(periods['3d']),
-              hoje:    mkMetrics(periods['hoje']),
+              hist:    mkMetrics(periods['maximum'], hotmartNaJanela(aid, periods['maximum'])),
+              d7:      mkMetrics(periods['7d'], hotmartNaJanela(aid, periods['7d'])),
+              d5:      mkMetrics(periods['5d'], hotmartNaJanela(aid, periods['5d'])),
+              d3:      mkMetrics(periods['3d'], hotmartNaJanela(aid, periods['3d'])),
+              hoje:    mkMetrics(periods['hoje'], hotmartNaJanela(aid, periods['hoje'])),
             };
           });
           // Ordenar ads por CPA 3d crescente dentro do conjunto
