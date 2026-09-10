@@ -123,6 +123,36 @@
   @media(max-width:640px){
     .barra{display:none} .tar .cc{display:none} h1{font-size:16px}
   }
+
+  /* ── Abas Pico | Tráfego e a leitura do Tráfego (10/09/2026) ── */
+  .abas{display:flex;gap:6px;margin-bottom:16px}
+  .abas button{font:700 12.5px Roboto,sans-serif;padding:7px 14px;border-radius:8px;cursor:pointer;
+    background:var(--surface);color:var(--t2);border:1px solid var(--border)}
+  .abas button.on{background:rgba(234,170,65,.12);color:var(--gold);border-color:rgba(234,170,65,.35)}
+  .abas button:focus-visible,.per button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+  .per{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:12px}
+  .per button{font:700 11.5px Roboto,sans-serif;padding:5px 11px;border-radius:7px;cursor:pointer;
+    background:transparent;color:var(--t3);border:1px solid var(--border)}
+  .per button.on{color:var(--t1);background:var(--surface-2)}
+  .trf{overflow-x:auto;background:var(--surface);border:1px solid var(--border);border-radius:12px}
+  .trf table{min-width:1180px}
+  .trf th{font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--t3);font-weight:700;
+    padding:9px 8px;text-align:right;white-space:nowrap;border-bottom:1px solid var(--border);
+    position:sticky;top:0;background:var(--surface)}
+  .trf th:first-child,.trf td:first-child{text-align:left}
+  .trf td{white-space:nowrap;border-bottom:1px solid var(--border);padding:7px 8px}
+  .trf tr.camp td{font-weight:700;background:rgba(255,255,255,.02)}
+  .trf tr.conj td:first-child{padding-left:22px;color:var(--t2)}
+  .trf tr.ad td:first-child{padding-left:36px}
+  .nome-ad{display:flex;align-items:center;gap:8px;max-width:330px}
+  .mini{position:relative;width:30px;height:30px;border-radius:4px;flex-shrink:0;overflow:hidden;
+    border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04)}
+  .mini img{width:100%;height:100%;object-fit:cover;display:block}
+  .mini .play{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    background:rgba(0,0,0,.35);color:#fff;font-size:10px}
+  .num-ad{font-size:10px;font-weight:900;color:var(--gold)}
+  .tit-ad{overflow:hidden;text-overflow:ellipsis;font-size:12px}
+  .bom{color:var(--ok)} .ruim{color:var(--verm)}
 </style>
 </head>
 <body>
@@ -505,6 +535,91 @@ function render(d) {
   });
 }
 
+/* ── Tráfego, só leitura ─────────────────────────────────────────
+   Mesma chave do link do pico, dados da função trafego-publico. Vendas,
+   CPA e ROAS contados pela Hotmart, igual à aba Tráfego do Tracker. */
+const PER_TRF = [['hoje','Hoje'],['3d','3D'],['5d','5D'],['7d','7D'],['maximum','Total']];
+const COL_TRF = [
+  ['gasto','Gasto','r'],['vendas','Vendas','n'],['cpa','CPA','cpa'],['cpa_mais1','CPA +1','cpa'],
+  ['cpc','CPC','r'],['cpm','CPM','r'],['ctr','CTR','p'],['impressoes','Impr.','n'],['hook_rate','Hook%','p'],
+  ['lp_views','LP Views','n'],['custo_lp','Custo/LP','r'],['init_check','Init.','n'],['custo_init','Custo/Init','r'],
+  ['connect','Connect','p'],['freq','Freq.','f'],['roas','ROAS','x'],
+];
+let TRF = null, perTrf = '7d', limiteTrf = null;
+const fmtR = v => v == null ? '—' : 'R$ ' + Number(v).toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
+function celTrf(m, [k,,tipo]) {
+  if (!m || m[k] == null) return '<td>—</td>';
+  const v = m[k];
+  if (tipo === 'r') return `<td>${fmtR(v)}</td>`;
+  if (tipo === 'cpa') {
+    const lim = limiteTrf, cls = lim ? (v <= lim ? 'bom' : 'ruim') : '';
+    return `<td class="${cls}">${fmtR(v)}</td>`;
+  }
+  if (tipo === 'p') return `<td>${(v*100).toFixed(1).replace('.',',')}%</td>`;
+  if (tipo === 'f') return `<td>${Number(v).toFixed(1).replace('.',',')}</td>`;
+  if (tipo === 'x') return `<td>${String(v).replace('.',',')}x</td>`;
+  return `<td>${Number(v).toLocaleString('pt-BR')}</td>`;
+}
+function linhaTrf(cls, nome, m) {
+  return `<tr class="${cls}"><td>${nome}</td>${COL_TRF.map(c => celTrf(m, c)).join('')}</tr>`;
+}
+function renderTrafego() {
+  const alvo = document.getElementById('trafego');
+  const quando = TRF.atualizado_em ? new Date(TRF.atualizado_em).toLocaleString('pt-BR', {day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}) : '—';
+  let h = `<div class="topo"><h1>Tráfego</h1><span class="tag">somente leitura</span></div>
+    <div class="sub">Anúncios ativos no Meta. Vendas, CPA e ROAS contados pelas vendas aprovadas na Hotmart. Métricas do Meta atualizadas em ${esc(quando)}.</div>
+    <div class="per">${PER_TRF.map(([k,l]) => `<button data-per="${k}" class="${k===perTrf?'on':''}">${l}</button>`).join('')}</div>
+    <div class="trf"><table><thead><tr><th>Campanha / conjunto / anúncio</th>${COL_TRF.map(c => `<th>${c[1]}</th>`).join('')}</tr></thead><tbody>`;
+  for (const c of TRF.campanhas) {
+    if (!c.periodos[perTrf]) continue;
+    limiteTrf = c.limite;
+    h += linhaTrf('camp', esc(c.nome), c.periodos[perTrf]);
+    for (const s of c.conjuntos) {
+      if (!s.periodos[perTrf]) continue;
+      h += linhaTrf('conj', esc(s.nome), s.periodos[perTrf]);
+      for (const a of s.anuncios) {
+        if (!a.periodos[perTrf]) continue;
+        const mini = a.miniatura
+          ? `<span class="mini"><img src="${esc(a.miniatura)}" alt="" loading="lazy" onerror="this.remove()">${a.video?'<span class="play">▶</span>':''}</span>`
+          : `<span class="mini"></span>`;
+        const nome = `<div class="nome-ad">${mini}${a.numero!=null?`<span class="num-ad">${String(a.numero).padStart(3,'0')}</span>`:''}<span class="tit-ad">${esc(a.titulo||'Anúncio sem cadastro')}</span></div>`;
+        h += linhaTrf('ad', nome, a.periodos[perTrf]);
+      }
+    }
+  }
+  h += `</tbody></table></div><div class="rod">Página de leitura. Nada aqui pode ser alterado.</div>`;
+  alvo.innerHTML = h;
+  alvo.querySelectorAll('.per button').forEach(b => b.onclick = () => { perTrf = b.dataset.per; renderTrafego(); });
+}
+async function abrirTrafego(t) {
+  const alvo = document.getElementById('trafego');
+  if (TRF) return renderTrafego();
+  alvo.innerHTML = '<div class="sub">Carregando o tráfego...</div>';
+  try {
+    const r = await fetch('https://wntzzzuqoqmfcjebmzul.supabase.co/functions/v1/trafego-publico?t=' + encodeURIComponent(t));
+    const d = await r.json();
+    if (!r.ok) { alvo.innerHTML = '<div class="erro">'+esc(d.erro||'Não foi possível abrir.')+'</div>'; return; }
+    TRF = d; renderTrafego();
+  } catch (e) { alvo.innerHTML = '<div class="erro">Não foi possível carregar agora.</div>'; }
+}
+function montarAbas(t) {
+  const app = document.getElementById('app');
+  const nav = document.createElement('nav');
+  nav.className = 'wrap abas';
+  nav.innerHTML = '<button data-aba="pico" class="on">Pico de vendas</button><button data-aba="trafego">Tráfego</button>';
+  const trf = document.createElement('div');
+  trf.className = 'wrap'; trf.id = 'trafego'; trf.hidden = true;
+  app.before(nav); app.after(trf);
+  const ir = aba => {
+    nav.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.aba === aba));
+    app.hidden = aba !== 'pico'; trf.hidden = aba !== 'trafego';
+    if (aba === 'trafego') abrirTrafego(t);
+    history.replaceState(null, '', aba === 'trafego' ? '#trafego' : location.pathname + location.search);
+  };
+  nav.querySelectorAll('button').forEach(b => b.onclick = () => ir(b.dataset.aba));
+  if (location.hash === '#trafego') ir('trafego');
+}
+
 (async () => {
   const t = new URLSearchParams(location.search).get('t');
   const alvo = document.getElementById('app');
@@ -515,6 +630,7 @@ function render(d) {
     if (!r.ok) { alvo.innerHTML = '<div class="erro">'+esc(d.erro||'Não foi possível abrir.')+'</div>'; return; }
     document.title = d.projeto.nome;
     render(d);
+    montarAbas(t);
   } catch (e) {
     alvo.innerHTML = '<div class="erro">Não foi possível carregar agora.</div>';
   }
