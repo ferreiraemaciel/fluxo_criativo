@@ -2263,3 +2263,22 @@ Alerta direto do Gabriel. Na semana de abertura aparecem perfis clonados oferece
 - [ ] Implementar a cadência de follow no Claudinho (2h, 4h, 8h e depois 12h, 24h, 48h)
 - [ ] Colocar a priorização por temperatura visível no painel de atendimento
 - [ ] Decidir o caminho por produto: checkout direto no MCV, conversa no combo
+
+---
+
+# PARTE 15. FICHA DA CAMPANHA, DECISÕES DE 10/09/2026
+
+Gravado no Tracker, aba Picos de Venda, ficha da campanha:
+
+| Campo | Definido |
+|---|---|
+| Nome da campanha | Black dos Fotógrafos Protegidos 2026 (preenchido pelo Felipe) |
+| Mote | "Meu lado advogado não assinaria essa Black." |
+| Onde o mote aparece | Última linha dos Reels pré Black, legenda, resposta de comentário, mensagem fixada do grupo, bloco 5 do trailer, abertura da live. Quadro fixo nos stories: Felipe de terno x Felipe de câmera |
+| Inimigo | O combinado que ficou no print do WhatsApp |
+| Palavra do "comente" | PROTEGIDO |
+| Objeto de antecipação | Envelope pardo lacrado, "confidencial, não abrir antes da Black", aberto na live de abertura |
+
+**Fora desta edição:** combo (a estratégia é desconto acima de 30%, sem empilhar produtos) e a frase "não compre nada ainda". As duas tarefas foram marcadas como puladas.
+
+**Achado no histórico de vendas, que muda a promessa:** o pacote completo do MCV já foi vendido a R$ 198,99 na "Promoção 1000 Fotógrafos Protegidos" (07/05/2026, 29 vendas com cupom). Em 2024 houve ofertas menores, só de contratos para eventos, a R$ 147,00 e R$ 124,95. Com o preço da Black em R$ 197,00, a diferença para maio é de R$ 1,99: quem comprou em maio compara, e a pergunta 7 da economia da oferta ("a ancoragem resiste a quem comparar com a sua última oferta?") responde não. A promessa de "maior desconto" só se sustenta com o preço abaixo desse piso.
