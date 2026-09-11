@@ -51,7 +51,7 @@ Deno.serve(async (req) => {
     });
   }
 
-  const [tarefas, decisoes, ads, metricas, bib] = await Promise.all([
+  const [tarefas, decisoes, ads, metricas, bib, cad] = await Promise.all([
     db.from("pico_tarefas")
       .select("id,fase,trilha,titulo,criterio_pronto,offset_dias,data_prevista,status,nivel_minimo,campos,definicoes,referencias,observacoes")
       .eq("projeto_id", projeto.id)
@@ -68,6 +68,9 @@ Deno.serve(async (req) => {
       .eq("projeto_id", projeto.id),
     db.from("pico_biblioteca")
       .select("categoria,titulo,url,tipo,nota,ordem")
+      .order("ordem"),
+    db.from("pico_caderno")
+      .select("numero,titulo,html,ordem")
       .order("ordem"),
   ]);
 
@@ -99,6 +102,7 @@ Deno.serve(async (req) => {
     gasto,
     compras,
     biblioteca: bib.data || [],
+      caderno: cad.data || [],
       lido_em: new Date().toISOString(),
   }), {
     headers: { ...cors, "Content-Type": "application/json", "Cache-Control": "no-store" },

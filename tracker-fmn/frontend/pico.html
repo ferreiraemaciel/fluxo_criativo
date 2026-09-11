@@ -125,6 +125,30 @@
   .obs{font-size:11px;color:var(--t2);margin-top:4px;padding:3px 8px;border-radius:5px;
     background:rgba(251,191,36,.07);border:1px solid rgba(251,191,36,.2);line-height:1.45}
   .tar.feita .obs{background:rgba(74,222,128,.06);border-color:rgba(74,222,128,.18)}
+  .cadwrap{display:grid;grid-template-columns:minmax(150px,230px) 1fr;gap:12px;align-items:start}
+  .cadidx{max-height:520px;overflow-y:auto;display:flex;flex-direction:column;gap:3px}
+  .cadbt{text-align:left;padding:6px 9px;border-radius:7px;cursor:pointer;font-size:11.5px;
+    font-family:Roboto,sans-serif;line-height:1.35;border:1px solid transparent;background:transparent;color:var(--t2)}
+  .cadbt.on{border-color:rgba(234,170,65,.4);background:rgba(234,170,65,.1);color:var(--gold)}
+  .cadtxt{max-height:520px;overflow-y:auto;padding-right:6px}
+  .caderno-corpo{font-size:12.5px;color:var(--t2);line-height:1.6}
+  .caderno-corpo h2,.caderno-corpo h3,.caderno-corpo h4,.caderno-corpo h5{color:var(--t1);margin:14px 0 6px;line-height:1.35}
+  .caderno-corpo h2{font-size:15px} .caderno-corpo h3{font-size:13.5px}
+  .caderno-corpo h4,.caderno-corpo h5{font-size:12.5px}
+  .caderno-corpo p{margin:7px 0} .caderno-corpo b{color:var(--t1)}
+  .caderno-corpo a{color:var(--azul);text-decoration:none}
+  .caderno-corpo ul,.caderno-corpo ol{margin:7px 0 7px 18px} .caderno-corpo li{margin:3px 0}
+  .caderno-corpo table{width:100%;border-collapse:collapse;margin:9px 0;font-size:11.5px}
+  .caderno-corpo th{text-align:left;padding:5px 8px;color:var(--t3);font-weight:700;border-bottom:1px solid var(--border)}
+  .caderno-corpo td{padding:5px 8px;border-top:1px solid var(--border);vertical-align:top;text-align:left}
+  .caderno-corpo blockquote{margin:9px 0;padding:6px 11px;border-left:2px solid rgba(234,170,65,.5);
+    background:rgba(255,255,255,.03);border-radius:0 7px 7px 0}
+  .caderno-corpo code{background:rgba(255,255,255,.06);padding:1px 5px;border-radius:4px;font-size:11.5px}
+  .caderno-corpo pre{background:rgba(255,255,255,.04);padding:9px 11px;border-radius:8px;overflow-x:auto;font-size:11px}
+  .caderno-corpo hr{border:none;border-top:1px solid var(--border);margin:12px 0}
+  @media(max-width:640px){
+    .cadwrap{grid-template-columns:1fr} .cadidx{max-height:200px}
+  }
   @media(max-width:640px){
     .barra{display:none} .tar .cc{display:none} h1{font-size:16px}
   }
@@ -540,6 +564,16 @@ function render(d) {
       ).join('') + `</div>`).join('') + `</div>`;
   }
 
+  // ── Caderno da Black ────────────────────────────────────────
+  const cad = d.caderno || [];
+  if (cad.length) {
+    window.__cad = cad;
+    h += `<div class="card"><h2>Caderno da Black</h2><div class="cadwrap"><div class="cadidx">` +
+      cad.map((x, i) => `<button class="cadbt${i === 0 ? ' on' : ''}" data-i="${i}">${x.numero ? '<b>'+x.numero+'.</b> ' : ''}${esc(x.titulo)}</button>`).join('') +
+      `</div><div class="cadtxt caderno-corpo" id="cadtxt">${cad[0].html}</div></div>
+      <div style="font-size:10.5px;color:var(--t3);margin-top:9px;line-height:1.45">O caderno da campanha, escrito desde o retiro: as aulas, os playbooks estudados, os números e os rascunhos.</div></div>`;
+  }
+
   // ── Debriefing ──────────────────────────────────────────────
   const rd = (() => { try { return JSON.parse(p.observacoes||'{}').debrief||[]; } catch { return []; } })();
   const IND = [['faturamento','Faturamento','R$'],['vendas','Vendas','un'],
@@ -590,6 +624,15 @@ function render(d) {
   h += `<div class="rod">Planejamento do pico, em tempo real.<br>
     Página de leitura. Nada aqui pode ser alterado.</div>`;
   document.getElementById('app').innerHTML = h;
+  const cadtxt = document.getElementById('cadtxt');
+  if (cadtxt) document.querySelectorAll('.cadbt').forEach(bt => {
+    bt.onclick = () => {
+      document.querySelectorAll('.cadbt').forEach(x => x.classList.remove('on'));
+      bt.classList.add('on');
+      cadtxt.innerHTML = (window.__cad || [])[bt.dataset.i].html;
+      cadtxt.scrollTop = 0;
+    };
+  });
   document.querySelectorAll('.card > h2').forEach(t => {
     t.classList.add('rec');
     t.onclick = () => t.parentElement.classList.toggle('fechado');

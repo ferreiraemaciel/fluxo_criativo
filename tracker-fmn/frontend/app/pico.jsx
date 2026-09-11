@@ -414,6 +414,63 @@ function ListaReferencias({ refs }) {
   );
 }
 
+/* ── Caderno da Black ───────────────────────────────────────────
+   O caderno inteiro dentro do Tracker: índice de um lado, texto do
+   outro, busca no topo. Vem da tabela pico_caderno, gerada pelo
+   scripts/sync-caderno.py a partir do BLACK-FRIDAY-2026.md.
+──────────────────────────────────────────────────────────────────*/
+function BlocoCaderno({ partes }) {
+  const [sel, setSel] = useState(null);
+  const [busca, setBusca] = useState('');
+  const b = busca.trim().toLowerCase();
+  const semTags = h => String(h || '').replace(/<[^>]+>/g, ' ');
+  const lista = b ? partes.filter(p => (p.titulo + ' ' + semTags(p.html)).toLowerCase().includes(b)) : partes;
+  const atual = lista.find(p => p.id === sel) || lista[0] || null;
+
+  return (
+    <SectionCard recolhivel idRecolher="pico:caderno" title="Caderno da Black"
+      headerRight={<span style={{ fontSize:11, color:'var(--text-3)',
+        fontFamily:'Roboto,sans-serif' }}>{partes.length} partes</span>}>
+      <input value={busca} onChange={e => setBusca(e.target.value)}
+        placeholder="Buscar no caderno inteiro"
+        style={{ width:'100%', padding:'6px 9px', borderRadius:7, marginBottom:10,
+          border:'1px solid var(--app-border)', background:'rgba(255,255,255,.03)',
+          color:'var(--text-1)', fontSize:12, fontFamily:'Roboto,sans-serif' }}/>
+      {!lista.length ? (
+        <div style={{ fontSize:12, fontFamily:'Roboto,sans-serif', color:'var(--text-3)' }}>
+          Nenhuma parte do caderno fala disso.
+        </div>
+      ) : (
+        <div style={{ display:'grid', gridTemplateColumns:'minmax(160px,240px) 1fr', gap:12,
+          alignItems:'start' }}>
+          <div style={{ maxHeight:520, overflowY:'auto', display:'flex', flexDirection:'column', gap:3 }}>
+            {lista.map(p => {
+              const ativa = atual && atual.id === p.id;
+              return (
+                <button key={p.id} onClick={() => setSel(p.id)}
+                  style={{ textAlign:'left', padding:'6px 9px', borderRadius:7, cursor:'pointer',
+                    fontSize:11.5, fontFamily:'Roboto,sans-serif', lineHeight:1.35,
+                    border:'1px solid ' + (ativa ? 'rgba(234,170,65,.4)' : 'transparent'),
+                    background: ativa ? 'rgba(234,170,65,.1)' : 'transparent',
+                    color: ativa ? '#eaaa41' : 'var(--text-2)' }}>
+                  {p.numero ? <b style={{ marginRight:5 }}>{p.numero}.</b> : null}{p.titulo}
+                </button>
+              );
+            })}
+          </div>
+          <div className="caderno-corpo" style={{ maxHeight:520, overflowY:'auto', paddingRight:6 }}
+            dangerouslySetInnerHTML={{ __html: atual.html }}/>
+        </div>
+      )}
+      <div style={{ fontSize:10.5, fontFamily:'Roboto,sans-serif', color:'var(--text-3)',
+        marginTop:9, lineHeight:1.45 }}>
+        É o caderno que vem sendo escrito desde o retiro: as aulas, os playbooks estudados, os nossos
+        números e os rascunhos. A tarefa fica curta, o porquê mora aqui.
+      </div>
+    </SectionCard>
+  );
+}
+
 /* ── Biblioteca de exemplos ─────────────────────────────────────
    Um exemplo real de cada peça, por tipo: criativo, página, live, disparo.
    Global, serve a todos os picos, e dá para acrescentar os seus.
@@ -2206,6 +2263,13 @@ function PicoScreen() {
     window.db.from('pico_biblioteca').select('*').order('ordem')
       .then(({ data }) => setBiblioteca(data || []));
   }, []);
+  /* Caderno da Black, também global */
+  const [caderno, setCaderno] = useState([]);
+  useEffect(() => {
+    window.db.from('pico_caderno').select('id,numero,titulo,html,ordem').order('ordem')
+      .then(({ data }) => setCaderno(data || []));
+  }, []);
+
   const addExemplo = async (item) => {
     const { data } = await window.db.from('pico_biblioteca').insert(item).select().single();
     if (data) setBiblioteca(b => [...b, data].sort((x, y) => x.ordem - y.ordem));
@@ -2559,6 +2623,12 @@ function PicoScreen() {
         <div style={{ marginBottom:14 }}>
           <BlocoBiblioteca itens={biblioteca} onAdicionar={addExemplo} onRemover={delExemplo}/>
         </div>
+
+        {caderno.length > 0 && (
+          <div style={{ marginBottom:14 }}>
+            <BlocoCaderno partes={caderno}/>
+          </div>
+        )}
 
         {/* Controles da execução */}
         <div style={{ display:'flex', alignItems:'center', gap:8, flexWrap:'wrap',
