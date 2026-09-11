@@ -2343,3 +2343,14 @@ O que isso resolve:
 O que pede atenção:
 - **Aluno pode se sentir punido.** Quem pagou R$ 297,00 só pelo MCV vê quem chega agora levar MCV e Blindagem pelo mesmo valor. A oferta de aluno precisa ser apresentada como a condição de quem já está dentro, não como um desconto menor.
 - **A promessa da ficha está desatualizada** e deve ser reescrita com a oferta nova.
+
+## 15.5 Oferta de aluno: Blindagem por R$ 197,00 no primeiro ano (11/09/2026)
+
+**Decidido pelo Felipe:** quem já é aluno paga **R$ 197,00 no primeiro ano** do Blindagem, em vez de R$ 397,00 (50,4% de desconto). A renovação volta ao preço normal.
+
+Isso responde à preocupação do aluno punido: quem já está dentro paga R$ 100,00 a menos que quem chega agora (R$ 197,00 contra R$ 297,00 do combo).
+
+| Público | Oferta | Fora do pico | Na Black |
+|---|---|---|---|
+| Não alunos | MCV no Canva + Blindagem anual | R$ 694,00 | R$ 297,00 |
+| Alunos | Blindagem, primeiro ano | R$ 397,00 | R$ 197,00 |
