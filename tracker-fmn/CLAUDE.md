@@ -455,6 +455,48 @@ Se o lead pedir pra parcelar no boleto ou no Pix (parcelamento fora do cartão),
 
 **Link especial de parcelamento (uso exclusivo humano).** Existe um segundo link de checkout do MCV, com o parâmetro `off=2zbq8e15`, que libera a condição de parcelamento nativa da Hotmart (boleto/pix parcelado) — é a resposta pro handoff acima. Esse link **nunca** deve ser enviado pelo Claudinho, só por um humano depois do handoff. Vive em `frontend/app/conversas.jsx` como `LINK_CHECKOUT_MCV_PARCELADO`, com `sck=whatsapp-ah` (mesma tag de rastreio de atendimento humano do link padrão), disponível como mensagem pronta ("Link com parcelado Hotmart") no painel de Conversas. O Claudinho não tem acesso a esse arquivo, mas se um dia esse link precisar aparecer em qualquer lugar que o Claudinho lê (`whatsapp-ia-prompt.ts`, `whatsapp-ia.ts`), a restrição continua valendo.
 
+## LINK DE PÁGINA DE VENDAS, CHECKOUT OU QUIZ: SEMPRE RASTREÁVEL PELA HOTMART E PELO TRACKER (REGRA GLOBAL)
+
+> Combinada com Felipe em 2026-09-11. Vale para QUALQUER link de produto do FMN (MCV, Blindagem e os
+> que vierem) que eu monte, em qualquer conversa, skill ou agente, sem precisar ser pedido. Soma-se à
+> regra "QUEM APERTA ENVIAR DECIDE" acima, que continua decidindo o `-ah`/`-cl`.
+
+**O que torna o link legível pelos dois:** a Hotmart só entende o `sck` (máximo 30 caracteres). O
+Tracker lê esse mesmo `sck` quando a venda chega pelo `hotmart-webhook`: `parseSck` divide pelo
+separador `hQwK21wXxR` (10 caracteres), a primeira parte vira `utm_source` e a segunda `utm_medium`.
+O `classifyOrigin` do `dashboard.jsx` usa a fonte para a origem (Instagram, WhatsApp, E-mail...) e o
+meio para o detalhe ("Mensagem Direta", "Stories", "Link na Bio"...). O pageview da página de vendas
+(`increment_post_view`) não guarda parâmetro nenhum, então o `sck` é o único rastro que chega ao Tracker.
+
+**Formato do `sck`:** `<canal>[-ah|-cl][-lp|-qz]` + `hQwK21wXxR` + `<meio>`, com 30 caracteres no total.
+Se passar de 30, tira o meio (fica só a fonte), nunca corta a fonte.
+
+| Canal (humano envia) | Página de vendas | Checkout direto | Quiz |
+|---|---|---|---|
+| Instagram Direct | `instagram-ah-lphQwK21wXxRdm` (27) | `instagram-ahhQwK21wXxRdm` (24) | `instagram-ah-qzhQwK21wXxRdm` (27) |
+| Instagram bio | `instagram-lphQwK21wXxRbio` (25) | `instagramhQwK21wXxRbio` (22) | `instagram-qzhQwK21wXxRbio` (25) |
+| Instagram Stories | `instagram-lphQwK21wXxRstories` (29) | `instagramhQwK21wXxRstories` (26) | `instagram-qzhQwK21wXxRstories` (29) |
+| WhatsApp (humano) | `whatsapp-ah-lp` (legado, sem meio) | `whatsapp-ah` | `whatsapp-ah-qz` |
+
+**Onde o `sck` entra, por destino:**
+- **Página de vendas do MCV** (`www.contratos.fotografiaeomeunegocio.com.br`): só o `sck`. A página
+  repassa o `sck` recebido inteiro para o botão de compra, com prioridade sobre qualquer `utm_*`
+  (testado em 11/09/2026: `?sck=instagram-ah-lphQwK21wXxRdm` chegou igual no link da Hotmart).
+- **Checkout direto** (`pay.hotmart.com/...`): só o `sck`, junto do `checkoutMode=10`.
+- **Quiz** (MCV `www.fotografoprotegido...`, Blindagem `www.diagnostico...`): `sck` E `utm_source`
+  + `utm_medium`. O quiz repassa o `sck` para a Hotmart como veio (`buildCheckoutUrl`), e as `utm_*`
+  ele grava no `quiz_leads`, que é o que a aba Funis/Leads do Tracker lê.
+
+**Link pronto do Direct para a página de vendas do MCV:**
+`https://www.contratos.fotografiaeomeunegocio.com.br/?sck=instagram-ah-lphQwK21wXxRdm`
+
+**Verificação antes de entregar qualquer link:** contar os caracteres do `sck` (máximo 30), conferir
+que o separador é `hQwK21wXxR` e não `|`, e que a tag bate com quem vai enviar.
+
+**Pendência conhecida:** o fallback do `buildCheckoutUrl` dos quizzes, usado só quando o link chega
+sem `sck` e sem ID de anúncio, ainda junta fonte e meio com `|`. O Tracker lê isso tudo como fonte e
+perde o meio. Não atrapalha os links desta regra, que sempre levam o `sck` pronto.
+
 ## TAG DE RASTREIO DO LINK DE CHECKOUT — QUEM APERTA ENVIAR DECIDE (REGRA GLOBAL)
 
 > Combinada em 2026-07-31, generalizada por Felipe em 2026-09-09 depois de eu entregar um rascunho

@@ -51,3 +51,14 @@ utm_source=FB&utm_campaign={{campaign.name}}&utm_content={{ad.name}}|{{ad.id}}&u
 
 - Anúncio aponta pro **checkout da Hotmart direto** → `sck=meta-ads` (Caso A)
 - Anúncio aponta pro **quiz ou landing page própria** → UTM completo (Caso B), o resto é automático
+
+### Caso C — Link enviado por uma pessoa ou posto no orgânico (Direct, bio, Stories, WhatsApp)
+
+> Regra de 2026-09-11. Detalhe completo em `CLAUDE.md`, seção "LINK DE PÁGINA DE VENDAS, CHECKOUT OU QUIZ:
+> SEMPRE RASTREÁVEL PELA HOTMART E PELO TRACKER".
+
+Sem anúncio no meio, o rastro é o `sck` montado à mão: fonte + separador `hQwK21wXxR` + meio, até 30
+caracteres. Ex.: `sck=instagram-ah-lphQwK21wXxRdm` (Direct, página de vendas, humano enviando). A Hotmart
+guarda o `sck`, o `hotmart-webhook` separa em `utm_source=instagram-ah-lp` e `utm_medium=dm`, e o Tracker
+mostra a venda como Instagram, "Mensagem Direta". No quiz, somar `utm_source` e `utm_medium` ao `sck`.
+
