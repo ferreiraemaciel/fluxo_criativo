@@ -931,7 +931,7 @@ const CENARIOS = ['conservador','alvo','otimista'];
 /* A meta conta só quem não é aluno. Aluno é bônus: fica fora da meta, do
    investimento e dos leads. Os preços vêm da ficha, e a venda do cenário
    alvo é a mesma do plano de mídia. */
-function BlocoImaginacao({ metricas, onSalvar, precos = {}, metaPlano }) {
+function BlocoImaginacao({ metricas, onSalvar, precos = {}, metaPlano, plano = {} }) {
   const valor = (cen, ch) => {
     if (cen === 'alvo' && ch === 'vendas' && metaPlano != null && metaPlano !== '') return metaPlano;
     const m = metricas.find(x => x.cenario === cen && x.indicador === ch);
@@ -942,7 +942,20 @@ function BlocoImaginacao({ metricas, onSalvar, precos = {}, metaPlano }) {
   const va = c => Number(valor(c, 'vendas_alunos')) || 0;
   const fatMeta  = c => vn(c) * pn;
   const fatBonus = c => va(c) * pa;
-  const roas = c => { const i = Number(valor(c, 'investimento')) || 0; return i > 0 ? fatMeta(c) / i : 0; };
+  /* O investimento sai do plano de mídia, na mesma escada, para o volume de
+     cada cenário: leads = vendas ÷ conversão, mídia = leads × CPL ÷ % da
+     captação, mais o imposto do Meta. Mudou o CPL lá, muda aqui. */
+  const imp   = Number(plano.imposto_meta) || 0;
+  const pCapt = 1 - (Number(plano.pct_teaser) || 0) - (Number(plano.pct_aquecimento) || 0)
+              - pctRemarketing(plano.dias_remarketing);
+  const invest = c => {
+    const tx = Number(plano.taxa_conversao) || 0;
+    if (!tx || pCapt <= 0) return 0;
+    return (Math.ceil(vn(c) / tx) * (Number(plano.cpl_meta) || 0)) / pCapt * (1 + imp);
+  };
+  const quente = (Number(plano.verba_alunos_dia) || 0) * (Number(plano.dias_alunos) || 0) * (1 + imp);
+  const roas = c => invest(c) > 0 ? fatMeta(c) / invest(c) : 0;
+  const res = v => <span style={{ color: v < 0 ? '#f87171' : undefined }}>{fmtMoeda(v)}</span>;
   const leads = (c, taxa) => taxa > 0 ? Math.round(vn(c) / taxa) : 0;
 
   const tdBase = { padding:'5px 8px', textAlign:'right', fontSize:12, fontFamily:'Roboto,sans-serif',
@@ -1010,22 +1023,30 @@ function BlocoImaginacao({ metricas, onSalvar, precos = {}, metaPlano }) {
           <tbody>
             {subtitulo('Meta: não alunos')}
             {linhaInput(INDICADORES_IMAGINACAO.vendas)}
-            {linhaInput(INDICADORES_IMAGINACAO.investimento)}
+            {linhaCalc('Investimento (mídia + imposto)', c => fmtMoeda(invest(c)), false,
+              'Sai do plano de mídia: conversão, CPL, percentuais das fases e imposto do Meta')}
             {linhaCalc('Ticket', () => pn ? fmtMoeda(pn) : '—', false, 'Preço da oferta para não alunos, vem da ficha')}
             {linhaCalc('Faturamento da meta', c => fmtMoeda(fatMeta(c)), true)}
             {linhaCalc('ROAS da meta', c => roas(c) ? roas(c).toFixed(2) : '—')}
+            {linhaCalc('Custo por venda', c => vn(c) ? fmtMoeda(invest(c) / vn(c)) : '—', false,
+              'Investimento dividido pelas vendas da meta. Acima do ticket, cada venda dá prejuízo')}
+            {linhaCalc('Resultado da meta', c => res(fatMeta(c) - invest(c)), true,
+              'Faturamento menos investimento, antes da taxa da Hotmart')}
             {linhaCalc('Leads a 5%', c => leads(c, .05) || '—')}
             {linhaCalc('Leads a 8%', c => leads(c, .08) || '—')}
             {subtitulo('Bônus: alunos, fora da meta')}
             {linhaInput(INDICADORES_IMAGINACAO.vendas_alunos)}
             {linhaCalc('Faturamento do bônus', c => fmtMoeda(fatBonus(c)))}
             {linhaCalc('Faturamento com o bônus', c => fmtMoeda(fatMeta(c) + fatBonus(c)), true)}
+            {linhaCalc('Resultado com o bônus', c => res(fatMeta(c) + fatBonus(c) - invest(c) - quente), true,
+              'Inclui a verba do público quente, com imposto. Antes da taxa da Hotmart')}
           </tbody>
         </table>
       </div>
       <div style={{ fontSize:10.5, fontFamily:'Roboto,sans-serif', color:'var(--text-3)',
         marginTop:9, lineHeight:1.45 }}>
-        A meta, o investimento e os leads contam só quem não é aluno. A venda do cenário alvo é
+        A meta, o investimento e os leads contam só quem não é aluno. O investimento sai do
+        plano de mídia para o volume de cada cenário. A venda do cenário alvo é
         a mesma do plano de mídia: mudou aqui, muda lá. Vendas para alunos são bônus.
       </div>
     </SectionCard>
@@ -2342,6 +2363,7 @@ function PicoScreen() {
           gap:14, marginBottom:14 }}>
           <BlocoImaginacao metricas={metricas.filter(m=>m.momento==='imaginacao')}
             onSalvar={salvarMetrica} metaPlano={projeto?.plano_midia?.vendas_meta}
+            plano={projeto?.plano_midia || {}}
             precos={{ nao: projeto?.declaracoes?.preco_pico, aluno: projeto?.declaracoes?.preco_aluno,
                       prodNao: projeto?.declaracoes?.produto, prodAluno: projeto?.declaracoes?.produto_aluno }}/>
           <BlocoDecisoes decisoes={decisoes} onEscolher={escolherDecisao}/>

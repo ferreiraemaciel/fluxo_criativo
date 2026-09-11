@@ -350,7 +350,10 @@ function render(d) {
   const pnI = Number(dec.preco_pico)||0, paI = Number(dec.preco_aluno)||0;
   const vn = c => (c === 'alvo' && pm.vendas_meta != null) ? Number(pm.vendas_meta) : (met('imaginacao',c,'vendas')||0);
   const va = c => met('imaginacao',c,'vendas_alunos')||0;
-  const inv = c => met('imaginacao',c,'investimento');
+  const impI = Number(pm.imposto_meta)||0;
+  const inv = c => { const tx = Number(pm.taxa_conversao)||0;
+    return tx && capt > 0 ? Math.ceil(vn(c)/tx)*(Number(pm.cpl_meta)||0)/capt*(1+impI) : 0; };
+  const res = v => `<span style="color:${v < 0 ? 'var(--verm)' : 'inherit'}">${brl(v)}</span>`;
   const fm = c => vn(c)*pnI, fb = c => va(c)*paI;
   if (CEN.some(c => vn(c) || va(c) || inv(c))) {
     const linha = (rot, f, cls) => `<tr><td${cls ? ' class="'+cls+'"' : ''}>${rot}</td>` +
@@ -361,14 +364,17 @@ function render(d) {
       <table><thead><tr><th></th>` + CEN.map(c => `<th style="text-transform:capitalize">${c}</th>`).join('') + `</tr></thead><tbody>` +
       sub('Meta: não alunos') +
       linha('Vendas para não alunos', c => vn(c)) +
-      linha('Investimento', c => inv(c)==null ? '—' : brl(inv(c))) +
+      linha('Investimento (mídia + imposto)', c => brl(inv(c))) +
       linha('Ticket', () => pnI ? brl(pnI) : '—') +
       linha('Faturamento da meta', c => brl(fm(c)), 'verde') +
       linha('ROAS da meta', c => inv(c) ? (fm(c)/inv(c)).toFixed(2) : '—') +
+      linha('Custo por venda', c => vn(c) ? brl(inv(c)/vn(c)) : '—') +
+      linha('Resultado da meta', c => res(fm(c)-inv(c)), 'forte') +
       sub('Bônus: alunos, fora da meta') +
       linha('Vendas para alunos', c => va(c)) +
       linha('Faturamento do bônus', c => brl(fb(c))) +
       linha('Faturamento com o bônus', c => brl(fm(c)+fb(c)), 'forte') +
+      linha('Resultado com o bônus', c => res(fm(c)+fb(c)-inv(c)-quente*(1+impI)), 'forte') +
       `</tbody></table></div>`;
   }
 

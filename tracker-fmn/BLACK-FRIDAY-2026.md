@@ -2354,3 +2354,24 @@ Isso responde à preocupação do aluno punido: quem já está dentro paga R$ 10
 |---|---|---|---|
 | Não alunos | MCV no Canva + Blindagem anual | R$ 694,00 | R$ 297,00 |
 | Alunos | Blindagem, primeiro ano | R$ 397,00 | R$ 197,00 |
+
+## 15.6 CPL de R$ 8,00 e a conta que fecha no vermelho (11/09/2026)
+
+**Decidido pelo Felipe, com o Samuel:** CPL na meta perto de R$ 8,00. Promessa gravada: "Pela primeira vez, os modelos de contrato e o Blindagem juntos, na maior condição que eu já fiz, uma vez só."
+
+O investimento da imaginação deixou de ser digitado (era R$ 10.000,00 fixo) e passou a sair do plano de mídia para o volume de cada cenário, com imposto. Com conversão de 5%, CPL de R$ 8,00, 20 dias de remarketing (captação fica com 50% da verba) e imposto de 12,15%:
+
+| | Conservador | Alvo | Otimista |
+|---|---|---|---|
+| Vendas não alunos | 50 | 100 | 200 |
+| Investimento (mídia + imposto) | R$ 17.944,00 | R$ 35.888,00 | R$ 71.776,00 |
+| Faturamento da meta | R$ 14.850,00 | R$ 29.700,00 | R$ 59.400,00 |
+| Resultado da meta | -R$ 3.094,00 | -R$ 6.188,00 | -R$ 12.376,00 |
+| Resultado com o bônus de alunos | R$ 1.831,00 | R$ 3.662,00 | R$ 2.399,00 |
+
+**Cada venda para não aluno custa R$ 358,88 e rende R$ 297,00.** ROAS de 0,83 em qualquer cenário, porque a conta é proporcional. Vender mais só aumenta o prejuízo da meta. Valores antes da taxa da Hotmart.
+
+Onde a conta vira:
+- **Conversão:** o empate é 6,04%. Com 7% (o padrão da planilha do retiro), o alvo sai de -R$ 6.188,00 para cerca de +R$ 4.000,00. Com 10%, cerca de +R$ 11.700,00.
+- **CPL:** com 5% de conversão, o empate é R$ 6,62.
+- **Dias de remarketing:** 20 dias levam 41% da verba. Com 7 dias (27,5%), a captação fica com 63,5% e o custo por venda cai para cerca de R$ 283,00.
