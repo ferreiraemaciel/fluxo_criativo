@@ -20,6 +20,10 @@ function normalizeSource(raw) {
   // sem isso caía dentro de "Tráfego" e inflava o ROAS por canal com receita
   // que não veio de anúncio.
   if (s.includes('manual')) return 'Manual';
+  // Venda por link de indicação (sck=ref-{codigo}) não veio de anúncio
+  // nenhum — cair em "Tráfego" infla o ROAS por canal com receita que não
+  // veio de verba paga, mesmo raciocínio já aplicado a "Manual" acima.
+  if (s.startsWith('ref-')) return 'Indicação';
   return 'Tráfego';
 }
 const fmtCur = window.fmtBRL;
@@ -1659,6 +1663,7 @@ const ORIGEM_CONFIG = {
   'TikTok':     { color: '#69c9d0', bg: 'rgba(105,201,208,.12)', icon: 'music' },
   'Facebook':   { color: '#1877f2', bg: 'rgba(24,119,242,.12)',  icon: 'facebook' },
   'Site':       { color: '#8b5cf6', bg: 'rgba(139,92,246,.12)',  icon: 'globe' },
+  'Indicação':  { color: '#eab308', bg: 'rgba(234,179,8,.12)',   icon: 'gift' },
   'Direto':     { color: '#94a3b8', bg: 'rgba(148,163,184,.08)', icon: 'link' },
   'Sem rastreio (webhook falhou)': { color: '#f59e0b', bg: 'rgba(245,158,11,.10)', icon: 'alert-triangle' },
   'Outros':     { color: '#64748b', bg: 'rgba(100,116,139,.08)', icon: 'help-circle' },
@@ -1672,6 +1677,10 @@ function classifyOrigin(sale) {
   // pra saber a origem real. Diferente de "Direto" (alguém digitou a URL).
   if (!s && (sale.hotmart_event || '').startsWith('SYNC_')) return 'Sem rastreio (webhook falhou)';
   if (!s) return 'Direto';
+  // Link de indicação: sck=ref-{codigo do indicador}, ver PREFIXO_INDICACAO
+  // em hotmart-core.server.ts (contratovisual). O hotmart-webhook daqui
+  // (parseSck) já devolve o sck inteiro em utm_source, minúsculo, sem separador.
+  if (s.startsWith('ref-')) return 'Indicação';
   if (s.includes('whatsapp') || s.includes('wpp') || s.includes('zap')) return 'WhatsApp';
   if (s.includes('instagram') || s === 'ig')                             return 'Instagram';
   if (s.includes('youtube') || s === 'yt')                               return 'YouTube';
