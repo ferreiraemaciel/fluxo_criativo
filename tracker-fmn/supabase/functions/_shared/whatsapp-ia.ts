@@ -303,6 +303,23 @@ async function processarComIAInterno(supabase: any, telefone: string, nomeLead: 
 
   const linhas = (historico || []).slice().reverse().filter((m: any) => m.corpo);
 
+  // Se a última mensagem da conversa inteira (não só a que disparou esta
+  // chamada) já é NOSSA, alguém já respondeu tudo que havia pendente até
+  // aqui. Gerar de novo nesse caso arrisca duplicar a resposta que já saiu,
+  // palavra por palavra, porque o contexto pra responder é essencialmente o
+  // mesmo. A trava final mais abaixo (checagem antes do envio) não cobre
+  // esse caso: ela compara com o instante em que ESTA chamada começou a
+  // processar, e uma resposta que já saiu antes disso passa batido. Achado
+  // real com a Náira Penteado em 2026-09-11: ela mandou 4 mensagens em
+  // sequência, duas sem conteúdo novo real ("tem outro nome", "esqueci o
+  // nome"), a que tinha ficado represada pela disputa da trava de
+  // concorrência rodou sozinha minutos depois sem saber que a pergunta já
+  // tinha sido feita, e mandou o texto idêntico de novo.
+  if (linhas.length && linhas[linhas.length - 1].direcao === "saida") {
+    console.log("[whatsapp-ia] última mensagem da conversa já é nossa, nada novo pra responder:", telefone);
+    return;
+  }
+
   // Áudio com transcrição já pronta (Groq/Whisper): usa o texto transcrito
   // em vez do placeholder "🎤 Áudio", pro Claudinho entender o conteúdo de
   // verdade. Sem transcrição ainda (corrida rara com o download em background),
