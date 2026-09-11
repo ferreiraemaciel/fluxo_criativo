@@ -109,6 +109,8 @@ Antes de escrever, leia `.claude/skills/revisora/references/manual-copy.md` e ap
 
 **Roteiro de Reels — Formato 1: Padrão (30-60s):**
 
+Antes de escrever qualquer formato de Reels, leia `.claude/skills/conteudo/references/reels-ganchos-e-premissas.md`: cinco ganchos pela família do tema, conteúdo como cadeia de premissas e o que for caso, número ou experiência do Felipe marcado `[VOCÊ PREENCHE]`.
+
 ```
 [0-3s]   GANCHO    — Afirmação não óbvia. Texto na tela + fala simultâneos.
 [4-15s]  TEASE     — Expande o gancho, contextualiza o problema.

@@ -81,6 +81,8 @@ Resumo do que vou criar:
 
 #### Reels 60 segundos
 
+Antes de escrever, leia `.claude/skills/conteudo/references/reels-ganchos-e-premissas.md`: cinco ganchos pela família do tema, conteúdo como cadeia de premissas e o que for caso, número ou experiência do Felipe marcado `[VOCÊ PREENCHE]`.
+
 ```
 [0-3s]   GANCHO    — Afirmação contra-intuitiva ou revelação. NUNCA pergunta.
 [4-15s]  TEASE     — Expande o gancho, contextualiza o problema.

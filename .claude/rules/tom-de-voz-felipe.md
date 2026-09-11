@@ -187,6 +187,10 @@ Roteiro em pegada natural de fala, nunca de texto lido em voz alta. Frases curta
 ("tava", "tá"), pausas reais, jeito de contar caso. Depois de escrever, reler em voz alta
 mentalmente: se soar institucional, soltar mais.
 
+Gancho, estrutura do conteúdo e fechamento seguem `.claude/skills/conteudo/references/reels-ganchos-e-premissas.md`: o gancho sai de fala real
+do público, o conteúdo é cadeia de premissas e o que é caso ou número do Felipe fica marcado para ele
+preencher, nunca inventado.
+
 ---
 
 ## 10. Rotina obrigatória antes de escrever artigo
