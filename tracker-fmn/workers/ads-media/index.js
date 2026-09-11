@@ -577,12 +577,31 @@ async function handleActivateAds(request, env) {
   const { token } = metaAcct(env, adAccountId);
   const resultados = [];
 
-  for (const it of (itens || [])) {
+  // Campanha e conjunto são ligados UMA vez cada, e só se ainda estiverem
+  // desligados. Antes, cada anúncio religava a campanha e o conjunto dele; com
+  // 5 anúncios na mesma campanha eram 10 alterações seguidas nos mesmos 2
+  // objetos, e o Meta recusa a partir da segunda em 30 s (erro #613, subcode
+  // 4841018). Caso real: ativação da MCV 220 em 11/09/2026, 3 de 5 "falharam".
+  const falhaPai = {};
+  async function ligarSeDesligado(id) {
+    if (!id || id in falhaPai) return;
     try {
-      // Ativa de cima pra baixo: campanha → conjunto → anúncio.
-      if (it.campaignId) await graphPost(it.campaignId, { status: 'ACTIVE' }, token);
-      if (it.adsetId)    await graphPost(it.adsetId,    { status: 'ACTIVE' }, token);
-      if (it.adId)       await graphPost(it.adId,       { status: 'ACTIVE' }, token);
+      const atual = await graphGet(id, { fields: 'status' }, token);
+      if (atual.status !== 'ACTIVE') await graphPost(id, { status: 'ACTIVE' }, token);
+      falhaPai[id] = null;
+    } catch (err) {
+      falhaPai[id] = err.message;
+    }
+  }
+  const lista = itens || [];
+  for (const id of new Set(lista.map((i) => i.campaignId).filter(Boolean))) await ligarSeDesligado(id);
+  for (const id of new Set(lista.map((i) => i.adsetId).filter(Boolean)))    await ligarSeDesligado(id);
+
+  for (const it of lista) {
+    const erroPai = (it.campaignId && falhaPai[it.campaignId]) || (it.adsetId && falhaPai[it.adsetId]);
+    if (erroPai) { resultados.push({ adId: it.adId, ok: false, error: erroPai }); continue; }
+    try {
+      if (it.adId) await graphPost(it.adId, { status: 'ACTIVE' }, token);
       resultados.push({ adId: it.adId, ok: true });
     } catch (err) {
       resultados.push({ adId: it.adId, ok: false, error: err.message });
