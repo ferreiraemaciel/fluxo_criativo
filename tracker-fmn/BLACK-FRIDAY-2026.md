@@ -2314,3 +2314,20 @@ No Tracker:
 - O ticket do plano de mídia vem da ficha (R$ 197,00). Antes era um valor digitado à parte (R$ 247,00).
 - O plano de mídia ganhou o bloco "Público quente", com verba por dia e dias rodando. O plano contra o real soma essa verba ao planejado, porque o gasto real inclui esses anúncios.
 - Nova tarefa no D0: "Subir campanha para alunos, público quente". O orçamento diário dela alimenta o plano.
+
+## 15.3 Oferta nova: combo para não alunos, Blindagem para alunos (11/09/2026)
+
+**Decidido pelo Felipe:**
+
+| Público | Oferta | Fora do pico | No pico | Desconto |
+|---|---|---|---|---|
+| Não alunos | Modelos de Contrato Visual no Canva + Blindagem (assinatura anual) | R$ 694,00 | R$ 397,00 | 42,8% |
+| Alunos | Só o Blindagem, assinatura anual | R$ 397,00 | R$ 198,50 | 50% (pode ir para 30%) |
+
+Com isso o combo volta: a tarefa "Montar o combo item por item" foi reativada, com os dois itens na ficha. O ticket do projeto e do plano de mídia passou para R$ 397,00.
+
+**Três pontos para conferir antes de fechar:**
+
+1. **O funil perpétuo já entrega o mesmo preço.** Hoje quem compra o MCV por R$ 297,00 recebe o upsell do Blindagem por R$ 397,00 com R$ 297,00 de cashback, ou seja, paga R$ 100,00. MCV mais Blindagem pelo perpétuo sai por R$ 397,00, exatamente o preço do combo da Black. Foram 14 vendas pelo upsell desde julho. Se o upsell continuar ativo na Black, o combo não é melhor que o caminho normal.
+2. **O preço de aluno já foi praticado.** R$ 198,50 é o preço de 4 vendas do Blindagem em 19/06/2026. E quem pegou o upsell pagou R$ 100,00 líquido.
+3. **O limite de CPA está destravado (Parte 14).** A pendência esperava o valor do combo. Com o ticket em R$ 397,00, a regra G5 (pausa com CPA acima de R$ 207,90) mata anúncio saudável do pico e precisa de um limite próprio.
