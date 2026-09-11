@@ -365,6 +365,74 @@ async function handleCreateAdset(request, env) {
   return json({ ok: true, adsetId: data.id });
 }
 
+/* ── GET /posts-do-ads?numero=N ──────────────────────────────────
+   Todas as publicações que um ADS já teve (cada relançamento cria uma nova),
+   com o engajamento de cada uma no Facebook e no Instagram e o link de destino,
+   da que tem mais engajamento pra que tem menos. Serve à opção "Reaproveitar
+   publicação" do modal Publicar: a melhor publicação quase nunca é a do último
+   anúncio. Caso real (11/09/2026): no ADS 212 a última tinha 2 reações e a de
+   dez/2025 tinha 70 curtidas e um depoimento de cliente.
+   O link de cada publicação vai junto porque ele não pode ser trocado: quem
+   decide se dá pra reaproveitar é o Tracker, comparando com o quiz do produto. */
+async function handlePostsDoAds(request, env, url) {
+  const numero = parseInt(url.searchParams.get('numero') || '', 10);
+  if (!numero) return json({ ok: false, error: 'numero obrigatório' }, 400);
+  const { token, accountId } = metaAcct(env);
+  const reNum = /ADS\s*0*(\d+)\b/i;
+
+  // 1) anúncios da conta com esse número no nome
+  const vistos = new Map();
+  let next = `${GRAPH}/${accountId}/ads?` + new URLSearchParams({
+    fields: 'name,created_time,creative{effective_object_story_id,effective_instagram_media_id,object_story_spec}',
+    limit: '200', access_token: token,
+  });
+  for (let pag = 0; next && pag < 30; pag++) {
+    const d = await (await fetch(next)).json();
+    if (d.error) throw new Error(d.error.message || 'Erro ao listar anúncios');
+    for (const a of d.data || []) {
+      const m = reNum.exec(a.name || '');
+      if (!m || parseInt(m[1], 10) !== numero) continue;
+      const c = a.creative || {};
+      if (!c.effective_object_story_id || vistos.has(c.effective_object_story_id)) continue;
+      const o = c.object_story_spec || {};
+      vistos.set(c.effective_object_story_id, {
+        storyId: c.effective_object_story_id, igId: c.effective_instagram_media_id || null,
+        link: o.video_data?.call_to_action?.value?.link || o.link_data?.link || null,
+        adName: a.name, criado: (a.created_time || '').slice(0, 10),
+      });
+    }
+    next = d.paging?.next || '';
+  }
+  const posts = [...vistos.values()];
+  if (!posts.length) return json({ ok: true, posts: [] });
+
+  // 2) engajamento: comentários de página exigem a chave da própria página
+  const pageId = env.FB_PAGE_ID;
+  const pagina = await graphGet(pageId, { fields: 'access_token' }, token);
+  const pt = pagina.access_token;
+  const lotes = (arr) => { const out = []; for (let i = 0; i < arr.length; i += 40) out.push(arr.slice(i, i + 40)); return out; };
+  const fb = {}, ig = {};
+  for (const l of lotes(posts.map((p) => p.storyId))) {
+    const d = await graphGet('', { ids: l.join(','), fields: 'reactions.summary(true).limit(0),comments.summary(true).limit(0),shares' }, pt);
+    for (const [k, v] of Object.entries(d)) fb[k] = {
+      reacoes: v.reactions?.summary?.total_count || 0, comentarios: v.comments?.summary?.total_count || 0, compartilhamentos: v.shares?.count || 0 };
+  }
+  const igIds = posts.map((p) => p.igId).filter(Boolean);
+  for (const l of lotes(igIds)) {
+    try {
+      const d = await graphGet('', { ids: l.join(','), fields: 'like_count,comments_count' }, pt);
+      for (const [k, v] of Object.entries(d)) ig[k] = { curtidas: v.like_count || 0, comentarios: v.comments_count || 0 };
+    } catch { /* Instagram fora do ar não impede de listar pelo Facebook */ }
+  }
+  for (const p of posts) {
+    p.fb = fb[p.storyId] || { reacoes: 0, comentarios: 0, compartilhamentos: 0 };
+    p.ig = ig[p.igId] || { curtidas: 0, comentarios: 0 };
+    p.total = p.fb.reacoes + p.fb.comentarios + p.fb.compartilhamentos + p.ig.curtidas + p.ig.comentarios;
+  }
+  posts.sort((a, b) => b.total - a.total);
+  return json({ ok: true, posts });
+}
+
 /* ── GET /post-anterior?adId=... ─────────────────────────────────
    Descobre a publicação por trás de um anúncio já publicado e para onde ela
    leva. Serve à opção "Reaproveitar publicação anterior" do modal Publicar:
@@ -804,6 +872,7 @@ export default {
         if (url.pathname === '/progresso')    return await handleProgresso(request, env, url);
         if (url.pathname === '/ads-status')    return await handleAdsStatus(request, env, url);
         if (url.pathname === '/post-anterior') return await handlePostAnterior(request, env, url);
+        if (url.pathname === '/posts-do-ads')  return await handlePostsDoAds(request, env, url);
         return json({ ok: true, service: 'ads-media' });
       }
 

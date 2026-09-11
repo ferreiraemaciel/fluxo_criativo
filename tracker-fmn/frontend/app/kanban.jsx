@@ -550,7 +550,8 @@ function MetaAdModal({ card, onClose }) {
   // comentários e compartilhamentos). O link vem da publicação e não pode ser
   // trocado, então só libera se ele levar pro quiz certo do produto.
   const [reaproveitar, setReaproveitar] = useState(false);
-  const [postAnterior, setPostAnterior] = useState(null); // { storyId, link, adName } | { erro }
+  const [postAnterior, setPostAnterior] = useState(null); // publicação escolhida | { erro }
+  const [postsCandidatos, setPostsCandidatos] = useState(null); // todas as publicações do ADS, por engajamento
   const [buscandoPost, setBuscandoPost] = useState(false);
 
   // ESC fecha
@@ -760,15 +761,21 @@ function MetaAdModal({ card, onClose }) {
   // Publicação reaproveitada não precisa de mídia no card: o vídeo já está nela.
   const podeContinuar = !!campaignId && !!adsetId && (reaproveitar ? !bloqueioReaproveitar : hasMedia);
 
+  // Procura TODAS as publicações que este ADS já teve (cada relançamento cria
+  // uma) e já escolhe a de mais engajamento cujo link leva ao quiz certo.
   async function alternarReaproveitar(liga) {
     setReaproveitar(liga);
-    if (!liga || postAnterior || !raw.meta_ad_id) return;
+    if (!liga || postsCandidatos) return;
     setBuscandoPost(true);
     try {
-      const d = await workerGet(`/post-anterior?adId=${encodeURIComponent(raw.meta_ad_id)}`);
-      setPostAnterior({ storyId: d.storyId, link: d.link, adName: d.adName });
+      const d = await workerGet(`/posts-do-ads?numero=${adNum}`);
+      const lista = d.posts || [];
+      setPostsCandidatos(lista);
+      const alvo = hostSemWww(linkDestino.trim() || LINK_DEFAULT);
+      const melhor = lista.find(p => hostSemWww(p.link || '') === alvo) || lista[0];
+      setPostAnterior(melhor || { erro: 'Esse ADS ainda não tem publicação no Meta.' });
     } catch (e) {
-      setPostAnterior({ erro: e.message || 'Não foi possível ler a publicação anterior.' });
+      setPostAnterior({ erro: e.message || 'Não foi possível ler as publicações no Meta.' });
     } finally {
       setBuscandoPost(false);
     }
@@ -1027,7 +1034,8 @@ function MetaAdModal({ card, onClose }) {
                   Reaproveitar publicação anterior
                 </label>
                 <div style={{ fontSize:11, color:'var(--text-3)', lineHeight:1.5 }}>
-                  Mantém curtidas, comentários e compartilhamentos do anúncio antigo deste card.
+                  Mantém curtidas, comentários e compartilhamentos de uma publicação que este ADS já teve.
+                  A lista vem da que tem mais engajamento pra que tem menos, e só dá pra escolher a que leva ao quiz certo.
                   Vídeo, textos e link vêm da publicação e não podem ser trocados. O rastreio abaixo continua valendo.
                 </div>
                 {reaproveitar && buscandoPost && (
@@ -1035,6 +1043,31 @@ function MetaAdModal({ card, onClose }) {
                 )}
                 {reaproveitar && postAnterior?.erro && (
                   <div style={{ fontSize:11.5, color:'var(--clr-neg)' }}>{postAnterior.erro} Publique do zero.</div>
+                )}
+                {reaproveitar && postsCandidatos?.length > 0 && (
+                  <div style={{ display:'flex', flexDirection:'column', gap:4, maxHeight:180, overflowY:'auto' }}>
+                    {postsCandidatos.slice(0, 8).map(p => {
+                      const ok = hostSemWww(p.link || '') === hostSemWww(linkDestino.trim() || LINK_DEFAULT);
+                      const sel = postAnterior?.storyId === p.storyId;
+                      return (
+                        <label key={p.storyId} title={p.link || ''} style={{ display:'flex', alignItems:'center', gap:8,
+                          padding:'6px 8px', borderRadius:7, cursor: ok ? 'pointer' : 'not-allowed', fontSize:11.5,
+                          fontFamily:'Roboto,sans-serif', opacity: ok ? 1 : .5,
+                          background: sel ? 'rgba(234,170,65,.1)' : 'transparent',
+                          border: `1px solid ${sel ? 'rgba(234,170,65,.4)' : 'var(--app-border)'}` }}>
+                          <input type="radio" name="post-reaproveitar" disabled={!ok} checked={sel}
+                            onChange={() => setPostAnterior(p)}/>
+                          <span style={{ color:'var(--text-2)', minWidth:74 }}>{p.criado ? p.criado.split('-').reverse().join('/') : '—'}</span>
+                          <span style={{ color:'var(--text-1)', fontWeight:700 }}>
+                            IG {p.ig.curtidas} curtidas, {p.ig.comentarios} coment. · FB {p.fb.reacoes} reações, {p.fb.comentarios} coment.
+                          </span>
+                          <span style={{ marginLeft:'auto', color: ok ? 'var(--clr-pos, #34d399)' : 'var(--clr-neg)', whiteSpace:'nowrap' }}>
+                            {ok ? 'quiz certo' : (hostSemWww(p.link || '') || 'sem link')}
+                          </span>
+                        </label>
+                      );
+                    })}
+                  </div>
                 )}
                 {reaproveitar && postAnterior && !postAnterior.erro && (
                   <div style={{ fontSize:11.5, lineHeight:1.5, color: linkPostOk ? 'var(--text-2)' : 'var(--clr-neg)' }}>
