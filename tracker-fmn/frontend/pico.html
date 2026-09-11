@@ -523,6 +523,18 @@ function render(d) {
     h += `</div></details>`;
   });
 
+  // ── Biblioteca de exemplos ──────────────────────────────────
+  const bib = d.biblioteca || [];
+  if (bib.length) {
+    const catsB = [...new Set(bib.map(x => x.categoria))];
+    h += `<div class="card"><h2>Biblioteca de exemplos</h2>` + catsB.map(c =>
+      `<div class="ficha-g">${esc(c)}</div><div class="refs" style="margin-left:0">` +
+      bib.filter(x => x.categoria === c).map(x => x.url
+        ? `<a href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.titulo)}${x.nota ? ' <span>· '+esc(x.nota)+'</span>' : ''}</a>`
+        : `<div style="font-size:11.5px;color:var(--t3)">${esc(x.titulo)}${x.nota ? ' · '+esc(x.nota) : ''}</div>`
+      ).join('') + `</div>`).join('') + `</div>`;
+  }
+
   // ── Debriefing ──────────────────────────────────────────────
   const rd = (() => { try { return JSON.parse(p.observacoes||'{}').debrief||[]; } catch { return []; } })();
   const IND = [['faturamento','Faturamento','R$'],['vendas','Vendas','un'],

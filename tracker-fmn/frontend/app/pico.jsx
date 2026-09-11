@@ -363,7 +363,8 @@ function LinhaTarefa({ t, onToggle, onAbrir, mostrarTrilha, onVirarCard, onDefin
    Os exemplos do retiro que servem para esta tarefa, abertos em nova aba.
 ──────────────────────────────────────────────────────────────────*/
 const ICONE_REF = { video:'play-circle', post:'image', imagem:'image', pagina:'globe',
-  doc:'file-text', planilha:'table', skill:'sparkles', pasta:'folder', quadro:'layout' };
+  doc:'file-text', planilha:'table', skill:'sparkles', pasta:'folder', quadro:'layout',
+  privado:'lock', aula:'graduation-cap' };
 
 function ListaReferencias({ refs }) {
   return (
@@ -390,6 +391,146 @@ function ListaReferencias({ refs }) {
         ))}
       </div>
     </div>
+  );
+}
+
+/* ── Biblioteca de exemplos ─────────────────────────────────────
+   Um exemplo real de cada peça, por tipo: criativo, página, live, disparo.
+   Global, serve a todos os picos, e dá para acrescentar os seus.
+──────────────────────────────────────────────────────────────────*/
+const CATEGORIAS_BIB = ["Oferta e combo", "Narrativa, trailer e manifesto", "Páginas de captura", "Páginas de vendas", "Criativos de captação", "Criativos de aquecimento e contagem", "Criativos de venda", "Posts orgânicos por fase", "Stories", "Lives e aulas", "Disparos e e-mails", "Encerramento", "Playbooks e casos", "Skills e ferramentas", "Aulas do Academy"];
+
+function ItemBib({ i, onRemover }) {
+  const [hov, setHov] = useState(false);
+  const estilo = { display:'flex', alignItems:'flex-start', gap:7, padding:'7px 9px', borderRadius:8,
+    textDecoration:'none', fontSize:12, fontFamily:'Roboto,sans-serif', lineHeight:1.4,
+    background: hov ? 'rgba(255,255,255,.045)' : 'rgba(255,255,255,.02)',
+    border:'1px solid var(--app-border)' };
+  const conteudo = (
+    <>
+      <LucideIcon icon={ICONE_REF[i.tipo] || 'link'} size={13}
+        style={{ color: i.url ? '#38bdf8' : 'var(--text-3)', flexShrink:0, marginTop:2 }}/>
+      <span style={{ flex:1, minWidth:0, paddingRight:14 }}>
+        <span style={{ color:'var(--text-1)' }}>{i.titulo}</span>
+        {i.nota && <span style={{ display:'block', fontSize:10.5, color:'var(--text-3)', marginTop:1 }}>{i.nota}</span>}
+      </span>
+    </>
+  );
+  return (
+    <div onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)} style={{ position:'relative' }}>
+      {i.url
+        ? <a href={i.url} target="_blank" rel="noopener noreferrer" style={estilo}>{conteudo}</a>
+        : <div style={estilo}>{conteudo}</div>}
+      {hov && (
+        <button onClick={() => { if (window.confirm('Tirar este exemplo da biblioteca?')) onRemover(i.id); }}
+          title="Tirar da biblioteca"
+          style={{ position:'absolute', top:5, right:5, padding:2, border:'none', borderRadius:4,
+            background:'var(--app-surface)', color:'var(--text-3)', cursor:'pointer', display:'flex' }}>
+          <LucideIcon icon="x" size={11}/>
+        </button>
+      )}
+    </div>
+  );
+}
+
+function BlocoBiblioteca({ itens, onAdicionar, onRemover }) {
+  const [cat, setCat] = useState('todas');
+  const [busca, setBusca] = useState('');
+  const [novo, setNovo] = useState(null);
+  const b = busca.trim().toLowerCase();
+  const visiveis = itens.filter(i => (cat === 'todas' || i.categoria === cat)
+    && (!b || `${i.titulo} ${i.nota || ''} ${i.categoria}`.toLowerCase().includes(b)));
+  const cats = CATEGORIAS_BIB.filter(c => visiveis.some(i => i.categoria === c))
+    .concat([...new Set(visiveis.map(i => i.categoria))].filter(c => !CATEGORIAS_BIB.includes(c)));
+  const campo = { padding:'6px 9px', borderRadius:7, border:'1px solid var(--app-border)',
+    background:'rgba(255,255,255,.03)', color:'var(--text-1)', fontSize:12, fontFamily:'Roboto,sans-serif' };
+  const chip = (id, rotulo, n) => (
+    <button key={id} onClick={() => setCat(id)}
+      style={{ padding:'4px 10px', borderRadius:99, cursor:'pointer', fontSize:11,
+        fontFamily:'Roboto,sans-serif', fontWeight:700,
+        border:'1px solid ' + (cat === id ? '#38bdf8' : 'var(--app-border)'),
+        background: cat === id ? 'rgba(56,189,248,.12)' : 'transparent',
+        color: cat === id ? '#38bdf8' : 'var(--text-3)' }}>
+      {rotulo} <span style={{ opacity:.7 }}>{n}</span>
+    </button>
+  );
+  const salvar = async () => {
+    if (!novo || !novo.titulo.trim()) return;
+    await onAdicionar({ categoria: novo.categoria, titulo: novo.titulo.trim(),
+      url: novo.url.trim() || null, nota: novo.nota.trim() || null, tipo: 'link', fonte: 'Felipe',
+      ordem: Math.max(0, CATEGORIAS_BIB.indexOf(novo.categoria)) * 100 + 99 });
+    setNovo(null);
+  };
+
+  return (
+    <SectionCard recolhivel idRecolher="pico:biblioteca" title="Biblioteca de exemplos"
+      headerRight={<span style={{ fontSize:11, color:'var(--text-3)',
+        fontFamily:'Roboto,sans-serif' }}>{itens.length} exemplos</span>}>
+      <div style={{ fontSize:11, fontFamily:'Roboto,sans-serif', color:'var(--text-3)',
+        marginBottom:10, lineHeight:1.45 }}>
+        Um exemplo real de cada peça, separado por tipo. Os mesmos links aparecem dentro das tarefas
+        em que servem. O cadeado marca arquivo privado do retiro: é só pedir que eu busco.
+      </div>
+      <div style={{ display:'flex', gap:6, flexWrap:'wrap', marginBottom:10 }}>
+        {chip('todas', 'Todas', itens.length)}
+        {CATEGORIAS_BIB.map(c => {
+          const n = itens.filter(i => i.categoria === c).length;
+          return n ? chip(c, c, n) : null;
+        })}
+      </div>
+      <div style={{ display:'flex', gap:8, marginBottom:12 }}>
+        <input value={busca} onChange={e => setBusca(e.target.value)} placeholder="Buscar exemplo"
+          style={{ ...campo, flex:1 }}/>
+        <button onClick={() => setNovo(novo ? null
+            : { categoria: cat === 'todas' ? CATEGORIAS_BIB[0] : cat, titulo:'', url:'', nota:'' })}
+          style={{ padding:'6px 11px', borderRadius:7, cursor:'pointer', border:'1px solid var(--app-border)',
+            background:'transparent', color:'var(--text-2)', fontSize:11.5, fontFamily:'Roboto,sans-serif',
+            fontWeight:700, display:'flex', alignItems:'center', gap:4 }}>
+          <LucideIcon icon={novo ? 'x' : 'plus'} size={12}/>{novo ? 'cancelar' : 'exemplo'}
+        </button>
+      </div>
+      {novo && (
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(200px,1fr))', gap:8,
+          marginBottom:14, padding:'10px 12px', borderRadius:9, background:'rgba(56,189,248,.04)',
+          border:'1px solid rgba(56,189,248,.16)' }}>
+          <select value={novo.categoria} onChange={e => setNovo({ ...novo, categoria:e.target.value })} style={campo}>
+            {CATEGORIAS_BIB.map(c => <option key={c} value={c}>{c}</option>)}
+          </select>
+          <input value={novo.titulo} placeholder="O que é (ex: anúncio de captação do fulano)"
+            onChange={e => setNovo({ ...novo, titulo:e.target.value })} style={campo}/>
+          <input value={novo.url} placeholder="https://"
+            onChange={e => setNovo({ ...novo, url:e.target.value })} style={campo}/>
+          <input value={novo.nota} placeholder="O que observar nele (opcional)"
+            onChange={e => setNovo({ ...novo, nota:e.target.value })} style={campo}/>
+          <button onClick={salvar}
+            style={{ padding:'6px 11px', borderRadius:7, cursor:'pointer', border:'none',
+              background:'#38bdf8', color:'#0b0b0d', fontSize:12, fontFamily:'Roboto,sans-serif', fontWeight:700 }}>
+            Guardar exemplo
+          </button>
+        </div>
+      )}
+      {cats.map(c => {
+        const lista = visiveis.filter(i => i.categoria === c);
+        return (
+          <div key={c} style={{ marginBottom:14 }}>
+            <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:7, paddingBottom:5,
+              borderBottom:'1px solid var(--app-border)' }}>
+              <span style={{ fontSize:10.5, fontFamily:'Roboto,sans-serif', fontWeight:700,
+                color:'var(--text-2)', letterSpacing:.4, textTransform:'uppercase' }}>{c}</span>
+              <span style={{ fontSize:10.5, fontFamily:'Roboto,sans-serif', color:'var(--text-3)' }}>{lista.length}</span>
+            </div>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(290px,1fr))', gap:6 }}>
+              {lista.map(i => <ItemBib key={i.id} i={i} onRemover={onRemover}/>)}
+            </div>
+          </div>
+        );
+      })}
+      {!visiveis.length && (
+        <div style={{ fontSize:12, fontFamily:'Roboto,sans-serif', color:'var(--text-3)' }}>
+          Nenhum exemplo encontrado.
+        </div>
+      )}
+    </SectionCard>
   );
 }
 
@@ -2039,6 +2180,21 @@ function PicoScreen() {
 
   const projeto = projetos.find(p => p.id === projetoId) || null;
 
+  /* Biblioteca de exemplos: global, carrega uma vez */
+  const [biblioteca, setBiblioteca] = useState([]);
+  useEffect(() => {
+    window.db.from('pico_biblioteca').select('*').order('ordem')
+      .then(({ data }) => setBiblioteca(data || []));
+  }, []);
+  const addExemplo = async (item) => {
+    const { data } = await window.db.from('pico_biblioteca').insert(item).select().single();
+    if (data) setBiblioteca(b => [...b, data].sort((x, y) => x.ordem - y.ordem));
+  };
+  const delExemplo = async (id) => {
+    setBiblioteca(b => b.filter(x => x.id !== id));
+    await window.db.from('pico_biblioteca').delete().eq('id', id);
+  };
+
   /* Carregar projetos */
   useEffect(() => {
     (async () => {
@@ -2376,6 +2532,10 @@ function PicoScreen() {
 
         <div style={{ marginBottom:14 }}>
           <BlocoAuditoria projeto={projeto} tarefas={tarefas}/>
+        </div>
+
+        <div style={{ marginBottom:14 }}>
+          <BlocoBiblioteca itens={biblioteca} onAdicionar={addExemplo} onRemover={delExemplo}/>
         </div>
 
         {/* Controles da execução */}

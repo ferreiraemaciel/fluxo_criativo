@@ -51,7 +51,7 @@ Deno.serve(async (req) => {
     });
   }
 
-  const [tarefas, decisoes, ads, metricas] = await Promise.all([
+  const [tarefas, decisoes, ads, metricas, bib] = await Promise.all([
     db.from("pico_tarefas")
       .select("id,fase,trilha,titulo,criterio_pronto,offset_dias,data_prevista,status,nivel_minimo,campos,definicoes,referencias")
       .eq("projeto_id", projeto.id)
@@ -66,6 +66,9 @@ Deno.serve(async (req) => {
     db.from("pico_metricas")
       .select("momento,cenario,indicador,valor,unidade")
       .eq("projeto_id", projeto.id),
+    db.from("pico_biblioteca")
+      .select("categoria,titulo,url,tipo,nota,ordem")
+      .order("ordem"),
   ]);
 
   // Gasto dos anúncios deste pico. Nada de vendas nem de dado de comprador:
@@ -95,7 +98,8 @@ Deno.serve(async (req) => {
     porAnuncio,
     gasto,
     compras,
-    lido_em: new Date().toISOString(),
+    biblioteca: bib.data || [],
+      lido_em: new Date().toISOString(),
   }), {
     headers: { ...cors, "Content-Type": "application/json", "Cache-Control": "no-store" },
   });
