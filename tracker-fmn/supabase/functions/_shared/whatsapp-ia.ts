@@ -257,6 +257,33 @@ async function baixarImagemBase64(midiaUrl: string): Promise<{ data: string; med
   }
 }
 
+/* Falha da IA fica registrada para a tela Conversas mostrar.
+
+   Em 03/09/2026 o crédito da Anthropic acabou e o Claudinho parou de
+   responder por uma semana sem ninguém saber: o erro só existia no log da
+   função. Agora a falha grava o motivo e a hora em app_config, a tela mostra
+   uma faixa vermelha, e a primeira resposta que dá certo limpa o aviso. */
+async function registrarFalhaDaIA(supabase: any, err: unknown) {
+  try {
+    const mensagem = String((err as any)?.message || err).slice(0, 300);
+    await supabase.from("app_config").upsert({
+      chave: "whatsapp_ia_ultimo_erro",
+      valor: { mensagem, em: new Date().toISOString() },
+      updated_at: new Date().toISOString(),
+    }, { onConflict: "chave" });
+  } catch (e) {
+    console.error("[whatsapp-ia] não consegui registrar a falha:", e);
+  }
+}
+
+async function limparFalhaDaIA(supabase: any) {
+  try {
+    await supabase.from("app_config")
+      .update({ valor: {}, updated_at: new Date().toISOString() })
+      .eq("chave", "whatsapp_ia_ultimo_erro");
+  } catch (_) { /* limpar o aviso nunca atrapalha a resposta */ }
+}
+
 async function processarComIAInterno(supabase: any, telefone: string, nomeLead: string | null, mensagemId: string | null, contato: any) {
   // Marca o instante em que essa chamada começou a processar, pra travar
   // envio duplicado mais abaixo (ver checagem antes do fetch de envio).
@@ -400,8 +427,10 @@ async function processarComIAInterno(supabase: any, telefone: string, nomeLead: 
     resposta.__tokensSaida   = d.usage?.output_tokens || 0;
   } catch (err) {
     console.error("[whatsapp-ia] erro ao chamar Anthropic:", err);
+    await registrarFalhaDaIA(supabase, err);
     return;
   }
+  await limparFalhaDaIA(supabase);
 
   // Envia a mensagem da IA pelo WhatsApp (sempre manda algo, mesmo em handoff,
   // pra não deixar o lead sem resposta enquanto espera um humano).

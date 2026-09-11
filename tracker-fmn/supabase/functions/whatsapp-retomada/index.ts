@@ -68,6 +68,19 @@ function usouFraseDeHandoff(texto: string): boolean {
   return FRASES_HANDOFF_PROIBIDAS.some((re) => re.test(texto || ""));
 }
 
+/* Mesmo registro de falha da função da IA (_shared/whatsapp-ia.ts): a tela
+   Conversas mostra uma faixa vermelha enquanto houver falha registrada. */
+async function registrarFalhaDaIA(err: unknown) {
+  try {
+    const mensagem = String((err as any)?.message || err).slice(0, 300);
+    await supabase.from("app_config").upsert({
+      chave: "whatsapp_ia_ultimo_erro",
+      valor: { mensagem, em: new Date().toISOString() },
+      updated_at: new Date().toISOString(),
+    }, { onConflict: "chave" });
+  } catch (_) { /* registrar nunca derruba a retomada */ }
+}
+
 async function gerarRetomada(historico: { role: string; content: string }[], ultimaFoiDoLead: boolean): Promise<{ mensagem: string; tokensEntrada: number; tokensSaida: number } | null> {
   if (!ANTHROPIC_API_KEY) return null;
 
@@ -127,6 +140,7 @@ ${instrucaoVacuo}`;
     return { mensagem, tokensEntrada: d.usage?.input_tokens || 0, tokensSaida: d.usage?.output_tokens || 0 };
   } catch (err) {
     console.error("[whatsapp-retomada] erro Anthropic:", err);
+    await registrarFalhaDaIA(err);
     return null;
   }
 }
@@ -183,6 +197,7 @@ Essa conversa estava andando rápido hoje, várias trocas de mensagem reais, e a
     return { mensagem, tokensEntrada: d.usage?.input_tokens || 0, tokensSaida: d.usage?.output_tokens || 0 };
   } catch (err) {
     console.error("[whatsapp-retomada] erro Anthropic (nudge reação):", err);
+    await registrarFalhaDaIA(err);
     return null;
   }
 }

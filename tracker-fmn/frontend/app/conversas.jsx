@@ -1049,6 +1049,8 @@ function ConversasScreen({ telefoneAlvo = null, onConsumirAlvo } = {}) {
   const [enviandoPronta, setEnviandoPronta] = useState(null);
   const [tick, setTick]           = useState(0); // força re-render pro contador de tempo
   const [iaAtivaGlobal, setIaAtivaGlobal] = useState(false);
+  // Falha do Claudinho gravada pela função da IA (whatsapp_ia_ultimo_erro).
+  const [falhaIA, setFalhaIA] = useState(null);
   const [modoTreinamento, setModoTreinamento] = useState(false);
   const [enviandoMidia, setEnviandoMidia] = useState(false);
   const [dragOverThread, setDragOverThread] = useState(false);
@@ -1094,6 +1096,9 @@ function ConversasScreen({ telefoneAlvo = null, onConsumirAlvo } = {}) {
       .then(({ data }) => { if (data) setIaAtivaGlobal(data.valor === true); });
     window.db.from('app_config').select('valor').eq('chave', 'whatsapp_modo_treinamento').single()
       .then(({ data }) => setModoTreinamento(data?.valor === true));
+    // O aviso some sozinho: a primeira resposta que dá certo limpa o registro.
+    window.db.from('app_config').select('valor').eq('chave', 'whatsapp_ia_ultimo_erro').maybeSingle()
+      .then(({ data }) => setFalhaIA(data?.valor?.mensagem ? data.valor : null));
     // Semáforo de produto comprado (só vendas aprovadas): uma bolinha por
     // produto principal, pra diferenciar de quem só está em contato/suporte.
     // O Supabase corta em 1000 linhas por página mesmo pedindo limit maior,
@@ -1532,6 +1537,26 @@ function ConversasScreen({ telefoneAlvo = null, onConsumirAlvo } = {}) {
           </Btn>
         </div>
       } />
+      {/* O Claudinho parou de responder. Em 03/09/2026 o crédito da
+          Anthropic acabou e ele ficou uma semana mudo sem ninguém ver, porque
+          o erro só aparecia no log da função. */}
+      {falhaIA && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px',
+          background: 'rgba(239,68,68,0.12)', borderBottom: '1px solid rgba(239,68,68,0.35)',
+          color: '#f87171', fontSize: 13, fontFamily: 'Roboto,sans-serif' }}>
+          <LucideIcon icon="alert-triangle" size={16} />
+          <span style={{ flex: 1 }}>
+            {/credit balance/i.test(falhaIA.mensagem)
+              ? <><b>O Claudinho não está respondendo: acabou o crédito da Anthropic.</b> Recarregue em console.anthropic.com, em Plans &amp; Billing. As mensagens novas voltam a ser respondidas sozinhas.</>
+              : <><b>O Claudinho falhou ao responder.</b> Motivo: {falhaIA.mensagem}</>}
+          </span>
+          {falhaIA.em && (
+            <span style={{ fontSize: 11, opacity: 0.8, whiteSpace: 'nowrap' }}>
+              última falha {new Date(falhaIA.em).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
+            </span>
+          )}
+        </div>
+      )}
       {modoTreinamento && (
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, padding: '8px 16px',
           background: 'rgba(251,191,36,.1)', borderBottom: '1px solid rgba(251,191,36,.3)',
