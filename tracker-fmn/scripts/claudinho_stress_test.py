@@ -210,6 +210,36 @@ def foco_beneficio_nao_ferramenta(r):
     return (not achou, "pergunta final focou em mostrar a ferramenta, não no benefício" if achou else "ok")
 
 
+
+
+# ── Aluno (regra de 11/09/2026) ─────────────────────────────────────────────
+# O código injeta este aviso quando o contato é aluno (whatsapp-ia.ts).
+# Manter o texto igual ao de lá.
+AVISO_ALUNO = (
+    "\n\n## ATENÇÃO: este contato JÁ É ALUNO (já comprou)\n"
+    "Siga a regra \"Quando o contato é aluno\" do prompt: pedido de suporte vira "
+    "indicação do número (48) 99966-2118, e qualquer outra coisa fica sem resposta "
+    "(mensagem vazia, handoff false). Nunca venda nada."
+)
+
+def indica_numero_suporte(r):
+    msg = r.get("mensagem", "") or ""
+    ok = bool(re.search(r"99966[-\s]?2118", msg))
+    return ok, "número de suporte presente" if ok else "não indicou o número de suporte"
+
+def sem_venda_pra_aluno(r):
+    msg = (r.get("mensagem", "") or "").lower()
+    ok = not re.search(r"hotmart|pay\.|r\$|12x|checkout", msg)
+    return ok, "sem preço nem link" if ok else "ofereceu preço ou link pra aluno"
+
+def sem_handoff(r):
+    ok = r.get("handoff") is not True
+    return ok, "sem handoff" if ok else "marcou handoff sem precisar"
+
+def mensagem_vazia(r):
+    ok = not (r.get("mensagem", "") or "").strip()
+    return ok, "ficou em silêncio" if ok else f"respondeu: {r.get('mensagem')!r}"
+
 CENARIOS = [
     {
         "nome": "Pergunta jurídica (ECA Digital) não é sinal de compra",
@@ -299,6 +329,23 @@ CENARIOS = [
         ],
         "checks": [sem_saudacao_periodo, sem_virgula_antes_e_ou, nao_pede_esclarecimento_ambiguo, termina_com_pergunta],
     },
+    {
+        "nome": "Aluno pede suporte: indica o número, sem vender",
+        "sistema_extra": AVISO_ALUNO,
+        "historico": [
+            {"role": "user", "content": "Oi Amanda, queria tirar uma dúvida, como faço para ter acesso novamente aos contratos?"},
+        ],
+        "checks": [indica_numero_suporte, sem_venda_pra_aluno, sem_handoff, sem_virgula_antes_e_ou],
+    },
+    {
+        "nome": "Aluno manda só 'Ok': Claudinho fica em silêncio",
+        "sistema_extra": AVISO_ALUNO,
+        "historico": [
+            {"role": "assistant", "content": "Prontinho, liberei aqui pra você."},
+            {"role": "user", "content": "Ok"},
+        ],
+        "checks": [mensagem_vazia, sem_handoff],
+    },
 ]
 
 
@@ -321,7 +368,7 @@ def main():
     for cenario in CENARIOS:
         print(f"── {cenario['nome']}")
         try:
-            resposta, uso = chamar_anthropic(api_key, model, system_prompt, cenario["historico"])
+            resposta, uso = chamar_anthropic(api_key, model, system_prompt + cenario.get("sistema_extra", ""), cenario["historico"])
         except (urllib.error.URLError, RuntimeError) as e:
             print(f"   ERRO DE CHAMADA: {e}\n")
             falhas.append((cenario["nome"], "chamada falhou", str(e)))

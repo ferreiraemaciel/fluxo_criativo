@@ -187,9 +187,10 @@ export async function processarComIA(supabase: any, telefoneRaw: string, nomeLea
   // (handoff), ia_pausada (o time assumiu), spam e aluno (logo abaixo).
   // ia_elegivel continua valendo só no modo de treinamento, acima.
   if (contato?.is_spam) return;
-  // Por enquanto a IA só atua no fluxo de leads do quiz. Aluno novo (quem
-  // comprou o MCV, etapa forçada por enviarBoasVindasMcv) fica de fora.
-  if (contato?.etapa === "aluno") return;
+  // Aluno (quem já comprou) não é mais barrado aqui (11/09/2026). O prompt
+  // recebe o aviso de que é aluno: pedido de suporte vira indicação do número
+  // de suporte, e qualquer outra coisa fica sem resposta, para o time. A trava
+  // em código logo antes do envio garante isso mesmo se o modelo errar.
 
   // Espera antes de responder de verdade, pra dar tempo do lead terminar de
   // mandar mensagem em sequência (ver DELAY_RESPOSTA_MS acima). Se durante a
@@ -364,7 +365,11 @@ async function processarComIAInterno(supabase: any, telefone: string, nomeLead: 
   const funnelSlug = await buscarFunnelSlug(supabase, telefone);
   const estagioAtual = contato?.estagio_venda || "descoberta";
   const produtoOverride = funnelSlug === "blindagem" ? `\n\n${BLINDAGEM_PRODUTO_OVERRIDE}` : "";
-  const systemPrompt = `${SYSTEM_PROMPT_MCV}${produtoOverride}${contextoLead}\n\n## Estágio atual da conversa\n${estagioAtual}`;
+  const ehAluno = contato?.etapa === "aluno";
+  const avisoAluno = ehAluno
+    ? `\n\n## ATENÇÃO: este contato JÁ É ALUNO (já comprou)\nSiga a regra "Quando o contato é aluno" do prompt: pedido de suporte vira indicação do número (48) 99966-2118, e qualquer outra coisa fica sem resposta (mensagem vazia, handoff false). Nunca venda nada.`
+    : "";
+  const systemPrompt = `${SYSTEM_PROMPT_MCV}${produtoOverride}${contextoLead}${avisoAluno}\n\n## Estágio atual da conversa\n${estagioAtual}`;
 
   let resposta: any;
   try {
@@ -435,6 +440,15 @@ async function processarComIAInterno(supabase: any, telefone: string, nomeLead: 
     return;
   }
   await limparFalhaDaIA(supabase);
+
+  // Trava em código para aluno: só sai mensagem que indica o suporte. Sem
+  // o número, é o modelo tentando conversar ou vender para quem já comprou, e
+  // essa conversa é do time. Não depende do prompt ser lembrado.
+  if (ehAluno && resposta.mensagem && !/99966[-\s]?2118/.test(resposta.mensagem)) {
+    console.log("[whatsapp-ia] aluno sem pedido de suporte, fica para o time:", telefone);
+    resposta.mensagem = "";
+    resposta.handoff = false;
+  }
 
   // Envia a mensagem da IA pelo WhatsApp (sempre manda algo, mesmo em handoff,
   // pra não deixar o lead sem resposta enquanto espera um humano).
