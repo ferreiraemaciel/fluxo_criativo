@@ -2508,3 +2508,65 @@ Regras da Meta seguidas: nenhum texto começa ou termina com variável; convite,
 | 14 | bf_follow | marketing | conversa parada (sessão fechada) | cadência 12h, 24h, 48h | Oi, {{1}}. Fiquei sem resposta aqui. Prefere que eu volte mais tarde ou não é o momento? | Pode voltar depois / Não é o momento |
 
 Mensagens do grupo (avisos de live, trailer, contagem) não passam por aprovação da Meta: são enviadas dentro do grupo e ficam para a régua de disparos.
+
+---
+
+# PARTE 19. MANIFESTO DA BLACK, NOS 11 MOVIMENTOS (rascunho para validar)
+
+Escrito com as falas reais da Parte 17. Sem preço, sem percentual, como o playbook manda. Faltam duas coisas suas: o caso de aluno do movimento 9 e o horário da live no movimento 10.
+
+**1. Cenário**
+Tem uma coisa que ninguém conta pra quem vive de fotografia: o trabalho mais difícil não é o clique. O mercado inteiro funciona no fio do combinado. A data fecha por áudio, o valor vai num print, o pagamento fica pro dia do evento. Quando dá tudo certo, ninguém lembra do assunto. Quando dá errado, a única prova que existe é uma conversa que sumiu no meio de outras trezentas.
+
+**2. Pergunta**
+Quantas vezes você entregou o trabalho inteiro antes de receber o valor inteiro?
+
+**3. A separação**
+Existem dois fotógrafos no mercado hoje. Um manda o contrato junto com o orçamento, o cliente assina pelo celular, o trabalho começa com tudo por escrito. O outro fecha no combinado, torce pra dar certo, descobre no pior dia possível que não tem nada nas mãos. Os dois fotografam igual. Só um dorme tranquilo.
+
+**4. A acomodação**
+Eu sei o que você vai dizer, porque eu escuto isso toda semana. "Felipe, comigo nunca aconteceu nada." Comigo também nunca tinha acontecido, até o dia em que aconteceu. É sempre assim: ninguém procura contrato no dia bom.
+
+**5. O que está em jogo**
+Não é sobre o cachê de um casamento. É sobre o mês que não fecha quando o sinal volta, é sobre a conta que vence do mesmo jeito, é sobre você dizer em casa que o trabalho do fim de semana não vai entrar. Uma cliente devolveu o sinal porque disse que ganhou o casamento de outro fotógrafo. Outro viu a foto que editou por horas ganhar um filtro no Instagram. Nos dois casos o combinado estava num print.
+
+**6. Autoridade**
+Eu sou o Felipe. Sou fotógrafo, sou advogado e passei os últimos anos escrevendo contrato pra quem vive de imagem. Não é teoria de escritório: é o documento que eu uso no meu próprio estúdio.
+
+**7. O convite**
+Em novembro eu vou fazer uma coisa que eu nunca fiz.
+
+**8. A quebra do padrão**
+Os Modelos de Contrato Visual e o Blindagem sempre foram vendidos separados. Nunca juntei os dois num pacote só. Nessa Black, eles vão juntos, numa condição que não volta.
+
+**9. Prova**
+[VOCÊ PREENCHE: um aluno real, com nome e o que mudou no trabalho dele depois do contrato. Sem promessa de dinheiro.] Hoje são mais de 970 fotógrafos usando os modelos.
+
+**10. A data**
+Dia 11 de novembro, às [HORA], eu abro a Black dos Fotógrafos Protegidos ao vivo. Quem estiver no grupo vê primeiro.
+
+**11. Bordão e CTA**
+Fotógrafo protegido não depende de sorte, depende de papel assinado. Comenta PROTEGIDO aqui embaixo que eu te mando o link do grupo.
+
+---
+
+# PARTE 20. DÚVIDAS E OBJEÇÕES, COM RESPOSTA (rascunho para validar)
+
+Todas as objeções saíram das mensagens reais da Parte 17. Serve para a live (bloco 14), para o atendimento e, mais para frente, para treinar o Claudinho.
+
+| # | Objeção, como ela chega | Resposta |
+|---|---|---|
+| 1 | "Tô só esperando entrar um dinheiro" | Reconhecer, sem forçar. A condição tem prazo e não volta. Mostrar o parcelamento e o Pix, e lembrar que um único cliente que cancela sem multa custa mais que o pacote inteiro. |
+| 2 | "Vai sair de 270 pra 360. Não tenho cartão de crédito" | No Pix o valor é o cheio da Black, sem juros. Metade dos nossos compradores paga assim. |
+| 3 | "Preciso ver pelo menos uma página pra ver de fato como é" | Mostrar uma página de exemplo e o fluxo de assinatura na tela do cliente. Isso entra na página de vendas e na live. |
+| 4 | "O contrato é legalmente válido?" | Contrato entre particulares tem validade quando as partes concordam e assinam. A assinatura eletrônica é reconhecida por lei, e o sistema guarda o registro de quem assinou, quando e de onde. |
+| 5 | "O visual do contrato interfere na legalidade?" | Não. A lei não exige feiura. O que vale é o conteúdo das cláusulas, e é por isso que o design existe: para o cliente ler e entender antes de assinar. |
+| 6 | "Seu modelo é genérico, não é específico" | São modelos por tipo de trabalho, todos editáveis. O que é do seu caso você ajusta, e as cláusulas que protegem o essencial já estão lá. |
+| 7 | "Tenho medo de ser simples demais" | Simples é o oposto de vago. O contrato é curto de ler porque é objetivo, não porque deixou coisa de fora. |
+| 8 | "Prefiro fazer com advogado particular" | Faz sentido para quem tem um caso muito fora do padrão. Para o dia a dia de foto e vídeo, o modelo resolve por uma fração do honorário e você continua podendo levar ao seu advogado. |
+| 9 | "Você é melhor que aquele que vende contrato a R$ 39,90?" | O barato costuma ser um arquivo solto. Aqui tem modelo por tipo de trabalho, atualização quando a lei muda e o sistema de assinatura junto. |
+| 10 | "Blindagem extra? Para prevenir de verdade tenho que investir extra?" | Essa dúvida é justa, e é o motivo do pacote desta Black: o contrato e a assinatura vão juntos, pelo preço de um. |
+| 11 | "O processo de assinatura é fácil? Tenho medo do cliente não conseguir" | O cliente recebe um link, lê no celular e assina com o dedo. Não precisa instalar nada nem criar conta. |
+| 12 | "Comprando, fico quantos anos com acesso?" | [CONFIRMAR o prazo de acesso do MCV antes de usar esta resposta.] O Blindagem do pacote é assinatura anual, e a renovação volta ao preço normal. |
+| 13 | "Já uso contrato, mas quero me respaldar na Lei Felca" | O material acompanha as mudanças da lei, e a aula ao vivo da Black é sobre exatamente isso. |
+| 14 | "Não confio em comprar no escuro" | Mostrar por dentro antes: página de exemplo, fluxo de assinatura e a garantia de 7 dias prevista no Código de Defesa do Consumidor para compra online. |
