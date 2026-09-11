@@ -2331,3 +2331,15 @@ Com isso o combo volta: a tarefa "Montar o combo item por item" foi reativada, c
 1. **O funil perpétuo já entrega o mesmo preço.** Hoje quem compra o MCV por R$ 297,00 recebe o upsell do Blindagem por R$ 397,00 com R$ 297,00 de cashback, ou seja, paga R$ 100,00. MCV mais Blindagem pelo perpétuo sai por R$ 397,00, exatamente o preço do combo da Black. Foram 14 vendas pelo upsell desde julho. Se o upsell continuar ativo na Black, o combo não é melhor que o caminho normal.
 2. **O preço de aluno já foi praticado.** R$ 198,50 é o preço de 4 vendas do Blindagem em 19/06/2026. E quem pegou o upsell pagou R$ 100,00 líquido.
 3. **O limite de CPA está destravado (Parte 14).** A pendência esperava o valor do combo. Com o ticket em R$ 397,00, a regra G5 (pausa com CPA acima de R$ 207,90) mata anúncio saudável do pico e precisa de um limite próprio.
+
+## 15.4 Combo por R$ 297,00 (11/09/2026)
+
+**Decidido pelo Felipe:** o combo para não alunos (MCV no Canva + Blindagem anual) sai por **R$ 297,00**, sobre R$ 694,00: 57,2% de desconto. A oferta de alunos continua com o Blindagem a R$ 198,50.
+
+O que isso resolve:
+- **O conflito com o perpétuo acabou.** MCV mais upsell com cashback custa R$ 397,00. A Black fica R$ 100,00 abaixo, e é a primeira vez que os dois saem juntos por esse valor.
+- **A pendência do limite de CPA (Parte 14) se resolve sozinha.** O limite da G5, R$ 207,90, é 70% de R$ 297,00. Com o ticket do combo em R$ 297,00, a regra atual já serve para o pico.
+
+O que pede atenção:
+- **Aluno pode se sentir punido.** Quem pagou R$ 297,00 só pelo MCV vê quem chega agora levar MCV e Blindagem pelo mesmo valor. A oferta de aluno precisa ser apresentada como a condição de quem já está dentro, não como um desconto menor.
+- **A promessa da ficha está desatualizada** e deve ser reescrita com a oferta nova.
