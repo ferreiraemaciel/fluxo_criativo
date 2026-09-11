@@ -120,6 +120,11 @@
   .refs a{font-size:11.5px;color:var(--azul);text-decoration:none}
   .refs a::before{content:'↗ ';opacity:.6}
   .refs a span{color:var(--t3)}
+  .val{font-size:9.5px;font-weight:700;color:var(--amb);border:1px solid rgba(251,191,36,.4);
+    border-radius:4px;padding:0 5px;margin-left:6px;letter-spacing:.3px}
+  .obs{font-size:11px;color:var(--t2);margin-top:4px;padding:3px 8px;border-radius:5px;
+    background:rgba(251,191,36,.07);border:1px solid rgba(251,191,36,.2);line-height:1.45}
+  .tar.feita .obs{background:rgba(74,222,128,.06);border-color:rgba(74,222,128,.18)}
   @media(max-width:640px){
     .barra{display:none} .tar .cc{display:none} h1{font-size:16px}
   }
@@ -487,9 +492,9 @@ function render(d) {
       const ok = t.status === 'feito';
       h += `<div class="tar${ok?' feita':''}">
         <span class="chk${ok?' on':''}">${ok?'✓':''}</span>
-        <span class="cresce"><span class="tt">${esc(t.titulo)}</span>
+        <span class="cresce"><span class="tt">${esc(t.titulo)}</span>${t.status==='validar' ? '<span class="val">validar</span>' : ''}
           <span style="font-size:10px;color:var(--t3);margin-left:6px">${TRILHAS[t.trilha]||''}</span>
-          ${t.criterio_pronto ? `<div class="cc">${esc(t.criterio_pronto)}</div>` : ''}</span>
+          ${t.criterio_pronto ? `<div class="cc">${esc(t.criterio_pronto)}</div>` : ''}${t.observacoes ? `<div class="obs">${esc(t.observacoes)}</div>` : ''}</span>
         <span class="meta"><span class="d">${rotD(t.offset_dias)}</span>
           <span class="dt">${t.data_prevista ? fmtD(t.data_prevista)+' '+semana(t.data_prevista) : ''}</span></span>
       </div>`;

@@ -43,6 +43,7 @@ const NIVEIS = [
 const STATUS_CFG = {
   pendente: { label:'Pendente', cor:'#94a3b8', bg:'rgba(148,163,184,.12)' },
   fazendo:  { label:'Fazendo',  cor:'#38bdf8', bg:'rgba(56,189,248,.12)'  },
+  validar:  { label:'Validar Felipe', cor:'#fbbf24', bg:'rgba(251,191,36,.12)' },
   feito:    { label:'Feito',    cor:'#4ade80', bg:'rgba(74,222,128,.12)'  },
   pulada:   { label:'Pulada',   cor:'#64748b', bg:'rgba(100,116,139,.12)' },
 };
@@ -248,9 +249,9 @@ function LinhaTarefa({ t, onToggle, onAbrir, mostrarTrilha, onVirarCard, onDefin
     >
       <button
         onClick={(e)=>{ e.stopPropagation(); onToggle(t); }}
-        title={feito ? 'Desmarcar' : 'Marcar como feito'}
+        title={feito ? 'Desmarcar' : t.status === 'validar' ? 'Validar: marcar como feito' : 'Marcar como feito'}
         style={{ width:19, height:19, borderRadius:6, flexShrink:0, marginTop:1,
-          border:'1.5px solid ' + (feito ? '#4ade80' : 'var(--app-border)'),
+          border:'1.5px solid ' + (feito ? '#4ade80' : t.status === 'validar' ? '#fbbf24' : 'var(--app-border)'),
           background: feito ? '#4ade80' : 'transparent', cursor:'pointer',
           display:'flex', alignItems:'center', justifyContent:'center', padding:0 }}>
         {feito && <LucideIcon icon="check" size={12} style={{ color:'#0b0b0d' }}/>}
@@ -270,11 +271,30 @@ function LinhaTarefa({ t, onToggle, onAbrir, mostrarTrilha, onVirarCard, onDefin
               {t.nivel_minimo === 'c' ? 'CRESC' : 'ESCALA'}
             </span>
           )}
+          {t.status === 'validar' && (
+            <span title="Lançado pelo Claude. Confira e marque o check para validar"
+              style={{ fontSize:9.5, fontFamily:'Roboto,sans-serif', fontWeight:700,
+                padding:'1px 6px', borderRadius:4, background:'rgba(251,191,36,.12)',
+                color:'#fbbf24', border:'1px solid rgba(251,191,36,.3)', letterSpacing:.3 }}>
+              VALIDAR
+            </span>
+          )}
         </div>
         {t.criterio_pronto && (
           <div style={{ fontSize:11, fontFamily:'Roboto,sans-serif', color:'var(--text-3)',
             marginTop:2, lineHeight:1.4 }}>
             {t.criterio_pronto}
+          </div>
+        )}
+        {t.observacoes && (
+          <div style={{ fontSize:11, fontFamily:'Roboto,sans-serif', color:'var(--text-2)',
+            marginTop:5, padding:'4px 8px', borderRadius:6, lineHeight:1.45,
+            background: t.status === 'validar' ? 'rgba(251,191,36,.07)' : feito ? 'rgba(74,222,128,.06)' : 'rgba(255,255,255,.03)',
+            border:'1px solid ' + (t.status === 'validar' ? 'rgba(251,191,36,.22)' : feito ? 'rgba(74,222,128,.18)' : 'var(--app-border)') }}>
+            <b style={{ color: t.status === 'validar' ? '#fbbf24' : feito ? '#4ade80' : 'var(--text-3)' }}>
+              {t.status === 'validar' ? 'Para validar: ' : feito ? 'Definido: ' : pulada ? 'Motivo: ' : 'Nota: '}
+            </b>
+            {t.observacoes.replace(/^(Validar|Sugestão para validar|Rascunho para validar):\s*/, '')}
           </div>
         )}
       </div>
@@ -2403,6 +2423,7 @@ function PicoScreen() {
   const atrasadas = tarefas.filter(t =>
     t.status !== 'feito' && t.status !== 'pulada' &&
     t.data_prevista && t.data_prevista < hojeISO()).length;
+  const paraValidar = tarefas.filter(t => t.status === 'validar').length;
   const diasParaD0 = projeto?.data_abertura ? diasEntre(hojeISO(), projeto.data_abertura) : null;
 
   const porGrupo = useMemo(() => {
@@ -2502,6 +2523,7 @@ function PicoScreen() {
             </Badge>
           )}
           {atrasadas > 0 && <Badge tone="danger">{atrasadas} atrasada{atrasadas>1?'s':''}</Badge>}
+          {paraValidar > 0 && <Badge tone="warn">{paraValidar} para validar</Badge>}
 
           <div style={{ flex:1, minWidth:120, maxWidth:260 }}>
             <Progresso feitas={feitas} total={tarefas.length}/>

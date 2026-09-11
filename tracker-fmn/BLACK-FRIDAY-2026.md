@@ -2481,3 +2481,30 @@ Fonte: 28.654 respostas do quiz Fotógrafo Protegido e as 393 mensagens longas r
 4. **A página e a live precisam mostrar o produto por dentro**: uma página de exemplo e o cliente recebendo e assinando. É a objeção "comprar no escuro".
 5. **Suporte de acesso é gargalo real.** Várias mensagens são de quem comprou e não acha o acesso. Com o volume da Black, isso vira reembolso. Responde a pergunta de suporte das 7 perguntas.
 6. **Bônus que o público pediu, e que só o Felipe consegue entregar:** autorização de uso de imagem avulsa, termo de entrega (inclusive para regularizar trabalhos antigos), cláusulas por nicho (newborn, acompanhamento mensal, ensaio sensual, esporte escolar com menores) e a atualização da Lei Felca e do ECA Digital.
+
+---
+
+# PARTE 18. TEMPLATES DO WHATSAPP DA BLACK (rascunho para validar, 11/09/2026)
+
+Auditoria na API oficial: só existem 2 templates reais, os dois de serviço (boas_vindas_mcv e resultado_quiz_mcv). Nenhum de marketing. Nada abaixo foi enviado à Meta.
+
+Regras da Meta seguidas: nenhum texto começa ou termina com variável; convite, bônus e carrinho aberto vão como marketing; lembrete só pode ser utility quando a pessoa pediu e não há oferta no texto. Todo template de marketing leva a resposta rápida "Não quero receber". Antes de qualquer disparo de venda, tirar da lista quem já comprou.
+
+| # | Nome | Categoria | Para quem | Quando | Texto | Botões |
+|---|---|---|---|---|---|---|
+| 1 | bf_convite_grupo | marketing | não alunos, leads do quiz, base antiga | captação, a partir de D-21 | Oi, {{1}}. Aqui é o Felipe, do Fotografia é o Meu Negócio. Em novembro vai ter a Black dos Fotógrafos Protegidos, a maior condição que eu já fiz nos contratos. Os detalhes saem primeiro no grupo, que é silencioso e só recebe aviso importante. Meu lado advogado não assinaria essa Black. | Entrar no grupo (link) / Não quero receber |
+| 2 | bf_convite_aluno | marketing | alunos do MCV sem Blindagem | captação | Oi, {{1}}. Como você já usa os Modelos de Contrato Visual, na Black dos Fotógrafos Protegidos vai ter uma condição só pra aluno no Blindagem, o sistema que manda o contrato pro cliente assinar pelo celular. Ela sai primeiro no grupo de alunos, é só tocar no botão. | Entrar no grupo (link) / Não quero receber |
+| 3 | bf_confirmacao_inscricao | utility possível | quem se inscreveu na página | na hora da inscrição | Oi, {{1}}. Sua vaga na lista da Black dos Fotógrafos Protegidos está confirmada. Os avisos chegam por aqui, a data da live sai primeiro no grupo. | Entrar no grupo (link) |
+| 4 | bf_lembrete_aula | utility possível | inscritos | dia de cada aula, se houver aulas de aquecimento | Oi, {{1}}. Hoje às {{2}} tem a aula {{3}} da Black dos Fotógrafos Protegidos. O link está no botão abaixo e abre na hora da aula. | Assistir (link) |
+| 5 | bf_ao_vivo | utility possível | inscritos | no início de cada live | Estamos ao vivo, {{1}}. A aula já começou, é só entrar pelo botão. | Entrar (link) |
+| 6 | bf_amanha | marketing | todos | D-1 | Oi, {{1}}. Amanhã às {{2}} eu abro a Black dos Fotógrafos Protegidos ao vivo. Coloca o celular pra despertar, o link chega aqui e no grupo dez minutos antes. | Entrar no grupo (link) / Não quero receber |
+| 7 | bf_carrinho_aberto | marketing | não alunos | D0, depois da live | Abriu, {{1}}. Os Modelos de Contrato Visual e o Blindagem juntos, de R$ 694 por R$ 297, só até {{2}}. É a primeira vez que os dois saem juntos por esse valor. | Ver a oferta (link) / Não quero receber |
+| 8 | bf_carrinho_aluno | marketing | alunos | D0 | Abriu a condição de aluno, {{1}}: o primeiro ano do Blindagem por R$ 197, em vez de R$ 397. Vale até {{2}} e é só pra quem já usa os contratos. | Ver a condição (link) / Não quero receber |
+| 9 | bf_bonus_relampago | marketing | grupo e base | carrinho aberto, D+5 | Bônus relâmpago, {{1}}: até {{2}}, quem entrar na Black leva também {{3}}. Depois desse horário ele sai da oferta. | Ver a oferta (link) / Não quero receber |
+| 10 | bf_quebra_objecao | marketing | clicou e não comprou | carrinho aberto | Oi, {{1}}. Vi que você abriu a página da Black e não seguiu. Se travou em alguma coisa, me responde aqui que eu te explico. A pergunta que mais chega é se o contrato vale na Justiça: a assinatura eletrônica é reconhecida por lei e o Blindagem guarda o registro de quem assinou e quando. | Tenho uma dúvida / Não quero receber |
+| 11 | bf_carrinho_abandonado | marketing | pedido parado no checkout | até 1 hora depois | Oi, {{1}}. Seu pedido da Black ficou parado no pagamento. Se foi o limite do cartão, no Pix sai à vista sem juros. A condição vale até {{2}}. | Terminar a compra (link) / Não quero receber |
+| 12 | bf_ultimas_horas | marketing | não alunos que não compraram | último dia | Último dia, {{1}}. A Black dos Fotógrafos Protegidos fecha hoje às {{2}}. Depois disso os modelos e o Blindagem voltam a ser vendidos separados, por R$ 694. | Ver a oferta (link) / Não quero receber |
+| 13 | bf_ultimas_horas_aluno | marketing | alunos que não compraram | último dia | Último dia, {{1}}. A condição de aluno fecha hoje às {{2}}. Depois disso o Blindagem volta a R$ 397 por ano. | Ver a condição (link) / Não quero receber |
+| 14 | bf_follow | marketing | conversa parada (sessão fechada) | cadência 12h, 24h, 48h | Oi, {{1}}. Fiquei sem resposta aqui. Prefere que eu volte mais tarde ou não é o momento? | Pode voltar depois / Não é o momento |
+
+Mensagens do grupo (avisos de live, trailer, contagem) não passam por aprovação da Meta: são enviadas dentro do grupo e ficam para a régua de disparos.
