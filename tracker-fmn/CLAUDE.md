@@ -488,8 +488,15 @@ Nunca corta palavra no meio: se passar de 30, sai primeiro o `-lp`/`-qz`, depois
   + `utm_medium`. O quiz repassa o `sck` para a Hotmart como veio (`buildCheckoutUrl`), e as `utm_*`
   ele grava no `quiz_leads`, que é o que a aba Funis/Leads do Tracker lê.
 
-**Link pronto do Direct para a página de vendas do MCV:**
-`https://www.contratos.fotografiaeomeunegocio.com.br/?sck=instagram-ah-lphQwK21wXxRdm`
+**Links prontos do Direct para as páginas de vendas:**
+- MCV: `https://www.contratos.fotografiaeomeunegocio.com.br/?sck=instagram-ah-lphQwK21wXxRdm`
+- Blindagem: `https://www.contratosblindagem.fotografiaeomeunegocio.com.br/?sck=instagram-ah-lphQwK21wXxRdm`
+
+**Mensagens prontas no Blindagem (conta FMN, categoria "Links"):** os links de uso diário vivem lá,
+uma versão WhatsApp (`whatsapp-ah`, `whatsapp-ah-lp`, `whatsapp-ah-qz`) e uma versão Direct (títulos
+com "(Direct)") para página de vendas, checkout, checkout parcelado e quiz de cada produto. Link
+novo ou mudança de regra: atualizar essas mensagens também. O quiz leva `sck` + as `utm_*` que a aba
+Funis já usa (`utm_source=whatsapp&utm_medium=atendimento-humano&utm_campaign=whatsapp-ah-quiz`).
 
 **Verificação antes de entregar qualquer link:** contar os caracteres do `sck` (máximo 30), conferir
 que o separador é `hQwK21wXxR` e não `|`, e que a tag bate com quem vai enviar.
