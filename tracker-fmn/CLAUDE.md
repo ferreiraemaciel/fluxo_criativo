@@ -469,7 +469,8 @@ meio para o detalhe ("Mensagem Direta", "Stories", "Link na Bio"...). O pageview
 (`increment_post_view`) não guarda parâmetro nenhum, então o `sck` é o único rastro que chega ao Tracker.
 
 **Formato do `sck`:** `<canal>[-ah|-cl][-lp|-qz]` + `hQwK21wXxR` + `<meio>`, com 30 caracteres no total.
-Se passar de 30, tira o meio (fica só a fonte), nunca corta a fonte.
+Nunca corta palavra no meio: se passar de 30, sai primeiro o `-lp`/`-qz`, depois o meio inteiro
+(fica só a fonte). Um meio cortado ("stori") o Tracker não reconhece.
 
 | Canal (humano envia) | Página de vendas | Checkout direto | Quiz |
 |---|---|---|---|
@@ -493,9 +494,13 @@ Se passar de 30, tira o meio (fica só a fonte), nunca corta a fonte.
 **Verificação antes de entregar qualquer link:** contar os caracteres do `sck` (máximo 30), conferir
 que o separador é `hQwK21wXxR` e não `|`, e que a tag bate com quem vai enviar.
 
-**Pendência conhecida:** o fallback do `buildCheckoutUrl` dos quizzes, usado só quando o link chega
-sem `sck` e sem ID de anúncio, ainda junta fonte e meio com `|`. O Tracker lê isso tudo como fonte e
-perde o meio. Não atrapalha os links desta regra, que sempre levam o `sck` pronto.
+**Rede de segurança nas páginas (desde 11/09/2026):** as duas páginas de vendas (`contratos.html` e
+`blindagem.html` no `fmn-site`) e os dois quizzes (`buildCheckoutUrl`) montam o `sck` sozinhos quando o
+link chega só com `utm_source`/`utm_medium`, na mesma ordem: `sck` recebido passa inteiro; senão o ID
+do anúncio (`utm_content` "nome|id") vai puro; senão fonte + `hQwK21wXxR` + meio, com a regra dos 30
+acima. Testado em produção: `?utm_source=instagram-ah-lp&utm_medium=dm` virou
+`sck=instagram-ah-lphQwK21wXxRdm`. Antes disso as páginas mandavam só a fonte e os quizzes juntavam com
+`|`, e o Tracker perdia o meio. Mesmo assim, link que eu monto leva o `sck` pronto.
 
 ## TAG DE RASTREIO DO LINK DE CHECKOUT — QUEM APERTA ENVIAR DECIDE (REGRA GLOBAL)
 

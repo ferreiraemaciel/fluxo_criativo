@@ -385,10 +385,15 @@ function buildCheckoutUrl() {
     if (contentAdId) {
       p.set('sck', contentAdId.slice(0, 30));
     } else {
-      const clean = s => (s || '').toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 15);
+      // Sem ID de anúncio: fonte + separador real do webhook + meio, dentro dos 30.
+      // Nunca corta palavra no meio: se não couber, sai primeiro o -lp/-qz da
+      // fonte, depois o meio inteiro.
+      const SEP = 'hQwK21wXxR';
+      const clean = s => (s || '').toLowerCase().replace(/[^a-z0-9-]/g, '');
       const src = clean(tracking.utm_source);
       const med = clean(tracking.utm_medium);
-      if (src) p.set('sck', (med ? `${src}|${med}` : src).slice(0, 30));
+      const opcoes = med ? [src + SEP + med, src.replace(/-(lp|qz)$/, '') + SEP + med, src] : [src];
+      if (src) p.set('sck', opcoes.find(o => o.length <= 30) || src.slice(0, 30));
     }
   }
   if (answers.email) p.set('email', answers.email);

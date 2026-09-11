@@ -62,3 +62,7 @@ caracteres. Ex.: `sck=instagram-ah-lphQwK21wXxRdm` (Direct, página de vendas, h
 guarda o `sck`, o `hotmart-webhook` separa em `utm_source=instagram-ah-lp` e `utm_medium=dm`, e o Tracker
 mostra a venda como Instagram, "Mensagem Direta". No quiz, somar `utm_source` e `utm_medium` ao `sck`.
 
+Desde 11/09/2026 as páginas de vendas (MCV e Blindagem) e os quizzes também montam esse `sck` sozinhos
+quando o link chega só com `utm_source` e `utm_medium`. Se não couber em 30, sai primeiro o `-lp`/`-qz`,
+depois o meio inteiro, nunca pedaço de palavra. O fallback antigo dos quizzes com `|` foi aposentado.
+
