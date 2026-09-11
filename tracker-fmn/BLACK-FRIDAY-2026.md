@@ -2375,3 +2375,29 @@ Onde a conta vira:
 - **Conversão:** o empate é 6,04%. Com 7% (o padrão da planilha do retiro), o alvo sai de -R$ 6.188,00 para cerca de +R$ 4.000,00. Com 10%, cerca de +R$ 11.700,00.
 - **CPL:** com 5% de conversão, o empate é R$ 6,62.
 - **Dias de remarketing:** 20 dias levam 41% da verba. Com 7 dias (27,5%), a captação fica com 63,5% e o custo por venda cai para cerca de R$ 283,00.
+
+---
+
+# PARTE 16. OS DOIS PLAYBOOKS CONTRA O TRACKER (11/09/2026)
+
+Estudados na íntegra: o playbook da Black (Gabriel Vilas Boas, versão 3.0 de 26/08/2026) e o playbook de divulgação do mid ticket (Ultra Retiro). O de mid ticket não é sobre a Black em si: é o motor semanal que deixa uma oferta familiar até 27/10, antes da captação. Base (faz uma vez): produto, página, Grupo VIP, Aula 00 "Comece por aqui", WhatsApp pós-venda. Motor (toda semana): Escuta, temas e reels, live semanal no grupo, Story Único, carrossel fixado.
+
+## 16.1 O que o Tracker já cobre
+Engenharia reversa da data (D-X), cronograma, oferta e combo, 7 perguntas da economia, ancoragem, bônus por velocidade, narrativa e trailer, mote, nível de operação, casos Nobre e Priscila como referência, debriefing com 9 indicadores e 9 perguntas, plano de mídia e ficha preenchida uma vez que aparece em tudo (o playbook do mid ticket faz exatamente isso com os blocos, o que confirma o desenho).
+
+## 16.2 O que falta e é fundamental
+1. **Carrinho de 10 dias não bate com as tarefas.** A decisão é 10 dias, mas replay e fechamento estão em D+17 e D+19. As datas do encerramento precisam seguir a decisão.
+2. **Pausar o upsell com cashback do Blindagem quando a captação começar.** Regra do mid ticket (mensagem 3 do pós-venda): quem compra na semana da abertura e vê oferta maior dias depois se irrita. No nosso caso o upsell ainda entrega MCV + Blindagem por R$ 397, acima do combo da Black.
+3. **Controle de grupos.** Planilha viva: link, pessoas, cheio, vídeo de boas-vindas enviado. O total alimenta "leads no grupo" do debriefing. Mais a governança: 5 administradores, aprovação de entrada, aviso antifraude fixado, grupo reserva.
+4. **Régua de disparos.** A grade de 12 mensagens (fase, público, canal, categoria marketing ou utility) e o checklist obrigatório de 8 itens antes de disparar: consentimento registrado, teto por pessoa por dia, saída fácil, suprimir quem comprou, teste com 200 a 500 contatos, registrar entregues, lidos, cliques e saídas.
+5. **Roteiro da live de abertura.** Os 14 blocos, o rundown minuto a minuto com plano B e o checklist da aula de vendas, montados com os dados da ficha.
+6. **Missão da semana.** O mid ticket reduz tudo a cinco itens executáveis na semana. O Tracker mostra 108 tarefas; falta o recorte do que vence nesta semana e do que atrasou.
+
+## 16.3 Conteúdo útil para centralizar
+- **Banco de Linguagem (Escuta):** falas literais em três tipos (dor, desejo, tentativa frustrada), mais medos e desejos realizados gerados por prompt. Alimenta reels, live, página, promessa e carrossel. Nossas fontes já estão no Tracker: conversas do WhatsApp e respostas do quiz.
+- **Skill de roteiro de Reels** (skill-roteiro-reels.zip): 5 ganchos por família de tema, roteiro de 90 segundos, conteúdo técnico marcado para o autor preencher. Conflita com duas regras nossas: orgânico não puxa para produto (a skill fecha com CTA do curso) e Reels de anúncio têm 7 seções.
+- **Story Único:** o exemplo de fotografia do próprio playbook serve direto ("me diz qual câmera você usa que eu libero um presente").
+- **Carrossel fixado da oferta:** 7 slides, slide 1 sem nome de produto, etapa com resultado.
+- **Calendário de conteúdo dia a dia:** a skill cronograma-black já instalada gera; falta levar para o Orgânico com a marca PICO.
+- **Aulas do Academy citadas:** página de vendas com IA (Livia), ManyChat de lead a aluno e aprovação de mensagem (Rafael Neaime), API oficial (Vitor), lives de conteúdo (Ladeira), YouTube sem tráfego (Fellipe), Story Único (Erika Vieira). E a aula prática de API e automação do Rafael Neaime em 18/09/2026.
+- **Live semanal no grupo VIP (motor):** uma por semana até a captação, com banco de condições sem desconto e ferramenta da semana. É decisão estratégica, não obrigação.
