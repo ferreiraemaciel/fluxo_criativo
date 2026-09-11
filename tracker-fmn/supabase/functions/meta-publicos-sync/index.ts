@@ -2,7 +2,8 @@
 //
 // POST /functions/v1/meta-publicos-sync
 //   { action: "preview",  produto? }                    → SÓ LÊ. Não escreve nada no Meta.
-// produto: "compradores" (padrão, MCV + Blindagem), "mcv" ou "todos".
+// produto: "compradores" (padrão, MCV + Blindagem), "mcv", "blindagem", "todos",
+// "quiz" (todos os leads do quiz) ou "quiz_frio" (leads do quiz que não compraram).
 //   { action: "listar" }                                → lista os públicos da conta
 //   { action: "atualizar", audience_id, produto? }      → manda os compradores pro público existente
 //   { action: "criar", nome?, semelhante?, produto? }   → cria público novo (+ semelhante 1%)
@@ -37,7 +38,13 @@ const LOTE = 5000;          // o Meta aceita até 10.000 por requisição
 const PAGINA_SUPABASE = 1000;
 
 // Recortes aceitos no corpo da requisição.
-type Recorte = "mcv" | "compradores" | "todos";
+type Recorte = "mcv" | "blindagem" | "compradores" | "todos"
+            | "quiz" | "quiz_frio" | "quiz_mcv" | "quiz_blindagem";
+const RECORTES: Recorte[] = ["mcv", "blindagem", "compradores", "todos",
+                             "quiz", "quiz_frio", "quiz_mcv", "quiz_blindagem"];
+// O quiz tem dois funis: "fotografo-protegido" (a porta do MCV) e "blindagem".
+// "quiz" é a lista inteira do quiz Fotógrafo Protegido. "quiz_frio" tira dela
+// quem já comprou, que é o público de aquisição de verdade.
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -242,6 +249,7 @@ async function buscarCompradores(produto: Recorte) {
       .range(de, de + PAGINA_SUPABASE - 1);
 
     if (produto === "mcv") q = q.eq("produto_id", PRODUTO_ID_MCV);
+    else if (produto === "blindagem") q = q.in("produto_id", PRODUTOS_ID_BLINDAGEM);
     else if (produto === "compradores") q = q.in("produto_id", PRODUTOS_COMPRADORES);
 
     const { data, error } = await q;
@@ -267,6 +275,78 @@ async function buscarCompradores(produto: Recorte) {
   }
 
   return { unicos, total_linhas: linhas.length, descartados_teste, descartados_sem_email };
+}
+
+/* ───────────────── Leitura dos leads do quiz no banco ───────────────── */
+
+// O quiz não tem endereço, só nome, e-mail e WhatsApp. O Meta aceita assim:
+// campo vazio vai como string vazia e ele casa pelo que tem.
+const FUNIL = { quiz_mcv: "fotografo-protegido", quiz_blindagem: "blindagem" } as const;
+
+async function buscarQuiz(frio: boolean, funil?: string) {
+  const sb = supa();
+  const linhas: Comprador[] = [];
+  let de = 0;
+
+  while (true) {
+    let qz = sb
+      .from("quiz_leads")
+      .select("email, nome, whatsapp")
+      .not("email", "is", null)
+      .order("created_at", { ascending: false })
+      .range(de, de + PAGINA_SUPABASE - 1);
+    if (funil) qz = qz.eq("funnel_slug", funil);
+    const { data, error } = await qz;
+    if (error) throw new Error(`Supabase: ${error.message}`);
+    if (!data || data.length === 0) break;
+    for (const l of data as { email: string; nome: string | null; whatsapp: string | null }[]) {
+      linhas.push({
+        comprador_email: l.email,
+        comprador_telefone: l.whatsapp,
+        comprador_nome: l.nome,
+        comprador_cidade: null,
+        comprador_estado: null,
+        comprador_cep: null,
+        comprador_pais: "BR",
+      });
+    }
+    if (data.length < PAGINA_SUPABASE) break;
+    de += PAGINA_SUPABASE;
+  }
+
+  // Quem já comprou sai da lista fria: ele entra no público de compradores.
+  const compradores = new Set<string>();
+  if (frio) {
+    const { unicos } = await buscarCompradores("todos");
+    for (const c of unicos) {
+      const e = normEmail(c.comprador_email);
+      if (e) compradores.add(e);
+    }
+  }
+
+  const vistos = new Set<string>();
+  const unicos: Comprador[] = [];
+  let descartados_sem_email = 0;
+  let descartados_compradores = 0;
+
+  for (const l of linhas) {
+    const email = normEmail(l.comprador_email);
+    if (!email) { descartados_sem_email++; continue; }
+    if (vistos.has(email)) continue;
+    if (frio && compradores.has(email)) { descartados_compradores++; continue; }
+    vistos.add(email);
+    unicos.push(l);
+  }
+
+  return { unicos, total_linhas: linhas.length, descartados_teste: 0,
+           descartados_sem_email, descartados_compradores };
+}
+
+// Porta única: o recorte decide se a lista vem das vendas ou do quiz.
+async function buscarPessoas(recorte: Recorte) {
+  if (recorte === "quiz" || recorte === "quiz_frio") return await buscarQuiz(recorte === "quiz_frio");
+  if (recorte === "quiz_mcv" || recorte === "quiz_blindagem") return await buscarQuiz(false, FUNIL[recorte]);
+  return await buscarCompradores(recorte);
 }
 
 /* ──────────────────── Envio pro público do Meta ──────────────────── */
@@ -332,7 +412,7 @@ async function carimbar(status: "ok" | "erro", mensagem: string, segundos: numbe
 // Diagnóstico completo SEM tocar na conta de anúncios.
 async function preview(produto: Recorte, audienceId?: string) {
   const { unicos, total_linhas, descartados_teste, descartados_sem_email } =
-    await buscarCompradores(produto);
+    await buscarPessoas(produto);
 
   const norm = unicos.map(normalizar);
   const cobertura = {
@@ -418,8 +498,8 @@ async function atualizar(audienceId: string, produto: Recorte) {
     throw new Error(`"${alvo.name}" é do tipo ${alvo.subtype}. Só dá pra mandar gente pra público do tipo CUSTOM.`);
   }
 
-  const { unicos } = await buscarCompradores(produto);
-  if (unicos.length === 0) throw new Error("Nenhum comprador encontrado. Envio cancelado.");
+  const { unicos } = await buscarPessoas(produto);
+  if (unicos.length === 0) throw new Error("Nenhuma pessoa encontrada nesse recorte. Envio cancelado.");
 
   const r = await enviarUsuarios(audienceId, unicos);
   const seg = (Date.now() - t0) / 1000;
@@ -430,13 +510,13 @@ async function atualizar(audienceId: string, produto: Recorte) {
 
 async function criar(nome: string, semelhante: boolean, produto: Recorte) {
   const t0 = Date.now();
-  const { unicos } = await buscarCompradores(produto);
-  if (unicos.length === 0) throw new Error("Nenhum comprador encontrado. Criação cancelada.");
+  const { unicos } = await buscarPessoas(produto);
+  if (unicos.length === 0) throw new Error("Nenhuma pessoa encontrada nesse recorte. Criação cancelada.");
 
   const criado = await graphPost(`/act_${AD_ACCOUNT_ID}/customaudiences`, {
     name: nome,
     subtype: "CUSTOM",
-    description: "Compradores vindos do Tracker FMN (atualização automática)",
+    description: `Lista "${produto}" vinda do Tracker FMN (atualização automática)`,
     customer_file_source: "USER_PROVIDED_ONLY",
   });
   if (criado.error) throw new Error(`Meta recusou criar o público: ${criado.error.message}`);
@@ -484,7 +564,7 @@ Deno.serve(async (req) => {
     const padrao = await alvoPadrao();
     const audienceId = body.audience_id ? String(body.audience_id) : padrao?.audience_id;
     const produto: Recorte = body.produto
-      ? (["todos", "compradores", "mcv"].includes(String(body.produto))
+      ? (RECORTES.includes(String(body.produto) as Recorte)
           ? (String(body.produto) as Recorte)
           : "compradores")
       : (padrao?.produto ?? "compradores");
