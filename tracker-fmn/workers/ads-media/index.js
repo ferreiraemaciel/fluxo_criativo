@@ -365,6 +365,29 @@ async function handleCreateAdset(request, env) {
   return json({ ok: true, adsetId: data.id });
 }
 
+/* ── GET /post-anterior?adId=... ─────────────────────────────────
+   Descobre a publicação por trás de um anúncio já publicado e para onde ela
+   leva. Serve à opção "Reaproveitar publicação anterior" do modal Publicar:
+   o anúncio novo aponta pra essa publicação e herda curtidas, comentários e
+   compartilhamentos. O link NÃO pode ser trocado nesse caminho (vem da
+   publicação), então o Tracker confere o destino antes de deixar publicar.
+   Combinado com Felipe em 2026-09-11. */
+async function handlePostAnterior(request, env, url) {
+  const adId = url.searchParams.get('adId');
+  if (!adId) return json({ ok: false, error: 'adId obrigatório' }, 400);
+  const { token } = metaAcct(env);
+  const ad = await graphGet(adId, {
+    fields: 'name,creative{effective_object_story_id,object_story_spec,video_id}',
+  }, token);
+  const c = ad.creative || {};
+  const oss = c.object_story_spec || {};
+  const link = (oss.video_data?.call_to_action?.value?.link) || oss.link_data?.link || null;
+  if (!c.effective_object_story_id) {
+    return json({ ok: false, error: 'Esse anúncio não tem publicação reaproveitável no Meta.' }, 404);
+  }
+  return json({ ok: true, storyId: c.effective_object_story_id, link, adName: ad.name || null });
+}
+
 /* ── POST /create-ad ─────────────────────────────────────────────
    Monta o criativo (link ad) e cria o anúncio PAUSADO ligado ao conjunto.
    body: {
@@ -391,7 +414,11 @@ async function handleCreateAd(request, env) {
   };
 
   let creativeParams;
-  if (b.videoId) {
+  if (b.objectStoryId) {
+    // Reaproveita a publicação: herda mídia, textos, link e engajamento.
+    // Só o rastreio (url_tags, logo abaixo) é do anúncio novo.
+    creativeParams = { name: `Criativo ${b.nome}`, object_story_id: b.objectStoryId };
+  } else if (b.videoId) {
     // Criativo de vídeo
     const videoData = {
       video_id:       b.videoId,
@@ -776,6 +803,7 @@ export default {
         if (url.pathname === '/video-status') return await handleVideoStatus(request, env);
         if (url.pathname === '/progresso')    return await handleProgresso(request, env, url);
         if (url.pathname === '/ads-status')    return await handleAdsStatus(request, env, url);
+        if (url.pathname === '/post-anterior') return await handlePostAnterior(request, env, url);
         return json({ ok: true, service: 'ads-media' });
       }
 

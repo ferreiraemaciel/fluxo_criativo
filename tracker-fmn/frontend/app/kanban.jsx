@@ -546,6 +546,12 @@ function MetaAdModal({ card, onClose }) {
   const [errorMsg, setErrorMsg] = useState('');
   const [resultUrl, setResultUrl] = useState('');
   const [avisoDuplicidade, setAvisoDuplicidade] = useState(null); // string | null, não bloqueia publicação
+  // Reaproveitar a publicação do anúncio anterior deste card (mantém curtidas,
+  // comentários e compartilhamentos). O link vem da publicação e não pode ser
+  // trocado, então só libera se ele levar pro quiz certo do produto.
+  const [reaproveitar, setReaproveitar] = useState(false);
+  const [postAnterior, setPostAnterior] = useState(null); // { storyId, link, adName } | { erro }
+  const [buscandoPost, setBuscandoPost] = useState(false);
 
   // ESC fecha
   React.useEffect(() => {
@@ -748,7 +754,28 @@ function MetaAdModal({ card, onClose }) {
     return d.videoId;
   }
 
+  const hostSemWww = u => { try { return new URL(u).hostname.replace(/^www\./, ''); } catch { return ''; } };
+  const linkPostOk = !!postAnterior?.link && hostSemWww(postAnterior.link) === hostSemWww(linkDestino.trim() || LINK_DEFAULT);
+  const bloqueioReaproveitar = reaproveitar && (buscandoPost || !postAnterior || postAnterior.erro || !linkPostOk);
+  // Publicação reaproveitada não precisa de mídia no card: o vídeo já está nela.
+  const podeContinuar = !!campaignId && !!adsetId && (reaproveitar ? !bloqueioReaproveitar : hasMedia);
+
+  async function alternarReaproveitar(liga) {
+    setReaproveitar(liga);
+    if (!liga || postAnterior || !raw.meta_ad_id) return;
+    setBuscandoPost(true);
+    try {
+      const d = await workerGet(`/post-anterior?adId=${encodeURIComponent(raw.meta_ad_id)}`);
+      setPostAnterior({ storyId: d.storyId, link: d.link, adName: d.adName });
+    } catch (e) {
+      setPostAnterior({ erro: e.message || 'Não foi possível ler a publicação anterior.' });
+    } finally {
+      setBuscandoPost(false);
+    }
+  }
+
   async function handleCreate() {
+    if (reaproveitar) return handleCreateReaproveitando();
     setStatus('loading'); setErrorMsg('');
     setLoadingMsg(isVideo && !raw.meta_video_id ? 'Enviando vídeo ao Meta (pode levar 1 min)…' : 'Publicando…');
     try {
@@ -770,6 +797,30 @@ function MetaAdModal({ card, onClose }) {
         cta:       'LEARN_MORE',
       });
       // Persiste os IDs no card + status de publicação (rascunho = pausado)
+      await window.db.from('ads').update({
+        meta_campaign_id:    campaignId,
+        meta_adset_id:       adsetId,
+        meta_ad_id:          d.adId,
+        meta_ad_url:         d.adUrl,
+        meta_publish_status: 'rascunho',
+      }).eq('numero', adNum);
+      setResultUrl(d.adUrl || '');
+      setStatus('success');
+    } catch (e) {
+      setStatus('error'); setErrorMsg(e.message || 'Erro inesperado');
+    }
+  }
+
+  async function handleCreateReaproveitando() {
+    if (bloqueioReaproveitar) return;
+    setStatus('loading'); setErrorMsg(''); setLoadingMsg('Montando o anúncio com a publicação anterior…');
+    try {
+      const d = await workerPost('/create-ad', {
+        nome:          `ADS ${card.num} - ${raw.titulo || ''}`.trim().slice(0, 200),
+        adsetId,
+        objectStoryId: postAnterior.storyId,
+        urlTags:       urlTags.trim(),
+      });
       await window.db.from('ads').update({
         meta_campaign_id:    campaignId,
         meta_adset_id:       adsetId,
@@ -967,7 +1018,37 @@ function MetaAdModal({ card, onClose }) {
               }
             </div>
 
+            {/* Reaproveitar publicação anterior (só pra card já publicado antes) */}
+            {raw.meta_ad_id && (
+              <div style={S.subBox}>
+                <label style={{ display:'flex', alignItems:'center', gap:8, cursor:'pointer',
+                  fontSize:12.5, fontFamily:'Roboto,sans-serif', color:'var(--text-1)', fontWeight:700 }}>
+                  <input type="checkbox" checked={reaproveitar} onChange={e => alternarReaproveitar(e.target.checked)}/>
+                  Reaproveitar publicação anterior
+                </label>
+                <div style={{ fontSize:11, color:'var(--text-3)', lineHeight:1.5 }}>
+                  Mantém curtidas, comentários e compartilhamentos do anúncio antigo deste card.
+                  Vídeo, textos e link vêm da publicação e não podem ser trocados. O rastreio abaixo continua valendo.
+                </div>
+                {reaproveitar && buscandoPost && (
+                  <div style={{ fontSize:11.5, color:'var(--text-2)' }}>Lendo a publicação no Meta…</div>
+                )}
+                {reaproveitar && postAnterior?.erro && (
+                  <div style={{ fontSize:11.5, color:'var(--clr-neg)' }}>{postAnterior.erro} Publique do zero.</div>
+                )}
+                {reaproveitar && postAnterior && !postAnterior.erro && (
+                  <div style={{ fontSize:11.5, lineHeight:1.5, color: linkPostOk ? 'var(--text-2)' : 'var(--clr-neg)' }}>
+                    {linkPostOk
+                      ? <>A publicação leva para <b>{postAnterior.link}</b>, o quiz certo deste produto.</>
+                      : <>A publicação leva para <b>{postAnterior.link || 'um destino desconhecido'}</b>, que não é o quiz deste produto ({linkDestino.trim() || LINK_DEFAULT}). Não dá pra reaproveitar: desmarque e publique do zero.</>}
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Copy do anúncio (pré-preenchida do card) */}
+            <fieldset disabled={reaproveitar} style={{ border:'none', padding:0, margin:0, minWidth:0,
+              display:'flex', flexDirection:'column', gap:'inherit', opacity: reaproveitar ? .45 : 1 }}>
             <div>
               <label style={S.label}>Texto principal</label>
               <textarea style={{ ...S.input, minHeight:76, resize:'vertical', fontFamily:'Roboto,sans-serif' }}
@@ -990,6 +1071,7 @@ function MetaAdModal({ card, onClose }) {
               <input style={S.input} value={linkDestino} onChange={e => setLinkDestino(e.target.value)}
                 placeholder="https://..."/>
             </div>
+            </fieldset>
 
             {/* Parâmetros de URL (rastreamento) */}
             <div>
@@ -1001,7 +1083,7 @@ function MetaAdModal({ card, onClose }) {
               </div>
             </div>
 
-            {!hasMedia && (
+            {!hasMedia && !reaproveitar && (
               <div style={{ padding:'8px 12px', borderRadius:8, background:'rgba(234,170,65,.06)',
                 border:'1px solid rgba(234,170,65,.2)', fontSize:11, color:'var(--fmn-gold)',
                 lineHeight:1.6 }}>
@@ -1027,12 +1109,12 @@ function MetaAdModal({ card, onClose }) {
               </div>
             )}
 
-            <button onClick={() => setConfirm(true)} disabled={!campaignId || !adsetId || !hasMedia}
+            <button onClick={() => setConfirm(true)} disabled={!podeContinuar}
               style={{ padding:'12px', borderRadius:8, border:'none',
-                background: campaignId && adsetId && hasMedia ? 'var(--fmn-gold)' : 'rgba(255,255,255,.08)',
-                color: campaignId && adsetId && hasMedia ? 'var(--fmn-black)' : 'var(--text-3)',
+                background: podeContinuar ? 'var(--fmn-gold)' : 'rgba(255,255,255,.08)',
+                color: podeContinuar ? 'var(--fmn-black)' : 'var(--text-3)',
                 fontFamily:'Roboto,sans-serif', fontWeight:700, fontSize:13,
-                cursor: campaignId && adsetId && hasMedia ? 'pointer' : 'not-allowed',
+                cursor: podeContinuar ? 'pointer' : 'not-allowed',
                 display:'flex', alignItems:'center', justifyContent:'center', gap:8 }}>
               <LucideIcon icon="rocket" size={16}/>Publicar no Meta
             </button>
@@ -1058,7 +1140,7 @@ function MetaAdModal({ card, onClose }) {
                   background:'transparent', color:'var(--text-2)', fontFamily:'Roboto,sans-serif', fontSize:13, cursor:'pointer' }}>
                 Voltar
               </button>
-              <button onClick={handleCreate} disabled={status==='loading'}
+              <button onClick={handleCreate} disabled={status==='loading' || bloqueioReaproveitar}
                 style={{ flex:2, padding:'10px', borderRadius:8, border:'none',
                   background:'var(--fmn-gold)', color:'var(--fmn-black)',
                   fontFamily:'Roboto,sans-serif', fontWeight:700, fontSize:13,
