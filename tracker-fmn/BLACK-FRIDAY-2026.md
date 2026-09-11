@@ -2401,3 +2401,83 @@ Engenharia reversa da data (D-X), cronograma, oferta e combo, 7 perguntas da eco
 - **Calendário de conteúdo dia a dia:** a skill cronograma-black já instalada gera; falta levar para o Orgânico com a marca PICO.
 - **Aulas do Academy citadas:** página de vendas com IA (Livia), ManyChat de lead a aluno e aprovação de mensagem (Rafael Neaime), API oficial (Vitor), lives de conteúdo (Ladeira), YouTube sem tráfego (Fellipe), Story Único (Erika Vieira). E a aula prática de API e automação do Rafael Neaime em 18/09/2026.
 - **Live semanal no grupo VIP (motor):** uma por semana até a captação, com banco de condições sem desconto e ferramenta da semana. É decisão estratégica, não obrigação.
+
+---
+
+# PARTE 17. BANCO DE LINGUAGEM DO PÚBLICO (11/09/2026)
+
+Fonte: 28.654 respostas do quiz Fotógrafo Protegido e as 393 mensagens longas recebidas no WhatsApp do Claudinho, lidas na íntegra (julho a setembro de 2026). Mensagens automáticas de outros fotógrafos e tentativas de manipular a IA foram descartadas. As falas estão copiadas como a pessoa escreveu, sem corrigir: é daqui que saem ganchos, mote, trailer e página.
+
+## 17.1 O ranking das dores (quiz)
+
+| Situação vivida | Pessoas |
+|---|---|
+| Postaram uma foto minha sem dar os créditos | 14.666 |
+| Colocaram filtro e acabaram com a minha foto | 11.041 |
+| Cliente quer que eu entregue os arquivos brutos | 10.603 |
+| Anos depois o cliente pediu as fotos que eu não guardei mais | 10.280 |
+| Ficou sem jantar ou mesa em um evento | 7.241 |
+| Cliente pediu muitos retoques e Photoshop excessivo | 6.823 |
+| Cliente cancelou o contrato e pediu o dinheiro de volta | 5.995 |
+| Cliente não gostou das fotos que eu fiz | 5.501 |
+
+- Contrato de hoje: **"Um textão em Word e nem sei se me protege" (13.020)**, não uso contrato (5.295), salvo as mensagens do WhatsApp (3.461).
+- "Já perdi dinheiro por não estar protegido": 6.901. "Às vezes protege, mas já tive problemas": 8.256.
+- Quanto custa um processo: "não faço ideia, mas espero nunca descobrir" (9.378).
+- Temas jurídicos que domina: "nenhum deles" (11.962).
+- Sentimento: estresse por ter que estar sempre atrás do dinheiro (10.558), medo do negócio não dar certo (8.503).
+- Quem é: fotógrafo (16.949), híbrido foto e vídeo (8.700), videomaker (2.969).
+
+## 17.2 Falas literais, por tipo
+
+**Dor**
+- "Me davam entrada E depois queriam o dinheiro de volta falando que ganharam o casamento"
+- "Quando eu passei horas editando e na hora de postar o cliente colocou um filtro horrível"
+- "Pq a bonita da cliente tirou minha marca d'água e usou as fotos que não comprou"
+- "Na verdade eu não faço contrato, e to correndo risco mesmo, e cliente cancelando de última hora e querendo mudar data"
+- "sempre acontece de o cliente postar fotos sem me dar o crédito pala autoria"
+- "Mas também por usar em peças publicitárias sem que isso fosse acordado em contrato"
+- "elas não engoliram bem e ameaçaram até chamar a gente na justiça" (vídeo em pendrive que não abriu na TV da cliente)
+- "fiz um acordo extra judicial e devolvi a metade do sinal"
+- "Eu só deixei de ganhar um pouquinho a mais. Por falta de um contrato."
+- "O meu caso seria mais nos acompanhamento mensal .. que as vez acontece do último mês os pais não vir fazer as foto de 12"
+
+**Tentativa frustrada**
+- "Eu tenho contrato aqui Porém são muitas folhas E olho hj e já não gosto mais dele"
+- "Pois cliente nenhum lê várias e várias folhas de coisas escritas"
+- "ficaram algumas coisas vagas No ar que me dava raiva só de ver rs"
+- "Formalizo tudo na reunião online. Sou péssima com contratos. Pensei até em contratar um advogado pra isso."
+- "Ainda envio um PDF com a proposta [...] mas o acerto final se dá pelo whatsapp"
+- "eu me travei com esse tipo de edição, que nem faço mais, com medo de passar de novo"
+
+**Desejo**
+- "quero algo que deixe bem, que visualizei e fechei mais rápido, intuitivo com proteção"
+- "um modelo simples e prático, mas com todo o amparo legal"
+- "queria algo rápido que eu posso em poucos minutinhos resolver"
+- "algo mais amigável de se ver, [não] ser algo meio brusco para cliente"
+- "Já sou empresa e cada dia tenho recebido propostas maiores"
+- "quero me respaldar principalmente sobre uso de imagem e a nova lei felca"
+
+## 17.3 As objeções, com a fala de quem tem
+
+| Objeção | Como aparece |
+|---|---|
+| Dinheiro agora | "Tô só esperando entrar um dinheiro", "meu cartão tá lá nas alturas", "o valor ficou alto para mim" |
+| Parcelamento com juros | "Vai sair de 270 pra 360. Infelizmente eu não tenho cartão de crédito." |
+| Quer ver antes | "preciso ver pelo menos uma página", "me mandam uma amostra", "não me sinto a vontade em comprar no escuro" |
+| Validade jurídica | "o contrato é legalmente válido?", "O visual do contrato pode vir a interferir na legalidade dele?", "vale pra cidade pequena?" |
+| Genérico ou simples demais | "o seu modelo é algo que não é específico e pode ser genérico", "tenho medo de ser Simples de mais" |
+| Prefere advogado | "não confio em contrato pronto, prefiro fazer com advogado particular" |
+| Concorrente barato | "Você é melhor que aquele cara que vende contrato a 39,90 na internet?" |
+| **Confusão com o Blindagem** | "Blindagem extra? [...] Para poder previnir de verdade eu tenho que investir extra?", "vou estar pagando anual? Ou só a blindagem?", "é uma mensalidade anual ou é mensal?" |
+| Assinatura do cliente | "O processo de assinatura do cliente é fácil? Tenho medo delas não conseguirem" |
+| Acesso para sempre | "quando passou cerca de uns 2 anos não tive mais acesso" (experiência ruim com item do Canva) |
+
+## 17.4 O que isso muda na Black
+
+1. **O inimigo está confirmado pelos dados.** "Print do WhatsApp" e "textão em Word" são as duas coisas que o público mais usa hoje.
+2. **O combo resolve a objeção que mais confunde.** O público não entende por que precisa pagar o Blindagem além do contrato. Na Black, os dois juntos pelo preço de um tiram essa dúvida da mesa: dá para usar isso no trailer e na live.
+3. **Pix e à vista precisam de destaque.** Parcelamento com juros assusta quem não tem cartão (e 52,4% já pagam à vista).
+4. **A página e a live precisam mostrar o produto por dentro**: uma página de exemplo e o cliente recebendo e assinando. É a objeção "comprar no escuro".
+5. **Suporte de acesso é gargalo real.** Várias mensagens são de quem comprou e não acha o acesso. Com o volume da Black, isso vira reembolso. Responde a pergunta de suporte das 7 perguntas.
+6. **Bônus que o público pediu, e que só o Felipe consegue entregar:** autorização de uso de imagem avulsa, termo de entrega (inclusive para regularizar trabalhos antigos), cláusulas por nicho (newborn, acompanhamento mensal, ensaio sensual, esporte escolar com menores) e a atualização da Lei Felca e do ECA Digital.
