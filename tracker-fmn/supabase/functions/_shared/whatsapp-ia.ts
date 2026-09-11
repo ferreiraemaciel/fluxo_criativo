@@ -179,10 +179,14 @@ export async function processarComIA(supabase: any, telefoneRaw: string, nomeLea
   const treinamento = await modoTreinamentoAtivo(supabase);
   if (treinamento && telefone !== TELEFONE_TESTE_TREINAMENTO && !contato?.ia_elegivel) return;
 
-  // Escopo fino: só quem foi explicitamente marcado como elegível (hoje, o
-  // lote de teste). O toggle geral liga o motor, isso aqui decide quem
-  // especificamente a IA pode responder — evita repetir o "ligou pra todo mundo".
-  if (!contato?.ia_elegivel) return;
+  // O lote de teste acabou (pedido do Felipe em 11/09/2026: o Claudinho
+  // precisa estar totalmente operante). Antes, só respondia quem tinha
+  // ia_elegivel marcado, e em 30 dias 44 leads do quiz sem a marca
+  // escreveram e ficaram sem resposta, sem erro nenhum aparecer. Agora ele
+  // responde todo lead, e só fica de fora quem as regras tiram: precisa_humano
+  // (handoff), ia_pausada (o time assumiu), spam e aluno (logo abaixo).
+  // ia_elegivel continua valendo só no modo de treinamento, acima.
+  if (contato?.is_spam) return;
   // Por enquanto a IA só atua no fluxo de leads do quiz. Aluno novo (quem
   // comprou o MCV, etapa forçada por enviarBoasVindasMcv) fica de fora.
   if (contato?.etapa === "aluno") return;
