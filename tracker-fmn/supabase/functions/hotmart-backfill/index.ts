@@ -16,6 +16,7 @@
 // Agendado via pg_cron a cada 15 min, mas só roda das 06h às 23:59 Brasília
 // (madrugada não tem venda pra recuperar, não vale gastar chamada à API).
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { parseSck } from "../_shared/atribuicao.ts";
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
@@ -109,6 +110,21 @@ async function buscarDadosComprador(token: string, transactionId: string) {
 
 function mapToVenda(item: any) {
   const { buyer, purchase, product } = item;
+
+  // Rastreio da venda. Sem isto, toda venda que entrava pela rede de segurança
+  // (quando o webhook falha, como no apagão de 24 e 25/08/2026) nascia órfã de
+  // anúncio e nunca era corrigida depois: o criativo aparecia com custo por
+  // venda pior do que o real, entrava no radar das regras de pausa, e a decisão
+  // de escala saía errada. Auditoria de 12/09/2026.
+  //
+  // O nome do campo muda conforme o endpoint da Hotmart, então lê os que
+  // existem, na ordem em que costumam aparecer.
+  const rastreio = purchase?.tracking || item?.tracking || {};
+  const sck = rastreio.source_sck || rastreio.sck || rastreio.source || null;
+  const atribuido: Record<string, unknown> = sck ? parseSck(String(sck)) : {};
+  if (sck && !Object.keys(atribuido).length) {
+    console.log(`[backfill] sck sem leitura: ${String(sck).slice(0, 40)}`);
+  }
   const statusRaw = purchase?.status || "";
   const status = STATUS_MAP[statusRaw] || statusRaw.toLowerCase();
   const toISO = (ms?: number) => (ms ? new Date(ms).toISOString() : null);
@@ -140,6 +156,14 @@ function mapToVenda(item: any) {
     comprador_email: buyer?.email || null,
     hotmart_order_date: toISO(purchase?.order_date),
     hotmart_approved_date: toISO(purchase?.approved_date),
+    utm_source: (atribuido.utm_source as string) ?? null,
+    utm_medium: (atribuido.utm_medium as string) ?? null,
+    utm_campaign: (atribuido.utm_campaign as string) ?? null,
+    utm_content: (atribuido.utm_content as string) ?? null,
+    utm_term: (atribuido.utm_term as string) ?? null,
+    meta_ad_id: (atribuido.meta_ad_id as string) ?? null,
+    // A coluna só aceita "direta" ou "quiz"; o sck lido aqui é a venda direta.
+    atribuicao_fonte: sck ? "direta" : null,
     hotmart_raw: item,
   };
 }
@@ -248,6 +272,42 @@ async function cruzarComQuiz() {
   return { telefonesPreenchidos, contatosPromovidos };
 }
 
+/* Herda a origem do quiz quando a venda chega sem anúncio.
+
+   O webhook já fazia isso desde o caso da Drica Rocha (passou pelo quiz por um
+   anúncio e comprou 1h37 depois, com a Hotmart apagando o sck no caminho).
+   A varredura, que é a rede de segurança de quando o webhook falha, não fazia:
+   a venda entrava órfã e nunca era corrigida. Mesma janela de 7 dias combinada
+   com o Felipe, e fica registrado em `atribuicao_fonte` que a origem foi
+   deduzida. Auditoria de 12/09/2026.                                       */
+async function herdarOrigemDoQuiz(venda: any): Promise<void> {
+  if (venda.meta_ad_id || !venda.comprador_email) return;
+  const referencia = venda.hotmart_order_date ? new Date(venda.hotmart_order_date).getTime() : Date.now();
+  const seteDiasAntes = new Date(referencia - 7 * 24 * 60 * 60 * 1000).toISOString();
+
+  const { data: lead } = await supabase
+    .from("quiz_leads")
+    .select("utm_source, utm_medium, utm_campaign, utm_content, created_at")
+    .ilike("email", venda.comprador_email)
+    .not("utm_content", "is", null)
+    .gte("created_at", seteDiasAntes)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  const conteudo = lead?.utm_content || "";
+  const idDoAnuncio = conteudo.includes("|") ? conteudo.split("|").pop()!.trim() : "";
+  if (!/^\d{10,}$/.test(idDoAnuncio)) return;
+
+  venda.meta_ad_id = idDoAnuncio;
+  venda.atribuicao_fonte = "quiz";
+  venda.utm_source = venda.utm_source || lead!.utm_source;
+  venda.utm_medium = venda.utm_medium || lead!.utm_medium;
+  venda.utm_campaign = venda.utm_campaign || lead!.utm_campaign;
+  venda.utm_content = venda.utm_content || lead!.utm_content;
+  console.log(`[backfill] origem herdada do quiz: ${venda.hotmart_transaction_id} → anúncio ${idDoAnuncio}`);
+}
+
 Deno.serve(async (req) => {
   const url = new URL(req.url);
   const force = url.searchParams.get("force") === "1";
@@ -270,6 +330,11 @@ Deno.serve(async (req) => {
     const vendas = items.map(mapToVenda).filter((v) => v.hotmart_transaction_id);
     const existentes = await transacoesExistentes(vendas.map((v) => v.hotmart_transaction_id));
     const faltantes = vendas.filter((v) => !existentes.has(v.hotmart_transaction_id));
+
+    // Origem: primeiro o sck que veio junto, depois o quiz por e-mail.
+    for (const v of faltantes) {
+      await herdarOrigemDoQuiz(v);
+    }
 
     // Enriquece telefone/estado das que estão sendo inseridas agora.
     for (const v of faltantes) {

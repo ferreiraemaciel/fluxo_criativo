@@ -69,27 +69,55 @@ function normalizarTelefoneWhatsapp(raw: string): string {
   return d; // 13 dígitos: já está no formato certo (DDI+DDD+9+8)
 }
 
-async function buscarFunnelSlug(supabase: any, telefone: string): Promise<string> {
-  const semDDI = telefone.startsWith("55") ? telefone.slice(2) : telefone;
+/* Acha o lead do quiz pelo telefone, sem grudar na pessoa errada.
+
+   Antes a busca era `whatsapp ilike %numero-sem-DDI%`, pegando o primeiro
+   resultado, sem ordem definida: qualquer telefone guardado que contivesse
+   aquela sequência em qualquer posição casava. Dado sensível de um lead
+   (situações que viveu, nível de risco) entrava no prompt da conversa de
+   outra pessoa e saía pelo WhatsApp como se fosse verdade sobre ela.
+   Auditoria de 12/09/2026.
+
+   Agora a comparação é pelo FIM do número, com os últimos 8 dígitos, e o
+   resultado é conferido em JavaScript: mesmo fim e mesmo DDD. Os últimos 8
+   dígitos são a chave estável porque não dá para saber se o número canônico
+   tem ou não o nono dígito. Havendo mais de um, vale o mais recente.        */
+async function acharLeadDoQuiz(supabase: any, telefone: string, colunas: string) {
+  const digitos = String(telefone || "").replace(/\D/g, "");
+  if (digitos.length < 10) return null;
+  const finais8 = digitos.slice(-8);
+  const ddd = digitos.slice(-11, -9); // dois dígitos antes do 9 + 8 finais
+
   const { data: leads } = await supabase
     .from("quiz_leads")
-    .select("funnel_slug")
-    .or(`whatsapp.ilike.%${semDDI}%`)
+    .select(colunas)
+    .ilike("whatsapp", `%${finais8}`)
     .order("created_at", { ascending: false })
-    .limit(1);
-  return leads?.[0]?.funnel_slug || "fotografo-protegido";
+    .limit(5);
+
+  for (const lead of leads || []) {
+    const d = String((lead as any).whatsapp || "").replace(/\D/g, "");
+    if (!d) return lead; // a consulta já casou pelo fim; sem telefone lido, aceita
+    if (d.slice(-8) !== finais8) continue;
+    if (ddd && d.length >= 10 && d.slice(-11, -9) !== ddd && d.slice(-10, -8) !== ddd) continue;
+    return lead;
+  }
+  return leads?.[0] ?? null;
+}
+
+async function buscarFunnelSlug(supabase: any, telefone: string): Promise<string> {
+  const lead = await acharLeadDoQuiz(supabase, telefone, "funnel_slug, whatsapp, created_at");
+  return lead?.funnel_slug || "fotografo-protegido";
 }
 
 async function buscarContextoLead(supabase: any, telefone: string): Promise<string> {
   // Tenta achar o lead pelo WhatsApp em quiz_leads (mesmo formato salvo lá,
   // que pode não estar normalizado igual whatsapp_mensagens.telefone).
-  const semDDI = telefone.startsWith("55") ? telefone.slice(2) : telefone;
-  const { data: leads } = await supabase
-    .from("quiz_leads")
-    .select("nivel_risco, area_atuacao, profissionalizacao, tipo_negocio, situacoes, sentimentos, usa_contrato, tipo_contrato_atual, custo_processo, confianca_clientes, protege_dinheiro, entende_contrato, quer_modelos, foco_artistico, temas_dominados")
-    .or(`whatsapp.ilike.%${semDDI}%`)
-    .limit(1);
-  const lead = leads?.[0];
+  const lead = await acharLeadDoQuiz(
+    supabase,
+    telefone,
+    "nivel_risco, area_atuacao, profissionalizacao, tipo_negocio, situacoes, sentimentos, usa_contrato, tipo_contrato_atual, custo_processo, confianca_clientes, protege_dinheiro, entende_contrato, quer_modelos, foco_artistico, temas_dominados, whatsapp, created_at",
+  );
   if (!lead) return "";
   const partes = [];
   if (lead.nivel_risco) partes.push(`Nível de risco/exposição desse lead: ${lead.nivel_risco}.`);
@@ -159,6 +187,52 @@ async function esperarComDigitando(ms: number, mensagemId: string | null) {
   }
 }
 
+/* Teto de gasto da IA.
+
+   Toda mensagem elegível dispara uma chamada paga. O custo por mensagem já era
+   calculado e gravado, mas nada cortava quando o gasto subia: um lead
+   insistente, um laço de mensagem automática ou alguém forjando webhook
+   queimavam crédito até acabar, que é a falha de uma semana já vivida em
+   setembro. Auditoria de 12/09/2026.
+
+   O teto do dia vem de app_config (chave `ia_teto_dia_usd`), com 8 dólares de
+   padrão, que é muito acima do uso normal. Batendo no teto, o Claudinho para
+   de responder e a tela acende a mesma faixa vermelha da falha, em vez de
+   gastar até o crédito acabar.                                            */
+const TETO_DIA_USD_PADRAO = 8;
+
+async function passouDoTetoDeGasto(supabase: any): Promise<boolean> {
+  try {
+    const { data: cfg } = await supabase
+      .from("app_config").select("valor").eq("chave", "ia_teto_dia_usd").maybeSingle();
+    const teto = Number((cfg?.valor as any)?.usd ?? cfg?.valor ?? TETO_DIA_USD_PADRAO);
+    if (!isFinite(teto) || teto <= 0) return false;
+
+    const inicioDoDia = new Date();
+    inicioDoDia.setUTCHours(3, 0, 0, 0); // 00h de Brasília
+    if (inicioDoDia.getTime() > Date.now()) inicioDoDia.setUTCDate(inicioDoDia.getUTCDate() - 1);
+
+    const { data: gastos } = await supabase
+      .from("whatsapp_mensagens")
+      .select("custo_usd")
+      .eq("origem", "ia")
+      .gte("created_at", inicioDoDia.toISOString())
+      .not("custo_usd", "is", null);
+    const total = (gastos || []).reduce((s: number, m: any) => s + Number(m.custo_usd || 0), 0);
+    if (total < teto) return false;
+
+    console.error(`[whatsapp-ia] teto do dia atingido: US$ ${total.toFixed(2)} de US$ ${teto.toFixed(2)}`);
+    await registrarFalhaDaIA(
+      supabase,
+      `Teto de gasto do dia atingido (US$ ${total.toFixed(2)} de US$ ${teto.toFixed(2)}). O Claudinho parou de responder hoje.`,
+    );
+    return true;
+  } catch (e) {
+    console.error("[whatsapp-ia] não consegui conferir o teto de gasto:", (e as Error).message);
+    return false; // na dúvida, responder o lead é melhor do que ficar mudo
+  }
+}
+
 export async function processarComIA(supabase: any, telefoneRaw: string, nomeLead: string | null, mensagemId: string | null = null) {
   if (!ANTHROPIC_API_KEY || !WHATSAPP_TOKEN || !WHATSAPP_PHONE_NUMBER_ID) {
     console.log("[whatsapp-ia] credenciais ausentes, pulando.");
@@ -169,6 +243,8 @@ export async function processarComIA(supabase: any, telefoneRaw: string, nomeLea
 
   const ativa = await iaAtivaGlobalmente(supabase);
   if (!ativa) return;
+
+  if (await passouDoTetoDeGasto(supabase)) return;
 
   const { data: contato } = await supabase.from("whatsapp_contatos").select("*").eq("telefone", telefone).single();
   if (contato?.ia_pausada || contato?.precisa_humano) return;

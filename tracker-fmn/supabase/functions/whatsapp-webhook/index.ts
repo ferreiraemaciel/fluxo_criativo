@@ -133,6 +133,17 @@ async function assinaturaConfere(corpoCru: string, cabecalho: string | null): Pr
   return diferenca === 0;
 }
 
+// Guarda a entrega que falhou, crua, para poder reprocessar depois. A Meta
+// nunca reenvia o que respondemos com 200, então sem isto a mensagem do lead
+// se perdia para sempre e nada indicava a perda (auditoria de 12/09/2026).
+async function guardarFalha(motivo: string, payload: unknown) {
+  try {
+    await supabase.from("webhook_falhas").insert({ origem: "whatsapp", motivo, payload });
+  } catch (e) {
+    console.error("[whatsapp-webhook] não consegui guardar a falha:", (e as Error).message);
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: CORS });
 
@@ -181,6 +192,7 @@ Deno.serve(async (req) => {
 
         // Mensagens recebidas do lead.
         for (const msg of value.messages || []) {
+          try {
           const waMessageId = msg.id || null;
 
           const telefone = normalizarTelefoneWhatsapp(msg.from);
@@ -331,6 +343,10 @@ Deno.serve(async (req) => {
               console.error("[whatsapp-webhook] erro na IA em background:", err)
             )
           );
+          } catch (erroMensagem) {
+            console.error("[whatsapp-webhook] erro numa mensagem do lote:", erroMensagem);
+            await guardarFalha((erroMensagem as Error)?.message || "erro ao processar mensagem", { mensagem: msg, contatos: value.contacts || [] });
+          }
         }
 
         // Atualizações de status (enviado/entregue/lido/falhou) das mensagens que a gente mandou.
@@ -354,6 +370,7 @@ Deno.serve(async (req) => {
     }
   } catch (err) {
     console.error("[whatsapp-webhook] erro processando payload:", err);
+    await guardarFalha((err as Error)?.message || "erro processando payload", payload);
   }
 
   if (tarefasEmBackground.length) {

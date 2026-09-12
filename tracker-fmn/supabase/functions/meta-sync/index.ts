@@ -200,6 +200,30 @@ async function reconciliarAnunciosParados(idsAtivos: Set<string>) {
   return { avaliadas: paradas.length, apagadas, relidas };
 }
 
+/* Venda de verdade do anúncio, pela Hotmart, nos últimos N dias.
+   As regras que pausam anúncio sozinhas liam só o que o Pixel do Meta enxerga,
+   e o próprio caderno do projeto registra que cerca de uma em cada três vendas
+   do MCV não chega ao Pixel (o ADS 309 vendeu com o Meta mostrando zero). Sem
+   esta conferência, anúncio lucrativo era pausado por "gastou sem vender", e
+   ainda entrava no histórico como ruim. Auditoria de 12/09/2026.
+   Complemento de pedido não conta como venda. */
+async function vendasHotmartDoAnuncio(metaAdId: string, dias: number): Promise<number> {
+  if (!metaAdId) return 0;
+  const desde = new Date(Date.now() - dias * 24 * 3_600_000).toISOString();
+  const { count, error } = await supabase
+    .from("vendas")
+    .select("id", { count: "exact", head: true })
+    .eq("meta_ad_id", metaAdId)
+    .eq("status", "aprovada")
+    .neq("is_order_bump", true)
+    .gte("created_at", desde);
+  if (error) {
+    console.error("[meta-sync] não consegui conferir venda na Hotmart:", error.message);
+    return 0; // não inventa venda: na dúvida, a regra segue como antes
+  }
+  return count || 0;
+}
+
 Deno.serve(async (req) => {
   // Portão: chave de serviço, cron do banco ou usuário logado no Tracker.
   const recusa = await portao(req, { usuario: true });
@@ -458,6 +482,13 @@ async function verificarRegraG1() {
       const gastoLimite = limitePara(adsRow?.produto || null);
       if (Number(i5d.gasto) < gastoLimite) continue;
 
+      // "Sem nenhuma venda" tem que valer também na Hotmart, não só no Pixel.
+      const vendasReais5d = await vendasHotmartDoAnuncio(i5d.meta_ad_id, 5);
+      if (vendasReais5d > 0) {
+        console.log(`[meta-sync] G1 não disparou em ${i5d.meta_ad_id}: o Pixel não viu, mas a Hotmart tem ${vendasReais5d} venda(s) em 5 dias.`);
+        continue;
+      }
+
       await supabase.from("alertas").insert({
         ads_numero:     adsRow?.numero || null,
         meta_ad_id:     i5d.meta_ad_id,
@@ -543,6 +574,26 @@ async function verificarRegraG5() {
       // diferente), não mais um limite único da conta.
       const cpaLimite = cpaLimitePara(adsRow?.produto || null);
       if (cpa3d < cpaLimite || cpa5d < cpaLimite) continue;
+
+      // O CPA do Pixel é o pior caso. Antes de pausar, refaz a conta com a
+      // venda que a Hotmart registrou na mesma janela: se o custo real está
+      // dentro do limite, o anúncio fica no ar.
+      const vendasReais5d = await vendasHotmartDoAnuncio(i3d.meta_ad_id, 5);
+      if (vendasReais5d > 0) {
+        const { data: gasto5dRow } = await supabase
+          .from("insights_cache")
+          .select("gasto, compras")
+          .eq("meta_ad_id", i3d.meta_ad_id)
+          .eq("periodo", "5d")
+          .maybeSingle();
+        const gasto5d = Number(gasto5dRow?.gasto || 0);
+        const vendas5d = Math.max(Number(gasto5dRow?.compras || 0), vendasReais5d);
+        const cpaReal = vendas5d > 0 ? gasto5d / vendas5d : null;
+        if (cpaReal != null && cpaReal < cpaLimite) {
+          console.log(`[meta-sync] G5 não disparou em ${i3d.meta_ad_id}: CPA real R$${cpaReal.toFixed(2)} com ${vendas5d} venda(s), abaixo do limite R$${cpaLimite.toFixed(2)}.`);
+          continue;
+        }
+      }
 
       // Combinado com Felipe em 2026-08-17: G5 não fica só no aviso, marca a
       // pausa como pendente pra processar-pausas (roda a cada 5min) executar

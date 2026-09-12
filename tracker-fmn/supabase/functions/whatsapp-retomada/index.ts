@@ -213,14 +213,26 @@ Deno.serve(async (_req) => {
     // de reabertura, não é conversa ao vivo, então é segura mesmo durante a
     // etapa de treinamento do Claudinho (onde a resposta ao vivo fica restrita
     // a um único número de teste, ver TELEFONE_TESTE_TREINAMENTO em whatsapp-ia.ts).
-    const { data: contatos, error } = await supabase
-      .from("whatsapp_contatos")
-      .select("telefone, nome, retomada_enviada_para")
-      .eq("ia_pausada", false)
-      .eq("precisa_humano", false)
-      .not("etapa", "in", "(aluno,perdido)");
-    if (error) throw error;
-    if (!contatos?.length) return new Response(JSON.stringify({ ok: true, processados: 0 }), { headers: { "content-type": "application/json" } });
+    // Paginado e com spam de fora. O banco corta em mil linhas por consulta
+    // sem avisar, e a tabela já passou disso: os contatos além da milésima
+    // linha nunca entravam na retomada, então lead com janela de 24h prestes
+    // a fechar ficava sem a mensagem de reabertura, sem erro nenhum na tela.
+    // Auditoria de 12/09/2026.
+    const contatos: any[] = [];
+    for (let pagina = 0; ; pagina++) {
+      const { data, error } = await supabase
+        .from("whatsapp_contatos")
+        .select("telefone, nome, retomada_enviada_para")
+        .eq("ia_pausada", false)
+        .eq("precisa_humano", false)
+        .eq("is_spam", false)
+        .not("etapa", "in", "(aluno,perdido)")
+        .range(pagina * 1000, pagina * 1000 + 999);
+      if (error) throw error;
+      contatos.push(...(data || []));
+      if (!data || data.length < 1000) break;
+    }
+    if (!contatos.length) return new Response(JSON.stringify({ ok: true, processados: 0 }), { headers: { "content-type": "application/json" } });
 
     const agora = Date.now();
     let enviados = 0;

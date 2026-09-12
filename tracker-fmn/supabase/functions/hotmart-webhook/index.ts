@@ -4,6 +4,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { upsertContato } from "../_shared/whatsapp-contatos.ts";
 import { renderCorpoTemplate } from "../_shared/whatsapp-templates.ts";
+import { parseSck } from "../_shared/atribuicao.ts";
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
@@ -76,61 +77,42 @@ const STATUS_MAP: Record<string, string> = {
   SHIPPING_COMPLETE:             "aprovada",
 };
 
+// Estados que não voltam atrás. A Hotmart reenvia webhook quando não recebe
+// 200 rápido, e uma retentativa atrasada de PURCHASE_APPROVED chegando depois
+// de um reembolso devolvia a venda para "aprovada": reembolso virava
+// faturamento na tela, e a tag do produto que tinha sido retirada voltava a
+// valer. Auditoria de 12/09/2026.
+const STATUS_TERMINAIS = new Set(["reembolsada", "chargeback", "protesto", "cancelada"]);
+
+// Eventos que reabrem de propósito uma venda encerrada. Assinatura cancelada
+// que volta é caso real, então a trava não pode barrar isso.
+const EVENTOS_QUE_REABREM = new Set([
+  "SUBSCRIPTION_REACTIVATED",
+  "SUBSCRIPTION_ACTIVE",
+]);
+
+// Ordem de chegada não é ordem de acontecimento. Só deixa passar quando o
+// evento novo é mais recente do que o que já está gravado.
+function podeSobrescrever(
+  statusAtual: string | null,
+  statusNovo: string,
+  eventoNovo: string,
+  dataAtual: string | null,
+  dataNova: string | null,
+): { pode: boolean; motivo?: string } {
+  if (!statusAtual) return { pode: true };
+  if (EVENTOS_QUE_REABREM.has(eventoNovo)) return { pode: true };
+  if (STATUS_TERMINAIS.has(statusAtual) && !STATUS_TERMINAIS.has(statusNovo)) {
+    return { pode: false, motivo: `venda já está como ${statusAtual}` };
+  }
+  if (dataAtual && dataNova && new Date(dataNova) < new Date(dataAtual)) {
+    return { pode: false, motivo: "evento mais antigo do que o já gravado" };
+  }
+  return { pode: true };
+}
+
 // Eventos que geram ou atualizam um registro em vendas
 const EVENTOS_RELEVANTES = new Set(Object.keys(STATUS_MAP));
-
-// Parser do source_sck da Hotmart (mesmo formato que sync_hotmart.py usa)
-const SCK_SEP = "hQwK21wXxR";
-const CLICK_ID_RE = /jLj6[a-zA-Z0-9]+/i;
-
-function parseSck(sck: string) {
-  if (!sck) return {};
-  const parts = sck.split(SCK_SEP);
-  const dec = (s: string) => s ? decodeURIComponent(s.replace(/\+/g, " ")).trim() : null;
-
-  const rawSource = parts[0] || "";
-  const m = CLICK_ID_RE.exec(rawSource);
-  const utmSource   = m ? rawSource.slice(0, m.index).toLowerCase().trim() : rawSource.toLowerCase().trim();
-  const utmMedium   = parts.length > 1 && parts[1] ? dec(parts[1]) : null;
-  const utmCampaign = parts.length > 2 && parts[2] ? dec(parts[2]) : null;
-  let   utmContent  = parts.length > 3 && parts[3] ? dec(parts[3]) : null;
-  const utmTerm     = parts.length > 4 && parts[4] ? dec(parts[4]) : null;
-
-  // Meta Ads: "ad_name|ad_id" em utm_content
-  let metaAdId: string | null = null;
-  if (utmContent && utmContent.includes("|")) {
-    const idx = utmContent.lastIndexOf("|");
-    const adId = utmContent.slice(idx + 1).trim();
-    if (/^\d{10,}$/.test(adId)) {
-      metaAdId  = adId;
-      utmContent = utmContent.slice(0, idx).trim();
-    }
-  }
-  // sck só com o ID do anúncio, sem separador nenhum (formato compacto usado
-  // pelo quiz-fotografo-protegido quando o destino é página própria: o
-  // separador real do sck tem 10 caracteres, nunca cabe nos 30 do campo da
-  // Hotmart pra alcançar a posição de content, então o quiz manda só o ID
-  // puro). Se o sck inteiro (sem split nenhum, rawSource) for só dígitos,
-  // 10+, é o ID do anúncio direto, não uma fonte de verdade.
-  const soDigitos = parts.length === 1 && /^\d{10,}$/.test(rawSource);
-  if (!metaAdId && soDigitos) {
-    metaAdId = rawSource;
-  }
-  // Limpar sufixo "|id" de medium e campaign também
-  const cleanPipe = (s: string | null) => s && s.includes("|") ? s.split("|")[0].trim() : s;
-
-  return {
-    // Quando o sck é só o ID do anúncio (sem separador), a "fonte" não é o
-    // ID em si -- é Meta Ads por construção (só o quiz-fotografo-protegido
-    // manda sck nesse formato, e só pra tráfego pago do Meta).
-    utm_source:   soDigitos ? "fb" : (utmSource || null),
-    utm_medium:   cleanPipe(utmMedium),
-    utm_campaign: cleanPipe(utmCampaign),
-    utm_content:  utmContent,
-    utm_term:     utmTerm,
-    meta_ad_id:   metaAdId,
-  };
-}
 
 Deno.serve(async (req) => {
   if (req.method !== "POST") {
@@ -556,6 +538,24 @@ Deno.serve(async (req) => {
   const hotmartApprovedDate = approvedDateMs ? new Date(Number(approvedDateMs)).toISOString() : null;
   // created_at = data real da compra (não a data de chegada do webhook)
   const createdAt = hotmartOrderDate || new Date().toISOString();
+
+  // Evento repetido ou fora de ordem não pode desfazer o que já aconteceu.
+  const { data: jaGravada } = await supabase
+    .from("vendas")
+    .select("status, hotmart_event, hotmart_order_date, hotmart_approved_date")
+    .eq("hotmart_transaction_id", transactionId)
+    .maybeSingle();
+
+  const dataNova   = hotmartApprovedDate || hotmartOrderDate;
+  const dataAtual  = jaGravada?.hotmart_approved_date || jaGravada?.hotmart_order_date || null;
+  const veredito   = podeSobrescrever(jaGravada?.status ?? null, status, evento, dataAtual, dataNova);
+  if (!veredito.pode) {
+    console.log(`[hotmart-webhook] ignorando ${evento} de ${transactionId}: ${veredito.motivo}`);
+    return new Response(JSON.stringify({ ok: true, ignorado: veredito.motivo }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
 
   const { error } = await supabase.from("vendas").upsert(
     {
