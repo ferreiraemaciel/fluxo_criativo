@@ -509,6 +509,30 @@ acima. Testado em produção: `?utm_source=instagram-ah-lp&utm_medium=dm` virou
 `sck=instagram-ah-lphQwK21wXxRdm`. Antes disso as páginas mandavam só a fonte e os quizzes juntavam com
 `|`, e o Tracker perdia o meio. Mesmo assim, link que eu monto leva o `sck` pronto.
 
+## PORTÃO DAS FUNÇÕES E PUBLICAÇÃO DO PAINEL (auditoria de 12/09/2026)
+
+**Toda Edge Function tem portão próprio.** As funções continuam publicadas com
+`--no-verify-jwt` (o cron chama sem JWT e a chave pública da tela não é JWT), e a
+trava mora em `supabase/functions/_shared/portao.ts`. Três chaves abrem a porta:
+chave de serviço no `Authorization`, `x-cron-secret` (segredo `CRON_SECRET`, para
+o pg_cron) ou sessão de usuário logado no Tracker, quando a função aceita usuário.
+Função nova nasce com `const recusa = await portao(req, { usuario: true }); if (recusa) return recusa;`
+logo depois do OPTIONS. O painel manda `window.tokenTracker` (o token da sessão),
+nunca mais a chave pública.
+
+**O painel publica por script.** `bash scripts/publicar-tracker.sh` carimba a
+versão de cada arquivo pelo conteúdo e sobe. Não escreva `?v=N` à mão.
+
+**Regras da casa do painel** (escopo global, corte de mil linhas, data de
+Brasília, status dos dois kanbans, régua única de custo por venda) estão em
+`frontend/ARQUITETURA.md`. Leia antes de mexer em tela.
+
+**O vigia.** `vigia-sinais` roda de 30 em 30 minutos e confere quatro relógios:
+mensagem recebida no WhatsApp, venda pelo webhook, sincronismo do Meta e lead do
+quiz. Grava em `app_config.vigia_sinais` e, se houver número em
+`app_config.vigia_whatsapp`, manda aviso pela fila do Khronus. A repescagem
+`whatsapp-ia-pendentes` responde conversa parada, das 8h às 22h.
+
 ## TAG DE RASTREIO DO LINK DE CHECKOUT — QUEM APERTA ENVIAR DECIDE (REGRA GLOBAL)
 
 > Combinada em 2026-07-31, generalizada por Felipe em 2026-09-09 depois de eu entregar um rascunho
