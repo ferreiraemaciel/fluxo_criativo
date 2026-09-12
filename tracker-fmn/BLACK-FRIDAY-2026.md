@@ -872,18 +872,40 @@ O playbook mostra 10 mensagens em 12 horas no dia da abertura, e no parágrafo s
 
 E o checklist de consentimento dos oito itens não é opcional para nós. **Somos a marca que vende segurança jurídica para fotógrafo.** Um disparo sem consentimento registrado, ou sem saída fácil, é um problema de reputação muito maior aqui do que seria em outro nicho.
 
-## 5.7 A ancoragem em 6 camadas, com a nossa camada 5 sendo a mais forte
+## 5.7 A ancoragem em 6 camadas (versão fechada em 11/09)
+
+> Versão anterior, com parceiros e preço de R$ 997, está superada. A tabela abaixo é a que vale.
 
 | Camada | Nossa versão |
 |---|---|
-| 1. Valor justo | Cerca de R$ 3.000, somando tudo com os parceiros |
-| 2. Valor do site | R$ 1.477,80, a soma real do que já vendemos hoje |
-| 3. Valor da Black | R$ 997, ou parcelado |
-| 4. Comparação banal | Menos de um terço de um ensaio |
-| 5. **ROI com um resultado** | **Um único cliente que dá calote custa mais que o combo inteiro** |
-| 6. Os 2 lugares em um ano | Continuar fechando no print do WhatsApp, ou ter documento em todo trabalho |
+| 1. **Valor justo** | **R$ 2.000, que é o que custa não ter** |
+| 2. Valor do site | R$ 694, a soma real do MCV com o Blindagem hoje |
+| 3. Valor da Black | R$ 297 |
+| 4. Comparação banal | Menos do que o sinal de um único ensaio |
+| 5. ROI com um resultado | O prejuízo evitado, mais o álbum que se paga sozinho |
+| 6. Os 2 lugares em um ano | O print do WhatsApp, ou contrato que o cliente assina pelo celular |
 
-A camada 5 no nosso caso é mais forte que no exemplo do playbook, porque no nosso nicho o prejuízo evitado é concreto e todo fotógrafo já viveu.
+### Por que a camada 1 virou "quanto custa não ter"
+
+O playbook chama a camada 1 de valor justo, que normalmente é o preço cheio inventado para o desconto parecer maior. Esse caminho não sobrevive à pergunta 7 da economia da oferta, e no nosso nicho ele tem uma saída melhor: **o valor justo aqui é o prejuízo que o fotógrafo já sabe que existe**, porque ele mesmo estimou esse número no quiz.
+
+- 3.515 pessoas disseram que um problema desses custa entre R$ 2.000 e R$ 5.000
+- 3.999 disseram que pode passar de R$ 20.000
+- 9.378 responderam "não faço ideia, mas espero nunca descobrir"
+
+Usamos o **piso**, R$ 2.000, de propósito. Piso não se discute.
+
+### A fala que abre a camada, na live e no pitch
+
+> "Deixa eu te mostrar quanto custa não ter isso. Uma pessoa respondeu aqui no quiz que fez um acordo extra judicial e devolveu a metade do sinal. Ela não perdeu o trabalho, ela trabalhou de graça pela metade, com o combinado num print do WhatsApp. No mesmo quiz, 3.515 pessoas disseram que um problema desses custa de 2 a 5 mil, quase 4 mil disseram que passa de 20 mil, 9.378 responderam que não fazem ideia, mas esperam nunca descobrir. O piso que o próprio fotógrafo estima é 2 mil. É esse o valor justo do que tá na mesa aqui. Só que eu não vou cobrar 2 mil."
+
+A fala do sinal é literal do banco de linguagem (ver 17.2). Ela funciona porque não é ameaça de processo, é o relato banal de quem trabalhou e devolveu dinheiro. Todo fotógrafo do público consegue se imaginar ali.
+
+### Camada 5 com os álbuns dentro
+
+O prejuízo evitado continua sendo o argumento mais forte do nicho, agora com o bônus físico somando: quem leva o **álbum pocket** revende por R$ 300 a R$ 600 e já recupera o que pagou na Black. Quem chega primeiro leva o **30x30 encadernado**, que o fotógrafo revende por cerca de R$ 1.500, cinco vezes o preço da oferta. O frete fica por conta de quem ganha, o resto é bonificado.
+
+**Nenhuma camada compara o preço com honorário de advogado, nem cita a OAB.** Decisão do Felipe em 11/09.
 
 ## 5.8 A plataforma no Claude como bônus, que já temos
 
@@ -2239,7 +2261,7 @@ Alerta direto do Gabriel. Na semana de abertura aparecem perfis clonados oferece
 - [ ] Definir a ferramenta feita no Claude que entra como bônus
 - [ ] Escolher item físico e sorteio
 - [x] Decidir desconto x ancoragem: **DECIDIDO, ancoragem** (ver 13.1 a 13.3). Público não é sensível a preço, então entra aumento de valor com eventos, mentorias e vitalício
-- [ ] Refazer a ancoragem com valor declarado item por item, no formato do carrossel dele (ver 13.6)
+- [x] Refazer a ancoragem com valor declarado item por item, no formato do carrossel dele (ver 13.6): **FEITO, ver 5.7**. Camada 1 virou R$ 2.000 (o que custa não ter, piso estimado pelo próprio público no quiz), camada 2 R$ 694, camada 3 R$ 297. Aguardando validação do Felipe
 - [ ] Definir o mote da campanha, o nosso equivalente ao "a Pri só pode estar ficando louca"
 - [ ] Decidir o Blindagem no combo: vitalício de verdade ou 3 anos ancorado contra a renovação (ver 12.2, recomendação é 3 anos)
 - [ ] Decidir se usamos escada de lotes em vez de preço único (ver 12.3)
