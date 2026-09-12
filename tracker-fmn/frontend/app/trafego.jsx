@@ -1756,7 +1756,7 @@ function SubstituirModal({ adNum, defaultAdsetId, defaultAdsetName, defaultCampI
   async function callFn(body) {
     const r = await fetch(`${SUPA_URL}/functions/v1/meta-criar-ad`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPA_KEY}` },
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${window.tokenTracker}` },
       body: JSON.stringify(body),
     });
     return r.json();
@@ -2625,7 +2625,7 @@ function TrafficScreen() {
     try {
       const r = await fetch(`${window.db.supabaseUrl}/functions/v1/meta-criar-ad`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${window.db.supabaseKey}` },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${window.tokenTracker}` },
         body: JSON.stringify({ action: 'pause_ad', ad_id: p.metaAdId }),
       });
       pauseRes = await r.json();
@@ -2679,7 +2679,7 @@ function TrafficScreen() {
     try {
       const r = await fetch(`${window.db.supabaseUrl}/functions/v1/meta-criar-ad`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${window.db.supabaseKey}` },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${window.tokenTracker}` },
         body: JSON.stringify({ action: 'pause_ad', ad_id: metaId }),
       });
       const res = await r.json();

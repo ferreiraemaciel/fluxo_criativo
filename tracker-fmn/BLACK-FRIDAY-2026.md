@@ -2990,3 +2990,60 @@ Essa é a mais útil das referências, porque a voz já é a do Felipe. Três co
 2. **O ok pra publicar**, porque isso mexe no site de produção
 
 E ficou registrado como tarefa própria, para 30/09: os inscritos da Black entram no banco mas ainda não aparecem na tela do Tracker, porque a aba Funis tem a lista de funis escrita no código. O mesmo vale para o público de inscritos no Meta, que o sincronizador ainda não sabe montar para essa campanha.
+
+---
+
+# PARTE 24. AS ARTES DA BLACK (rascunho para validar, 11/09/2026)
+
+## 24.1 A arte do que entra, já montada
+
+Arquivo: `meus-produtos/blindagem/entregas/criativos/black-2026/arte-o-que-entra.html`, em 1080x1350. Abre no navegador, tira print ou imprime em PDF.
+
+Quatro caixas: Modelos de Contrato Visual, Blindagem por um ano, o álbum 30x30 e os dez pocket. Os mockups dos dois produtos são os nossos, os mesmos que as páginas do site usam. As duas caixas dos álbuns estão com moldura listrada esperando foto real.
+
+Rodapé: "Nenhum preço aqui. O preço abre ao vivo." É o que permite ela entrar na página de inscrição sem quebrar a regra.
+
+## 24.2 As 13 artes que faltam, com data
+
+> Todas lançadas no Tracker como tarefa própria, na trilha de conteúdo, com o que precisa sair de cada uma escrito na tarefa.
+
+| Data | Arte | Por que essa data |
+|---|---|---|
+| 20/09 | Marca da campanha: selo, paleta e tipografia | Primeira da fila, tudo depende dela |
+| 22/09 | Arte do que entra na Black | Já montada, esperando as fotos |
+| 25/09 | Fotografar os álbuns, 30x30 e pocket | Trava a arte acima e todos os cards de bônus |
+| 28/09 | Imagem de compartilhamento e destaque de perfil | Antes das páginas irem ao ar em 30/09 |
+| 05/10 | Capa do trailer e capa do grupo | Antes do trailer sair em 17/10 |
+| 12/10 | Banner das comunidades e da área de membros | Junto com o disparo para a base |
+| 16/10 | Os 3 estáticos nativos de captação | Antes da captação subir em 21/10 |
+| 24/10 | Jogo de contagem regressiva, 7 peças | A primeira entra no ar em 27/10 |
+| 28/10 | Cards de revelação dos bônus, 5 peças | O primeiro bônus é revelado em 29/10 |
+| 02/11 | Carrossel do manifesto | Entra no feed em 04/11 |
+| 04/11 | Capas das 4 aulas | A primeira aula é em 05/11 |
+| 08/11 | Carrossel da ancoragem e do empilhamento | As duas peças que mais vendem no carrinho |
+| 09/11 | Modelo de card de depoimento | Sem modelo, cada depoimento vira arte do zero e deixa de sair |
+| 11/11 | Cards do carrinho aberto, 6 peças | Urgência do carrinho, da abertura ao corte |
+
+## 24.3 A que trava tudo
+
+**Fotografar os álbuns, em 25/09.** Ela segura a arte do que entra, os dois cards de bônus, o carrossel do empilhamento e o bloco de presentes da página de inscrição. É foto sua, de produto seu, então é a única da lista que não tem como eu adiantar.
+
+O que precisa ser fotografado: o 30x30 aberto na mesa mostrando lâmina e capa, o 30x30 fechado, os dez pocket empilhados ou em leque, mais um pocket aberto. Luz natural, fundo limpo.
+
+## 24.4 Nossas páginas do último pico, agora catalogadas
+
+Nove páginas nossas entraram na biblioteca, na categoria "Nossas páginas, último pico", presas nas tarefas de página e de oferta de aluno:
+
+| Página | Endereço |
+|---|---|
+| Lançamento do Blindagem, junho de 2026 | upsell.fotografiaeomeunegocio.com.br/blindagem-lancamento |
+| Upsell do Blindagem para aluno do MCV | upsell.fotografiaeomeunegocio.com.br |
+| Quiz Fotógrafo Protegido, nossa captura | fotografoprotegido.fotografiaeomeunegocio.com.br |
+| Quiz Blindagem, diagnóstico | diagnostico.fotografiaeomeunegocio.com.br |
+| Vendas do Blindagem, perpétua | fotografiaeomeunegocio.com.br/blindagem |
+| Modelos de Contrato Visual | contratos.fotografiaeomeunegocio.com.br |
+| Combo contratos mais Blindagem | contratosblindagem.fotografiaeomeunegocio.com.br |
+| Para Você, porta de entrada | fotografiaeomeunegocio.com.br/para-voce |
+| Resultados e depoimentos | fotografiaeomeunegocio.com.br/resultados |
+
+A do combo merece uma olhada antes de escrever a página de vendas da Black, porque já existe uma versão de combo no ar e a Black não pode contradizer ela.

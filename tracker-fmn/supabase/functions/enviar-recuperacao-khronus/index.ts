@@ -21,6 +21,7 @@
 // com o telefone certo, que a Ponte resolve o identificador sozinha na
 // primeira tentativa de envio.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { portao } from "../_shared/portao.ts";
 
 const khronus = createClient(
   Deno.env.get("KHRONUS_SUPABASE_URL")!,
@@ -109,6 +110,9 @@ const CORS = {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: CORS });
+  // Portão: só rotina com chave de serviço, cron ou usuário logado no Tracker.
+  const recusa = await portao(req, { usuario: true, cabecalhos: CORS });
+  if (recusa) return recusa;
 
   if (req.method !== "POST") {
     return new Response("Método não permitido", { status: 405, headers: CORS });

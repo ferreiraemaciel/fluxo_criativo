@@ -1,5 +1,6 @@
 // Tracker FMN — custo REAL cobrado pela Meta (não estimativa), via API de
 // pricing_analytics da WABA. GET ?from=YYYY-MM-DD&to=YYYY-MM-DD
+import { portao } from "../_shared/portao.ts";
 const WHATSAPP_TOKEN = Deno.env.get("FB_ACCESS_TOKEN_PERMANENTE");
 const WABA_ID = Deno.env.get("WHATSAPP_BUSINESS_ACCOUNT_ID");
 
@@ -10,6 +11,9 @@ const CORS = {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: CORS });
+  // Portão: só rotina com chave de serviço, cron ou usuário logado no Tracker.
+  const recusa = await portao(req, { usuario: true, cabecalhos: CORS });
+  if (recusa) return recusa;
   try {
     const url = new URL(req.url);
     const from = url.searchParams.get("from");

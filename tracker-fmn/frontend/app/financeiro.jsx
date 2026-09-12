@@ -182,7 +182,7 @@ function AddExpenseModal({ onClose, onSaved }) {
       try {
         const r = await fetch(`${window.db.supabaseUrl}/functions/v1/khronus-tags`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${window.db.supabaseKey}` },
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${window.tokenTracker}` },
           body: JSON.stringify({ acao: 'marcar', telefone: form.telefone, tag_id: form.tagId }),
         });
         const d = await r.json().catch(() => ({}));
@@ -320,7 +320,7 @@ function AddRevenueModal({ onClose, onSaved }) {
   useEffect(() => {
     fetch(`${window.db.supabaseUrl}/functions/v1/khronus-tags`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${window.db.supabaseKey}` },
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${window.tokenTracker}` },
       body: JSON.stringify({ acao: 'listar' }),
     }).then(r => r.json()).then(d => setTags(d.tags || [])).catch(() => setTags([]));
   }, []);

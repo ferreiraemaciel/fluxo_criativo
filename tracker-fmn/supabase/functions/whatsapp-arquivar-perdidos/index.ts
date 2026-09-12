@@ -5,6 +5,7 @@
 // então). Enquanto ainda dá tempo de abrir a janela, ou se ele já respondeu
 // alguma vez dentro das últimas 24h, continua visível normalmente.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { portao } from "../_shared/portao.ts";
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
@@ -13,7 +14,10 @@ const supabase = createClient(
 
 const JANELA_MS = 24 * 60 * 60 * 1000;
 
-Deno.serve(async (_req) => {
+Deno.serve(async (req) => {
+  // Portão: chave de serviço, cron do banco ou usuário logado no Tracker.
+  const recusa = await portao(req, { usuario: true });
+  if (recusa) return recusa;
   try {
     const { data: contatos, error } = await supabase
       .from("whatsapp_contatos")

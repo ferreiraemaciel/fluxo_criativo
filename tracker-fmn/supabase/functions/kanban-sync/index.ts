@@ -12,6 +12,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { classificarAd } from "../_shared/classificar.ts";
 import { extrairCompras } from "../_shared/metricas.ts";
+import { portao } from "../_shared/portao.ts";
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
@@ -328,6 +329,9 @@ async function destravar() {
 }
 
 Deno.serve(async (req) => {
+  // Portão: chave de serviço, cron do banco ou usuário logado no Tracker.
+  const recusa = await portao(req, { usuario: true });
+  if (recusa) return recusa;
   if (req.method !== "POST" && req.method !== "GET") {
     return new Response("Método não permitido", { status: 405 });
   }

@@ -34,6 +34,25 @@ function normalizarArrays(row: Record<string, unknown>) {
   }
 }
 
+// Só os quizzes podem gravar lead aqui. Antes da auditoria de 12/09/2026 esta
+// função aceitava POST de qualquer origem, então dava para encher a base de
+// lead falso (o que estraga o custo por lead) e disparar evento Lead no CAPI,
+// que ensina o algoritmo do Meta a otimizar para o público errado.
+const ORIGENS_PERMITIDAS = [
+  "fotografoprotegido.fotografiaeomeunegocio.com.br",
+  "diagnostico.fotografiaeomeunegocio.com.br",
+  "quiz-fotografo-protegido.pages.dev",
+  "quiz-blindagem.pages.dev",
+];
+
+function origemPermitida(req: Request) {
+  const bruto = req.headers.get("Origin") || req.headers.get("Referer") || "";
+  if (!bruto) return false;
+  let host = "";
+  try { host = new URL(bruto).hostname.toLowerCase(); } catch { return false; }
+  return ORIGENS_PERMITIDAS.some((d) => host === d || host.endsWith("." + d));
+}
+
 async function sha256hex(str: string): Promise<string> {
   const data = new TextEncoder().encode(str);
   const hash = await crypto.subtle.digest("SHA-256", data);
@@ -43,6 +62,9 @@ async function sha256hex(str: string): Promise<string> {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
   if (req.method !== "POST") return new Response("método", { status: 405, headers: cors });
+  if (!origemPermitida(req)) {
+    return new Response(JSON.stringify({ error: "origem não autorizada" }), { status: 403, headers: { ...cors, "content-type": "application/json" } });
+  }
   try {
     const body = await req.json();
     if (!body || !body.code) {

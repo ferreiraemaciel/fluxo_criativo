@@ -770,7 +770,7 @@ function MetricasView({ contatosDb, msgs, onPrecisaJanela }) {
     const SUPA_KEY = window.db?.supabaseKey  || '';
     if (!SUPA_URL) return;
     setCustoRealMeta(null);
-    fetch(`${SUPA_URL}/functions/v1/whatsapp-custo-meta?from=${from}&to=${to}`, { headers: { Authorization: `Bearer ${SUPA_KEY}` } })
+    fetch(`${SUPA_URL}/functions/v1/whatsapp-custo-meta?from=${from}&to=${to}`, { headers: { Authorization: `Bearer ${window.tokenTracker}` } })
       .then(r => r.json())
       .then(d => { if (!d.error) setCustoRealMeta(d); })
       .catch(() => {});

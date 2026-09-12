@@ -100,6 +100,39 @@ async function gravarEntradaSeNova(row: Record<string, unknown>): Promise<boolea
   return true;
 }
 
+// Confere a assinatura que a Meta manda em cada entrega (X-Hub-Signature-256,
+// HMAC-SHA256 do corpo cru com o App Secret). Sem isso, qualquer pessoa que
+// descobrisse o endereço simulava mensagem de lead: o Claudinho respondia de
+// verdade pelo número oficial, gastando crédito, e o atacante escolhia para
+// qual número a resposta ia. Achado da auditoria de 12/09/2026.
+//
+// Enquanto META_APP_SECRET não estiver configurado no projeto, a função só
+// registra o aviso e deixa passar, para não derrubar o atendimento. Assim que
+// o segredo entra, a conferência passa a valer sozinha.
+const APP_SECRET = Deno.env.get("META_APP_SECRET") || "";
+
+async function assinaturaConfere(corpoCru: string, cabecalho: string | null): Promise<boolean> {
+  if (!APP_SECRET) {
+    console.warn("[webhook] META_APP_SECRET ausente: assinatura da Meta não conferida");
+    return true;
+  }
+  const recebida = (cabecalho || "").replace(/^sha256=/i, "").trim().toLowerCase();
+  if (!recebida) return false;
+  const chave = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(APP_SECRET),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
+  const assinado = await crypto.subtle.sign("HMAC", chave, new TextEncoder().encode(corpoCru));
+  const esperada = [...new Uint8Array(assinado)].map((b) => b.toString(16).padStart(2, "0")).join("");
+  if (esperada.length !== recebida.length) return false;
+  let diferenca = 0;
+  for (let i = 0; i < esperada.length; i++) diferenca |= esperada.charCodeAt(i) ^ recebida.charCodeAt(i);
+  return diferenca === 0;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: CORS });
 
@@ -118,9 +151,15 @@ Deno.serve(async (req) => {
 
   if (req.method !== "POST") return json({ error: "método não suportado" }, 405);
 
+  const corpoCru = await req.text();
+  if (!(await assinaturaConfere(corpoCru, req.headers.get("x-hub-signature-256")))) {
+    console.warn("[webhook] entrega recusada: assinatura inválida");
+    return json({ error: "assinatura inválida" }, 401);
+  }
+
   let payload: any;
   try {
-    payload = await req.json();
+    payload = JSON.parse(corpoCru);
   } catch {
     return json({ ok: true }); // Meta não gosta de retry por payload malformado, só engole.
   }

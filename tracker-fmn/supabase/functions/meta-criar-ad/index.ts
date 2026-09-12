@@ -3,6 +3,7 @@
 // POST /functions/v1/meta-criar-ad   { action: "adsets", campaign_id }
 // POST /functions/v1/meta-criar-ad   { action: "create", adset_id, card }
 
+import { portao } from "../_shared/portao.ts";
 const META_TOKEN    = Deno.env.get("FB_ACCESS_TOKEN_PERMANENTE")!;
 const AD_ACCOUNT_ID = Deno.env.get("FB_AD_ACCOUNT_ID")!;
 const PAGE_ID       = Deno.env.get("FB_PAGE_ID")!;
@@ -386,6 +387,9 @@ async function createAd(adsetId: string, card: Record<string, unknown>, creative
 // ── Handler principal ──────────────────────────────────────────────────────────
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
+  // Portão: só rotina com chave de serviço, cron ou usuário logado no Tracker.
+  const recusa = await portao(req, { usuario: true, cabecalhos: CORS });
+  if (recusa) return recusa;
   if (req.method !== "POST") return json({ error: "Método não permitido" }, 405);
 
   let body: Record<string, unknown>;

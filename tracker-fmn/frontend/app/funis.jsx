@@ -594,7 +594,7 @@ function EnviarRecuperacaoModal({ item, onClose }) {
       const SUPA_KEY = window.db?.supabaseKey || '';
       const r = await fetch(`${SUPA_URL}/functions/v1/enviar-recuperacao-khronus`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${SUPA_KEY}` },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${window.tokenTracker}` },
         body: JSON.stringify({ telefone: item.telefone, nome: item.nome, corpo, produto: item.produto_nome }),
       });
       const d = await r.json().catch(() => ({}));
@@ -1286,7 +1286,7 @@ function FunisScreen({ onNavigate }) {
         try {
           const r = await fetch(`${window.db.supabaseUrl}/functions/v1/khronus-fila-status`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${window.db.supabaseKey}` },
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${window.tokenTracker}` },
             body: JSON.stringify({ telefones: telefonesKhronus }),
           });
           const d = await r.json().catch(() => ({}));
