@@ -3003,6 +3003,30 @@ Quatro caixas: Modelos de Contrato Visual, Blindagem por um ano, o álbum 30x30 
 
 Rodapé: "Nenhum preço aqui. O preço abre ao vivo." É o que permite ela entrar na página de inscrição sem quebrar a regra.
 
+## 24.1b A marca da campanha, fechada
+
+Arquivo: `meus-produtos/blindagem/entregas/criativos/black-2026/marca-da-campanha.html`
+
+**De onde saiu.** A regra de identidade do perfil manda a arte sair do **objeto físico do assunto**, nunca de uma paleta escolhida por gosto. O objeto desta campanha já estava decidido na ficha: o envelope pardo lacrado, carimbado, que fica na mesa a partir de outubro e é aberto ao vivo no dia 11. A campanha inteira é feita de três materiais: **papel pardo, tinta de carimbo e preto de Black Friday**.
+
+**O selo é um carimbo, não um logo.** Levemente torto de propósito. Três linhas: CONFIDENCIAL, o nome da campanha, a data. Três versões mais uma reduzida.
+
+| Cor | Hex | Onde usa |
+|---|---|---|
+| Pardo | `#B98A57` | A cor da campanha. Toda a antecipação |
+| Preto | `#0D0D0D` | Oferta, contagem e carrinho |
+| Tinta de carimbo | `#9E2B25` | Só o selo, a etiqueta de bônus e o corte final |
+| Dourado FMN | `#EAAA41` | O fio que liga à casa |
+| Pardo claro | `#E4C9A5` | Texto secundário sobre pardo |
+
+**A virada de cor é a virada da campanha:** pardo até a véspera, preto quando o carrinho abre.
+
+**Tipografia:** Montserrat, que já é a da casa. A única adição é a Roboto Mono nas etiquetas e no carimbo, que dá cara de documento sem fonte paga. As duas são gratuitas no Canva.
+
+**A regra que mais importa no faz e não faz:** tinta de carimbo é acento, nunca fundo de peça. Se aparecer em tudo, para de significar urgência.
+
+**Por que esta campanha ganha paleta fixa** se o perfil não tem paleta padrão: a regra contra paleta fixa existe para impedir que um carrossel novo herde a cor do anterior por preguiça. Uma campanha de 49 dias é o caso oposto, ela precisa ser reconhecida de longe em dezenas de peças.
+
 ## 24.2 As 13 artes que faltam, com data
 
 > Todas lançadas no Tracker como tarefa própria, na trilha de conteúdo, com o que precisa sair de cada uma escrito na tarefa.
