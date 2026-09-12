@@ -872,7 +872,7 @@ O playbook mostra 10 mensagens em 12 horas no dia da abertura, e no parágrafo s
 
 E o checklist de consentimento dos oito itens não é opcional para nós. **Somos a marca que vende segurança jurídica para fotógrafo.** Um disparo sem consentimento registrado, ou sem saída fácil, é um problema de reputação muito maior aqui do que seria em outro nicho.
 
-## 5.7 A ancoragem em 6 camadas (versão fechada em 11/09)
+## 5.7 A ancoragem em 6 camadas (VALIDADA pelo Felipe em 11/09)
 
 > Versão anterior, com parceiros e preço de R$ 997, está superada. A tabela abaixo é a que vale.
 
@@ -893,7 +893,7 @@ O playbook chama a camada 1 de valor justo, que normalmente é o preço cheio in
 - 3.999 disseram que pode passar de R$ 20.000
 - 9.378 responderam "não faço ideia, mas espero nunca descobrir"
 
-Usamos o **piso**, R$ 2.000, de propósito. Piso não se discute.
+Usamos o **piso**, R$ 2.000, de propósito. Piso não se discute. **Validado pelo Felipe em 11/09/2026.**
 
 ### A fala que abre a camada, na live e no pitch
 
@@ -2592,3 +2592,201 @@ Todas as objeções saíram das mensagens reais da Parte 17. Serve para a live (
 | 12 | "Comprando, fico quantos anos com acesso?" | [CONFIRMAR o prazo de acesso do MCV antes de usar esta resposta.] O Blindagem do pacote é assinatura anual, e a renovação volta ao preço normal. |
 | 13 | "Já uso contrato, mas quero me respaldar na Lei Felca" | O material acompanha as mudanças da lei, e a aula ao vivo da Black é sobre exatamente isso. |
 | 14 | "Não confio em comprar no escuro" | Mostrar por dentro antes: página de exemplo, fluxo de assinatura e a garantia de 7 dias prevista no Código de Defesa do Consumidor para compra online. |
+
+---
+
+# PARTE 21. CRIATIVOS DE CAPTAÇÃO, OS 5 ÂNGULOS (rascunho para validar, 11/09/2026)
+
+> Base: os 5 criativos de captação da Maratona Black CEO, lidos na íntegra no Google Docs oficial do playbook.
+> O que aproveitei foi a **arquitetura**, não o texto: cinco entradas diferentes para a mesma oferta, todas
+> terminando no mesmo lugar, nenhuma vendendo o produto. Lá o destino era a inscrição na maratona, aqui é a
+> inscrição na página da Black mais a entrada no grupo de WhatsApp.
+
+## 21.1 As regras que valem para os cinco
+
+1. **Nenhum criativo vende o produto.** Todos vendem a inscrição. Quem clica entra na página, depois no grupo.
+2. **Preço não aparece em nenhum.** Nem R$ 297, nem R$ 694, nem percentual de desconto. A ancoragem inteira fica para a live de abertura.
+3. **Sem "não compre nada ainda".** Essa linha é o coração do criativo 1 e do 3 do playbook. Ficou fora desta edição por decisão do Felipe em 10/09, então troquei a entrada por outras duas.
+4. **Sem OAB, sem honorário, sem tabela de advogado.** Vale para legenda, roteiro e comentário.
+5. **CTA único: "Saiba Mais".** Uma vez só, no fim, sem repetir e sem pausa dramática antes.
+6. **O que é caso, número ou aluno do Felipe fica `[VOCÊ PREENCHE]`.** Não inventei nenhum depoimento.
+7. **Duração alvo: 48 segundos.** Estrutura em 3 blocos, que é a nossa estrutura de Reels de anúncio.
+
+Os números do quiz que aparecem nos roteiros são reais, apurados no nosso banco: 3.515 pessoas estimaram o prejuízo entre R$ 2.000 e R$ 5.000, 3.999 disseram que passa de R$ 20.000, 9.378 responderam que não fazem ideia, 11.962 disseram não dominar nenhum tema jurídico, 8.256 disseram que às vezes se protegem mas já tiveram problema.
+
+## 21.2 Criativo 1. O advogado contra o fotógrafo
+
+**Família:** inversão. **Função:** é o criativo que carrega o mote e dá unidade a tudo.
+
+**Headline:** Meu lado advogado não assinaria essa Black.
+
+**Hook (0 a 3s):** "Ninguém acredita em mim quando falo isso, mas eu briguei comigo mesmo pra montar essa Black."
+
+**Roteiro**
+
+*Bloco 1, 0 a 12s.* Ninguém acredita em mim quando falo isso, mas eu briguei comigo mesmo pra montar essa Black. Tem um Felipe aqui que é advogado, tem outro que é fotógrafo há [VOCÊ PREENCHE: anos de estrada]. O advogado olhou a condição e disse que eu tava louco. O fotógrafo olhou e lembrou de como era antes de eu entender qualquer coisa de contrato.
+
+*Bloco 2, 13 a 33s.* E o fotógrafo ganhou por um motivo simples. Todo mundo desse meio já fechou trabalho por print do WhatsApp, achando que print resolve. Print não diz o que tá incluso, não diz prazo de entrega, não diz o que acontece se o cliente cancelar na véspera. Quando o problema aparece, o combinado vira a sua palavra contra a dele e aí não importa quem tava certo. [VOCÊ PREENCHE: o seu caso, ou o do aluno, em uma frase]
+
+*Bloco 3, 34 a 48s.* Em novembro eu vou fazer a maior condição que eu já fiz pra resolver isso de uma vez. Eu não vou falar de preço agora. Hoje não tem nada pra comprar, tem uma lista pra entrar. Quem tá nela vê primeiro. Clica em Saiba Mais e se inscreve.
+
+**Legenda:** Meu lado advogado não assinaria essa Black, o fotógrafo aqui ganhou a discussão e é por isso que ela vai existir. Em novembro eu abro a maior condição que já fiz, quem tá na lista fica sabendo primeiro. Link aqui embaixo.
+
+**Título do anúncio:** Meu lado advogado não assinaria essa Black
+
+**Descrição:** Entre na lista da Black dos Fotógrafos Protegidos
+
+**Notas de edição:** o quadro dos dois Felipes é o mesmo dos stories, terno de um lado, câmera do outro. Corte seco entre as duas figuras no bloco 1. Legenda queimada, porque grande parte assiste sem som. Nada de preço na tela em nenhum frame.
+
+## 21.3 Criativo 2. A fala do sinal devolvido
+
+**Família:** dor reconhecível. **Função:** é o criativo mais forte da captação, porque o gancho é fala literal do público.
+
+**Headline:** Ele trabalhou, entregou, devolveu metade do dinheiro.
+
+**Hook (0 a 3s):** "'Fiz um acordo extra judicial e devolvi a metade do sinal.' Isso não é peça de processo, é um fotógrafo me respondendo um formulário."
+
+**Roteiro**
+
+*Bloco 1, 0 a 14s.* "Fiz um acordo extra judicial e devolvi a metade do sinal." Isso não é peça de processo, é um fotógrafo me respondendo um formulário. Ele não perdeu o trabalho, ele trabalhou pela metade do que combinou, com o combinado num print.
+
+*Bloco 2, 15 a 35s.* E o mais pesado nem é o caso dele. É que quando eu perguntei pra base inteira quanto custa um problema desses, 3.515 pessoas responderam que custa de 2 a 5 mil, quase 4 mil disseram que passa de 20 mil e mais de 9 mil responderam que não fazem ideia, mas esperam nunca descobrir. Ninguém aqui sabe o tamanho do risco que carrega. [VOCÊ PREENCHE: se tiver um caso seu de cliente que pediu dinheiro de volta, entra aqui em uma frase]
+
+*Bloco 3, 36 a 48s.* Em novembro eu vou abrir a maior condição que eu já fiz pra você parar de trabalhar torcendo. Não é hoje. Hoje só tem a lista, que é o jeito de você saber antes de todo mundo. Clica em Saiba Mais.
+
+**Legenda:** Um fotógrafo me contou que fez acordo e devolveu metade do sinal e ele nem foi o caso mais grave que eu li. Quando eu perguntei quanto custa um problema desses, mais de 9 mil pessoas responderam que não fazem ideia. Em novembro eu abro a maior condição que já fiz, entra na lista pelo link.
+
+**Título do anúncio:** Ele devolveu metade do sinal por causa de um print
+
+**Descrição:** Entre na lista da Black dos Fotógrafos Protegidos
+
+**Notas de edição:** a fala do sinal entra na tela como texto, no formato de resposta de formulário, com o Felipe lendo. Os três números do quiz aparecem um por vez, sem animação boba. Não identificar a pessoa de jeito nenhum, é resposta de quiz.
+
+*Cuidado de compliance:* a fala é de terceiro, anônima e entra como relato. Nunca apresentar como caso julgado, nunca dizer que houve processo.
+
+## 21.4 Criativo 3. O print do WhatsApp
+
+**Família:** o que já tentaram. **Função:** nomear o inimigo declarado da campanha.
+
+**Headline:** O print do WhatsApp não é contrato e todo mundo age como se fosse.
+
+**Hook (0 a 3s):** "Todo mundo fala pra você fechar pelo WhatsApp mesmo, que é mais rápido. É mais rápido até o dia em que não é."
+
+**Roteiro**
+
+*Bloco 1, 0 a 12s.* Todo mundo fala pra você fechar pelo WhatsApp mesmo, que é mais rápido. É mais rápido até o dia em que não é. Aí você vai lá procurar a conversa, rola duas semanas de áudio e descobre que a parte que importava nunca foi escrita.
+
+*Bloco 2, 13 a 34s.* E olha, eu entendo o motivo. Quem tentou resolver com contrato de verdade recebeu um documento de sete folhas que nem o cliente lê nem você entende. Uma pessoa me escreveu assim, do jeito que ela digitou: "Eu tenho contrato aqui Porém são muitas folhas E olho hj e já não gosto mais dele". Então sobra o print, que é rápido, é fácil e não protege nada. O problema nunca foi você ser desorganizado, foi o contrato ser feito pra advogado ler.
+
+*Bloco 3, 35 a 48s.* Em novembro eu abro a maior condição que eu já fiz pra trocar o print por documento que o cliente entende e assina pelo celular. Hoje eu só quero você na lista. Clica em Saiba Mais e se inscreve.
+
+**Legenda:** O print do WhatsApp parece contrato, dá a sensação de contrato, só não funciona como contrato. E a culpa não é sua, é que o que te ofereceram antes tinha sete folhas que ninguém lê. Em novembro eu abro a maior condição que já fiz, link aqui embaixo pra entrar na lista.
+
+**Título do anúncio:** O print do WhatsApp não é contrato
+
+**Descrição:** Entre na lista da Black dos Fotógrafos Protegidos
+
+**Notas de edição:** tela de celular rolando conversa longa nos primeiros segundos, com a parte importante nunca aparecendo. A citação das sete folhas entra escrita, do jeito que a pessoa escreveu.
+
+## 21.5 Criativo 4. Quem já está do outro lado
+
+**Família:** prova e bastidor. **Função:** o único da captação que mostra gente e o que mais depende de você.
+
+**Headline:** O que muda quando o contrato para de ser um problema seu.
+
+**Hook (0 a 3s):** "Deixa eu te mostrar uma coisa que mudou aqui depois que eu parei de fechar trabalho na conversa."
+
+**Roteiro**
+
+*Bloco 1, 0 a 12s.* Deixa eu te mostrar uma coisa que mudou aqui depois que eu parei de fechar trabalho na conversa. [VOCÊ PREENCHE: a cena concreta, o que você deixou de fazer, o que sobrou de tempo ou de paz]
+
+*Bloco 2, 13 a 35s.* [VOCÊ PREENCHE: dois ou três alunos, com nome e uma frase do que aconteceu com cada um. Print de mensagem serve e é melhor que depoimento gravado] Repara que nenhum deles virou advogado. Eles só pararam de improvisar na hora que o cliente fecha, que é a hora em que dá errado.
+
+*Bloco 3, 36 a 48s.* Em novembro eu abro a maior condição que eu já fiz pra quem quiser entrar pra esse lado. Quem tá na lista vê primeiro e tem chance nos bônus que são por ordem de chegada. Clica em Saiba Mais.
+
+**Legenda:** Nenhuma dessas pessoas virou advogada, elas só pararam de improvisar na hora de fechar. Em novembro abro a maior condição que já fiz e quem tá na lista vê primeiro. Link aqui embaixo.
+
+**Título do anúncio:** Eles pararam de improvisar na hora de fechar
+
+**Descrição:** Entre na lista da Black dos Fotógrafos Protegidos
+
+**Notas de edição:** esse é o único criativo com rosto e print de conversa. Pedir autorização de uso de imagem e de mensagem antes de usar qualquer print de aluno, inclusive elogio. Sem autorização, não entra.
+
+*Bloqueio:* esse criativo não pode ser gravado sem os casos reais. Se não tiver depoimento liberado até a data de entrega, ele sai da rodada e a verba vai para o criativo 2.
+
+## 21.6 Criativo 5. Por que isso existe
+
+**Família:** dor reconhecível, na versão origem. **Função:** o criativo de autoridade, sem soar autoridade.
+
+**Headline:** Eu fiz os dois lados dessa mesa e só um deles me dava medo.
+
+**Hook (0 a 3s):** "Eu tenho vergonha de admitir isso, mas eu já fotografei casamento com o combinado inteiro num áudio de WhatsApp."
+
+**Roteiro**
+
+*Bloco 1, 0 a 14s.* Eu tenho vergonha de admitir isso, mas eu já fotografei [VOCÊ PREENCHE: o tipo de trabalho] com o combinado inteiro num áudio de WhatsApp. E eu era advogado nessa época. Eu sabia exatamente o que podia dar errado, só que na hora de fechar eu fazia igual todo mundo.
+
+*Bloco 2, 15 a 35s.* Foi aí que eu entendi o problema de verdade. Não é falta de informação, é que ninguém entrega pro fotógrafo um contrato que caiba na rotina dele. O que existia era modelo de nove folhas ou nada. Eu passei [VOCÊ PREENCHE: tempo] montando o que eu queria ter tido quando comecei e hoje tem [VOCÊ PREENCHE: número] fotógrafo usando.
+
+*Bloco 3, 36 a 48s.* Em novembro isso vai estar na maior condição que eu já fiz, uma vez só. Não vou falar de preço aqui. Entra na lista, que quem tá nela fica sabendo primeiro. Clica em Saiba Mais.
+
+**Legenda:** Eu era advogado e mesmo assim fechava trabalho por áudio de WhatsApp, porque o que me ofereciam de contrato não cabia na minha rotina. Foi por isso que eu montei o que eu queria ter tido no começo. Em novembro ele vai estar na maior condição que já fiz, entra na lista pelo link.
+
+**Título do anúncio:** Eu era advogado e fechava trabalho por áudio
+
+**Descrição:** Entre na lista da Black dos Fotógrafos Protegidos
+
+**Notas de edição:** gravar sentado, sem cenário de escritório. Esse é o criativo mais falado e menos editado dos cinco.
+
+## 21.7 Como rodar os cinco
+
+| Ângulo | Para qual público entra primeiro | Se performar mal |
+|---|---|---|
+| 1. Advogado contra fotógrafo | Frio, aberto. É o que carrega o mote | Vira orgânico, não morre |
+| 2. Fala do sinal | Frio, aberto. Testar como principal | Se cair, trocar só o bloco 2 |
+| 3. Print do WhatsApp | Frio e lookalike dos leads do quiz | Trocar o gancho, manter o corpo |
+| 4. Quem já está do outro lado | Quente: base de alunos, engajamento, visitantes | Depende de depoimento liberado |
+| 5. Por que isso existe | Frio e público de vídeo 95% | Vira o criativo de aquecimento |
+
+**Ordem de produção sugerida:** 2, 1, 3, 5, 4. O criativo 2 é o que tem mais chance de segurar sozinho a captação e o 4 é o único que pode travar por falta de material de terceiro.
+
+**O que falta para fechar essa tarefa:** os `[VOCÊ PREENCHE]` de cada roteiro, a autorização de imagem dos alunos do criativo 4 e a definição da data de entrega (que está em outra tarefa da ficha).
+
+## 21.8 Os 3 estáticos nativos, que os outros dois documentos do playbook ensinam
+
+> Li também os dois docs que estavam nas referências dessa tarefa: "Copy de criativo estático de captação" e
+> "Copy de criativo de vídeo de captação", os dois da Black do MMM. O de vídeo confirmou o que já fazemos
+> (fala longa, objeção entre aspas no meio, CTA de comentar a palavra). O de estático trouxe três formatos
+> nativos que a gente não tinha e que custam quase nada para produzir.
+
+A regra de ouro dos três: **nenhum parece anúncio**. Entram no feed como coisa da vida da pessoa.
+
+### Estático 1. A conversa vazada
+
+No original é uma conversa de casal falando da Black, montada. Para nós isso precisa ser conversa real, porque a marca vende segurança jurídica e não pode simular print. Felizmente a conversa real existe: **a sua com a encadernadora ou com a SóClick sobre os álbuns**.
+
+Print da conversa, sem retoque, com os nomes cobertos. Do lado de fora, uma linha só: "Tá chegando coisa aqui em casa pra Black. Ainda não posso falar o que é." Legenda curta com o link na bio ou no botão.
+
+*Por que funciona:* é o objeto físico aparecendo antes da oferta, que é exatamente o que o playbook manda fazer na antecipação. E resolve o problema de mostrar bônus sem revelar preço.
+
+### Estático 2. A caixinha respondida
+
+Abrir caixinha no stories perguntando o que quiserem sobre a Black. Escolher a pergunta mais direta ("vai ter Black esse ano", "o Blindagem vai entrar") e responder com foto sua e texto por cima:
+
+"Vai ter. Vai ser a maior condição que eu já fiz, com os modelos e o Blindagem juntos pela primeira vez. Não vou dar mais spoiler. Quem quiser saber a data antes, entra na lista."
+
+Esse print da caixinha vira criativo estático, rodando no feed como anúncio.
+
+*Por que funciona:* pergunta de terceiro dá permissão para falar de oferta sem soar vendedor. E é produção de dois minutos.
+
+### Estático 3. A reação à notícia
+
+No original é o formato "Choquei", reagindo a uma notícia de crise. O nosso equivalente já existe e é melhor, porque é do nosso assunto: **reagir a notícia real sobre a Lei Felca, o ECA Digital ou uma decisão recente sobre foto e uso de imagem**.
+
+Montagem de duas colunas: o print da manchete de um lado, você do outro, com uma linha de reação. Nada de escândalo inventado, a notícia carrega o peso sozinha.
+
+*Cuidado:* crédito da imagem no formato "Reprodução/nome do veículo", como já é regra nossa em todo conteúdo. E nenhuma afirmação jurídica sem lastro no texto da lei ou da decisão.
+
+### O que isso muda na contagem
+
+A captação passa a ter **8 peças**: os 5 vídeos dos ângulos mais esses 3 estáticos. O total do pico vai de 20 para 23 anúncios. Os três estáticos não pesam na produção porque nenhum deles exige gravação, só um print e uma legenda.
