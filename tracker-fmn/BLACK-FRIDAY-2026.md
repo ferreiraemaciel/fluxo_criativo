@@ -2790,3 +2790,107 @@ Montagem de duas colunas: o print da manchete de um lado, você do outro, com um
 ### O que isso muda na contagem
 
 A captação passa a ter **8 peças**: os 5 vídeos dos ângulos mais esses 3 estáticos. O total do pico vai de 20 para 23 anúncios. Os três estáticos não pesam na produção porque nenhum deles exige gravação, só um print e uma legenda.
+
+---
+
+# PARTE 22. CALENDÁRIO DE CONTEÚDO, DIA A DIA (rascunho para validar, 11/09/2026)
+
+> Base: a planilha oficial de planejamento de conteúdo da Black do MMM, 37 dias, aberta e lida na íntegra.
+> O que aproveitei foi o desenho: **um tema por dia, stories todo dia, feed só quando tem função**, com um
+> objetivo estratégico escrito em cada linha. O que joguei fora foi o conteúdo, que é de outro nicho.
+
+## 22.1 As cinco regras do calendário
+
+1. **Stories todo dia. Feed só quando tem função.** Na planilha do MMM a maioria dos dias da antecipação não tem feed nenhum e isso é de propósito. Feed todo dia sem função vira ruído e queima entrega.
+2. **Este calendário é a peça da Black de cada dia, não o dia inteiro.** O ritmo declarado é 2 publicações diárias. A segunda continua vindo do conteúdo perpétuo que já está no Orgânico. Se eu lançasse duas peças de Black por dia seriam quase cem cards, o que não se produz sozinho.
+3. **Descanso é linha do calendário.** Domingo e véspera de fase entram marcados, não esquecidos.
+4. **Preço só a partir de 11/11.** Antes disso nenhuma peça cita valor, nem percentual.
+5. **Tudo que é caso, número ou aluno seu está `[VOCÊ PREENCHE]`.** Não inventei depoimento, nem número de aluno.
+
+**A data de encerramento ainda é sua.** Montei até 30/11 seguindo a recomendação da seção 7.9 do caderno, que tira o corte de cima do feriadão de 20 e 21 e faz a campanha passar pela Black Friday oficial de 27. Se você preferir encerrar antes, as linhas de 21/11 em diante mudam.
+
+
+## 22.2 FASE A. Antecipação sem revelar (13/10 a 20/10)
+
+| Dia | D-X | Tema | Stories | Feed | Objetivo |
+|---|---|---|---|---|---|
+| 13/10 (ter) | D-29 | A pergunta que ninguém faz antes de fechar | Enquete: já teve foto sua postada sem crédito (sim, já / não, nunca). Depois a segunda: você já devolveu dinheiro pra cliente. Comentar os resultados no fim do dia. | sem feed | Ranquear o perfil com quem vota. Quem interage com enquete recebe melhor o trailer daqui a quatro dias, é o mesmo truque do calendário do MMM. |
+| 14/10 (qua) | D-28 | O combinado que ficou no print | Bastidor: o envelope pardo lacrado aparece na mesa pela primeira vez, sem explicação. Só 'não vou falar o que é'. | **Reels**: O combinado que ficou no print do WhatsApp | Abrir a antecipação diária com dor reconhecível, sem citar Black nem produto. É a versão orgânica do ângulo 3. |
+| 15/10 (qui) | D-27 | O envelope | Caixinha aberta: o que você quer saber sobre a Black. As perguntas que chegarem viram o estático 2 e alimentam a live. | sem feed | Coletar pergunta real do público, que é matéria-prima de criativo e de quebra de objeção. |
+| 16/10 (sex) | D-26 | São muitas folhas | Responder três perguntas da caixinha. Uma delas já com a chamada da lista. | **Carrossel**: Por que o contrato que te ofereceram antes não funcionou | Nomear a tentativa frustrada. O inimigo não é o fotógrafo desorganizado, é o contrato feito pra advogado ler. |
+| 17/10 (sáb) | D-25 | O trailer | Contagem pro trailer durante o dia. Depois de publicado, repost com reação. | **Reels**: Trailer da Black dos Fotógrafos Protegidos | Soltar o trailer pro público já aquecido pela enquete de 13/10. Sem preço, como o playbook pede. |
+| 18/10 (dom) | D-24 | Descanso do feed | Repost do trailer e prints de reação. Nada novo. | sem feed | Descanso intencional. O feed para, os stories seguram a conversa. |
+| 19/10 (seg) | D-23 | Repercussão | Prints de quem comentou o trailer, com o nome coberto quando for DM. | **Imagem**: A data está marcada. Entra na lista. | Converter quem viu o trailer em inscrito. Primeira peça com chamada direta pra página. |
+| 20/10 (ter) | D-22 | Véspera da captação | Amanhã eu abro os grupos. Explicar o que vai acontecer lá dentro e o que não vai (não é grupo de spam). | sem feed | Preparar a abertura dos grupos, reduzindo a saída logo nos primeiros dias. |
+
+## FASE B. Captação (21/10 a 25/10, seguindo em paralelo até a abertura)
+
+| Dia | D-X | Tema | Stories | Feed | Objetivo |
+|---|---|---|---|---|---|
+| 21/10 (qua) | D-21 | Comente PROTEGIDO | Passo a passo de como entrar no grupo. Fixar a mensagem de boas-vindas. | **Reels**: Ele devolveu metade do sinal por causa de um print | Abrir a captação com o ângulo mais forte, em versão orgânica, com CTA de comentar a palavra. |
+| 22/10 (qui) | D-20 | Print contra documento | Mostrar o volume de gente entrando no grupo, sem número inventado. | **Carrossel**: O que o print não diz e o documento diz | Conteúdo de comparação, que é tarefa própria do dia 22. Mostra a diferença sem falar preço. |
+| 23/10 (sex) | D-19 | Responder o que veio | Responder comentário por comentário da série da palavra. Stories com as melhores perguntas. | sem feed | Relacionamento ao extremo, que é o que o playbook pede na captação. |
+| 24/10 (sáb) | D-18 | A evolução de quem entrou antes | Bastidor do grupo já cheio. | **Reels**: [VOCÊ PREENCHE: o caso de um aluno, do começo ao agora] | Conteúdo de evolução do aluno, que é tarefa própria do dia 24. Depende de aluno liberar o caso. |
+| 25/10 (dom) | D-17 | Descanso | Só um story humano, sem campanha. | sem feed | Descanso. O feed para no domingo. |
+
+## FASE C. Aquecimento (26/10 a 10/11)
+
+| Dia | D-X | Tema | Stories | Feed | Objetivo |
+|---|---|---|---|---|---|
+| 26/10 (seg) | D-16 | Começa o aquecimento | Abrir o bloco de aquecimento explicando que agora vem conteúdo mais denso. | **Reels**: O que muda quando o contrato sai do seu colo | Primeiro dos vídeos de aquecimento. Sobrepõe a captação, que continua. |
+| 27/10 (ter) | D-15 | Faltam 15 dias | Ligar a contagem regressiva pública. Marcador fixo nos stories a partir de hoje. | **Imagem**: Faltam 15 dias | Iniciar a contagem, que vai até o dia anterior à abertura. |
+| 28/10 (qua) | D-14 | Boas-vindas nos grupos cheios | Vídeo de boas-vindas gravado pra cada grupo que fechou, com o nome do grupo dito na gravação. | **Carrossel**: As três coisas que todo fotógrafo acha que o contrato resolve e não resolve | Quebra de objeção cedo, antes do preço existir. |
+| 29/10 (qui) | D-13 | O primeiro bônus | Mostrar o álbum 30x30 chegando, na mão, sem dizer ainda a regra de quem ganha. | **Reels**: O álbum que a primeira compra leva | Primeiro bônus revelado, um por vez, como o playbook manda. Presente aparece antes do preço. |
+| 30/10 (sex) | D-12 | Bastidor dos álbuns | Conversa com a encadernadora, print real, nomes cobertos. | sem feed | É o estático 1 da captação virando conteúdo orgânico. Objeto físico aparecendo antes da oferta. |
+| 31/10 (sáb) | D-11 | Descanso do feed | Story humano, fim de semana. | sem feed | Descanso. |
+| 01/11 (dom) | D-10 | Metralhadora de depoimentos, dia 1 | Três depoimentos ao longo do dia, cada um com nome e contexto. | **Carrossel**: [VOCÊ PREENCHE: três alunos, um por card, com nome e o que mudou] | Começa a distribuição concentrada de prova social, que é tarefa própria do dia. |
+| 02/11 (seg) | D-9 | O segundo bônus | Mostrar os dez álbuns pocket empilhados. | **Imagem**: Dez álbuns. Dez pessoas. | Segundo bônus revelado. A regra de ordem de compra aparece aqui pela primeira vez. |
+| 03/11 (ter) | D-8 | Faltam 8 dias | Contagem. Responder as dúvidas que mais repetiram na caixinha. | **Reels**: Eu era advogado e fechava trabalho por áudio | Versão orgânica do ângulo 5. Autoridade pela falha, não pelo currículo. |
+| 04/11 (qua) | D-7 | As páginas no ar | Avisar que a página já existe e que quem tá na lista vai receber o link antes. | **Carrossel**: O manifesto, em onze movimentos | Backlog da semana da abertura começa. O manifesto entra inteiro no feed. |
+| 05/11 (qui) | D-6 | Aula 1 | Chamada pra aula durante o dia, link no grupo. | **Reels**: Corte da aula 1 | Primeira aula de aquecimento. O corte alimenta o feed no mesmo dia. |
+| 06/11 (sex) | D-5 | Aula 2 | Chamada e replay. | **Reels**: Corte da aula 2 | Segunda aula. |
+| 07/11 (sáb) | D-4 | Aula 3 | Chamada e replay. | **Reels**: Corte da aula 3 | Terceira aula. |
+| 08/11 (dom) | D-3 | Descanso do feed | Só replay das aulas nos stories. | sem feed | Descanso antes da reta final. |
+| 09/11 (seg) | D-2 | Os bônus que faltavam | Revelar a aula ao vivo da Lei Felca e o tira-dúvidas em grupo. | **Carrossel**: Tudo que entra junto, um por card | Empilhamento de bônus completo, ainda antes do preço. É o D-3 do Nobre. |
+| 10/11 (ter) | D-1 | Amanhã é o grande dia | Metralhadora de depoimentos o dia inteiro. Última chamada pra entrar no grupo. | **Reels**: Amanhã eu abro | Véspera. Nenhuma informação nova, só volume e presença. |
+
+## FASE D. Carrinho aberto (11/11 a 30/11)
+
+| Dia | D-X | Tema | Stories | Feed | Objetivo |
+|---|---|---|---|---|---|
+| 11/11 (qua) | D0 | GRANDE DIA | Contagem hora a hora até a live. Depois da live, prints de quem comprou, com autorização. | **Reels**: O envelope aberto | Abertura. A live revela a oferta e a ancoragem das 6 camadas. O envelope é aberto ao vivo. |
+| 12/11 (qui) | D+1 | A ancoragem | Responder a primeira leva de dúvida de preço. | **Carrossel**: O que custa não ter e o que custa ter | A ancoragem em 6 camadas vira carrossel, um card por camada. |
+| 13/11 (sex) | D+2 | O empilhamento | Mostrar quem já garantiu o pocket, sem dizer quantos faltam se o número for baixo. | **Carrossel**: Tudo que entra, com nome e pra quem serve | Empilhamento de bônus no formato que o playbook recomenda. |
+| 14/11 (sáb) | D+3 | Primeira live de vendas | Chamada o dia todo. Depois, cortes. | **Reels**: Corte da live de vendas | D+3. Novo ângulo, novas provas, mesmo pitch. |
+| 15/11 (dom) | D+4 | Prova social | Prints de compra e de mensagem, com autorização. | **Carrossel**: Quem entrou nos primeiros dias | Domingo trabalha com prova, que exige pouca produção. |
+| 16/11 (seg) | D+5 | Objeção: é só modelo pronto | Responder a objeção nos stories, com a tela do Blindagem. | **Reels**: Não é um PDF que você preenche e reza | Primeira quebra de objeção do carrinho. |
+| 17/11 (ter) | D+6 | Os dez primeiros | Mostrar os álbuns pocket sendo separados, com o nome de quem levou. | **Imagem**: Os dez já têm dono | Prova de que o bônus por ordem é real, o que sustenta o próximo. |
+| 18/11 (qua) | D+7 | Segunda live de vendas | Chamada e cortes. | **Reels**: Corte da segunda live | D+7. |
+| 19/11 (qui) | D+8 | Objeção: eu já comprei antes | Explicar a regra de crédito de quem já é aluno, em stories e no grupo. | **Carrossel**: Se você já comprou os modelos, a sua oferta é outra | Segunda quebra de objeção, endereçada a quem já é aluno. |
+| 20/11 (sex) | D+9 | Feriado | Story leve, sem venda. Nada de contagem, nada de corte. | sem feed | Consciência Negra. Feriado é furada pra corte e pra pitch, então o dia é só presença. |
+| 21/11 (sáb) | D+10 | Descanso | Sem publicação. | sem feed | Sábado de feriadão. Descanso. |
+| 22/11 (dom) | D+11 | Recap | Recapitular a oferta pra quem entrou no meio. | **Carrossel**: Pra quem chegou agora | Domingo de recap, que capta quem entrou na lista tarde. |
+| 23/11 (seg) | D+12 | Falta uma semana | Voltar a contagem, agora até o corte. | **Imagem**: Uma semana | Reativar urgência depois do feriadão. |
+| 24/11 (ter) | D+13 | Comparação final | Responder dúvida de quem ainda compara com comprar só um dos dois. | **Carrossel**: Comprar separado depois custa mais | Última peça de comparação, agora com preço na mesa. |
+| 25/11 (qua) | D+14 | Live de replay e pitch | Chamada e cortes. | **Reels**: Corte da live de replay | D+14. É a live de pitch final, deslocada do feriadão. |
+| 26/11 (qui) | D+15 | Véspera da Black oficial | Avisar que amanhã é a Black de verdade e que aqui nada muda, o preço já é o menor. | **Reels**: Amanhã é a Black de todo mundo. Aqui já é desde o dia 11 | Usar a data oficial a favor, em vez de competir com ela. |
+| 27/11 (sex) | D+16 | Black Friday oficial | Presença o dia inteiro. Responder rápido, que é o dia de maior intenção de compra do ano. | **Carrossel**: O que tá na mesa hoje | Segundo pico natural da campanha. |
+| 28/11 (sáb) | D+17 | Últimas 48 horas | Contagem por hora nos stories. | **Imagem**: 48 horas | Reta final. |
+| 29/11 (dom) | D+18 | Últimas 24 horas | Contagem por hora. Metralhadora de depoimento de novo. | **Reels**: Amanhã fecha | Véspera do corte. |
+| 30/11 (seg) | D+19 | ENCERRAMENTO | Contagem até a hora exata. Avisar o corte quando acontecer, sem prorrogar. | **Reels**: O último bônus, que só quem entra hoje leva | Encerramento com hora exata e um bônus revelado só hoje, que é o movimento que o playbook pede pra quem deixa pra cima da hora. |
+
+## 22.3 O que virou card no Orgânico
+
+São **38 peças de feed** em 49 dias. Cada uma entrou como card no Orgânico com a marca PICO, na
+data prevista, com tema, gancho e o objetivo do dia escrito nas observações. Os stories não viram card,
+ficam só aqui, porque são produção do dia e não passam por fila.
+
+Para achar só elas, o Orgânico agora tem o filtro **Origem: Pico**, igual ao dos Anúncios. Card sem essa
+marca continua sendo perpétuo, como sempre foi.
+
+| Fase | Peças de feed |
+|---|---|
+| FASE A | 4 |
+| FASE B | 3 |
+| FASE C | 13 |
+| FASE D | 18 |

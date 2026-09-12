@@ -272,6 +272,17 @@ function ContentCard({ item, col, onOpen, onDragStart, onEtapaToggle }) {
           background:`${color}18`, color, border:`1px solid ${color}33` }}>
           <LucideIcon icon={platIcon} size={9}/>{item.plataforma}
         </span>
+        {/* Pico de vendas: separa o que e de campanha do que e perpetuo.
+            Card sem essa marca continua sendo perpetuo, como sempre foi. */}
+        {item.pico_projeto_id && (
+          <span title="Conteúdo de um pico de vendas"
+            style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700,
+              letterSpacing:'0.04em', borderRadius:5, padding:'2px 7px',
+              color:'#c084fc', background:'rgba(192,132,252,.12)',
+              border:'1px solid rgba(192,132,252,.35)' }}>
+            PICO
+          </span>
+        )}
         {item.data_prevista && (
           <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', color:'var(--text-3)', marginLeft:'auto' }}>
             {item.data_prevista.split('-').reverse().join('/')}
@@ -2526,6 +2537,7 @@ function OrganicoScreen() {
   // Data clicada no calendário: abre o seletor de conteúdo pronto pra programar.
   const [programarData, setProgramarData] = useState(null);
   const [platFilter, setPlatFilter] = useState('Todos');
+  const [origemFilter, setOrigemFilter] = useState('Todos');
   const [respFilter, setRespFilter] = useState('Todos');
   const [searchQuery, setSearchQuery] = useState('');
   const [nextNum, setNextNum]       = useState(1);
@@ -2806,6 +2818,8 @@ function OrganicoScreen() {
 
   const filtered = items.filter(i => {
     if (platFilter !== 'Todos' && i.plataforma !== platFilter) return false;
+    if (origemFilter === 'Pico'     && !i.pico_projeto_id) return false;
+    if (origemFilter === 'Perpétuo' &&  i.pico_projeto_id) return false;
     if (respFilter === 'Comum') { if (i.responsavel) return false; }
     else if (respFilter !== 'Todos' && i.responsavel !== respFilter) return false;
     if (searchQuery.trim()) {
@@ -2820,7 +2834,7 @@ function OrganicoScreen() {
     return true;
   });
 
-  const temFiltroAtivo = platFilter !== 'Todos' || respFilter !== 'Todos' || searchQuery.trim() !== '';
+  const temFiltroAtivo = platFilter !== 'Todos' || origemFilter !== 'Todos' || respFilter !== 'Todos' || searchQuery.trim() !== '';
 
   return (
     <div style={{ display:'flex', flexDirection:'column', height:'100%', overflow:'hidden' }}>
@@ -2914,6 +2928,17 @@ function OrganicoScreen() {
         <div style={{ width:1, height:20, background:'var(--app-border)', flexShrink:0 }}/>
         <div style={{ display:'flex', alignItems:'center', gap:6 }}>
           <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700,
+            letterSpacing:'0.08em', textTransform:'uppercase', color:'var(--text-3)' }}>Origem</span>
+          <div style={{ display:'flex', gap:4 }}>
+            {['Todos','Perpétuo','Pico'].map(o => (
+              <FilterPill key={o} label={o} active={origemFilter===o}
+                onClick={()=>setOrigemFilter(o)}/>
+            ))}
+          </div>
+        </div>
+        <div style={{ width:1, height:20, background:'var(--app-border)', flexShrink:0 }}/>
+        <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+          <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700,
             letterSpacing:'0.08em', textTransform:'uppercase', color:'var(--text-3)' }}>Responsável</span>
           {/* Só as fotos, com contorno na cor de cada um (padrão do Khronus).
               Inativo fica em cinza e apagado, então dá pra ver de longe quem
@@ -2965,7 +2990,7 @@ function OrganicoScreen() {
           )}
         </div>
         {temFiltroAtivo && (
-          <button onClick={()=>{ setPlatFilter('Todos'); setRespFilter('Todos'); setSearchQuery(''); }}
+          <button onClick={()=>{ setPlatFilter('Todos'); setOrigemFilter('Todos'); setRespFilter('Todos'); setSearchQuery(''); }}
             style={{ display:'flex', alignItems:'center', gap:4, padding:'4px 8px', borderRadius:6,
               background:'rgba(248,113,113,.08)', border:'1px solid rgba(248,113,113,.2)',
               color:'var(--clr-neg)', fontSize:10.5, fontFamily:'Roboto,sans-serif',
