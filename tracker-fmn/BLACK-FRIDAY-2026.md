@@ -2970,7 +2970,7 @@ As três seguem o mesmo desenho, muito mais curto que o do Nobre: **uma dobra s�
 1. **A oferta de aluno aparece na primeira dobra.** "Vocês que são meus alunos terão uma oferta especial", em BF25. A nossa oferta de aluno existe e não aparecia em lugar nenhum da página. Entrou, sem citar preço
 2. **A data mora dentro da caixa do formulário**, como parte da frase, não como selo solto embaixo
 
-**O que não peguei, e o motivo:** a dobra única. O público do Ladeira conhece os produtos dele de cor, então uma tela basta. O nosso público frio não conhece nem o Blindagem, então precisa de explicação. Fico no tamanho da página do Nobre.
+**O que não peguei, com o motivo:** a dobra única. O público do Ladeira conhece os produtos dele de cor, então uma tela basta. O nosso público frio não conhece nem o Blindagem, então precisa de explicação. Fico no tamanho da página do Nobre.
 
 **Virou tarefa para 22/09:** montar a arte do que entra na Black, no lugar onde o Ladeira põe as capas dos cursos.
 
