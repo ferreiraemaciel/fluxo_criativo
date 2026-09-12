@@ -2914,6 +2914,15 @@ Ela dedica **um bloco inteiro ao presente físico** antes de qualquer coisa de p
 
 Outra coisa que ela faz e que vale: o CTA repetido no meio da página usa o mesmo texto do botão do formulário, "Entrar no Grupo". O destino declarado é o grupo, não a compra.
 
+## 23.2b Onde ver as duas agora
+
+Pré-visualização no ar, fora do site de produção:
+
+- Inscrição: https://black-preview.fmn-site.pages.dev/black
+- Obrigado: https://black-preview.fmn-site.pages.dev/black-obrigado
+
+É uma ramificação separada dentro do mesmo projeto da Cloudflare. Quem tem o link vê a página de verdade, com pixel e formulário funcionando. O domínio principal continua sem nada: `fotografiaeomeunegocio.com.br/black` responde 404 até a publicação ser aprovada.
+
 ## 23.3 A nossa página de inscrição
 
 Arquivo: `fmn-site/public/black.html`. Pronta e testada no navegador, no celular e no computador. **Ainda não publicada.**
