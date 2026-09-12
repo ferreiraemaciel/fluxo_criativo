@@ -677,4 +677,26 @@ function BarraProgresso({ pct = 0, etapa = '' }) {
   );
 }
 
-Object.assign(window, { LucideIcon, Btn, Badge, CardKPI, SectionCard, Divider, Sidebar, TopBar, fmtBRL, RefBlock, UTM_GLOBAL, PLATAFORMAS, PLAT_COLOR, PLAT_ICON, CarouselLightbox, novoJobId, BarraProgresso, melhorThumbAd });
+
+/* ── buscarTudo ──────────────────────────────────────────────────────────
+   Busca TODAS as linhas, não só as mil primeiras.
+
+   O Supabase corta o resultado em 1000 linhas por padrão, e o .limit() do
+   client só reduz esse teto, nunca aumenta: pedir .limit(5000) engana, volta
+   1000 e nada avisa que faltou. Nasceu na tela de Funis (escondia 574 de
+   1.574 leads) e virou fonte única na auditoria de 12/09/2026, quando o
+   mesmo corte apareceu no Dashboard e no Financeiro, com 1.549 vendas na
+   base: faturamento, lucro e ROAS do período Máximo saíam errados para
+   baixo, sem aviso nenhum na tela.                                      */
+async function buscarTudo(montarQuery, passo = 1000) {
+  const linhas = [];
+  for (let pagina = 0; ; pagina++) {
+    const { data, error } = await montarQuery().range(pagina * passo, pagina * passo + passo - 1);
+    if (error) break;
+    linhas.push(...(data || []));
+    if (!data || data.length < passo) break;
+  }
+  return linhas;
+}
+
+Object.assign(window, { buscarTudo, LucideIcon, Btn, Badge, CardKPI, SectionCard, Divider, Sidebar, TopBar, fmtBRL, RefBlock, UTM_GLOBAL, PLATAFORMAS, PLAT_COLOR, PLAT_ICON, CarouselLightbox, novoJobId, BarraProgresso, melhorThumbAd });

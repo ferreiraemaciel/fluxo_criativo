@@ -77,12 +77,14 @@ function useVendasData(from, to) {
       // Sem ela, venda das 21h-23h59 de Brasília cai no dia seguinte em UTC e
       // sumia do "Hoje" desta aba enquanto aparecia no Dashboard.
       const brt = window.FMNFinancas.brtRangeUtc(from, to);
-      const { data } = await window.db
+      // Paginado: o banco corta em mil linhas por consulta e a base já passou
+      // disso, então o faturamento do período Máximo vinha menor do que é.
+      const data = await window.buscarTudo(() => window.db
         .from('vendas')
         .select('hotmart_transaction_id,produto_nome,valor_bruto,preco_oferta,valor_liquido,status,created_at,utm_source')
         .gte('created_at', brt.gte)
         .lte('created_at', brt.lte)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }));
       setVendas(data || []);
       setLoading(false);
     }
@@ -175,26 +177,6 @@ function AddExpenseModal({ onClose, onSaved }) {
     });
     if (error) { setSaving(false); setErro(error.message || 'Não consegui salvar. Confira os campos.'); return; }
 
-    // Tag é enfeite útil, nunca pode derrubar o lançamento da receita: a
-    // venda já está salva a essa altura. Se a marcação falhar (ou a pessoa
-    // ainda não existir como contato no Khronus), avisa e segue.
-    if (form.tagId && form.telefone.trim()) {
-      try {
-        const r = await fetch(`${window.db.supabaseUrl}/functions/v1/khronus-tags`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${window.tokenTracker}` },
-          body: JSON.stringify({ acao: 'marcar', telefone: form.telefone, tag_id: form.tagId }),
-        });
-        const d = await r.json().catch(() => ({}));
-        if (d.motivo === 'sem_contato') {
-          setSaving(false);
-          setAviso('Receita salva. A tag não foi aplicada: esse telefone ainda não existe como contato no Khronus.');
-          onSaved();
-          return;
-        }
-      } catch { /* venda salva é o que importa */ }
-    }
-
     setSaving(false);
     onSaved(); onClose();
   };
@@ -267,11 +249,6 @@ function AddExpenseModal({ onClose, onSaved }) {
           <div style={{ padding:'9px 11px',borderRadius:8,background:'rgba(248,113,113,.08)',
             border:'1px solid rgba(248,113,113,.3)',fontSize:11.5,color:'#f87171',
             fontFamily:'Roboto,sans-serif',lineHeight:1.5 }}>{erro}</div>
-        )}
-        {aviso && (
-          <div style={{ padding:'9px 11px',borderRadius:8,background:'rgba(251,191,36,.08)',
-            border:'1px solid rgba(251,191,36,.3)',fontSize:11.5,color:'#fbbf24',
-            fontFamily:'Roboto,sans-serif',lineHeight:1.5 }}>{aviso}</div>
         )}
         <div style={{ display:'flex',gap:8,marginTop:4 }}>
           <button onClick={onClose} style={{ flex:1,padding:'10px',borderRadius:8,

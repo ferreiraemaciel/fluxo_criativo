@@ -70,28 +70,30 @@ function useDashboardData(period, dateRange) {
         const metaPct = cfgMap.imposto_meta_pct ?? 12.15;
 
         /* vendas aprovadas no período */
-        const { data: vendas } = await window.db
+        // Paginado: são 1.549 vendas na base e o banco corta em mil por
+        // consulta, sem avisar (auditoria 12/09/2026).
+        const vendas = await window.buscarTudo(() => window.db
           .from('vendas')
           .select('valor_bruto, valor_liquido, preco_oferta, produto_nome, utm_source, status, created_at, comprador_email')
           .eq('status', 'aprovada')
           .gte('created_at', brt.gte)
-          .lte('created_at', brt.lte);
+          .lte('created_at', brt.lte));
 
         /* reembolsos no período */
-        const { data: reembolsos } = await window.db
+        const reembolsos = await window.buscarTudo(() => window.db
           .from('vendas')
           .select('valor_bruto')
           .eq('status', 'reembolsada')
           .gte('created_at', brt.gte)
-          .lte('created_at', brt.lte);
+          .lte('created_at', brt.lte));
 
         /* insights agregados (para o funil); mapeados ao período */
         const insightsPeriodo = period === 'Máximo' || period === 'Hoje' || period === 'Custom'
           ? 'maximum' : period;
-        const { data: insights } = await window.db
+        const insights = await window.buscarTudo(() => window.db
           .from('insights_cache')
           .select('gasto, link_clicks, landing_page_views, compras, initiate_checkout')
-          .eq('periodo', insightsPeriodo);
+          .eq('periodo', insightsPeriodo));
 
         /* Gasto e funil do PERÍODO, sempre do histórico diário.
 

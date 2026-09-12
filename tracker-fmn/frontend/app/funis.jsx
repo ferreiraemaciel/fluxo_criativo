@@ -485,23 +485,9 @@ function Bar({ label, n, max, pctVal, color, sub }) {
    fica destacado com a situação real, não só um "abandonou" genérico.
    "Recuperado" = essa mesma pessoa aparece depois em vendas aprovada,
    casando por e-mail.                                                     */
-// Busca TODAS as linhas, não só as 1000 primeiras.
-//
-// O Supabase corta o resultado em 1000 linhas por padrão (limite do
-// servidor); o .limit() do client só reduz esse teto, nunca aumenta. Pedir
-// .limit(5000) engana: volta 1000 e nada avisa que faltou. Foi o que
-// escondia 574 dos 1.574 leads dos últimos 30 dias na aba Leads, e o que
-// fazia o badge de contato sumir na Recuperação de Venda.
-async function buscarTudo(montarQuery, passo = 1000) {
-  const linhas = [];
-  for (let pagina = 0; ; pagina++) {
-    const { data, error } = await montarQuery().range(pagina * passo, pagina * passo + passo - 1);
-    if (error) break;
-    linhas.push(...(data || []));
-    if (!data || data.length < passo) break;
-  }
-  return linhas;
-}
+// buscarTudo agora mora em shared.jsx (fonte única desde 12/09/2026), porque
+// o mesmo corte de mil linhas aparecia no Dashboard e no Financeiro.
+const buscarTudo = window.buscarTudo;
 
 // Últimos 11 dígitos (DDD+número), ignora diferença de DDI — mesmo critério
 // usado no cruzamento server-side (cruzarComQuiz, hotmart-backfill).

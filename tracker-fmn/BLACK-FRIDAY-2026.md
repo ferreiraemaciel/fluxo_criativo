@@ -3141,6 +3141,23 @@ Toda tarefa de arte agora tem um card correspondente no Orgânico, com a tarefa 
 
 Os cards de arte começam com **ARTE ·** no título, então dá para separar do que é publicação. Cada um diz nas observações quais peças do calendário ele alimenta.
 
+## 25.3b Os 8 criativos de captação, agora nos Anúncios
+
+Os cinco vídeos dos ângulos e os três estáticos nativos viraram card em Anúncios, com a marca PICO, cada um com o roteiro completo, a copy do Meta, título, descrição e notas de edição.
+
+| Card | Peça |
+|---|---|
+| ADS 366 | Ângulo 1, o advogado contra o fotógrafo |
+| ADS 367 | Ângulo 2, a fala do sinal devolvido |
+| ADS 368 | Ângulo 3, o print do WhatsApp |
+| ADS 369 | Ângulo 4, quem já está do outro lado |
+| ADS 370 | Ângulo 5, por que isso existe |
+| ADS 371 | Estático, a conversa vazada dos álbuns |
+| ADS 372 | Estático, a caixinha respondida |
+| ADS 373 | Estático, a reação a notícia |
+
+Na aba Anúncios, o filtro **Origem: Pico** mostra as oito juntas, separadas do perpétuo.
+
 ## 25.4 O que mudou no Tracker para isso funcionar
 
 Antes, a tarefa que virava card guardava só um texto, do tipo "Orgânico: nome da tarefa". Servia de aviso, não abria nada, obrigava a procurar o card na mão.
