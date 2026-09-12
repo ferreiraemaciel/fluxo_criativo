@@ -3120,7 +3120,7 @@ O domínio principal continua sem nada até a publicação ser aprovada.
 
 ## 25.3 Cada arte virou card no Orgânico, com a marca PICO
 
-Toda tarefa de arte agora tem um card correspondente no Orgânico, e a tarefa carrega o link de ida. Na aba Pico de Vendas, o botão verde **ORG** ao lado da tarefa abre o card direto, sem procurar na mão.
+Toda tarefa de arte agora tem um card correspondente no Orgânico, com a tarefa carregando o link de ida. Na aba Pico de Vendas, o botão verde **ORG** ao lado da tarefa abre o card direto, sem procurar na mão.
 
 | Tarefa de arte | Card |
 |---|---|
@@ -3143,7 +3143,7 @@ Os cards de arte começam com **ARTE ·** no título, então dá para separar do
 
 ## 25.4 O que mudou no Tracker para isso funcionar
 
-Antes, a tarefa que virava card guardava só um texto, do tipo "Orgânico: nome da tarefa". Servia de aviso, não abria nada, e obrigava a procurar o card na mão.
+Antes, a tarefa que virava card guardava só um texto, do tipo "Orgânico: nome da tarefa". Servia de aviso, não abria nada, obrigava a procurar o card na mão.
 
 Agora a tarefa guarda o tipo e o identificador do card. O selo verde ao lado da tarefa virou botão: clicou, cai no card certo, no Orgânico ou nos Anúncios, com o card já aberto.
 
