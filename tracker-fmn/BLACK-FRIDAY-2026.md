@@ -2955,6 +2955,35 @@ A inscrição grava em `quiz_leads` com `funnel_slug` igual a `black-2026`, pela
 
 Como essa função já dispara o Lead pela CAPI com o identificador `<code>_lead`, a página de obrigado dispara o Lead do navegador **com o mesmo identificador**. O Meta junta os dois em vez de contar duas vezes. Sem isso, todo lead entraria dobrado no relatório e o CPL apareceria pela metade do que é.
 
+## 23.5b O que veio das páginas do Ladeira e da nossa última campanha
+
+> Corrigido em 11/09 depois de uma pergunta certeira do Felipe: o material do Ladeira estava catalogado na
+> biblioteca, mas não estava preso nas tarefas das páginas, então não aparecia ao lado do trabalho. Agora está.
+> E a nossa própria página do último pico, que é a referência mais óbvia de todas, também não estava.
+
+### Das três páginas de captura do Ladeira (BF23, BF24, BF25)
+
+As três seguem o mesmo desenho, e é radicalmente mais curto que o do Nobre: **uma dobra só**. Formulário à esquerda, do lado direito uma arte mostrando tudo que entra na oferta. Sem bloco de autoridade, sem CTA repetido, sem lista explicando o evento.
+
+**O que peguei:**
+
+1. **A oferta de aluno aparece na primeira dobra.** "Vocês que são meus alunos terão uma oferta especial", em BF25. A nossa oferta de aluno existe e não aparecia em lugar nenhum da página. Entrou, sem citar preço
+2. **A data mora dentro da caixa do formulário**, como parte da frase, não como selo solto embaixo
+
+**O que não peguei, e por quê:** a dobra única. O público do Ladeira conhece os produtos dele de cor, então uma tela basta. O nosso público frio não conhece nem o Blindagem, então precisa de explicação. Fico no tamanho da página do Nobre.
+
+**Virou tarefa para 22/09:** montar a arte do que entra na Black, no lugar onde o Ladeira põe as capas dos cursos.
+
+### Da nossa página do último pico, o lançamento do Blindagem
+
+Essa é a mais útil das referências, porque a voz já é a do Felipe. Três coisas entraram na página de inscrição da Black:
+
+1. **A lista de atritos com X.** Seis linhas, cada uma uma cena concreta da rotina, fechadas por uma caixa com a conclusão. É melhor do que a minha lista numerada de três itens, porque a dor vem antes de qualquer promessa, item a item, do jeito que o fotógrafo vive
+2. **Os três chips inline embaixo da promessa.** No lançamento eram "18 de junho · Live às 20h · Somente para alunos MCV". Aqui são "11 de novembro · Ao vivo · Uma vez só". Resolve num lugar só o que eu tinha espalhado em dois
+3. **A barra de topo com a marca e o selo do segmento.** Dá contexto sem ocupar espaço
+
+**Guardado para a página de vendas:** a seção "o que muda", em duas colunas, comparando o que os Modelos de Contrato Visual entregam com o que o Blindagem adiciona. É exatamente a confusão entre os dois produtos que o banco de linguagem mostrou, e que o combo resolve.
+
 ## 23.6 O que falta e depende de você
 
 1. **O link de convite do grupo.** O lugar está marcado no arquivo com um comentário. Enquanto ele não existe, o botão abre uma conversa comigo pedindo o link, pra ninguém ficar sem caminho
