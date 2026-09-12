@@ -3027,6 +3027,28 @@ Arquivo: `meus-produtos/blindagem/entregas/criativos/black-2026/marca-da-campanh
 
 **Por que esta campanha ganha paleta fixa** se o perfil não tem paleta padrão: a regra contra paleta fixa existe para impedir que um carrossel novo herde a cor do anterior por preguiça. Uma campanha de 49 dias é o caso oposto, ela precisa ser reconhecida de longe em dezenas de peças.
 
+## 24.1c O jogo de contagem, montado
+
+Arquivo: `meus-produtos/blindagem/entregas/criativos/black-2026/jogo-de-contagem.html`. Sete peças no feed e as mesmas sete no story.
+
+| Data | Peça |
+|---|---|
+| 27/10 | Faltam 15 dias. Liga a contagem, junto com o marcador fixo nos stories |
+| 01/11 | Faltam 10 dias |
+| 04/11 | Faltam 7 dias. Mesmo dia em que as páginas sobem |
+| 06/11 | Faltam 5 dias. Dia da aula 2 |
+| 08/11 | Faltam 3 dias. Dia do empilhamento de bônus |
+| 10/11 | **É amanhã.** Primeira quebra, a peça vira dourada |
+| 11/11 | **É hoje.** Segunda quebra, tinta de carimbo, e a única que fala em hora |
+
+**As três decisões de desenho:**
+
+1. **O número é o assunto.** Ocupa quase metade da altura e não divide espaço com mais nada, porque quem rola o feed lê o número antes de decidir se para
+2. **As duas últimas quebram o padrão de propósito.** Cinco peças pretas seguidas viram paisagem. No dia 10 o fundo vira dourado e quem acompanha entende sozinho que chegou a hora. No dia 11 vira tinta de carimbo, a cor que a paleta reserva para o corte
+3. **A hora só aparece na última.** Antes disso ela rouba o assunto da peça, que é a contagem
+
+O selo fica sempre no pé, levemente torto. É o que faz as sete parecerem uma coisa só quando aparecem lado a lado na grade do perfil.
+
 ## 24.2 As 13 artes que faltam, com data
 
 > Todas lançadas no Tracker como tarefa própria, na trilha de conteúdo, com o que precisa sair de cada uma escrito na tarefa.
