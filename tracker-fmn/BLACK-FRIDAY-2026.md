@@ -2963,14 +2963,14 @@ Como essa função já dispara o Lead pela CAPI com o identificador `<code>_lead
 
 ### Das três páginas de captura do Ladeira (BF23, BF24, BF25)
 
-As três seguem o mesmo desenho, e é radicalmente mais curto que o do Nobre: **uma dobra só**. Formulário à esquerda, do lado direito uma arte mostrando tudo que entra na oferta. Sem bloco de autoridade, sem CTA repetido, sem lista explicando o evento.
+As três seguem o mesmo desenho, muito mais curto que o do Nobre: **uma dobra só**. Formulário à esquerda, do lado direito uma arte mostrando tudo que entra na oferta. Sem bloco de autoridade, sem CTA repetido, sem lista explicando o evento.
 
 **O que peguei:**
 
 1. **A oferta de aluno aparece na primeira dobra.** "Vocês que são meus alunos terão uma oferta especial", em BF25. A nossa oferta de aluno existe e não aparecia em lugar nenhum da página. Entrou, sem citar preço
 2. **A data mora dentro da caixa do formulário**, como parte da frase, não como selo solto embaixo
 
-**O que não peguei, e por quê:** a dobra única. O público do Ladeira conhece os produtos dele de cor, então uma tela basta. O nosso público frio não conhece nem o Blindagem, então precisa de explicação. Fico no tamanho da página do Nobre.
+**O que não peguei, e o motivo:** a dobra única. O público do Ladeira conhece os produtos dele de cor, então uma tela basta. O nosso público frio não conhece nem o Blindagem, então precisa de explicação. Fico no tamanho da página do Nobre.
 
 **Virou tarefa para 22/09:** montar a arte do que entra na Black, no lugar onde o Ladeira põe as capas dos cursos.
 
@@ -2982,7 +2982,7 @@ Essa é a mais útil das referências, porque a voz já é a do Felipe. Três co
 2. **Os três chips inline embaixo da promessa.** No lançamento eram "18 de junho · Live às 20h · Somente para alunos MCV". Aqui são "11 de novembro · Ao vivo · Uma vez só". Resolve num lugar só o que eu tinha espalhado em dois
 3. **A barra de topo com a marca e o selo do segmento.** Dá contexto sem ocupar espaço
 
-**Guardado para a página de vendas:** a seção "o que muda", em duas colunas, comparando o que os Modelos de Contrato Visual entregam com o que o Blindagem adiciona. É exatamente a confusão entre os dois produtos que o banco de linguagem mostrou, e que o combo resolve.
+**Guardado para a página de vendas:** a seção "o que muda", em duas colunas, comparando o que os Modelos de Contrato Visual entregam com o que o Blindagem adiciona. É exatamente a confusão entre os dois produtos que o banco de linguagem mostrou e que o combo resolve.
 
 ## 23.6 O que falta e depende de você
 
