@@ -2563,7 +2563,7 @@ Todas as objeções saíram das mensagens reais da Parte 17. Serve para a live (
 | 5 | "O visual do contrato interfere na legalidade?" | Não. A lei não exige feiura. O que vale é o conteúdo das cláusulas, e é por isso que o design existe: para o cliente ler e entender antes de assinar. |
 | 6 | "Seu modelo é genérico, não é específico" | São modelos por tipo de trabalho, todos editáveis. O que é do seu caso você ajusta, e as cláusulas que protegem o essencial já estão lá. |
 | 7 | "Tenho medo de ser simples demais" | Simples é o oposto de vago. O contrato é curto de ler porque é objetivo, não porque deixou coisa de fora. |
-| 8 | "Prefiro fazer com advogado particular" | Faz sentido para quem tem um caso muito fora do padrão. Para o dia a dia de foto e vídeo, o modelo resolve por uma fração do honorário e você continua podendo levar ao seu advogado. |
+| 8 | "Prefiro fazer com advogado particular" | Faz sentido para quem tem um caso muito fora do padrão. Para o dia a dia de foto e vídeo, o modelo já cobre as situações que mais aparecem. Nada impede que você leve ao seu advogado para adaptar ao seu caso. |
 | 9 | "Você é melhor que aquele que vende contrato a R$ 39,90?" | O barato costuma ser um arquivo solto. Aqui tem modelo por tipo de trabalho, atualização quando a lei muda e o sistema de assinatura junto. |
 | 10 | "Blindagem extra? Para prevenir de verdade tenho que investir extra?" | Essa dúvida é justa, e é o motivo do pacote desta Black: o contrato e a assinatura vão juntos, pelo preço de um. |
 | 11 | "O processo de assinatura é fácil? Tenho medo do cliente não conseguir" | O cliente recebe um link, lê no celular e assina com o dedo. Não precisa instalar nada nem criar conta. |
