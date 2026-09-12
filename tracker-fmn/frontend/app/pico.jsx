@@ -101,26 +101,28 @@ async function criarCardDaTarefa(tarefa, projeto) {
     const { data } = await window.db.from('ads').select('numero');
     const usados = new Set((data || []).map(r => r.numero));
     let n = 1; while (usados.has(n)) n++;
-    const { error } = await window.db.from('ads').insert({
+    const { data: novo, error } = await window.db.from('ads').insert({
       numero: n,
       titulo: `ADS ${String(n).padStart(3,'0')} - ${tarefa.titulo}`,
       tipo: 'imagem',
       status: 'fazer',
       pico_projeto_id: projeto.id,
-    });
+    }).select('id').single();
     if (error) throw new Error(error.message);
-    return { tipo:'Anúncios', rotulo:`ADS ${String(n).padStart(3,'0')}`, hash:'#criativos' };
+    return { tipo:'Anúncios', rotulo:`ADS ${String(n).padStart(3,'0')}`, hash:'#criativos',
+             cardTipo:'ads', cardId:novo.id, alvo:n };
   }
   if (tarefa.trilha === 'conteudo') {
-    const { error } = await window.db.from('conteudo_organico').insert({
+    const { data: novo, error } = await window.db.from('conteudo_organico').insert({
       tema: tarefa.titulo,
       plataforma: 'Reels',
       // O Organico nao tem coluna "Fazer": a primeira e "Fazendo".
       status: 'Fazendo',
       pico_projeto_id: projeto.id,
-    });
+    }).select('id').single();
     if (error) throw new Error(error.message);
-    return { tipo:'Orgânico', rotulo:tarefa.titulo, hash:'#organico' };
+    return { tipo:'Orgânico', rotulo:tarefa.titulo, hash:'#organico',
+             cardTipo:'organico', cardId:novo.id, alvo:novo.id };
   }
   throw new Error('Só tarefas de Tráfego e Conteúdo viram card.');
 }
@@ -216,7 +218,7 @@ function Progresso({ feitas, total, cor = '#4ade80', altura = 6 }) {
 }
 
 /* ── Linha de tarefa ────────────────────────────────────────────*/
-function LinhaTarefa({ t, onToggle, onAbrir, mostrarTrilha, onVirarCard, onDefinir }) {
+function LinhaTarefa({ t, onToggle, onAbrir, mostrarTrilha, onVirarCard, onDefinir, onAbrirCard }) {
   const [hov, setHov] = useState(false);
   const [criando, setCriando] = useState(false);
   const [aberto, setAberto] = useState(false);
@@ -323,10 +325,23 @@ function LinhaTarefa({ t, onToggle, onAbrir, mostrarTrilha, onVirarCard, onDefin
           </span>
         )}
         {t.entregavel_url && (
-          <span title={`Card criado: ${t.entregavel_url}`}
-            style={{ color:'#4ade80', display:'flex' }}>
-            <LucideIcon icon="link" size={12}/>
-          </span>
+          onAbrirCard && t.card_id ? (
+            <button
+              onClick={e => { e.stopPropagation(); onAbrirCard(t); }}
+              title={`Abrir o card: ${t.entregavel_url}`}
+              style={{ display:'flex', alignItems:'center', gap:3, padding:'1px 6px', borderRadius:4,
+                cursor:'pointer', fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700,
+                color:'#4ade80', background:'rgba(74,222,128,.1)',
+                border:'1px solid rgba(74,222,128,.3)' }}>
+              <LucideIcon icon="external-link" size={9}/>
+              {t.card_tipo === 'ads' ? 'ADS' : 'ORG'}
+            </button>
+          ) : (
+            <span title={`Card criado: ${t.entregavel_url}`}
+              style={{ color:'#4ade80', display:'flex' }}>
+              <LucideIcon icon="link" size={12}/>
+            </span>
+          )
         )}
         {podeVirarCard && (hov || criando) && (
           <button
@@ -1797,7 +1812,7 @@ function Calendario({ tarefas, d0, onAbrir }) {
             {tarefasDoDia.map(t => (
               <LinhaTarefa key={t.id} t={t} onToggle={onAbrir.toggle}
                 onAbrir={()=>{}} mostrarTrilha onVirarCard={onAbrir.virarCard}
-                onDefinir={onAbrir.definirTarefa}/>
+                onDefinir={onAbrir.definirTarefa} onAbrirCard={onAbrir.abrirCard}/>
             ))}
           </div>
         </div>
@@ -2243,7 +2258,7 @@ function BlocoDebriefing({ projeto, metricas, tarefas, onSalvar, onSalvarRespost
 }
 
 /* ── Tela principal ─────────────────────────────────────────────*/
-function PicoScreen() {
+function PicoScreen({ onNavigate }) {
   const [projetos, setProjetos]   = useState([]);
   const [projetoId, setProjetoId] = useState(null);
   const [tarefas, setTarefas]     = useState([]);
@@ -2436,18 +2451,23 @@ function PicoScreen() {
     }
   };
 
+  /* Clique na tarefa leva até o card que ela virou, no Orgânico ou nos Anúncios.
+     Sem isso o vínculo existia só como texto e obrigava a procurar o card na mão. */
+  const abrirCard = (t) => {
+    if (!onNavigate || !t.card_id) return;
+    onNavigate(t.card_tipo === 'ads' ? 'criativos' : 'organico', t.card_id);
+  };
+
   /* Tarefa vira card no kanban, já marcada com o projeto */
   const [aviso, setAviso] = useState(null);
   const virarCard = async (t) => {
     try {
       const r = await criarCardDaTarefa(t, projeto);
       const marca = `${r.tipo}: ${r.rotulo}`;
-      await window.db.from('pico_tarefas')
-        .update({ entregavel_url: marca, status: t.status === 'pendente' ? 'fazendo' : t.status })
-        .eq('id', t.id);
-      setTarefas(ts => ts.map(x => x.id === t.id
-        ? { ...x, entregavel_url: marca, status: x.status === 'pendente' ? 'fazendo' : x.status }
-        : x));
+      const patch = { entregavel_url: marca, card_tipo: r.cardTipo, card_id: r.cardId,
+                      status: t.status === 'pendente' ? 'fazendo' : t.status };
+      await window.db.from('pico_tarefas').update(patch).eq('id', t.id);
+      setTarefas(ts => ts.map(x => x.id === t.id ? { ...x, ...patch } : x));
       setAviso({ tipo:'ok', texto:`Card criado em ${r.tipo}: ${r.rotulo}`, hash:r.hash });
     } catch (e) {
       setAviso({ tipo:'erro', texto: e.message });
@@ -2677,7 +2697,7 @@ function PicoScreen() {
         {/* Execução */}
         {visao === 'calendario' ? (
           <Calendario tarefas={visiveis} d0={projeto?.data_abertura}
-            onAbrir={{ toggle: alternarTarefa, virarCard, definirTarefa }}/>
+            onAbrir={{ toggle: alternarTarefa, virarCard, definirTarefa, abrirCard }}/>
         ) : (
         <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
           {ordemGrupos.map(gid => {
@@ -2693,7 +2713,7 @@ function PicoScreen() {
                   {lista.map(t => (
                     <LinhaTarefa key={t.id} t={t} onToggle={alternarTarefa}
                       onAbrir={()=>{}} mostrarTrilha={visao === 'fase'}
-                      onVirarCard={virarCard} onDefinir={definirTarefa}/>
+                      onVirarCard={virarCard} onDefinir={definirTarefa} onAbrirCard={abrirCard}/>
                   ))}
                 </div>
               </GrupoRecolhivel>

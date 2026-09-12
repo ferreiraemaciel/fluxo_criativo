@@ -71,13 +71,13 @@
       switch (screen) {
         case 'dashboard':  return <DashboardScreen period={period} onPeriodChange={setPeriod} dateRange={dateRange} onDateRangeChange={setDateRange} onNavigate={navigate}/>;
         case 'ideias':     return <IdeiaScreen/>;
-        case 'organico':   return <OrganicoScreen/>;
+        case 'organico':   return <OrganicoScreen targetCard={targetAd} onConsumeTarget={() => setTargetAd(null)}/>;
         case 'criativos':  return <KanbanScreen targetAd={targetAd} onConsumeTarget={() => setTargetAd(null)}/>;
         case 'trafego':    return <TrafficScreen/>;
         case 'funis':      return <FunisScreen onNavigate={navigate}/>;
         case 'conversas':  return <ConversasScreen telefoneAlvo={telefoneAlvo} onConsumirAlvo={() => setTelefoneAlvo(null)}/>;
         case 'financeiro': return <FinancialScreen/>;
-        case 'pico':       return <PicoScreen/>;
+        case 'pico':       return <PicoScreen onNavigate={navigate}/>;
         case 'site':       return <SiteScreen/>;
         case 'sistema':    return <SystemScreen/>;
         default:           return <DashboardScreen period={period} onPeriodChange={setPeriod} dateRange={dateRange} onDateRangeChange={setDateRange}/>;

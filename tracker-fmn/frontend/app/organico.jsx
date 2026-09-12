@@ -2530,7 +2530,7 @@ function DesempenhoView({ metricas }) {
   );
 }
 
-function OrganicoScreen() {
+function OrganicoScreen({ targetCard, onConsumeTarget }) {
   const [items, setItems]           = useState([]);
   const [dbAvailable, setDbAvail]   = useState(false);
   const [modal, setModal]           = useState(null);
@@ -2835,6 +2835,17 @@ function OrganicoScreen() {
   });
 
   const temFiltroAtivo = platFilter !== 'Todos' || origemFilter !== 'Todos' || respFilter !== 'Todos' || searchQuery.trim() !== '';
+
+  // Chegada vinda de outra tela (hoje, a tarefa do Pico que virou este card):
+  // abre o card direto, sem obrigar a procurar na mão. Aceita id ou número.
+  useEffect(() => {
+    if (targetCard == null || !items.length) return;
+    const alvo = items.find(i => i.id === targetCard || String(i.numero) === String(targetCard));
+    if (alvo) {
+      setModal({ item: alvo, siblings: items.filter(i => i.status === alvo.status) });
+      if (onConsumeTarget) onConsumeTarget();
+    }
+  }, [targetCard, items]);
 
   return (
     <div style={{ display:'flex', flexDirection:'column', height:'100%', overflow:'hidden' }}>

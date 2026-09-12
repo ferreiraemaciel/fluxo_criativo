@@ -3093,3 +3093,58 @@ Nove páginas nossas entraram na biblioteca, na categoria "Nossas páginas, últ
 | Resultados e depoimentos | fotografiaeomeunegocio.com.br/resultados |
 
 A do combo merece uma olhada antes de escrever a página de vendas da Black, porque já existe uma versão de combo no ar e a Black não pode contradizer ela.
+
+---
+
+# PARTE 25. ONDE ABRIR CADA COISA (11/09/2026)
+
+> Tudo que já está montado, com link direto. Nenhum destes endereços é o site público.
+
+## 25.1 As artes
+
+| Arte | Link |
+|---|---|
+| Índice de todas | https://black-artes.pages.dev/ |
+| Marca da campanha: selo, paleta, tipografia e aplicações | https://black-artes.pages.dev/marca |
+| Jogo de contagem, as 7 peças no feed e no story | https://black-artes.pages.dev/contagem |
+| O que entra na Black, 1080x1350 | https://black-artes.pages.dev/o-que-entra |
+
+## 25.2 As páginas
+
+| Página | Link |
+|---|---|
+| Inscrição, pré-visualização | https://black-preview.fmn-site.pages.dev/black |
+| Obrigado, pré-visualização | https://black-preview.fmn-site.pages.dev/black-obrigado |
+
+O domínio principal continua sem nada até a publicação ser aprovada.
+
+## 25.3 Cada arte virou card no Orgânico, com a marca PICO
+
+Toda tarefa de arte agora tem um card correspondente no Orgânico, e a tarefa carrega o link de ida. Na aba Pico de Vendas, o botão verde **ORG** ao lado da tarefa abre o card direto, sem procurar na mão.
+
+| Tarefa de arte | Card |
+|---|---|
+| Marca da campanha | ORG 180 |
+| Arte do que entra na Black | ORG 181 |
+| Fotografar os álbuns | ORG 182 |
+| Imagem de compartilhamento e destaque | ORG 183 |
+| Capa do trailer e capa do grupo | ORG 184 |
+| Banner das comunidades | ORG 185 |
+| Os 3 estáticos nativos de captação | ORG 186 |
+| Jogo de contagem, 7 peças | ORG 187 |
+| Cards de revelação dos bônus | ORG 188 |
+| Capas das 4 aulas | ORG 189 |
+| Modelo de card de depoimento | ORG 190 |
+| Cards do carrinho aberto | ORG 191 |
+| Carrossel do manifesto | ORG 156, que já existia no calendário |
+| Carrossel da ancoragem e do empilhamento | ORG 163, que já existia no calendário |
+
+Os cards de arte começam com **ARTE ·** no título, então dá para separar do que é publicação. Cada um diz nas observações quais peças do calendário ele alimenta.
+
+## 25.4 O que mudou no Tracker para isso funcionar
+
+Antes, a tarefa que virava card guardava só um texto, do tipo "Orgânico: nome da tarefa". Servia de aviso, não abria nada, e obrigava a procurar o card na mão.
+
+Agora a tarefa guarda o tipo e o identificador do card. O selo verde ao lado da tarefa virou botão: clicou, cai no card certo, no Orgânico ou nos Anúncios, com o card já aberto.
+
+Vale para qualquer pico de vendas daqui em diante, não só para esta Black.
