@@ -3039,7 +3039,7 @@ Arquivo: `meus-produtos/blindagem/entregas/criativos/black-2026/jogo-de-contagem
 | 06/11 | Faltam 5 dias. Dia da aula 2 |
 | 08/11 | Faltam 3 dias. Dia do empilhamento de bônus |
 | 10/11 | **É amanhã.** Primeira quebra, a peça vira dourada |
-| 11/11 | **É hoje.** Segunda quebra, tinta de carimbo, e a única que fala em hora |
+| 11/11 | **É hoje.** Segunda quebra, tinta de carimbo, a única que fala em hora |
 
 **As três decisões de desenho:**
 
