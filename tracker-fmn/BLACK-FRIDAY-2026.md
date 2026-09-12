@@ -2894,3 +2894,61 @@ marca continua sendo perpétuo, como sempre foi.
 | FASE B | 3 |
 | FASE C | 13 |
 | FASE D | 18 |
+
+---
+
+# PARTE 23. AS PÁGINAS DE INSCRIÇÃO E DE OBRIGADO (rascunho para validar, 11/09/2026)
+
+> Base: as três landings do playbook, abertas e olhadas uma a uma. A do Nobre deu a estrutura. A da
+> Priscila deu o bloco de presente físico. A do Segundeiro não somou nada que a gente já não tivesse.
+
+## 23.1 O que a página do Nobre ensina e que copiei
+
+Página curta, de uma rolagem e meia. Barra amarela no topo dizendo que o desconto está chegando. Foto e marca da campanha. Promessa. Subheadline explicando que é evento gratuito. **Formulário de três campos logo na primeira dobra**, nome, e-mail e WhatsApp. Data e hora embaixo do botão. Bloco de autoridade com foto da comunidade. CTA repetido. Rodapé com contato e aviso.
+
+Nenhum preço em lugar nenhum.
+
+## 23.2 O que a página da Priscila ensina e que copiei
+
+Ela dedica **um bloco inteiro ao presente físico** antes de qualquer coisa de preço, mostrando o objeto. No caso dela era uma câmera 360, no nosso são os álbuns. É a aplicação direta da regra do Nobre de que presente aparece antes do preço.
+
+Outra coisa que ela faz e que vale: o CTA repetido no meio da página usa o mesmo texto do botão do formulário, "Entrar no Grupo". O destino declarado é o grupo, não a compra.
+
+## 23.3 A nossa página de inscrição
+
+Arquivo: `fmn-site/public/black.html`. Pronta e testada no navegador, no celular e no computador. **Ainda não publicada.**
+
+| Bloco | O que tem |
+|---|---|
+| Barra de topo | 11 de novembro, a maior condição que eu já fiz |
+| Primeira dobra | Promessa sem citar produto nem preço, mais o formulário de três campos |
+| O que acontece no dia 11 | A live com o envelope aberto, os presentes por ordem de chegada, o grupo sabendo antes |
+| Presentes físicos | O 30x30 e os dez pocket, com a revenda de cada um |
+| Quem fala | Advogado e fotógrafo, em dois parágrafos |
+| Rodapé | WhatsApp e o aviso de que dá pra sair da lista |
+
+**O que ela não tem, de propósito:** preço, percentual de desconto e o nome do combo. O critério da tarefa é exatamente esse.
+
+## 23.4 A página de obrigado
+
+Arquivo: `fmn-site/public/black-obrigado.html`. Quatro passos, na ordem que importa:
+
+1. **Entrar no grupo do WhatsApp.** Único passo destacado, porque é o que transforma lead em gente que aparece no dia
+2. **Salvar o meu número**, com o motivo dito: sem salvar, o WhatsApp esconde o story e a mensagem cai nas não lidas
+3. **Colocar o alarme no dia 11**
+4. **Ler o blog enquanto espera**, que segura a pessoa dentro da casa sem prometer nada
+
+Ela chama a pessoa pelo primeiro nome quando ela veio do formulário na mesma sessão.
+
+## 23.5 Rastreamento, sem contar duas vezes
+
+A inscrição grava em `quiz_leads` com `funnel_slug` igual a `black-2026`, pela mesma função que já recebe os leads dos quizzes. Nenhuma tabela nova, nenhuma função nova.
+
+Como essa função já dispara o Lead pela CAPI com o identificador `<code>_lead`, a página de obrigado dispara o Lead do navegador **com o mesmo identificador**. O Meta junta os dois em vez de contar duas vezes. Sem isso, todo lead entraria dobrado no relatório e o CPL apareceria pela metade do que é.
+
+## 23.6 O que falta e depende de você
+
+1. **O link de convite do grupo.** O lugar está marcado no arquivo com um comentário. Enquanto ele não existe, o botão abre uma conversa comigo pedindo o link, pra ninguém ficar sem caminho
+2. **O ok pra publicar**, porque isso mexe no site de produção
+
+E ficou registrado como tarefa própria, para 30/09: os inscritos da Black entram no banco mas ainda não aparecem na tela do Tracker, porque a aba Funis tem a lista de funis escrita no código. O mesmo vale para o público de inscritos no Meta, que o sincronizador ainda não sabe montar para essa campanha.
