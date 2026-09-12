@@ -31,7 +31,7 @@ const AUTOMACOES_NUVEM = [
 
 // Espelha REGRAS-KANBAN.md — fonte de verdade em texto fica lá, isso aqui é
 // só a versão visual. Se a regra mudar, atualizar os dois.
-const TICKET_VAL = 297;
+const TICKET_VAL = window.TICKET_PADRAO; // fonte única em shared.jsx
 const TAGS_PERFORMANCE = [
   { tag: 'Ótimo',            cor: '#4ade80', condicao: '≥ 5 vendas E (CPA < R$297 OU CPA indefinido)' },
   { tag: 'Testar novamente', cor: '#eaaa41', condicao: '0 vendas E gasto < R$297 — OU — fez venda, gasto < R$297 E CPA < R$297' },

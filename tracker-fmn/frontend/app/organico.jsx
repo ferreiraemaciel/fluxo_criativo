@@ -617,7 +617,7 @@ function PublicarArtigoModal({ form, onClose, onSuccess, initialDate }) {
   const [fase, setFase]   = useState('carregando'); // carregando | pronto | enviando | erro | ok
   const [artigo, setArtigo] = useState(null);
   const [erro, setErro]   = useState('');
-  const hoje = new Date().toISOString().slice(0, 10);
+  const hoje = window.FMNFinancas.dataBRT();
   const [data, setData] = useState(initialDate || form.data_prevista || hoje);
   const [hora, setHora] = useState('18:00');
 
@@ -1037,7 +1037,7 @@ function PublishModal({ form, slidesArr, slideFiles, onClose, onSuccess, initial
               <div>
                 <label style={LABEL_STYLE}>Data</label>
                 <input type="date" value={schedDate} onChange={e=>setDate(e.target.value)}
-                  min={new Date().toISOString().slice(0,10)}
+                  min={window.FMNFinancas.dataBRT()}
                   style={{ ...FIELD_STYLE, resize:'none', colorScheme:'dark' }}/>
               </div>
               <div>

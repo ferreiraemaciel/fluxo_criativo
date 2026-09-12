@@ -699,4 +699,12 @@ async function buscarTudo(montarQuery, passo = 1000) {
   return linhas;
 }
 
-Object.assign(window, { buscarTudo, LucideIcon, Btn, Badge, CardKPI, SectionCard, Divider, Sidebar, TopBar, fmtBRL, RefBlock, UTM_GLOBAL, PLATAFORMAS, PLAT_COLOR, PLAT_ICON, CarouselLightbox, novoJobId, BarraProgresso, melhorThumbAd });
+
+/* Ticket de referência do MCV, usado na classificação de anúncio.
+   Estava declarado em kanban.jsx e em sistema.jsx ao mesmo tempo: como todo
+   arquivo do painel compartilha o mesmo escopo, mudar num deles não mudava
+   nada, porque o outro carregava depois e vencia (auditoria 12/09/2026).
+   A régua canônica do servidor é supabase/functions/_shared/classificar.ts. */
+const TICKET_PADRAO = 297;
+
+Object.assign(window, { TICKET_PADRAO, buscarTudo, LucideIcon, Btn, Badge, CardKPI, SectionCard, Divider, Sidebar, TopBar, fmtBRL, RefBlock, UTM_GLOBAL, PLATAFORMAS, PLAT_COLOR, PLAT_ICON, CarouselLightbox, novoJobId, BarraProgresso, melhorThumbAd });

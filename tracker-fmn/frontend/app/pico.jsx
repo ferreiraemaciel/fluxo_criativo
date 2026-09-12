@@ -49,7 +49,7 @@ const STATUS_CFG = {
 };
 
 /* ── Datas ──────────────────────────────────────────────────────*/
-const hojeISO = () => new Date().toISOString().slice(0, 10);
+const hojeISO = () => window.FMNFinancas.dataBRT();
 
 function fmtData(iso) {
   if (!iso) return '';
@@ -2075,23 +2075,29 @@ function BlocoDebriefing({ projeto, metricas, tarefas, onSalvar, onSalvarRespost
              .map(t => t.data_prevista).sort().pop()
         || projeto.data_abertura;
 
-      const { data: vendas } = await window.db.from('vendas')
+      const vendas = await window.buscarTudo(() => window.db.from('vendas')
         .select('valor_bruto')
         .eq('status', 'aprovada')
         .gte('hotmart_order_date', inicio)
-        .lte('hotmart_order_date', fim + 'T23:59:59');
+        .lte('hotmart_order_date', fim + 'T23:59:59'));
 
       const fat = (vendas || []).reduce((a, v) => a + (Number(v.valor_bruto) || 0), 0);
       const qtd = (vendas || []).length;
 
+      /* Verba: gasto de vida inteira dos anúncios marcados com este pico.
+         Anúncio de pico só roda durante o pico, então vida inteira é a janela
+         dele, e o perpétuo fica de fora. Decisão registrada no cabeçalho deste
+         bloco, mantida na auditoria de 12/09/2026. O que a auditoria corrigiu
+         foi o rodapé, que dizia que o perpétuo não entrava na conta sem avisar
+         que isso vale para a verba, não para o faturamento. */
       const { data: ads } = await window.db.from('ads')
         .select('meta_ad_id').eq('pico_projeto_id', projeto.id).not('meta_ad_id','is',null);
       const ids = (ads || []).map(a => a.meta_ad_id);
 
       let verba = 0;
       if (ids.length) {
-        const { data: ins } = await window.db.from('insights_cache')
-          .select('gasto').eq('periodo','maximum').in('meta_ad_id', ids);
+        const ins = await window.buscarTudo(() => window.db.from('insights_cache')
+          .select('gasto').eq('periodo','maximum').in('meta_ad_id', ids));
         verba = (ins || []).reduce((a, i) => a + (Number(i.gasto) || 0), 0);
       }
 
@@ -2101,7 +2107,7 @@ function BlocoDebriefing({ projeto, metricas, tarefas, onSalvar, onSalvarRespost
         onSalvar('verba', verba),
       ]);
       setMsg({ t:'ok', x: ids.length
-        ? `Puxado de ${inicio} a ${fim}. ${qtd} vendas e ${ids.length} anúncios do pico.`
+        ? `Puxado de ${inicio} a ${fim}. ${qtd} vendas da loja na janela e a verba dos ${ids.length} anúncios marcados com este pico.`
         : `Puxado de ${inicio} a ${fim}. ${qtd} vendas. Nenhum anúncio marcado com este pico ainda, então a verba veio zerada.` });
     } catch (e) {
       setMsg({ t:'erro', x:e.message });
@@ -2249,9 +2255,10 @@ function BlocoDebriefing({ projeto, metricas, tarefas, onSalvar, onSalvarRespost
 
       <div style={{ fontSize:10.5, fontFamily:'Roboto,sans-serif', color:'var(--text-3)',
         marginTop:11, lineHeight:1.45 }}>
-        Faturamento, vendas e verba vêm do banco. A verba soma só os anúncios marcados com
-        este pico, então o perpétuo não entra na conta. Leads no grupo é o único que precisa
-        ser contado à mão.
+        Faturamento e vendas são de toda a loja na janela do pico, da abertura ao encerramento,
+        então o perpétuo entra neles. A verba soma só os anúncios marcados com este pico. O ROAS
+        lê os dois desse jeito de propósito: é quanto a loja faturou na abertura para cada real
+        de anúncio do pico. Leads no grupo é o único que precisa ser contado à mão.
       </div>
     </SectionCard>
   );

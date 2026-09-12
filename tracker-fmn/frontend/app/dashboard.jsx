@@ -74,7 +74,7 @@ function useDashboardData(period, dateRange) {
         // consulta, sem avisar (auditoria 12/09/2026).
         const vendas = await window.buscarTudo(() => window.db
           .from('vendas')
-          .select('valor_bruto, valor_liquido, preco_oferta, produto_nome, utm_source, status, created_at, comprador_email')
+          .select('valor_bruto, valor_liquido, preco_oferta, produto_nome, utm_source, status, created_at, comprador_email, meta_ad_id, is_order_bump')
           .eq('status', 'aprovada')
           .gte('created_at', brt.gte)
           .lte('created_at', brt.lte));
@@ -295,17 +295,31 @@ function useDashboardData(period, dateRange) {
           : period; // '7d', '14d', '30d'
 
         /* métricas do período via insights_cache (compras, gasto, cpa por meta_ad_id) */
-        const { data: icData } = await window.db
+        const icData = await window.buscarTudo(() => window.db
           .from('insights_cache')
           .select('meta_ad_id, compras, gasto, cpa')
-          .eq('periodo', icPeriodo);
+          .eq('periodo', icPeriodo));
         const icMap = Object.fromEntries((icData || []).map(r => [r.meta_ad_id, r]));
+
+        /* Venda de verdade por anúncio, no mesmo período: a maior entre o que o
+           Pixel do Meta atribuiu e o que a Hotmart registrou. É a régua oficial
+           do projeto, que a aba Tráfego já usava e este ranking não: aqui ia só
+           o Pixel, então o mesmo anúncio aparecia com custo por venda diferente
+           conforme a tela aberta (auditoria 12/09/2026). Complemento de pedido
+           não conta como venda. */
+        const vendasHotmartPorAd = {};
+        (vendas || []).forEach(v => {
+          if (!v.meta_ad_id || v.is_order_bump) return;
+          vendasHotmartPorAd[v.meta_ad_id] = (vendasHotmartPorAd[v.meta_ad_id] || 0) + 1;
+        });
 
         const adsMapped = (adsRaw || []).map(a => {
           const ic       = a.meta_ad_id ? icMap[a.meta_ad_id] : null;
-          const vendas   = ic ? Number(ic.compras || 0) : 0;
+          const vendasPixel   = ic ? Number(ic.compras || 0) : 0;
+          const vendasHotmart = a.meta_ad_id ? (vendasHotmartPorAd[a.meta_ad_id] || 0) : 0;
+          const vendas   = Math.max(vendasPixel, vendasHotmart);
           const gasto    = ic ? Number(ic.gasto   || 0) : Number(a.gasto_total || 0);
-          const cpa      = ic && ic.cpa ? Number(ic.cpa) : (vendas > 0 ? gasto / vendas : null);
+          const cpa      = vendas > 0 ? gasto / vendas : null;
           return {
             numero:   a.numero,
             titulo:   a.titulo || `ADS ${a.numero}`,

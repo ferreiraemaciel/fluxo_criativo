@@ -19,14 +19,14 @@ const PERIODOS = [
   { id: 'maximo', label: 'Máximo',        dias: null },
   { id: 'custom', label: 'Personalizado', dias: -1   },
 ];
-const today = () => new Date().toISOString().slice(0, 10);
+const today = () => window.FMNFinancas.dataBRT();
 function rangeFromPeriodo(id, customFrom, customTo) {
   if (id === 'custom') return { p_from: customFrom || null, p_to: customTo || null };
   if (id === 'hoje') { const t = today(); return { p_from: t, p_to: t }; }
   const dias = PERIODOS.find(p => p.id === id)?.dias;
   if (!dias) return { p_from: null, p_to: null };
   const to = new Date(); const from = new Date(); from.setDate(from.getDate() - dias);
-  const iso = d => d.toISOString().slice(0, 10);
+  const iso = d => window.FMNFinancas.dataBRT(d);
   return { p_from: iso(from), p_to: iso(to) };
 }
 
@@ -1082,7 +1082,7 @@ function CardCustoPorLead({ range, funnel }) {
 
 function FunisScreen({ onNavigate }) {
   const [periodo, setPeriodo]       = useState('30d');
-  const [customFrom, setCustomFrom] = useState(() => { const d = new Date(); d.setDate(d.getDate()-30); return d.toISOString().slice(0,10); });
+  const [customFrom, setCustomFrom] = useState(() => { const d = new Date(); d.setDate(d.getDate()-30); return window.FMNFinancas.dataBRT(d); });
   const [customTo, setCustomTo]     = useState(today);
   const [aba, setAba]               = useState('analise');
   const [data, setData]             = useState(null);

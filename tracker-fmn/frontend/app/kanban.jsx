@@ -47,7 +47,7 @@ const ADS_COLUMNS = [
 // Ruim:             0 vendas E gasto >= R$297
 // Mediano:          tudo o mais
 
-const TICKET_VAL = 297;
+const TICKET_VAL = window.TICKET_PADRAO; // fonte única em shared.jsx
 
 // Fonte canônica: supabase/functions/_shared/classificar.ts (usada por
 // kanban-sync e processar-pausas). Este arquivo roda no browser (Babel),

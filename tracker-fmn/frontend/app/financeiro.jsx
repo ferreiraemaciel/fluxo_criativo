@@ -12,7 +12,7 @@ function DateFilter({ from, to, onChange }) {
     background:'var(--app-surface-2)', border:'1px solid var(--app-border)',
     color:'var(--text-1)', colorScheme:'dark', cursor:'pointer',
   };
-  const iso = d => d.toISOString().slice(0,10);
+  const iso = d => window.FMNFinancas.dataBRT(d); // data de Brasília, não de Londres
   function aplicarPreset(p) {
     const hoje = new Date();
     let f;
@@ -163,7 +163,7 @@ const calcularValorNoPeriodo = (d, from, to) => window.FMNFinancas.rateioDespesa
 /* ── AddExpenseModal ─────────────────────────────────────────────*/
 function AddExpenseModal({ onClose, onSaved }) {
   const [erro, setErro] = useState('');
-  const [form, setForm] = useState({ descricao:'', categoria:'ferramenta', tipo:'recorrente', recorrencia:'mensal', valor:'', data: new Date().toISOString().slice(0,10), observacoes:'' });
+  const [form, setForm] = useState({ descricao:'', categoria:'ferramenta', tipo:'recorrente', recorrencia:'mensal', valor:'', data: window.FMNFinancas.dataBRT(), observacoes:'' });
   const [saving, setSaving] = useState(false);
   const set = (k,v) => setForm(p => ({...p,[k]:v}));
   const categorias = CATEGORIAS_DESPESA;
@@ -287,7 +287,7 @@ function AddRevenueModal({ onClose, onSaved }) {
   const [tags, setTags] = useState([]);
   const [form, setForm] = useState({
     produto: '', valor: '', nome: '', email: '', telefone: '', tagId: '',
-    data: new Date().toISOString().slice(0,10), observacoes: '',
+    data: window.FMNFinancas.dataBRT(), observacoes: '',
   });
   const set = (k,v) => setForm(p => ({...p,[k]:v}));
 
@@ -574,7 +574,7 @@ function ExpensesTab({ dateRange }) {
                     // Encerrar é diferente de apagar. Apagar some com a despesa
                     // do passado inteiro e distorce todos os meses em que ela
                     // realmente existiu; encerrar só diz até quando ela valeu.
-                    const hoje = new Date().toISOString().slice(0,10);
+                    const hoje = window.FMNFinancas.dataBRT();
                     const q = window.prompt(
                       `Até que dia "${row.desc}" foi cobrada?\n\nData no formato AAAA-MM-DD. ` +
                       `Depois dessa data ela para de descontar do lucro, e os meses anteriores ficam como estavam.`,
@@ -1107,7 +1107,7 @@ function FinancialScreen() {
   // padrão: primeiro dia do mês atual até hoje (inclui vendas novas)
   const _hoje = new Date();
   const _primeiroDiaMes = new Date(_hoje.getFullYear(), _hoje.getMonth(), 1);
-  const _iso = d => d.toISOString().slice(0,10);
+  const _iso = d => window.FMNFinancas.dataBRT(d);
   const [dateRange, setDateRange] = useState({ from: _iso(_primeiroDiaMes), to: _iso(_hoje) });
   const tabs = [
     { id: 'hotmart',  label: 'Hotmart',          icon: 'shopping-cart' },

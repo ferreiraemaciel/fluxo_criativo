@@ -163,5 +163,21 @@
     };
   }
 
-  window.FMNFinancas = { rateioDespesa, somarDespesas, calcularResultado, brtRangeUtc };
+
+  /* ── A data de hoje, em Brasília ───────────────────────────────
+     `new Date().toISOString().slice(0,10)` devolve a data em Londres. A
+     partir das 21h de Brasília isso já é o dia seguinte, então o preset
+     "Hoje" do Financeiro apontava para amanhã e mostrava faturamento zero,
+     enquanto o Dashboard mostrava o dia certo. No Pico, toda tarefa do dia
+     aparecia atrasada e a conclusão era gravada com a data de amanhã.
+     Auditoria de 12/09/2026.                                           */
+  const _fmtDataBRT = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit', day: '2-digit',
+  });
+  function dataBRT(d = new Date()) {
+    const data = d instanceof Date ? d : new Date(d);
+    return _fmtDataBRT.format(data);
+  }
+
+  window.FMNFinancas = { dataBRT, rateioDespesa, somarDespesas, calcularResultado, brtRangeUtc };
 })();

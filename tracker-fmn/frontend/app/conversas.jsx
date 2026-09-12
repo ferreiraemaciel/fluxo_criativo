@@ -703,7 +703,7 @@ function periodoRapido(dias) {
   const to = new Date();
   const from = new Date();
   if (dias != null) from.setDate(from.getDate() - dias);
-  const fmt = d => d.toISOString().slice(0, 10);
+  const fmt = d => window.FMNFinancas.dataBRT(d);
   const fromStr = dias == null ? METRICAS_DATA_MINIMA_GERAL : fmt(from);
   return { from: fromStr, to: fmt(to) };
 }
@@ -1105,17 +1105,9 @@ function ConversasScreen({ telefoneAlvo = null, onConsumirAlvo } = {}) {
     // então pagina de verdade com .range() até esgotar (hoje são 1130+ vendas
     // aprovadas, sem paginação metade delas nunca chegava aqui).
     (async () => {
-      const todasVendas = [];
-      let pagina = 0;
-      while (true) {
-        const de = pagina * 1000, ate = de + 999;
-        const { data, error } = await window.db.from('vendas').select('comprador_telefone, comprador_email, produto_nome')
-          .eq('status', 'aprovada').range(de, ate);
-        if (error || !data) break;
-        todasVendas.push(...data);
-        if (data.length < 1000) break;
-        pagina++;
-      }
+      const todasVendas = await window.buscarTudo(() => window.db
+        .from('vendas').select('comprador_telefone, comprador_email, produto_nome')
+        .eq('status', 'aprovada'));
 
       // Nem toda venda vem com telefone da Hotmart (alguns checkouts não
       // pedem o campo, ex: Blindagem). Quando falta, tenta recuperar pelo
@@ -1151,7 +1143,23 @@ function ConversasScreen({ telefoneAlvo = null, onConsumirAlvo } = {}) {
     if (window.db) window.db.from('whatsapp_contatos').upsert({ telefone, is_spam: true }, { onConflict: 'telefone' }).then(() => carregar());
   }
 
-  useEffect(() => { carregar(); const t = setInterval(carregar, 15000); return () => clearInterval(t); }, []);
+  /* Recarga periódica com trava de reentrada.
+     Cada volta relê a tabela de vendas inteira (telefone e e-mail de todos os
+     compradores), todos os contatos e 90 dias de mensagem. A cada 15 segundos
+     isso eram quatro varreduras por minuto numa aba que fica aberta o dia
+     todo, e sem trava as voltas se empilhavam quando uma demorava mais que o
+     intervalo. Passou para 60 segundos na auditoria de 12/09/2026.        */
+  useEffect(() => {
+    let rodando = false;
+    const volta = async () => {
+      if (rodando) return;
+      rodando = true;
+      try { await carregar(); } finally { rodando = false; }
+    };
+    volta();
+    const t = setInterval(volta, 60000);
+    return () => clearInterval(t);
+  }, []);
 
   // Chegou de outra tela pedindo um contato específico (alarme da Visão Geral):
   // abre a conversa dele e limpa o alvo, pra não reabrir sozinho depois.

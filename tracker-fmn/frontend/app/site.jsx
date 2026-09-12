@@ -18,7 +18,11 @@ const PAGES_CFG = [
 ];
 const PAGE_SLUGS = new Set(PAGES_CFG.map(p => p.slug));
 
-const PERIODOS = [
+// Nome próprio de propósito: o global PERIODOS já existe em funis.jsx com o
+// campo `dias`, e este arquivo carrega depois. Quando os dois dividiam o
+// mesmo nome, o filtro de 7 e 30 dias da tela Funis parava de filtrar, com
+// o botão aceso (auditoria 12/09/2026).
+const PERIODOS_SITE = [
   { id:'hoje',   label:'Hoje'          },
   { id:'7d',     label:'7 dias'        },
   { id:'30d',    label:'30 dias'       },
@@ -210,7 +214,7 @@ function SiteScreen() {
   /* ── Barra de período ──────────────────────────────────────────── */
   const PeriodBar = (
     <div style={{display:'flex',alignItems:'center',gap:5,flexWrap:'wrap'}}>
-      {PERIODOS.map(p=>(
+      {PERIODOS_SITE.map(p=>(
         <button key={p.id} onClick={()=>setPeriodo(p.id)}
           style={{padding:'5px 12px',borderRadius:6,cursor:'pointer',fontSize:11.5,
             fontFamily:'Roboto,sans-serif',fontWeight:600,border:'1px solid',transition:'all 130ms',
