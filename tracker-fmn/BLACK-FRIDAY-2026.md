@@ -549,7 +549,7 @@ Marcos contados a partir de D0 (dia da abertura do carrinho):
 |---|---|
 | Começa a antecipação | D-28 |
 | Abre a captação | D-21 |
-| Primeira aula de aquecimento | D-6 |
+| Aula de aquecimento, uma só (decisão de 14/09) | D-2 |
 | Grande dia, abre o carrinho | D0 |
 | Encerramento | D+10 |
 
@@ -935,7 +935,7 @@ Se **D0 for 11 de novembro**, D-28 cai em 14 de outubro e D-21 em 21 de outubro.
 | Marcha lenta | 4 a 25 de outubro | Só orgânico, sem mídia pesada |
 | Retomada | 26 de outubro | Eleição acabou |
 | Trailer no ar | 28 de outubro | |
-| Aulas de aquecimento | 5, 6 e 7 de novembro | D-6 a D-4 |
+| Aula de aquecimento, uma só (decisão de 14/09) | 9 de novembro, às 20h | D-2 |
 | **Grande dia** | **11 de novembro** | Dentro da janela recomendada |
 | Carrinho aberto | 11 a 21 de novembro | |
 | Lives de vendas | 14 e 18 de novembro | D+3 e D+7 |
@@ -1358,7 +1358,7 @@ D0 é o dia em que o carrinho abre. Tudo se conta a partir dele.
 | Contagem regressiva pública: 15, 10, 7, 5, 3 dias e "é amanhã" | D-15 a D-1 | playbook |
 | Vídeo de boas vindas nos grupos cheios | D-10 | playbook |
 | **Começa o backlog da semana da abertura** | **D-7** | playbook |
-| Aulas de aquecimento (CPL 1, 2, 3 e a extra) | D-6 a D-2 | Nobre real |
+| Aula de aquecimento, uma só (decisão do Felipe em 14/09) | D-2 | Nobre fez quatro, nós fazemos uma |
 | Presentes e vantagens aparecem, **antes do preço** | D-3 | Nobre real |
 | Metralhadora de depoimentos e "amanhã é o grande dia" | D-1 | playbook |
 | **GRANDE DIA: live de abertura, carrinho abre** | **D0** | todas |
@@ -2517,7 +2517,7 @@ Regras da Meta seguidas: nenhum texto começa ou termina com variável; convite,
 | 1 | bf_convite_grupo | marketing | não alunos, leads do quiz, base antiga | captação, a partir de D-21 | Oi, {{1}}. Aqui é o Felipe, do Fotografia é o Meu Negócio. Em novembro vai ter a Black dos Fotógrafos Protegidos, a maior condição que eu já fiz nos contratos. Os detalhes saem primeiro no grupo, que é silencioso e só recebe aviso importante. Meu lado advogado não assinaria essa Black. | Entrar no grupo (link) / Não quero receber |
 | 2 | bf_convite_aluno | marketing | alunos do MCV sem Blindagem | captação | Oi, {{1}}. Como você já usa os Modelos de Contrato Visual, na Black dos Fotógrafos Protegidos vai ter uma condição só pra aluno no Blindagem, o sistema que manda o contrato pro cliente assinar pelo celular. Ela sai primeiro no grupo de alunos, é só tocar no botão. | Entrar no grupo (link) / Não quero receber |
 | 3 | bf_confirmacao_inscricao | utility possível | quem se inscreveu na página | na hora da inscrição | Oi, {{1}}. Sua vaga na lista da Black dos Fotógrafos Protegidos está confirmada. Os avisos chegam por aqui, a data da live sai primeiro no grupo. | Entrar no grupo (link) |
-| 4 | bf_lembrete_aula | utility possível | inscritos | dia de cada aula, se houver aulas de aquecimento | Oi, {{1}}. Hoje às {{2}} tem a aula {{3}} da Black dos Fotógrafos Protegidos. O link está no botão abaixo e abre na hora da aula. | Assistir (link) |
+| 4 | bf_lembrete_aula | utility possível | inscritos | no dia da aula de aquecimento, 09/11 | Oi, {{1}}. Hoje às {{2}} tem a aula da Black dos Fotógrafos Protegidos. O link está no botão abaixo e abre na hora da aula. | Assistir (link) |
 | 5 | bf_ao_vivo | utility possível | inscritos | no início de cada live | Estamos ao vivo, {{1}}. A aula já começou, é só entrar pelo botão. | Entrar (link) |
 | 6 | bf_amanha | marketing | todos | D-1 | Oi, {{1}}. Amanhã às {{2}} eu abro a Black dos Fotógrafos Protegidos ao vivo. Coloca o celular pra despertar, o link chega aqui e no grupo dez minutos antes. | Entrar no grupo (link) / Não quero receber |
 | 7 | bf_carrinho_aberto | marketing | não alunos | D0, depois da live | Abriu, {{1}}. Os Modelos de Contrato Visual e o Blindagem juntos, de R$ 694 por R$ 297, só até {{2}}. É a primeira vez que os dois saem juntos por esse valor. | Ver a oferta (link) / Não quero receber |
@@ -2847,11 +2847,11 @@ A captação passa a ter **8 peças**: os 5 vídeos dos ângulos mais esses 3 es
 | 02/11 (seg) | D-9 | O segundo bônus | Mostrar os dez álbuns pocket empilhados. | **Imagem**: Dez álbuns. Dez pessoas. | Segundo bônus revelado. A regra de ordem de compra aparece aqui pela primeira vez. |
 | 03/11 (ter) | D-8 | Faltam 8 dias | Contagem. Responder as dúvidas que mais repetiram na caixinha. | **Reels**: Eu era advogado e fechava trabalho por áudio | Versão orgânica do ângulo 5. Autoridade pela falha, não pelo currículo. |
 | 04/11 (qua) | D-7 | As páginas no ar | Avisar que a página já existe e que quem tá na lista vai receber o link antes. | **Carrossel**: O manifesto, em onze movimentos | Backlog da semana da abertura começa. O manifesto entra inteiro no feed. |
-| 05/11 (qui) | D-6 | Aula 1 | Chamada pra aula durante o dia, link no grupo. | **Reels**: Corte da aula 1 | Primeira aula de aquecimento. O corte alimenta o feed no mesmo dia. |
-| 06/11 (sex) | D-5 | Aula 2 | Chamada e replay. | **Reels**: Corte da aula 2 | Segunda aula. |
-| 07/11 (sáb) | D-4 | Aula 3 | Chamada e replay. | **Reels**: Corte da aula 3 | Terceira aula. |
-| 08/11 (dom) | D-3 | Descanso do feed | Só replay das aulas nos stories. | sem feed | Descanso antes da reta final. |
-| 09/11 (seg) | D-2 | Os bônus que faltavam | Revelar a aula ao vivo da Lei Felca e o tira-dúvidas em grupo. | **Carrossel**: Tudo que entra junto, um por card | Empilhamento de bônus completo, ainda antes do preço. É o D-3 do Nobre. |
+| 05/11 (qui) | D-6 | Bastidor da aula | Mostrar a preparação da aula do dia 9, sem contar o tema inteiro. | sem feed | Criar expectativa pra aula única, que agora concentra toda a atenção. |
+| 06/11 (sex) | D-5 | Convite pra aula | Disparo convidando pra aula de segunda, com o link no grupo. | sem feed | Garantir presença na aula única. |
+| 07/11 (sáb) | D-4 | Descanso | Story humano, sem campanha. | sem feed | Descanso. |
+| 08/11 (dom) | D-3 | Véspera da aula | Lembrete da aula de amanhã, às 20h. | sem feed | Descanso do feed antes da reta final. |
+| 09/11 (seg) | D-2 | **A aula ao vivo, 20h** | Chamada o dia inteiro. Na aula, revelar os bônus que faltavam: a aula da Lei Felca e o tira-dúvidas em grupo. | **Carrossel**: Tudo que entra junto, um por card · **Reels**: Corte da aula ao vivo | A aula única carrega o conteúdo e planta a oferta. O empilhamento de bônus sai no mesmo dia, ainda antes do preço. |
 | 10/11 (ter) | D-1 | Amanhã é o grande dia | Metralhadora de depoimentos o dia inteiro. Última chamada pra entrar no grupo. | **Reels**: Amanhã eu abro | Véspera. Nenhuma informação nova, só volume e presença. |
 
 ## FASE D. Carrinho aberto (11/11 a 30/11)
@@ -2879,9 +2879,11 @@ A captação passa a ter **8 peças**: os 5 vídeos dos ângulos mais esses 3 es
 | 29/11 (dom) | D+18 | Últimas 24 horas | Contagem por hora. Metralhadora de depoimento de novo. | **Reels**: Amanhã fecha | Véspera do corte. |
 | 30/11 (seg) | D+19 | ENCERRAMENTO | Contagem até a hora exata. Avisar o corte quando acontecer, sem prorrogar. | **Reels**: O último bônus, que só quem entra hoje leva | Encerramento com hora exata e um bônus revelado só hoje, que é o movimento que o playbook pede pra quem deixa pra cima da hora. |
 
+> **Decisão do Felipe em 14/09/2026: uma aula de aquecimento só, em vez de três.** Três aulas era muito para uma produção feita por uma pessoa só. A aula fica na segunda, **09/11, às 20h**, dois dias antes da abertura, que é a mesma posição da última aula do Nobre. Ela carrega o conteúdo, o convite pra abertura e a revelação dos bônus que faltavam. Os cortes das aulas 2 e 3 saíram do calendário (ORG 158 e ORG 159 arquivados) e o ORG 157 virou o corte da aula única.
+
 ## 22.3 O que virou card no Orgânico
 
-São **38 peças de feed** em 49 dias. Cada uma entrou como card no Orgânico com a marca PICO, na
+São **36 peças de feed** em 49 dias. Eram 38, duas saíram com a decisão de fazer uma aula só. Cada uma entrou como card no Orgânico com a marca PICO, na
 data prevista, com tema, gancho e o objetivo do dia escrito nas observações. Os stories não viram card,
 ficam só aqui, porque são produção do dia e não passam por fila.
 
@@ -2892,7 +2894,7 @@ marca continua sendo perpétuo, como sempre foi.
 |---|---|
 | FASE A | 4 |
 | FASE B | 3 |
-| FASE C | 13 |
+| FASE C | 11 |
 | FASE D | 18 |
 
 ---
@@ -3036,7 +3038,7 @@ Arquivo: `meus-produtos/blindagem/entregas/criativos/black-2026/jogo-de-contagem
 | 27/10 | Faltam 15 dias. Liga a contagem, junto com o marcador fixo nos stories |
 | 01/11 | Faltam 10 dias |
 | 04/11 | Faltam 7 dias. Mesmo dia em que as páginas sobem |
-| 06/11 | Faltam 5 dias. Dia da aula 2 |
+| 06/11 | Faltam 5 dias |
 | 08/11 | Faltam 3 dias. Dia do empilhamento de bônus |
 | 10/11 | **É amanhã.** Primeira quebra, a peça vira dourada |
 | 11/11 | **É hoje.** Segunda quebra, tinta de carimbo, a única que fala em hora |
@@ -3065,7 +3067,7 @@ O selo fica sempre no pé, levemente torto. É o que faz as sete parecerem uma c
 | 24/10 | Jogo de contagem regressiva, 7 peças | A primeira entra no ar em 27/10 |
 | 28/10 | Cards de revelação dos bônus, 5 peças | O primeiro bônus é revelado em 29/10 |
 | 02/11 | Carrossel do manifesto | Entra no feed em 04/11 |
-| 04/11 | Capas das 4 aulas | A primeira aula é em 05/11 |
+| 04/11 | Capa da aula | A aula é em 09/11 |
 | 08/11 | Carrossel da ancoragem e do empilhamento | As duas peças que mais vendem no carrinho |
 | 09/11 | Modelo de card de depoimento | Sem modelo, cada depoimento vira arte do zero e deixa de sair |
 | 11/11 | Cards do carrinho aberto, 6 peças | Urgência do carrinho, da abertura ao corte |
@@ -3153,7 +3155,7 @@ Toda tarefa de arte agora tem um card correspondente no Orgânico, com a tarefa 
 | Os 3 estáticos nativos de captação | ORG 186 |
 | Jogo de contagem, 7 peças | ORG 187 |
 | Cards de revelação dos bônus | ORG 188 |
-| Capas das 4 aulas | ORG 189 |
+| Capa da aula | ORG 189 |
 | Modelo de card de depoimento | ORG 190 |
 | Cards do carrinho aberto | ORG 191 |
 | Carrossel do manifesto | ORG 156, que já existia no calendário |
