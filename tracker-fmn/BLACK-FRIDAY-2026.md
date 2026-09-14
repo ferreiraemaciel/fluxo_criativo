@@ -1297,7 +1297,7 @@ Conferi os dias da semana em vez de estimar. Resultado:
 | 04/10/2026 | domingo | primeiro turno |
 | 25/10/2026 | domingo | segundo turno |
 | 10/11/2026 | terça | |
-| **11/11/2026** | **quarta** | mesma posição de semana que o Nobre usou em 2025 |
+| **11/11/2026** | **quarta** | mesma data do Nobre em 2025, mas não o mesmo dia da semana: em 2025 o dia 11/11 caiu numa terça (corrigido em 14/09) |
 | 15/11/2026 | domingo | Proclamação da República cai no domingo, não atrapalha |
 | **20/11/2026** | **sexta** | **Consciência Negra, feriado nacional** |
 | 21/11/2026 | sábado | |
