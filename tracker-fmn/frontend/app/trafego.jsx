@@ -255,7 +255,30 @@ function useTrafficData(mostrarDesativados) {
       // ativas" é a regra combinada com o Felipe em 2026-08-13.
       if (mostrarDesativados) {
         const activeCampaignIds = new Set(Object.keys(camps));
-        for (const row of insights||[]) {
+        // O insights_cache só guarda anúncio ATIVO: quando um anúncio para, as
+        // janelas curtas dele são apagadas, e a linha desativada aparecia só com
+        // traço. Aqui os números dos desativados vêm direto do Meta, na hora
+        // (função trafego-desativados), e substituem o que houver no cache pra
+        // esses anúncios. Se a busca falhar, cai no cache como antes.
+        let linhasDesativados = insights || [];
+        try {
+          const r = await fetch(`${window.db.supabaseUrl}/functions/v1/trafego-desativados`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${window.tokenTracker}` },
+            body: JSON.stringify({ campanhas: [...activeCampaignIds].filter(c => /^\d+$/.test(c)) }),
+          });
+          const d = await r.json().catch(() => ({}));
+          if (r.ok && Array.isArray(d.linhas)) {
+            const doMeta = d.linhas.filter(l => !activeAids.has(l.meta_ad_id));
+            const aidsDoMeta = new Set(doMeta.map(l => l.meta_ad_id));
+            linhasDesativados = [...(insights || []).filter(l => !aidsDoMeta.has(l.meta_ad_id)), ...doMeta];
+          } else {
+            console.error('[Tráfego] desativados do Meta:', d.erro || r.status);
+          }
+        } catch (err) {
+          console.error('[Tráfego] desativados do Meta:', err);
+        }
+        for (const row of linhasDesativados) {
           const aid = row.meta_ad_id;
           if (activeAids.has(aid)) continue; // já entrou na 1ª passada
           const cid = row.meta_campaign_id || 'sem-campanha';
