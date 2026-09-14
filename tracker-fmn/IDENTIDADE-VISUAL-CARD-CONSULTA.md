@@ -13,7 +13,9 @@ Imagem única, 1080x1350px, com conteúdo **estruturado** (lista numerada, régu
 comparativo). Não é frase solta, não é foto com manchete, e não é carrossel.
 
 A intenção não é ser lido e esquecido, é **ser salvo**. O leitor guarda pra consultar antes do
-próximo trabalho. Por isso a peça precisa se sustentar sozinha, sem contexto e sem legenda.
+próximo trabalho. Por isso a arte precisa ser **enxuta**, com pouco texto e só o essencial de cada
+item, e a **explicação vai na legenda**, que sempre existe e sempre explica. A arte leva o selo
+"LEIA A LEGENDA" para mandar a pessoa até ela (ver regra própria abaixo, de 2026-09-14).
 
 **A ideia por trás:** não deve parecer post, deve parecer **página arrancada de um manual**. Post a
 pessoa curte, ficha a pessoa guarda.
@@ -47,17 +49,37 @@ Se tem **um caso**, é Caso Real.
    É o **maior elemento da peça**, maior que os itens. Contraintuitivo, mas card de consulta é
    reencontrado na pasta de salvos, em miniatura: se o título não for legível pequeno, a pessoa
    salva e nunca mais acha.
-5. **Itens numerados**, cada um com o número dentro de um círculo cheio na cor de destaque, o nome
-   do critério em caixa alta preta ao lado, e a frase de apoio em corpo menor logo abaixo.
-   De 3 a 5 itens, nunca mais que isso.
+5. **Itens numerados**, cada um com o número dentro de um círculo cheio na cor de destaque e o nome
+   do critério em caixa alta preta ao lado. Frase de apoio é opcional e, quando existir, tem no
+   máximo seis palavras. De 3 a 5 itens, nunca mais que isso.
 6. **Os nomes de critério ficam todos no mesmo corpo.** Nenhum item pode sair maior que os outros,
    senão o primeiro parece título e os demais parecem rodapé (aconteceu na primeira geração do
    ORG 058).
 7. **Linha de fecho embaixo dos itens**, com a consequência em negrito. É ela que fecha o raciocínio
    e diz ao leitor o que fazer com a informação.
-8. **`@felipeferreirafotografo` centralizado na base da folha**, cinza discreto, sem negrito.
-9. **Sem foto, sem ilustração, sem rabisco manuscrito.** O rabisco neon é marca da Citação Crua e
+8. **Selo "LEIA A LEGENDA"** logo acima do arroba: pílula pequena com contorno fino, texto em caixa
+   alta com espaçamento entre letras e uma seta pequena apontando pra baixo. Obrigatório em todo
+   Card de Consulta.
+9. **`@felipeferreirafotografo` centralizado na base da folha**, cinza discreto, sem negrito.
+10. **Sem foto, sem ilustração, sem rabisco manuscrito.** O rabisco neon é marca da Citação Crua e
    não entra aqui. Ícone só na variante comparativa (ver abaixo), sempre monoline.
+
+### Pouco texto na arte, explicação na legenda (regra fixa, 2026-09-14)
+
+Decisão do Felipe a partir do lote derivado do artigo ORG 066. Vale para todo Card de Consulta.
+
+- **A arte só tem o essencial.** Título, nomes dos itens e, no máximo, uma frase curta por item.
+  Se um item precisa de explicação, a explicação vai para a legenda, não para a folha.
+- **A legenda é explicativa, sempre.** É nela que cada item ganha o porquê, o exemplo e a base
+  legal. Card de Consulta nunca sai com legenda de uma linha.
+- **Selo "LEIA A LEGENDA" em todos**, logo acima do arroba. É o que liga a arte enxuta ao texto que
+  explica, e é o que transforma o salvamento em leitura.
+- **Teste antes de gerar:** conte as palavras dentro da folha. Passou de 40, tem texto demais e
+  alguma coisa precisa descer para a legenda.
+
+Por que: card de consulta é visto em miniatura, no feed e na pasta de salvos. Texto demais some no
+tamanho pequeno, e a peça vira parágrafo em vez de ficha. A arte enxuta é reconhecida de longe e a
+legenda entrega a profundidade para quem parou.
 
 ### Coerência lógica dos itens (regra fixa, 2026-08-07)
 
@@ -193,3 +215,7 @@ Passo a passo:
   feito antes de a spec ter hex exato, hierarquia definida e a regra de corpo único dos itens. Com
   esses três pontos escritos dentro do prompt, a geração se sustenta. Mesmo arco que a Citação Crua
   já tinha percorrido. Prompt de referência no card do ORG 056.
+- 2026-09-14: **Pouco texto na arte, legenda explicativa e selo "LEIA A LEGENDA" em todos.** Decisão
+  do Felipe no lote derivado do artigo ORG 066. A frase antiga "a peça precisa se sustentar sozinha,
+  sem contexto e sem legenda" saiu. Frase de apoio dos itens passou a ser opcional, com no máximo
+  seis palavras, e entrou o teste de no máximo 40 palavras dentro da folha.
