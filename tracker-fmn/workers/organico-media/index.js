@@ -195,9 +195,8 @@ async function handleArtigoPublicar(request, env) {
    mesmo quando o vídeo é igual ao de um Reels. Vertical e até 3 minutos, o
    YouTube classifica como Short sozinho, não existe chamada separada.
 
-   Agendamento é do próprio YouTube (status.publishAt): o vídeo sobe na hora
-   como privado com data marcada, e o YouTube libera no horário. O cron daqui
-   só vira o card pra Arquivado quando a hora passa.
+   Agendamento: o card guarda o pedido e o cron sobe o vídeo, já público, no
+   horário marcado (janela do cron: 6h às 23h de Brasília).
 
    Enquanto o projeto do Google não passar pela auditoria da API, TODO vídeo
    enviado fica travado como privado. Não é erro deste código.
@@ -222,6 +221,45 @@ async function youtubeAccessToken(env) {
   return d.access_token;
 }
 
+/* Sobe um vídeo do R2 pro canal, sempre público. Usado pelo "Publicar agora" e
+   pelo cron no dia do agendamento. O agendamento não sobe na hora de propósito:
+   a cota da API do YouTube é de cerca de 6 envios por dia, então agendar uma
+   semana de uma vez estouraria a cota. Cada vídeo sobe no próprio dia. */
+async function enviarVideoYoutube(env, { videoUrl, titulo, descricao }) {
+  const key = origKeyFromUrl(videoUrl) || (videoUrl && videoUrl.startsWith(R2_PUBLIC + '/') ? videoUrl.replace(R2_PUBLIC + '/', '') : null);
+  const obj = key ? await env.BUCKET.get(key) : null;
+  if (!obj) throw new Error('O vídeo em alta não está mais no armazenamento. Importe o vídeo do Drive de novo.');
+
+  const token = await youtubeAccessToken(env);
+  const init = await fetch('https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json; charset=UTF-8',
+      'X-Upload-Content-Length': String(obj.size),
+      'X-Upload-Content-Type': 'video/mp4',
+    },
+    body: JSON.stringify({
+      snippet: { title: titulo, description: descricao, categoryId: '22' },
+      status: { privacyStatus: 'public', selfDeclaredMadeForKids: false },
+    }),
+  });
+  const sessao = init.headers.get('Location');
+  if (!init.ok || !sessao) {
+    const e = await init.json().catch(() => ({}));
+    throw new Error('O YouTube recusou o envio: ' + (e.error?.message || init.status));
+  }
+  const { readable, writable } = new FixedLengthStream(obj.size);
+  obj.body.pipeTo(writable);
+  const up = await fetch(sessao, { method: 'PUT', headers: { 'Content-Type': 'video/mp4' }, body: readable });
+  const video = await up.json().catch(() => ({}));
+  if (!up.ok || !video.id) throw new Error('Falha ao enviar o vídeo ao YouTube: ' + (video.error?.message || up.status));
+
+  const origKey = origKeyFromUrl(videoUrl);
+  if (origKey) await env.BUCKET.delete(origKey);
+  return video;
+}
+
 async function handleYoutubePublicar(request, env) {
   const body = await request.json().catch(() => ({}));
   const { cardId, videoUrl, scheduleAt } = body;
@@ -243,76 +281,37 @@ async function handleYoutubePublicar(request, env) {
     return json({ error: 'Agende pelo menos 5 minutos à frente.' }, 400);
   }
 
-  // Lê o vídeo direto do R2 (sem passar pela URL pública) pra saber o tamanho exato.
-  const key = origKeyFromUrl(videoUrl) || (videoUrl.startsWith(R2_PUBLIC + '/') ? videoUrl.replace(R2_PUBLIC + '/', '') : null);
-  const obj = key ? await env.BUCKET.get(key) : null;
-  if (!obj) return json({ error: 'O vídeo em alta não está mais no armazenamento. Importe o vídeo do Drive de novo.' }, 404);
-
-  const token = await youtubeAccessToken(env);
-
-  const meta = {
-    snippet: { title: titulo, description: descricao, categoryId: '22' },
-    status: {
-      privacyStatus: scheduleAt ? 'private' : 'public',
-      ...(scheduleAt ? { publishAt: new Date(scheduleAt).toISOString() } : {}),
-      selfDeclaredMadeForKids: false,
-    },
-  };
-
-  // Upload resumível: 1) abre a sessão, 2) manda os bytes.
-  const init = await fetch('https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json; charset=UTF-8',
-      'X-Upload-Content-Length': String(obj.size),
-      'X-Upload-Content-Type': 'video/mp4',
-    },
-    body: JSON.stringify(meta),
-  });
-  const sessao = init.headers.get('Location');
-  if (!init.ok || !sessao) {
-    const e = await init.json().catch(() => ({}));
-    return json({ error: 'O YouTube recusou o envio: ' + (e.error?.message || init.status) }, 502);
-  }
-
-  const { readable, writable } = new FixedLengthStream(obj.size);
-  obj.body.pipeTo(writable);
-  const up = await fetch(sessao, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'video/mp4' },
-    body: readable,
-  });
-  const video = await up.json().catch(() => ({}));
-  if (!up.ok || !video.id) {
-    return json({ error: 'Falha ao enviar o vídeo ao YouTube: ' + (video.error?.message || up.status) }, 502);
-  }
-
   const sbUrl = env.SUPABASE_URL, sbKey = env.SUPABASE_SERVICE_KEY;
-  await fetch(`${sbUrl}/rest/v1/conteudo_organico?id=eq.${cardId}`, {
+  const patchCard = (campos) => fetch(`${sbUrl}/rest/v1/conteudo_organico?id=eq.${cardId}`, {
     method: 'PATCH',
     headers: { 'apikey': sbKey, 'Authorization': `Bearer ${sbKey}`,
                'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
-    body: JSON.stringify(scheduleAt ? {
-      status: 'Agendado', scheduled_at: scheduleAt, data_prevista: scheduleAt.slice(0, 10),
-      scheduled_media: { tipo: 'youtube', videoId: video.id },
-      youtube_video_id: video.id, erro_publicacao: null, erro_publicacao_em: null,
-    } : {
-      status: 'Arquivado', published_at: new Date().toISOString(),
-      scheduled_at: null, scheduled_media: null,
-      youtube_video_id: video.id, erro_publicacao: null, erro_publicacao_em: null,
-    }),
+    body: JSON.stringify(campos),
   });
 
-  // Mesma política do Reels: a versão em alta sai do R2 depois que chegou ao destino.
-  const origKey = origKeyFromUrl(videoUrl);
-  if (origKey) await env.BUCKET.delete(origKey);
+  if (scheduleAt) {
+    // Confere agora que o vídeo existe, pra não descobrir a falta só no dia.
+    const key = origKeyFromUrl(videoUrl) || (videoUrl.startsWith(R2_PUBLIC + '/') ? videoUrl.replace(R2_PUBLIC + '/', '') : null);
+    const existe = key ? await env.BUCKET.head(key) : null;
+    if (!existe) return json({ error: 'O vídeo em alta não está mais no armazenamento. Importe o vídeo do Drive de novo.' }, 404);
+    await patchCard({
+      status: 'Agendado', scheduled_at: scheduleAt, data_prevista: new Date(new Date(scheduleAt).getTime() - 3 * 3600e3).toISOString().slice(0, 10),
+      scheduled_media: { tipo: 'youtube', videoUrl, titulo, descricao },
+      erro_publicacao: null, erro_publicacao_em: null,
+    });
+    return json({ ok: true, scheduled: true });
+  }
 
-  return json({
-    ok: true, scheduled: !!scheduleAt, videoId: video.id,
-    url: `https://youtu.be/${video.id}`,
-    privado_pela_auditoria: !scheduleAt && video.status?.privacyStatus === 'private',
+  let video;
+  try { video = await enviarVideoYoutube(env, { videoUrl, titulo, descricao }); }
+  catch (e) { return json({ error: e.message }, 502); }
+  await patchCard({
+    status: 'Arquivado', published_at: new Date().toISOString(),
+    scheduled_at: null, scheduled_media: null,
+    youtube_video_id: video.id, erro_publicacao: null, erro_publicacao_em: null,
   });
+  return json({ ok: true, scheduled: false, videoId: video.id, url: `https://youtu.be/${video.id}`,
+    privado_pela_auditoria: video.status?.privacyStatus === 'private' });
 }
 
 /* ── Publicar um container já criado ──────────────────────────────────────
@@ -782,18 +781,26 @@ async function runScheduledPublish(env) {
       continue;
     }
 
-    // YouTube já agendou sozinho (publishAt). Aqui só fecha o card quando a hora passa.
+    // YouTube agendado: o vídeo sobe no dia, dentro da cota diária da API.
     if (m.tipo === 'youtube') {
-      await fetch(`${sbUrl}/rest/v1/conteudo_organico?id=eq.${post.id}`, {
+      const patch = (campos) => fetch(`${sbUrl}/rest/v1/conteudo_organico?id=eq.${post.id}`, {
         method: 'PATCH',
         headers: { 'apikey': sbKey, 'Authorization': `Bearer ${sbKey}`,
                    'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
-        body: JSON.stringify({
-          status: 'Arquivado', published_at: post.scheduled_at || new Date().toISOString(),
-          scheduled_at: null, scheduled_media: null,
-        }),
+        body: JSON.stringify(campos),
       });
-      console.log(`[cron] YouTube ${m.videoId} liberado pelo agendamento do próprio YouTube.`);
+      try {
+        const video = await enviarVideoYoutube(env, m);
+        await patch({ status: 'Arquivado', published_at: new Date().toISOString(),
+          scheduled_at: null, scheduled_media: null, youtube_video_id: video.id,
+          erro_publicacao: null, erro_publicacao_em: null });
+        console.log(`[cron] YouTube publicado: ${post.id} → ${video.id}`);
+      } catch (err) {
+        console.error(`[cron] Falha no YouTube ${post.id}:`, err && err.message);
+        await patch({ status: 'Feito', scheduled_at: null, scheduled_media: null,
+          erro_publicacao: String(err && err.message || err).slice(0, 500),
+          erro_publicacao_em: new Date().toISOString() });
+      }
       continue;
     }
 
