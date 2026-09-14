@@ -3107,7 +3107,10 @@ A do combo merece uma olhada antes de escrever a página de vendas da Black, por
 | Índice de todas | https://black-artes.pages.dev/ |
 | Marca da campanha: selo, paleta, tipografia e aplicações | https://black-artes.pages.dev/marca |
 | Jogo de contagem, as 7 peças no feed e no story | https://black-artes.pages.dev/contagem |
+| Cards de revelação dos bônus, 5 peças | https://black-artes.pages.dev/bonus |
 | O que entra na Black, 1080x1350 | https://black-artes.pages.dev/o-que-entra |
+
+Todos esses links também estão na **Biblioteca** da aba Pico de Vendas, na categoria **Artes e páginas da Black**, junto com as duas páginas. É o caminho mais curto: abre o Pico, abre a Biblioteca, clica.
 
 ## 25.2 As páginas
 
