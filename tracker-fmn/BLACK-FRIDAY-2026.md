@@ -3121,7 +3121,7 @@ Todos esses links também estão na **Biblioteca** da aba Pico de Vendas, na cat
 | Modelos de feed, 11 páginas | https://www.canva.com/d/jiHZVmQKviJbqRO |
 | Modelos de story, 4 páginas | https://www.canva.com/d/ZMrrbAkVyiPt8Bh |
 
-**O kit de marca tem:** a paleta com os seis hex da campanha, Montserrat nos títulos e no corpo, e os carimbos em PNG com fundo transparente nas cinco cores (tinta, dourado, branco, preto e pardo), cada cor na versão completa e na reduzida. São dez arquivos.
+**O kit de marca tem:** a paleta com os seis hex da campanha, Montserrat nos títulos e no corpo, mais os carimbos em PNG com fundo transparente nas cinco cores (tinta, dourado, branco, preto e pardo), cada cor na versão completa e na reduzida. São dez arquivos.
 
 **Os modelos de feed:** contagem, é amanhã, é hoje, bônus com foto, bônus só com texto, capa de carrossel, meio de carrossel, fecho de carrossel, depoimento, envelope e capa de aula.
 
