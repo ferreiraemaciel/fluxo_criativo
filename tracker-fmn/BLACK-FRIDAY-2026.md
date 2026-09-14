@@ -3112,6 +3112,23 @@ A do combo merece uma olhada antes de escrever a página de vendas da Black, por
 
 Todos esses links também estão na **Biblioteca** da aba Pico de Vendas, na categoria **Artes e páginas da Black**, junto com as duas páginas. É o caminho mais curto: abre o Pico, abre a Biblioteca, clica.
 
+## 25.1b No Canva
+
+| O quê | Link |
+|---|---|
+| Pasta da Black 2026 | https://www.canva.com/folder/FAHVMF6zq7o |
+| Kit de marca da Black 2026 | https://www.canva.com/brand/kAHVMH_RrdA |
+| Modelos de feed, 11 páginas | https://www.canva.com/d/jiHZVmQKviJbqRO |
+| Modelos de story, 4 páginas | https://www.canva.com/d/ZMrrbAkVyiPt8Bh |
+
+**O kit de marca tem:** a paleta com os seis hex da campanha, Montserrat nos títulos e no corpo, e os carimbos em PNG com fundo transparente nas cinco cores (tinta, dourado, branco, preto e pardo), cada cor na versão completa e na reduzida. São dez arquivos.
+
+**Os modelos de feed:** contagem, é amanhã, é hoje, bônus com foto, bônus só com texto, capa de carrossel, meio de carrossel, fecho de carrossel, depoimento, envelope e capa de aula.
+
+**Os modelos de story:** contagem, envelope, bônus e chamada de aula.
+
+Os PNGs também estão em `meus-produtos/blindagem/entregas/criativos/black-2026/png`, junto com os fundos de feed e de story em preto, pardo, dourado e tinta.
+
 ## 25.2 As páginas
 
 | Página | Link |
