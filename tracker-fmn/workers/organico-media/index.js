@@ -4,6 +4,7 @@
  * Rotas:
  *   POST   /upload          — sobe arquivo original + thumb no R2, retorna URLs
  *   POST   /publish         — posta ou agenda carrossel/imagem no Instagram
+ *   POST   /youtube-publicar — sobe o vídeo do card de Youtube no canal (agora ou agendado)
  *   DELETE /original/:key   — deleta arquivo original do R2
  *   GET    /                — health check
  *
@@ -187,6 +188,132 @@ async function handleArtigoPublicar(request, env) {
 }
 
 
+
+
+/* ── YouTube ─────────────────────────────────────────────────────────────
+   Card de plataforma Youtube é um card próprio (combinado em 14/09/2026),
+   mesmo quando o vídeo é igual ao de um Reels. Vertical e até 3 minutos, o
+   YouTube classifica como Short sozinho, não existe chamada separada.
+
+   Agendamento é do próprio YouTube (status.publishAt): o vídeo sobe na hora
+   como privado com data marcada, e o YouTube libera no horário. O cron daqui
+   só vira o card pra Arquivado quando a hora passa.
+
+   Enquanto o projeto do Google não passar pela auditoria da API, TODO vídeo
+   enviado fica travado como privado. Não é erro deste código.
+
+   Secrets: YT_CLIENT_ID, YT_CLIENT_SECRET, YT_REFRESH_TOKEN (canal do Felipe). */
+const YT_LIMITE_TITULO = 100;
+const YT_LIMITE_DESCRICAO = 5000;
+
+async function youtubeAccessToken(env) {
+  if (!env.YT_CLIENT_ID || !env.YT_CLIENT_SECRET || !env.YT_REFRESH_TOKEN) {
+    throw new Error('O YouTube ainda não foi conectado ao Tracker. Faltam as chaves do Google no worker.');
+  }
+  const r = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    body: new URLSearchParams({
+      client_id: env.YT_CLIENT_ID, client_secret: env.YT_CLIENT_SECRET,
+      refresh_token: env.YT_REFRESH_TOKEN, grant_type: 'refresh_token',
+    }),
+  });
+  const d = await r.json().catch(() => ({}));
+  if (!d.access_token) throw new Error('O Google recusou a conexão com o YouTube: ' + (d.error_description || d.error || r.status));
+  return d.access_token;
+}
+
+async function handleYoutubePublicar(request, env) {
+  const body = await request.json().catch(() => ({}));
+  const { cardId, videoUrl, scheduleAt } = body;
+  const titulo = (body.titulo || '').trim();
+  const descricao = (body.descricao || '').trim();
+
+  if (!cardId)   return json({ error: 'cardId é obrigatório.' }, 400);
+  if (!videoUrl) return json({ error: 'O card não tem vídeo importado. Importe o vídeo do Drive antes de publicar.' }, 400);
+  if (!titulo)   return json({ error: 'O vídeo precisa de um título.' }, 400);
+  if (titulo.length > YT_LIMITE_TITULO) {
+    return json({ error: `O título tem ${titulo.length} caracteres e o YouTube aceita no máximo ${YT_LIMITE_TITULO}. Tire ${titulo.length - YT_LIMITE_TITULO}.` }, 400);
+  }
+  // O YouTube recusa < e > no título e na descrição.
+  if (/[<>]/.test(titulo + descricao)) return json({ error: 'O YouTube não aceita os sinais < e > no título nem na descrição.' }, 400);
+  if (new TextEncoder().encode(descricao).length > YT_LIMITE_DESCRICAO) {
+    return json({ error: `A descrição passou do limite de ${YT_LIMITE_DESCRICAO} bytes do YouTube.` }, 400);
+  }
+  if (scheduleAt && new Date(scheduleAt).getTime() < Date.now() + 5 * 60e3) {
+    return json({ error: 'Agende pelo menos 5 minutos à frente.' }, 400);
+  }
+
+  // Lê o vídeo direto do R2 (sem passar pela URL pública) pra saber o tamanho exato.
+  const key = origKeyFromUrl(videoUrl) || (videoUrl.startsWith(R2_PUBLIC + '/') ? videoUrl.replace(R2_PUBLIC + '/', '') : null);
+  const obj = key ? await env.BUCKET.get(key) : null;
+  if (!obj) return json({ error: 'O vídeo em alta não está mais no armazenamento. Importe o vídeo do Drive de novo.' }, 404);
+
+  const token = await youtubeAccessToken(env);
+
+  const meta = {
+    snippet: { title: titulo, description: descricao, categoryId: '22' },
+    status: {
+      privacyStatus: scheduleAt ? 'private' : 'public',
+      ...(scheduleAt ? { publishAt: new Date(scheduleAt).toISOString() } : {}),
+      selfDeclaredMadeForKids: false,
+    },
+  };
+
+  // Upload resumível: 1) abre a sessão, 2) manda os bytes.
+  const init = await fetch('https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json; charset=UTF-8',
+      'X-Upload-Content-Length': String(obj.size),
+      'X-Upload-Content-Type': 'video/mp4',
+    },
+    body: JSON.stringify(meta),
+  });
+  const sessao = init.headers.get('Location');
+  if (!init.ok || !sessao) {
+    const e = await init.json().catch(() => ({}));
+    return json({ error: 'O YouTube recusou o envio: ' + (e.error?.message || init.status) }, 502);
+  }
+
+  const { readable, writable } = new FixedLengthStream(obj.size);
+  obj.body.pipeTo(writable);
+  const up = await fetch(sessao, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'video/mp4' },
+    body: readable,
+  });
+  const video = await up.json().catch(() => ({}));
+  if (!up.ok || !video.id) {
+    return json({ error: 'Falha ao enviar o vídeo ao YouTube: ' + (video.error?.message || up.status) }, 502);
+  }
+
+  const sbUrl = env.SUPABASE_URL, sbKey = env.SUPABASE_SERVICE_KEY;
+  await fetch(`${sbUrl}/rest/v1/conteudo_organico?id=eq.${cardId}`, {
+    method: 'PATCH',
+    headers: { 'apikey': sbKey, 'Authorization': `Bearer ${sbKey}`,
+               'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+    body: JSON.stringify(scheduleAt ? {
+      status: 'Agendado', scheduled_at: scheduleAt, data_prevista: scheduleAt.slice(0, 10),
+      scheduled_media: { tipo: 'youtube', videoId: video.id },
+      youtube_video_id: video.id, erro_publicacao: null, erro_publicacao_em: null,
+    } : {
+      status: 'Arquivado', published_at: new Date().toISOString(),
+      scheduled_at: null, scheduled_media: null,
+      youtube_video_id: video.id, erro_publicacao: null, erro_publicacao_em: null,
+    }),
+  });
+
+  // Mesma política do Reels: a versão em alta sai do R2 depois que chegou ao destino.
+  const origKey = origKeyFromUrl(videoUrl);
+  if (origKey) await env.BUCKET.delete(origKey);
+
+  return json({
+    ok: true, scheduled: !!scheduleAt, videoId: video.id,
+    url: `https://youtu.be/${video.id}`,
+    privado_pela_auditoria: !scheduleAt && video.status?.privacyStatus === 'private',
+  });
+}
 
 /* ── Publicar um container já criado ──────────────────────────────────────
    Publicar logo depois de criar o container falha de vez em quando com
@@ -655,6 +782,21 @@ async function runScheduledPublish(env) {
       continue;
     }
 
+    // YouTube já agendou sozinho (publishAt). Aqui só fecha o card quando a hora passa.
+    if (m.tipo === 'youtube') {
+      await fetch(`${sbUrl}/rest/v1/conteudo_organico?id=eq.${post.id}`, {
+        method: 'PATCH',
+        headers: { 'apikey': sbKey, 'Authorization': `Bearer ${sbKey}`,
+                   'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+        body: JSON.stringify({
+          status: 'Arquivado', published_at: post.scheduled_at || new Date().toISOString(),
+          scheduled_at: null, scheduled_media: null,
+        }),
+      });
+      console.log(`[cron] YouTube ${m.videoId} liberado pelo agendamento do próprio YouTube.`);
+      continue;
+    }
+
     const { imageUrls = [], videoUrl = null, thumbUrl = null, origKeys = [], caption = '', tipo = 'imagem', comFacebook = false } = m;
 
     try {
@@ -1092,6 +1234,7 @@ export default {
       if (method === 'POST' && url.pathname === '/criar-pasta')  return await handleCriarPasta(request, env);
       if (method === 'GET'  && url.pathname === '/artigo-status')   return await handleArtigoStatus(request, env, url);
       if (method === 'POST' && url.pathname === '/artigo-publicar') return await handleArtigoPublicar(request, env);
+      if (method === 'POST' && url.pathname === '/youtube-publicar') return await handleYoutubePublicar(request, env);
       if (method === 'POST' && url.pathname === '/deletar-pasta') return await handleDeletarPasta(request, env);
       if (method === 'POST' && url.pathname === '/import-link')   return await handleImportLink(request, env);
       if (method === 'POST' && url.pathname === '/import-direto') return await handleImportDireto(request, env);

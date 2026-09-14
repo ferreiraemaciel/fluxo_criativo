@@ -784,6 +784,136 @@ function PublicarArtigoModal({ form, onClose, onSuccess, initialDate }) {
   );
 }
 
+/* ── Publicar no YouTube ───────────────────────────────────────────────────
+   Card de Youtube é card próprio, mesmo quando o vídeo é igual ao de um Reels.
+   Vertical e até 3 minutos, o YouTube trata como Short sozinho. */
+function PublicarYoutubeModal({ form, onClose, onSuccess, initialDate }) {
+  const hoje = window.FMNFinancas.dataBRT();
+  const [modo, setModo]     = useState(initialDate ? 'agendar' : 'agora');
+  const [data, setData]     = useState(initialDate || form.data_prevista || hoje);
+  const [hora, setHora]     = useState('18:00');
+  const [titulo, setTitulo] = useState((form.headline || form.tema || '').trim().slice(0, 100));
+  const [descricao, setDesc] = useState((form.legenda || '').trim());
+  const [fase, setFase]     = useState('pronto'); // pronto | enviando | erro | ok
+  const [erro, setErro]     = useState('');
+  const [resultado, setRes] = useState(null);
+
+  const video = (() => {
+    let mf = form.media_files;
+    if (typeof mf === 'string') { try { mf = JSON.parse(mf); } catch { mf = null; } }
+    return Array.isArray(mf) ? mf.find(m => m && m.tipo === 'video' && m.url_alta) : null;
+  })();
+
+  async function enviar() {
+    setFase('enviando'); setErro('');
+    const scheduleAt = modo === 'agendar' ? new Date(`${data}T${hora}:00-03:00`).toISOString() : null;
+    try {
+      const r = await fetch(`${WORKER_URL}/youtube-publicar`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cardId: form.id, videoUrl: video.url_alta, titulo, descricao, scheduleAt }),
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok || d.error) throw new Error(d.error || 'Falha ao publicar no YouTube.');
+      setRes(d); setFase('ok');
+      setTimeout(() => onSuccess(scheduleAt ? 'Agendado' : 'Arquivado', scheduleAt, d.videoId), d.privado_pela_auditoria ? 4000 : 1400);
+    } catch (e) {
+      setErro(e.message); setFase('erro');
+    }
+  }
+
+  const campo = { width:'100%', padding:'9px 11px', borderRadius:8, background:'rgba(255,255,255,.04)',
+    border:'1px solid var(--app-border)', color:'var(--text-1)', fontFamily:'Roboto,sans-serif', fontSize:12.5, boxSizing:'border-box' };
+  const rotulo = { fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700, letterSpacing:'0.1em',
+    textTransform:'uppercase', color:'var(--text-3)', display:'block', marginBottom:5 };
+
+  return (
+    <div onClick={e => e.target === e.currentTarget && fase !== 'enviando' && onClose()}
+      style={{ position:'fixed', inset:0, background:'rgba(0,0,0,.75)', zIndex:900,
+        display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
+      <div style={{ width:'100%', maxWidth:440, background:'var(--app-surface)', border:'1px solid var(--app-border)',
+        borderRadius:14, padding:22, display:'flex', flexDirection:'column', gap:14 }}>
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+          <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+            <div style={{ width:34, height:34, borderRadius:9, display:'flex', alignItems:'center', justifyContent:'center',
+              background:'rgba(239,68,68,.12)', border:'1px solid rgba(239,68,68,.35)' }}>
+              <LucideIcon icon="play" size={16} style={{ color:'#ef4444' }}/>
+            </div>
+            <div>
+              <div style={{ fontSize:14, fontFamily:'Roboto,sans-serif', fontWeight:700, color:'var(--text-1)' }}>Publicar no YouTube</div>
+              <div style={{ fontSize:11, fontFamily:'Roboto,sans-serif', color:'var(--text-3)' }}>Vertical até 3 minutos vira Short</div>
+            </div>
+          </div>
+          {fase !== 'enviando' && (
+            <button onClick={onClose} style={{ background:'none', border:'none', cursor:'pointer', color:'var(--text-3)', display:'flex' }}>
+              <LucideIcon icon="x" size={16}/>
+            </button>
+          )}
+        </div>
+
+        {!video && (
+          <div style={{ padding:'10px 12px', borderRadius:8, background:'rgba(251,191,36,.08)', border:'1px solid rgba(251,191,36,.25)',
+            fontSize:11.5, color:'#fbbf24', lineHeight:1.5 }}>
+            Este card ainda não tem vídeo importado. Importe o vídeo do Drive antes de publicar.
+          </div>
+        )}
+
+        {fase === 'ok' ? (
+          <div style={{ fontSize:12.5, color:'var(--text-2)', lineHeight:1.6 }}>
+            {resultado?.scheduled ? 'Vídeo enviado e agendado no YouTube.' : 'Vídeo enviado ao YouTube.'}
+            {resultado?.privado_pela_auditoria && (
+              <div style={{ marginTop:8, color:'#fbbf24' }}>
+                Ele ficou privado porque o Google ainda não liberou a publicação pela API. Quando a auditoria sair, os próximos entram públicos.
+              </div>
+            )}
+            {resultado?.url && <div style={{ marginTop:8 }}><a href={resultado.url} target="_blank" rel="noreferrer" style={{ color:'#ef4444' }}>{resultado.url}</a></div>}
+          </div>
+        ) : (<>
+          <div style={{ display:'flex', gap:4, padding:4, borderRadius:10, background:'rgba(255,255,255,.04)', border:'1px solid var(--app-border)' }}>
+            {[['agora','Publicar agora','zap'],['agendar','Agendar','clock']].map(([id,label,icon]) => (
+              <button key={id} onClick={()=>setModo(id)}
+                style={{ flex:1, padding:'8px', borderRadius:7, cursor:'pointer',
+                  background: modo===id ? 'rgba(239,68,68,.15)' : 'transparent',
+                  border: modo===id ? '1px solid rgba(239,68,68,.35)' : '1px solid transparent',
+                  color: modo===id ? '#f87171' : 'var(--text-3)', fontFamily:'Roboto,sans-serif', fontWeight:700, fontSize:12,
+                  display:'flex', alignItems:'center', justifyContent:'center', gap:6 }}>
+                <LucideIcon icon={icon} size={13}/>{label}
+              </button>
+            ))}
+          </div>
+
+          {modo === 'agendar' && (
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
+              <div><label style={rotulo}>Data</label>
+                <input type="date" value={data} min={hoje} onChange={e=>setData(e.target.value)} style={{ ...campo, colorScheme:'dark' }}/></div>
+              <div><label style={rotulo}>Horário (Brasília)</label>
+                <input type="time" value={hora} onChange={e=>setHora(e.target.value)} style={{ ...campo, colorScheme:'dark' }}/></div>
+            </div>
+          )}
+
+          <div>
+            <label style={rotulo}>Título ({titulo.length}/100)</label>
+            <input value={titulo} maxLength={100} onChange={e=>setTitulo(e.target.value)} style={campo}/>
+          </div>
+          <div>
+            <label style={rotulo}>Descrição</label>
+            <textarea value={descricao} rows={5} onChange={e=>setDesc(e.target.value)} style={{ ...campo, resize:'vertical' }}/>
+          </div>
+
+          {erro && (
+            <div style={{ padding:'9px 11px', borderRadius:9, background:'rgba(248,113,113,.08)', border:'1px solid rgba(248,113,113,.3)',
+              fontSize:11.5, color:'#f87171', lineHeight:1.5 }}>{erro}</div>
+          )}
+
+          <Btn onClick={enviar} disabled={!video || !titulo.trim() || fase === 'enviando' || (modo === 'agendar' && !data)} style={{ justifyContent:'center' }}>
+            <LucideIcon icon={fase === 'enviando' ? 'loader' : modo === 'agendar' ? 'clock' : 'send'} size={13}/>
+            {fase === 'enviando' ? 'Enviando o vídeo, pode levar alguns minutos...' : modo === 'agendar' ? 'Agendar no YouTube' : 'Publicar agora'}
+          </Btn>
+        </>)}
+      </div>
+    </div>
+  );
+}
+
 function PublishModal({ form, slidesArr, slideFiles, onClose, onSuccess, initialDate, initialModo }) {
   // initialModo/initialDate: quando vem do calendário, já abre em "Agendar"
   // com o dia clicado preenchido, faltando só o horário.
@@ -1395,7 +1525,7 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
     onSave(updated);
   };
 
-  const canShowPublish = !isNew && (form.plataforma === 'Carrossel' || form.plataforma === 'Imagem' || form.plataforma === 'Reels' || form.plataforma === 'Artigo');
+  const canShowPublish = !isNew && (form.plataforma === 'Carrossel' || form.plataforma === 'Imagem' || form.plataforma === 'Reels' || form.plataforma === 'Artigo' || form.plataforma === 'Youtube');
 
   // Painel esquerdo — navegador de slides embarcado
   const [previewIdx, setPreviewIdx] = useState(0);
@@ -1425,7 +1555,24 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
           }}/>
       )}
 
-      {showPublish && form.plataforma !== 'Artigo' && (
+      {showPublish && form.plataforma === 'Youtube' && (
+        <PublicarYoutubeModal
+          form={form}
+          onClose={() => setShowPublish(false)}
+          initialDate={prefillSchedDate || null}
+          onSuccess={(novoStatus, quando, videoId) => {
+            setShowPublish(false);
+            set('status', novoStatus);
+            if (videoId) set('youtube_video_id', videoId);
+            // Mesmo cuidado do Artigo (ORG 065): o form local precisa saber do
+            // scheduled_at, senão o salvamento automático rebaixa o card.
+            if (quando) { set('data_prevista', quando.slice(0, 10)); set('scheduled_at', quando); }
+            else { set('scheduled_at', null); set('published_at', new Date().toISOString()); }
+            onImported && onImported();
+          }}/>
+      )}
+
+      {showPublish && form.plataforma !== 'Artigo' && form.plataforma !== 'Youtube' && (
         <PublishModal
           form={form}
           slidesArr={slidesArr}
