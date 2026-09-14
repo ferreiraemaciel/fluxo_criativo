@@ -38,7 +38,7 @@ Portais de imprensa. Publicam o caso já mastigado para jornalista, que é exata
 
 Os 27 estão localizados e testados. O que muda de um para outro é **como** se lê, não se dá para ler.
 
-### Entregam a notícia por requisição simples (12)
+### Entregam a notícia por requisição simples (11)
 
 Servem o conteúdo já montado no HTML. Consulta barata.
 
@@ -48,7 +48,6 @@ Servem o conteúdo já montado no HTML. Consulta barata.
 | CE | https://www.tjce.jus.br/noticias/ |
 | DF | https://www.tjdft.jus.br/institucional/imprensa/noticias |
 | MA | https://www.tjma.jus.br/midia/tj/noticias |
-| MT | https://www.tjmt.jus.br/noticias |
 | MS | https://www.tjms.jus.br/noticias |
 | MG | https://www.tjmg.jus.br/portal-tjmg/noticias/ |
 | PE | https://portal.tjpe.jus.br/ |
@@ -59,9 +58,9 @@ Servem o conteúdo já montado no HTML. Consulta barata.
 
 Em PE e PI o endereço que funciona é a home do portal, que lista as recentes, e não uma página dedicada.
 
-### Precisam do navegador (15)
+### Precisam do navegador (16)
 
-Aqui a requisição simples devolve só o menu do site, ou é barrada por filtro de robô. A lista de notícias é montada por script no lado do leitor. Todos os 15 foram abertos e confirmados no navegador embutido do app.
+Aqui a requisição simples devolve só o menu do site, ou é barrada por filtro de robô. A lista de notícias é montada por script no lado do leitor. Todos os 16 foram abertos e confirmados no navegador embutido do app.
 
 | UF | Endereço | Por que precisa |
 |---|---|---|
@@ -71,6 +70,7 @@ Aqui a requisição simples devolve só o menu do site, ou é barrada por filtro
 | BA | https://www.tjba.jus.br/portal/agencia-de-noticias/ | Montada por script |
 | ES | https://www.tjes.jus.br/category/s1-front-page/ultimasnoticias/ | Montada por script |
 | GO | https://www.tjgo.jus.br/index.php/institucional/centro-de-comunicacao-social | Filtro de robô, HTTP 403 |
+| MT | https://www.tjmt.jus.br/noticias | Mudou de plataforma, passou a ser montada por script (constatado na rodada de 14/09/2026) |
 | PA | https://www.tjpa.jus.br/PortalExterno/index-noticias.xhtml | Montada por script |
 | PB | https://www.tjpb.jus.br/noticias | Filtro de robô, HTTP 403 |
 | RN | https://www.tjrn.jus.br/noticias/ | Filtro de robô, HTTP 403 |
@@ -81,7 +81,7 @@ Aqui a requisição simples devolve só o menu do site, ou é barrada por filtro
 | SE | https://www.tjse.jus.br/portal/ | Montada por script |
 | TO | https://www.tjto.jus.br/comunicacao/noticias | Montada por script |
 
-**Consequência de arquitetura:** 15 dos 27 tribunais só se leem com navegador. Somado ao buscador do STJ, que também só cede ao navegador, o navegador deixa de ser recurso extra e passa a ser requisito da rotina. Sem ele, a camada dos estados perde mais da metade do país.
+**Consequência de arquitetura:** 16 dos 27 tribunais só se leem com navegador. Somado ao buscador do STJ, que também só cede ao navegador, o navegador deixa de ser recurso extra e passa a ser requisito da rotina. Sem ele, a camada dos estados perde mais da metade do país.
 
 ### Portais que ajudam mais que os outros
 
