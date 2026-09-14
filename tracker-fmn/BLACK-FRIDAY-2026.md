@@ -2879,7 +2879,7 @@ A captação passa a ter **8 peças**: os 5 vídeos dos ângulos mais esses 3 es
 | 29/11 (dom) | D+19 | Últimas 24 horas | Contagem por hora. Metralhadora de depoimento de novo. | **Reels**: Amanhã fecha | Véspera do corte. |
 | 30/11 (seg) | D+20 | ENCERRAMENTO | Contagem até a hora exata. Avisar o corte quando acontecer, sem prorrogar. | **Reels**: O último bônus, que só quem entra hoje leva | Encerramento com hora exata e um bônus revelado só hoje, que é o movimento que o playbook pede pra quem deixa pra cima da hora. |
 
-> **Decisões do Felipe em 14/09/2026.** Primeiro, uma aula só em vez de três, porque três era muito para produção de uma pessoa. Depois, a aula entrou dentro da própria live de abertura, que passou para **terça, 10/11, às 20h**. Terça é o que o material do VTSD mostra: o Nobre abriu numa terça em 2025, o Ladeira numa segunda em 2024 e numa terça em 2025, o Gabriel numa segunda. A live começa com a aula e termina com a oferta, com o carrinho abrindo durante a transmissão. A semana antes da abertura ficou só para aquecer, e as peças a partir de 26/10 andaram um dia pra trás.
+> **Decisões do Felipe em 14/09/2026.** Primeiro, uma aula só em vez de três, porque três era muito para produção de uma pessoa. Depois, a aula entrou dentro da própria live de abertura, que passou para **terça, 10/11, às 20h**. Terça é o que o material do VTSD mostra: o Nobre abriu numa terça em 2025, o Ladeira numa segunda em 2024 e numa terça em 2025, o Gabriel numa segunda. A live começa com a aula e termina com a oferta, com o carrinho abrindo durante a transmissão. A semana antes da abertura ficou só para aquecer. As peças a partir de 26/10 andaram um dia pra trás.
 
 ## 22.3 O que virou card no Orgânico
 
