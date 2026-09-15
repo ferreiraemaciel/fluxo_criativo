@@ -1106,6 +1106,9 @@ async function cozinha(env, payload) {
     return { ok: true, processando: true };
   }
   if (r.status === 524 || r.status === 522 || r.status === 504) return { ok: true, processando: true };
+  // A cozinha roda uma máquina só. Enquanto processa um vídeo grande, o
+  // Google recusa os outros pedidos (429). Mensagem clara no lugar do código.
+  if (r.status === 429) throw new Error('A importação está ocupada com outro vídeo. Tente de novo em alguns minutos.');
   const d = await r.json().catch(() => ({}));
   if (!r.ok || !d.ok) throw new Error(d.error || `cozinha ${r.status}`);
   return d;
