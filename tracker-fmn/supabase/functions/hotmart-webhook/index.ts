@@ -163,7 +163,7 @@ Deno.serve(async (req) => {
         status: 400, headers: { "Content-Type": "application/json" },
       });
     }
-    await enviarBoasVindasMcv(transactionId, venda.comprador_telefone, venda.comprador_nome);
+    await enviarBoasVindasDoProduto(String(venda.produto_id || ""), transactionId, venda.comprador_telefone, venda.comprador_nome);
     // Bug real em 2026-08-28 (Adriel de Oliveira, primeira venda do
     // Blindagem): esse endpoint reenviava só a boas-vindas, nunca a tag do
     // produto. No fluxo normal do webhook as duas rodam em sequência (a
@@ -652,7 +652,7 @@ Deno.serve(async (req) => {
       .eq("hotmart_transaction_id", transactionId)
       .single();
     if (!vendaAtual?.whatsapp_boas_vindas_enviado) {
-      await enviarBoasVindasMcv(transactionId, telefoneFinal, comprador?.name || null);
+      await enviarBoasVindasDoProduto(produtoIdStr, transactionId, telefoneFinal, comprador?.name || null);
     }
   }
 
@@ -945,30 +945,76 @@ async function marcarTagDoProduto(produtoId: string, telefoneRaw: string, nome: 
   }
 }
 
-// Manda a boas-vindas de aluno novo pelo número de suporte, via fila do
-// Khronus (Ponte, WhatsApp Web automatizado) — não é mais a API oficial do
-// Meta (mudou em 2026-08-26). Idempotente: quem chama já checou
-// vendas.whatsapp_boas_vindas_enviado antes.
+// Cada produto tem a sua boas-vindas. Até 15/09/2026 o Blindagem recebia o
+// texto do MCV (com o link do grupo do MCV), caso real da Isabelle Tanji, que
+// comprou os dois e recebeu a mesma mensagem duas vezes.
+async function enviarBoasVindasDoProduto(produtoId: string, transactionId: string, telefoneRaw: string, nome: string | null) {
+  if (produtoId === PRODUTO_ID_BLINDAGEM) return enviarBoasVindasBlindagem(transactionId, telefoneRaw, nome);
+  return enviarBoasVindasMcv(transactionId, telefoneRaw, nome);
+}
+
 async function enviarBoasVindasMcv(transactionId: string, telefoneRaw: string, nome: string | null) {
   if (!WHATSAPP_GRUPO_LINK_MCV) {
     console.log("WhatsApp boas-vindas: WHATSAPP_GRUPO_LINK_MCV ausente, pulando.");
     return;
   }
+  const primeiroNome = (nome || "").trim().split(/\s+/)[0] || "tudo bem";
+  const corpo = renderCorpoTemplate("boas_vindas_mcv", [primeiroNome, WHATSAPP_GRUPO_LINK_MCV]);
+  await enfileirarBoasVindas(transactionId, telefoneRaw, nome, corpo, "MCV");
+}
+
+// A chave é gerada pelo próprio Blindagem (outro webhook da Hotmart, em
+// contratovisual/src/lib/hotmart-core.server.ts) e grava em public.access_codes,
+// no mesmo projeto do Khronus. Os dois webhooks chegam quase juntos, então
+// espera a chave aparecer. Sem chave, não manda: mensagem sem chave não serve,
+// e a venda fica com whatsapp_boas_vindas_enviado=false pra reenviar depois.
+const BLINDAGEM_URL = "https://blindagem.fotografiaeomeunegocio.com.br";
+
+async function chaveBlindagemDaVenda(transactionId: string): Promise<string | null> {
+  for (let tentativa = 0; tentativa < 8; tentativa++) {
+    const { data } = await khronus.schema("public")
+      .from("access_codes")
+      .select("code")
+      .eq("hotmart_transaction", transactionId)
+      .limit(1);
+    const code = (data || [])[0]?.code;
+    if (code) return code;
+    await new Promise((r) => setTimeout(r, 5000));
+  }
+  return null;
+}
+
+async function enviarBoasVindasBlindagem(transactionId: string, telefoneRaw: string, nome: string | null) {
+  const chave = await chaveBlindagemDaVenda(transactionId);
+  if (!chave) {
+    console.error("Boas-vindas Blindagem sem chave gerada, não enviada:", transactionId);
+    return;
+  }
+  const primeiroNome = (nome || "").trim().split(/\s+/)[0] || "tudo bem";
+  const corpo =
+    `Oi, ${primeiroNome}. Aqui é do time do Fotografia é o Meu Negócio.\n\n` +
+    `Sua compra do Blindagem foi aprovada e o seu acesso já está liberado.\n\n` +
+    `Esta é a sua chave de acesso, guarda ela bem porque também é o comprovante da sua licença:\n*${chave}*\n\n` +
+    `Pra criar a sua conta é só entrar por este link, a chave já vai preenchida:\n` +
+    `${BLINDAGEM_URL}/cadastro?codigo=${encodeURIComponent(chave)}\n\n` +
+    `Qualquer dúvida no cadastro, me chama aqui mesmo.`;
+  await enfileirarBoasVindas(transactionId, telefoneRaw, nome, corpo, "Blindagem");
+}
+
+// Manda a boas-vindas de aluno novo pelo número de suporte, via fila do
+// Khronus (Ponte, WhatsApp Web automatizado) — não é mais a API oficial do
+// Meta (mudou em 2026-08-26). Idempotente: quem chama já checou
+// vendas.whatsapp_boas_vindas_enviado antes.
+async function enfileirarBoasVindas(transactionId: string, telefoneRaw: string, nome: string | null, corpo: string, rotulo: string) {
   const to = normalizarTelefoneWhatsapp(telefoneRaw);
   const variantesKhronus = variantesTelefoneKhronus(telefoneRaw);
   // A primeira variante é o número como ele é de verdade; é ela que vai pra
   // fila. As outras só ajudam a reconhecer contato salvo em formato antigo.
   const telefoneKhronus = variantesKhronus[0] || null;
-  const primeiroNome = (nome || "").trim().split(/\s+/)[0] || "tudo bem";
-  const corpo = renderCorpoTemplate("boas_vindas_mcv", [primeiroNome, WHATSAPP_GRUPO_LINK_MCV]);
 
   try {
-    // Aluno novo quase nunca tem conversa anterior com o número de suporte,
-    // e desde 2026-08-26 isso deixou de ser impedimento: o contato entra sem
-    // wa_chat_id e a Ponte descobre o identificador com o WhatsApp na
-    // primeira tentativa de envio (ver ponte.js, ação 'resolver-numero').
     if (!telefoneKhronus) {
-      console.log("Boas-vindas MCV pulada, telefone inválido:", transactionId, to);
+      console.log(`Boas-vindas ${rotulo} pulada, telefone inválido:`, transactionId, to);
     } else {
       const { data: achados } = await khronus
         .from("crm_whatsapp_contatos")
@@ -997,7 +1043,7 @@ async function enviarBoasVindasMcv(transactionId: string, telefoneRaw: string, n
       });
       if (errFila) throw new Error(`Enfileirar: ${errFila.message}`);
       await supabase.from("vendas").update({ whatsapp_boas_vindas_enviado: true }).eq("hotmart_transaction_id", transactionId);
-      console.log("Boas-vindas MCV enfileirada no Khronus:", transactionId, telefoneKhronus);
+      console.log(`Boas-vindas ${rotulo} enfileirada no Khronus:`, transactionId, telefoneKhronus);
     }
 
     const { data: vendaData } = await supabase
@@ -1010,7 +1056,7 @@ async function enviarBoasVindasMcv(transactionId: string, telefoneRaw: string, n
       tornouAlunoEm: vendaData?.created_at || new Date().toISOString(),
     });
   } catch (err) {
-    console.error("Erro ao enfileirar boas-vindas MCV no Khronus:", err);
+    console.error(`Erro ao enfileirar boas-vindas ${rotulo} no Khronus:`, err);
   }
 }
 
