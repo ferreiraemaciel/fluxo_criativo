@@ -170,7 +170,7 @@ Deno.serve(async (req) => {
     if (!contatoId) {
       const { data: novo, error: errNovo } = await khronus
         .from("crm_whatsapp_contatos")
-        .insert({ studio_id: STUDIO_ID, telefone, nome, etapa: "em_conversa" })
+        .insert({ studio_id: STUDIO_ID, telefone, nome })
         .select("id")
         .single();
       if (errNovo) throw new Error(`Criar contato: ${errNovo.message}`);

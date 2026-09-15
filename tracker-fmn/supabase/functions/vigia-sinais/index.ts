@@ -146,7 +146,7 @@ Deno.serve(async (req) => {
         if (!contatoId) {
           const { data: novo } = await khronus
             .from("crm_whatsapp_contatos")
-            .insert({ studio_id: STUDIO_FMN, telefone: numero, nome: "Vigia do Tracker", etapa: "em_conversa" })
+            .insert({ studio_id: STUDIO_FMN, telefone: numero, nome: "Vigia do Tracker" })
             .select("id")
             .single();
           contatoId = novo?.id;

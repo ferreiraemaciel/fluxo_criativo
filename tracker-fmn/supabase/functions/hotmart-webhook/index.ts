@@ -908,7 +908,6 @@ async function marcarTagDoProduto(produtoId: string, telefoneRaw: string, nome: 
           studio_id: STUDIO_ID_KHRONUS,
           telefone: variantes[0],
           nome,
-          etapa: "aluno",
         })
         .select("id")
         .single();
@@ -1026,7 +1025,9 @@ async function enfileirarBoasVindas(transactionId: string, telefoneRaw: string, 
       if (!contatoId) {
         const { data: novo, error: errContato } = await khronus
           .from("crm_whatsapp_contatos")
-          .insert({ studio_id: STUDIO_ID_KHRONUS, telefone: telefoneKhronus, nome, etapa: "aluno" })
+          // Sem "etapa": a coluna saiu do Khronus na faxina de 15/09/2026. Mandar
+          // ela derrubava a criação do contato e a boas-vindas não saía.
+          .insert({ studio_id: STUDIO_ID_KHRONUS, telefone: telefoneKhronus, nome })
           .select("id")
           .single();
         if (errContato) throw new Error(`Criar contato: ${errContato.message}`);
