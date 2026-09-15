@@ -923,6 +923,7 @@ function PublishModal({ form, slidesArr, slideFiles, onClose, onSuccess, initial
   const [phase, setPhase]         = useState('idle');
   const [msg, setMsg]             = useState('');
   const [comFacebook, setFB]      = useState(false);
+  const [colaboradores, setColab] = useState('');
 
   const isReels = form.plataforma === 'Reels';
   const reelsVideo = (() => {
@@ -966,7 +967,7 @@ function PublishModal({ form, slidesArr, slideFiles, onClose, onSuccess, initial
         const r = await fetch(`${WORKER_URL}/schedule`, {
           method: 'POST', headers: { 'Content-Type':'application/json' },
           body: JSON.stringify({ itemId: form.id, scheduleAt, videoUrl: reelsVideo.url_alta,
-            thumbUrl: reelsVideo.thumb_url, caption, tipo: 'reels', comFacebook }),
+            thumbUrl: reelsVideo.thumb_url, caption, tipo: 'reels', comFacebook, colaboradores }),
         });
         pubData = await r.json();
         if (!pubData.ok) throw new Error(pubData.error || 'Falha ao agendar.');
@@ -975,7 +976,7 @@ function PublishModal({ form, slidesArr, slideFiles, onClose, onSuccess, initial
         const r = await fetch(`${WORKER_URL}/publish`, {
           method: 'POST', headers: { 'Content-Type':'application/json' },
           body: JSON.stringify({ tipo: 'reels', videoUrl: reelsVideo.url_alta, thumbUrl: reelsVideo.thumb_url,
-            caption, scheduleAt: null, comFacebook }),
+            caption, scheduleAt: null, comFacebook, colaboradores }),
         });
         pubData = await r.json();
         if (!pubData.ok) throw new Error(pubData.error || 'Falha na publicação.');
@@ -1074,7 +1075,7 @@ function PublishModal({ form, slidesArr, slideFiles, onClose, onSuccess, initial
         const schedRes = await fetch(`${WORKER_URL}/schedule`, {
           method: 'POST',
           headers: { 'Content-Type':'application/json' },
-          body: JSON.stringify({ itemId: form.id, scheduleAt, imageUrls, origKeys, caption, tipo, comFacebook }),
+          body: JSON.stringify({ itemId: form.id, scheduleAt, imageUrls, origKeys, caption, tipo, comFacebook, colaboradores }),
         });
         pubData = await schedRes.json();
         if (!pubData.ok) throw new Error(pubData.error || 'Falha ao agendar.');
@@ -1084,7 +1085,7 @@ function PublishModal({ form, slidesArr, slideFiles, onClose, onSuccess, initial
         const pubRes = await fetch(`${WORKER_URL}/publish`, {
           method: 'POST',
           headers: { 'Content-Type':'application/json' },
-          body: JSON.stringify({ tipo, imageUrls, caption, scheduleAt: null, origKeys, comFacebook }),
+          body: JSON.stringify({ tipo, imageUrls, caption, scheduleAt: null, origKeys, comFacebook, colaboradores }),
         });
         pubData = await pubRes.json();
         if (!pubData.ok) throw new Error(pubData.error || 'Falha na publicação.');
@@ -1218,6 +1219,17 @@ function PublishModal({ form, slidesArr, slideFiles, onClose, onSuccess, initial
               </div>
             </div>
           </label>
+
+          {/* Collab: até 3 perfis. O convidado aceita no app dele pra aparecer junto. */}
+          <div style={{ marginBottom:14 }}>
+            <label style={LABEL_STYLE}>Colaboradores (collab)</label>
+            <input value={colaboradores} onChange={e => setColab(e.target.value)}
+              placeholder="@perfil1 @perfil2"
+              style={{ ...FIELD_STYLE, resize:'none' }}/>
+            <div style={{ fontSize:10.5, fontFamily:'Roboto,sans-serif', color:'var(--text-3)', marginTop:4, lineHeight:1.4 }}>
+              Até 3 perfis. Cada um recebe o convite no Instagram e precisa aceitar pra aparecer na publicação.
+            </div>
+          </div>
 
           <button onClick={run}
             disabled={!hasImages || (modo==='agendar' && !schedDate)}

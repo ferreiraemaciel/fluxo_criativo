@@ -56,7 +56,7 @@ function safeParse(v) {
 
 /* ── Reels: cria o container de vídeo e espera processar antes de publicar.
    Video processing no Instagram não é instantâneo (diferente de imagem). ── */
-async function createReelsContainer(graph, igId, token, videoUrl, caption, comFacebook, thumbUrl) {
+async function createReelsContainer(graph, igId, token, videoUrl, caption, comFacebook, thumbUrl, colab = []) {
   const FB_PAGE_ID = '1738059673077819';
   const params = new URLSearchParams({
     media_type:   'REELS',
@@ -67,10 +67,19 @@ async function createReelsContainer(graph, igId, token, videoUrl, caption, comFa
   });
   if (thumbUrl) params.set('thumb_offset', '0');
   if (comFacebook) params.set('fb_page_id', FB_PAGE_ID);
+  if (colab.length) params.set('collaborators', JSON.stringify(colab));
   const r = await fetch(`${graph}/${igId}/media`, { method: 'POST', body: params });
   const d = await r.json();
   if (!d.id) throw new Error(`Erro ao criar container REELS: ${JSON.stringify(d)}`);
   return d.id;
+}
+
+/* Colaboradores do post (collab). O Instagram aceita até 3 perfis, pelo nome de
+   usuário sem @. Vale para Reels, imagem e o carrossel (no container pai, nunca
+   nos itens). Quem é convidado precisa aceitar o convite no app para aparecer. */
+function normalizarColaboradores(v) {
+  const lista = Array.isArray(v) ? v : String(v || '').split(/[\s,;]+/);
+  return [...new Set(lista.map(u => String(u).trim().replace(/^@/, '').toLowerCase()).filter(Boolean))].slice(0, 3);
 }
 
 // Limite de legenda do Instagram (erro 36004, "The caption was too long").
@@ -486,7 +495,9 @@ async function handlePublish(request, env) {
     scheduleAt,    // ISO string ou null (null = postar agora)
     origKeys,      // keys do R2 para deletar depois
     comFacebook,   // bool — cross-post para a Page do Facebook
+    colaboradores, // perfis convidados para a collab
   } = body;
+  const colab = normalizarColaboradores(colaboradores);
 
   const FB_PAGE_ID = '1738059673077819';
 
@@ -507,7 +518,7 @@ async function handlePublish(request, env) {
 
   if (tipo === 'reels') {
     /* ── Reels ── */
-    const containerId = await createReelsContainer(graph, igId, token, videoUrl, caption, comFacebook, thumbUrl);
+    const containerId = await createReelsContainer(graph, igId, token, videoUrl, caption, comFacebook, thumbUrl, colab);
     const ready = await waitReelsReady(graph, containerId, token);
     if (!ready) return json({ error: 'Vídeo ainda processando no Instagram — tente publicar de novo em instantes.' }, 202);
 
@@ -552,6 +563,7 @@ async function handlePublish(request, env) {
       access_token: token,
     });
     if (comFacebook) carParams.set('fb_page_id', FB_PAGE_ID);
+    if (colab.length) carParams.set('collaborators', JSON.stringify(colab));
     if (scheduleTs) {
       carParams.set('scheduled_publish_time', String(scheduleTs));
       carParams.set('published', 'false');
@@ -569,6 +581,7 @@ async function handlePublish(request, env) {
       access_token: token,
     });
     if (comFacebook) params.set('fb_page_id', FB_PAGE_ID);
+    if (colab.length) params.set('collaborators', JSON.stringify(colab));
     if (scheduleTs) {
       params.set('scheduled_publish_time', String(scheduleTs));
       params.set('published', 'false');
@@ -604,7 +617,7 @@ async function handleSchedule(request, env) {
   let body;
   try { body = await request.json(); } catch (e) { return json({ error: 'JSON inválido.' }, 400); }
 
-  const { itemId, scheduleAt, imageUrls, videoUrl, thumbUrl, origKeys, caption, tipo, comFacebook } = body;
+  const { itemId, scheduleAt, imageUrls, videoUrl, thumbUrl, origKeys, caption, tipo, comFacebook, colaboradores } = body;
   if (!itemId || !scheduleAt) {
     return json({ error: 'itemId e scheduleAt são obrigatórios.' }, 400);
   }
@@ -636,7 +649,7 @@ async function handleSchedule(request, env) {
       erro_publicacao_em: null,
       scheduled_at: scheduleAt,
       data_prevista: scheduleAt.slice(0, 10), // YYYY-MM-DD para o calendário
-      scheduled_media: { imageUrls, videoUrl, thumbUrl, origKeys: origKeys || [], caption, tipo, comFacebook: !!comFacebook },
+      scheduled_media: { imageUrls, videoUrl, thumbUrl, origKeys: origKeys || [], caption, tipo, comFacebook: !!comFacebook, colaboradores: normalizarColaboradores(colaboradores) },
     }),
   });
 
@@ -805,12 +818,13 @@ async function runScheduledPublish(env) {
     }
 
     const { imageUrls = [], videoUrl = null, thumbUrl = null, origKeys = [], caption = '', tipo = 'imagem', comFacebook = false } = m;
+    const colab = normalizarColaboradores(m.colaboradores);
 
     try {
       let creationId;
 
       if (tipo === 'reels') {
-        creationId = await createReelsContainer(graph, igId, token, videoUrl, caption, comFacebook, thumbUrl);
+        creationId = await createReelsContainer(graph, igId, token, videoUrl, caption, comFacebook, thumbUrl, colab);
         const ready = await waitReelsReady(graph, creationId, token);
         if (!ready) throw new Error('Vídeo não terminou de processar a tempo — tenta de novo no próximo ciclo.');
 
@@ -858,6 +872,7 @@ async function runScheduledPublish(env) {
         }
         const p = new URLSearchParams({ media_type: 'CAROUSEL', children: childIds.join(','), caption, access_token: token });
         if (comFacebook) p.set('fb_page_id', FB_PAGE_ID);
+        if (colab.length) p.set('collaborators', JSON.stringify(colab));
         const r = await fetch(`${graph}/${igId}/media`, { method: 'POST', body: p });
         const d = await r.json();
         if (!d.id) throw new Error(`Erro carrossel: ${JSON.stringify(d)}`);
@@ -865,6 +880,7 @@ async function runScheduledPublish(env) {
       } else {
         const p = new URLSearchParams({ image_url: imageUrls[0], caption, access_token: token });
         if (comFacebook) p.set('fb_page_id', FB_PAGE_ID);
+        if (colab.length) p.set('collaborators', JSON.stringify(colab));
         const r = await fetch(`${graph}/${igId}/media`, { method: 'POST', body: p });
         const d = await r.json();
         if (!d.id) throw new Error(`Erro mídia: ${JSON.stringify(d)}`);
