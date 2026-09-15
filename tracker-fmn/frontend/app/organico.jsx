@@ -2423,7 +2423,7 @@ function CalendarioView({ items, onOpen, onNewWithDate, onReschedule, onEditSche
   }
 
   return (
-    <div style={{ flex:1, display:'flex', flexDirection:'column', overflow:'hidden', padding:'0 20px 16px' }}>
+    <div style={{ flex:1, display:'flex', flexDirection:'column', overflowY:'auto', minHeight:0, padding:'0 20px 16px' }}>
 
       {/* Navegação mês */}
       <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:16, padding:'12px 0 16px' }}>
@@ -2445,7 +2445,7 @@ function CalendarioView({ items, onOpen, onNewWithDate, onReschedule, onEditSche
         </button>
       </div>
 
-      {/* Grade — ocupa todo o espaço sem scroll */}
+      {/* Grade: o calendário rola quando alguma semana cresce */}
       <div style={{ flex:1, display:'flex', flexDirection:'column', minHeight:0 }}>
         {/* Cabeçalho dias da semana */}
         <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', gap:4, marginBottom:4 }}>
@@ -2463,8 +2463,10 @@ function CalendarioView({ items, onOpen, onNewWithDate, onReschedule, onEditSche
         </div>
 
         {/* Células — gridAutoRows:'1fr' preenche toda a altura disponível */}
+        {/* Semana cresce com o dia mais cheio (mínimo 150px) e o calendário inteiro
+            rola. Com altura fixa, as publicações a partir da 4ª ficavam escondidas. */}
         <div style={{ flex:1, display:'grid', gridTemplateColumns:'repeat(7,1fr)',
-          gridAutoRows:'1fr', gap:4 }}>
+          gridAutoRows:'minmax(150px, auto)', gap:4 }}>
           {cells.map((cel, idx) => {
             const { dia, fora } = cel;
             const colIdx = idx % 7; // 0=segunda...6=domingo
@@ -2500,9 +2502,7 @@ function CalendarioView({ items, onOpen, onNewWithDate, onReschedule, onEditSche
                   borderRadius:8, padding:'7px 8px',
                   background: isDragOver ? 'rgba(234,170,65,.1)' : bgColor,
                   cursor:'pointer', display:'flex', flexDirection:'column', gap:4,
-                  // Dia cheio rola por dentro: a linha do mês continua do mesmo tamanho
-                  // e nenhuma publicação fica escondida (antes cortava a partir da 4ª).
-                  minHeight:0, overflowY:'auto', overflowX:'hidden', scrollbarWidth:'thin',
+                  overflow:'hidden',
                   transition:'border-color 150ms, background 150ms, opacity 150ms',
                   opacity: isToday ? 1 : fora ? 0.34 : isWeekend ? 0.7 : 1 }}
                 onMouseOver={e => { if (fora) e.currentTarget.style.opacity = 0.75; }}
@@ -2589,7 +2589,7 @@ function CalendarioView({ items, onOpen, onNewWithDate, onReschedule, onEditSche
                     </div>
                   );
                 })}
-                {/* sem limite de itens: o dia rola quando passa do espaço */}
+                {/* sem limite de itens: a semana cresce até caber todos */}
                 {dayItems.length === 0 && !fora && (
                   <span style={{ fontSize:9, fontFamily:'Roboto,sans-serif',
                     color: isWeekend ? 'rgba(255,255,255,.06)' : 'rgba(255,255,255,.1)',
