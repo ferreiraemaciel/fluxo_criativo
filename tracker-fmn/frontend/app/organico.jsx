@@ -2500,7 +2500,10 @@ function CalendarioView({ items, onOpen, onNewWithDate, onReschedule, onEditSche
                   borderRadius:8, padding:'7px 8px',
                   background: isDragOver ? 'rgba(234,170,65,.1)' : bgColor,
                   cursor:'pointer', display:'flex', flexDirection:'column', gap:4,
-                  overflow:'hidden', transition:'border-color 150ms, background 150ms, opacity 150ms',
+                  // Dia cheio rola por dentro: a linha do mês continua do mesmo tamanho
+                  // e nenhuma publicação fica escondida (antes cortava a partir da 4ª).
+                  minHeight:0, overflowY:'auto', overflowX:'hidden', scrollbarWidth:'thin',
+                  transition:'border-color 150ms, background 150ms, opacity 150ms',
                   opacity: isToday ? 1 : fora ? 0.34 : isWeekend ? 0.7 : 1 }}
                 onMouseOver={e => { if (fora) e.currentTarget.style.opacity = 0.75; }}
                 onMouseOut={e => { if (fora && !isToday) e.currentTarget.style.opacity = 0.34; }}
@@ -2517,7 +2520,7 @@ function CalendarioView({ items, onOpen, onNewWithDate, onReschedule, onEditSche
                 </span>
 
                 {/* Chips dos conteúdos */}
-                {dayItems.slice(0,4).map(item => {
+                {dayItems.map(item => {
                   const isFeito = item.status === 'Arquivado';
                   const color = isFeito ? '#4ade80' : (PLAT_COLOR[item.plataforma] || '#94a3b8');
                   const num   = String(item.numero||0).padStart(3,'0');
@@ -2586,10 +2589,7 @@ function CalendarioView({ items, onOpen, onNewWithDate, onReschedule, onEditSche
                     </div>
                   );
                 })}
-                {dayItems.length > 4 && (
-                  <span style={{ fontSize:9.5, fontFamily:'Roboto,sans-serif', color:'var(--text-3)',
-                    paddingLeft:4 }}>+{dayItems.length-4} mais</span>
-                )}
+                {/* sem limite de itens: o dia rola quando passa do espaço */}
                 {dayItems.length === 0 && !fora && (
                   <span style={{ fontSize:9, fontFamily:'Roboto,sans-serif',
                     color: isWeekend ? 'rgba(255,255,255,.06)' : 'rgba(255,255,255,.1)',
