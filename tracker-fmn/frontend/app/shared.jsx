@@ -707,4 +707,11 @@ async function buscarTudo(montarQuery, passo = 1000) {
    A régua canônica do servidor é supabase/functions/_shared/classificar.ts. */
 const TICKET_PADRAO = 297;
 
-Object.assign(window, { TICKET_PADRAO, buscarTudo, LucideIcon, Btn, Badge, CardKPI, SectionCard, Divider, Sidebar, TopBar, fmtBRL, RefBlock, UTM_GLOBAL, PLATAFORMAS, PLAT_COLOR, PLAT_ICON, CarouselLightbox, novoJobId, BarraProgresso, melhorThumbAd });
+// Fechar janela clicando no fundo escuro: só vale quando o clique COMEÇOU no
+// fundo. Arrastar o cantinho de um campo de texto pra aumentar e soltar o
+// mouse fora da janela gera um "click" no fundo, e o card fechava sozinho.
+let alvoDoMouseDown = null;
+document.addEventListener('mousedown', e => { alvoDoMouseDown = e.target; }, true);
+const cliqueFoiNoFundo = e => e.target === e.currentTarget && alvoDoMouseDown === e.currentTarget;
+
+Object.assign(window, { TICKET_PADRAO, cliqueFoiNoFundo, buscarTudo, LucideIcon, Btn, Badge, CardKPI, SectionCard, Divider, Sidebar, TopBar, fmtBRL, RefBlock, UTM_GLOBAL, PLATAFORMAS, PLAT_COLOR, PLAT_ICON, CarouselLightbox, novoJobId, BarraProgresso, melhorThumbAd });

@@ -864,7 +864,7 @@ function MetaAdModal({ card, onClose }) {
   };
 
   return (
-    <div onClick={onClose} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,.7)', zIndex:700,
+    <div onClick={e => window.cliqueFoiNoFundo(e) && onClose()} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,.7)', zIndex:700,
       display:'flex', alignItems:'center', justifyContent:'center' }}>
       <div onClick={e=>e.stopPropagation()}
         style={{ background:'var(--app-surface)', border:'1px solid var(--app-border-2)',
@@ -1819,7 +1819,7 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
 
   return (
     <>
-      <div onClick={onClose} style={{
+      <div onClick={e => window.cliqueFoiNoFundo(e) && onClose()} style={{
         position:'fixed', inset:0, background:'rgba(0,0,0,.75)', zIndex:500,
         display:'flex', alignItems:'stretch', justifyContent:'stretch',
         padding:'20px',
@@ -2381,7 +2381,7 @@ function NovoAdsModal({ onClose, onCreated }) {
     colorScheme:'dark' };
 
   return (
-    <div onClick={onClose} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,.75)', zIndex:600,
+    <div onClick={e => window.cliqueFoiNoFundo(e) && onClose()} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,.75)', zIndex:600,
       display:'flex', alignItems:'center', justifyContent:'center' }}>
       <div onClick={e=>e.stopPropagation()}
         style={{ width:420, background:'var(--app-surface)', border:'1px solid var(--app-border-2)',
@@ -2517,7 +2517,7 @@ function AtivarMetaModal({ itens, onClose, onDone, onEdit }) {
   }
 
   return (
-    <div onClick={onClose} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,.75)', zIndex:700,
+    <div onClick={e => window.cliqueFoiNoFundo(e) && onClose()} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,.75)', zIndex:700,
       display:'flex', alignItems:'center', justifyContent:'center' }}>
       <div onClick={e => e.stopPropagation()} style={{ width:480, maxHeight:'80vh', display:'flex', flexDirection:'column',
         background:'var(--app-surface)', border:'1px solid var(--app-border-2)', borderRadius:16,

@@ -222,7 +222,7 @@ function IdeaModal({ idea, onClose, onSave }) {
     marginBottom:5, display:'block' };
 
   return (
-    <div onClick={onClose}
+    <div onClick={e => window.cliqueFoiNoFundo(e) && onClose()}
       style={{ position:'fixed', inset:0, background:'rgba(0,0,0,.72)', zIndex:400,
         display:'flex', alignItems:'center', justifyContent:'center' }}>
       <div onClick={e=>e.stopPropagation()}

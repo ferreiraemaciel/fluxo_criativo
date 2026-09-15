@@ -657,7 +657,7 @@ function PublicarArtigoModal({ form, onClose, onSuccess, initialDate }) {
   }
 
   const Caixa = ({ children }) => (
-    <div onClick={e => e.target === e.currentTarget && onClose()}
+    <div onClick={e => cliqueFoiNoFundo(e) && onClose()}
       style={{ position:'fixed', inset:0, background:'rgba(0,0,0,.75)', zIndex:900,
         display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
       <div style={{ width:'100%', maxWidth:420, background:'var(--app-surface)',
@@ -827,7 +827,7 @@ function PublicarYoutubeModal({ form, onClose, onSuccess, initialDate }) {
     textTransform:'uppercase', color:'var(--text-3)', display:'block', marginBottom:5 };
 
   return (
-    <div onClick={e => e.target === e.currentTarget && fase !== 'enviando' && onClose()}
+    <div onClick={e => cliqueFoiNoFundo(e) && fase !== 'enviando' && onClose()}
       style={{ position:'fixed', inset:0, background:'rgba(0,0,0,.75)', zIndex:900,
         display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
       <div style={{ width:'100%', maxWidth:440, background:'var(--app-surface)', border:'1px solid var(--app-border)',
@@ -1117,7 +1117,7 @@ function PublishModal({ form, slidesArr, slideFiles, onClose, onSuccess, initial
   return (
     <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,.75)', zIndex:800,
       display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}
-      onClick={e => e.target === e.currentTarget && phase !== 'uploading' && phase !== 'publishing' && onClose()}>
+      onClick={e => cliqueFoiNoFundo(e) && phase !== 'uploading' && phase !== 'publishing' && onClose()}>
 
       <div style={{ background:'#1a1b1f', border:'1px solid rgba(255,255,255,.12)',
         borderRadius:16, width:'100%', maxWidth:400, padding:'24px',
@@ -1584,7 +1584,7 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
       )}
 
       {/* overlay full-screen */}
-      <div onClick={e => e.target === e.currentTarget && onClose()}
+      <div onClick={e => cliqueFoiNoFundo(e) && onClose()}
         style={{ position:'fixed', inset:0, background:'rgba(0,0,0,.75)', zIndex:700,
           display:'flex', alignItems:'stretch', justifyContent:'stretch', padding:20 }}>
 
@@ -2206,7 +2206,7 @@ function ProgramarModal({ dateStr, items, onEscolher, onCriarNovo, onClose }) {
 
 
   return (
-    <div onClick={e => e.target === e.currentTarget && onClose()}
+    <div onClick={e => cliqueFoiNoFundo(e) && onClose()}
       style={{ position:'fixed', inset:0, background:'rgba(0,0,0,.7)', zIndex:900,
         display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
       <div onClick={e => e.stopPropagation()}
