@@ -186,6 +186,7 @@ function ContentCard({ item, col, onOpen, onDragStart, onEtapaToggle }) {
   const color    = PLAT_COLOR[item.plataforma] || '#94a3b8';
   const platIcon = PLAT_ICON[item.plataforma] || 'file';
   const num      = String(item.numero || 0).padStart(3, '0');
+  const importacao = useImportacao(item.id);
 
   // Vídeo (Reels): usa a thumb JPG gerada junto (media_files), nunca o .mp4
   // direto num <img> — <img> não sabe renderizar vídeo. Isolado em try/catch
@@ -272,6 +273,21 @@ function ContentCard({ item, col, onOpen, onDragStart, onEtapaToggle }) {
           background:`${color}18`, color, border:`1px solid ${color}33` }}>
           <LucideIcon icon={platIcon} size={9}/>{item.plataforma}
         </span>
+        {importacao?.estado === 'rodando' && (
+          <span title={importacao.etapa || 'Importando mídia do Drive'}
+            style={{ display:'inline-flex', alignItems:'center', gap:4, padding:'2px 7px', borderRadius:5,
+              fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700,
+              background:'rgba(234,170,65,.12)', color:'var(--fmn-gold)', border:'1px solid rgba(234,170,65,.3)' }}>
+            <LucideIcon icon="loader" size={9}/>Importando {Math.round(importacao.pct || 0)}%
+          </span>
+        )}
+        {importacao?.estado === 'erro' && (
+          <span title={importacao.msg}
+            style={{ padding:'2px 7px', borderRadius:5, fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700,
+              background:'rgba(248,113,113,.1)', color:'#f87171', border:'1px solid rgba(248,113,113,.3)' }}>
+            Falha na importação
+          </span>
+        )}
         {/* Pico de vendas: separa o que e de campanha do que e perpetuo.
             Card sem essa marca continua sendo perpetuo, como sempre foi. */}
         {item.pico_projeto_id && (
@@ -433,66 +449,104 @@ function CopyAllPromptsBtn({ slidesArr }) {
    as imagens (1350px / 1920px stories, JPEG 82%) e sobe pro R2.
    Roda no Mac via serve.py; fora do Mac mostra aviso.
 ─────────────────────────────────────────────────────────────────*/
-function AdicionarCriativoOrganicoBtn({ numero, cardId, onDone }) {
-  const [step, setStep] = useState('idle'); // idle | running | warn
-  const [msg, setMsg]   = useState('');
-  const [pct, setPct]   = useState(0);
+/* Importação acompanhada fora do card. Antes o acompanhamento morava dentro do
+   botão: fechar o card desmontava o botão e a barra sumia, mesmo com a cozinha
+   ainda trabalhando na nuvem. Ao reabrir, parecia que nada tinha acontecido, e
+   o quadro só mostrava a mídia depois de recarregar a página. Agora a importação
+   segue sozinha, o card do quadro mostra o andamento e a lista se atualiza no fim. */
+const importacoes = new Map();          // cardId -> { estado: 'rodando'|'erro', pct, etapa, msg }
+const ouvintesImportacao = new Set();
+const avisarImportacao = () => ouvintesImportacao.forEach(f => f());
 
-  // Importa da nuvem (cozinha via worker) — funciona de qualquer lugar, sem Mac.
-  // A cozinha reporta o progresso real; o card é a rede de segurança.
-  async function run(pasta) {
-    const jobId = novoJobId();
-    setStep('running'); setPct(0); setMsg('Preparando');
-    const sleep = ms => new Promise(r => setTimeout(r, ms));
-    const falhar = m => { setStep('warn'); setMsg(m); setPct(0); setTimeout(() => { setStep('idle'); setMsg(''); }, 6000); };
-    const concluir = () => { setStep('idle'); setMsg(''); setPct(0); onDone && onDone(); };
+function useImportacao(cardId) {
+  const [, forcar] = useState(0);
+  useEffect(() => {
+    const f = () => forcar(x => x + 1);
+    ouvintesImportacao.add(f);
+    return () => { ouvintesImportacao.delete(f); };
+  }, []);
+  return cardId ? importacoes.get(cardId) || null : null;
+}
 
-    const endpoint = pasta ? '/import-link' : '/import-direto';
-    const bodyObj  = pasta ? { card_id: cardId, drive_url: pasta, job_id: jobId } : { card_id: cardId, job_id: jobId };
+async function iniciarImportacao(cardId, pasta) {
+  if (importacoes.get(cardId)?.estado === 'rodando') return;
+  const jobId = novoJobId();
+  const atualizar = campos => { importacoes.set(cardId, { ...(importacoes.get(cardId) || {}), ...campos }); avisarImportacao(); };
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  const falhar = m => {
+    atualizar({ estado: 'erro', msg: m, pct: 0 });
+    setTimeout(() => { if (importacoes.get(cardId)?.estado === 'erro') { importacoes.delete(cardId); avisarImportacao(); } }, 8000);
+  };
+  const concluir = () => {
+    importacoes.delete(cardId); avisarImportacao();
+    window.dispatchEvent(new CustomEvent('organico:importado', { detail: { cardId } }));
+  };
+  atualizar({ estado: 'rodando', pct: 0, etapa: 'Preparando', msg: '' });
 
-    let slidesAntes = null;
+  const endpoint = pasta ? '/import-link' : '/import-direto';
+  const bodyObj  = pasta ? { card_id: cardId, drive_url: pasta, job_id: jobId } : { card_id: cardId, job_id: jobId };
+
+  let slidesAntes = null;
+  try {
+    const res = await window.db.from('conteudo_organico').select('slides').eq('id', cardId).single();
+    slidesAntes = JSON.stringify(res.data?.slides ?? null);
+  } catch {}
+
+  let erroRapido = null;
+  fetch(`${WORKER_URL}${endpoint}`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(bodyObj) })
+    .then(async r => { const d = await r.json().catch(() => ({})); if (!r.ok || d.error) erroRapido = d.error || `Erro ${r.status}`; })
+    .catch(() => {});
+
+  for (let i = 0; i < 300; i++) {            // 300 x 2s = 10 min
+    await sleep(2000);
+    if (erroRapido) return falhar(erroRapido);
     try {
-      const res = await window.db.from('conteudo_organico').select('slides').eq('id', cardId).single();
-      slidesAntes = JSON.stringify(res.data?.slides ?? null);
+      const pr = await (await fetch(`${WORKER_URL}/progresso?job=${jobId}`)).json();
+      if (pr.erro) return falhar(pr.erro);
+      const campos = {};
+      if (typeof pr.pct === 'number') campos.pct = pr.pct;
+      if (pr.etapa) campos.etapa = pr.etapa;
+      if (Object.keys(campos).length) atualizar(campos);
+      if (pr.done) return concluir();
     } catch {}
-
-    let erroRapido = null;
-    fetch(`${WORKER_URL}${endpoint}`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(bodyObj) })
-      .then(async r => { const d = await r.json().catch(() => ({})); if (!r.ok || d.error) erroRapido = d.error || `Erro ${r.status}`; })
-      .catch(() => {});
-
-    for (let i = 0; i < 300; i++) {            // 300 x 2s = 10 min
-      await sleep(2000);
-      if (erroRapido) return falhar(erroRapido);
+    if (i % 3 === 0) {
       try {
-        const p = await (await fetch(`${WORKER_URL}/progresso?job=${jobId}`)).json();
-        if (p.erro) return falhar(p.erro);
-        if (typeof p.pct === 'number') setPct(p.pct);
-        if (p.etapa) setMsg(p.etapa);
-        if (p.done) return concluir();
+        const res = await window.db.from('conteudo_organico').select('slides').eq('id', cardId).single();
+        if (res.data && JSON.stringify(res.data.slides ?? null) !== slidesAntes) return concluir();
       } catch {}
-      if (i % 3 === 0) {
-        try {
-          const res = await window.db.from('conteudo_organico').select('slides').eq('id', cardId).single();
-          if (res.data && JSON.stringify(res.data.slides ?? null) !== slidesAntes) return concluir();
-        } catch {}
-      }
     }
-    falhar('Demorou demais. Recarregue a página em instantes.');
   }
+  falhar('Demorou demais. Recarregue a página em instantes.');
+}
 
-  if (step === 'running') {
-    return <BarraProgresso pct={pct} etapa={msg}/>;
+function AdicionarCriativoOrganicoBtn({ numero, cardId, onDone }) {
+  const imp = useImportacao(cardId);
+  // Card aberto quando a importação termina: atualiza a prévia na hora.
+  useEffect(() => {
+    const f = e => { if (e.detail?.cardId === cardId) onDone && onDone(); };
+    window.addEventListener('organico:importado', f);
+    return () => window.removeEventListener('organico:importado', f);
+  }, [cardId, onDone]);
+
+  if (imp?.estado === 'rodando') {
+    return (
+      <div style={{ display:'flex', flexDirection:'column', gap:5 }}>
+        <BarraProgresso pct={imp.pct || 0} etapa={imp.etapa || ''}/>
+        <span style={{ fontSize:10.5, fontFamily:'Roboto,sans-serif', color:'var(--text-3)' }}>
+          Pode fechar o card, a importação continua e o quadro atualiza sozinho.
+        </span>
+      </div>
+    );
   }
   return (
     <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
-      {step === 'warn' && (
+      {imp?.estado === 'erro' && (
         <div style={{ padding:'6px 10px', borderRadius:8, background:'rgba(248,113,113,.08)',
-          border:'1px solid rgba(248,113,113,.3)', fontSize:11, color:'#f87171', lineHeight:1.4 }}>{msg}</div>
+          border:'1px solid rgba(248,113,113,.3)', fontSize:11, color:'#f87171', lineHeight:1.4 }}>{imp.msg}</div>
       )}
       <Btn variant="secondary" size="sm" icon="image-plus" style={{ width:'100%', justifyContent:'center' }}
-        onClick={() => run(null)} title="Puxa a mídia da pasta ORG deste card no Drive">Importar</Btn>
+        onClick={() => iniciarImportacao(cardId, null)} title="Puxa a mídia da pasta ORG deste card no Drive">Importar</Btn>
     </div>
   );
 }
@@ -2857,6 +2911,11 @@ function OrganicoScreen({ targetCard, onConsumeTarget }) {
     }
   }, []);
   useEffect(() => { loadItems(); }, [loadItems]);
+  useEffect(() => {
+    const f = () => loadItems();
+    window.addEventListener('organico:importado', f);
+    return () => window.removeEventListener('organico:importado', f);
+  }, [loadItems]);
 
   // Importar arquivos (geral) — puxa o Drive de todos os cards (via cozinha/worker).
   const [importMsg, setImportMsg] = useState('');
