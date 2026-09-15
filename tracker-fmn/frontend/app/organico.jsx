@@ -1941,18 +1941,60 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
                     </div>
                   )}
 
-                  {/* Data prevista */}
-                  <div style={{ display:'flex', flexDirection:'column', gap:7 }}>
-                    <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)' }}>Data prevista</span>
-                    <input type="date" value={form.data_prevista||''}
-                      onChange={e=>set('data_prevista',e.target.value)}
-                      style={{ padding:'8px 12px', borderRadius:8, width:'fit-content',
-                        background:'rgba(255,255,255,.04)', border:'1px solid rgba(255,255,255,.1)',
-                        color:'var(--text-1)', fontFamily:'Roboto,sans-serif', fontSize:12.5,
-                        colorScheme:'dark', outline:'none' }}
-                      onFocus={e=>e.target.style.borderColor='rgba(234,170,65,.4)'}
-                      onBlur={e=>e.target.style.borderColor='rgba(255,255,255,.1)'}/>
-                  </div>
+                  {/* Postagem programada: é a data do calendário. Com o card agendado,
+                      trocar a data ou o horário aqui troca o horário real da publicação. */}
+                  {(() => {
+                    const agendado = !!form.scheduled_at;
+                    const brt = agendado ? new Date(new Date(form.scheduled_at).getTime() - 3 * 3600e3).toISOString() : '';
+                    const hora = agendado ? brt.slice(11, 16) : '';
+                    const dia = form.data_prevista || (agendado ? brt.slice(0, 10) : '');
+                    const campo = { padding:'8px 12px', borderRadius:8, width:'fit-content',
+                      background:'rgba(255,255,255,.04)', border:'1px solid rgba(255,255,255,.1)',
+                      color:'var(--text-1)', fontFamily:'Roboto,sans-serif', fontSize:12.5,
+                      colorScheme:'dark', outline:'none' };
+                    const reagendar = (novoDia, novaHora) => {
+                      set('data_prevista', novoDia);
+                      if (agendado && novoDia && novaHora) set('scheduled_at', new Date(`${novoDia}T${novaHora}:00-03:00`).toISOString());
+                    };
+                    const retirar = async () => {
+                      if (agendado && !window.confirm('Retirar a data tira o card de Agendado e ele volta para Feito, sem publicar. Confirma?')) return;
+                      setForm(f => ({ ...f, data_prevista: '', scheduled_at: null, scheduled_media: null,
+                        status: f.status === 'Agendado' ? 'Feito' : f.status }));
+                      if (form.id && window.db) {
+                        await window.db.from('conteudo_organico').update({
+                          data_prevista: null, scheduled_at: null, scheduled_media: null,
+                          erro_publicacao: null, erro_publicacao_em: null,
+                          ...(form.status === 'Agendado' ? { status: 'Feito' } : {}),
+                        }).eq('id', form.id);
+                        onImported && onImported();
+                      }
+                    };
+                    return (
+                      <div style={{ display:'flex', flexDirection:'column', gap:7 }}>
+                        <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)' }}>Postagem programada</span>
+                        <div style={{ display:'flex', gap:8, alignItems:'center', flexWrap:'wrap' }}>
+                          <input type="date" value={dia} onChange={e => reagendar(e.target.value, hora)} style={campo}/>
+                          <input type="time" value={hora} disabled={!agendado}
+                            title={agendado ? 'Horário da publicação (Brasília)' : 'O horário é definido ao agendar, em Publicar'}
+                            onChange={e => reagendar(dia, e.target.value)}
+                            style={{ ...campo, opacity: agendado ? 1 : .45, cursor: agendado ? 'text' : 'not-allowed' }}/>
+                          {(dia || agendado) && (
+                            <button onClick={retirar} title="Retirar data"
+                              style={{ display:'flex', alignItems:'center', gap:5, padding:'7px 10px', borderRadius:8, cursor:'pointer',
+                                background:'transparent', border:'1px solid rgba(248,113,113,.3)', color:'#f87171',
+                                fontFamily:'Roboto,sans-serif', fontWeight:700, fontSize:11.5 }}>
+                              <LucideIcon icon="x" size={12}/>Retirar data
+                            </button>
+                          )}
+                        </div>
+                        {agendado && (
+                          <span style={{ fontSize:11, fontFamily:'Roboto,sans-serif', color:'var(--text-3)' }}>
+                            Agendado. Trocar a data ou o horário muda a publicação e o calendário.
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })()}
                 </div>
               </div>
 
@@ -2719,6 +2761,9 @@ function OrganicoScreen({ targetCard, onConsumeTarget }) {
 
     const patch = { status: colId };
     if (colId !== 'Fazendo') patch.etapa = null;
+    // Saiu de Agendado pelo kanban: a publicação deixa de existir, então a data
+    // e o horário saem junto, senão o calendário mostraria um post que não vai sair.
+    if (item.status === 'Agendado') Object.assign(patch, { data_prevista: null, scheduled_at: null, scheduled_media: null, erro_publicacao: null, erro_publicacao_em: null });
 
     setItems(prev => prev.map(i => i.id === dragId ? { ...i, ...patch } : i));
     setDragId(null);
@@ -2875,6 +2920,9 @@ function OrganicoScreen({ targetCard, onConsumeTarget }) {
       data_prevista:form.data_prevista||null,
       referencia:form.referencia||null,
       published_at:form.published_at||null,
+      // Horário editado no campo Postagem programada. Só vai quando existe: quem
+      // limpa o horário é o botão Retirar data, que grava direto no banco.
+      ...(form.scheduled_at ? { scheduled_at: form.scheduled_at } : {}),
     };
     if (form.id) {
       if (dbAvailable) await window.db.from('conteudo_organico').update(row).eq('id',form.id);
