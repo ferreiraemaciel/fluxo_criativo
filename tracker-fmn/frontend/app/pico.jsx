@@ -112,7 +112,7 @@ async function criarCardDaTarefa(tarefa, projeto) {
     return { tipo:'Anúncios', rotulo:`ADS ${String(n).padStart(3,'0')}`, hash:'#criativos',
              cardTipo:'ads', cardId:novo.id, alvo:n };
   }
-  if (tarefa.trilha === 'conteudo') {
+  if (tarefa.trilha === 'conteudo' && tarefa.gera_card) {
     const { data: novo, error } = await window.db.from('conteudo_organico').insert({
       tema: tarefa.titulo,
       plataforma: 'Reels',
@@ -124,7 +124,7 @@ async function criarCardDaTarefa(tarefa, projeto) {
     return { tipo:'Orgânico', rotulo:tarefa.titulo, hash:'#organico',
              cardTipo:'organico', cardId:novo.id, alvo:novo.id };
   }
-  throw new Error('Só tarefas de Tráfego e Conteúdo viram card.');
+  throw new Error('Só postagem vira card. Arte, capa e modelo ficam como tarefa com check.');
 }
 
 
@@ -231,7 +231,10 @@ function LinhaTarefa({ t, onToggle, onAbrir, mostrarTrilha, onVirarCard, onDefin
         return v != null && v !== '' && !(Array.isArray(v) && v.length === 0);
       }).length
     : 0;
-  const podeVirarCard = onVirarCard && (t.trilha === 'trafego' || t.trilha === 'conteudo')
+  /* Card é publicação. Arte em si (marca, capa, modelo, foto de produto) fica
+     como tarefa com check e nunca vira card: só a tarefa marcada como postagem. */
+  const podeVirarCard = onVirarCard
+    && (t.trilha === 'trafego' || (t.trilha === 'conteudo' && t.gera_card))
     && !t.entregavel_url;
   const feito   = t.status === 'feito';
   const pulada  = t.status === 'pulada';

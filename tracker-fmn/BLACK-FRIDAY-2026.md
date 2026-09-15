@@ -3140,28 +3140,32 @@ Os PNGs também estão em `meus-produtos/blindagem/entregas/criativos/black-2026
 
 O domínio principal continua sem nada até a publicação ser aprovada.
 
-## 25.3 Cada arte virou card no Orgânico, com a marca PICO
+## 25.3 Arte é tarefa com check, card é só postagem (corrigido em 15/09/2026)
 
-Toda tarefa de arte agora tem um card correspondente no Orgânico, com a tarefa carregando o link de ida. Na aba Pico de Vendas, o botão verde **ORG** ao lado da tarefa abre o card direto, sem procurar na mão.
+Card no Orgânico é publicação: carrossel, Reels, imagem, artigo, YouTube. Arte em si, como marca, selo, capa, modelo ou foto de produto, fica como tarefa com check na aba Pico de Vendas, com os links nas referências da própria tarefa.
 
-| Tarefa de arte | Card |
+Em 11/09 eu tinha criado um card para cada tarefa de arte. Estava errado. Os onze cards **ARTE ·** foram apagados em 15/09, as tarefas continuam lá com check, e os três que tinham pasta no Drive (180, 181 e 182) mandaram a pasta para a lixeira.
+
+**Os números que ficaram livres:** ORG 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190 e 191. O Tracker dá sempre o menor número livre para o card novo, então as próximas doze postagens criadas ocupam esse buraco sozinhas, na ordem.
+
+| Número livre | Era o card de arte |
 |---|---|
-| Marca da campanha | ORG 180 |
-| Arte do que entra na Black | ORG 181 |
-| Fotografar os álbuns | ORG 182 |
-| Imagem de compartilhamento e destaque | ORG 183 |
-| Capa do trailer e capa do grupo | ORG 184 |
-| Banner das comunidades | ORG 185 |
-| Os 3 estáticos nativos de captação | ORG 186 |
-| Jogo de contagem, 7 peças | ORG 187 |
-| Cards de revelação dos bônus | ORG 188 |
-| Capa da live | ORG 189 |
-| Modelo de card de depoimento | ORG 190 |
-| Cards do carrinho aberto | ORG 191 |
-| Carrossel do manifesto | ORG 156, que já existia no calendário |
-| Carrossel da ancoragem e do empilhamento | ORG 163, que já existia no calendário |
+| ORG 180 | Marca da campanha, selo e paleta |
+| ORG 181 | Arte do que entra na Black |
+| ORG 182 | Fotografar os álbuns |
+| ORG 183 | Imagem de compartilhamento e destaque de perfil |
+| ORG 184 | Capa do trailer e capa do grupo |
+| ORG 185 | Banner das comunidades e da área de membros |
+| ORG 186 | Os 3 estáticos nativos, que já tinham ido para ADS 371 a 373 |
+| ORG 187 | Jogo de contagem, 7 peças |
+| ORG 188 | Cards de revelação dos bônus, 5 peças |
+| ORG 189 | Capa da live de abertura |
+| ORG 190 | Modelo de card de depoimento |
+| ORG 191 | Cards do carrinho aberto, 6 peças |
 
-Os cards de arte começam com **ARTE ·** no título, então dá para separar do que é publicação. Cada um diz nas observações quais peças do calendário ele alimenta.
+As duas tarefas que são postagem de verdade seguem ligadas ao card delas: o carrossel do manifesto (ORG 156) e o carrossel da ancoragem e do empilhamento (ORG 163).
+
+**O que mudou no Tracker:** a tarefa ganhou a marca de postagem. Só tarefa de tráfego e tarefa de conteúdo marcada como postagem mostram o botão de criar card. Hoje estão marcadas as oito que são publicação pelo título: carrossel do manifesto, carrossel da ancoragem, post de véspera, Reels do grande dia, conteúdo de comparação, conteúdo de evolução do aluno, conteúdo explicando o produto e conteúdo avisando o último dia. Projeto novo herda a marca do modelo.
 
 ## 25.3b Os 8 criativos de captação, agora nos Anúncios
 
