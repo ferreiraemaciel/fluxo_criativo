@@ -24,12 +24,19 @@ def main():
     if a.source:
         for f in ET.parse(a.source).getroot().iter('file'):
             if f.findtext('duration') and f.findtext('name'):
-                filedur[f.get('id')] = int(f.findtext('duration'))
+                # duracao do arquivo em segundos (o arquivo pode ter fps diferente da sequencia)
+                r = f.find('rate')
+                tb = int(r.findtext('timebase')) if r is not None else 30
+                nt = r is not None and (r.findtext('ntsc') or '').upper() == 'TRUE'
+                fps = tb * 1000.0 / 1001.0 if nt else float(tb)
+                filedur[f.get('id')] = int(f.findtext('duration')) / fps
 
     seq = ET.parse(a.xml).getroot().find('sequence')   # levanta erro se malformado
     media = seq.find('media')
     prob = []
     TOTAL = int(seq.findtext('duration'))
+    sr = seq.find('rate')
+    SEQ_FPS = int(sr.findtext('timebase')) * (1000.0 / 1001.0 if (sr.findtext('ntsc') or '').upper() == 'TRUE' else 1.0)
 
     def check(clips, label):
         pos = None
@@ -46,8 +53,8 @@ def main():
             pos = en
             if ii < 0:
                 prob.append('%s clipe %d: in negativo' % (label, i))
-            if fid in filedur and oo > filedur[fid]:
-                prob.append('%s clipe %d: out %d > dur arquivo %d' % (label, i, oo, filedur[fid]))
+            if fid in filedur and oo / SEQ_FPS > filedur[fid] + 0.05:
+                prob.append('%s clipe %d: out %.2fs > dur arquivo %.2fs' % (label, i, oo / SEQ_FPS, filedur[fid]))
         return pos
 
     vt = [tr for tr in media.find('video').findall('track') if tr.findall('clipitem')]
