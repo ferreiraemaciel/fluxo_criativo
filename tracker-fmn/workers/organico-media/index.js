@@ -82,6 +82,10 @@ function normalizarColaboradores(v) {
   return [...new Set(lista.map(u => String(u).trim().replace(/^@/, '').toLowerCase()).filter(Boolean))].slice(0, 3);
 }
 
+// Quantos ciclos do cron (15 min cada) um Reels agendado pode esperar o
+// Instagram processar o vídeo antes de desistir. 8 ciclos = 2 horas.
+const MAX_CICLOS_REELS = 8;
+
 // Limite de legenda do Instagram (erro 36004, "The caption was too long").
 const LIMITE_LEGENDA = 2200;
 
@@ -519,7 +523,7 @@ async function handlePublish(request, env) {
   if (tipo === 'reels') {
     /* ── Reels ── */
     const containerId = await createReelsContainer(graph, igId, token, videoUrl, caption, comFacebook, thumbUrl, colab);
-    const ready = await waitReelsReady(graph, containerId, token);
+    const ready = await waitReelsReady(graph, containerId, token, 60, 3000);
     if (!ready) return json({ error: 'Vídeo ainda processando no Instagram — tente publicar de novo em instantes.' }, 202);
 
     let postId = null;
@@ -824,9 +828,27 @@ async function runScheduledPublish(env) {
       let creationId;
 
       if (tipo === 'reels') {
-        creationId = await createReelsContainer(graph, igId, token, videoUrl, caption, comFacebook, thumbUrl, colab);
-        const ready = await waitReelsReady(graph, creationId, token);
-        if (!ready) throw new Error('Vídeo não terminou de processar a tempo — tenta de novo no próximo ciclo.');
+        // O Instagram pode levar vários minutos pra processar um vídeo. Antes a
+        // espera era de 1 minuto e, passado isso, o card voltava pra Feito com
+        // "tenta de novo no próximo ciclo", sem tentar nada (ORG 210 em 16/09 e
+        // ORG 240 em 17/09/2026). Agora o container criado fica guardado no card
+        // e os ciclos seguintes esperam o MESMO container, sem criar outro, por
+        // até MAX_CICLOS_REELS ciclos de 15 min antes de desistir.
+        creationId = m.creationId || await createReelsContainer(graph, igId, token, videoUrl, caption, comFacebook, thumbUrl, colab);
+        const ready = await waitReelsReady(graph, creationId, token, 60, 3000);
+        if (!ready) {
+          const ciclos = (Number(m.ciclosProcessando) || 0) + 1;
+          if (ciclos >= MAX_CICLOS_REELS) {
+            throw new Error(`O Instagram não terminou de processar o vídeo depois de ${ciclos} tentativas (cerca de ${ciclos * 15} minutos). Publique de novo pelo card.`);
+          }
+          await fetch(`${sbUrl}/rest/v1/conteudo_organico?id=eq.${post.id}`, {
+            method: 'PATCH',
+            headers: { 'apikey': sbKey, 'Authorization': `Bearer ${sbKey}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+            body: JSON.stringify({ scheduled_media: { ...m, creationId, ciclosProcessando: ciclos } }),
+          });
+          console.log(`[cron] Reels ${post.id} ainda processando no Instagram (ciclo ${ciclos}), segue agendado.`);
+          continue;
+        }
 
         const metaMediaId = await publicarContainer(graph, igId, token, creationId, 'o Reels');
 
