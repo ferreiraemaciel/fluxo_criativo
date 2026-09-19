@@ -64,7 +64,8 @@ AVISO = (
 
 
 def esc(t) -> str:
-    return html.escape(str(t or "")).replace("\n", "<br>")
+    # "R$ 397" não pode quebrar entre o símbolo e o valor
+    return html.escape(str(t or "")).replace("R$ ", "R$\u00a0").replace("\n", "<br>")
 
 
 def img_b64(nome: str) -> str:
@@ -161,18 +162,18 @@ body {{ font-family:"Montserrat",sans-serif; color:var(--charcoal); font-size:11
                     text-transform:uppercase; padding:1.2mm 3mm; border-radius:1mm; }}
 .aviso-cab .sub {{ font-weight:700; font-size:8pt; letter-spacing:.12em; text-transform:uppercase; color:var(--gold); }}
 .aviso p {{ margin:0; font-size:7.6pt; line-height:1.5; color:rgba(255,255,255,.88); font-weight:400; }}
-.capa {{ background:var(--navy); color:#fff; padding:13mm 18mm 13mm; position:relative; }}
+.capa {{ background:var(--navy); color:#fff; padding:10mm 18mm 10mm; position:relative; }}
 .capa::after {{ content:""; position:absolute; left:0; right:0; bottom:0; height:2.2mm; background:var(--gold); }}
-.capa img {{ height:22mm; display:block; margin-bottom:8mm; }}
+.capa img {{ height:19mm; display:block; margin-bottom:6mm; }}
 .overline {{ font-weight:700; font-size:8.5pt; letter-spacing:.18em; text-transform:uppercase; color:var(--gold); margin:0 0 3mm; }}
-.capa h1 {{ font-weight:900; font-size:24pt; line-height:1.08; letter-spacing:-.02em; margin:0 0 8mm; color:#fff; }}
-.meta {{ display:flex; gap:10mm; flex-wrap:wrap; border-top:1px solid rgba(255,255,255,.18); padding-top:5mm; }}
+.capa h1 {{ font-weight:900; font-size:24pt; line-height:1.08; letter-spacing:-.02em; margin:0 0 6mm; color:#fff; }}
+.meta {{ display:flex; gap:4mm 8mm; flex-wrap:wrap; border-top:1px solid rgba(255,255,255,.18); padding-top:4mm; }}
 .meta-item span {{ display:block; font-size:7.5pt; letter-spacing:.14em; text-transform:uppercase; color:var(--gold); font-weight:700; }}
-.meta-item strong {{ font-weight:500; font-size:10pt; color:#fff; }}
+.meta-item strong {{ font-weight:500; font-size:9.5pt; color:#fff; }}
 table.fluxo {{ width:100%; border-collapse:collapse; }}
 table.fluxo td {{ padding:0; }}
 .esp-topo {{ height:11mm; }}
-.esp-base {{ height:22mm; }}
+.esp-base {{ height:20mm; }}
 main {{ padding:0 18mm; }}
 section {{ margin-bottom:9mm; }}
 h2 {{ font-weight:700; font-size:14pt; color:var(--black); margin:0 0 4mm; letter-spacing:-.01em; display:flex; align-items:center; gap:3mm; break-after:avoid; }}
@@ -180,8 +181,8 @@ h2 {{ font-weight:700; font-size:14pt; color:var(--black); margin:0 0 4mm; lette
 h3 {{ font-weight:700; font-size:10.5pt; color:var(--black); margin:0 0 1mm; }}
 p {{ margin:0 0 3mm; }}
 .num {{ font-weight:900; font-size:12pt; color:var(--gold-deep); min-width:9mm; line-height:1.3; }}
-.pauta {{ list-style:none; margin:0; padding:0; display:grid; grid-template-columns:1fr 1fr; column-gap:8mm; }}
-.pauta li {{ display:flex; gap:3mm; align-items:baseline; padding:2mm 0; border-bottom:1px solid rgba(26,26,26,.10); font-size:10pt; font-weight:500; color:var(--black); break-inside:avoid; }}
+.pauta {{ list-style:none; margin:0; padding:0; display:grid; grid-template-columns:1fr 1fr; column-gap:8mm; break-inside:avoid; }}
+.pauta li {{ display:flex; gap:3mm; align-items:baseline; padding:1.6mm 0; border-bottom:1px solid rgba(26,26,26,.10); font-size:10pt; font-weight:500; color:var(--black); break-inside:avoid; }}
 .detalhe {{ padding:4mm 0; border-bottom:1px solid rgba(26,26,26,.10); break-inside:avoid; }}
 .detalhe:last-child {{ border-bottom:0; }}
 .detalhe-cab {{ display:flex; gap:3mm; align-items:baseline; margin-bottom:1.5mm; }}

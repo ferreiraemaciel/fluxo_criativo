@@ -37,7 +37,7 @@ O PDF **não cria** dever de sigilo contratual. Ele registra o caráter confiden
 
 ## 2. Descobrir quem é o destinatário
 
-Pergunte, uma pergunta só: para quem vai o PDF. O nome entra no campo `destinatario` da capa e define o tom e o recorte. **Não precisa de e-mail.** O Felipe envia pelo WhatsApp, ou pede para você enviar pelo Khronus (seção 7).
+Pergunte, uma pergunta só: para quem vai o PDF. O nome entra no campo `destinatario` da capa e define o tom e o recorte. **Não precisa de e-mail.** O Felipe envia pelo WhatsApp, ou pede para você enviar pelo Khronus (seção 8).
 
 ## 3. Escolher o que entra
 
@@ -124,7 +124,29 @@ Depois de gerar, **olhe o PDF inteiro** (Read com `pages`, de 2 em 2). Confira o
 
 Mostre ao Felipe o caminho absoluto do PDF, em texto.
 
-## 7. Envio
+## 7. Salvar no Drive, sempre
+
+**Todo PDF de reunião gera uma cópia na pasta "Reuniões" do Drive do Felipe. Sem perguntar.** Decisão dele em 19/09/2026.
+
+- **Pasta:** `Meu Drive/Fotografia é o Meu Negócio/Administrativo/Reuniões` (ID `1Y-YqsdTejpiHM5DgK2zKVyr13G1Wl8I7`, link `https://drive.google.com/drive/folders/1Y-YqsdTejpiHM5DgK2zKVyr13G1Wl8I7`)
+- **Título do arquivo**, fácil de ler e de ordenar: `AAAA-MM-DD Reunião {Nome da pessoa} - {Assunto em até 6 palavras}.pdf`
+  - Exemplos: `2026-09-18 Reunião Lucas Lermen - Khronus e parceria de afiliados.pdf` e `2026-09-18 Reunião Ana Âmago Fotografia - Apresentação do Khronus.pdf`
+  - A data é a da reunião, e não a de hoje. Sem travessão, só hífen com espaços.
+  - Reunião com mais de uma pessoa: o nome de quem recebe o PDF, ou o nome do grupo.
+- **Como copiar:** o Drive está sincronizado no Mac, então é uma cópia de arquivo. O envio pela ferramenta do Drive exigiria embutir o PDF no comando, grande demais.
+
+```bash
+cp ~/Documents/reunioes/AAAA-MM-DD-tema/resumo-pauta.pdf \
+  "$HOME/Library/CloudStorage/GoogleDrive-ferreiraemacielfoto@gmail.com/Meu Drive/Fotografia é o Meu Negócio/Administrativo/Reuniões/AAAA-MM-DD Reunião Nome - Assunto.pdf"
+```
+
+- **Conferir na nuvem:** espere uns 20 segundos e confirme com `search_files` usando `parentId = '1Y-YqsdTejpiHM5DgK2zKVyr13G1Wl8I7'`, checando o título e o tamanho. Só diga que está salvo depois disso.
+- **Se a pasta local não existir** (Drive fora do ar ou sem sincronizar), diga ao Felipe, deixe o PDF em `~/Documents/reunioes/` e não tente contornar.
+- **Nunca sobrescreva** um arquivo de mesmo nome sem avisar. Se já existir, pergunte.
+
+**Aviso de acesso.** Em 19/09/2026 a pasta estava com "qualquer pessoa com o link pode ver". Como o PDF é confidencial, confira uma vez por conversa com `get_file_permissions`. Se ainda estiver assim, avise o Felipe em uma frase e sugira restringir às pessoas que precisam. Não altere o compartilhamento por conta própria.
+
+## 8. Envio
 
 **A skill não envia e-mail.** O Felipe manda o PDF pelo WhatsApp, por conta própria, ou pede para você mandar pelo Khronus. Só faça o envio pelo Khronus **quando ele pedir**, na conversa, naquele momento. Ter gerado o PDF não é pedido de envio.
 

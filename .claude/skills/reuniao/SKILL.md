@@ -111,5 +111,6 @@ Se o Felipe escolher mais de uma, faça na ordem 3, 2, 1. A anotação de inteli
 - **Terceiros.** Reunião tem gente de fora. Nome, telefone, e-mail, valor combinado com terceiro e opinião sobre pessoa não saem da conversa nem entram em conteúdo público. Cada módulo diz o que fazer com isso.
 - **Nada sai sozinho.** Esta skill não envia e-mail. Só manda mensagem pelo Khronus quando o Felipe pede o envio, depois de ver a simulação e confirmar. Nunca publica e nunca lança card sem o Felipe aprovar o conteúdo na conversa. Aprovação segue o padrão do projeto: mostrar, perguntar `1. Aprovar e salvar` ou `2. Quero ajustar algo`.
 - **Concorrentes.** Nunca nomear concorrente em nada que sai daqui, mesmo que tenha sido citado na reunião.
+- **PDF vai sempre para o Drive.** Toda cópia de PDF de reunião é salva na pasta "Reuniões" do Drive, com o título `AAAA-MM-DD Reunião Nome - Assunto`. O passo a passo está em `references/pdf.md`, seção 7.
 - **Caminho no chat.** Todo arquivo salvo tem o caminho absoluto exibido em texto no chat.
 - **Segredos.** Nunca escrever token ou chave em arquivo. Os scripts leem o `.env` sozinhos.
