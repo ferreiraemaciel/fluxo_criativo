@@ -69,6 +69,17 @@
 
 ---
 
+## Reuniões (/reuniao)
+
+| Operação | Tempo estimado | Unidade |
+|----------|----------------|---------|
+| Localizar e estudar as anotações de uma reunião (Gmail + Drive + resumo) | cerca de 60 segundos | segundos |
+| Gerar o PDF de resumo e pauta com a marca FMN (script + conferência visual) | cerca de 30 segundos | segundos |
+
+> Medido em 2026-09-19 no primeiro teste. Ajustar depois de três usos reais.
+
+---
+
 ## Painel e Scripts
 
 | Operação | Tempo estimado | Unidade |
