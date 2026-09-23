@@ -140,6 +140,11 @@
         "/Users/ferreiraemaciel/Documents/fluxo-criativo/meus-produtos/blindagem/entregas/criativos/black-2026"
       ],
       "port": 8842
+    },
+    {
+      "name": "blindagem-local",
+      "url": "http://localhost:8080",
+      "port": 8080
     }
   ]
 }
