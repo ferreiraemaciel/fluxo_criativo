@@ -56,6 +56,13 @@ O leitor é uma pessoa de fora. Do estudo da reunião, entra:
 
 **Tire de fora, sempre:** comentário sobre pessoas ou empresas que não estavam na reunião, menção a concorrente, referência a mentoria ou a terceiros do mercado, estratégia interna de preço e margem, oferta de suporte particular (como canal de telefone para dúvida jurídica) e qualquer coisa dita em confiança. Na dúvida, deixe fora e avise o Felipe do que foi cortado, em uma linha por corte.
 
+**Aprendido na reunião de 25/09/2026 (onboarding de aluna nova):**
+
+- **Familiar ou criança que apareceu na chamada** (a filha da aluna ajudando com o computador, por exemplo) não entra no PDF, nem como participante nem como responsável. O Gemini pode listá-la como responsável de tarefa junto com a aluna. Nesse caso o PDF fica só com a aluna, e o corte é avisado ao Felipe.
+- **Promessa comercial dita de improviso** (prazo de reembolso, desconto, condição de preço) não vai para o PDF sem o Felipe decidir. Um documento por escrito vira compromisso.
+- **Preço de módulo que ainda não existe** fica de fora. Se a reunião mostrou recursos em beta, o PDF os apresenta como prévia, avisa que ainda não estão disponíveis para uso geral e não promete data nem valor.
+- **Nome do participante vem do Gemini com falhas** (nome duplicado, só o nome da conta). Use a forma mais completa e limpa que apareceu na transcrição e avise o Felipe para conferir.
+
 **Números conferem com a transcrição.** O resumo do Gemini mistura valores. Antes de pôr preço, percentual ou prazo no PDF, confirme na transcrição com `scripts/reuniao-extrair-notas.py ARQUIVO --buscar "397"` e, se houver divergência entre o Resumo e os Detalhes do Gemini, diga ao Felipe qual número você usou e por quê.
 
 **Correções de nome** do Passo 2 da skill já entram aplicadas. O PDF do participante não pode ter "Cronos" onde o produto é Khronus, nem o nome da conta do Gemini no lugar de Felipe.
