@@ -2328,6 +2328,44 @@ function useAlarmeAtendimento() {
   return { ...alarme, dispensar };
 }
 
+/* Vigia de sinais na tela. O vigia-sinais (nuvem, 30 em 30 min) já detectava
+   quando o WhatsApp parava de receber, mas só avisava por mensagem se houvesse
+   número configurado, e não havia: de 14 a 26/09/2026 o Tracker ficou 12 dias
+   sem receber nenhuma resposta de lead e ninguém viu. Agora o aviso fica aqui,
+   em vermelho, no topo da Visão Geral, até o sinal voltar. */
+function AlarmeVigia() {
+  const [v, setV] = useState(null);
+  useEffect(() => {
+    let vivo = true;
+    const ler = () => window.db.from('app_config').select('valor').eq('chave', 'vigia_sinais').maybeSingle()
+      .then(({ data }) => { if (vivo) setV(data?.valor || null); });
+    ler();
+    const t = setInterval(ler, 5 * 60 * 1000);
+    return () => { vivo = false; clearInterval(t); };
+  }, []);
+  const parados = (v?.relogios || []).filter(r => r.parado);
+  if (!parados.length) return null;
+  return (
+    <div style={{ padding:'12px 16px', borderRadius:12, background:'rgba(248,113,113,.1)',
+      border:'1px solid rgba(248,113,113,.45)', display:'flex', gap:10, alignItems:'flex-start' }}>
+      <LucideIcon icon="alert-triangle" size={18} style={{ color:'#f87171', flexShrink:0, marginTop:1 }}/>
+      <div style={{ display:'flex', flexDirection:'column', gap:3 }}>
+        <span style={{ fontFamily:'Roboto,sans-serif', fontWeight:900, fontSize:13, color:'#f87171' }}>
+          Algo parou de funcionar
+        </span>
+        {parados.map(r => (
+          <span key={r.chave} style={{ fontFamily:'Roboto,sans-serif', fontSize:12.5, color:'var(--text-1)' }}>
+            {r.titulo}: nada há {r.ha} (o normal é no máximo {r.limite_horas} h)
+          </span>
+        ))}
+        <span style={{ fontFamily:'Roboto,sans-serif', fontSize:11.5, color:'var(--text-3)' }}>
+          Chame o Claude pra investigar.
+        </span>
+      </div>
+    </div>
+  );
+}
+
 function AlarmeAtendimento({ onNavigate }) {
   const { carregando, humano, mudo, dispensar } = useAlarmeAtendimento();
   const [aberto, setAberto] = useState(false);
@@ -2494,6 +2532,7 @@ function DashboardScreen({ period, onPeriodChange, dateRange, onDateRangeChange,
 
         {/* Alarme de atendimento: primeira coisa da tela quando existe lead
             esperando. Some sozinho quando não há nada pendente. */}
+        <AlarmeVigia/>
         <AlarmeAtendimento onNavigate={onNavigate}/>
 
         {/* KPIs reais — linha 1 */}

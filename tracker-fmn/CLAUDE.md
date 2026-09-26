@@ -339,6 +339,15 @@ Qualquer ADS ativo, de qualquer produto ou conta, que tenha **CPA acima de R$207
 
 **Mesma proteção do G5 contra re-alerta infinito** já nasceu junto: só avalia ADS com `ads.status='ativo'`, não fica re-processando o que já foi pausado e classificado.
 
+## whatsapp-webhook — segredo do app errado derruba tudo em silêncio (incidente 14 a 26/09/2026)
+
+`META_APP_SECRET` confere a assinatura de cada aviso da Meta. Em 14/09 foi cadastrado um valor que não era do app que manda as mensagens (**"Relatório de Anúncios", ID 851080791403307**). Resultado: toda mensagem de lead passou a ser recusada com 401 por 12 dias, o Claudinho parou de responder e ninguém percebeu. Só as mensagens do quiz continuavam saindo, porque não dependem de resposta. As mensagens desses 12 dias se perderam (a Meta desiste de reenviar).
+
+**Regras:**
+1. **Antes** de cadastrar ou trocar `META_APP_SECRET`, conferir que ele é do app 851080791403307: `GET https://graph.facebook.com/v25.0/851080791403307?fields=name&access_token=851080791403307|SEGREDO` tem que devolver o nome do app.
+2. **Depois**, mandar uma mensagem real pro número oficial e ver chegar em Conversas. Sem essa prova, a troca não está concluída.
+3. O `vigia-sinais` já detectava ("mensagem recebida no WhatsApp: nada há 12 dias"), mas só avisava por WhatsApp com número em `app_config.vigia_whatsapp`, que estava vazio. Desde 26/09 o aviso também aparece em vermelho no topo da Visão Geral (`AlarmeVigia` em `dashboard.jsx`).
+
 ## whatsapp-webhook — NUNCA deployar sem `--no-verify-jwt` (incidente real, 2026-08-07 a 2026-08-11)
 
 > Combinado com Felipe em 2026-08-11, depois de um incidente real de 4 dias sem receber nenhuma mensagem de lead.
