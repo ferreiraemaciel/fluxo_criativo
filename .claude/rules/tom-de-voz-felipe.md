@@ -85,6 +85,11 @@ Idiomas e tiques que podem entrar em qualquer ponto, não são de tema específi
 · `convenhamos` · `vem comigo...` · `vai nessa, confia na sorte` · `isso é um tapa na cara de quem
 diz` · `um tempo danado` · `é triste, mas é a realidade`
 
+**Correção de 26/09/2026, a partir do artigo da marca d'água.** O convite dele nunca vem seco. Onde eu
+escrevi "Vem comigo.", ele escreveu **"Vem comigo que essa é pedrada."** O padrão: o convite carrega junto
+a promessa do que vem depois, com gíria de entusiasmo. Outras da mesma família: "essa é pedrada", "essa
+vai te doer", "presta atenção nessa". Convite sem recompensa anunciada soa morno perto do jeito dele.
+
 Figuras que ele chama de temperos, a puxar quando couber, nunca como checklist:
 antítese equilibrada, crescendo retórico, tríade, personificação jurídica, provérbio, aparte
 conversacional, ironia sinalizada ("repare na ironia").
