@@ -1,0 +1,487 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Radar Jurídico da Fotografia · 28 de setembro de 2026</title>
+<style>
+*,*::before,*::after{box-sizing:border-box}
+:root{
+  --bg:#f6f5f2; --superficie:#fff; --borda:#e2ded6; --borda-forte:#cfc9bd;
+  --tinta:#1c1a17; --tinta-media:#5a544b; --tinta-fraca:#8b8378;
+  --acento:#9a6b1f; --acento-suave:#f5ecd9; --acento-borda:#e4d4b0;
+  --neg:#a4462f; --pos:#2f6b4f;
+  --sombra:0 1px 2px rgba(28,26,23,.05),0 8px 24px -12px rgba(28,26,23,.14);
+  --raio:14px;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#141311; --superficie:#1c1b18; --borda:#2e2b26; --borda-forte:#3d3931;
+    --tinta:#ece8e1; --tinta-media:#a9a296; --tinta-fraca:#7d766b;
+    --acento:#d5a44f; --acento-suave:#2a2318; --acento-borda:#4a3c22;
+    --neg:#d97b60; --pos:#6fb392;
+    --sombra:0 1px 2px rgba(0,0,0,.3),0 8px 24px -12px rgba(0,0,0,.6);
+  }
+}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; background:var(--bg); color:var(--tinta);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;
+  font-size:16.5px; line-height:1.62; letter-spacing:-.003em;
+  -webkit-font-smoothing:antialiased;
+}
+.pagina{max-width:820px;margin:0 auto;padding:0 24px 96px}
+
+/* Cabeçalho */
+.capa{padding:64px 0 40px;border-bottom:1px solid var(--borda)}
+.selo{
+  display:inline-flex;align-items:center;gap:8px;font-size:11.5px;font-weight:650;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--acento);
+  background:var(--acento-suave);border:1px solid var(--acento-borda);
+  padding:6px 12px;border-radius:999px;margin-bottom:22px;
+}
+.selo .ponto{width:6px;height:6px;border-radius:50%;background:var(--acento)}
+h1{font-size:clamp(29px,5vw,42px);line-height:1.14;margin:0 0 22px;letter-spacing:-.028em;font-weight:700}
+.meta{display:flex;flex-wrap:wrap;gap:10px}
+.meta-item{
+  font-size:13px;color:var(--tinta-media);background:var(--superficie);
+  border:1px solid var(--borda);border-radius:8px;padding:7px 12px;
+}
+.meta-item b{color:var(--tinta);font-weight:600}
+
+/* Placar */
+.placar{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:32px 0 0}
+.placar-item{
+  background:var(--superficie);border:1px solid var(--borda);border-radius:var(--raio);
+  padding:18px 20px;box-shadow:var(--sombra);
+}
+.placar-num{display:block;font-size:32px;font-weight:700;line-height:1;letter-spacing:-.03em}
+.placar-rot{display:block;margin-top:7px;font-size:12.5px;color:var(--tinta-fraca);
+  text-transform:uppercase;letter-spacing:.07em;font-weight:600}
+
+/* Seções */
+.secao{margin-top:56px;scroll-margin-top:24px}
+.secao h2{
+  display:flex;align-items:center;gap:12px;font-size:13px;font-weight:700;
+  letter-spacing:.13em;text-transform:uppercase;color:var(--tinta-media);
+  margin:0 0 22px;padding-bottom:14px;border-bottom:1px solid var(--borda);
+}
+.sec-num{
+  display:inline-grid;place-items:center;width:22px;height:22px;border-radius:6px;
+  background:var(--tinta);color:var(--bg);font-size:11px;letter-spacing:0;flex:none;
+}
+.secao p{margin:0 0 15px;color:var(--tinta-media)}
+.secao p:last-child{margin-bottom:0}
+.secao a{color:var(--acento);text-decoration:none;border-bottom:1px solid var(--acento-borda);
+  word-break:break-word}
+.secao a:hover{border-bottom-color:var(--acento)}
+.vazio{color:var(--tinta-fraca);font-style:italic}
+
+/* Casos */
+.caso{
+  background:var(--superficie);border:1px solid var(--borda);border-radius:var(--raio);
+  box-shadow:var(--sombra);margin-bottom:18px;overflow:hidden;
+}
+.caso-head{display:flex;gap:14px;align-items:flex-start;padding:22px 24px 18px;
+  border-bottom:1px solid var(--borda)}
+.caso-num{
+  font-size:11.5px;font-weight:700;color:var(--acento);background:var(--acento-suave);
+  border:1px solid var(--acento-borda);border-radius:7px;padding:4px 8px;flex:none;margin-top:3px;
+  font-variant-numeric:tabular-nums;
+}
+.caso-head h3{margin:0;font-size:20.5px;line-height:1.3;letter-spacing:-.02em;font-weight:670}
+.caso-corpo{padding:6px 24px 22px}
+.campo{padding:14px 0;border-bottom:1px solid var(--borda)}
+.campo:last-child{border-bottom:0;padding-bottom:2px}
+.campo .rotulo{
+  display:block;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--tinta-fraca);margin-bottom:5px;
+}
+.campo .valor{display:block;color:var(--tinta-media)}
+.campo--placar .valor,.campo--importa .valor{color:var(--tinta)}
+.campo--importa{background:var(--acento-suave);margin:14px -24px 0;padding:16px 24px;
+  border-top:1px solid var(--acento-borda);border-bottom:0}
+.campo--importa .rotulo{color:var(--acento)}
+.campo--revela .valor{color:var(--tinta)}
+.campo--pratica{background:var(--acento-suave);margin:0 -24px 6px;padding:20px 24px;
+  border-bottom:1px solid var(--acento-borda)}
+.campo--pratica .rotulo{color:var(--acento);font-size:11.5px}
+.campo--pratica .valor{color:var(--tinta);font-size:17.5px;line-height:1.55}
+.campo--historia .valor{color:var(--tinta);font-size:17px}
+.campo--lastro{opacity:.72}
+.campo--lastro .valor{font-size:13.5px}
+.campo--potencial{background:var(--acento-suave);margin:0 -24px;padding:16px 24px;
+  border-top:1px solid var(--acento-borda);border-bottom:1px solid var(--acento-borda)}
+.campo--potencial .rotulo{color:var(--acento)}
+.campo--potencial .valor{color:var(--tinta)}
+.campo--potencial .valor strong:first-of-type{font-size:19px;letter-spacing:-.02em}
+.campo--aprofundar{background:var(--acento-suave);margin:0 -24px;padding:14px 24px;
+  border-bottom:0}
+.campo--aprofundar .rotulo{color:var(--acento)}
+.campo--aprofundar .valor{color:var(--tinta)}
+.campo--precedente .valor{color:var(--tinta)}
+.campo--fragil{border-left:3px solid var(--neg);padding-left:14px;
+  margin-left:-17px;background:transparent}
+.campo--fragil .rotulo{color:var(--neg)}
+.campo--fragil .valor{color:var(--tinta)}
+.campo--cuidado{border-left:3px solid var(--neg);padding-left:14px;margin-left:-17px}
+.campo--cuidado .rotulo{color:var(--neg)}
+.campo--cuidado .valor{color:var(--tinta)}
+.campo--gancho{background:var(--acento-suave);margin:0 -24px;padding:16px 24px 18px;
+  border-bottom:0}
+.campo--gancho .rotulo{color:var(--acento)}
+.campo--gancho .valor{color:var(--tinta)}
+.btn-fonte{
+  display:inline-flex;align-items:center;gap:7px;font-size:13.5px;font-weight:560;
+  border:1px solid var(--borda-forte)!important;border-radius:8px;padding:7px 12px;
+  color:var(--tinta-media)!important;text-decoration:none;
+}
+.btn-fonte:hover{border-color:var(--acento)!important;color:var(--acento)!important}
+.btn-fonte .seta{font-size:11px;opacity:.65}
+
+/* Tabela */
+.tabela-wrap{overflow-x:auto;border:1px solid var(--borda);border-radius:var(--raio);
+  background:var(--superficie);box-shadow:var(--sombra);margin-bottom:20px}
+table{border-collapse:collapse;width:100%;min-width:520px;font-size:14.5px}
+th{
+  text-align:left;font-size:11px;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--tinta-fraca);font-weight:700;padding:13px 16px;
+  border-bottom:1px solid var(--borda-forte);white-space:nowrap;
+}
+td{padding:12px 16px;border-bottom:1px solid var(--borda);color:var(--tinta-media)}
+tbody tr:last-child td{border-bottom:0}
+tbody tr:hover td{background:var(--acento-suave)}
+td.num,td.neg,td.pos{text-align:right;font-variant-numeric:tabular-nums}
+td.neg{color:var(--neg);font-weight:600}
+td.pos{color:var(--pos);font-weight:600}
+td.rot{color:var(--tinta);font-weight:600}
+
+/* Blocos genéricos */
+.lista{margin:0 0 15px;padding-left:22px;color:var(--tinta-media)}
+.lista li{margin-bottom:8px}
+.citacao{
+  margin:20px 0 0;padding:18px 22px;background:var(--acento-suave);
+  border:1px solid var(--acento-borda);border-radius:var(--raio);
+  color:var(--tinta);font-size:16px;
+}
+
+/* Nota */
+.nota{
+  background:var(--superficie);border:1px solid var(--borda);border-left:3px solid var(--acento);
+  border-radius:10px;padding:16px 20px;margin-top:20px;
+}
+.nota-rotulo{display:block;font-size:11px;font-weight:700;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--acento);margin-bottom:6px}
+.nota p{margin:0;font-size:14.5px}
+
+/* Pautas */
+.pauta{
+  background:var(--superficie);border:1px solid var(--borda);border-radius:var(--raio);
+  box-shadow:var(--sombra);margin-bottom:16px;overflow:hidden;
+}
+.pauta header{display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  padding:20px 24px 16px;border-bottom:1px solid var(--borda)}
+.pauta-ordem{
+  display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;
+  background:var(--tinta);color:var(--bg);font-size:12.5px;font-weight:700;flex:none;
+}
+.pauta header h3{margin:0;font-size:18.5px;line-height:1.3;letter-spacing:-.018em;
+  font-weight:660;flex:1 1 240px}
+.badge{
+  font-size:10.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;
+  padding:5px 10px;border-radius:999px;border:1px solid;flex:none;
+}
+.badge--alta{color:var(--neg);border-color:var(--neg);background:transparent}
+.badge--média,.badge--media{color:var(--tinta-fraca);border-color:var(--borda-forte)}
+.badge--baixa{color:var(--tinta-fraca);border-color:var(--borda-forte)}
+.pauta-corpo{padding:6px 24px 20px}
+.pauta-campo{padding:13px 0;border-bottom:1px solid var(--borda)}
+.pauta-campo:last-child{border-bottom:0;padding-bottom:2px}
+.pauta-campo .rotulo{display:block;font-size:11px;font-weight:700;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--tinta-fraca);margin-bottom:5px}
+.pauta-campo .valor{display:block;color:var(--tinta-media)}
+
+/* Vazios */
+.vazios{background:var(--superficie);border:1px solid var(--borda);border-radius:var(--raio)}
+.vazios summary{
+  cursor:pointer;padding:16px 20px;font-size:14px;font-weight:600;color:var(--tinta-media);
+  display:flex;align-items:center;gap:10px;list-style:none;
+}
+.vazios summary::-webkit-details-marker{display:none}
+.vazios summary::before{content:"›";font-size:19px;color:var(--tinta-fraca);
+  transition:transform .18s ease;display:inline-block}
+.vazios[open] summary::before{transform:rotate(90deg)}
+.contador{font-size:11.5px;font-weight:700;color:var(--tinta-fraca);
+  border:1px solid var(--borda-forte);border-radius:999px;padding:2px 8px}
+.vazios ul{margin:0;padding:0 24px 20px 46px;color:var(--tinta-media);font-size:14.5px}
+.vazios li{margin-bottom:9px}
+.vazios li:last-child{margin-bottom:0}
+
+/* Formatos e decisão */
+.caso-head{flex-wrap:wrap}
+.formatos{display:flex;gap:6px;margin-left:auto;flex-wrap:wrap}
+.chip{
+  display:inline-flex;align-items:center;gap:5px;cursor:pointer;
+  font:inherit;font-size:11.5px;font-weight:600;letter-spacing:.02em;
+  color:var(--tinta-fraca);background:transparent;
+  border:1px solid var(--borda-forte);border-radius:999px;padding:5px 10px;
+  transition:all .15s ease;
+}
+.chip:hover{border-color:var(--acento);color:var(--acento)}
+.chip.on{background:var(--acento);border-color:var(--acento);color:#fff}
+@media (prefers-color-scheme:dark){.chip.on{color:#17140d}}
+:root[data-theme="dark"] .chip.on{color:#17140d}
+.chip .mi{display:block;flex:none}
+@media (max-width:620px){.chip-txt{display:none}.chip{padding:6px 8px}}
+.decisao-barra{display:flex;gap:8px;padding:12px 24px;border-bottom:1px solid var(--borda);
+  background:color-mix(in srgb, var(--borda) 22%, transparent)}
+.dec{
+  cursor:pointer;font:inherit;font-size:11.5px;font-weight:700;letter-spacing:.06em;
+  text-transform:uppercase;padding:6px 14px;border-radius:8px;
+  border:1px solid var(--borda-forte);background:transparent;color:var(--tinta-fraca);
+  transition:all .15s ease;
+}
+.dec:hover{border-color:var(--tinta-media);color:var(--tinta-media)}
+.dec--aceito.on{background:var(--pos);border-color:var(--pos);color:#fff}
+.dec--standby.on{background:var(--acento);border-color:var(--acento);color:#fff}
+.dec--descartado.on{background:var(--neg);border-color:var(--neg);color:#fff}
+.caso[data-estado="descartado"]{opacity:.5}
+.caso[data-estado="descartado"] .caso-corpo{display:none}
+
+/* Barra de exportação */
+.barra-exportar{
+  position:sticky;bottom:0;z-index:9;margin:32px -24px -96px;padding:14px 24px 20px;
+  background:color-mix(in srgb, var(--bg) 92%, transparent);
+  backdrop-filter:blur(8px);border-top:1px solid var(--borda);
+  display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+}
+.barra-exportar .contagem{font-size:13px;color:var(--tinta-media)}
+.barra-exportar .contagem b{color:var(--tinta)}
+.btn-exportar{
+  cursor:pointer;font:inherit;font-size:13.5px;font-weight:650;margin-left:auto;
+  background:var(--tinta);color:var(--bg);border:0;border-radius:9px;padding:10px 18px;
+}
+.btn-exportar:hover{opacity:.86}
+.btn-limpar{
+  cursor:pointer;font:inherit;font-size:13px;background:transparent;color:var(--tinta-fraca);
+  border:1px solid var(--borda-forte);border-radius:9px;padding:9px 14px;
+}
+@media print{.formatos,.decisao-barra,.barra-exportar{display:none}}
+
+/* Rodapé */
+.rodape{margin-top:64px;padding-top:24px;border-top:1px solid var(--borda);
+  font-size:12.5px;color:var(--tinta-fraca);display:flex;justify-content:space-between;
+  gap:16px;flex-wrap:wrap}
+
+@media (max-width:600px){
+  body{font-size:16px}
+  .pagina{padding:0 18px 64px}
+  .capa{padding:40px 0 30px}
+  .caso-head,.caso-corpo,.pauta header,.pauta-corpo{padding-left:18px;padding-right:18px}
+  .campo--importa,.campo--gancho{margin-left:-18px;margin-right:-18px;
+    padding-left:18px;padding-right:18px}
+}
+@media print{
+  body{background:#fff}
+  .caso,.pauta,.tabela-wrap,.nota{box-shadow:none;break-inside:avoid}
+  .vazios{display:none}
+}
+</style>
+</head>
+<body data-relatorio="2026-09-28">
+<div class="pagina">
+  <header class="capa">
+    <span class="selo"><span class="ponto"></span>Radar Jurídico da Fotografia</span>
+    <h1>28 de setembro de 2026</h1>
+    <div class="meta">
+      <span class="meta-item">Período varrido <b>15 a 28 de setembro de 2026 (rodada dupla, cobre também a semana de 21/09, cuja rodada não saiu)</b></span>
+      <span class="meta-item">Escopo <b>COMPLETO</b></span>
+    </div>
+    <div class="placar">
+  <div class="placar-item"><span class="placar-num">1</span>
+    <span class="placar-rot">caso novo</span></div>
+  <div class="placar-item"><span class="placar-num">3</span>
+    <span class="placar-rot">pautas sugeridas</span></div>
+</div>
+  </header>
+  <section class="secao">
+  <h2>Resumo da rodada</h2>
+  <p>Catorze dias parados, mas nem por isso vazios. Apareceu um caso novo forte, de Araguaína, no Tocantins, sobre uso de foto de criança para divulgar serviço no WhatsApp sem autorização dos pais. Ele mexe direto com um hábito que praticamente todo fotógrafo tem, usar a foto do cliente para mostrar o próprio trabalho, e mostra que isso pode sair caro quando envolve criança e falta autorização por escrito. Fora esse caso, a rodada foi de varredura extensa e resultado seco. O buscador do STJ segue bloqueado pela terceira rodada seguida, e dois tribunais estaduais (Amazonas e Rio Grande do Norte) continuam sem entregar lista de notícia navegável mesmo pelo navegador embutido. Em compensação, três tribunais que estavam degradados nas rodadas passadas voltaram a responder nesta (Mato Grosso, Rondônia e Santa Catarina), o que é bom sinal para a robustez da varredura daqui pra frente.</p>
+<blockquote class="citacao">De onde vieram os casos: o caso de Araguaína veio da varredura direta do site do TJTO (tribunal que exige navegador). Todas as camadas rodaram nesta rodada: Câmara e Senado via API (Camada 1), STJ com degradação parcial (Camada 2), os 27 tribunais estaduais, sendo 11 por requisição simples e 16 pelo navegador embutido (Camada 3), imprensa e busca aberta incluindo Migalhas, ConJur e busca restrita a `jus.br` (Camada 4), e TST (Camada 5). Duas fontes estaduais degradaram: TJAM (lista de notícias não renderiza, mesma falha de rodadas anteriores) e TJRN (mesma falha da categoria "Decisões Judiciais", sexta rodada seguida sem funcionar). O STJ degradou no buscador de jurisprudência (SCON), terceira rodada seguida bloqueada pelo desafio automático do Cloudflare, sem tentativa de contorno, coberto pela rede de segurança (Informativo de Jurisprudência e notícias do site, por navegador e requisição simples). TJPA entregou só a vitrine de seis notícias da home, sem lista datada nem busca funcional, mesma limitação de rodadas anteriores. Do lado bom, TJMT, TJRO e TJSC, que tinham degradado ou tido cobertura parcial em rodadas passadas, voltaram a responder normalmente nesta rodada e tiveram cobertura completa do período.</blockquote>
+</section>
+<section class="secao">
+  <h2><span class="sec-num">1</span>O que mudou na lei</h2>
+  <p>Nada no período. Nenhuma proposição nova na Câmara dos Deputados cruzou os termos de filtro (direito autoral, direitos autorais, direito de imagem, fotografia, uso de imagem, inteligência artificial, proteção de dados) entre 15 e 28 de setembro de 2026. No Senado Federal, das 2.904 proposições de 2026 filtradas localmente pelos mesmos termos, nenhuma foi apresentada dentro da janela. Duas tiveram só mudança de situação processual no período (um requerimento de audiência pública sobre regulamentação de fármacos e um requerimento de sessão especial sobre o Dia Nacional da Proteção de Dados), nenhuma delas com relação com fotografia.</p>
+</section>
+<section class="secao">
+  <h2><span class="sec-num">2</span>Decisões e casos</h2>
+  <article class="caso" data-caso="01-o-calend-rio-escolar-que-virou-propaganda-sem-av" data-titulo="O calendário escolar que virou propaganda sem avisar ninguém">
+  <header class="caso-head">
+    <span class="caso-num">01</span>
+    <h3>O calendário escolar que virou propaganda sem avisar ninguém</h3>
+    <div class="formatos"><button class="chip" data-fmt="artigo" title="Artigo" aria-label="Artigo" aria-pressed="false"><svg class="mi" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="M5 3h11l3 3v15H5z" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M8 9h8M8 13h8M8 17h5" stroke="currentColor" stroke-width="1.7"/></svg><span class="chip-txt">Artigo</span></button><button class="chip" data-fmt="carrossel" title="Carrossel" aria-label="Carrossel" aria-pressed="false"><svg class="mi" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><rect x="8" y="4" width="8" height="16" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M5 7v10M19 7v10" stroke="currentColor" stroke-width="1.7"/></svg><span class="chip-txt">Carrossel</span></button><button class="chip" data-fmt="imagem" title="Imagem" aria-label="Imagem" aria-pressed="false"><svg class="mi" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="8.5" cy="10" r="1.6" fill="currentColor"/><path d="M4 17l5-5 4 4 3-2 4 4" fill="none" stroke="currentColor" stroke-width="1.7"/></svg><span class="chip-txt">Imagem</span></button><button class="chip" data-fmt="reels" title="Reels" aria-label="Reels" aria-pressed="false"><svg class="mi" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M10 9.5l5 2.5-5 2.5z" fill="currentColor"/></svg><span class="chip-txt">Reels</span></button><button class="chip" data-fmt="youtube" title="YouTube" aria-label="YouTube" aria-pressed="false"><svg class="mi" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><rect x="2.5" y="6" width="19" height="12" rx="3.5" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M10.5 9.5l4.5 2.5-4.5 2.5z" fill="currentColor"/></svg><span class="chip-txt">YouTube</span></button></div>
+  </header>
+  <div class="decisao-barra"><button class="dec dec--aceito" data-dec="aceito">Aceito</button><button class="dec dec--standby" data-dec="standby">Standby</button><button class="dec dec--descartado" data-dec="descartado">Descartado</button></div>
+  <div class="caso-corpo">
+    <div class="campo campo--pratica"><span class="rotulo">O que muda na prática</span><span class="valor">Você fez o ensaio, entregou o material contratado, e quer mostrar aquele trabalho bonito no seu Instagram ou mandar no grupo de WhatsApp para conseguir mais clientes. Pare antes de postar. O contrato de prestação de serviço (tirar a foto, entregar o produto) não é a mesma coisa que autorização para usar aquela imagem em divulgação. São dois consentimentos diferentes, e o segundo você precisa pedir por escrito, separado. Com criança na foto, o cuidado dobra: a autorização tem que vir expressamente dos pais, e falta dela costuma virar indenização quase automática, porque a Justiça enxerga esse uso como exploração comercial da imagem de alguém que não podia consentir sozinho.</span></div>
+<div class="campo campo--historia"><span class="rotulo">A história em uma linha</span><span class="valor">Uma mãe pagou R$ 20 para um calendário escolar com a foto do filho, e meses depois viu a mesma foto circulando num grupo de WhatsApp como propaganda do serviço do profissional que fez o calendário.</span></div>
+<div class="campo campo--placar"><span class="rotulo">Como terminou</span><span class="valor">A Justiça de Araguaína (TO) mandou pagar R$ 1.500 de danos morais para a mãe, proibiu para sempre a reprodução ou venda daquele material e determinou a retirada definitiva da foto da internet. O caso é de primeiro grau, ainda cabe recurso.</span></div>
+<div class="campo campo--potencial"><span class="rotulo">Potencial de conteúdo</span><span class="valor">17/18 · identificação 3, dor 2, contraintuição 3, acionabilidade 3, ponte com produto 3, vida útil 3. A nota alta vem da contraintuição: quase todo fotógrafo usa foto de cliente no portfólio achando que já está automaticamente autorizado, e a acionabilidade é imediata (uma cláusula resolve).</span></div>
+<div class="campo campo--gancho"><span class="rotulo">Gancho de conteúdo</span><span class="valor">Reels ou carrossel batendo de frente com o hábito do portfólio. Abertura pronta: "Você entregou o álbum, recebeu o pagamento, e a foto continua sendo sua para usar como quiser? Depende de uma coisa que você provavelmente esqueceu de pedir." Fecho natural puxando para a cláusula de autorização de uso de imagem para divulgação, com destaque separado para quando tem criança na cena.</span></div>
+<div class="campo campo--cuidado"><span class="rotulo">Cuidado ao produzir conteúdo</span><span class="valor">Não dizer que é proibido usar foto de cliente no portfólio, a regra certa é que precisa de autorização separada e explícita, e com criança essa autorização tem que ser dos pais. Também não confundir com direito autoral do fotógrafo sobre a própria foto, aqui a discussão é o direito de imagem de quem foi fotografado, não a autoria da imagem. Não citar valor de indenização como se fosse padrão, o valor de R$ 1.500 foi arbitrado para este caso específico.</span></div>
+<div class="campo campo--aprofundar"><span class="rotulo">Vale aprofundar</span><span class="valor">Sim. É o tipo de caso que sustenta um artigo pilar sobre autorização de uso de imagem para portfólio e divulgação, separando claramente contrato de prestação de serviço e autorização de uso posterior.</span></div>
+<div class="campo campo--lastro"><span class="rotulo">Lastro</span><span class="valor">TJTO, Comarca de Araguaína, 3ª Vara Cível, juiz Álvaro Nascimento Cunha, sentença de 22/9/2026, divulgada em notícia do tribunal em 24/9/2026. Número do processo não informado na fonte. Fundamentação: Constituição Federal e Estatuto da Criança e do Adolescente (Lei 8.069/1990, [art. 17](<a href="https://www.planalto.gov.br/ccivil_03/leis/l8069.htm" target="_blank" rel="noopener">planalto.gov.br/ccivil_03/leis/l8069.htm</a>)), combinados com entendimento do STJ de que o dano moral é presumido em caso de exploração comercial não autorizada de imagem pessoal (linha da [Súmula 403 do STJ](<a href="https://www.stj.jus.br/docs_internet/SumulasSTJ/SUMULA%20403.pdf" target="_blank" rel="noopener">stj.jus.br/docs_internet/SumulasSTJ/SUMULA%20403.pdf</a>)).</span></div>
+<div class="campo campo--integra"><span class="rotulo">Íntegra arquivada</span><span class="valor">não disponível. A notícia do TJTO não linka o PDF da sentença, e não foi localizado o número do processo para busca direta no sistema do tribunal.</span></div>
+<div class="campo campo--fonte"><span class="rotulo">Fonte</span><span class="valor"><a class="btn-fonte" href="https://www.tjto.jus.br/comunicacao/noticias/comarca-de-araguaina-uso-indevido-de-fotografia-de-crianca-em-rede-social-gera-indenizacao" target="_blank" rel="noopener">tjto.jus.br<span class="seta">↗</span></a></span></div>
+  </div>
+</article>
+</section>
+<section class="secao">
+  <h2><span class="sec-num">3</span>Para você saber</h2>
+  <p>Nada no período. Os demais achados investigados nesta rodada não passaram no filtro anti-ruído (um caso de fraude com fotos de terceira pessoa usadas em anúncio de serviços sexuais em Mato Grosso do Sul, sem fotógrafo nem contrato envolvido, e uma reportagem sobre fotógrafos de imprensa barrados pela segurança do STF, que é um incidente de credenciamento, não uma decisão judicial) ou eram casos antigos recirculando em buscas (STJ 2020, TJMG 2023 e 2025, TJES 2019, TJMA 2020, caso de Ourinhos e caso de Jaraguá do Sul já registrados em `descartados.md`, e o próprio caso da professora do DF já aprovado na rodada de 8 de setembro, republicado por outro veículo em 3 de setembro).</p>
+</section>
+<section class="secao">
+  <h2><span class="sec-num">4</span>Pauta sugerida</h2>
+  <article class="pauta pauta--alta">
+  <header>
+    <span class="pauta-ordem">1</span>
+    <h3>Autorização de uso de imagem para portfólio e divulgação, especialmente com criança</h3>
+    <span class="badge badge--alta">prioridade alta</span>
+  </header>
+  <div class="pauta-corpo"><div class="pauta-campo"><span class="rotulo">Ângulo</span><span class="valor">o caso de Araguaína como gancho de abertura, expandindo para a pergunta que todo fotógrafo evita se fazer: "o cliente autorizou o ensaio, mas autorizou eu mostrar essa foto no meu Instagram?"</span></div><div class="pauta-campo"><span class="rotulo">Formato</span><span class="valor">artigo pilar com a seção "o que fazer na segunda-feira de manhã" trazendo o texto de cláusula pronta, e um Reels ou carrossel derivado com o gancho contraintuitivo.</span></div><div class="pauta-campo"><span class="rotulo">Por que agora</span><span class="valor">caso fresco, nota alta na régua de potencial, e resolve com contrato, o que cria ponte natural com os produtos.</span></div></div>
+</article>
+<article class="pauta pauta--média">
+  <header>
+    <span class="pauta-ordem">2</span>
+    <h3>Publicar o material já aprofundado do caso da professora do DF</h3>
+    <span class="badge badge--média">prioridade média</span>
+  </header>
+  <div class="pauta-corpo"><div class="pauta-campo"><span class="rotulo">Ângulo</span><span class="valor">nenhum tema novo, é o material da rodada de 8 de setembro, já aprofundado e, até onde este radar registra, ainda não publicado. A repercussão do caso em pelo menos dois veículos diferentes em setembro mostra que o assunto ainda rende engajamento.</span></div><div class="pauta-campo"><span class="rotulo">Formato</span><span class="valor">o que já estava previsto na ficha daquela rodada.</span></div><div class="pauta-campo"><span class="rotulo">Por que agora</span><span class="valor">o assunto voltou a aparecer espontaneamente na imprensa neste mês, sinal de que a janela de interesse ainda está aberta.</span></div></div>
+</article>
+<article class="pauta pauta--baixa">
+  <header>
+    <span class="pauta-ordem">3</span>
+    <h3>Conferir e atualizar `radar-juridico/fontes.md` nos tribunais que mudaram de comportamento</h3>
+    <span class="badge badge--baixa">prioridade baixa</span>
+  </header>
+  <div class="pauta-corpo"><div class="pauta-campo"><span class="rotulo">Ângulo</span><span class="valor">não é pauta de conteúdo, é manutenção do radar. TJMT, TJRO e TJSC voltaram a responder normalmente nesta rodada depois de degradação ou cobertura parcial em rodadas passadas, e TJGO passou a ser acessível por um caminho alternativo (`/agencia-de-noticias/noticias-ccs`) não documentado na lista atual.</span></div><div class="pauta-campo"><span class="rotulo">Formato</span><span class="valor">ajuste nas linhas desses quatro tribunais na lista de fontes.</span></div><div class="pauta-campo"><span class="rotulo">Por que agora</span><span class="valor">quanto mais rodadas passarem sem o ajuste, maior o risco de a próxima varredura tratar essas fontes como ainda degradadas e gastar tempo tentando contornos desnecessários, ou o oposto, não perceber uma nova degradação por comparação errada com o estado antigo.</span></div></div>
+</article>
+</section>
+<section class="secao">
+  <h2><span class="sec-num">5</span>Nada relevante encontrado em</h2>
+  <details class="vazios"><summary>Temas buscados que vieram vazios <span class="contador">11</span></summary><ul><li>Lei nova, alteração ou regulamentação sobre imagem, foto, direito autoral ou inteligência artificial, na Câmara ou no Senado, entre 15 e 28 de setembro de 2026.</li><li>Buscador de jurisprudência do STJ (SCON). Bloqueado pelo desafio de verificação automática do Cloudflare durante toda a tentativa desta rodada, sem tentativa de contorno, conforme a regra do método. Terceira rodada seguida com essa degradação.</li><li>Informativo de Jurisprudência do STJ (edições 901, de 15/9, e 902, de 22/9) e notícias do site do STJ (cobertura completa de 15 a 28/9, por navegador).</li><li>Notícia jurídica brasileira nova sobre fotografia, direito de imagem ou direito autoral de foto, com decisão proferida dentro da janela, nos tribunais AP, CE, DF, MA, MS, MG, PE, PI, PR, RJ, SP (por requisição simples) e AC, AL, BA, ES, GO, MT, PB, RO, RR, RS, SC, SE (por navegador, com cobertura completa do período).</li><li>TJAM e TJRN. Degradação confirmada nesta rodada: lista de notícias não renderiza mesmo pelo navegador embutido (TJRN é a sexta rodada seguida com essa falha).</li><li>TJPA. Cobertura parcial: só a vitrine de seis notícias da página inicial, sem lista datada nem busca funcional pelo navegador.</li><li>Supremo Tribunal Federal. Fora da varredura semanal desde 3 de agosto, por decisão do Felipe.</li><li>Decisão brasileira sobre inteligência artificial treinada em acervo fotográfico, ou sanção da ANPD envolvendo acervo, backup ou compartilhamento de imagem de cliente de fotógrafo.</li><li>Justiça do Trabalho, sobre vínculo, cachê e rescisão de fotógrafo e assistente. TST varrido, sem resultado novo no período.</li><li>Recurso ou fato novo nos casos já aprofundados em rodadas anteriores (professora do DF, casos do STJ de 3 de agosto, TJMG e TJRJ de julho e agosto, sentença de blockchain de Salvador). Nenhum teve movimentação encontrada nesta janela, além da republicação sem fato novo do caso da professora do DF em outro veículo.</li><li>Migalhas e ConJur, por busca interna com os termos "fotografia", "fotógrafo", "direito autoral" e "direito de imagem", filtrados por mês. Todos os resultados encontrados eram de fora do período (2010 a agosto de 2026) ou fora do nicho (vídeo de IA sobre Bolsonaro, caso da Padroeira do Brasil).</li></ul></details>
+</section>
+  <div class="barra-exportar">
+    <span class="contagem" id="contagem"></span>
+    <button class="btn-limpar" id="limpar">Restaurar sugestões</button>
+    <button class="btn-exportar" id="exportar">Baixar minhas decisões</button>
+  </div>
+  <footer class="rodape">
+    <span>Gerado a partir de 2026-09-28.md</span>
+    <span>Fontes oficiais e API pública DataJud (CNJ)</span>
+  </footer>
+</div>
+<script>
+(function () {
+  var chave = 'radar-juridico:' + (document.body.dataset.relatorio || 'sem-nome');
+  var estado = {};
+  try { estado = JSON.parse(localStorage.getItem(chave) || '{}'); } catch (e) { estado = {}; }
+
+  var casos = Array.prototype.slice.call(document.querySelectorAll('.caso'));
+
+  function lerDoDom(art) {
+    var fmts = [];
+    art.querySelectorAll('.chip.on').forEach(function (c) { fmts.push(c.dataset.fmt); });
+    var dec = art.querySelector('.dec.on');
+    return { titulo: art.dataset.titulo, decisao: dec ? dec.dataset.dec : '', formatos: fmts };
+  }
+
+  function aplicar(art, dados) {
+    art.querySelectorAll('.chip').forEach(function (c) {
+      var on = dados.formatos.indexOf(c.dataset.fmt) !== -1;
+      c.classList.toggle('on', on);
+      c.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+    art.querySelectorAll('.dec').forEach(function (d) {
+      d.classList.toggle('on', d.dataset.dec === dados.decisao);
+    });
+    art.dataset.estado = dados.decisao || '';
+  }
+
+  function salvar() {
+    casos.forEach(function (art) { estado[art.dataset.caso] = lerDoDom(art); });
+    try { localStorage.setItem(chave, JSON.stringify(estado)); } catch (e) {}
+    contar();
+  }
+
+  function contar() {
+    var n = { aceito: 0, standby: 0, descartado: 0 };
+    casos.forEach(function (art) {
+      var d = art.dataset.estado;
+      if (n[d] !== undefined) n[d]++;
+    });
+    var alvo = document.getElementById('contagem');
+    if (alvo) {
+      alvo.innerHTML = '<b>' + n.aceito + '</b> aceitos, <b>' + n.standby +
+        '</b> em standby, <b>' + n.descartado + '</b> descartados';
+    }
+  }
+
+  casos.forEach(function (art) {
+    if (estado[art.dataset.caso]) aplicar(art, estado[art.dataset.caso]);
+    else art.dataset.estado = (art.querySelector('.dec.on') || {}).dataset
+      ? art.querySelector('.dec.on').dataset.dec : '';
+
+    art.querySelectorAll('.chip').forEach(function (c) {
+      c.addEventListener('click', function () {
+        var on = !c.classList.contains('on');
+        c.classList.toggle('on', on);
+        c.setAttribute('aria-pressed', on ? 'true' : 'false');
+        salvar();
+      });
+    });
+
+    art.querySelectorAll('.dec').forEach(function (d) {
+      d.addEventListener('click', function () {
+        var jaEra = d.classList.contains('on');
+        art.querySelectorAll('.dec').forEach(function (o) { o.classList.remove('on'); });
+        if (!jaEra) d.classList.add('on');
+        art.dataset.estado = jaEra ? '' : d.dataset.dec;
+        salvar();
+      });
+    });
+  });
+
+  contar();
+
+  var btn = document.getElementById('exportar');
+  if (btn) {
+    btn.addEventListener('click', function () {
+      var saida = { relatorio: document.body.dataset.relatorio, casos: [] };
+      casos.forEach(function (art) {
+        var d = lerDoDom(art);
+        saida.casos.push({
+          id: art.dataset.caso, titulo: d.titulo,
+          decisao: d.decisao || 'sem decisao', formatos: d.formatos
+        });
+      });
+      var blob = new Blob([JSON.stringify(saida, null, 2)], { type: 'application/json' });
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'radar-decisoes-' + saida.relatorio + '.json';
+      a.click();
+      URL.revokeObjectURL(a.href);
+    });
+  }
+
+  var limpar = document.getElementById('limpar');
+  if (limpar) {
+    limpar.addEventListener('click', function () {
+      try { localStorage.removeItem(chave); } catch (e) {}
+      location.reload();
+    });
+  }
+})();
+</script>
+</body>
+</html>
