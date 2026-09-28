@@ -73,7 +73,10 @@ Deno.serve(async (req) => {
     {
       chave: "whatsapp",
       titulo: "mensagem recebida no WhatsApp",
-      limiteHoras: 5,
+      // Era 5 h. Com o volume de set/2026 (poucas respostas por dia) disparava
+      // alarme falso em tarde tranquila (28/09). 12 h ainda pega pane de verdade
+      // no mesmo dia: a de 14/09 ficou 12 dias sem nada.
+      limiteHoras: 12,
       ultima: await ultimaData("whatsapp_mensagens", "created_at", (q) => q.eq("direcao", "entrada")),
     },
     {
