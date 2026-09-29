@@ -139,7 +139,7 @@ Sempre que o usuário pedir uma imagem, ou quando uma skill precisar gerar uma i
 
 **Esta integração usa a assinatura ChatGPT Plus do usuário. Sem custo adicional de API.**
 
-Aplica-se a: pedidos diretos no chat ("gera uma imagem de X"), `/furadeira-visual`, `/criativo-estatico`, `/banner-visual`, `/avat-whisk` e qualquer outro contexto que precise de imagem gerada por IA.
+Aplica-se a: pedidos diretos no chat ("gera uma imagem de X"), `/furadeira-visual`, `/criativo-estatico`, `/banner-visual`, `/capa-youtube`, `/avat-whisk` e qualquer outro contexto que precise de imagem gerada por IA.
 
 ---
 
@@ -683,6 +683,7 @@ Em seguida, liste os comandos disponíveis organizados por categoria:
 - `/criativo-estatico`. Gerar criativos estáticos para anúncios (prompt para colar em ferramenta externa OU geração automática via API)
 - `/gerar-furadeira`. Gerar a Furadeira (método do produto) no `perfil.md` aplicando uma das 6 mecânicas (Fases, Condicional, Enquadramento, Listas, Empecilhos, Dinâmica de Entrega) escolhida automaticamente conforme o nicho
 - `/furadeira-visual`. Gerar a imagem PNG da Furadeira via prompt para ChatGPT (a skill decide o layout sozinha conforme mecânica + nicho)
+- `/capa-youtube`. Gerar os prompts da capa (thumbnail) de um vídeo do YouTube, sempre em 1920x1080 horizontal, com capa completa, fundo e elementos em prompts separados
 - `/avat-whisk`. Briefings visuais prontos para o Whisk (Google Labs)
 - `/criar-gpt`. Criar agente GPT personalizado para infoprodutores
 
