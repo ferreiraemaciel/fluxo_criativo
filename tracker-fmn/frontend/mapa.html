@@ -27,6 +27,10 @@
       --font-body:"Aleo","PT Serif",Georgia,serif;
       --text-3: rgba(255,255,255,.35);
     }
+    /* ?tema=verde troca a paleta para a do Blindagem, usada na landing dele */
+    :root[data-tema="verde"] {
+      --fmn-gold:#2f9e5c; --fmn-gold-deep:#24804a; --fmn-gold-soft:#5cc98a;
+    }
     *, *::before, *::after { box-sizing: border-box; }
     html, body {
       margin: 0; padding: 0;
@@ -69,6 +73,13 @@
   <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js"
     integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y"
     crossorigin="anonymous"></script>
+<script>
+  // a landing do Blindagem embute este mapa com ?tema=verde
+  try {
+    var t = new URLSearchParams(location.search).get('tema');
+    if (t === 'verde') document.documentElement.setAttribute('data-tema', 'verde');
+  } catch (e) {}
+</script>
 </head>
 <body>
 
@@ -78,7 +89,7 @@
   <script src="app/supabase.js?v=26"></script>
 
   <!-- Componente do mapa -->
-  <script type="text/babel" src="app/map.jsx?v=47"></script>
+  <script type="text/babel" src="app/map.jsx?v=48"></script>
 
   <!-- Renderiza o widget no modo "acumulado total" (sem filtro de período) -->
   <script type="text/babel">

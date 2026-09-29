@@ -1,3 +1,14 @@
+/* A landing do Blindagem embute este mapa com ?tema=verde e usa a paleta
+   dela. Sem o parametro, tudo segue no dourado do Tracker. */
+var MAPA_RGB = '234,170,65';
+var MAPA_HEX = '#eaaa41';
+try {
+  if (new URLSearchParams(location.search).get('tema') === 'verde') {
+    MAPA_RGB = '47,158,92';
+    MAPA_HEX = '#2f9e5c';
+  }
+} catch (e) {}
+
 /* ================================================================
    Tracker FMN — Mapa de Fotógrafos Protegidos
    GeoJSON embutido (133KB) — sem fetch externo
@@ -79,7 +90,7 @@ function BrazilD3Map({ byState, citiesByState, total }) {
 
     const defs = svg.append('defs');
     defs.append('radialGradient').attr('id','mapGlow2').call(function(g) {
-      g.append('stop').attr('offset','0%').attr('stop-color','rgba(234,170,65,.06)');
+      g.append('stop').attr('offset','0%').attr('stop-color','rgba(' + MAPA_RGB + ',.06)');
       g.append('stop').attr('offset','100%').attr('stop-color','transparent');
     });
     svg.append('ellipse')
@@ -87,7 +98,7 @@ function BrazilD3Map({ byState, citiesByState, total }) {
       .attr('fill','url(#mapGlow2)').attr('pointer-events','none');
 
     const tipEl = document.createElement('div');
-    tipEl.style.cssText = 'position:fixed;background:rgba(12,13,17,.96);border:1px solid rgba(234,170,65,.28);border-radius:8px;padding:8px 12px;font-family:Roboto,sans-serif;font-size:12px;pointer-events:none;opacity:0;transition:opacity 100ms;white-space:nowrap;z-index:9999;box-shadow:0 6px 20px rgba(0,0,0,.55);';
+    tipEl.style.cssText = 'position:fixed;background:rgba(12,13,17,.96);border:1px solid rgba(' + MAPA_RGB + ',.28);border-radius:8px;padding:8px 12px;font-family:Roboto,sans-serif;font-size:12px;pointer-events:none;opacity:0;transition:opacity 100ms;white-space:nowrap;z-index:9999;box-shadow:0 6px 20px rgba(0,0,0,.55);';
     document.body.appendChild(tipEl);
     const tip = window.d3.select(tipEl);
 
@@ -112,14 +123,14 @@ function BrazilD3Map({ byState, citiesByState, total }) {
         // divide pelo número de estados: 1º=100%, último=100/N %
         opacity = (N - rank) / N;
       }
-      return 'rgba(234,170,65,' + opacity.toFixed(3) + ')';
+      return 'rgba(' + MAPA_RGB + ',' + opacity.toFixed(3) + ')';
     }
 
     svg.append('g').selectAll('path')
       .data(geo.features).enter().append('path')
       .attr('d', function(d) { try { return pathGen(d); } catch(e) { return ''; } })
       .attr('fill', function(d) { return stateFill(d.properties.sigla || ''); })
-      .attr('stroke','rgba(234,170,65,.25)')
+      .attr('stroke','rgba(' + MAPA_RGB + ',.25)')
       .attr('stroke-width','0.7').attr('stroke-linejoin','round')
       .style('cursor','pointer')
       .on('mousemove', function(event, d) {
@@ -127,20 +138,20 @@ function BrazilD3Map({ byState, citiesByState, total }) {
         const name  = STATE_NAMES[sigla] || sigla;
         const count = byState[sigla] || 0;
         const hasData = count > 0;
-        window.d3.select(this).attr('fill','rgba(234,170,65,.85)');
+        window.d3.select(this).attr('fill','rgba(' + MAPA_RGB + ',.85)');
         const ex = event.clientX + 14;
         const ey = event.clientY - 10;
         const vt = hasData
           ? count + ' fotógrafo' + (count!==1?'s':'') + ' protegido' + (count!==1?'s':'')
           : 'Sem dados ainda';
-        const vc = hasData ? '#eaaa41' : 'rgba(255,255,255,.32)';
+        const vc = hasData ? MAPA_HEX : 'rgba(255,255,255,.32)';
         let citiesHtml = '';
         if (hasData && citiesByState && citiesByState[sigla]) {
           const top3 = Object.entries(citiesByState[sigla])
             .sort((a,b)=>b[1]-a[1]).slice(0,3);
           citiesHtml = '<div style="margin-top:5px;border-top:1px solid rgba(255,255,255,.08);padding-top:5px;">'
             + top3.map(function(c){ return '<div style="font-size:10px;color:rgba(255,255,255,.5);line-height:1.6">'
-              + c[0] + ' <span style="color:rgba(234,170,65,.7)">'+c[1]+'</span></div>'; }).join('')
+              + c[0] + ' <span style="color:rgba(' + MAPA_RGB + ',.7)">'+c[1]+'</span></div>'; }).join('')
             + '</div>';
         }
         tip.html('<span style="font-weight:700;color:rgba(255,255,255,.9)">'+name+'</span><br>'
