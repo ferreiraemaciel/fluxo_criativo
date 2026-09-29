@@ -759,7 +759,7 @@ function rPrecheckout(){
     { img:'assets/mockup-app-macbook.webp?v=2', title:'⭐ Geração de Contratos Profissionais', body:'Crie contratos adaptados ao seu nicho em minutos, sem precisar de advogado para cada um.' },
     { img:'assets/mockup-app-celular.webp', pos:'top', title:'⭐ Assinatura Digital com Validade Jurídica', body:'Envie para o cliente assinar digitalmente. Sem papel, sem impressora, sem demora.' },
     { img:'assets/mockup-app-macbook.webp?v=2', title:'⭐ Organização por Cliente e Evento', body:'Todos os contratos centralizados e fáceis de encontrar quando o cliente ligar às 23h.' },
-    { img:'assets/mockup-app-celular-mao.webp', pos:'top', title:'⭐ Acompanhamento de Status em Tempo Real', body:'Saiba quais contratos estão pendentes, assinados ou vencidos, sem precisar ligar pro cliente.' },
+    { img:'assets/mockup-app-celular-mao.webp?v=2', pos:'top', title:'⭐ Acompanhamento de Status em Tempo Real', body:'Saiba quais contratos estão pendentes, assinados ou vencidos, sem precisar ligar pro cliente.' },
   ];
   const rgrid = el('<div class="recebe-grid"></div>');
   recebe.forEach(o => {
@@ -810,7 +810,7 @@ function rPrecheckout(){
   </div>`));
 
   // — preço final + 2º botão
-  stage.appendChild(el(`<img src="assets/mockup-app-celular-mao.webp" alt="" style="width:70%;display:block;margin:0 auto 18px">`));
+  stage.appendChild(el(`<img src="assets/mockup-app-celular-mao.webp?v=2" alt="" style="width:70%;display:block;margin:0 auto 18px">`));
   stage.appendChild(el(`<div class="pco-price"><div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-2);margin-bottom:6px">🔒 Licença anual</div><div style="text-decoration:line-through;color:var(--ink-2);font-size:14px;margin-bottom:4px">R$ 697,00 à vista</div><div class="pco-por" style="font-size:26px;line-height:1.2">Apenas 12x de R$ 41,06</div><div class="pco-px" style="margin-top:8px;font-size:13.5px">ou R$ 397,00 à vista</div></div>`));
   const b2 = el(`<button class="btn" style="margin-bottom:32px">QUERO ME PROTEGER AGORA</button>`);
   b2.onclick = goCheckout;
