@@ -69,15 +69,15 @@ Aqui a requisição simples devolve só o menu do site, ou é barrada por filtro
 | AM | https://www.tjam.jus.br/index.php/noticias | Montada por script |
 | BA | https://www.tjba.jus.br/portal/agencia-de-noticias/ | Montada por script |
 | ES | https://www.tjes.jus.br/category/s1-front-page/ultimasnoticias/ | Montada por script |
-| GO | https://www.tjgo.jus.br/index.php/institucional/centro-de-comunicacao-social | Filtro de robô, HTTP 403 |
-| MT | https://www.tjmt.jus.br/noticias | Mudou de plataforma, passou a ser montada por script (constatado na rodada de 14/09/2026) |
+| GO | https://www.tjgo.jus.br/index.php/agencia-de-noticias/noticias-ccs | Filtro de robô, HTTP 403 na requisição simples. Em 28/09/2026 o navegador abriu o caminho alternativo `/index.php/agencia-de-noticias/noticias-ccs`, que traz lista datada e recente (a página institucional anterior só trazia menu). Paginação por número, cerca de 7.700 páginas e sem filtro de data testado, então a primeira página cobre poucos dias. Complementar com busca aberta restrita ao domínio |
+| MT | https://www.tjmt.jus.br/noticias | Montada por script (mudança constatada em 14/09/2026). Em 28/09/2026 respondeu normalmente pelo navegador, com filtro por data (Data Início e Data Fim) e busca por palavra (`?pesquisa=termo`). Trocar de página por URL não funciona, a paginação é feita no clique. Filtrar pelo período reduz a lista a poucas páginas |
 | PA | https://www.tjpa.jus.br/PortalExterno/index-noticias.xhtml | Montada por script |
 | PB | https://www.tjpb.jus.br/noticias | Filtro de robô, HTTP 403 |
 | RN | https://www.tjrn.jus.br/noticias/ | Filtro de robô, HTTP 403 |
-| RO | https://www.tjro.jus.br/ | Montada por script |
+| RO | https://www.tjro.jus.br/noticias/mais-noticias | A home só mostra vitrine de cinco itens. Em 28/09/2026 o arquivo completo respondeu pelo navegador em `/noticias/mais-noticias`, dez notícias por página, paginação por URL (`?start=10`, `?start=20`), cerca de 1.456 páginas, ordem do mais recente para o mais antigo. Três páginas cobrem duas semanas |
 | RR | https://www.tjrr.jus.br/index.php/noticias | Montada por script |
 | RS | https://www.tjrs.jus.br/novo/comunicacao/noticias-do-tjrs/noticias/ | Montada por script |
-| SC | https://www.tjsc.jus.br/web/imprensa | Montada por script |
+| SC | https://www.tjsc.jus.br/web/imprensa/noticias | A capa do portal de imprensa mostra só quatro destaques. Em 28/09/2026 a lista completa respondeu pelo navegador em `/web/imprensa/noticias`, vinte notícias por página, com data e hora. Há busca do site em `/pesquisa?q=termo`, com contadores de "última modificação" que mostram rápido se há conteúdo novo sobre o termo |
 | SE | https://www.tjse.jus.br/portal/ | Montada por script |
 | TO | https://www.tjto.jus.br/comunicacao/noticias | Montada por script |
 
