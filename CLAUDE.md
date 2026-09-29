@@ -720,6 +720,9 @@ Em seguida, liste os comandos disponíveis organizados por categoria:
 **Comercial:**
 - `/comercial-playbook`. Criar scripts de venda 1:1 (SPIN Selling), entrega em HTML pronto para PDF
 
+**Jurídico:**
+- `/peca-juridica`. Montar peça jurídica em formato visual (notificação, contrato, distrato, acordo, procuração, contrato de honorários), cards com ícone e cabeçalho com foto em vez de texto corrido tradicional. Entrega em HTML e PDF
+
 **Vídeo:**
 - `/video-heygen`. Criar vídeo com avatar IA
 - `/video-remotion`. Criar vídeo para Meta Ads com Remotion

@@ -98,6 +98,20 @@
 
 ---
 
+## Peça Jurídica Visual (/peca-juridica)
+
+| Operação | Tempo estimado | Unidade |
+|----------|----------------|---------|
+| Gerar capa fotográfica via ChatGPT (flat lay) | 2 a 3 minutos | minutos |
+| Montar 1 peça visual (procuração ou contrato de honorários) | 3 a 5 minutos | minutos |
+| Montar a peça principal do caso completa (linha do tempo, provas, pedido) | 6 a 9 minutos | minutos |
+| Montar as três peças do mesmo caso (peça + procuração + contrato) | 12 a 18 minutos | minutos |
+| Exportar PDF e conferir paginação | cerca de 60 segundos | segundos |
+
+> Medido em 2026-09-29 no caso Unity Digital/Robison Kunz. Ajustar depois de três usos reais.
+
+---
+
 ## Dashboards
 
 | Operação | Tempo estimado | Unidade |
