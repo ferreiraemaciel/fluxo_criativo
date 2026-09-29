@@ -43,7 +43,14 @@ const ORIGENS_PERMITIDAS = [
   "diagnostico.fotografiaeomeunegocio.com.br",
   "quiz-fotografo-protegido.pages.dev",
   "quiz-blindagem.pages.dev",
+  // pré-checkout da landing do Blindagem (modal com nome, e-mail e telefone)
+  "contratosblindagem.fotografiaeomeunegocio.com.br",
 ];
+
+// De onde o lead veio dentro do mesmo funil. O quiz manda "novo"; a landing
+// manda "precheckout-lp". Lista fechada para ninguém encher a base com
+// rótulo inventado.
+const ORIGENS_LEAD = ["novo", "precheckout-lp"];
 
 function origemPermitida(req: Request) {
   const bruto = req.headers.get("Origin") || req.headers.get("Referer") || "";
@@ -71,7 +78,8 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: "code obrigatório" }), { status: 400, headers: { ...cors, "content-type": "application/json" } });
     }
 
-    const row: Record<string, unknown> = { funnel_slug: body.funnel_slug || "fotografo-protegido", origem: "novo" };
+    const origemLead = ORIGENS_LEAD.includes(String(body.origem)) ? String(body.origem) : "novo";
+    const row: Record<string, unknown> = { funnel_slug: body.funnel_slug || "fotografo-protegido", origem: origemLead };
     for (const k of COLS) if (k in body) row[k] = body[k];
     normalizarArrays(row);
 
@@ -121,7 +129,8 @@ Deno.serve(async (req) => {
               client_user_agent: req.headers.get("user-agent") || undefined,
             },
             custom_data: {
-              content_name: body.funnel_slug === "blindagem" ? "Quiz Blindagem" : "Quiz Fotógrafo Protegido",
+              content_name: origemLead === "precheckout-lp" ? "Pré-checkout Blindagem"
+                : body.funnel_slug === "blindagem" ? "Quiz Blindagem" : "Quiz Fotógrafo Protegido",
               ...(body.nivel_risco ? { lead_quality: body.nivel_risco } : {}),
             },
           }],
