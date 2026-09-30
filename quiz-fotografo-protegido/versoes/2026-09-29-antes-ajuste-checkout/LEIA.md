@@ -9,3 +9,8 @@ Números dos 15 dias anteriores (15/09 a 29/09):
 
 Hotmart checkout W87258826R com 4 order bumps: Combo Presets R$59,90, Pack Pro Lightroom R$19,90, Cenários Natalinos R$29,90, Mensagens que Vendem R$147.
 Comparar com os 15 dias depois da troca (até ~14/10/2026).
+
+## Publicado em 30/09/2026
+Imagens: mockup no topo, mapa e foto removidos, 8 depoimentos mantidos (confirmado).
+Order bump: ainda com 4 produtos e MQV a R$147 no dia da publicação (pendente).
+Comparar em 15/10/2026.
