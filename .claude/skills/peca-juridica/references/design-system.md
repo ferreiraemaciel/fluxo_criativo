@@ -35,11 +35,11 @@ Dourado amadeirado como cor de destaque (`--accent`), nunca azul, nunca cor corp
 ## Casca do documento
 
 ```css
-body{ margin:0; padding:32px 16px 64px; background:#efe9df; font-family:'EB Garamond', Georgia, serif; color:var(--ink); }
+body{ margin:0; padding:32px 0 64px; background:#efe9df; font-family:'EB Garamond', Georgia, serif; color:var(--ink); }
 .doc{ max-width:794px; margin:0 auto; background:var(--paper); box-shadow:0 12px 40px rgba(58,52,46,0.14); border-radius:4px; overflow:hidden; }
 ```
 
-`794px` é largura útil de A4 a 96dpi. O fundo da página (`#efe9df`) é mais escuro que o papel (`--paper`), para o card do documento se destacar.
+`794px` é largura útil de A4 a 96dpi. O fundo da página (`#efe9df`) é mais escuro que o papel (`--paper`), para o card do documento se destacar. **`padding` do `body` é só vertical (32px/64px), nunca lateral.** Combinado com o Felipe em 2026-09-29: um `padding` lateral no `body` cria uma borda visível dos dois lados do `.doc` (o fundo mais escuro aparecendo nas laterais), e ele não quer isso em nenhum documento — o `.doc` deve encostar nas extremidades quando a tela/PDF é mais estreita que 794px, sem gutter mínimo forçado.
 
 ### Aviso de rascunho (enquanto houver campo pendente)
 
