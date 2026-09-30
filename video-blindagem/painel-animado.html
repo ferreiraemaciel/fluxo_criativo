@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Blindagem, painel animado</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f1013;
+    --card: #181a1f;
+    --muted: #1f2229;
+    --fg: #f4f4f6;
+    --muted-fg: rgba(255,255,255,.72);
+    --border: rgba(255,255,255,.07);
+    --primary: #fbbf24;
+    --primary-fg: #0c0d11;
+    --destructive: #f87171;
+    --amber: #f59e0b;
+    --violet: #8b5cf6;
+    --sky: #0ea5e9;
+    --emerald: #10b981;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { font-size: 20px; }
+  html, body { width: 100%; height: 100%; background: #000; overflow: hidden; }
+  body { font-family: 'Roboto', system-ui, -apple-system, sans-serif; color: var(--fg); }
+
+  /* Palco fixo 1920x1080, escalado para caber na janela */
+  #stage {
+    position: absolute; left: 50%; top: 50%;
+    width: 1920px; height: 1080px;
+    transform-origin: center center;
+    background: var(--bg);
+    overflow: hidden;
+  }
+  #glow {
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(900px 500px at 78% -8%, rgba(251,191,36,.10), transparent 70%),
+      radial-gradient(700px 500px at 0% 100%, rgba(139,92,246,.06), transparent 70%);
+  }
+  #page {
+    position: absolute; inset: 0;
+    padding: 72px 128px;
+    transform-origin: 50% 50%;
+  }
+
+  .tnum { font-variant-numeric: tabular-nums; }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+    box-shadow: 0 1px 0 rgba(255,255,255,.03) inset, 0 12px 40px rgba(0,0,0,.25);
+  }
+  svg.i { width: 1.1rem; height: 1.1rem; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+
+  /* Cabeçalho */
+  .head { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 1.4rem; }
+  .head h1 { font-size: 2.1rem; font-weight: 600; letter-spacing: -0.01em; }
+  .head p { color: var(--muted-fg); margin-top: .3rem; font-size: 1rem; }
+  .btn {
+    display: inline-flex; align-items: center; gap: .55rem;
+    background: var(--primary); color: var(--primary-fg);
+    font-weight: 500; font-size: 1rem;
+    padding: .7rem 1.2rem; border-radius: .6rem;
+    box-shadow: 0 0 0 0 rgba(251,191,36,.5);
+  }
+  .btn svg.i { width: 1rem; height: 1rem; }
+
+  /* Números */
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.2rem; }
+  .stat { padding: 1.15rem 1.3rem; display: flex; align-items: center; gap: .9rem; }
+  .ico {
+    width: 2.7rem; height: 2.7rem; border-radius: .6rem;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(251,191,36,.15); border: 1px solid rgba(251,191,36,.30); color: var(--primary);
+  }
+  .ico svg.i { width: 1.3rem; height: 1.3rem; }
+  .stat .lbl { font-size: .8rem; color: var(--muted-fg); }
+  .stat .val { font-size: 1.7rem; font-weight: 600; line-height: 1.2; }
+
+  /* Quadro de status + valor */
+  .mid { display: grid; grid-template-columns: 2fr 1fr; gap: 1rem; margin-bottom: 1.2rem; }
+  .status { padding: 1.3rem 1.5rem; }
+  .status .ttl, .valor .ttl { display: flex; align-items: center; gap: .55rem; font-weight: 600; font-size: 1.05rem; color: var(--fg); margin-bottom: 1rem; }
+  .status .ttl svg.i, .valor .ttl svg.i { color: var(--primary); }
+  .bar-row { margin-bottom: .8rem; }
+  .bar-row:last-child { margin-bottom: 0; }
+  .bar-top { display: flex; justify-content: space-between; align-items: center; font-size: .95rem; margin-bottom: .3rem; }
+  .bar-top .l { display: flex; align-items: center; gap: .55rem; }
+  .bar-top .r { color: var(--muted-fg); }
+  .track { height: .55rem; border-radius: 99px; background: var(--muted); overflow: hidden; }
+  .fill { height: 100%; border-radius: 99px; width: 0; }
+  .c-amber { color: var(--amber); } .b-amber { background: var(--amber); }
+  .c-violet { color: var(--violet); } .b-violet { background: var(--violet); }
+  .c-sky { color: var(--sky); } .b-sky { background: var(--sky); }
+  .c-emerald { color: var(--emerald); } .b-emerald { background: var(--emerald); }
+
+  .valor { padding: 1.3rem 1.5rem; display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden; }
+  .valor .ttl { margin-bottom: .4rem; }
+  .valor .big { font-size: 2.5rem; font-weight: 600; letter-spacing: -0.01em; }
+  .valor .sub { color: var(--muted-fg); font-size: .8rem; margin-top: .3rem; }
+  #valorGlow { position: absolute; inset: 0; background: radial-gradient(400px 200px at 50% 60%, rgba(251,191,36,.18), transparent 70%); opacity: 0; pointer-events: none; }
+
+  /* Últimos contratos */
+  .list { padding: 1.3rem 1.5rem 1rem; }
+  .list h2 { font-size: 1.15rem; font-weight: 600; margin-bottom: .5rem; }
+  #rows { position: relative; height: calc(var(--rowH) * 4); overflow: hidden; --rowH: 3.3rem; }
+  .row {
+    position: absolute; left: 0; right: 0; height: var(--rowH);
+    display: flex; align-items: center; justify-content: space-between;
+    border-top: 1px solid var(--border);
+    will-change: transform, opacity;
+  }
+  .row .nome { font-weight: 500; font-size: 1.02rem; }
+  .row .meta { font-size: .78rem; color: var(--muted-fg); display: flex; gap: .7rem; align-items: center; margin-top: .1rem; }
+  .row .meta .exp { display: inline-flex; align-items: center; gap: .3rem; color: var(--amber); }
+  .row .meta .exp svg.i { width: .8rem; height: .8rem; }
+  .pill {
+    font-size: .8rem; font-weight: 500; padding: .25rem .75rem; border-radius: 99px; border: 1px solid; white-space: nowrap;
+    display: inline-block; transform-origin: right center;
+  }
+  .p-amber { background: rgba(245,158,11,.10); color: #fbbf24; border-color: rgba(245,158,11,.30); }
+  .p-violet { background: rgba(139,92,246,.10); color: #a78bfa; border-color: rgba(139,92,246,.30); }
+  .p-sky { background: rgba(14,165,233,.10); color: #38bdf8; border-color: rgba(14,165,233,.30); }
+  .p-emerald { background: rgba(16,185,129,.10); color: #34d399; border-color: rgba(16,185,129,.30); }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="glow"></div>
+  <div id="page">
+
+    <div class="head" id="head">
+      <div>
+        <h1>Visão Geral</h1>
+        <p>Bora blindar mais alguns contratos hoje e aumentar esse faturamento aí?</p>
+      </div>
+      <div class="btn" id="btn">
+        <svg class="i" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+        Gerar contrato
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="card stat" data-stat="0">
+        <div class="ico"><svg class="i" viewBox="0 0 24 24"><path d="M20 19.5v.5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8.5L20 7.5V10"/><path d="M14 2v6h6"/><path d="M8 18c1-2 2-2 3 0s2 0 3-1"/></svg></div>
+        <div><div class="lbl">Contratos (total)</div><div class="val tnum" id="v-total">0</div></div>
+      </div>
+      <div class="card stat" data-stat="1">
+        <div class="ico"><svg class="i" viewBox="0 0 24 24"><path d="M20 19.5v.5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8.5L20 7.5V10"/><path d="M14 2v6h6"/><path d="M8 18c1-2 2-2 3 0s2 0 3-1"/></svg></div>
+        <div><div class="lbl">Contratos no mês</div><div class="val tnum" id="v-mes">0</div></div>
+      </div>
+      <div class="card stat" data-stat="2">
+        <div class="ico"><svg class="i" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+        <div><div class="lbl">Clientes</div><div class="val tnum" id="v-cli">0</div></div>
+      </div>
+      <div class="card stat" data-stat="3">
+        <div class="ico"><svg class="i" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg></div>
+        <div><div class="lbl">Links expirados</div><div class="val tnum" id="v-exp">0</div></div>
+      </div>
+    </div>
+
+    <div class="mid">
+      <div class="card status" id="status">
+        <div class="ttl"><svg class="i" viewBox="0 0 24 24"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>Status dos seus contratos</div>
+
+        <div class="bar-row">
+          <div class="bar-top"><div class="l c-amber"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span style="color:var(--fg)">Aguardando cliente</span></div><span class="r tnum" id="t-aguardando"></span></div>
+          <div class="track"><div class="fill b-amber" id="f-aguardando"></div></div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-top"><div class="l c-violet"><svg class="i" viewBox="0 0 24 24"><path d="M20 19.5v.5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8.5L20 7.5V10"/><path d="M14 2v6h6"/><path d="M8 18c1-2 2-2 3 0s2 0 3-1"/></svg><span style="color:var(--fg)">Aguardando você assinar</span></div><span class="r tnum" id="t-assinar"></span></div>
+          <div class="track"><div class="fill b-violet" id="f-assinar"></div></div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-top"><div class="l c-sky"><svg class="i" viewBox="0 0 24 24"><path d="M20 19.5v.5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8.5L20 7.5V10"/><path d="M14 2v6h6"/><path d="M8 18c1-2 2-2 3 0s2 0 3-1"/></svg><span style="color:var(--fg)">Assinado · gerar PDF</span></div><span class="r tnum" id="t-pdf"></span></div>
+          <div class="track"><div class="fill b-sky" id="f-pdf"></div></div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-top"><div class="l c-emerald"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg><span style="color:var(--fg)">Finalizados</span></div><span class="r tnum" id="t-final"></span></div>
+          <div class="track"><div class="fill b-emerald" id="f-final"></div></div>
+        </div>
+      </div>
+
+      <div class="card valor" id="valor">
+        <div id="valorGlow"></div>
+        <div class="ttl"><svg class="i" viewBox="0 0 24 24"><line x1="12" x2="12" y1="2" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Valor blindado</div>
+        <div>
+          <div class="big tnum" id="v-valor">R$ 0,00</div>
+          <div class="sub">Soma dos contratos já assinados</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card list" id="list">
+      <h2>Últimos contratos</h2>
+      <div id="rows"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+/* Animação do painel do Blindagem. Tudo é função do tempo t (segundos), sem estado escondido.
+   ?t=6.5 congela em um instante (para conferir quadros). window.__seek(t) faz o mesmo por script. */
+const LOOP = 16;
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const easeOut = x => 1 - Math.pow(1 - x, 3);
+const prog = (t, start, dur, ease = easeOut) => ease(clamp((t - start) / dur));
+
+/* Dados fictícios */
+const BASE = { total: 47, mes: 12, cli: 38, exp: 0, aguardando: 9, assinar: 6, pdf: 5, final: 27, valor: 128750 };
+const E1 = 8.4;   // chega contrato novo
+const E2 = 11.6;  // um contrato é finalizado
+const EV_DUR = 0.9;
+
+const STATUS = {
+  aguardando: { label: 'Aguardando cliente', cls: 'p-amber' },
+  assinar:    { label: 'Aguardando fotógrafo assinar', cls: 'p-violet' },
+  pdf:        { label: 'Assinado · gerar PDF', cls: 'p-sky' },
+  final:      { label: 'Finalizado', cls: 'p-emerald' },
+};
+const ROWS = [
+  { nome: 'Ensaio Família Oliveira',       data: '19/09/2026', st: 'aguardando', exp: 'expira em 7 dias', novo: true },
+  { nome: 'Casamento Ana e Rafael',        data: '18/09/2026', st: 'pdf', st2: 'final' },
+  { nome: 'Ensaio Gestante Camila',        data: '17/09/2026', st: 'aguardando', exp: 'expira em 5 dias' },
+  { nome: 'Aniversário 15 anos Beatriz',   data: '15/09/2026', st: 'assinar' },
+  { nome: 'Ensaio Newborn Helena',         data: '12/09/2026', st: 'final' },
+];
+
+const $ = id => document.getElementById(id);
+const fmtBRL = v => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+/* Linhas da lista, criadas uma vez */
+const rowsEl = $('rows');
+const rowEls = ROWS.map(r => {
+  const el = document.createElement('div');
+  el.className = 'row';
+  el.innerHTML = `
+    <div style="min-width:0">
+      <div class="nome">${r.nome}</div>
+      <div class="meta"><span>${r.data}</span>${r.exp ? `<span class="exp"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>${r.exp}</span>` : ''}</div>
+    </div>
+    <span class="pill ${STATUS[r.st].cls}">${STATUS[r.st].label}</span>`;
+  rowsEl.appendChild(el);
+  return el;
+});
+
+function render(t) {
+  /* Câmera: aproximação lenta, só para dar vida */
+  $('page').style.transform = `scale(${1 + 0.018 * (t / LOOP)})`;
+
+  /* Saída da cena no fim do ciclo */
+  $('page').style.opacity = 1 - prog(t, LOOP - 0.8, 0.7, x => x);
+
+  /* Cabeçalho */
+  const h = prog(t, 0.1, 0.7);
+  $('head').style.opacity = h;
+  $('head').style.transform = `translateY(${(1 - h) * 18}px)`;
+  const k = clamp((t - 7.4) / 0.9);            // botão chama atenção antes do contrato novo
+  const pulse = Math.sin(k * Math.PI);
+  $('btn').style.boxShadow = `0 0 0 ${pulse * 14}px rgba(251,191,36,${0.35 * (1 - k)})`;
+  $('btn').style.transform = `scale(${1 + pulse * 0.04})`;
+
+  /* Valores com os eventos aplicados */
+  const ev1 = prog(t, E1, EV_DUR);
+  const ev2 = prog(t, E2, EV_DUR);
+  const V = {
+    total: BASE.total + ev1,
+    mes: BASE.mes + ev1,
+    cli: BASE.cli + ev1,
+    exp: BASE.exp,
+    aguardando: BASE.aguardando + ev1,
+    assinar: BASE.assinar,
+    pdf: BASE.pdf - ev2,
+    final: BASE.final + ev2,
+    valor: BASE.valor + 4800 * ev2,
+  };
+
+  /* Cartões de número */
+  const statKeys = ['total', 'mes', 'cli', 'exp'];
+  const statIds = ['v-total', 'v-mes', 'v-cli', 'v-exp'];
+  document.querySelectorAll('.stat').forEach((el, i) => {
+    const p = prog(t, 0.6 + i * 0.14, 0.7);
+    el.style.opacity = p;
+    el.style.transform = `translateY(${(1 - p) * 26}px)`;
+    const count = prog(t, 1.0 + i * 0.14, 1.3);
+    const shown = t < E1 ? BASE[statKeys[i]] * count : V[statKeys[i]];
+    $(statIds[i]).textContent = Math.round(shown);
+  });
+
+  /* Quadro de status */
+  const sp = prog(t, 1.9, 0.7);
+  $('status').style.opacity = sp;
+  $('status').style.transform = `translateY(${(1 - sp) * 26}px)`;
+  ['aguardando', 'assinar', 'pdf', 'final'].forEach((g, i) => {
+    const fill = prog(t, 2.5 + i * 0.35, 1.2);
+    const pctLive = (V[g] / V.total) * 100;
+    const shownVal = t < E1 ? V[g] * fill : V[g];
+    const shownPct = t < E1 ? pctLive * fill : pctLive;
+    $('f-' + g).style.width = shownPct + '%';
+    $('t-' + g).textContent = `${Math.round(shownVal)} · ${Math.round(shownPct)}%`;
+  });
+
+  /* Valor blindado */
+  const vp = prog(t, 2.6, 0.7);
+  $('valor').style.opacity = vp;
+  $('valor').style.transform = `translateY(${(1 - vp) * 26}px)`;
+  const vcount = prog(t, 3.0, 1.8);
+  const vshow = t < E2 ? BASE.valor * vcount : V.valor;
+  $('v-valor').textContent = fmtBRL(vshow);
+  const glow = Math.sin(clamp((t - E2) / 1.6) * Math.PI);
+  $('valorGlow').style.opacity = glow;
+  $('v-valor').style.color = glow > 0.02 ? `color-mix(in srgb, #fbbf24 ${Math.round(glow * 100)}%, #f4f4f6)` : '';
+
+  /* Lista de contratos */
+  const lp = prog(t, 3.6, 0.7);
+  $('list').style.opacity = lp;
+  $('list').style.transform = `translateY(${(1 - lp) * 26}px)`;
+  const rowH = parseFloat(getComputedStyle(document.documentElement).fontSize) * 3.3;
+  rowEls.forEach((el, i) => {
+    const r = ROWS[i];
+    let y, o;
+    if (r.novo) {
+      y = -rowH + rowH * ev1;          // o contrato novo desce do topo e empurra os outros
+      o = ev1;
+    } else {
+      const idx = i - 1;
+      const enter = prog(t, 4.2 + idx * 0.22, 0.6);
+      y = idx * rowH + rowH * ev1 + (1 - enter) * 22;
+      o = enter;
+    }
+    el.style.transform = `translateY(${y}px)`;
+    el.style.opacity = o;
+
+    if (r.st2) {                        // contrato que foi finalizado troca de situação
+      const pill = el.querySelector('.pill');
+      const s = STATUS[t >= E2 + 0.35 ? r.st2 : r.st];
+      pill.className = 'pill ' + s.cls;
+      pill.textContent = s.label;
+      const kk = clamp((t - (E2 + 0.35)) / 0.5);
+      pill.style.transform = kk > 0 && kk < 1 ? `scale(${1 + 0.18 * Math.sin(kk * Math.PI)})` : 'scale(1)';
+    }
+  });
+}
+
+/* Ajuste do palco à janela */
+function fit() {
+  const s = Math.min(innerWidth / 1920, innerHeight / 1080);
+  $('stage').style.transform = `translate(-50%, -50%) scale(${s})`;
+}
+addEventListener('resize', fit); fit();
+
+/* Trava para conferir quadros: window.__hold = true e depois window.__seek(t) */
+window.__seek = t => render(clamp(t, 0, LOOP));
+window.__LOOP = LOOP;
+window.__hold = false;
+
+const frozen = new URLSearchParams(location.search).get('t');
+if (frozen !== null) {
+  document.fonts.ready.then(() => render(parseFloat(frozen)));
+} else {
+  let t0 = null;
+  const tick = now => {
+    if (t0 === null) t0 = now;
+    if (!window.__hold) render(((now - t0) / 1000) % LOOP);
+    requestAnimationFrame(tick);
+  };
+  document.fonts.ready.then(() => requestAnimationFrame(tick));
+}
+</script>
+</body>
+</html>

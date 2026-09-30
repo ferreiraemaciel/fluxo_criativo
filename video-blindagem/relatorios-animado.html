@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Blindagem, relatórios animados</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0b0d;
+    --card: #0f1115;
+    --track: #1b1d22;
+    --fg: #f4f4f6;
+    --muted-fg: rgba(255,255,255,.62);
+    --border: rgba(255,255,255,.08);
+    --primary: #fbbf24;
+    --primary-fg: #0c0d11;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { font-size: 20px; }
+  html, body { width: 100%; height: 100%; background: #000; overflow: hidden; }
+  body { font-family: 'Roboto', system-ui, -apple-system, sans-serif; color: var(--fg); }
+
+  #stage { position: absolute; left: 50%; top: 50%; width: 1920px; height: 1080px; transform-origin: center center; background: var(--bg); overflow: hidden; }
+  #glow { position: absolute; inset: 0; background: radial-gradient(900px 500px at 78% -8%, rgba(251,191,36,.07), transparent 70%), radial-gradient(700px 500px at 0% 100%, rgba(96,165,250,.05), transparent 70%); }
+  #page { position: absolute; inset: 0; padding: 48px 128px; transform-origin: 50% 50%; }
+
+  .tnum { font-variant-numeric: tabular-nums; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 0.9rem; }
+  svg.i { width: 1.1rem; height: 1.1rem; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+
+  /* Filtros de período e aviso de proposta fechada */
+  .bar-top-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; height: 2.1rem; }
+  .chips { display: flex; gap: .5rem; }
+  .chip { font-size: .78rem; padding: .4rem .95rem; border-radius: 99px; border: 1px solid var(--border); color: var(--muted-fg); background: var(--bg); }
+  .chip.on { background: var(--primary); color: var(--primary-fg); border-color: var(--primary); font-weight: 500; }
+  #toast {
+    display: inline-flex; align-items: center; gap: .55rem;
+    font-size: .82rem; padding: .45rem .95rem; border-radius: 99px;
+    background: rgba(74,222,128,.10); border: 1px solid rgba(74,222,128,.35); color: #86efac; opacity: 0;
+  }
+  #toast svg.i { width: .95rem; height: .95rem; }
+
+  /* Indicadores */
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1rem; }
+  .kpi { padding: 1.05rem 1.25rem; display: flex; align-items: center; gap: 1rem; }
+  .ico { width: 2.75rem; height: 2.75rem; border-radius: .7rem; display: flex; align-items: center; justify-content: center; background: rgba(251,191,36,.10); border: 1px solid rgba(251,191,36,.32); color: #f5a524; flex-shrink: 0; }
+  .ico svg.i { width: 1.25rem; height: 1.25rem; }
+  .kpi .lbl { font-size: .78rem; color: var(--muted-fg); }
+  .kpi .val { font-size: 1.65rem; font-weight: 600; line-height: 1.2; white-space: nowrap; }
+
+  /* Gráficos */
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+  .sec { padding: 1rem 1.15rem; height: 14.6rem; overflow: hidden; }
+  .sec h3 { font-size: .72rem; font-weight: 500; letter-spacing: .06em; text-transform: uppercase; color: var(--muted-fg); margin-bottom: .8rem; }
+  .bar { margin-bottom: .55rem; }
+  .bar .top { display: flex; justify-content: space-between; font-size: .8rem; line-height: 1.2; margin-bottom: .22rem; }
+  .bar .top .v { color: var(--muted-fg); margin-left: .5rem; }
+  .bar .trk { height: .34rem; border-radius: 99px; background: var(--track); overflow: hidden; }
+  .bar .fil { height: 100%; border-radius: 99px; width: 0; }
+  .pie-wrap { display: flex; align-items: center; gap: 1.1rem; margin-top: .2rem; }
+  .legend { flex: 1; min-width: 0; }
+  .legend .it { display: flex; align-items: center; gap: .55rem; font-size: .8rem; margin-bottom: .32rem; }
+  .legend .dot { width: .5rem; height: .5rem; border-radius: 99px; flex-shrink: 0; }
+  .legend .n { flex: 1; }
+  .legend .q { color: var(--muted-fg); }
+  .lineWrap { position: relative; margin-top: 1.2rem; }
+  .lineWrap svg { display: block; width: 100%; height: 6.2rem; }
+  #lineDot { position: absolute; width: .6rem; height: .6rem; border-radius: 99px; background: #a78bfa; box-shadow: 0 0 0 .3rem rgba(167,139,250,.25); transform: translate(-50%, -50%); }
+  .dates { display: flex; justify-content: space-between; font-size: .68rem; color: var(--muted-fg); margin-top: .5rem; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="glow"></div>
+  <div id="page">
+
+    <div class="bar-top-row" id="top">
+      <div class="chips">
+        <div class="chip">Hoje</div><div class="chip">7 dias</div><div class="chip on">30 dias</div><div class="chip">Este mês</div>
+      </div>
+      <div id="toast">
+        <svg class="i" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>
+        <span>Proposta fechada · Instagram · R$ 6.400,00</span>
+      </div>
+    </div>
+
+    <div class="kpis" id="kpis"></div>
+    <div class="grid" id="grid"></div>
+
+  </div>
+</div>
+
+<script>
+/* Relatórios do Blindagem/Khronus animados. Tudo é função do tempo t (segundos).
+   window.__hold = true e window.__seek(t) para conferir quadros parados. */
+const LOOP = 15;
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const easeOut = x => 1 - Math.pow(1 - x, 3);
+const prog = (t, start, dur, ease = easeOut) => ease(clamp((t - start) / dur));
+const $ = s => document.querySelector(s);
+const brl = v => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+/* Dados fictícios, coerentes entre si */
+const E = 8.5, EVD = 0.9, NOVA = 6400;
+const ORIG = [ // ordenado por faturamento, como no programa
+  { nome: 'Instagram',    cor: '#eaaa41', total: 14, ganhas: 6, receita: 31200, live: true },
+  { nome: 'Indicação',    cor: '#60a5fa', total: 8,  ganhas: 5, receita: 24500 },
+  { nome: 'Site',         cor: '#a78bfa', total: 10, ganhas: 4, receita: 17600 },
+  { nome: 'Já é cliente', cor: '#4ade80', total: 6,  ganhas: 4, receita: 14400 },
+  { nome: 'Google',       cor: '#f472b6', total: 4,  ganhas: 1, receita: 3200 },
+  { nome: 'Outro',        cor: '#fb923c', total: 2,  ganhas: 0, receita: 0 },
+];
+const RANK = [3, 1, 0, 2, 4, 5]; // ordem do ranking de conversão (índices de ORIG): Já é cliente, Indicação, Instagram, Site, Google, Outro
+const MOTIVOS = [['Preço', 4], ['Data não disponível', 3], ['Fechou com outro profissional', 2], ['Distância', 2], ['Sem retorno', 1]];
+const SERIE = [3200,0,4800,6500,0,5400,0,0,3900,0,5800,7200,0,7400,0,4500,0,6100,0,4200,0,8800,3700,0,5200,0,0,9600,0,4600]; // 30 dias, soma 90.900
+const BASE = { receita: 90900, ganhas: 20, perdidas: 12, decididas: 32, aberto: 38700 };
+
+/* ---------- Indicadores ---------- */
+const ICONS = {
+  up: '<polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>',
+  check: '<path d="M20 6 9 17l-5-5"/>',
+  x: '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
+  clip: '<rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/>',
+  hour: '<path d="M5 22h14"/><path d="M5 2h14"/><path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22"/><path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2"/>',
+  rec: '<path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 17.5v-11"/>',
+  pct: '<line x1="19" x2="5" y1="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/>',
+};
+const KPIS = [
+  { lbl: 'Faturamento',        ico: 'up',    flash: 1, fmt: (L, c) => brl(L.receita * c) },
+  { lbl: 'Propostas fechadas', ico: 'check', flash: 1, fmt: (L, c) => Math.round(L.ganhas * c) },
+  { lbl: 'Propostas perdidas', ico: 'x',     flash: 0, fmt: (L, c) => Math.round(L.perdidas * c) },
+  { lbl: 'Finalizadas',        ico: 'clip',  flash: 1, fmt: (L, c) => Math.round(L.decididas * c) },
+  { lbl: 'Em aberto',          ico: 'hour',  flash: 1, fmt: (L, c) => brl(L.aberto * c) },
+  { lbl: 'Ticket médio',       ico: 'rec',   flash: 1, fmt: (L, c) => brl((L.receita / L.ganhas) * c) },
+  { lbl: 'Taxa de conversão',  ico: 'pct',   flash: 1, fmt: (L, c) => Math.round((L.ganhas / L.decididas) * 100 * c) + '%' },
+];
+const kpiEls = KPIS.map(k => {
+  const el = document.createElement('div');
+  el.className = 'card kpi';
+  el.innerHTML = `<div class="ico"><svg class="i" viewBox="0 0 24 24">${ICONS[k.ico]}</svg></div>
+    <div><div class="lbl">${k.lbl}</div><div class="val tnum"></div></div>`;
+  $('#kpis').appendChild(el);
+  return { el, val: el.querySelector('.val') };
+});
+
+/* ---------- Seções ---------- */
+function secao(titulo) {
+  const el = document.createElement('div');
+  el.className = 'card sec';
+  el.innerHTML = `<h3>${titulo}</h3>`;
+  $('#grid').appendChild(el);
+  return el;
+}
+function mkBar(parent, label, cor) {
+  const el = document.createElement('div');
+  el.className = 'bar';
+  el.innerHTML = `<div class="top"><span>${label}</span><span class="v tnum"></span></div><div class="trk"><div class="fil" style="background:${cor}"></div></div>`;
+  parent.appendChild(el);
+  return { el, v: el.querySelector('.v'), fil: el.querySelector('.fil') };
+}
+
+const s1 = secao('Fechadas x perdidas');
+const bFech = mkBar(s1, 'Fechadas', '#4ade80');
+const bPerd = mkBar(s1, 'Perdidas', '#f87171');
+
+const s2 = secao('Origem dos leads');
+s2.insertAdjacentHTML('beforeend', `<div class="pie-wrap"><svg id="pie" width="130" height="130" viewBox="0 0 130 130"></svg><div class="legend" id="legend"></div></div>`);
+const legEls = ORIG.map(o => {
+  const it = document.createElement('div');
+  it.className = 'it';
+  it.innerHTML = `<span class="dot" style="background:${o.cor}"></span><span class="n">${o.nome}</span><span class="q tnum"></span>`;
+  $('#legend').appendChild(it);
+  return { el: it, q: it.querySelector('.q') };
+});
+
+const s3 = secao('Faturamento por origem');
+const bFat = ORIG.map(o => mkBar(s3, o.nome, o.cor));
+
+const s4 = secao('Ranking de conversão');
+const bRank = RANK.map(i => mkBar(s4, ORIG[i].nome, ORIG[i].cor));
+
+const s5 = secao('Por que se perde');
+const bMot = MOTIVOS.map(([m]) => mkBar(s5, m, '#f87171'));
+
+const s6 = secao('Evolução do faturamento');
+s6.insertAdjacentHTML('beforeend', `<div class="lineWrap"><svg id="line" viewBox="0 0 320 90" preserveAspectRatio="none"><polyline id="poly" fill="none" stroke="#a78bfa" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/></svg><div id="lineDot"></div></div><div class="dates"><span>21/08/2026</span><span>19/09/2026</span></div>`);
+const secs = [s1, s2, s3, s4, s5, s6];
+
+/* ---------- Pizza ---------- */
+function pieSvg(sweep) {
+  const r = 65, rad = a => a * Math.PI / 180;
+  const total = ORIG.reduce((s, o) => s + o.total, 0);
+  let acc = 0, out = '';
+  ORIG.forEach(o => {
+    const a0 = acc, a1 = acc + (o.total / total) * 360;
+    acc = a1;
+    const e = Math.min(a1, sweep);
+    if (e <= a0) return;
+    const s = -90 + a0, f = -90 + e;
+    const x1 = r + r * Math.cos(rad(s)), y1 = r + r * Math.sin(rad(s));
+    const x2 = r + r * Math.cos(rad(f)), y2 = r + r * Math.sin(rad(f));
+    out += `<path d="M ${r} ${r} L ${x1} ${y1} A ${r} ${r} 0 ${e - a0 > 180 ? 1 : 0} 1 ${x2} ${y2} Z" fill="${o.cor}"/>`;
+  });
+  $('#pie').innerHTML = out;
+}
+
+function render(t) {
+  $('#page').style.transform = `scale(${1 + 0.016 * (t / LOOP)})`;
+  $('#page').style.opacity = 1 - prog(t, LOOP - 0.8, 0.7, x => x);
+
+  /* Topo */
+  const tp = prog(t, 0.1, 0.6);
+  $('#top').style.opacity = tp;
+  const ta = clamp((t - (E - 0.3)) / 0.5) * (1 - clamp((t - (E + 2.6)) / 0.6));
+  $('#toast').style.opacity = ta;
+  $('#toast').style.transform = `translateY(${(1 - clamp((t - (E - 0.3)) / 0.5)) * -10}px)`;
+
+  /* Valores vivos (com o evento aplicado) */
+  const ev = prog(t, E, EVD);
+  const L = {
+    receita: BASE.receita + NOVA * ev,
+    ganhas: BASE.ganhas + ev,
+    perdidas: BASE.perdidas,
+    decididas: BASE.decididas + ev,
+    aberto: BASE.aberto - NOVA * ev,
+  };
+  const flash = Math.sin(clamp((t - E) / 1.6) * Math.PI);
+
+  /* Indicadores */
+  KPIS.forEach((k, i) => {
+    const p = prog(t, 0.5 + i * 0.12, 0.6);
+    const c = prog(t, 0.9 + i * 0.12, 1.3);
+    const { el, val } = kpiEls[i];
+    el.style.opacity = p;
+    el.style.transform = `translateY(${(1 - p) * 24}px)`;
+    val.textContent = k.fmt(L, c);
+    if (k.flash) {
+      el.style.borderColor = `rgba(251,191,36,${0.08 + flash * 0.55})`;
+      el.style.boxShadow = `0 0 ${flash * 26}px rgba(251,191,36,${flash * 0.22})`;
+    }
+  });
+
+  /* Entrada dos cartões de gráfico */
+  const starts = [2.0, 2.25, 2.5, 3.7, 3.95, 4.2];
+  secs.forEach((el, i) => {
+    const p = prog(t, starts[i], 0.6);
+    el.style.opacity = p;
+    el.style.transform = `translateY(${(1 - p) * 24}px)`;
+  });
+  const fillP = (i, k) => prog(t, starts[i] + 0.45 + k * 0.09, 1.1);
+
+  /* 1. Fechadas x perdidas */
+  const mx = Math.max(L.ganhas, L.perdidas);
+  let f = fillP(0, 0);
+  bFech.fil.style.width = (L.ganhas / mx) * 100 * f + '%';
+  bFech.v.textContent = Math.round(L.ganhas * f);
+  f = fillP(0, 1);
+  bPerd.fil.style.width = (L.perdidas / mx) * 100 * f + '%';
+  bPerd.v.textContent = Math.round(L.perdidas * f);
+
+  /* 2. Origem dos leads */
+  pieSvg(360 * prog(t, 2.9, 1.5));
+  legEls.forEach((lg, i) => {
+    const p = prog(t, 3.1 + i * 0.12, 0.5);
+    lg.el.style.opacity = p;
+    lg.el.style.transform = `translateX(${(1 - p) * 12}px)`;
+    lg.q.textContent = Math.round(ORIG[i].total * p);
+  });
+
+  /* 3. Faturamento por origem */
+  const rec = ORIG.map(o => o.receita + (o.live ? NOVA * ev : 0));
+  const maxRec = Math.max(1, ...rec);
+  ORIG.forEach((o, i) => {
+    const p = fillP(2, i);
+    bFat[i].fil.style.width = (rec[i] / maxRec) * 100 * p + '%';
+    bFat[i].v.textContent = brl(rec[i] * p);
+    bFat[i].el.style.opacity = 0.35 + 0.65 * prog(t, starts[2] + 0.2 + i * 0.09, 0.4);
+  });
+
+  /* 4. Ranking de conversão */
+  RANK.forEach((oi, k) => {
+    const o = ORIG[oi];
+    const g = o.ganhas + (o.live ? ev : 0);
+    const conv = (g / o.total) * 100;
+    const p = fillP(3, k);
+    bRank[k].fil.style.width = conv * p + '%';
+    bRank[k].v.textContent = Math.round(conv * p) + '%';
+    bRank[k].el.style.opacity = 0.35 + 0.65 * prog(t, starts[3] + 0.2 + k * 0.09, 0.4);
+  });
+
+  /* 5. Por que se perde */
+  const maxMot = MOTIVOS[0][1];
+  MOTIVOS.forEach(([, q], k) => {
+    const p = fillP(4, k);
+    bMot[k].fil.style.width = (q / maxMot) * 100 * p + '%';
+    bMot[k].v.textContent = Math.round(q * p);
+    bMot[k].el.style.opacity = 0.35 + 0.65 * prog(t, starts[4] + 0.2 + k * 0.09, 0.4);
+  });
+
+  /* 6. Evolução do faturamento */
+  const serie = SERIE.map((v, i) => i === SERIE.length - 1 ? v + NOVA * ev : v);
+  const mS = Math.max(1, ...serie);
+  const n = serie.length;
+  const pts = serie.map((v, i) => [i * (320 / (n - 1)), 90 - 6 - (v / mS) * (90 - 14)]);
+  const reveal = prog(t, 4.8, 1.8) * (n - 1);
+  const whole = Math.floor(reveal), frac = reveal - whole;
+  const shown = pts.slice(0, whole + 1);
+  if (whole < n - 1) {
+    const a = pts[whole], b = pts[whole + 1];
+    shown.push([a[0] + (b[0] - a[0]) * frac, a[1] + (b[1] - a[1]) * frac]);
+  }
+  $('#poly').setAttribute('points', shown.map(p => p.join(',')).join(' '));
+  const head = shown[shown.length - 1];
+  const wrap = $('#line').parentElement;
+  const wpx = wrap.offsetWidth, hpx = $('#line').clientHeight;
+  $('#lineDot').style.left = (head[0] / 320) * wpx + 'px';
+  $('#lineDot').style.top = (head[1] / 90) * hpx + 'px';
+  $('#lineDot').style.opacity = prog(t, 4.8, 0.3);
+}
+
+function fit() {
+  const s = Math.min(innerWidth / 1920, innerHeight / 1080);
+  $('#stage').style.transform = `translate(-50%, -50%) scale(${s})`;
+}
+addEventListener('resize', fit); fit();
+
+window.__seek = t => render(clamp(t, 0, LOOP));
+window.__LOOP = LOOP;
+window.__hold = false;
+
+const frozen = new URLSearchParams(location.search).get('t');
+if (frozen !== null) {
+  document.fonts.ready.then(() => render(parseFloat(frozen)));
+} else {
+  let t0 = null;
+  const tick = now => {
+    if (t0 === null) t0 = now;
+    if (!window.__hold) render(((now - t0) / 1000) % LOOP);
+    requestAnimationFrame(tick);
+  };
+  document.fonts.ready.then(() => requestAnimationFrame(tick));
+}
+</script>
+</body>
+</html>

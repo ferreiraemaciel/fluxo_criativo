@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Blindagem, do link à auditoria</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#0f1013; --card:#181a1f; --muted:#1f2229; --fg:#f4f4f6; --muted-fg:rgba(255,255,255,.70); --border:rgba(255,255,255,.07); --primary:#fbbf24; --primary-fg:#0c0d11; --amber:#f59e0b; --violet:#8b5cf6; --sky:#0ea5e9; --emerald:#10b981; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  html { font-size:20px; }
+  html, body { width:100%; height:100%; background:#000; overflow:hidden; }
+  body { font-family:'Roboto', system-ui, -apple-system, sans-serif; color:var(--fg); }
+  #stage { position:absolute; left:50%; top:50%; width:1920px; height:1080px; transform-origin:center center; background:var(--bg); overflow:hidden; }
+  #glow { position:absolute; inset:0; background:radial-gradient(900px 500px at 78% -8%, rgba(251,191,36,.10), transparent 70%), radial-gradient(700px 500px at 0% 100%, rgba(139,92,246,.06), transparent 70%); }
+  #desk { position:absolute; inset:0; }
+  .page { position:absolute; inset:0; padding:64px 128px; opacity:0; }
+  .tnum { font-variant-numeric:tabular-nums; }
+  .card { position:relative; overflow:hidden; background:var(--card); border:1px solid var(--border); border-radius:.8rem; box-shadow:0 1px 0 rgba(255,255,255,.03) inset, 0 12px 40px rgba(0,0,0,.25); transform-origin:50% 50%; }
+  svg.i { width:1.1rem; height:1.1rem; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; flex-shrink:0; }
+  .shine { position:absolute; top:0; bottom:0; left:0; width:100%; pointer-events:none; opacity:0; z-index:3; background:linear-gradient(105deg, transparent 38%, rgba(255,255,255,.07) 46%, rgba(251,191,36,.16) 50%, rgba(255,255,255,.07) 54%, transparent 62%); transform:translateX(-120%); }
+  .hd { position:absolute; top:50%; width:.8rem; height:.8rem; border-radius:99px; transform:translate(-50%,-50%); opacity:0; pointer-events:none; box-shadow:0 0 14px currentColor, 0 0 4px currentColor; background:currentColor; }
+
+  .head { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:1.4rem; }
+  .head h1 { font-size:2.1rem; font-weight:600; letter-spacing:-.01em; }
+  .head p { color:var(--muted-fg); margin-top:.3rem; font-size:1rem; }
+  .btn { display:inline-flex; align-items:center; gap:.55rem; background:var(--primary); color:var(--primary-fg); font-weight:500; font-size:1rem; padding:.7rem 1.2rem; border-radius:.6rem; white-space:nowrap; }
+  .btn svg.i { width:1rem; height:1rem; }
+  .btn-o { display:inline-flex; align-items:center; gap:.5rem; border:1px solid rgba(255,255,255,.14); color:var(--fg); font-size:.9rem; padding:.55rem .95rem; border-radius:.55rem; background:transparent; white-space:nowrap; }
+  .btn-o svg.i { width:1rem; height:1rem; }
+  .btn-wa { color:#34d399; border-color:rgba(16,185,129,.45); }
+
+  /* Dash */
+  .stats { display:grid; grid-template-columns:repeat(4,1fr); gap:1rem; margin-bottom:1.2rem; }
+  .stat { padding:1.15rem 1.3rem; display:flex; align-items:center; gap:.9rem; }
+  .ico { position:relative; width:2.7rem; height:2.7rem; border-radius:.6rem; display:flex; align-items:center; justify-content:center; background:rgba(251,191,36,.15); border:1px solid rgba(251,191,36,.30); color:var(--primary); flex-shrink:0; }
+  .ico svg.i { width:1.3rem; height:1.3rem; }
+  .stat .lbl { font-size:.8rem; color:var(--muted-fg); }
+  .stat .val { font-size:1.7rem; font-weight:600; line-height:1.2; }
+  .mid { display:grid; grid-template-columns:2fr 1fr; gap:1rem; margin-bottom:1.2rem; }
+  .status { padding:1.3rem 1.5rem; }
+  .status .ttl, .valor .ttl { display:flex; align-items:center; gap:.55rem; font-weight:600; font-size:1.05rem; margin-bottom:1rem; }
+  .status .ttl svg.i, .valor .ttl svg.i { color:var(--primary); }
+  .bar-row { margin-bottom:.8rem; } .bar-row:last-child { margin-bottom:0; }
+  .bar-top { display:flex; justify-content:space-between; align-items:center; font-size:.95rem; margin-bottom:.3rem; }
+  .bar-top .l { display:flex; align-items:center; gap:.55rem; } .bar-top .r { color:var(--muted-fg); }
+  .tw { position:relative; }
+  .track { height:.55rem; border-radius:99px; background:var(--muted); overflow:hidden; }
+  .fill { height:100%; border-radius:99px; width:0; }
+  .c-amber{color:var(--amber)} .b-amber{background:var(--amber)} .c-violet{color:var(--violet)} .b-violet{background:var(--violet)} .c-sky{color:var(--sky)} .b-sky{background:var(--sky)} .c-emerald{color:var(--emerald)} .b-emerald{background:var(--emerald)}
+  .valor { padding:1.3rem 1.5rem; display:flex; flex-direction:column; justify-content:space-between; }
+  .valor .ttl { margin-bottom:.4rem; }
+  .numwrap { position:relative; display:inline-block; }
+  .valor .big { font-size:2.5rem; font-weight:600; letter-spacing:-.01em; transform-origin:left center; }
+  .valor .sub { color:var(--muted-fg); font-size:.8rem; margin-top:.3rem; }
+  #valorGlow { position:absolute; inset:0; background:radial-gradient(400px 200px at 40% 65%, rgba(251,191,36,.20), transparent 70%); opacity:0; pointer-events:none; }
+  .burst { position:absolute; left:50%; top:50%; width:0; height:0; pointer-events:none; z-index:4; }
+  .b-ring { position:absolute; left:0; top:0; width:70px; height:70px; border-radius:99px; border:2px solid rgba(251,191,36,.85); opacity:0; transform:translate(-50%,-50%); }
+  .b-spark { position:absolute; left:0; top:0; width:8px; height:8px; margin:-4px 0 0 -4px; border-radius:99px; background:#fbbf24; box-shadow:0 0 10px #fbbf24; opacity:0; }
+  .b-plus { position:absolute; left:50%; top:-1.6rem; font-size:.95rem; font-weight:600; color:#86efac; white-space:nowrap; opacity:0; padding:.2rem .7rem; border-radius:99px; background:rgba(74,222,128,.12); border:1px solid rgba(74,222,128,.4); }
+  .list { padding:1.3rem 1.5rem 1rem; }
+  .list h2 { font-size:1.15rem; font-weight:600; margin-bottom:.5rem; }
+  #rowsA { position:relative; height:13.2rem; overflow:hidden; }
+  .row { position:absolute; left:0; right:0; height:3.3rem; display:flex; align-items:center; justify-content:space-between; border-top:1px solid var(--border); }
+  .row .nome { font-weight:500; font-size:1.02rem; }
+  .row .meta { font-size:.78rem; color:var(--muted-fg); display:flex; gap:.7rem; align-items:center; margin-top:.1rem; }
+  .row .meta .exp { display:inline-flex; align-items:center; gap:.3rem; color:var(--amber); }
+  .row .meta .exp svg.i { width:.8rem; height:.8rem; }
+  .pill { font-size:.8rem; font-weight:500; padding:.25rem .75rem; border-radius:99px; border:1px solid; white-space:nowrap; display:inline-block; transform-origin:right center; }
+  .p-amber{background:rgba(245,158,11,.10);color:#fbbf24;border-color:rgba(245,158,11,.30)} .p-violet{background:rgba(139,92,246,.10);color:#a78bfa;border-color:rgba(139,92,246,.30)} .p-sky{background:rgba(14,165,233,.10);color:#38bdf8;border-color:rgba(14,165,233,.30)} .p-emerald{background:rgba(16,185,129,.10);color:#34d399;border-color:rgba(16,185,129,.30)} .p-slate{background:rgba(148,163,184,.10);color:#cbd5e1;border-color:rgba(148,163,184,.30)}
+
+  /* Novo contrato */
+  .search { display:flex; align-items:center; gap:.5rem; width:13rem; height:2.2rem; border:1px solid rgba(255,255,255,.12); border-radius:.5rem; padding:0 .7rem; font-size:.78rem; color:var(--muted-fg); background:#14161a; }
+  .search svg.i { width:.9rem; height:.9rem; }
+  .sec2 { font-size:1.05rem; font-weight:600; margin-bottom:.3rem; }
+  .lead { color:var(--muted-fg); font-size:.85rem; line-height:1.55; max-width:56rem; margin-bottom:1.1rem; }
+  .mgrid { display:grid; grid-template-columns:repeat(2,1fr); gap:.8rem; }
+  .mod { padding:.9rem 1.1rem; display:flex; align-items:center; gap:.9rem; border-color:rgba(16,185,129,.30); }
+  .mod .mi { width:2.4rem; height:2.4rem; border-radius:.55rem; background:rgba(245,158,11,.15); display:flex; align-items:center; justify-content:center; color:#f59e0b; }
+  .mod .mi svg.i { width:1.15rem; height:1.15rem; }
+  .mn { font-weight:500; font-size:1rem; } .ms { font-size:.75rem; color:var(--muted-fg); margin-top:.1rem; }
+  .hov.on { border-color:rgba(251,191,36,.7); background:#1f2229; box-shadow:0 0 0 3px rgba(251,191,36,.12); }
+
+  /* Formulário */
+  .fgrid { display:grid; grid-template-columns:repeat(3,1fr); gap:1rem; margin-bottom:1.2rem; }
+  .fc { padding:1.2rem 1.3rem; }
+  .fc h3 { font-size:1rem; font-weight:600; margin-bottom:.9rem; display:flex; align-items:center; gap:.5rem; }
+  .fc h3 svg.i { color:var(--primary); }
+  .fld { margin-bottom:.85rem; } .fld:last-child { margin-bottom:0; }
+  .fld label { display:block; font-size:.72rem; color:var(--muted-fg); margin-bottom:.3rem; }
+  .inp { height:2.5rem; border:1px solid rgba(255,255,255,.12); border-radius:.55rem; background:#14161a; padding:0 .8rem; display:flex; align-items:center; font-size:.9rem; }
+  .inp.on { border-color:#fbbf24; box-shadow:0 0 0 3px rgba(251,191,36,.18); }
+  .inp .ph { color:rgba(255,255,255,.35); }
+  .fbar { display:flex; justify-content:flex-end; }
+
+  /* Contrato */
+  .ctrow { display:grid; grid-template-columns:3fr 2fr; gap:1rem; }
+  .ct-h { display:flex; align-items:center; gap:.8rem; margin-bottom:1.2rem; }
+  .ct-h .ttl { flex:1; }
+  .ct-h .ttl h1 { font-size:1.8rem; font-weight:600; }
+  .ct-h .ttl p { color:var(--muted-fg); font-size:.85rem; margin-top:.2rem; }
+  .cc { padding:1.2rem 1.4rem; margin-bottom:1rem; } .cc:last-child { margin-bottom:0; }
+  .cc h3 { font-size:1rem; font-weight:600; margin-bottom:.25rem; }
+  .cc .sub { font-size:.78rem; color:var(--muted-fg); margin-bottom:.9rem; line-height:1.45; }
+  .linkrow { display:flex; gap:.5rem; align-items:center; }
+  .linkin { flex:1; height:2.5rem; border:1px solid rgba(255,255,255,.12); border-radius:.55rem; background:#14161a; padding:0 .8rem; display:flex; align-items:center; font-size:.78rem; color:rgba(255,255,255,.8); white-space:nowrap; overflow:hidden; }
+  .ib { width:2.5rem; height:2.5rem; padding:0; justify-content:center; }
+  .sig { display:flex; align-items:center; justify-content:space-between; padding:.75rem 0; border-top:1px solid var(--border); }
+  .sig .who b { display:block; font-weight:500; font-size:.95rem; } .sig .who span { font-size:.75rem; color:var(--muted-fg); }
+  .sigr { position:relative; min-width:11rem; height:2.4rem; display:flex; align-items:center; justify-content:flex-end; }
+  .sigr > * { position:absolute; right:0; }
+  .pdfline { display:flex; align-items:center; gap:.6rem; font-size:.85rem; padding:.3rem 0; opacity:0; }
+  .spin { width:1rem; height:1rem; border-radius:99px; border:2px solid rgba(251,191,36,.25); border-top-color:#fbbf24; flex-shrink:0; }
+  .okc { width:1rem; height:1rem; color:#34d399; flex-shrink:0; }
+
+  #toast { position:absolute; right:128px; bottom:120px; z-index:60; display:inline-flex; align-items:center; gap:.6rem; font-size:.9rem; padding:.65rem 1.1rem; border-radius:.7rem; background:#12261c; border:1px solid rgba(74,222,128,.4); color:#86efac; opacity:0; box-shadow:0 12px 40px rgba(0,0,0,.4); }
+  #toast svg.i { width:1rem; height:1rem; }
+
+  /* PDF */
+  .papers { display:flex; gap:70px; justify-content:center; align-items:flex-start; margin-top:.4rem; }
+  .paper { position:relative; width:380px; height:553px; background:#fff; color:#111; font-family:Arial, Helvetica, sans-serif; overflow:hidden; border-radius:3px; box-shadow:0 20px 60px rgba(0,0,0,.5); transform-origin:50% 50%; }
+  .pimg { display:block; width:100%; height:100%; object-fit:cover; object-position:top; }
+  #paper1 { box-shadow:7px 7px 0 0 #dcdde2, 14px 14px 0 0 #b3b5bf, 0 24px 60px rgba(0,0,0,.5); }
+  .ph1 { background:#1a1a2e; color:#fff; padding:12px 16px; font-size:11px; font-weight:700; text-align:center; }
+  .pb { padding:14px 18px; }
+  .sk { height:5px; border-radius:3px; background:#e5e7eb; margin:6px 0; }
+  .skh { height:7px; width:42%; border-radius:3px; background:#9ca3af; margin:14px 0 6px; }
+  .ah { background:#1a1a2e; padding:17px 16px; display:flex; align-items:center; justify-content:center; position:relative;}
+  .aht { font-size:13.5px; font-weight:700; color:#fff; line-height:1.3; text-align:center; padding:1px 6px; border-radius:4px; }
+  .ahs { font-size:8px; color:rgba(255,255,255,.55); margin-top:2px; text-align:center; }
+  .ahl { position:absolute; right:14px; top:50%; margin-top:-14px; width:28px; height:28px; border-radius:6px; background:rgba(255,255,255,.14); border:1px solid rgba(255,255,255,.28); display:flex; align-items:center; justify-content:center; }
+  .ab { padding:16px 16px 12px;}
+  .ag { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:13px;}
+  .ac { border:.5px solid #d1d5db; border-radius:4px; overflow:hidden; }
+  .abadge { background:#f3f4f6; padding:4px 8px; font-size:8px; font-weight:700; color:#6b7280; text-transform:uppercase; letter-spacing:.05em; border-bottom:.5px solid #e5e7eb;}
+  .aid { padding:6px 8px 5px; border-bottom:.5px solid #e5e7eb;}
+  .an { font-size:10.5px; font-weight:700;} .ad { font-size:8px; font-family:monospace; color:#6b7280; margin-top:2px;}
+  .ar { display:flex; justify-content:space-between; align-items:center; padding:4.4px 8px; border-bottom:.5px solid #f3f4f6; font-size:8.5px;}
+  .ar .v { color:#111; text-align:right; white-space:nowrap; }
+  .ar .mono { font-family:monospace; font-size:7.6px;}
+  .dot { display:inline-block; width:5px; height:5px; border-radius:50%; background:#22c55e; margin-right:3px; vertical-align:middle; }
+  .term { color:#6b7280; border-radius:3px; padding:0 2px; margin:0 -2px; display:inline-block; transform-origin:left center; }
+  .ahash { padding:5px 8px 8px; border-top:.5px solid #e5e7eb; background:#fafafa;}
+  .ahash .term { font-size:8.5px;}
+  .hm { font-family:monospace; font-size:7.6px; color:#374151; margin-top:3px;}
+  .hs { border:.5px solid #d1d5db; border-radius:4px; overflow:hidden; margin-bottom:13px;}
+  .hh { background:#f3f4f6; padding:4px 8px; font-size:8px; font-weight:700; color:#6b7280; text-transform:uppercase; letter-spacing:.05em; border-bottom:.5px solid #e5e7eb;}
+  .hb { padding:9px 8px;}
+  .fp { border:1.4px solid #1a1a2e; border-radius:4px; padding:10px 10px; margin-bottom:13px;}
+  .fp .term { font-size:8.5px; font-weight:700; color:#1a1a2e; text-transform:uppercase; letter-spacing:.06em;}
+  .ft { border-top:.5px solid #e5e7eb; padding-top:11px;}
+
+  /* Celular */
+  #phoneLayer { position:absolute; inset:0; opacity:0; pointer-events:none; }
+  #phoneIn { position:absolute; left:745px; top:60px; width:430px; height:880px; transform-origin:50% 60%; }
+  #phone { position:absolute; inset:0; background:#050506; border-radius:64px; padding:11px; box-shadow:0 0 0 2px #2b2d33, 0 40px 90px rgba(0,0,0,.55); }
+  #screen { position:relative; width:408px; height:858px; border-radius:54px; overflow:hidden; background:#0f1013; }
+  .island { position:absolute; top:12px; left:50%; width:112px; height:32px; margin-left:-56px; background:#000; border-radius:20px; z-index:10; }
+  .sbar { position:absolute; top:0; left:0; right:0; height:52px; display:flex; justify-content:space-between; align-items:center; padding:8px 36px 0; font-size:15px; font-weight:600; z-index:9; color:#fff; }
+  .pscr { position:absolute; inset:0; padding-top:52px; opacity:0; }
+  .bbar { height:44px; margin:2px 16px 0; border-radius:14px; background:#1c1e23; display:flex; align-items:center; justify-content:center; gap:6px; font-size:12.5px; color:#cfd2d8; }
+  .bbar svg { width:12px; height:12px; fill:none; stroke:currentColor; stroke-width:2.2; stroke-linecap:round; stroke-linejoin:round; }
+  .wcont { padding:14px 22px 0; }
+  /* WhatsApp */
+  #sWA { background:#0b141a; padding-top:0; }
+  .wh { position:absolute; top:0; left:0; right:0; height:116px; background:#202c33; padding-top:52px; display:flex; align-items:center; gap:10px; padding-left:14px; padding-right:14px; }
+  .wh .av { width:40px; height:40px; border-radius:99px; background:#00a884; display:flex; align-items:center; justify-content:center; font-weight:600; font-size:15px; color:#fff; }
+  .wh .nm { font-size:16px; font-weight:500; color:#e9edef; } .wh .st { font-size:12px; color:#8696a0; margin-top:1px; }
+  .wh svg { width:20px; height:20px; fill:none; stroke:#aebac1; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+  .wchat { position:absolute; top:116px; left:0; right:0; bottom:64px; padding:14px 12px; background:#0b141a; }
+  .wdate { margin:0 auto 12px; width:fit-content; background:#182229; color:#8696a0; font-size:11.5px; padding:4px 10px; border-radius:8px; }
+  .bub { background:#202c33; color:#e9edef; border-radius:4px 14px 14px 14px; padding:8px 10px 6px; font-size:14.5px; line-height:1.4; max-width:318px; }
+  .bub .lk { color:#53bdeb; text-decoration:underline; word-break:break-all; border-radius:4px; padding:0 2px; margin:0 -2px; display:inline-block; }
+  .bub .tm { text-align:right; font-size:11px; color:#8696a0; margin-top:2px; }
+  .typing { background:#202c33; border-radius:4px 14px 14px 14px; width:64px; height:34px; display:flex; gap:5px; align-items:center; justify-content:center; }
+  .typing i { width:7px; height:7px; border-radius:99px; background:#8696a0; display:block; }
+  .wf { position:absolute; left:0; right:0; bottom:0; height:64px; background:#0b141a; display:flex; align-items:center; gap:8px; padding:0 10px 10px; }
+  .wf .in { flex:1; height:40px; border-radius:22px; background:#202c33; color:#8696a0; font-size:14px; display:flex; align-items:center; padding:0 14px; }
+  .wf .mic { width:40px; height:40px; border-radius:99px; background:#00a884; }
+  /* Página pública */
+  .pttl { text-align:center; margin-top:8px; }
+  .pttl h1 { font-size:22px; font-weight:600; margin-top:8px; }
+  .pttl p { font-size:12.5px; color:rgba(255,255,255,.7); margin-top:6px; line-height:1.4; padding:0 6px; }
+  .safe { margin:10px auto 0; width:fit-content; display:flex; align-items:center; gap:6px; font-size:11px; color:rgba(255,255,255,.55); border:1px solid rgba(255,255,255,.12); border-radius:99px; padding:4px 10px; }
+  .safe svg { width:11px; height:11px; fill:none; stroke:#fbbf24; stroke-width:2.2; }
+  .pstep { margin-top:14px; } .pstep .t { display:flex; justify-content:space-between; font-size:11px; color:rgba(255,255,255,.65); margin-bottom:6px; } .pstep .b { height:4px; border-radius:99px; background:#1f2229; overflow:hidden; } .pstep .b i { display:block; height:100%; background:#fbbf24; border-radius:99px; }
+  .pf { margin-top:12px; } .pf label { display:block; font-size:11.5px; color:rgba(255,255,255,.65); margin-bottom:4px; }
+  .pf .inp { height:44px; font-size:15px; border-radius:10px; padding:0 12px; }
+  .pbtn { margin-top:16px; height:50px; border-radius:12px; background:#fbbf24; color:#0c0d11; font-size:16px; font-weight:500; display:flex; align-items:center; justify-content:center; }
+  .pbtn.off { opacity:.4; }
+  .backl { font-size:12.5px; color:rgba(255,255,255,.6); margin-top:10px; }
+  #pDoc { position:relative; margin-top:10px; height:330px; border-radius:10px; overflow:hidden; background:#fff; color:#111; font-family:Arial, Helvetica, sans-serif; }
+  #docIn { position:absolute; left:0; right:0; top:0; }
+  #docIn .h { font-size:11.5px; font-weight:700; text-align:center; margin-bottom:8px; }
+  #docIn .c { font-size:9.5px; font-weight:700; color:#1a1a2e; margin:12px 0 4px; }
+  .hint { font-size:11.5px; color:#f59e0b; text-align:center; margin-top:8px; height:16px; }
+  .termo { margin-top:8px; border:1px solid rgba(251,191,36,.35); background:rgba(251,191,36,.06); border-radius:10px; padding:10px 12px; }
+  .termo .tt { display:flex; align-items:center; gap:6px; font-size:12.5px; font-weight:600; } .termo .tt svg { width:14px; height:14px; fill:none; stroke:#fbbf24; stroke-width:2; }
+  .termo .lb { display:flex; gap:8px; margin-top:6px; font-size:11.5px; line-height:1.4; color:rgba(255,255,255,.85); }
+  .cb { width:18px; height:18px; border-radius:4px; border:1.5px solid rgba(255,255,255,.4); flex-shrink:0; margin-top:1px; display:flex; align-items:center; justify-content:center; }
+  .cb svg { width:12px; height:12px; fill:none; stroke:#0c0d11; stroke-width:3; stroke-linecap:round; stroke-linejoin:round; opacity:0; }
+  #sDone { text-align:center; }
+  .dn { padding:70px 24px 0; }
+  #checkP { width:84px; height:84px; margin:0 auto; position:relative; }
+  #checkP svg { width:84px; height:84px; fill:none; stroke:#10b981; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+  .dn h2 { font-size:22px; font-weight:600; margin-top:20px; }
+  .dn p { font-size:13px; color:rgba(255,255,255,.7); line-height:1.45; margin-top:8px; }
+  .rcpt { margin:20px 0 0; text-align:left; border:1px solid rgba(255,255,255,.1); border-radius:12px; background:rgba(255,255,255,.03); }
+  .rcpt div { padding:10px 14px; border-top:1px solid rgba(255,255,255,.07); } .rcpt div:first-child { border-top:none; }
+  .rcpt small { display:block; font-size:10px; letter-spacing:.06em; text-transform:uppercase; color:rgba(255,255,255,.5); margin-bottom:2px; }
+  .rcpt b { font-weight:500; font-size:14px; } .rcpt .mono { font-family:monospace; font-size:12px; }
+  .burstP { position:absolute; left:50%; top:50%; width:0; height:0; }
+
+  /* Toque e cursor */
+  #touch { position:absolute; left:0; top:0; width:46px; height:46px; margin:-23px 0 0 -23px; border-radius:99px; background:rgba(255,255,255,.28); border:2px solid rgba(255,255,255,.75); opacity:0; z-index:80; pointer-events:none; }
+  #tring { position:absolute; left:0; top:0; width:46px; height:46px; margin:-23px 0 0 -23px; border-radius:99px; border:2px solid rgba(255,255,255,.7); opacity:0; z-index:79; pointer-events:none; }
+  #cursor { position:absolute; left:0; top:0; z-index:90; opacity:0; pointer-events:none; filter:drop-shadow(0 4px 6px rgba(0,0,0,.55)); }
+  #cursor svg { width:30px; height:30px; display:block; }
+  #cring { position:absolute; left:0; top:0; width:44px; height:44px; margin:-22px 0 0 -22px; border-radius:99px; border:2.5px solid rgba(251,191,36,.9); opacity:0; z-index:89; pointer-events:none; }
+
+  #cap { position:absolute; left:0; right:0; bottom:22px; display:flex; justify-content:center; z-index:70; opacity:0; pointer-events:none; }
+  #cap span { background:rgba(15,16,19,.86); border:1px solid rgba(251,191,36,.40); color:var(--fg); font-size:1.05rem; font-weight:500; padding:.55rem 1.4rem; border-radius:99px; box-shadow:0 10px 40px rgba(0,0,0,.5); }
+  #cap.big span { font-size:1.6rem; padding:.5rem 2rem; color:#fbbf24; }
+
+  #outro { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; opacity:0; z-index:50; background:var(--bg); }
+  #outro img { height:300px; width:auto; display:block; filter:drop-shadow(0 8px 40px rgba(67,97,238,.35)); }
+  #outro .wm { margin-top:1.4rem; font-size:2.6rem; font-weight:600; letter-spacing:-.01em; }
+  #outro .tag { margin-top:.5rem; font-size:1.05rem; color:var(--muted-fg); }
+  #fade { position:absolute; inset:0; background:#000; opacity:0; pointer-events:none; z-index:99; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="glow"></div>
+
+  <div id="desk">
+    <!-- 1. Painel -->
+    <div class="page" id="pgDash" style="padding:72px 128px">
+      <div class="head bl" id="headA">
+        <div><h1>Visão Geral</h1><p>Bora blindar mais alguns contratos hoje e aumentar esse faturamento aí?</p></div>
+        <div class="btn" id="btnDash"><svg class="i" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="M12 5v14"/></svg>Gerar contrato</div>
+      </div>
+      <div class="stats">
+        <div class="card stat bl"><div class="shine"></div><div class="ico"><svg class="i" viewBox="0 0 24 24"><path d="M20 19.5v.5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8.5L20 7.5V10"/><path d="M14 2v6h6"/><path d="M8 18c1-2 2-2 3 0s2 0 3-1"/></svg></div><div><div class="lbl">Contratos (total)</div><div class="val tnum" id="v-total">0</div></div></div>
+        <div class="card stat bl"><div class="shine"></div><div class="ico"><svg class="i" viewBox="0 0 24 24"><path d="M20 19.5v.5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8.5L20 7.5V10"/><path d="M14 2v6h6"/><path d="M8 18c1-2 2-2 3 0s2 0 3-1"/></svg></div><div><div class="lbl">Contratos no mês</div><div class="val tnum" id="v-mes">0</div></div></div>
+        <div class="card stat bl"><div class="shine"></div><div class="ico"><svg class="i" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><div><div class="lbl">Clientes</div><div class="val tnum" id="v-cli">0</div></div></div>
+        <div class="card stat bl"><div class="shine"></div><div class="ico"><svg class="i" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg></div><div><div class="lbl">Links expirados</div><div class="val tnum" id="v-exp">0</div></div></div>
+      </div>
+      <div class="mid">
+        <div class="card status bl" id="statusCard"><div class="shine"></div>
+          <div class="ttl"><svg class="i" viewBox="0 0 24 24"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>Status dos seus contratos</div>
+          <div class="bar-row"><div class="bar-top"><div class="l c-amber"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span style="color:var(--fg)">Aguardando cliente</span></div><span class="r tnum" id="t-aguardando"></span></div><div class="tw"><div class="track"><div class="fill b-amber" id="f-aguardando"></div></div><i class="hd c-amber" id="h-aguardando"></i></div></div>
+          <div class="bar-row"><div class="bar-top"><div class="l c-violet"><svg class="i" viewBox="0 0 24 24"><path d="M20 19.5v.5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8.5L20 7.5V10"/><path d="M14 2v6h6"/><path d="M8 18c1-2 2-2 3 0s2 0 3-1"/></svg><span style="color:var(--fg)">Aguardando você assinar</span></div><span class="r tnum" id="t-assinar"></span></div><div class="tw"><div class="track"><div class="fill b-violet" id="f-assinar"></div></div><i class="hd c-violet" id="h-assinar"></i></div></div>
+          <div class="bar-row"><div class="bar-top"><div class="l c-sky"><svg class="i" viewBox="0 0 24 24"><path d="M20 19.5v.5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8.5L20 7.5V10"/><path d="M14 2v6h6"/><path d="M8 18c1-2 2-2 3 0s2 0 3-1"/></svg><span style="color:var(--fg)">Assinado · gerar PDF</span></div><span class="r tnum" id="t-pdf"></span></div><div class="tw"><div class="track"><div class="fill b-sky" id="f-pdf"></div></div><i class="hd c-sky" id="h-pdf"></i></div></div>
+          <div class="bar-row"><div class="bar-top"><div class="l c-emerald"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg><span style="color:var(--fg)">Finalizados</span></div><span class="r tnum" id="t-final"></span></div><div class="tw"><div class="track"><div class="fill b-emerald" id="f-final"></div></div><i class="hd c-emerald" id="h-final"></i></div></div>
+        </div>
+        <div class="card valor bl" id="valorCard"><div id="valorGlow"></div><div class="shine"></div>
+          <div class="ttl"><svg class="i" viewBox="0 0 24 24"><line x1="12" x2="12" y1="2" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Valor blindado</div>
+          <div><div class="numwrap"><div class="big tnum" id="v-valor">R$ 0,00</div><div class="burst" id="burst"><div class="b-ring" id="bRing"></div><div class="b-plus" id="bPlus">+ R$ 4.800,00</div></div></div><div class="sub">Soma dos contratos já assinados</div></div>
+        </div>
+      </div>
+      <div class="card list bl" id="listA"><h2>Últimos contratos</h2><div id="rowsA"></div></div>
+    </div>
+
+    <!-- 2. Novo contrato -->
+    <div class="page" id="pgNovo" style="padding-top:100px">
+      <div class="head"><div><h1>Novo contrato</h1><p>Que tipo de contrato você precisa hoje?</p></div><div class="search"><svg class="i" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>Buscar tipo de contrato...</div></div>
+      <div class="sec2">Gerar contrato</div>
+      <p class="lead">As cláusulas já estão definidas e não se mexe nelas aqui. Você preenche os dados do cliente e do trabalho, como data, local, valor e forma de pagamento, escolhe entre as opções que o modelo permite e envia o link para o cliente assinar.</p>
+      <div class="mgrid" id="mgrid">
+        <div class="card mod hov" id="modCas"><div class="mi"><svg class="i" viewBox="0 0 24 24"><path d="M6 3h12l4 6-10 13L2 9Z"/><path d="M11 3 8 9l4 13 4-13-3-6"/><path d="M2 9h20"/></svg></div><div><div class="mn">Casamento</div><div class="ms">2 modelos</div></div></div>
+        <div class="card mod hov"><div class="mi"><svg class="i" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg></div><div><div class="mn">Gestante</div><div class="ms">1 modelo</div></div></div>
+        <div class="card mod hov"><div class="mi"><svg class="i" viewBox="0 0 24 24"><path d="M20 21v-8a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8"/><path d="M4 16s.5-1 2-1 2.5 2 4 2 2.5-2 4-2 2.5 2 4 2 2-1 2-1"/><path d="M2 21h20"/><path d="M7 8v3"/><path d="M12 8v3"/><path d="M17 8v3"/></svg></div><div><div class="mn">Aniversário Infantil</div><div class="ms">1 modelo</div></div></div>
+        <div class="card mod hov"><div class="mi"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9 12h.01"/><path d="M15 12h.01"/><path d="M10 16c.5.3 1.2.5 2 .5s1.5-.2 2-.5"/></svg></div><div><div class="mn">Newborn</div><div class="ms">1 modelo</div></div></div>
+        <div class="card mod hov"><div class="mi"><svg class="i" viewBox="0 0 24 24"><path d="M21.4 10.9a1 1 0 0 0 0-1.8L12.8 5.2a2 2 0 0 0-1.6 0L2.6 9.1a1 1 0 0 0 0 1.8l8.6 3.9a2 2 0 0 0 1.6 0z"/><path d="M22 10v6"/><path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5"/></svg></div><div><div class="mn">Formatura</div><div class="ms">2 modelos</div></div></div>
+        <div class="card mod hov"><div class="mi"><svg class="i" viewBox="0 0 24 24"><path d="M19 14c1.5-1.5 3-3.2 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.8 0-3 .5-4.5 2-1.5-1.5-2.7-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4 3 5.5l7 7Z"/></svg></div><div><div class="mn">Debutante</div><div class="ms">1 modelo</div></div></div>
+      </div>
+    </div>
+
+    <!-- 3. Formulário -->
+    <div class="page" id="pgForm" style="padding-top:130px">
+      <div class="head"><div><h1>Gerar contrato</h1><p>Casamento · preencha os dados do cliente e do trabalho</p></div></div>
+      <div class="fgrid">
+        <div class="card fc"><h3><svg class="i" viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Contratantes</h3>
+          <div class="fld"><label>Contratante 1 · Nome completo</label><div class="inp" id="fNome"><span class="v"></span></div></div>
+          <div class="fld"><label>Telefone</label><div class="inp" id="fTel"><span class="v"></span></div></div>
+          <div class="fld"><label>Contratante 2</label><div class="inp"><span>Thiago Martins Rocha</span></div></div></div>
+        <div class="card fc"><h3><svg class="i" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/></svg>Evento</h3>
+          <div class="fld"><label>Data do evento</label><div class="inp" id="fData"><span class="v"></span></div></div>
+          <div class="fld"><label>Local</label><div class="inp"><span>Jardim Botânico, Salvador - BA</span></div></div>
+          <div class="fld"><label>Horário</label><div class="inp"><span>16:00</span></div></div></div>
+        <div class="card fc"><h3><svg class="i" viewBox="0 0 24 24"><line x1="12" x2="12" y1="2" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Pagamento</h3>
+          <div class="fld"><label>Valor total</label><div class="inp" id="fValor"><span class="v"></span></div></div>
+          <div class="fld"><label>Forma de pagamento</label><div class="inp"><span>Pix em 3 parcelas</span></div></div>
+          <div class="fld"><label>Primeira parcela</label><div class="inp"><span>Na assinatura</span></div></div></div>
+      </div>
+      <div class="fbar"><div class="btn" id="btnGerar">Gerar contrato</div></div>
+    </div>
+
+    <!-- 4. Página do contrato -->
+    <div class="page" id="pgContrato" style="padding-top:130px">
+      <div class="ct-h">
+        <div class="btn-o" id="btnVoltar"><svg class="i" viewBox="0 0 24 24"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>Voltar</div>
+        <div class="ttl"><h1>Casamento Rafael e Thiago</h1><p>Template: Casamento</p></div>
+        <span class="pill p-slate" id="ctPill">Rascunho</span>
+      </div>
+      <div class="ctrow">
+        <div>
+          <div class="card cc" id="cardLink"><h3>Link para o cliente</h3><div class="sub">Mande este link ao contratante. Ele preenche os dados e assina pelo celular.</div>
+            <div class="linkrow"><div class="linkin">blindagem.fotografiaeomeunegocio.com.br/c/Hf3kQ8vT2m</div>
+              <div class="btn-o ib" id="btnCopy"><svg class="i" viewBox="0 0 24 24"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></div>
+              <div class="btn-o ib"><svg class="i" viewBox="0 0 24 24"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg></div>
+              <div class="btn-o ib btn-wa" id="btnWA"><svg class="i" viewBox="0 0 24 24"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg></div></div></div>
+          <div class="card cc" id="cardSig"><h3>Assinaturas</h3><div class="sub">Cada parte aceita e assina eletronicamente. O fotógrafo assina depois do cliente.</div>
+            <div class="sig" id="rowCli"><div class="who"><b>Contratante 1</b><span>Rafael Moraes Tavares</span></div><div class="sigr"><span class="pill p-amber" id="pillCli">Aguardando</span></div></div>
+            <div class="sig" id="rowCli2"><div class="who"><b>Contratante 2</b><span>Thiago Martins Rocha</span></div><div class="sigr"><span class="pill p-amber" id="pillCli2">Aguardando</span></div></div>
+            <div class="sig"><div class="who"><b>Fotógrafo</b><span>Você</span></div><div class="sigr"><span class="pill p-slate" id="pillFot0">Aguarda o cliente</span><div class="btn" id="btnAssinar" style="opacity:0">Assinar</div><span class="pill p-emerald" id="pillFot1" style="opacity:0">Assinou</span></div></div></div>
+        </div>
+        <div><div class="card cc" id="cardPdf"><h3>PDF do contrato</h3><div class="sub">Gera o PDF com a página de auditoria e envia aos contratantes.</div>
+          <div class="btn" id="btnPdf" style="opacity:.4">Gerar PDF</div>
+          <div style="margin-top:1rem;min-height:5.6rem" id="pdfProg">
+            <div class="pdfline"><span class="mk"></span>Obtendo dados de auditoria...</div>
+            <div class="pdfline"><span class="mk"></span>Gerando PDF (pode levar alguns segundos)...</div>
+            <div class="pdfline"><span class="mk"></span>Enviando PDF...</div></div></div></div>
+      </div>
+    </div>
+
+    <!-- 5. PDF -->
+    <div class="page" id="pgPdf" style="padding-top:90px">
+      <div class="ct-h">
+        <div class="btn-o" id="btnVoltarPdf"><svg class="i" viewBox="0 0 24 24"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>Voltar</div>
+        <div class="ttl"><h1>Casamento Rafael e Thiago.pdf</h1><p>Contrato assinado com página de auditoria</p></div>
+        <span class="pill p-emerald">Finalizado</span>
+      </div>
+      <div class="papers">
+        <div class="paper bl" id="paper1"><img class="pimg" src="contrato-casamento-p1.jpg" alt=""></div>
+        <div class="paper bl" id="paperAudit">
+          <div class="ah"><div><div class="aht term" id="au0" data-k="0">Registro de Auditoria e Assinatura</div><div class="ahs">Casamento Rafael e Thiago</div></div><div class="ahl"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2L3 7v5c0 5.25 3.75 10.15 9 11.35C17.25 22.15 21 17.25 21 12V7L12 2Z" fill="#fff" fill-opacity=".9"/><path d="M9 12l2 2 4-4" stroke="#1a1a2e" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
+          <div class="ab">
+            <div class="ag">
+              <div class="ac"><div class="abadge">Contratante</div><div class="aid"><div class="an">Rafael Moraes Tavares</div><div class="ad">CPF: ***.***.***-04</div></div>
+                <div class="ar"><span class="term" id="au1" data-k="1">Preenchimento</span><span class="v"><i class="dot"></i>14:31</span></div>
+                <div class="ar"><span class="term" id="au2" data-k="2">Visualizou</span><span class="v"><i class="dot"></i>14:33</span></div>
+                <div class="ar"><span class="term" id="au3" data-k="3">Aceitou os termos</span><span class="v"><i class="dot"></i>14:35</span></div>
+                <div class="ar"><span class="term" id="au4" data-k="4">Assinatura eletrônica</span><span class="v"><i class="dot"></i>14:36</span></div>
+                <div class="ar"><span class="term" id="au5" data-k="5">IP</span><span class="v mono">203.0.113.•••</span></div>
+                <div class="ar"><span class="term" id="au6" data-k="6">Dispositivo</span><span class="v mono">iPhone · Safari</span></div>
+                <div class="ahash"><span class="term" id="au7" data-k="7">Hash de assinatura</span><div class="hm">9f3c a71b … 4e02</div><div class="sk" style="width:80%;height:4px;margin:3px 0 0"></div></div></div>
+              <div class="ac"><div class="abadge">Contratado</div><div class="aid"><div class="an">Marina Costa Fotografia</div><div class="ad">CNPJ: **.***.***/0001-**</div></div>
+                <div class="ar"><span class="term" data-k="1">Preenchimento</span><span class="v"><i class="dot"></i>14:30</span></div>
+                <div class="ar"><span class="term" data-k="4">Assinatura eletrônica</span><span class="v"><i class="dot"></i>14:38</span></div>
+                <div class="ar"><span class="term" data-k="5">IP</span><span class="v mono">198.51.100.•••</span></div>
+                <div class="ar"><span class="term" data-k="6">Dispositivo</span><span class="v mono">MacBook · Chrome</span></div>
+                <div class="ahash"><span class="term" data-k="7">Hash de assinatura</span><div class="hm">c81d 02fe … 77a9</div><div class="sk" style="width:74%;height:4px;margin:3px 0 0"></div></div></div>
+            </div>
+            <div class="hs"><div class="hh">Hashes de integridade (SHA-256)</div><div class="hb"><div class="sk" style="height:4px"></div><div class="sk" style="width:88%;height:4px"></div></div></div>
+            <div class="fp"><span class="term" id="au8" data-k="8">Impressão digital das assinaturas</span><div class="sk" style="height:4px;margin-top:6px"></div><div class="sk" style="width:70%;height:4px"></div></div>
+            <div class="ft"><div class="sk" style="width:90%;margin-left:5%;height:4px"></div><div class="sk" style="width:76%;margin-left:12%;height:4px"></div><div class="sk" style="width:84%;margin-left:8%;height:4px"></div><div class="sk" style="width:70%;margin-left:15%;height:4px"></div><div class="sk" style="width:80%;margin-left:10%;height:4px"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast"><svg class="i" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg><span id="toastTxt"></span></div>
+
+  <!-- Celular -->
+  <div id="phoneLayer"><div id="phoneIn"><div id="phone"><div id="screen">
+    <div class="island"></div>
+    <div class="sbar"><span>14:32</span><span style="letter-spacing:2px;font-size:13px">●●● ▮</span></div>
+
+    <div class="pscr" id="sWA">
+      <div class="wh"><svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg><div class="av">MC</div><div style="flex:1"><div class="nm">Marina Costa Fotografia</div><div class="st" id="waSt">online</div></div><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg></div>
+      <div class="wchat"><div class="wdate">HOJE</div>
+        <div class="typing" id="waTyping"><i></i><i></i><i></i></div>
+        <div class="bub" id="waBub" style="opacity:0;position:absolute;left:12px;top:64px">Olá! Segue o link para você assinar o contrato "Casamento Rafael e Thiago":<br><br><span class="lk" id="waLink">blindagem.fotografiaeomeunegocio.com.br/c/Hf3kQ8vT2m</span><br><br>Qualquer dúvida, é só me chamar.<div class="tm">14:32</div></div></div>
+      <div class="wf"><div class="in">Mensagem</div><div class="mic"></div></div>
+    </div>
+
+    <div class="pscr" id="sForm">
+      <div class="bbar"><svg viewBox="0 0 24 24"><rect width="14" height="10" x="5" y="11" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>blindagem.fotografiaeomeunegocio.com.br</div>
+      <div class="wcont">
+        <div class="pttl"><img src="logo-blindagem.png" style="height:44px;width:auto;display:block;margin:0 auto" alt=""><h1>Preencha seus dados</h1><p>Marina Costa Fotografia solicitou estas informações para gerar seu contrato.</p></div>
+        <div class="safe"><svg viewBox="0 0 24 24"><rect width="14" height="10" x="5" y="11" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>Conexão segura · seus dados são protegidos</div>
+        <div class="pstep"><div class="t"><span>Passo 1 de 2 · Dados do contrato</span><span>1 / 2</span></div><div class="b"><i style="width:50%"></i></div></div>
+        <div class="pf"><label>Nome completo</label><div class="inp"><span>Rafael Moraes Tavares</span></div></div>
+        <div class="pf"><label>CPF</label><div class="inp" id="pCpf"><span class="v"></span></div></div>
+        <div class="pf"><label>E-mail</label><div class="inp" id="pMail"><span class="v"></span></div></div>
+        <div class="pbtn" id="pBtnRev">Revisar e assinar</div>
+      </div>
+    </div>
+
+    <div class="pscr" id="sSign">
+      <div class="bbar"><svg viewBox="0 0 24 24"><rect width="14" height="10" x="5" y="11" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>blindagem.fotografiaeomeunegocio.com.br</div>
+      <div class="wcont">
+        <div class="pttl" style="margin-top:2px"><h1 style="margin-top:0;font-size:20px">Leia e assine seu contrato</h1><p>Role até o final do contrato para liberar a assinatura.</p></div>
+        <div class="pstep"><div class="t"><span>Passo 2 de 2 · Leitura e assinatura</span><span>2 / 2</span></div><div class="b"><i style="width:100%"></i></div></div>
+        <div class="backl">← Voltar e editar dados</div>
+        <div id="pDoc"><div id="docIn"><img src="contrato-casamento-p1.jpg" style="width:100%;display:block" alt=""></div></div>
+        <div class="hint" id="pHint">Role até o final do contrato acima para habilitar a assinatura.</div>
+        <div class="termo"><div class="tt"><svg viewBox="0 0 24 24"><path d="M12 2 4 6v6c0 5 3.4 8.6 8 10 4.6-1.4 8-5 8-10V6l-8-4Z"/><path d="m9 12 2 2 4-4"/></svg>Termo de aceite</div>
+          <div class="lb"><div class="cb" id="pTermo"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></div><span>Li o contrato e aceito os termos. Serão registrados meu nome, documento, data e hora.</span></div></div>
+        <div class="pbtn off" id="pBtnAss" style="margin-top:12px">Assinar contrato</div>
+      </div>
+    </div>
+
+    <div class="pscr" id="sDone">
+      <div class="bbar"><svg viewBox="0 0 24 24"><rect width="14" height="10" x="5" y="11" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>blindagem.fotografiaeomeunegocio.com.br</div>
+      <div class="dn">
+        <div id="checkP"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4" id="checkPath"/></svg><div class="burstP" id="burstP"></div></div>
+        <h2>Assinatura registrada</h2>
+        <p>Seu aceite foi registrado. Você receberá o contrato final assim que todas as partes declararem seus aceites.</p>
+        <div class="rcpt" id="rcpt"><div><small>Assinado por</small><b>Rafael Moraes Tavares</b></div><div><small>Data e hora</small><b>19/09/2026 · 14:36</b></div><div><small>Hash da assinatura</small><b class="mono">9f3c a71b … 4e02</b></div></div>
+      </div>
+    </div>
+  </div></div></div></div>
+
+  <div id="touch"></div><div id="tring"></div>
+  <div id="cring"></div>
+  <div id="cursor"><svg viewBox="0 0 24 24"><path d="M4 2.5 4.6 19.4l4.3-4.1 3 6.5 3-1.4-3-6.4 6.1-.3Z" fill="#fff" stroke="#111" stroke-width="1.5" stroke-linejoin="round"/></svg></div>
+
+  <div id="cap"><span id="capT"></span></div>
+
+  <div id="outro"><img src="logo-blindagem.png" alt="Blindagem"><div class="wm">Blindagem</div><div class="tag">Contratos para fotógrafos</div></div>
+  <div id="fade"></div>
+</div>
+
+<script>
+/* =====================================================================
+   Blindagem, do link à auditoria. Trilha "In It (Instrumental Version)",
+   Kadant, 98 BPM. bt(n) = n batidas. Compasso k começa na batida 4(k-1).
+   Drop 1 no compasso 10 (batida 36), drop 2 no compasso 20 (batida 76).
+   Tudo é função do tempo t. window.__hold + window.__seek(t) congelam quadros.
+   ===================================================================== */
+const BPM = 98, BEAT = 60 / BPM, bt = n => n * BEAT, TOTAL = bt(108);
+const PI = Math.PI;
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const linear = x => x;
+const easeOut = x => 1 - Math.pow(1 - x, 3);
+const easeInOut = x => x < .5 ? 4*x*x*x : 1 - Math.pow(-2*x + 2, 3) / 2;
+const easeOutBack = x => { const c1 = 1.25, c3 = c1 + 1; return 1 + c3*Math.pow(x - 1, 3) + c1*Math.pow(x - 1, 2); };
+const prog = (t, s, d, e = easeOut) => e(clamp((t - s) / d));
+const $ = s => document.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const brl = v => v.toLocaleString('pt-BR', { style:'currency', currency:'BRL' });
+const SB = 'beat';
+/* ?semlegendas esconde as legendas do rodapé (a lista de textos fica fora do vídeo) */
+const SEM_LEGENDAS = new URLSearchParams(location.search).has('semlegendas');
+
+/* ---------------- Registro de cartões e destaques ---------------- */
+const cards = [];
+function reg(el, T0, draw) { const c = { el, T0, draw, rest:null }; cards.push(c); return c; }
+const spots = [];
+function spot(card, openB, closeB, o = {}) {
+  const s = { card, open:bt(openB), replay:bt(openB) + BEAT*.8, closeStart:bt(closeB), closeEnd:bt(closeB) + BEAT, maxW:o.maxW ?? .62, maxH:o.maxH ?? .62, maxS:o.maxS ?? 2.6 };
+  spots.push(s); return s;
+}
+function amount(s, t) {
+  if (t < s.open) return 0;
+  if (t < s.open + BEAT) return easeOutBack((t - s.open) / BEAT);
+  if (t < s.closeStart) return 1;
+  if (t < s.closeEnd) return 1 - easeInOut((t - s.closeStart) / BEAT);
+  return 0;
+}
+function shine(el, cc, m, start = .3, dur = 2.2) {
+  const s = el.querySelector('.shine'); if (!s) return;
+  s.style.opacity = clamp(m);
+  s.style.transform = `translateX(${-120 + 240*clamp((cc - start)/dur)}%)`;
+}
+
+/* ---------------- Explosões (onda + faíscas) ---------------- */
+function mkBurst(parent, n, color = '#fbbf24') {
+  const ring = document.createElement('div'); ring.className = 'b-ring'; ring.style.borderColor = color; parent.appendChild(ring);
+  const sp = []; for (let i = 0; i < n; i++) { const d = document.createElement('div'); d.className = 'b-spark'; d.style.background = color; d.style.boxShadow = `0 0 10px ${color}`; parent.appendChild(d); sp.push(d); }
+  return { ring, sp, n };
+}
+function updBurst(b, age, f, rad = 150, sx = 1.25, sy = .75, ringMax = 4.2, dur = 1.4) {
+  if (age > 0 && age < dur) { const k = age / dur; b.ring.style.opacity = (1 - k) * f; b.ring.style.transform = `translate(-50%,-50%) scale(${.3 + ringMax*easeOut(k)})`; } else b.ring.style.opacity = 0;
+  b.sp.forEach((d, i) => {
+    const k = clamp(age / (dur*.9)), ang = i*(2*PI/b.n) + .2, dist = 30 + rad*easeOut(k);
+    d.style.opacity = age > 0 ? (1 - k) * f : 0;
+    d.style.transform = `translate(${Math.cos(ang)*dist*sx}px, ${Math.sin(ang)*dist*sy}px) scale(${.4 + (1 - k)*1.1})`;
+  });
+}
+const burstDash = mkBurst($('#burst'), 16);
+const burstPhone = mkBurst($('#burstP'), 18, '#34d399');
+
+/* =====================================================================
+   PAINEL
+   ===================================================================== */
+const E_DROP2 = bt(76);
+const BASE = { total:47, mes:12, cli:38, exp:0, aguardando:9, assinar:6, pdf:5, final:27, valor:128750 };
+function liveA(t) {
+  const ev = prog(t, E_DROP2, BEAT);
+  return { ev, V:{ total:BASE.total + ev, mes:BASE.mes + ev, cli:BASE.cli + ev, exp:0, aguardando:BASE.aguardando, assinar:BASE.assinar, pdf:BASE.pdf, final:BASE.final + ev, valor:BASE.valor + 4800*ev } };
+}
+const STATUS = {
+  rascunho:{ label:'Rascunho', cls:'p-slate' }, aguardando:{ label:'Aguardando cliente', cls:'p-amber' },
+  assinar:{ label:'Aguardando fotógrafo assinar', cls:'p-violet' }, pdf:{ label:'Assinado · gerar PDF', cls:'p-sky' }, final:{ label:'Finalizado', cls:'p-emerald' },
+};
+const ROWS = [
+  { nome:'Casamento Rafael e Thiago', data:'19/09/2026', st:'final', novo:true },
+  { nome:'Ensaio Gestante Camila', data:'17/09/2026', st:'aguardando', exp:'expira em 5 dias' },
+  { nome:'Aniversário 15 anos Beatriz', data:'15/09/2026', st:'assinar' },
+  { nome:'Ensaio Newborn Helena', data:'12/09/2026', st:'final' },
+  { nome:'Evento corporativo Studio Norte', data:'10/09/2026', st:'final' },
+];
+const rowEls = ROWS.map(r => {
+  const el = document.createElement('div'); el.className = 'row';
+  el.innerHTML = `<div style="min-width:0"><div class="nome">${r.nome}</div><div class="meta"><span>${r.data}</span>${r.exp ? `<span class="exp"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>${r.exp}</span>` : ''}</div></div><span class="pill ${STATUS[r.st].cls}">${STATUS[r.st].label}</span>`;
+  $('#rowsA').appendChild(el); return el;
+});
+const KEYS = ['total','mes','cli','exp'], IDS = ['#v-total','#v-mes','#v-cli','#v-exp'];
+$$('#pgDash .stat').forEach((el, i) => reg(el, bt(.3 + i*.4), (cc, t, X, m) => { $(IDS[i]).textContent = Math.round(X.A.V[KEYS[i]] * prog(cc, .3, 2.2)); shine(el, cc, m); }));
+const GROUPS = ['aguardando','assinar','pdf','final'];
+const cStatus = reg($('#statusCard'), bt(2.4), (cc, t, X, m) => {
+  const V = X.A.V;
+  GROUPS.forEach((g, i) => {
+    const f = prog(cc, .5 + i*.3, 1.3), pct = V[g] / V.total * 100;
+    $('#f-' + g).style.width = pct*f + '%';
+    $('#t-' + g).textContent = `${Math.round(V[g]*f)} · ${Math.round(pct*f)}%`;
+    const h = $('#h-' + g); h.style.left = pct*f + '%'; h.style.opacity = clamp(m) * (f > .02 ? (.55 + .45*Math.sin(cc*6 + i)) : 0);
+  });
+  shine($('#statusCard'), cc, m, .2, 2.6);
+});
+const cValor = reg($('#valorCard'), bt(3.2), (cc, t, X, m) => {
+  const V = X.A.V, f = clamp(m), age = t - E_DROP2;
+  $('#v-valor').textContent = brl(V.valor * prog(cc, .3, 2.2));
+  const flash = age > 0 ? Math.sin(clamp(age / 1.8)*PI) : 0;
+  $('#valorGlow').style.opacity = clamp(f*(.45 + .25*Math.sin(cc*3.2)) + flash*.9);
+  $('#v-valor').style.color = flash > .02 ? `color-mix(in srgb, #fbbf24 ${Math.round(flash*100)}%, #f4f4f6)` : '';
+  $('#v-valor').style.transform = age > 0 ? `scale(${1 + .09*Math.sin(clamp(age/.7)*PI)})` : '';
+  updBurst(burstDash, age, 1);
+  const ag2 = t - bt(84);   // dentro do modal, mais uma onda quando o valor termina de contar
+  if (f > .5 && ag2 > 0 && ag2 < 1.4) updBurst(burstDash, ag2, f);
+  const plus = $('#bPlus'), a = (f > .5 && ag2 > 0) ? ag2 : age, kp = clamp(a/1.8);
+  plus.style.opacity = a > 0 ? Math.min(1, a/.2) * (1 - clamp((a - 1.3)/.5)) : 0;
+  plus.style.transform = `translate(-50%, ${-10 - 46*easeOut(kp)}px)`;
+  shine($('#valorCard'), cc, m, .3, 2.2);
+});
+reg($('#listA'), bt(4.4), () => {});
+
+/* =====================================================================
+   PÁGINA DO CONTRATO
+   ===================================================================== */
+const CT = [[0,'rascunho'],[bt(22.05),'aguardando'],[bt(42.6),'assinar'],[bt(48.7),'pdf'],[bt(58.0),'final']];
+function drawContrato(t) {
+  let key = CT[0][1], tc = 0;
+  for (const [tt, k] of CT) if (t >= tt) { key = k; tc = tt; }
+  const pill = $('#ctPill'), s = STATUS[key];
+  pill.className = 'pill ' + s.cls; pill.textContent = s.label;
+  const k = clamp((t - tc - .1)/.5); pill.style.transform = (tc > 0 && k > 0 && k < 1) ? `scale(${1 + .2*Math.sin(k*PI)})` : 'scale(1)';
+  // contratante
+  const sigCli = t >= bt(40.8);
+  const pc = $('#pillCli'); pc.className = 'pill ' + (sigCli ? 'p-emerald' : 'p-amber'); pc.textContent = sigCli ? 'Assinou · 14:36' : 'Aguardando';
+  const kc = clamp((t - bt(40.9))/.5); pc.style.transform = (kc > 0 && kc < 1) ? `scale(${1 + .2*Math.sin(kc*PI)})` : 'scale(1)';
+  const sigCli2 = t >= bt(42.0);
+  const pc2 = $('#pillCli2'); pc2.className = 'pill ' + (sigCli2 ? 'p-emerald' : 'p-amber'); pc2.textContent = sigCli2 ? 'Assinou · 14:41' : 'Aguardando';
+  const kc2 = clamp((t - bt(42.1))/.5); pc2.style.transform = (kc2 > 0 && kc2 < 1) ? `scale(${1 + .2*Math.sin(kc2*PI)})` : 'scale(1)';
+  // fotógrafo
+  const showBtn = t >= bt(43.0) && t < bt(48.7), signed = t >= bt(48.7);
+  $('#pillFot0').style.opacity = t < bt(42.8) ? 1 : 0;
+  const bA = $('#btnAssinar'); bA.style.opacity = showBtn ? prog(t, bt(43.0), .3) : 0;
+  bA.style.transform = showBtn ? `scale(${1 + .04*Math.sin(clamp((t - bt(44))/(BEAT*3))*PI*3)})` : '';
+  const pf = $('#pillFot1'); pf.style.opacity = signed ? 1 : 0;
+  const kf = clamp((t - bt(48.8))/.5); pf.style.transform = (kf > 0 && kf < 1) ? `scale(${1 + .2*Math.sin(kf*PI)})` : 'scale(1)';
+  // botão do PDF
+  const bp = $('#btnPdf'), en = t >= bt(48.9);
+  bp.style.opacity = en ? (t >= bt(58) ? .5 : 1) : .4;
+  const pk = clamp((t - bt(50))/(BEAT*2.6)); bp.style.boxShadow = (en && t < bt(53)) ? `0 0 0 ${Math.sin(pk*PI*2)*10}px rgba(251,191,36,${.35*(1 - pk)})` : '';
+  // progresso
+  const T = [bt(53.4), bt(55.0), bt(56.6)], DONE = bt(58.0);
+  $$('#pdfProg .pdfline').forEach((ln, i) => {
+    ln.style.opacity = prog(t, T[i], .3);
+    const doneI = (i < 2 && t >= T[i + 1]) || t >= DONE;
+    const mk = ln.querySelector('.mk');
+    if (doneI) mk.innerHTML = '<svg class="okc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>';
+    else mk.innerHTML = `<div class="spin" style="transform:rotate(${(t*420)%360}deg)"></div>`;
+  });
+}
+
+/* =====================================================================
+   PÁGINA DO PDF: a auditoria em destaque
+   ===================================================================== */
+const TERM_START = k => bt(61.2 + k*.64);
+const paperCards = [reg($('#paper1'), bt(59.0), () => {}), null,
+  reg($('#paperAudit'), bt(59.5), (cc, t, X, m) => {
+    const f = clamp(m);
+    $$('#paperAudit .term').forEach(el => {
+      const k = +el.dataset.k, s = TERM_START(k);
+      const a = clamp((t - s)/.18), cur = (t >= s && t < s + bt(.64)) ? 1 : 0;
+      const inten = f > .5 ? a * (cur ? 1 : .42) : 0;
+      el.style.background = inten > .01 ? `rgba(251,191,36,${.62*inten})` : '';
+      el.style.color = inten > .01 ? '#111' : '';
+      el.style.fontWeight = inten > .3 ? '700' : '';
+      el.style.transform = inten > .01 ? `scale(${1 + .10*inten*(cur ? 1 : .3)})` : '';
+      el.style.boxShadow = (inten > .6 && cur) ? '0 0 0 2px rgba(251,191,36,.55)' : '';
+    });
+    // o título recebe o destaque sobre o fundo escuro
+    const au0 = $('#au0'); if (f > .5 && t >= TERM_START(0) && t < TERM_START(0) + bt(.64)) au0.style.background = 'rgba(251,191,36,.9)', au0.style.color = '#1a1a2e';
+    else if (f > .5 && t >= TERM_START(0) + bt(.64)) au0.style.background = 'rgba(251,191,36,.28)', au0.style.color = '#fff';
+    else au0.style.background = '', au0.style.color = '#fff';
+    shine($('#paperAudit'), cc, m, .3, 2.2);
+  })];
+
+/* =====================================================================
+   Destaques
+   ===================================================================== */
+const spAudit = spot(paperCards[2], 60, 67, { maxW:.62, maxH:.86, maxS:2.8 });
+const spValor = spot(cValor, 80, 87, { maxW:.62, maxS:2.6 });
+const spStatus = spot(cStatus, 88, 95, { maxW:.84, maxS:1.7 });
+
+/* =====================================================================
+   Páginas e navegação
+   ===================================================================== */
+const PAGES = { dash:$('#pgDash'), novo:$('#pgNovo'), form:$('#pgForm'), contrato:$('#pgContrato'), pdf:$('#pgPdf') };
+const NAV = { dash:[[0,8],[75.7,200]], novo:[[8.6,12],[0,0]], form:[[12.6,19.6]], contrato:[[20.2,58.2],[70.4,75]], pdf:[[58.8,70]] };
+const FADE = bt(.5);
+function pageVis(name, t) {
+  let best = 0, tr = 0;
+  for (const [a, b] of NAV[name]) {
+    if (b <= a) continue;
+    const A = bt(a), Bt = bt(b);
+    const inn = clamp((t - (A - FADE))/FADE), out = 1 - clamp((t - Bt)/FADE);
+    const v = inn * out; if (v > best) { best = v; tr = (1 - inn)*18 - (1 - out)*10; }
+  }
+  return { o:best, y:tr };
+}
+
+/* ---------------- Campos digitados ---------------- */
+const TYPES = [
+  ['#fNome',  'Rafael Moraes Tavares',   13.5, 14.9, 13.3],
+  ['#fTel',   '(44) 97004-1004',         15.2, 16.2, 15.0],
+  ['#fData',  '07/05/2027',              16.6, 17.4, 16.4],
+  ['#fValor', 'R$ 4.800,00',             17.9, 18.8, 17.7],
+  ['#pCpf',   '104.204.304-04',          29.4, 30.4, 29.2],
+  ['#pMail',  'cliente5@exemplo.com.br', 30.8, 31.9, 30.6],
+];
+function typeField(sel, txt, b0, b1, t, clickB) {
+  const el = $(sel), v = el.querySelector('.v');
+  const p = clamp((t - bt(b0))/(bt(b1) - bt(b0)));
+  const n = Math.floor(txt.length * p);
+  const active = t >= bt(clickB) && t < bt(b1) + .5;
+  v.textContent = t >= bt(b0) ? txt.slice(0, n) + (active && Math.floor(t*4)%2 === 0 ? '|' : '') : (active && Math.floor(t*4)%2 === 0 ? '|' : '');
+  el.classList.toggle('on', active);
+}
+
+/* =====================================================================
+   Celular
+   ===================================================================== */
+const SCR = { wa:[22.3,28.4], form:[28.4,32.4], sign:[32.4,36.3], done:[36.3,41.6] };
+const SCREENS = { wa:$('#sWA'), form:$('#sForm'), sign:$('#sSign'), done:$('#sDone') };
+const SF = bt(.3);
+function scrVis(name, t) {
+  const [a, b] = SCR[name];
+  const inn = clamp((t - (bt(a) - (name === 'wa' ? 0 : SF)))/(name === 'wa' ? .01 : SF)), out = name === 'done' ? 1 : 1 - clamp((t - bt(b))/SF);
+  return inn * out;
+}
+function phonePresence(t) {
+  const p = prog(t, bt(22.3), bt(.9), easeInOut), q = prog(t, bt(40.7), bt(.8), easeInOut);
+  return { p, q, pp: clamp(p) * (1 - q) };
+}
+function drawPhone(t) {
+  const { p, q, pp } = phonePresence(t);
+  const L = $('#phoneLayer'); L.style.opacity = pp > .01 ? 1 : 0;
+  const pin = easeOutBack(clamp((t - bt(22.3))/bt(.9)));
+  $('#phoneIn').style.transform = `translateY(${(1 - pin)*150 + q*170}px) rotate(${(1 - pin)*-5 + q*4}deg) scale(${.94 + .06*clamp(pin)})`;
+  $('#phoneIn').style.opacity = clamp(p*1.6) * (1 - q);
+  for (const k in SCREENS) { const v = scrVis(k, t); SCREENS[k].style.opacity = v; SCREENS[k].style.transform = `translateX(${(1 - v)*14}px)`; }
+
+  // WhatsApp: digitando e mensagem chegando
+  const typing = t >= bt(23.4) && t < bt(24.8);
+  $('#waTyping').style.opacity = typing ? 1 : 0;
+  $$('#waTyping i').forEach((d, i) => d.style.transform = `translateY(${-4*Math.max(0, Math.sin(t*9 - i*.9))}px)`);
+  $('#waSt').textContent = typing ? 'digitando...' : 'online';
+  const bub = $('#waBub'), bp = prog(t, bt(24.8), .35, easeOutBack);
+  bub.style.opacity = clamp(bp*1.5); bub.style.transform = `translateY(${(1 - bp)*18}px) scale(${.96 + .04*bp})`;
+  const lkOn = t >= bt(27.75) && t < bt(28.6);
+  $('#waLink').style.background = lkOn ? 'rgba(83,189,235,.28)' : '';
+
+  // formulário
+  const rev = $('#pBtnRev'); rev.style.filter = (t >= bt(31.95) && t < bt(32.3)) ? 'brightness(.8)' : '';
+
+  // assinatura: rolagem do contrato com o dedo
+  const sc = prog(t, bt(32.7), bt(2.1), easeInOut);
+  $('#docIn').style.transform = `translateY(${-sc*DOC_MAX}px)`;
+  const atEnd = sc > .96;
+  $('#pHint').style.opacity = atEnd ? 0 : 1;
+  const tk = t >= bt(35.2);
+  $('#pTermo').style.background = tk ? '#fbbf24' : ''; $('#pTermo').style.borderColor = tk ? '#fbbf24' : ''; $('#pTermo svg').style.opacity = tk ? 1 : 0;
+  const btn = $('#pBtnAss'); btn.classList.toggle('off', !tk);
+  btn.style.filter = (t >= bt(35.95) && t < bt(36.3)) ? 'brightness(.8)' : '';
+
+  // sucesso
+  const ds = t - bt(36);
+  const cp = prog(t, bt(36), .6, easeOutBack);
+  $('#checkP').style.transform = `scale(${.4 + .6*clamp(cp)})`; $('#checkP').style.opacity = clamp(cp*2);
+  $('#checkPath').style.strokeDasharray = 12; $('#checkPath').style.strokeDashoffset = 12*(1 - prog(t, bt(36.2), .5));
+  updBurst(burstPhone, ds - .05, 1, 105, 1, 1, 3.1, 1.1);
+  const rc = prog(t, bt(37.2), .6); $('#rcpt').style.opacity = rc; $('#rcpt').style.transform = `translateY(${(1 - rc)*16}px)`;
+}
+
+/* =====================================================================
+   Cursor e toques
+   ===================================================================== */
+const MEASURE = ['#btnDash','#modCas','#fNome','#fTel','#fData','#fValor','#btnGerar','#btnWA','#rowCli','#btnAssinar','#btnPdf','#paperAudit','#au0','#au1','#au2','#au3','#au4','#au5','#au6','#au7','#au8','#btnVoltarPdf','#btnVoltar','#valorCard','#statusCard','#waLink','#pCpf','#pMail','#pBtnRev','#pTermo','#pBtnAss','#pDoc'];
+const REST = {};
+let WP = [], TAPS = [], DRAG = null, DOC_MAX = 300;
+function measure() {
+  const sr = $('#stage').getBoundingClientRect(), s = sr.width/1920;
+  const rc = el => { const r = el.getBoundingClientRect(); return { cx:(r.left - sr.left + r.width/2)/s, cy:(r.top - sr.top + r.height/2)/s, w:r.width/s, h:r.height/s, l:(r.left - sr.left)/s, tp:(r.top - sr.top)/s }; };
+  DOC_MAX = Math.max(0, $('#docIn').offsetHeight - $('#pDoc').offsetHeight + 4);
+  MEASURE.forEach(sel => { const el = $(sel); if (el) REST[sel] = rc(el); else console.warn('sem', sel); });
+  cards.forEach(c => { c.rest = rc(c.el); });
+  spots.forEach(sp => { const r = sp.card.rest; sp.scale = Math.min(sp.maxW*1920/r.w, sp.maxH*1080/r.h, sp.maxS); });
+  const P = (sel, dx = 0, dy = 0) => ({ x:REST[sel].cx + dx, y:REST[sel].cy + dy });
+  const Z = (sel, sp, dx = 0) => { const r = REST[sel], c = sp.card.rest; return { x:960 + (r.cx - c.cx)*sp.scale + dx, y:540 + (r.cy - c.cy)*sp.scale }; };
+  WP = [
+    { b:4.2, x:1560, y:880, first:true },
+    { b:8,   ...P('#btnDash', -20, 4), click:'#btnDash' },
+    { b:12,  ...P('#modCas', 60, 4), click:'#modCas' },
+    { b:13.3, ...P('#fNome', 60), click:'#fNome' },
+    { b:15.0, ...P('#fTel', 60), click:'#fTel' },
+    { b:16.4, ...P('#fData', 60), click:'#fData' },
+    { b:17.7, ...P('#fValor', 60), click:'#fValor' },
+    { b:19.5, ...P('#btnGerar'), click:'#btnGerar' },
+    { b:22,   ...P('#btnWA'), click:'#btnWA' },
+    { b:44.3, ...P('#rowCli', 220, 4) },
+    { b:48,   ...P('#btnAssinar'), click:'#btnAssinar' },
+    { b:53,   ...P('#btnPdf'), click:'#btnPdf' },
+    { b:60,   ...P('#paperAudit', 40, -60), click:'#paperAudit' },
+    ...[0,1,2,3,4,5,6,7,8].map(k => { const r = REST['#au' + k], c = spAudit.card.rest, sc = spAudit.scale, cx = 960 + (r.cx - c.cx)*sc, cy = 540 + (r.cy - c.cy)*sc, hw = r.w*sc/2; return { b:61.2 + k*.64 - .12, x:k === 0 ? cx + hw + 28 : cx - hw - 18, y:cy + 6, z:true }; }),
+    { b:67,   x:260, y:560, click:'#back1' },
+    { b:69.5, ...P('#btnVoltarPdf'), click:'#btnVoltarPdf' },
+    { b:75,   ...P('#btnVoltar'), click:'#btnVoltar' },
+    { b:80,   ...P('#valorCard', 40, 30), click:'#valorCard' },
+    { b:87,   x:260, y:560, click:'#back2' },
+    { b:88,   ...P('#statusCard', -200, 10), click:'#statusCard' },
+    { b:95,   x:260, y:560, click:'#back3' },
+  ];
+  const tp = (b, sel, dx = 0, dy = 0) => ({ b, ...P(sel, dx, dy) });
+  TAPS = [ tp(28,'#waLink', -40, 6), tp(29.2,'#pCpf', 40), tp(30.6,'#pMail', 40), tp(32,'#pBtnRev'), tp(35.2,'#pTermo'), tp(36,'#pBtnAss') ];
+  const d = REST['#pDoc']; DRAG = { b0:32.7, b1:34.8, x:d.cx, y0:d.cy + d.h*.32, y1:d.cy - d.h*.32 };
+}
+
+function segPos(i, t) {          // posição do cursor na etapa i
+  const w = WP[i], tw = bt(w.b);
+  if (i === 0) return { x:w.x, y:w.y };
+  const p = WP[i - 1], tp = bt(p.b);
+  const dist = Math.hypot(w.x - p.x, w.y - p.y);
+  const dur = clamp(dist/1700, .34, 1.25);
+  const start = Math.max(tp + .22, tw - dur);
+  const k = easeInOut(clamp((t - start)/(tw - start)));
+  const nx = -(w.y - p.y)/(dist || 1), ny = (w.x - p.x)/(dist || 1), arc = .07*dist*Math.sin(PI*k);
+  return { x:p.x + (w.x - p.x)*k + nx*arc, y:p.y + (w.y - p.y)*k + ny*arc };
+}
+function cursorAt(t) {
+  let i = 0;
+  for (let j = 0; j < WP.length; j++) if (t >= bt(WP[j].b) - 1.4) i = j;
+  // escolhe a primeira etapa cujo tempo de chegada ainda não passou
+  for (let j = 0; j < WP.length; j++) { if (t <= bt(WP[j].b)) { i = j; break; } i = j; }
+  return { ...segPos(i, t), i };
+}
+function curVisible(t) {
+  const first = prog(t, bt(4.2), .3);
+  const hide = prog(t, bt(22.5), .25) * (1 - prog(t, bt(41.6), .3));
+  const end = 1 - prog(t, bt(99), .4);
+  return first * (1 - hide) * end;
+}
+function drawCursor(t) {
+  const c = cursorAt(t), v = curVisible(t);
+  const cur = $('#cursor'); cur.style.opacity = v; cur.style.transform = `translate(${c.x - 5}px, ${c.y - 3}px)`;
+  // clique: anel e efeito de apertar
+  let ringOp = 0, rx = 0, ry = 0, ringScale = .3, press = null;
+  for (const w of WP) {
+    if (!w.click) continue;
+    const age = t - bt(w.b);
+    if (age > -.05 && age < .5) { ringOp = (1 - clamp(age/.5)) * .9 * v; rx = w.x; ry = w.y; ringScale = .3 + 1.4*easeOut(clamp(age/.5)); }
+    if (age > -.04 && age < .22 && w.click.startsWith('#') && $(w.click)) press = w.click;
+  }
+  const cr = $('#cring'); cr.style.opacity = ringOp; cr.style.transform = `translate(${rx}px, ${ry}px) scale(${ringScale})`;
+  $$('.pressed').forEach(e => { e.classList.remove('pressed'); e.style.filter = e.dataset.f || ''; });
+  if (press && ['#btnDash','#btnGerar','#btnWA','#btnAssinar','#btnPdf','#btnVoltarPdf','#btnVoltar'].includes(press)) { const e = $(press); e.dataset.f = ''; e.classList.add('pressed'); e.style.filter = 'brightness(.78)'; }
+  // hover no cartão de modelo
+  $('#modCas').classList.toggle('on', t > bt(10.2) && t < bt(12.5) && Math.abs(c.x - REST['#modCas'].cx) < REST['#modCas'].w/2 && Math.abs(c.y - REST['#modCas'].cy) < REST['#modCas'].h/2);
+}
+function drawTouch(t) {
+  const el = $('#touch'), ring = $('#tring');
+  let op = 0, x = 0, y = 0, sc = 1, ro = 0, rs = .5, rx = 0, ry = 0;
+  for (const tp of TAPS) {
+    const age = t - bt(tp.b);
+    if (age > -.18 && age < .55) {
+      const inn = clamp((age + .18)/.14), out = 1 - clamp((age - .16)/.25);
+      op = Math.max(op, inn*out); x = tp.x; y = tp.y; sc = age > 0 && age < .14 ? .82 : 1;
+      if (age > 0) { ro = Math.max(ro, (1 - clamp(age/.5))*.9); rs = .5 + 1.5*easeOut(clamp(age/.5)); rx = tp.x; ry = tp.y; }
+    }
+  }
+  if (DRAG) {
+    const a = bt(DRAG.b0), b = bt(DRAG.b1);
+    if (t > a - .18 && t < b + .3) {
+      const k = easeInOut(clamp((t - a)/(b - a)));
+      const inn = clamp((t - (a - .18))/.14), out = 1 - clamp((t - b)/.25);
+      op = Math.max(op, inn*out); x = DRAG.x; y = DRAG.y0 + (DRAG.y1 - DRAG.y0)*k; sc = .9;
+    }
+  }
+  el.style.opacity = op; el.style.transform = `translate(${x}px, ${y}px) scale(${sc})`;
+  ring.style.opacity = ro; ring.style.transform = `translate(${rx}px, ${ry}px) scale(${rs})`;
+}
+
+/* =====================================================================
+   Legendas, aviso, fechamento
+   ===================================================================== */
+const CAPS = [
+  [9, 19.6, 'Você escolhe o modelo e preenche o trabalho'],
+  [23.6, 28, 'O cliente recebe o link no WhatsApp'],
+  [28.6, 35.6, 'O cliente confere tudo no celular'],
+  [36.3, 40.5, 'Assinou', 'big'],
+  [44, 52.5, 'Você assina em seguida'],
+  [59.2, 68.4, 'Cada passo fica registrado'],
+  [77.5, 96, 'O painel mostra o que você blindou'],
+];
+function drawCap(t) {
+  if (SEM_LEGENDAS) { $('#cap').style.display = 'none'; return; }
+  let txt = '', big = false, o = 0;
+  for (const [a, b, s, kind] of CAPS) {
+    const v = prog(t, bt(a), .4) * (1 - prog(t, bt(b) - .4, .4));
+    if (v > o) { o = v; txt = s; big = kind === 'big'; }
+  }
+  const cap = $('#cap'); cap.style.opacity = o; cap.className = big ? 'big' : ''; cap.style.transform = `translateY(${(1 - o)*14}px)`;
+  if (txt) $('#capT').textContent = txt;
+}
+function drawToast(t) {
+  const items = [[48.3, 50.6, 'Assinatura registrada!'], [58.0, 60.4, 'PDF gerado e enviado aos contratantes!']];
+  let o = 0, txt = '';
+  for (const [a, b, s] of items) { const v = prog(t, bt(a), .3) * (1 - prog(t, bt(b) - .3, .3)); if (v > o) { o = v; txt = s; } }
+  $('#toast').style.opacity = o; $('#toast').style.transform = `translateY(${(1 - o)*14}px)`;
+  if (txt) $('#toastTxt').textContent = txt;
+}
+
+/* =====================================================================
+   Quadro a quadro
+   ===================================================================== */
+function render(t) {
+  const X = { A:liveA(t) };
+
+  /* páginas */
+  for (const n in PAGES) { const v = pageVis(n, t); PAGES[n].style.opacity = v.o; PAGES[n].style.transform = `translateY(${v.y}px)`; PAGES[n].style.pointerEvents = 'none'; }
+
+  /* celular e desfoque da mesa */
+  drawPhone(t);
+  const pp = phonePresence(t).pp;
+  $('#desk').style.filter = pp > .001 ? `blur(${11*pp}px) brightness(${1 - .5*pp})` : '';
+
+  /* destaque (modal) ativo */
+  let active = null, m = 0;
+  for (const s of spots) { const a = amount(s, t); if (a > 0) { active = s; m = a; break; } }
+  const mBlur = clamp(m);
+
+  /* cartões */
+  for (const c of cards) {
+    const p = prog(t, c.T0, .6);
+    let cc = t - c.T0;
+    for (const s of spots) if (s.card === c && t >= s.replay) cc = t - s.replay;
+    const isActive = active && active.card === c, mm = isActive ? m : 0;
+    c.draw(cc, t, X, mm);
+    c.el.style.opacity = p;
+    let tr = `translateY(${(1 - p)*24}px)`;
+    if (isActive) {
+      const r = c.rest;
+      tr = `translate(${(960 - r.cx)*m}px, ${(540 - r.cy)*m}px) scale(${1 + (active.scale - 1)*m})`;
+      c.el.style.zIndex = 20; c.el.style.borderColor = `rgba(251,191,36,${.55*mBlur})`;
+      c.el.style.boxShadow = `0 ${50*mBlur}px ${140*mBlur}px rgba(0,0,0,.7), 0 0 ${70*mBlur}px rgba(251,191,36,${.20*mBlur})`; c.el.style.filter = '';
+    } else {
+      c.el.style.zIndex = ''; c.el.style.borderColor = ''; c.el.style.boxShadow = '';
+      c.el.style.filter = mBlur > .001 ? `blur(${14*mBlur}px) brightness(${1 - .5*mBlur})` : '';
+    }
+    c.el.style.transform = tr;
+  }
+  $('#headA').style.filter = mBlur > .001 && active && active.card !== null ? `blur(${14*mBlur}px) brightness(${1 - .5*mBlur})` : '';
+  const h = prog(t, .1, .7); $('#headA').style.opacity = h;
+  $('#headA').style.transform = `translateY(${(1 - h)*18}px)`;
+  const kk = clamp((t - bt(6.5))/(BEAT*1.5)), pulse = Math.sin(kk*PI);
+  if (!$('#btnDash').classList.contains('pressed')) { $('#btnDash').style.boxShadow = `0 0 0 ${pulse*16}px rgba(251,191,36,${.35*(1 - kk)})`; $('#btnDash').style.transform = `scale(${1 + pulse*.05})`; }
+
+  /* lista do painel */
+  const rowH = 66, ev = X.A.ev, evL = prog(t, bt(76.3), BEAT);
+  rowEls.forEach((el, i) => {
+    const r = ROWS[i]; let y, o;
+    if (r.novo) { y = -rowH + rowH*evL; o = evL; }
+    else { const idx = i - 1, en = prog(t, bt(5 + idx*.4), .6); y = idx*rowH + rowH*evL + (1 - en)*22; o = en; }
+    el.style.transform = `translateY(${y}px)`; el.style.opacity = o;
+  });
+
+  /* novo contrato */
+  $$('#mgrid .mod').forEach((el, i) => { const p = prog(t, bt(9 + i*.25), .5); el.style.opacity = p; if (el.id !== 'modCas' || true) el.style.transform = `translateY(${(1 - p)*18}px)`; });
+
+  /* formulário */
+  TYPES.forEach(a => typeField(a[0], a[1], a[2], a[3], t, a[4]));
+
+  drawContrato(t);
+  drawCursor(t); drawTouch(t); drawCap(t); drawToast(t);
+
+  /* fechamento */
+  const oi = prog(t, bt(100), BEAT*1.2);
+  $('#outro').style.opacity = oi; $('#outro img').style.transform = `scale(${.94 + .06*oi})`;
+  $('#fade').style.opacity = prog(t, TOTAL - 1.0, 1.0, linear);
+}
+
+function fit() {
+  const s = Math.min(innerWidth/1920, innerHeight/1080);
+  $('#stage').style.transform = `translate(-50%, -50%) scale(${s})`;
+}
+addEventListener('resize', fit); fit();
+
+/* =====================================================================
+   Efeitos sonoros: lista de eventos, na mesma linha do tempo da animação.
+   O som é sintetizado à parte (sfx.py) a partir desta lista.
+   ===================================================================== */
+function buildSfx() {
+  const E = [], add = (t, type, o = {}) => E.push({ t:+t.toFixed(4), type, ...o });
+  WP.forEach(w => { if (w.click) add(bt(w.b), 'click'); });
+  TAPS.forEach(tp => add(bt(tp.b), 'tap'));
+  add(bt(DRAG.b0), 'swipe', { dur:bt(DRAG.b1) - bt(DRAG.b0) });
+  [8.1, 12.1, 19.7, 28.4, 32.4, 58.3, 69.9, 75.2].forEach(b => add(bt(b), 'page'));
+  add(bt(22.3), 'phoneIn'); add(bt(40.7), 'phoneOut');
+  spots.forEach(sp => { add(sp.open, 'modalIn'); add(sp.closeStart, 'modalOut'); });
+  // digitando
+  TYPES.forEach(([sel, txt, b0, b1]) => {
+    const phone = sel.startsWith('#p'), n = txt.length;
+    for (let i = 1; i <= n; i++) add(bt(b0) + (bt(b1) - bt(b0))*i/n, phone ? 'ptick' : 'key');
+  });
+  // entradas dos cartões
+  for (let i = 0; i < 4; i++) add(bt(.3 + i*.4), 'pop', { vol:.55 });
+  add(bt(2.4), 'pop', { vol:.6 }); add(bt(3.2), 'pop', { vol:.6 }); add(bt(4.4), 'pop', { vol:.6 });
+  for (let i = 0; i < 6; i++) add(bt(9 + i*.25), 'pop', { vol:.4 });
+  add(bt(59.0), 'page'); add(bt(59.5), 'page');
+  // contagem dos números e barras
+  for (let i = 0; i < 4; i++) add(bt(.3 + i*.4) + .3, 'count', { dur:2.2, vol:.22, f0:620 + i*70 });
+  add(bt(3.2) + .3, 'count', { dur:2.2, vol:.34, f0:480 });
+  for (let i = 0; i < 4; i++) add(bt(2.4) + .5 + i*.3, 'bar', { i });
+  for (let i = 0; i < 4; i++) add(spStatus.replay + .5 + i*.3, 'bar', { i, vol:.9 });
+  add(spValor.replay + .3, 'count', { dur:2.2, vol:.45, f0:440 });
+  // segundo drop: o valor sobe
+  add(E_DROP2, 'coin'); add(E_DROP2 + .02, 'count', { dur:BEAT, vol:.3, f0:900 }); add(bt(76.3), 'pop', { vol:.6 });
+  add(bt(84), 'coin', { vol:.75 });
+  // WhatsApp
+  add(bt(22.12), 'wasend'); add(bt(24.8), 'wareceive');
+  // assinatura: festa
+  add(bt(36), 'success'); add(bt(37.2), 'pop', { vol:.6 });
+  [40.9, 42.1, 48.8].forEach(b => add(bt(b), 'pop', { vol:.7 }));
+  add(bt(48.3), 'toast'); add(bt(58.0), 'toast');
+  [53.4, 55.0, 56.6].forEach(b => add(bt(b), 'tick'));
+  // termos da auditoria
+  for (let k = 0; k < 9; k++) add(TERM_START(k), 'term', { k });
+  // logo
+  add(bt(99.0), 'riser', { dur:BEAT }); add(bt(100.05), 'logo');
+  E.sort((a, b) => a.t - b.t);
+  return { total:TOTAL, events:E };
+}
+window.__sfx = buildSfx;
+
+window.__seek = t => render(clamp(t, 0, TOTAL));
+window.__TOTAL = TOTAL; window.__hold = false;
+window.__ready = new Promise(res => Promise.all([document.fonts.ready, ...[...document.images].map(i => i.decode().catch(() => {}))]).then(() => { measure(); setTimeout(res, 80); }));
+const frozen = new URLSearchParams(location.search).get('t');
+window.__ready.then(() => {
+  if (frozen !== null) { render(parseFloat(frozen)); return; }
+  let t0 = null;
+  const tick = now => { if (t0 === null) t0 = now; if (!window.__hold) render(((now - t0)/1000) % (TOTAL + 1.2)); requestAnimationFrame(tick); };
+  requestAnimationFrame(tick);
+});
+</script>
+</body>
+</html>

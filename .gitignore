@@ -165,3 +165,8 @@ supabase/.temp/
 # Materiais de referência da Black Friday: vivem no R2 (bucket fmn-referencias),
 # cópia local não versionada. Índice em tracker-fmn/REFERENCIAS-BF.md
 tracker-fmn/referencias-bf/
+
+# Vídeos do Blindagem: trilhas do Epidemic Sound (licença da conta, não versionar) e MP4 renderizados
+video-blindagem/trilhas/
+video-blindagem/*.mp4
+video-blindagem/legendas/*.mov

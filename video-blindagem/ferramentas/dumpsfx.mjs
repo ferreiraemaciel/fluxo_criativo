@@ -1,0 +1,13 @@
+import puppeteer from 'puppeteer-core';
+import fs from 'fs';
+const browser = await puppeteer.launch({ executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: 'new' });
+const page = await browser.newPage();
+await page.setViewport({ width: 1920, height: 1080 });
+page.on('pageerror', e => console.log('ERRO NA PÁGINA:', e.message));
+await page.goto('file:///Users/ferreiraemaciel/Documents/fluxo-criativo/video-blindagem/' + (process.env.HTML || 'blindagem-contratos.html'), { waitUntil: 'networkidle0' });
+await page.evaluate(() => { window.__hold = true; return window.__ready; });
+const data = await page.evaluate(() => window.__sfx());
+fs.writeFileSync(process.argv[2], JSON.stringify(data));
+const by = {}; data.events.forEach(e => by[e.type] = (by[e.type] || 0) + 1);
+console.log('eventos:', data.events.length, JSON.stringify(by));
+await browser.close();
