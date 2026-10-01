@@ -138,7 +138,15 @@
     // realmente vira nota; quando não existe, o bruto serve.
     const bruto   = aprovadas.reduce((s, v) => s + Number(v.preco_oferta ?? v.valor_bruto ?? 0), 0);
     const liquido = aprovadas.reduce((s, v) => s + Number(v.valor_liquido ?? v.valor_bruto ?? 0), 0);
-    const taxaHotmart = Math.max(0, bruto - liquido);
+    /* Desde 01/10/2026 a renovação do Blindagem também entra aqui, paga pelo
+       Asaas (linha com id "ASAAS-..."). A taxa de cada plataforma é separada
+       para o detalhamento; no lucro entra a soma das duas. */
+    const ehAsaas = v => String(v.hotmart_transaction_id || '').startsWith('ASAAS-');
+    const taxaDe = lista => Math.max(0, lista.reduce((s, v) =>
+      s + Number(v.preco_oferta ?? v.valor_bruto ?? 0) - Number(v.valor_liquido ?? v.valor_bruto ?? 0), 0));
+    const taxaAsaas   = taxaDe(aprovadas.filter(ehAsaas));
+    const taxaTotal   = Math.max(0, bruto - liquido);
+    const taxaHotmart = Math.max(0, taxaTotal - taxaAsaas);
 
     const trafego     = Number(gasto) || 0;
     const impostoNota = bruto   * (Number(notaPct) / 100);
@@ -151,10 +159,10 @@
     const margem = bruto > 0 ? (lucro / bruto) * 100 : 0;
 
     return {
-      bruto, liquido, taxaHotmart,
+      bruto, liquido, taxaHotmart, taxaAsaas, taxaPlataformas: taxaTotal,
       impostoNota, impostoMeta, trafego,
       despesas: despesasPer,
-      custoTotal: taxaHotmart + impostoNota + impostoMeta + trafego + despesasPer,
+      custoTotal: taxaTotal + impostoNota + impostoMeta + trafego + despesasPer,
       lucro, margem,
       vendas: aprovadas.length,
       // ROI: o que sobrou dividido pelo que foi investido pra fazer sobrar.

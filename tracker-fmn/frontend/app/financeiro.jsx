@@ -81,7 +81,7 @@ function useVendasData(from, to) {
       // disso, então o faturamento do período Máximo vinha menor do que é.
       const data = await window.buscarTudo(() => window.db
         .from('vendas')
-        .select('hotmart_transaction_id,produto_nome,valor_bruto,preco_oferta,valor_liquido,status,created_at,utm_source')
+        .select('hotmart_transaction_id,produto_nome,valor_bruto,preco_oferta,valor_liquido,status,created_at,utm_source,oferta_nome,metodo_pagamento,parcelas,comprador_email,comprador_nome')
         .gte('created_at', brt.gte)
         .lte('created_at', brt.lte)
         .order('created_at', { ascending: false }));
@@ -776,6 +776,7 @@ function TaxesTab({ dateRange }) {
   const fat        = resultado.bruto;
   const liquido     = resultado.liquido;
   const hotmartTax  = resultado.taxaHotmart;
+  const asaasTax    = resultado.taxaAsaas;
   const hotmartPct  = fat > 0 ? ((hotmartTax / fat) * 100).toFixed(2) : '0.00';
   const vendasCount = resultado.vendas;
   const metaTax     = resultado.impostoMeta;
@@ -826,6 +827,12 @@ function TaxesTab({ dateRange }) {
         </div>
       </TaxCard>
 
+      {asaasTax > 0 && (
+        <TaxCard title="Taxa Asaas" subtitle="Renovações do Blindagem pagas no app">
+          <TaxRow label="Taxa paga por nós (Pix e à vista)" value={fmtDec(asaasTax)} accent />
+          <TaxRow label="Taxas das duas plataformas" value={fmt(Math.round(resultado.taxaPlataformas))} />
+        </TaxCard>
+      )}
       <TaxCard title="Taxa Hotmart" subtitle="Diferença entre valor bruto e valor líquido recebido">
         <TaxRow label="Faturamento bruto" value={fmt(Math.round(fat))} />
         <TaxRow label="Valor líquido recebido" value={fmt(Math.round(liquido))} />
@@ -893,9 +900,91 @@ function SinalHotmart({ faixa, registros }) {
   );
 }
 
+/* ── Asaas ────────────────────────────────────────────────────────
+   Desde 01/10/2026 a renovação do Blindagem (e, no futuro, a etapa nova e
+   a primeira compra) é paga pelo Asaas, direto no app. Cada pagamento entra
+   aqui como venda nova, com id "ASAAS-<pedido>" e a etiqueta em oferta_nome
+   (Renovação, Upgrade, Renovação + Upgrade, Primeira compra).
+   No Pix e no cartão à vista a taxa é nossa. No parcelado o cliente paga a
+   taxa e a antecipação: o bruto é maior que o preço, e entra o preço cheio. */
+function ehAsaas(v) { return String(v.hotmart_transaction_id || '').startsWith('ASAAS-'); }
+
+function AsaasTab({ dateRange }) {
+  const { vendas: todas, loading } = useVendasData(dateRange.from, dateRange.to);
+  const vendas = todas.filter(ehAsaas);
+  const aprovadas = vendas.filter(v => v.status === 'aprovada');
+  const soma = (lista, f) => lista.reduce((s, v) => s + f(v), 0);
+  const preco   = soma(aprovadas, v => Number(v.preco_oferta ?? v.valor_bruto));
+  const pago    = soma(aprovadas, v => Number(v.valor_bruto));
+  const liquido = soma(aprovadas, v => Number(v.valor_liquido ?? v.valor_bruto));
+  const nossaTaxa = Math.max(0, preco - liquido);
+  const doCliente = Math.max(0, pago - preco);
+  const conta = rotulo => aprovadas.filter(v => (v.oferta_nome || '').includes(rotulo)).length;
+  const reembolsos = vendas.filter(v => v.status === 'reembolsada' || v.status === 'chargeback');
+  const forma = v => v.metodo_pagamento === 'pix' ? 'Pix' : `Cartão ${v.parcelas || 1}x`;
+  const cores = { 'Renovação':'#60a5fa', 'Upgrade':'#4ade80', 'Renovação + Upgrade':'#c084fc', 'Primeira compra':'var(--fmn-gold)' };
+
+  if (loading) return <div style={{padding:40,textAlign:'center',color:'var(--text-3)',fontFamily:'Roboto,sans-serif'}}>Carregando...</div>;
+  return (
+    <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
+      <div style={{ display:'flex', gap:12, flexWrap:'wrap' }}>
+        <CardKPI label="Faturamento Asaas" value={fmt(preco)} icon="trending-up" accent/>
+        <CardKPI label="Recebido na conta" value={fmt(liquido)} icon="wallet"/>
+        <CardKPI label="Taxa paga por nós" value={fmtDec(nossaTaxa)} icon="percent"/>
+        <CardKPI label="Renovações · Upgrades" value={`${conta('Renovação')} · ${conta('Upgrade')}`} icon="refresh-cw"/>
+      </div>
+      <div style={{ padding:'10px 14px', borderRadius:10, background:'rgba(96,165,250,.07)', border:'1px solid rgba(96,165,250,.18)',
+        fontSize:12, fontFamily:'Roboto,sans-serif', color:'var(--text-2)', lineHeight:1.55 }}>
+        No Pix e no cartão à vista, a taxa do Asaas sai do nosso lado.
+        {doCliente > 0 && ` No parcelado, o cliente pagou ${fmtDec(doCliente)} a mais em taxa e antecipação e o preço cheio entrou para nós.`}
+        {reembolsos.length > 0 && ` ${reembolsos.length === 1 ? 'Houve 1 estorno' : `Houve ${reembolsos.length} estornos`} no período.`}
+      </div>
+      <SectionCard title={`Pagamentos pelo Asaas (${vendas.length})`} noPad>
+        {vendas.length === 0 ? (
+          <div style={{ padding:20, fontSize:13, color:'var(--text-3)', fontFamily:'Roboto,sans-serif' }}>Nenhum pagamento pelo Asaas no período.</div>
+        ) : (
+          <table style={{ width:'100%', borderCollapse:'collapse' }}>
+            <thead>
+              <tr style={{ borderBottom:'1px solid var(--app-border)' }}>
+                {['Data','Cliente','Etiqueta','Forma','Preço','Pago','Recebido','Situação'].map((h,i) => (
+                  <th key={i} style={{ padding:'10px 14px', textAlign:i>=4&&i<=6?'right':'left', fontSize:10, fontFamily:'Roboto,sans-serif',
+                    fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)' }}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {vendas.map((v, i) => {
+                const cor = cores[v.oferta_nome] || 'var(--text-2)';
+                const ok = v.status === 'aprovada';
+                return (
+                  <tr key={v.hotmart_transaction_id} style={{ borderBottom: i < vendas.length-1 ? '1px solid var(--app-border)' : 'none',
+                    fontSize:12.5, fontFamily:'Roboto,sans-serif', color:'var(--text-1)' }}>
+                    <td style={{ padding:'10px 14px', whiteSpace:'nowrap' }}>{(v.created_at||'').slice(0,10).split('-').reverse().join('/')}</td>
+                    <td style={{ padding:'10px 14px' }}>{v.comprador_nome || v.comprador_email}</td>
+                    <td style={{ padding:'10px 14px' }}>
+                      <span style={{ padding:'2px 8px', borderRadius:99, fontSize:11, fontWeight:700, color:cor, border:`1px solid ${cor}55`, background:`${cor}14` }}>{v.oferta_nome || 'Asaas'}</span>
+                    </td>
+                    <td style={{ padding:'10px 14px', whiteSpace:'nowrap' }}>{forma(v)}</td>
+                    <td style={{ padding:'10px 14px', textAlign:'right' }}>{fmtDec(Number(v.preco_oferta ?? v.valor_bruto))}</td>
+                    <td style={{ padding:'10px 14px', textAlign:'right' }}>{fmtDec(Number(v.valor_bruto))}</td>
+                    <td style={{ padding:'10px 14px', textAlign:'right' }}>{fmtDec(Number(v.valor_liquido ?? v.valor_bruto))}</td>
+                    <td style={{ padding:'10px 14px', color: ok ? 'var(--clr-pos)' : 'var(--clr-neg)' }}>{ok ? 'Aprovada' : v.status === 'reembolsada' ? 'Estornada' : v.status}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        )}
+      </SectionCard>
+    </div>
+  );
+}
+
 function HotmartTab({ dateRange }) {
   const [activeFilter, setActiveFilter] = useState('Todos');
-  const { vendas, loading } = useVendasData(dateRange.from, dateRange.to);
+  const { vendas: todas, loading } = useVendasData(dateRange.from, dateRange.to);
+  // As renovações pagas pelo Asaas têm a aba própria (01/10/2026).
+  const vendas = todas.filter(v => !ehAsaas(v));
   const filters = ['Todos','Aprovados','Reembolsos','Cancelados','Problemas'];
 
   const productMap = {};
@@ -1111,6 +1200,7 @@ function FinancialScreen() {
   const [dateRange, setDateRange] = useState({ from: _iso(_primeiroDiaMes), to: _iso(_hoje) });
   const tabs = [
     { id: 'hotmart',  label: 'Hotmart',          icon: 'shopping-cart' },
+    { id: 'asaas',    label: 'Asaas',            icon: 'refresh-cw' },
     { id: 'despesas', label: 'Despesas',          icon: 'receipt' },
     { id: 'impostos', label: 'Impostos',          icon: 'landmark' },
   ];
@@ -1140,6 +1230,7 @@ function FinancialScreen() {
       {/* Content */}
       <div style={{ flex: 1, overflowY: 'auto', padding: '20px 24px' }}>
         {tab === 'hotmart'  && <HotmartTab dateRange={dateRange}/>}
+        {tab === 'asaas'    && <AsaasTab dateRange={dateRange}/>}
         {tab === 'despesas' && <ExpensesTab dateRange={dateRange}/>}
         {tab === 'impostos' && <TaxesTab dateRange={dateRange}/>}
       </div>

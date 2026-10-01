@@ -65,6 +65,12 @@ const STATUS_MAP: Record<string, string> = {
   PURCHASE_CHARGEBACK:           "chargeback",
   PURCHASE_PROTEST:              "protesto",
   PURCHASE_DELAYED:              "pendente",
+  // Pix ou boleto GERADO e ainda não pago. Era descartado como "evento
+  // ignorado" (caso Renata, ADS 356, 30/09/2026): o Meta contava a compra,
+  // porque a Hotmart avisa o pixel na geração, e o Tracker não tinha nada.
+  // Agora entra como pendente e aparece em Recuperação de Venda; quando o
+  // pagamento cai, o PURCHASE_APPROVED da mesma transação passa por cima.
+  PURCHASE_BILLET_PRINTED:       "pendente",
   PURCHASE_ABANDONED:            "recuperacao",
   PURCHASE_OUT_OF_SHOPPING_CART: "recuperacao",
   // Assinaturas
@@ -198,6 +204,8 @@ Deno.serve(async (req) => {
     CHARGEBACK: "PURCHASE_CHARGEBACK",
     PROTEST:    "PURCHASE_PROTEST",
     DELAYED:    "PURCHASE_DELAYED",
+    WAITING_PAYMENT: "PURCHASE_BILLET_PRINTED",
+    BILLET_PRINTED:  "PURCHASE_BILLET_PRINTED",
     ABANDONED:  "PURCHASE_ABANDONED",
   };
 

@@ -525,12 +525,13 @@ const SITUACAO_INFO = {
   abandonou:    { label: 'Abandonou o carrinho', cor: '#94a3b8' },
   pendente:     { label: 'Pagamento pendente',   cor: '#fbbf24' },
   recusada:     { label: 'Cartão recusado',      cor: '#f87171' },
-  expirada:     { label: 'Boleto vencido',       cor: '#f87171' },
+  expirada:     { label: 'Pix ou boleto vencido', cor: '#f87171' },
   cancelada:    { label: 'Cancelada',            cor: '#f87171' },
   atrasada:     { label: 'Pagamento atrasado',   cor: '#fbbf24' },
   bloqueada:    { label: 'Bloqueada',            cor: '#f87171' },
   pre_aprovada: { label: 'Pré-aprovada',         cor: '#60a5fa' },
   recuperacao:  { label: 'Em recuperação',       cor: '#fbbf24' },
+  protesto:     { label: 'Pediu reembolso',      cor: '#fb923c' },
 };
 
 // Uma mensagem por situação, cada uma argumentando o motivo específico —
@@ -556,6 +557,7 @@ const produtoNaFrase = bruto => {
 
 const MSG_SITUACAO = {
   abandonou:    (n, p) => `Oi, ${n}. Vi aqui que você chegou a abrir o checkout ${p.do} e não finalizou. Ficou alguma dúvida no meio do caminho ou foi só falta de tempo mesmo?`,
+  protesto:     (n, p) => `Oi, ${n}, tudo bem? Vi que você pediu o reembolso ${p.do} e queria entender o que aconteceu, ficou faltando alguma coisa ou algo não funcionou como você esperava? Se eu conseguir resolver, me conta aqui.`,
   pendente:     (n, p) => `Oi, ${n}. Seu pagamento ${p.do} ainda está pendente aqui do nosso lado. Se foi Pix ou boleto, às vezes a confirmação demora um pouco. Já conseguiu finalizar ou posso te ajudar com alguma coisa?`,
   recusada:     (n, p) => `Oi, ${n}. Algum imprevisto aconteceu com seu cartão na hora de fechar ${p.o}. Geralmente é algo simples de resolver, limite, dado digitado errado ou o banco barrando por segurança mesmo. Quer que eu gere um link novo pra tentar de novo ou prefere outra forma de pagamento?`,
   expirada:     (n, p) => `Oi, ${n}. O boleto ${p.do} venceu sem pagamento. Vamos dar andamento na evolução do seu negócio, posso emitir um novo link para você?`,
@@ -1125,8 +1127,10 @@ function FunisScreen({ onNavigate }) {
       let q = window.db.from('quiz_leads').select(
         'id,nome,email,whatsapp,area_atuacao,profissionalizacao,tipo_negocio,confianca_clientes,situacoes,custo_processo,usa_contrato,tipo_contrato_atual,foco_artistico,sentimentos,protege_dinheiro,temas_dominados,entende_contrato,quer_modelos,nivel_risco,completou_lead,completou_quiz,utm_source,utm_medium,utm_campaign,utm_content,created_at,perfil,device_platform'
       ).order('created_at', { ascending: false });
-      if (range.p_from) q = q.gte('created_at', range.p_from);
-      if (range.p_to)   q = q.lte('created_at', range.p_to + 'T23:59:59Z');
+      // Dia em horário de Brasília. Antes era UTC: tudo das 21h à meia-noite do
+      // último dia sumia (Renata, Pix das 22h54 de 30/09/2026, fora da Recuperação).
+      if (range.p_from) q = q.gte('created_at', range.p_from + 'T00:00:00-03:00');
+      if (range.p_to)   q = q.lte('created_at', range.p_to + 'T23:59:59.999-03:00');
       if (funnel !== 'all') q = q.eq('funnel_slug', funnel);
       return q;
     };
@@ -1141,8 +1145,10 @@ function FunisScreen({ onNavigate }) {
   // aparecia em lugar nenhum como oportunidade de recuperação.
   // Não inclui reembolsada/chargeback: isso já foi venda fechada, é
   // problema pós-venda, categoria diferente de "ainda não converteu".
-  // "protesto" também não entra: Felipe nunca habilitou esse status na conta.
-  const STATUS_RECUPERAVEL = ['pendente','cancelada','recusada','expirada','atrasada','bloqueada','pre_aprovada','recuperacao'];
+  // "protesto" ENTRA desde 01/10/2026: na Hotmart é o pedido de reembolso aberto
+  // pelo comprador, e o gerente da conta lembra que há 5 dias pra reverter antes
+  // do reembolso sair (planilha "Dinheiro na Mesa"). Caso real: Jair, 26/09.
+  const STATUS_RECUPERAVEL = ['pendente','cancelada','recusada','expirada','atrasada','bloqueada','pre_aprovada','recuperacao','protesto'];
   useEffect(() => {
     if (!window.db || aba !== 'carrinho') return;
     setLoadingCarrinho(true);
@@ -1150,8 +1156,8 @@ function FunisScreen({ onNavigate }) {
       let q = window.db.from('abandono_carrinho')
         .select('id,nome,email,telefone,produto_nome,created_at,utm_source,meta_ad_id')
         .order('created_at', { ascending: false });
-      if (range.p_from) q = q.gte('created_at', range.p_from);
-      if (range.p_to)   q = q.lte('created_at', range.p_to + 'T23:59:59Z');
+      if (range.p_from) q = q.gte('created_at', range.p_from + 'T00:00:00-03:00');
+      if (range.p_to)   q = q.lte('created_at', range.p_to + 'T23:59:59.999-03:00');
       return q;
     };
     const montarVendas = () => {
@@ -1159,8 +1165,8 @@ function FunisScreen({ onNavigate }) {
         .select('hotmart_transaction_id,comprador_nome,comprador_email,comprador_telefone,produto_nome,created_at,utm_source,meta_ad_id,status')
         .in('status', STATUS_RECUPERAVEL)
         .order('created_at', { ascending: false });
-      if (range.p_from) q = q.gte('created_at', range.p_from);
-      if (range.p_to)   q = q.lte('created_at', range.p_to + 'T23:59:59Z');
+      if (range.p_from) q = q.gte('created_at', range.p_from + 'T00:00:00-03:00');
+      if (range.p_to)   q = q.lte('created_at', range.p_to + 'T23:59:59.999-03:00');
       return q;
     };
 
@@ -1293,8 +1299,8 @@ function FunisScreen({ onNavigate }) {
     const EXTRA_FIELDS = ['profissionalizacao','tipo_negocio','confianca_clientes','tipo_contrato_atual','foco_artistico','protege_dinheiro','entende_contrato'];
     const montarExtra = () => {
       let q = window.db.from('quiz_leads').select(EXTRA_FIELDS.join(','));
-      if (range.p_from) q = q.gte('created_at', range.p_from);
-      if (range.p_to)   q = q.lte('created_at', range.p_to + 'T23:59:59Z');
+      if (range.p_from) q = q.gte('created_at', range.p_from + 'T00:00:00-03:00');
+      if (range.p_to)   q = q.lte('created_at', range.p_to + 'T23:59:59.999-03:00');
       if (funnel !== 'all') q = q.eq('funnel_slug', funnel);
       return q;
     };
