@@ -74,7 +74,7 @@ function useDashboardData(period, dateRange) {
         // consulta, sem avisar (auditoria 12/09/2026).
         const vendas = await window.buscarTudo(() => window.db
           .from('vendas')
-          .select('valor_bruto, valor_liquido, preco_oferta, produto_nome, utm_source, status, created_at, comprador_email, meta_ad_id, is_order_bump')
+          .select('hotmart_transaction_id, valor_bruto, valor_liquido, preco_oferta, produto_nome, utm_source, status, created_at, comprador_email, meta_ad_id, is_order_bump')
           .eq('status', 'aprovada')
           .gte('created_at', brt.gte)
           .lte('created_at', brt.lte));
@@ -158,6 +158,7 @@ function useDashboardData(period, dateRange) {
         const impostoNota = resultado.impostoNota;
         const liquido     = resultado.liquido;
         const taxaHotmart = resultado.taxaHotmart;
+        const taxaAsaas   = resultado.taxaAsaas;
         const lucro       = resultado.lucro;
         const margem      = resultado.margem;
 
@@ -223,6 +224,8 @@ function useDashboardData(period, dateRange) {
         const breakdownRows = [
           { label: 'Faturamento (base da nota)', value: fat, color: 'var(--text-1)', bold: true },
           { label: 'Taxa da Hotmart',            value: -taxaHotmart,  color: 'var(--clr-neg)' },
+          // Renovação do Blindagem pelo Asaas (01/10/2026): só aparece quando houver.
+          ...(taxaAsaas > 0 ? [{ label: 'Taxa do Asaas', value: -taxaAsaas, color: 'var(--clr-neg)' }] : []),
           { label: 'Recebido na conta',          value: liquido,       color: 'var(--text-2)' },
           { label: `Imposto sobre Nota (${notaPct.toString().replace('.',',')}%)`, value: -impostoNota, color: 'var(--clr-neg)' },
           { label: 'Anúncios no Meta',           value: -gasto,        color: 'var(--clr-neg)' },
@@ -246,7 +249,8 @@ function useDashboardData(period, dateRange) {
           window.db.from('vendas').select('comprador_email').eq('status','aprovada')
             .ilike('produto_nome','%contrato visual%').gte('created_at', brt.gte).lte('created_at', brt.lte),
           window.db.from('vendas').select('comprador_email').eq('status','aprovada')
-            .ilike('produto_nome','%blindagem%').gte('created_at', brt.gte).lte('created_at', brt.lte),
+            .ilike('produto_nome','%blindagem%').not('hotmart_transaction_id','like','ASAAS-%')
+            .gte('created_at', brt.gte).lte('created_at', brt.lte),
         ]);
         const mcvSet      = new Set((mcvEmailsRaw   || []).map(r => r.comprador_email).filter(Boolean));
         const blindSet    = new Set((blindEmailsRaw || []).map(r => r.comprador_email).filter(Boolean));
