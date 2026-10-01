@@ -1125,8 +1125,10 @@ function FunisScreen({ onNavigate }) {
       let q = window.db.from('quiz_leads').select(
         'id,nome,email,whatsapp,area_atuacao,profissionalizacao,tipo_negocio,confianca_clientes,situacoes,custo_processo,usa_contrato,tipo_contrato_atual,foco_artistico,sentimentos,protege_dinheiro,temas_dominados,entende_contrato,quer_modelos,nivel_risco,completou_lead,completou_quiz,utm_source,utm_medium,utm_campaign,utm_content,created_at,perfil,device_platform'
       ).order('created_at', { ascending: false });
-      if (range.p_from) q = q.gte('created_at', range.p_from);
-      if (range.p_to)   q = q.lte('created_at', range.p_to + 'T23:59:59Z');
+      // Dia em horário de Brasília. Antes era UTC: tudo das 21h à meia-noite do
+      // último dia sumia (Renata, Pix das 22h54 de 30/09/2026, fora da Recuperação).
+      if (range.p_from) q = q.gte('created_at', range.p_from + 'T00:00:00-03:00');
+      if (range.p_to)   q = q.lte('created_at', range.p_to + 'T23:59:59.999-03:00');
       if (funnel !== 'all') q = q.eq('funnel_slug', funnel);
       return q;
     };
@@ -1150,8 +1152,8 @@ function FunisScreen({ onNavigate }) {
       let q = window.db.from('abandono_carrinho')
         .select('id,nome,email,telefone,produto_nome,created_at,utm_source,meta_ad_id')
         .order('created_at', { ascending: false });
-      if (range.p_from) q = q.gte('created_at', range.p_from);
-      if (range.p_to)   q = q.lte('created_at', range.p_to + 'T23:59:59Z');
+      if (range.p_from) q = q.gte('created_at', range.p_from + 'T00:00:00-03:00');
+      if (range.p_to)   q = q.lte('created_at', range.p_to + 'T23:59:59.999-03:00');
       return q;
     };
     const montarVendas = () => {
@@ -1159,8 +1161,8 @@ function FunisScreen({ onNavigate }) {
         .select('hotmart_transaction_id,comprador_nome,comprador_email,comprador_telefone,produto_nome,created_at,utm_source,meta_ad_id,status')
         .in('status', STATUS_RECUPERAVEL)
         .order('created_at', { ascending: false });
-      if (range.p_from) q = q.gte('created_at', range.p_from);
-      if (range.p_to)   q = q.lte('created_at', range.p_to + 'T23:59:59Z');
+      if (range.p_from) q = q.gte('created_at', range.p_from + 'T00:00:00-03:00');
+      if (range.p_to)   q = q.lte('created_at', range.p_to + 'T23:59:59.999-03:00');
       return q;
     };
 
@@ -1293,8 +1295,8 @@ function FunisScreen({ onNavigate }) {
     const EXTRA_FIELDS = ['profissionalizacao','tipo_negocio','confianca_clientes','tipo_contrato_atual','foco_artistico','protege_dinheiro','entende_contrato'];
     const montarExtra = () => {
       let q = window.db.from('quiz_leads').select(EXTRA_FIELDS.join(','));
-      if (range.p_from) q = q.gte('created_at', range.p_from);
-      if (range.p_to)   q = q.lte('created_at', range.p_to + 'T23:59:59Z');
+      if (range.p_from) q = q.gte('created_at', range.p_from + 'T00:00:00-03:00');
+      if (range.p_to)   q = q.lte('created_at', range.p_to + 'T23:59:59.999-03:00');
       if (funnel !== 'all') q = q.eq('funnel_slug', funnel);
       return q;
     };
