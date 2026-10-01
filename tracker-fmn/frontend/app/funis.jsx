@@ -525,12 +525,13 @@ const SITUACAO_INFO = {
   abandonou:    { label: 'Abandonou o carrinho', cor: '#94a3b8' },
   pendente:     { label: 'Pagamento pendente',   cor: '#fbbf24' },
   recusada:     { label: 'Cartão recusado',      cor: '#f87171' },
-  expirada:     { label: 'Boleto vencido',       cor: '#f87171' },
+  expirada:     { label: 'Pix ou boleto vencido', cor: '#f87171' },
   cancelada:    { label: 'Cancelada',            cor: '#f87171' },
   atrasada:     { label: 'Pagamento atrasado',   cor: '#fbbf24' },
   bloqueada:    { label: 'Bloqueada',            cor: '#f87171' },
   pre_aprovada: { label: 'Pré-aprovada',         cor: '#60a5fa' },
   recuperacao:  { label: 'Em recuperação',       cor: '#fbbf24' },
+  protesto:     { label: 'Pediu reembolso',      cor: '#fb923c' },
 };
 
 // Uma mensagem por situação, cada uma argumentando o motivo específico —
@@ -556,6 +557,7 @@ const produtoNaFrase = bruto => {
 
 const MSG_SITUACAO = {
   abandonou:    (n, p) => `Oi, ${n}. Vi aqui que você chegou a abrir o checkout ${p.do} e não finalizou. Ficou alguma dúvida no meio do caminho ou foi só falta de tempo mesmo?`,
+  protesto:     (n, p) => `Oi, ${n}, tudo bem? Vi que você pediu o reembolso ${p.do} e queria entender o que aconteceu, ficou faltando alguma coisa ou algo não funcionou como você esperava? Se eu conseguir resolver, me conta aqui.`,
   pendente:     (n, p) => `Oi, ${n}. Seu pagamento ${p.do} ainda está pendente aqui do nosso lado. Se foi Pix ou boleto, às vezes a confirmação demora um pouco. Já conseguiu finalizar ou posso te ajudar com alguma coisa?`,
   recusada:     (n, p) => `Oi, ${n}. Algum imprevisto aconteceu com seu cartão na hora de fechar ${p.o}. Geralmente é algo simples de resolver, limite, dado digitado errado ou o banco barrando por segurança mesmo. Quer que eu gere um link novo pra tentar de novo ou prefere outra forma de pagamento?`,
   expirada:     (n, p) => `Oi, ${n}. O boleto ${p.do} venceu sem pagamento. Vamos dar andamento na evolução do seu negócio, posso emitir um novo link para você?`,
@@ -1143,8 +1145,10 @@ function FunisScreen({ onNavigate }) {
   // aparecia em lugar nenhum como oportunidade de recuperação.
   // Não inclui reembolsada/chargeback: isso já foi venda fechada, é
   // problema pós-venda, categoria diferente de "ainda não converteu".
-  // "protesto" também não entra: Felipe nunca habilitou esse status na conta.
-  const STATUS_RECUPERAVEL = ['pendente','cancelada','recusada','expirada','atrasada','bloqueada','pre_aprovada','recuperacao'];
+  // "protesto" ENTRA desde 01/10/2026: na Hotmart é o pedido de reembolso aberto
+  // pelo comprador, e o gerente da conta lembra que há 5 dias pra reverter antes
+  // do reembolso sair (planilha "Dinheiro na Mesa"). Caso real: Jair, 26/09.
+  const STATUS_RECUPERAVEL = ['pendente','cancelada','recusada','expirada','atrasada','bloqueada','pre_aprovada','recuperacao','protesto'];
   useEffect(() => {
     if (!window.db || aba !== 'carrinho') return;
     setLoadingCarrinho(true);
