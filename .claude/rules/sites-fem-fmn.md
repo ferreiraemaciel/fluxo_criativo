@@ -64,6 +64,22 @@ npx wrangler deploy worker-upload.js --name fem-upload
 
 ---
 
+## Otimização de imagem — regra oficial
+
+> Aprovada em 2026-10-03. Vale para toda foto que aparece nos sites FeM e FMN (posts, capas, portfólio, prévia de galeria, capa de vídeo).
+
+**JPEG 82%, aresta maior até 1920px, mesmo nome de arquivo** (só a extensão vira `.jpg`). PNG continua PNG, só reduz o tamanho. Não é WebP: manter `.jpg` evita mexer em endereço salvo no banco.
+
+**Garantia em duas camadas:**
+1. O navegador otimiza no admin (`optimizeImage` em `fem-site/admin.html` e `fmn-site/public/admin.html`). Se não conseguir (HEIC, memória do celular), a foto NÃO sobe e aparece aviso para exportar em JPG. Nunca cair no original em silêncio.
+2. O worker `fem-upload` recusa (413) foto acima de 1920px no envio normal. Só a rota `/presign` aceita original, e só para `*/alta` (entrega em alta da galeria) e `concurso*`.
+
+**Fica em tamanho original de propósito:** `galerias/{evento}/alta/`, `concurso*`, `fotos-com-selo/`, `selosfine-art/`.
+
+Foto que entrar por fora do admin (script, wrangler, S3) não passa pela trava do worker: otimizar antes com `fem-site/scripts/reotimizar-site-fem.py` (guarda o original no balde `site-fem-originais`).
+
+---
+
 ## Grid de fotos — galerias e posts
 
 > Aprovado em 2026-07-20. Aplica-se a qualquer grid de fotos nos sites FeM e FMN: galerias públicas, posts (Histórias) e visualização de fotos no admin.
