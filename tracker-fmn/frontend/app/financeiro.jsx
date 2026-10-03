@@ -900,6 +900,116 @@ function SinalHotmart({ faixa, registros }) {
   );
 }
 
+/* ── Infraestrutura ──────────────────────────────────────────────
+   Quanto custa a estrutura do Blindagem/Khronus/Kairós (03/10/2026). A função
+   custos-infra mede o uso todo dia às 23h50 e grava a estimativa em custos_infra.
+   Fatura real é lançada à mão aqui, e fica separada da estimativa. */
+function InfraTab({ dateRange }) {
+  const mes = (dateRange.to || window.FMNFinancas.dataBRT()).slice(0, 7);
+  const [linhas, setLinhas] = useState(null);
+  const [cfg, setCfg] = useState({});
+  const [faturaAberta, setFaturaAberta] = useState(false);
+  const [fat, setFat] = useState({ servico: 'Supabase', valor: '' });
+  const carregar = async () => {
+    const ini = mes + '-01';
+    const [a, b] = await Promise.all([
+      window.db.from('custos_infra').select('*').gte('dia', ini).lte('dia', mes + '-31').order('dia'),
+      window.db.from('app_config').select('valor').eq('chave', 'infra_config').maybeSingle(),
+    ]);
+    setLinhas(a.data || []); setCfg(b.data?.valor || {});
+  };
+  useEffect(() => { carregar(); }, [mes]);
+  if (!linhas) return <div style={{padding:40,textAlign:'center',color:'var(--text-3)',fontFamily:'Roboto,sans-serif'}}>Carregando...</div>;
+
+  const fmt = v => (v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  const medido = linhas.filter(l => l.fonte === 'medido');
+  const faturas = linhas.filter(l => l.fonte === 'fatura');
+  const dias = [...new Set(medido.map(l => l.dia))];
+  const [ano, m] = mes.split('-').map(Number);
+  const nDias = new Date(ano, m, 0).getDate();
+  const estimado = medido.reduce((t, l) => t + Number(l.valor_brl), 0);
+  const projecao = dias.length ? estimado / dias.length * nDias : 0;
+  const faturado = faturas.reduce((t, l) => t + Number(l.valor_brl), 0);
+  const ultimo = [...medido].reverse().find(l => l.servico === 'Supabase extras')?.detalhe || {};
+  const r2 = [...medido].reverse().find(l => l.servico === 'Cloudflare R2');
+  const gbFotos = (ultimo.gb_arquivos || 0) + Number(r2?.quantidade || 0);
+  const servicos = {};
+  medido.forEach(l => { (servicos[l.servico] ||= { brl: 0, ult: null }).brl += Number(l.valor_brl); servicos[l.servico].ult = l; });
+  const semR2 = !r2;
+  const alerta = cfg.alerta_projecao_brl && projecao > cfg.alerta_projecao_brl;
+
+  const salvarFatura = async () => {
+    const v = Number(String(fat.valor).replace(/\./g, '').replace(',', '.'));
+    if (!v) return;
+    await window.db.from('custos_infra').upsert({ dia: mes + '-01', servico: fat.servico, valor_brl: v, valor_usd: 0, fonte: 'fatura' }, { onConflict: 'dia,servico,fonte' });
+    setFaturaAberta(false); setFat({ servico: 'Supabase', valor: '' }); carregar();
+  };
+
+  return (
+    <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
+      {alerta && (
+        <div style={{ padding:'10px 14px', borderRadius:10, background:'rgba(248,113,113,.1)', border:'1px solid rgba(248,113,113,.45)', color:'#f87171', fontFamily:'Roboto,sans-serif', fontSize:13 }}>
+          A projeção do mês ({fmt(projecao)}) passou do limite de {fmt(cfg.alerta_projecao_brl)}.
+        </div>
+      )}
+      <div style={{ display:'flex', gap:12, flexWrap:'wrap' }}>
+        <CardKPI label="Estimado até hoje" value={fmt(estimado)} icon="server" accent/>
+        <CardKPI label="Projeção do mês" value={fmt(projecao)} icon="trending-up"/>
+        <CardKPI label="Faturado no mês" value={faturado ? fmt(faturado) : 'Sem fatura lançada'} icon="receipt"/>
+        <CardKPI label="Por estúdio" value={ultimo.estudios ? fmt(projecao / ultimo.estudios) : '—'} icon="users"/>
+        <CardKPI label="Por GB de arquivos" value={gbFotos ? fmt(projecao / gbFotos) : '—'} icon="hard-drive"/>
+      </div>
+      {semR2 && (
+        <div style={{ padding:'10px 14px', borderRadius:10, background:'rgba(251,191,36,.08)', border:'1px solid rgba(251,191,36,.3)', color:'#fbbf24', fontFamily:'Roboto,sans-serif', fontSize:12.5, lineHeight:1.5 }}>
+          O uso da Cloudflare (fotos do Kairós no R2 e pedidos dos Workers) ainda não está sendo medido: falta o token de leitura de análise. Por enquanto entra só a mensalidade fixa dos Workers.
+        </div>
+      )}
+      <SectionCard title={`Por serviço, ${String(m).padStart(2,'0')}/${ano} (${dias.length} dias medidos)`}
+        headerRight={<Btn size="sm" variant="secondary" icon="plus" onClick={() => setFaturaAberta(v => !v)}>Lançar fatura</Btn>} noPad>
+        {faturaAberta && (
+          <div style={{ display:'flex', gap:8, padding:'12px 16px', borderBottom:'1px solid var(--app-border)', alignItems:'center', flexWrap:'wrap' }}>
+            <select value={fat.servico} onChange={e => setFat(f => ({ ...f, servico: e.target.value }))}
+              style={{ padding:'7px 10px', borderRadius:8, background:'rgba(255,255,255,.04)', border:'1px solid var(--app-border)', color:'var(--text-1)' }}>
+              <option>Supabase</option><option>Cloudflare</option>
+            </select>
+            <input placeholder="Valor da fatura em R$" value={fat.valor} onChange={e => setFat(f => ({ ...f, valor: e.target.value }))}
+              style={{ padding:'7px 10px', borderRadius:8, background:'rgba(255,255,255,.04)', border:'1px solid var(--app-border)', color:'var(--text-1)', width:180 }}/>
+            <Btn size="sm" onClick={salvarFatura}>Salvar fatura de {String(m).padStart(2,'0')}/{ano}</Btn>
+          </div>
+        )}
+        <table style={{ width:'100%', borderCollapse:'collapse', fontFamily:'Roboto,sans-serif', fontSize:13 }}>
+          <thead><tr style={{ color:'var(--text-3)', fontSize:11, textAlign:'left' }}>
+            <th style={{ padding:'10px 16px' }}>Serviço</th><th>Uso no último dia</th><th style={{ textAlign:'right', padding:'10px 16px' }}>Estimado no mês</th>
+          </tr></thead>
+          <tbody>
+            {Object.entries(servicos).map(([nome, s]) => (
+              <tr key={nome} style={{ borderTop:'1px solid var(--app-border)' }}>
+                <td style={{ padding:'10px 16px', color:'var(--text-1)', fontWeight:700 }}>{nome}</td>
+                <td style={{ color:'var(--text-2)' }}>
+                  {nome === 'Supabase extras' ? `${s.ult.detalhe?.gb_banco ?? '—'} GB de banco, ${s.ult.detalhe?.gb_arquivos ?? '—'} GB de arquivos`
+                    : nome === 'Supabase máquina' ? (s.ult.detalhe?.maquina || '—')
+                    : s.ult.quantidade != null ? `${Number(s.ult.quantidade).toLocaleString('pt-BR')} ${s.ult.unidade || ''}` : 'Valor fixo'}
+                </td>
+                <td style={{ textAlign:'right', padding:'10px 16px', color:'var(--text-1)', fontVariantNumeric:'tabular-nums' }}>{fmt(s.brl)}</td>
+              </tr>
+            ))}
+            {faturas.map(f => (
+              <tr key={f.id} style={{ borderTop:'1px solid var(--app-border)' }}>
+                <td style={{ padding:'10px 16px', color:'var(--fmn-gold)', fontWeight:700 }}>Fatura {f.servico}</td>
+                <td style={{ color:'var(--text-3)' }}>Lançada à mão</td>
+                <td style={{ textAlign:'right', padding:'10px 16px', color:'var(--fmn-gold)' }}>{fmt(Number(f.valor_brl))}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </SectionCard>
+      <div style={{ fontSize:11.5, color:'var(--text-3)', fontFamily:'Roboto,sans-serif', lineHeight:1.5 }}>
+        Estimativa pelo uso medido, com o preço oficial em dólar e a cotação do dia. Plano Supabase Pro com máquina {cfg.supabase_maquina || 'Micro'} (o crédito do plano cobre a máquina). A fatura que chega no cartão é a palavra final.
+      </div>
+    </div>
+  );
+}
+
 /* ── Asaas ────────────────────────────────────────────────────────
    Desde 01/10/2026 a renovação do Blindagem (e, no futuro, a etapa nova e
    a primeira compra) é paga pelo Asaas, direto no app. Cada pagamento entra
@@ -1201,6 +1311,7 @@ function FinancialScreen() {
   const tabs = [
     { id: 'hotmart',  label: 'Hotmart',          icon: 'shopping-cart' },
     { id: 'asaas',    label: 'Asaas',            icon: 'refresh-cw' },
+    { id: 'infra',    label: 'Infraestrutura',   icon: 'server' },
     { id: 'despesas', label: 'Despesas',          icon: 'receipt' },
     { id: 'impostos', label: 'Impostos',          icon: 'landmark' },
   ];
@@ -1231,6 +1342,7 @@ function FinancialScreen() {
       <div style={{ flex: 1, overflowY: 'auto', padding: '20px 24px' }}>
         {tab === 'hotmart'  && <HotmartTab dateRange={dateRange}/>}
         {tab === 'asaas'    && <AsaasTab dateRange={dateRange}/>}
+        {tab === 'infra'    && <InfraTab dateRange={dateRange}/>}
         {tab === 'despesas' && <ExpensesTab dateRange={dateRange}/>}
         {tab === 'impostos' && <TaxesTab dateRange={dateRange}/>}
       </div>
