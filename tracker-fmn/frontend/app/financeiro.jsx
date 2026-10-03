@@ -932,7 +932,7 @@ function InfraTab({ dateRange }) {
   const faturado = faturas.reduce((t, l) => t + Number(l.valor_brl), 0);
   const ultimo = [...medido].reverse().find(l => l.servico === 'Supabase extras')?.detalhe || {};
   const r2 = [...medido].reverse().find(l => l.servico === 'Cloudflare R2');
-  const gbFotos = (ultimo.gb_arquivos || 0) + Number(r2?.quantidade || 0);
+  const gbFotos = Number(r2?.detalhe?.gb_kairos || 0);
   const servicos = {};
   medido.forEach(l => { (servicos[l.servico] ||= { brl: 0, ult: null }).brl += Number(l.valor_brl); servicos[l.servico].ult = l; });
   const semR2 = !r2;
@@ -957,7 +957,7 @@ function InfraTab({ dateRange }) {
         <CardKPI label="Projeção do mês" value={fmt(projecao)} icon="trending-up"/>
         <CardKPI label="Faturado no mês" value={faturado ? fmt(faturado) : 'Sem fatura lançada'} icon="receipt"/>
         <CardKPI label="Por estúdio" value={ultimo.estudios ? fmt(projecao / ultimo.estudios) : '—'} icon="users"/>
-        <CardKPI label="Por GB de arquivos" value={gbFotos ? fmt(projecao / gbFotos) : '—'} icon="hard-drive"/>
+        <CardKPI label="Por GB de fotos do Kairós" value={gbFotos ? fmt(projecao / gbFotos) : '—'} icon="hard-drive"/>
       </div>
       {semR2 && (
         <div style={{ padding:'10px 14px', borderRadius:10, background:'rgba(251,191,36,.08)', border:'1px solid rgba(251,191,36,.3)', color:'#fbbf24', fontFamily:'Roboto,sans-serif', fontSize:12.5, lineHeight:1.5 }}>
@@ -986,7 +986,8 @@ function InfraTab({ dateRange }) {
               <tr key={nome} style={{ borderTop:'1px solid var(--app-border)' }}>
                 <td style={{ padding:'10px 16px', color:'var(--text-1)', fontWeight:700 }}>{nome}</td>
                 <td style={{ color:'var(--text-2)' }}>
-                  {nome === 'Supabase extras' ? `${s.ult.detalhe?.gb_banco ?? '—'} GB de banco, ${s.ult.detalhe?.gb_arquivos ?? '—'} GB de arquivos`
+                  {nome === 'Cloudflare R2' && s.ult.detalhe?.baldes ? Object.entries(s.ult.detalhe.baldes).sort((a,b)=>b[1]-a[1]).map(([b,g]) => `${b === 'blindagem-kairos' ? 'Kairós' : b}: ${g.toLocaleString('pt-BR')} GB`).join(' · ')
+                    : nome === 'Supabase extras' ? `${s.ult.detalhe?.gb_banco ?? '—'} GB de banco, ${s.ult.detalhe?.gb_arquivos ?? '—'} GB de arquivos`
                     : nome === 'Supabase máquina' ? (s.ult.detalhe?.maquina || '—')
                     : s.ult.quantidade != null ? `${Number(s.ult.quantidade).toLocaleString('pt-BR')} ${s.ult.unidade || ''}` : 'Valor fixo'}
                 </td>

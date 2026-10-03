@@ -52,8 +52,11 @@ async function cloudflare(dia: string) {
     if (CLASSE_A.has(t)) a1 += g.sum.requests; else b1 += g.sum.requests;
   }
   const bytes = a.r2StorageAdaptiveGroups.reduce((t: number, g: any) => t + (g.max.payloadSize || 0) + (g.max.metadataSize || 0), 0);
+  // Espaço por balde: o Kairós tem balde próprio (blindagem-kairos), o resto é dos sites.
+  const baldes: Record<string, number> = {};
+  for (const g of a.r2StorageAdaptiveGroups) baldes[g.dimensions.bucketName] = +(((g.max.payloadSize || 0) + (g.max.metadataSize || 0)) / 1024 ** 3).toFixed(2);
   const pedidos = a.workersInvocationsAdaptive.reduce((t: number, g: any) => t + g.sum.requests, 0);
-  return { bytes, a1, b1, pedidos };
+  return { bytes, a1, b1, pedidos, baldes };
 }
 
 Deno.serve(async (req) => {
@@ -88,7 +91,7 @@ Deno.serve(async (req) => {
       const gbR2 = cf.bytes / GB;
       // Franquias mensais rateadas por dia.
       add("Cloudflare R2", Math.max(0, gbR2 - 10) * 0.015 / n + Math.max(0, cf.a1 - 1e6 / n) * 4.5 / 1e6 + Math.max(0, cf.b1 - 1e7 / n) * 0.36 / 1e6,
-        +gbR2.toFixed(2), "GB", { gravacoes: cf.a1, leituras: cf.b1 });
+        +gbR2.toFixed(2), "GB", { gravacoes: cf.a1, leituras: cf.b1, baldes: cf.baldes, gb_kairos: cf.baldes["blindagem-kairos"] ?? 0 });
       add("Cloudflare Workers", (cfg.workers_plano_usd ?? 5) / n + Math.max(0, cf.pedidos - 1e7 / n) * 0.3 / 1e6, cf.pedidos, "pedidos", null);
     } else {
       add("Cloudflare Workers", (cfg.workers_plano_usd ?? 5) / n, null, null, { aviso: cf?.erro || "sem token de análise da Cloudflare, R2 não medido" });
