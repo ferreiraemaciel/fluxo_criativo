@@ -195,7 +195,18 @@ def parse_perfil(texto: str) -> dict:
     diferenciais = _sub_bullets(bloco_id_produto, "Diferencial versus concorrentes")
     if not diferenciais:
         diferenciais = _sub_bullets(bloco_id_produto, "Diferenciais")
+    # Campo único "- **Diferencial:** texto", padrão dos perfis gerados pelo /produto-concepcao
+    if not diferenciais:
+        diferencial_unico = _valor_chave(bloco_id_produto, "Diferencial")
+        if diferencial_unico:
+            diferenciais = [diferencial_unico]
     dados["diferenciais"] = diferenciais
+
+    # Perfil com H1 genérico ("# Perfil do Negócio"): o nome vem de "- **Nome:**" na Identidade do Produto
+    if dados["nome_produto"] == "Produto":
+        nome_campo = _valor_chave(bloco_id_produto, "Nome")
+        if nome_campo:
+            dados["nome_produto"] = nome_campo
 
     # Argumentos Incontestaveis: todas as bullets da secao
     bloco_args = _secao(texto, r"Argumentos\s+Incontest[aá]veis")
