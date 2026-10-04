@@ -32,6 +32,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import html
 import re
 import shutil
 import sys
@@ -1448,8 +1449,8 @@ def main() -> int:
 
     # Atualiza nome do produto na sidebar se o perfil mudou desde a criacao
     existente = re.sub(
-        r'(<div class="sidebar-product">).*?(</div>)',
-        lambda m: f"{m.group(1)}{nome_produto}{m.group(2)}",
+        r'(<div class="(?:sidebar-product|product" id="sidebar-product)">).*?(</div>)',
+        lambda m: f"{m.group(1)}{html.escape(nome_produto)}{m.group(2)}",
         existente,
         count=1,
     )
