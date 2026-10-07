@@ -495,9 +495,10 @@ function brlToCents(s) {
 // Link de destino por produto: cada um tem o seu quiz, e mandar tráfego de
 // Blindagem pro quiz do MCV queimaria verba levando a pessoa pro funil errado.
 // Combinado com Felipe em 2026-08-27, quando os anúncios de Blindagem entraram.
+// Desde 2026-10-07 o anúncio de Blindagem vai direto pra página de vendas, não pro quiz.
 const LINK_POR_PRODUTO = {
   MCV: 'https://www.fotografoprotegido.fotografiaeomeunegocio.com.br',
-  BLI: 'https://www.diagnostico.fotografiaeomeunegocio.com.br',
+  BLI: 'https://www.contratosblindagem.fotografiaeomeunegocio.com.br',
 };
 
 function MetaAdModal({ card, onClose }) {
@@ -1073,7 +1074,7 @@ function MetaAdModal({ card, onClose }) {
                   <div style={{ fontSize:11.5, lineHeight:1.5, color: linkPostOk ? 'var(--text-2)' : 'var(--clr-neg)' }}>
                     {linkPostOk
                       ? <>A publicação leva para <b>{postAnterior.link}</b>, o quiz certo deste produto.</>
-                      : <>A publicação leva para <b>{postAnterior.link || 'um destino desconhecido'}</b>, que não é o quiz deste produto ({linkDestino.trim() || LINK_DEFAULT}). Não dá pra reaproveitar: desmarque e publique do zero.</>}
+                      : <>A publicação leva para <b>{postAnterior.link || 'um destino desconhecido'}</b>, que não é o destino deste produto ({linkDestino.trim() || LINK_DEFAULT}). Não dá pra reaproveitar: desmarque e publique do zero.</>}
                   </div>
                 )}
               </div>
