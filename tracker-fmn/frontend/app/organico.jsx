@@ -1139,7 +1139,7 @@ function PublishModal({ form, slidesArr, slideFiles, onClose, onSuccess, initial
         const pubRes = await fetch(`${WORKER_URL}/publish`, {
           method: 'POST',
           headers: { 'Content-Type':'application/json' },
-          body: JSON.stringify({ tipo, imageUrls, caption, scheduleAt: null, origKeys, comFacebook, colaboradores }),
+          body: JSON.stringify({ cardId: form.id, tipo, imageUrls, caption, scheduleAt: null, origKeys, comFacebook, colaboradores }),
         });
         pubData = await pubRes.json();
         if (!pubData.ok) throw new Error(pubData.error || 'Falha na publicação.');

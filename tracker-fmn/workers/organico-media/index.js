@@ -39,6 +39,25 @@ function collectOrigKeys(imageUrls, explicitKeys) {
   return [...keys];
 }
 
+/* Apaga do R2 os originais que nenhum OUTRO card ainda vai usar. O mesmo vídeo
+   pode estar no Reels e no Shorts do YouTube feito a partir dele: apagar quando o
+   Reels publicava deixou os Shorts 270 a 279 sem vídeo (07/10/2026). Se a consulta
+   falhar, não apaga: sobrar arquivo é desperdício, apagar o que falta é post perdido. */
+async function apagarOriginais(env, keys, cardId) {
+  for (const k of keys || []) {
+    const base = k.split('/').pop().replace(/\.[^.]+$/, '');
+    try {
+      const r = await fetch(`${env.SUPABASE_URL}/rest/v1/rpc/org_midia_em_uso`, {
+        method: 'POST',
+        headers: { 'apikey': env.SUPABASE_SERVICE_KEY, 'Authorization': `Bearer ${env.SUPABASE_SERVICE_KEY}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ base, exceto: cardId || null }),
+      });
+      if (!r.ok || (await r.json()) !== false) { console.log(`[r2] original mantido (em uso ou sem resposta): ${k}`); continue; }
+      await env.BUCKET.delete(k);
+    } catch (e) { console.log(`[r2] original mantido, erro na consulta: ${k}`); }
+  }
+}
+
 function json(data, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
@@ -238,7 +257,7 @@ async function youtubeAccessToken(env) {
    pelo cron no dia do agendamento. O agendamento não sobe na hora de propósito:
    a cota da API do YouTube é de cerca de 6 envios por dia, então agendar uma
    semana de uma vez estouraria a cota. Cada vídeo sobe no próprio dia. */
-async function enviarVideoYoutube(env, { videoUrl, titulo, descricao }) {
+async function enviarVideoYoutube(env, { videoUrl, titulo, descricao }, cardId) {
   const key = origKeyFromUrl(videoUrl) || (videoUrl && videoUrl.startsWith(R2_PUBLIC + '/') ? videoUrl.replace(R2_PUBLIC + '/', '') : null);
   const obj = key ? await env.BUCKET.get(key) : null;
   if (!obj) throw new Error('O vídeo em alta não está mais no armazenamento. Importe o vídeo do Drive de novo.');
@@ -269,7 +288,7 @@ async function enviarVideoYoutube(env, { videoUrl, titulo, descricao }) {
   if (!up.ok || !video.id) throw new Error('Falha ao enviar o vídeo ao YouTube: ' + (video.error?.message || up.status));
 
   const origKey = origKeyFromUrl(videoUrl);
-  if (origKey) await env.BUCKET.delete(origKey);
+  if (origKey) await apagarOriginais(env, [origKey], cardId);
   return video;
 }
 
@@ -316,7 +335,7 @@ async function handleYoutubePublicar(request, env) {
   }
 
   let video;
-  try { video = await enviarVideoYoutube(env, { videoUrl, titulo, descricao }); }
+  try { video = await enviarVideoYoutube(env, { videoUrl, titulo, descricao }, cardId); }
   catch (e) { return json({ error: e.message }, 502); }
   await patchCard({
     status: 'Arquivado', published_at: new Date().toISOString(),
@@ -500,6 +519,7 @@ async function handlePublish(request, env) {
     origKeys,      // keys do R2 para deletar depois
     comFacebook,   // bool — cross-post para a Page do Facebook
     colaboradores, // perfis convidados para a collab
+    cardId,        // card que está publicando (não conta como "em uso")
   } = body;
   const colab = normalizarColaboradores(colaboradores);
 
@@ -535,7 +555,7 @@ async function handlePublish(request, env) {
     // (FINISHED) e, no caso imediato, depois de publicar de verdade.
     const key = origKeyFromUrl(videoUrl);
     const keysToDelete = collectOrigKeys([], [...(origKeys || []), ...(key ? [key] : [])]);
-    if (keysToDelete.length) await Promise.all(keysToDelete.map(k => env.BUCKET.delete(k)));
+    if (keysToDelete.length) await apagarOriginais(env, keysToDelete, cardId);
 
     return json({ ok: true, scheduled: !!scheduleTs, postId, creationId: containerId });
   }
@@ -605,7 +625,7 @@ async function handlePublish(request, env) {
   // Deleta originais do R2 (após publicar ou agendar com sucesso)
   const keysToDelete = collectOrigKeys(imageUrls, origKeys);
   if (keysToDelete.length) {
-    await Promise.all(keysToDelete.map(key => env.BUCKET.delete(key)));
+    await apagarOriginais(env, keysToDelete, cardId);
   }
 
   return json({
@@ -807,7 +827,7 @@ async function runScheduledPublish(env) {
         body: JSON.stringify(campos),
       });
       try {
-        const video = await enviarVideoYoutube(env, m);
+        const video = await enviarVideoYoutube(env, m, post.id);
         await patch({ status: 'Arquivado', published_at: new Date().toISOString(),
           scheduled_at: null, scheduled_media: null, youtube_video_id: video.id,
           erro_publicacao: null, erro_publicacao_em: null });
@@ -876,7 +896,7 @@ async function runScheduledPublish(env) {
         try {
           const key = origKeyFromUrl(videoUrl);
           const keysToDelete = collectOrigKeys([], [...origKeys, ...(key ? [key] : [])]);
-          if (keysToDelete.length) await Promise.all(keysToDelete.map(k => env.BUCKET.delete(k)));
+          if (keysToDelete.length) await apagarOriginais(env, keysToDelete, post.id);
         } catch (errLimpeza) {
           console.error(`[cron] Reels ${post.id} publicado, mas falhou ao limpar R2:`, errLimpeza.message);
         }
@@ -936,7 +956,7 @@ async function runScheduledPublish(env) {
       try {
         const keysToDelete = collectOrigKeys(imageUrls, origKeys);
         if (keysToDelete.length) {
-          await Promise.all(keysToDelete.map(k => env.BUCKET.delete(k)));
+          await apagarOriginais(env, keysToDelete, post.id);
         }
       } catch (errLimpeza) {
         console.error(`[cron] ${post.id} publicado, mas falhou ao limpar R2:`, errLimpeza.message);
