@@ -365,6 +365,29 @@ async function limparFalhaDaIA(supabase: any) {
   } catch (_) { /* limpar o aviso nunca atrapalha a resposta */ }
 }
 
+const PALAVRAS_DE_ASSUNTO = /link|compr|pre[cç]|valor|quanto|pag|pix|cart|parcel|boleto|quero|acesso|entrar|senha|problema|erro|ajuda|d[uú]vida|como|onde|quando|qual|modelo|contrato|blindagem|plano/i;
+
+function conversaEncerradaSoAgradecimento(linhas: any[]): boolean {
+  let idx = -1;
+  for (let i = linhas.length - 1; i >= 0; i--) {
+    if (linhas[i].direcao === "saida") { idx = i; break; }
+  }
+  if (idx < 0) return false;
+  const nossa = linhas[idx];
+  if (!["ia", "ia_retomada", "manual"].includes(nossa.origem)) return false;
+  // Tira emoji e espaço do fim antes de olhar se terminou em pergunta.
+  const nossaLimpa = String(nossa.corpo || "").replace(/[\s\p{Extended_Pictographic}\uFE0F\u200D]+$/u, "");
+  if (nossaLimpa.endsWith("?")) return false;
+  const doLead = linhas.slice(idx + 1).filter((m: any) => m.direcao === "entrada");
+  if (!doLead.length) return false;
+  if (doLead.some((m: any) => m.tipo !== "texto")) return false;
+  const texto = doLead.map((m: any) => String(m.corpo || "")).join(" ");
+  if (texto.includes("?")) return false;
+  if (texto.trim().split(/\s+/).filter(Boolean).length > 15) return false;
+  if (PALAVRAS_DE_ASSUNTO.test(texto)) return false;
+  return true;
+}
+
 async function processarComIAInterno(supabase: any, telefone: string, nomeLead: string | null, mensagemId: string | null, contato: any) {
   // Marca o instante em que essa chamada começou a processar, pra travar
   // envio duplicado mais abaixo (ver checagem antes do fetch de envio).
@@ -372,7 +395,7 @@ async function processarComIAInterno(supabase: any, telefone: string, nomeLead: 
 
   const { data: historico } = await supabase
     .from("whatsapp_mensagens")
-    .select("direcao, tipo, corpo, midia_url, transcricao, created_at")
+    .select("direcao, tipo, origem, corpo, midia_url, transcricao, created_at")
     .eq("telefone", telefone)
     .order("created_at", { ascending: false })
     .limit(20);
@@ -393,6 +416,19 @@ async function processarComIAInterno(supabase: any, telefone: string, nomeLead: 
   // tinha sido feita, e mandou o texto idêntico de novo.
   if (linhas.length && linhas[linhas.length - 1].direcao === "saida") {
     console.log("[whatsapp-ia] última mensagem da conversa já é nossa, nada novo pra responder:", telefone);
+    return;
+  }
+
+  // Conversa já encerrada: a nossa última fala foi uma despedida (não termina
+  // em pergunta) e o lead só respondeu com agradecimento, emoji ou "vc tbm".
+  // Responder isso abre um laço sem fim, porque cada "Por nada, abraço" nosso
+  // puxa outro "Obrigada" educado do lado de lá. Achado real em 2026-10-07 com
+  // a Danielle Oliveira e o Gee: o Claudinho mandou "Por nada", "Fica bem aí",
+  // "Valeu demais" seguidos, um pra cada 👍 ou ❤️. Se a pessoa trouxer
+  // qualquer pergunta, pedido ou assunto de compra, a trava não vale e ele
+  // responde normalmente.
+  if (conversaEncerradaSoAgradecimento(linhas)) {
+    console.log("[whatsapp-ia] conversa encerrada, lead só agradeceu, não responder:", telefone);
     return;
   }
 
