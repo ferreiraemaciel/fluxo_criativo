@@ -9,6 +9,8 @@ import { SYSTEM_PROMPT_MCV } from "../_shared/whatsapp-ia-prompt.ts";
 import { custoAnthropicUsd } from "../_shared/whatsapp-custos.ts";
 import { contatoSoRespondeAutomatico } from "../_shared/whatsapp-automatica.ts";
 import { aplicarCorrecoesAutomaticas } from "../_shared/whatsapp-texto-fixes.ts";
+import { conversaEncerrada } from "../_shared/whatsapp-conversa-encerrada.ts";
+import { portao } from "../_shared/portao.ts";
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
@@ -202,7 +204,9 @@ Essa conversa estava andando rápido hoje, várias trocas de mensagem reais, e a
   }
 }
 
-Deno.serve(async (_req) => {
+Deno.serve(async (req) => {
+  const recusa = await portao(req);
+  if (recusa) return recusa;
   if (!WHATSAPP_TOKEN || !WHATSAPP_PHONE_NUMBER_ID) {
     return new Response(JSON.stringify({ ok: true, processados: 0, motivo: "credenciais ausentes" }), { headers: { "content-type": "application/json" } });
   }
@@ -263,10 +267,12 @@ Deno.serve(async (_req) => {
 
       const { data: historicoRaw } = await supabase
         .from("whatsapp_mensagens")
-        .select("direcao, corpo, created_at")
+        .select("direcao, tipo, origem, corpo, created_at")
         .eq("telefone", contato.telefone)
         .order("created_at", { ascending: false })
         .limit(20);
+      // Conversa já encerrada com despedida dos dois lados: não cutuca.
+      if (conversaEncerrada((historicoRaw || []).slice().reverse().filter((m: any) => m.corpo))) continue;
       const historico = (historicoRaw || []).slice().reverse().filter((m: any) => m.corpo)
         .map((m: any) => ({ role: m.direcao === "entrada" ? "user" : "assistant", content: m.corpo }));
 
@@ -354,10 +360,12 @@ Deno.serve(async (_req) => {
 
       const { data: historicoRaw } = await supabase
         .from("whatsapp_mensagens")
-        .select("direcao, corpo, created_at")
+        .select("direcao, tipo, origem, corpo, created_at")
         .eq("telefone", contato.telefone)
         .order("created_at", { ascending: false })
         .limit(20);
+      // Conversa já encerrada com despedida dos dois lados: não cutuca.
+      if (conversaEncerrada((historicoRaw || []).slice().reverse().filter((m: any) => m.corpo))) continue;
       const historico = (historicoRaw || []).slice().reverse().filter((m: any) => m.corpo)
         .map((m: any) => ({ role: m.direcao === "entrada" ? "user" : "assistant", content: m.corpo }));
 

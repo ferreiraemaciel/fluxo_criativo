@@ -7,6 +7,7 @@ import { upsertContato } from "./whatsapp-contatos.ts";
 import { custoAnthropicUsd } from "./whatsapp-custos.ts";
 import { pareceMensagemAutomatica, contatoSoRespondeAutomatico } from "./whatsapp-automatica.ts";
 import { aplicarCorrecoesAutomaticas } from "./whatsapp-texto-fixes.ts";
+import { conversaEncerrada } from "./whatsapp-conversa-encerrada.ts";
 
 const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
 const ANTHROPIC_MODEL   = Deno.env.get("ANTHROPIC_IA_MODEL") || "claude-haiku-4-5-20251001";
@@ -365,29 +366,6 @@ async function limparFalhaDaIA(supabase: any) {
   } catch (_) { /* limpar o aviso nunca atrapalha a resposta */ }
 }
 
-const PALAVRAS_DE_ASSUNTO = /link|compr|pre[cç]|valor|quanto|pag|pix|cart|parcel|boleto|quero|acesso|entrar|senha|problema|erro|ajuda|d[uú]vida|como|onde|quando|qual|modelo|contrato|blindagem|plano/i;
-
-function conversaEncerradaSoAgradecimento(linhas: any[]): boolean {
-  let idx = -1;
-  for (let i = linhas.length - 1; i >= 0; i--) {
-    if (linhas[i].direcao === "saida") { idx = i; break; }
-  }
-  if (idx < 0) return false;
-  const nossa = linhas[idx];
-  if (!["ia", "ia_retomada", "manual"].includes(nossa.origem)) return false;
-  // Tira emoji e espaço do fim antes de olhar se terminou em pergunta.
-  const nossaLimpa = String(nossa.corpo || "").replace(/[\s\p{Extended_Pictographic}\uFE0F\u200D]+$/u, "");
-  if (nossaLimpa.endsWith("?")) return false;
-  const doLead = linhas.slice(idx + 1).filter((m: any) => m.direcao === "entrada");
-  if (!doLead.length) return false;
-  if (doLead.some((m: any) => m.tipo !== "texto")) return false;
-  const texto = doLead.map((m: any) => String(m.corpo || "")).join(" ");
-  if (texto.includes("?")) return false;
-  if (texto.trim().split(/\s+/).filter(Boolean).length > 15) return false;
-  if (PALAVRAS_DE_ASSUNTO.test(texto)) return false;
-  return true;
-}
-
 async function processarComIAInterno(supabase: any, telefone: string, nomeLead: string | null, mensagemId: string | null, contato: any) {
   // Marca o instante em que essa chamada começou a processar, pra travar
   // envio duplicado mais abaixo (ver checagem antes do fetch de envio).
@@ -427,7 +405,7 @@ async function processarComIAInterno(supabase: any, telefone: string, nomeLead: 
   // "Valeu demais" seguidos, um pra cada 👍 ou ❤️. Se a pessoa trouxer
   // qualquer pergunta, pedido ou assunto de compra, a trava não vale e ele
   // responde normalmente.
-  if (conversaEncerradaSoAgradecimento(linhas)) {
+  if (conversaEncerrada(linhas)) {
     console.log("[whatsapp-ia] conversa encerrada, lead só agradeceu, não responder:", telefone);
     return;
   }
