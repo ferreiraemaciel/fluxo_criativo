@@ -588,6 +588,31 @@ async function processarComIAInterno(supabase: any, telefone: string, nomeLead: 
       return;
     }
 
+    // Mesma trava, olhando o outro lado: o lead mandou mensagem nova enquanto
+    // essa resposta era escrita. A resposta pronta não leu essa mensagem, e
+    // mandar assim ignora o que ele acabou de perguntar. Pior, depois que ela
+    // sai a conversa termina numa fala nossa, e a chamada da mensagem nova
+    // desiste (ver "última mensagem da conversa já é nossa" lá em cima), então
+    // a pergunta fica sem resposta nenhuma. Achado real em 2026-10-09 com a
+    // Larissa (Studio Criativo Ágape): "O valor está acima do valor que vi em
+    // um anúncio" chegou 3 segundos antes do envio e nunca foi respondida.
+    // Descartando aqui, a chamada da mensagem nova responde o histórico
+    // inteiro. Reação de emoji não conta, porque ela não aciona resposta.
+    const ultimaEntradaLida = (historico || []).find((m: any) => m.direcao === "entrada")?.created_at;
+    if (ultimaEntradaLida) {
+      const { data: chegouNova } = await supabase
+        .from("whatsapp_mensagens")
+        .select("id, raw")
+        .eq("telefone", telefone)
+        .eq("direcao", "entrada")
+        .gt("created_at", ultimaEntradaLida)
+        .limit(5);
+      if ((chegouNova || []).some((m: any) => m.raw?.type !== "reaction")) {
+        console.log("[whatsapp-ia] resposta descartada: o lead mandou mensagem nova enquanto essa era gerada:", telefone);
+        return;
+      }
+    }
+
     try {
       const r = await fetch(`https://graph.facebook.com/v25.0/${WHATSAPP_PHONE_NUMBER_ID}/messages`, {
         method: "POST",

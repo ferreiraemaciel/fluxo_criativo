@@ -52,6 +52,12 @@ export const PADROES_MSG_AUTOMATICA = [
   // perguntamos. Achado no treino de 2026-08-11 (Deborah Demétrio).
   /capturar momentos preciosos/i,
   /mensagem já foi recebida/i,
+  // Saudação automática de estúdio que pede o nome antes de "continuar".
+  // Achado em 2026-10-09 (Studio Criativo Ágape): chegou 30 segundos depois
+  // do nosso template, e o Claudinho respondeu "Oi Nicoly" como se fosse gente.
+  /que bom ter (voc[êe]|vc) por aqui/i,
+  /fa[çc]o parte do time d[oa]/i,
+  /antes da gente continuar/i,
 ];
 
 export function pareceMensagemAutomatica(texto: string): boolean {
