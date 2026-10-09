@@ -3243,3 +3243,17 @@ A produção começa quando as pendências desta rodada fecharem. O plano de mí
 2. **Os cards de bônus.** Eram 5 peças, viram 6, e os textos de quem leva mudam nos dois álbuns. A tarefa voltou para pendente.
 3. **O CPA limite do pico.** Com MCV a R$ 187, o limite de hoje (R$ 207,90) passa a ser maior que o próprio ticket. A 70% daria R$ 130,90 no MCV e R$ 207,90 no Blindagem. Virou tarefa para 19/10, antes de subir a captação.
 4. **A data do evento F*ck Burocracia.** Sem ela, o bônus não entra no card nem na página de vendas. Virou tarefa para 10/10.
+
+## 26.5 Registro do que foi feito, dia a dia
+
+> A partir daqui, tudo que é executado entra nesta lista com a data. Serve para olhar para trás e saber o que já está resolvido sem precisar abrir tarefa por tarefa.
+
+### 09/10/2026
+
+- **Preços da Black definidos** e gravados: MCV R$ 187, Blindagem R$ 297, Blindagem para aluno R$ 197. Ticket do pico no Tracker atualizado para 187. Ver 26.1.
+- **Bônus redefinidos:** o álbum 30x30 passou a ser do primeiro comprador, o pocket vai para os 10 seguintes com frete por conta de quem ganha, e entrou o evento F*ck Burocracia. Ver 26.2.
+- **Quantidade de anúncios dobrada**, de 23 para 46, com a distribuição por fase gravada no plano de mídia. Tarefa marcada como feita.
+- **Auditoria dos templates de WhatsApp fechada:** 2 aprovados, os dois de serviço. Tarefa marcada como feita, os 14 que faltam vão para análise antes de ir à Meta.
+- **Fotos dos álbuns resolvidas sem gravação nova.** Estavam no acervo, em Meu Drive > Diversos > Álbuns impressos. Oito fotos escolhidas e otimizadas em `meus-produtos/blindagem/entregas/criativos/black-2026/fotos-albuns`: o 30x30 de capa fotográfica da Gabriela (fechado, aberto na lâmina, aberto na contracapa), o pocket 15x21 do Benjamim (capa, aberto, em leque) e os 7 álbuns de Natal juntos, em duas versões. Tarefa marcada como feita.
+- **Quatro tarefas novas criadas:** subir as listas de leads do MCV e do Blindagem como público, refazer a ancoragem e a meta com os preços novos, definir data e formato do evento F*ck Burocracia, ajustar G1 e G5 para o CPA do pico.
+- **Grupo de WhatsApp:** você ficou de criar.
