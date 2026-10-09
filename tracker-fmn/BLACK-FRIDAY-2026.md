@@ -3257,3 +3257,11 @@ A produção começa quando as pendências desta rodada fecharem. O plano de mí
 - **Fotos dos álbuns resolvidas sem gravação nova.** Estavam no acervo, em Meu Drive > Diversos > Álbuns impressos. Oito fotos escolhidas e otimizadas em `meus-produtos/blindagem/entregas/criativos/black-2026/fotos-albuns`: o 30x30 de capa fotográfica da Gabriela (fechado, aberto na lâmina, aberto na contracapa), o pocket 15x21 do Benjamim (capa, aberto, em leque) e os 7 álbuns de Natal juntos, em duas versões. Tarefa marcada como feita.
 - **Quatro tarefas novas criadas:** subir as listas de leads do MCV e do Blindagem como público, refazer a ancoragem e a meta com os preços novos, definir data e formato do evento F*ck Burocracia, ajustar G1 e G5 para o CPA do pico.
 - **Grupo de WhatsApp:** você ficou de criar.
+
+### 09/10/2026, parte da tarde
+
+- **Grupo de WhatsApp criado por você**, com os administradores definidos. Link de convite guardado na Biblioteca do pico.
+- **Artes do grupo prontas**, três peças na marca da campanha: foto de perfil 1080x1080 (conferida no corte redondo do WhatsApp), boas-vindas 1080x1350 para fixar, story de convite 1080x1920. Arquivos em `png-grupo`, gerador em `gerar-pecas-grupo.py`.
+- **Descrição do grupo escrita**, com os cinco combinados. Três decisões suas entraram no texto: o grupo é fechado e abre só nos momentos certos, o aviso de golpe veio logo no começo, dizendo para não confiar em número que não seja o dos administradores, e nada de falar em sair do grupo. Arquivo em `descricao-grupo-whatsapp.md`.
+- **Correção de marca:** "dos Fotógrafos Protegidos" passou a ser escrito com maiúscula na arte do perfil.
+- **Acesso fácil publicado:** duas páginas novas em black-artes, `/grupo` e `/fotos`, cada peça com botão de baixar. As duas entraram na Biblioteca do pico e nas referências das tarefas que dependem delas.
