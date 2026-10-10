@@ -26,7 +26,7 @@
 **Duas decisões já tomadas, para não reabrir:**
 1. **Sem parceiros nesta edição** (28/08). Bônus próprios substituem, ver 7.14
 2. **Preços oficiais de site:** MCV R$ 297, Blindagem R$ 397, ver 2.0
-3. **Preços da Black, definidos em 09/10:** MCV R$ 187, Blindagem R$ 297, Blindagem para quem já é aluno R$ 197. Ver Parte 26, que é a fonte de verdade de preço e bônus
+3. **Preços da Black, definidos em 09/10:** MCV R$ 197, Blindagem R$ 297, Blindagem para quem já é aluno R$ 197. Ver Parte 26, que é a fonte de verdade de preço e bônus
 
 **As cinco decisões que travam a execução, todas suas:**
 1. A data de abertura (D0), respeitando as duas amarras da régua em 7.12: captação fora da janela eleitoral, e nem abertura nem encerramento em feriado
@@ -881,7 +881,7 @@ E o checklist de consentimento dos oito itens não é opcional para nós. **Somo
 |---|---|
 | 1. **Valor justo** | **R$ 2.000, que é o que custa não ter** |
 | 2. Valor do site | R$ 694, a soma real do MCV com o Blindagem hoje |
-| 3. Valor da Black | R$ 187 no MCV, R$ 484 levando os dois, R$ 197 no Blindagem para quem já é aluno |
+| 3. Valor da Black | R$ 197 no MCV, R$ 494 levando os dois, R$ 197 no Blindagem para quem já é aluno |
 | 4. Comparação banal | Menos do que o sinal de um único ensaio |
 | 5. ROI com um resultado | O prejuízo evitado, mais o álbum que se paga sozinho |
 | 6. Os 2 lugares em um ano | O print do WhatsApp, ou contrato que o cliente assina pelo celular |
@@ -3203,10 +3203,10 @@ Vale para qualquer pico de vendas daqui em diante, não só para esta Black.
 
 | Quem compra | O que leva | Preço de site | Preço da Black | Desconto |
 |---|---|---|---|---|
-| Quem não é aluno | Modelos de Contrato Visual | R$ 297 | **R$ 187** | 37% |
+| Quem não é aluno | Modelos de Contrato Visual | R$ 297 | **R$ 197** | 34% |
 | Quem não é aluno | Blindagem, assinatura anual | R$ 397 | **R$ 297** | 25% |
 | Quem já tem o MCV | Blindagem, assinatura anual | R$ 397 | **R$ 197** | 50% |
-| Quem leva os dois | MCV mais Blindagem | R$ 694 | **R$ 484** | 30% |
+| Quem leva os dois | MCV mais Blindagem | R$ 694 | **R$ 494** | 29% |
 
 O desconto existe de verdade nesta edição, então a ficha da campanha está certa em dizer desconto. A ancoragem por valor continua valendo como forma de apresentar, não como substituta do desconto: o valor justo de R$ 2.000 abre, o preço de site ancora, o preço da Black fecha.
 
@@ -3241,7 +3241,7 @@ A produção começa quando as pendências desta rodada fecharem. O plano de mí
 
 1. **A ancoragem, o plano de mídia e a meta.** O ticket caiu, então a mesma meta de lucro passa a exigir mais volume, ou mais venda de Blindagem no mix. Virou tarefa para 10/10.
 2. **Os cards de bônus.** Eram 5 peças, viram 6, e os textos de quem leva mudam nos dois álbuns. A tarefa voltou para pendente.
-3. **O CPA limite do pico.** Com MCV a R$ 187, o limite de hoje (R$ 207,90) passa a ser maior que o próprio ticket. A 70% daria R$ 130,90 no MCV e R$ 207,90 no Blindagem. Virou tarefa para 19/10, antes de subir a captação.
+3. **O CPA limite do pico.** Com MCV a R$ 197, o limite de hoje (R$ 207,90) passa a ser maior que o próprio ticket. A 70% daria R$ 137,90 no MCV e R$ 207,90 no Blindagem. Virou tarefa para 19/10, antes de subir a captação.
 4. **A data do evento F*ck Burocracia.** Sem ela, o bônus não entra no card nem na página de vendas. Virou tarefa para 10/10.
 
 ## 26.5 Registro do que foi feito, dia a dia
@@ -3250,7 +3250,7 @@ A produção começa quando as pendências desta rodada fecharem. O plano de mí
 
 ### 09/10/2026
 
-- **Preços da Black definidos** e gravados: MCV R$ 187, Blindagem R$ 297, Blindagem para aluno R$ 197. Ticket do pico no Tracker atualizado para 187. Ver 26.1.
+- **Preços da Black definidos** e gravados: MCV R$ 197 (corrigido por você em 09/10, tinha ficado 187), Blindagem R$ 297, Blindagem para aluno R$ 197. Ticket do pico no Tracker atualizado para 197. Ver 26.1.
 - **Bônus redefinidos:** o álbum 30x30 passou a ser do primeiro comprador, o pocket vai para os 10 seguintes com frete por conta de quem ganha, e entrou o evento F*ck Burocracia. Ver 26.2.
 - **Quantidade de anúncios dobrada**, de 23 para 46, com a distribuição por fase gravada no plano de mídia. Tarefa marcada como feita.
 - **Auditoria dos templates de WhatsApp fechada:** 2 aprovados, os dois de serviço. Tarefa marcada como feita, os 14 que faltam vão para análise antes de ir à Meta.
