@@ -3308,3 +3308,19 @@ A produção começa quando as pendências desta rodada fecharem. O plano de mí
 **Som.** Nenhuma locução de IA. O silêncio de dois segundos depois do "trabalhou de graça pela metade" é o ponto mais importante do áudio. Legenda queimada em tudo.
 
 **Falta você:** definir quem aparece nas cenas 4 a 8. Se for aluno, precisa de autorização de uso de imagem assinada antes de gravar.
+
+## 26.7 Onde parou, 10/10/2026
+
+**Os dois trailers viraram card em Anúncios**, com a tag do pico: **ADS 395** (racional) e **ADS 396** (emocional). Cada um com roteiro completo, estética visual, copy do Meta, título, descrição, posicionamento e a lista de planos a captar. Entram como ADS porque o plano de mídia já previa o trailer como anúncio da fase de antecipação. A publicação no perfil continua sendo o **ORG 144**, que usa o emocional.
+
+**Gravação movida para a semana de 13/10**, com data travada em 14/10. Felipe aparece em cena nos dois, então não depende de autorização de imagem de terceiro. O trailer sai no ar em 16/10, a janela de edição é de dois dias.
+
+**Preço corrigido:** MCV a R$ 197.
+
+### O que trava o quê, nesta ordem
+
+1. **Campanha de antecipação sobe em 13/10.** Depende dos criativos de antecipação, que ainda não existem. São 4 peças com a quantidade dobrada.
+2. **Trailer sai em 16/10.** Depende da gravação de 14/10 e do caso real do bloco 4 do racional.
+3. **Captação sobe em 20/10.** Depende da gravação dos 5 criativos em 17/10, que por sua vez depende dos trechos de caso real nos cinco roteiros.
+4. **Templates de WhatsApp.** O mais atrasado de todos, de 06/09, com prazo da Meta no meio. Sem eles não há disparo de massa na abertura.
+5. **A conta da meta** com o preço novo, que decide verba e CPA limite.
