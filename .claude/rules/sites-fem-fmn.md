@@ -21,6 +21,8 @@
 
 Pixel **Pixel de Ferreira e Maciel - Estúdio**, ID `3977050979222407`, num arquivo só: `fem-site/pixel-fem.js`. Toda página nova da FeM inclui no `<head>` o `<script src="/pixel-fem.js"></script>` mais o `<noscript>` do PageView. Ele mede `PageView` e `Contact` (todo clique de WhatsApp) sozinho; contexto extra vai em `data-pixel-nome` / `data-pixel-categoria` no link. Nunca colar o código do pixel solto na página (duplica o PageView). Fora só do `admin.html`. Detalhes em `fem-site/REGRAS.md`. O pixel da FMN (`2021111734750468`) é outro e não entra no site da FeM.
 
+**Rastreio próprio, junto do pixel:** toda página/LP da FeM também inclui `<script src="/rastreio-fem.js" defer></script>`. Grava visita, origem, utm, aparelho, cidade, tempo, rolagem e clique no WhatsApp no worker `fem-rastreio` (banco D1 `fem-rastreio`, código em `fem-site/scripts/rastreio/`). Fica na Cloudflare porque o Supabase do site da FeM (`hmiyfywzumpttwzqiccu`) está em conta que o conector e a CLI daqui não alcançam. Relatório só com login do admin + e-mail na lista ADMINS. Aba "Site" do admin da FeM lê daí.
+
 **Deploy nunca é automático via git push.** Sempre rodar:
 ```bash
 # Site público FeM
