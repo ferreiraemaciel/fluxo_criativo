@@ -3269,3 +3269,15 @@ A produção começa quando as pendências desta rodada fecharem. O plano de mí
 - **As duas páginas no ar, na identidade da campanha.** Endereços definidos por você: `fotografiaeomeunegocio.com.br/black-2026` e `/black-2026-obrigado`. A primeira versão subiu com a cara do site, dourado e chips, sem o mote em lugar nenhum. Você apontou no mesmo dia e as duas foram refeitas: preto com grão, carimbo da campanha no topo e no fecho, Roboto Mono nas etiquetas, contagem regressiva ao vivo até 10/11 às 20h, formulário em papel pardo, presentes com as fotos reais dos álbuns, e **o mote virou a manchete**: "Meu lado advogado não assinaria essa Black." A página de obrigado ganhou o mesmo tratamento, mais o aviso de golpe.
 - **Imagens no R2** (`imagens.ferreiraemaciel.com.br/fmn/black2026-*`): carimbo dourado, 30x30 na lâmina, pocket em leque.
 - **Pendência:** a foto do Felipe que a página usava (`fmn/felipe.webp`) não existe mais no R2. O bloco de autoridade está sem retrato até você mandar uma foto.
+
+### 09/10/2026, ajustes da página de inscrição pedidos pelo Felipe
+
+- **O mote ficou explicado.** A versão anterior ("eu mandaria ele repensar") era difícil de entender. Agora a manchete continua "Meu lado advogado não assinaria essa Black" e logo abaixo vem a explicação dele: "A oferta para todos os Modelos de Contrato Visual está surreal. Sim, meu lado fotógrafo ganhou do lado advogado."
+- **Marca centralizada** no topo da página, acima de tudo.
+- **Bônus não aparecem na captura**, e isso bate com o playbook: na antecipação é "antecipação sem revelar", e a revelação de bônus, um por vez, é da fase de aquecimento (a partir de 26/10 no nosso calendário). O que fica na página é só o presente físico por velocidade, que é o que as landings de referência fazem, presente antes do preço.
+- **Presentes sem foto por enquanto**, só texto, com o título novo: "Tem coisa física nessa Black, mas você precisa ser um dos primeiros."
+- **O bloco sobre o Felipe saiu** desta fase.
+- **Animação:** a esteira de contratos em laço, a mesma da hero do MCV, entrou no rodapé do hero.
+- **Botão final gritante:** dourado cheio, grande, com pulso.
+- **Rodapé:** sem número de telefone, com o logo do FMN.
+- **Contagem regressiva subiu para a barra fina do topo**, que fica fixa enquanto a pessoa rola.
