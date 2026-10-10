@@ -990,7 +990,13 @@ const LINK_CHECKOUT_MCV_PARCELADO = 'https://pay.hotmart.com/W87258826R?off=2zbq
 // desconto é gatilho de handoff, ver whatsapp-ia-prompt.ts).
 const CUPOM_DESCONTO = 'DESCONTOEPRAQUEMPEDE';
 const LINK_CHECKOUT_MCV_CUPOM = `https://pay.hotmart.com/W87258826R?checkoutMode=10&sck=whatsapp-ah&offDiscount=${CUPOM_DESCONTO}`;
+// Link da página de vendas do Blindagem para o story do Instagram (09/10/2026).
+// A página monta o sck sozinha: instagram-ah-lp + separador + story (30 caracteres).
+// É para colar no story, não para mandar no WhatsApp (marcaria a venda como story).
+const LINK_STORY_BLINDAGEM = 'https://www.contratosblindagem.fotografiaeomeunegocio.com.br/?utm_source=instagram-ah-lp&utm_medium=story&utm_campaign=blindagem';
 const MENSAGENS_PRONTAS = [
+  { id: 'story_blindagem', label: 'Link do story do Instagram (Blindagem)', icone: 'camera',
+    texto: LINK_STORY_BLINDAGEM },
   { id: 'checkout', label: 'Link de checkout (MCV)', icone: 'link',
     texto: `Segue o link pra garantir o seu: ${LINK_CHECKOUT_MCV}` },
   { id: 'checkout_cupom', label: 'Link com cupom de desconto', icone: 'ticket-percent',
