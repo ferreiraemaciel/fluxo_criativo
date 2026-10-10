@@ -3286,3 +3286,25 @@ A produção começa quando as pendências desta rodada fecharem. O plano de mí
 - **Página de obrigado, ajustes:** o passo de salvar o número saiu, os passos foram renumerados (01 grupo, 02 alarme), o rodapé perdeu o telefone e ganhou o logo do FMN. O aviso de golpe deixou de apontar para um número específico: agora diz que só os nossos números oficiais estão autorizados a falar, e pede para confirmar com um administrador dos grupos antes de qualquer coisa.
 - **A mancha escura atrás da esteira não era da imagem.** O hero tinha um brilho dourado radial no topo e a faixa da esteira ficava fora dele, então ela aparecia como um retângulo mais preto logo abaixo da barra amarela. O brilho saiu do hero e passou para o fundo da página inteira, fixado nos primeiros 1.100px. De passagem, as sombras pretas semitransparentes da arte foram limpas e o arquivo virou `fmn/black2026-esteira.webp`.
 - **Descrição do grupo aplicada por você em 09/10**, já com o aviso de golpe e o grupo fechado. A linha do fecho do bloco de presentes ("álbum de verdade, bonificados pela SóClick") saiu da página a seu pedido, então a SóClick não aparece mais na captura.
+
+## 26.6 Roteiro do trailer emocional (rascunho para validar, 10/10/2026)
+
+> O segundo trailer, decidido em 28/08 (ver 2.x, "fazer os dois trailers, e fazer o emocional em nível de cinema"). Sem preço, sem porcentagem, sem mostrar o produto. De 80 a 90 segundos. Está também na tarefa "Escrever o roteiro do trailer emocional", campo a campo, para preencher na tela do Tracker.
+
+**Cena 1, 0s a 9s, silêncio.** Celular de bruços na mesa de edição, madrugada. A tela acende sozinha e ilumina a madeira. Macro, 85mm, foco raso. A mão entra devagar e vira o aparelho. Só som ambiente.
+
+**Cena 2, 9s a 24s.** A conversa rolando no polegar, meses de mensagem em segundos. Três inserts de balões, só o trecho que importa em foco: "pode ser assim?", "fechado", "combinado então". Locução baixa: *"O combinado tava ali. Num áudio, num print, numa mensagem que ninguém leu duas vezes."*
+
+**Cena 3, 24s a 42s, a virada.** Corta para o dia, o fotógrafo de costas na janela. Texto em tela, letra por letra: *"fiz um acordo extra judicial e devolvi a metade do sinal"*, com a linha menor dizendo que é resposta real do nosso quiz. Locução: *"Ele não perdeu o trabalho. Ele trabalhou de graça pela metade."* A trilha para seca. Dois segundos de nada.
+
+**Cena 4, 42s a 56s.** Três cartelas, uma por respiração, com os números reais do quiz: 3.515 disseram de 2 a 5 mil, 3.999 disseram mais de 20 mil, 9.378 responderam que não fazem ideia. Por baixo, cobertura da rotina. Locução: *"Esse é o preço de combinar no escuro."*
+
+**Cena 5, 56s a 68s.** O outro caminho, pelo gesto e nunca pela tela do produto: a assinatura com o dedo no celular, o aperto de mão, a luz do estúdio apagando.
+
+**Cena 6, 68s a 78s.** Felipe em quadro pela primeira vez, falando direto para a câmera: *"No dia 10 de novembro eu abro a maior condição que eu já fiz. Meu lado advogado não assinaria essa Black."*
+
+**Cena 7, 78s a 88s.** Cartela com o carimbo torto, a data e a hora, mais a linha do grupo.
+
+**Som.** Nenhuma locução de IA. O silêncio de dois segundos depois do "trabalhou de graça pela metade" é o ponto mais importante do áudio. Legenda queimada em tudo.
+
+**Falta você:** definir quem aparece nas cenas 4 a 8. Se for aluno, precisa de autorização de uso de imagem assinada antes de gravar.
