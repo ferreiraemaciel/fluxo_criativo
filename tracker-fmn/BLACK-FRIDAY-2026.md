@@ -3324,3 +3324,24 @@ A produção começa quando as pendências desta rodada fecharem. O plano de mí
 3. **Captação sobe em 20/10.** Depende da gravação dos 5 criativos em 17/10, que por sua vez depende dos trechos de caso real nos cinco roteiros.
 4. **Templates de WhatsApp.** O mais atrasado de todos, de 06/09, com prazo da Meta no meio. Sem eles não há disparo de massa na abertura.
 5. **A conta da meta** com o preço novo, que decide verba e CPA limite.
+
+## 26.8 Os 4 criativos de antecipação (lançados em 10/10/2026)
+
+Viraram card em Anúncios com a tag do pico, prontos para gravar junto com os trailers em 14/10.
+
+| Card | Peça | Família | Formato |
+|---|---|---|---|
+| ADS 397 | O envelope | Curiosidade de nicho | Reels |
+| ADS 398 | Eu perguntei pra 28 mil fotógrafos | Dor reconhecível com dado próprio | Reels |
+| ADS 399 | O que essa Black não vai ser | Inversão, sazonalidade de novembro | Reels |
+| ADS 400 | A data está marcada | Oportunidade, recolhe quem viu os vídeos | Imagem |
+
+Com os dois trailers (ADS 395 e 396), a fase de antecipação fecha em **6 peças**, dentro da conta de 46 anúncios.
+
+**A régua aplicada nos quatro:** nenhum vende produto, nenhum fala preço ou percentual, nenhum revela o que tem dentro da oferta, CTA único "Saiba Mais" no fim, 48 segundos em três blocos, sem OAB nem honorário. Todos vendem só a entrada na lista.
+
+**Nenhum tem trecho esperando ser preenchido**, de propósito, porque a campanha sobe em 13/10. Os números do ADS 398 são reais, apurados no nosso quiz, e não podem ser arredondados na edição.
+
+**O ADS 400 tem prompt de imagem**, como plano B. A primeira escolha continua sendo a foto real do envelope, porque a marca pede foto real sempre que der.
+
+**Dependência:** o envelope físico precisa existir antes de gravar o ADS 397.
