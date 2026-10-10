@@ -13,6 +13,14 @@
 | Admin FeM | `~/Documents/fem-site` | `fem-admin` | `admin.ferreiraemaciel.com.br` |
 | Site público FMN | `~/Documents/fmn-site` | `fmn-site` | `fotografiaeomeunegocio.com.br` |
 
+`www.ferreiraemaciel.com.br` também abre o projeto `fem-site` (LPs como `/pre-venda-natal-2026`).
+
+## Pixel da Meta da FeM em toda página e LP (regra fixa)
+
+> Aprovada em 2026-10-09. Vale para toda página do `fem-site` e para toda LP futura da FeM.
+
+Pixel **Pixel de Ferreira e Maciel - Estúdio**, ID `3977050979222407`, num arquivo só: `fem-site/pixel-fem.js`. Toda página nova da FeM inclui no `<head>` o `<script src="/pixel-fem.js"></script>` mais o `<noscript>` do PageView. Ele mede `PageView` e `Contact` (todo clique de WhatsApp) sozinho; contexto extra vai em `data-pixel-nome` / `data-pixel-categoria` no link. Nunca colar o código do pixel solto na página (duplica o PageView). Fora só do `admin.html`. Detalhes em `fem-site/REGRAS.md`. O pixel da FMN (`2021111734750468`) é outro e não entra no site da FeM.
+
 **Deploy nunca é automático via git push.** Sempre rodar:
 ```bash
 # Site público FeM
