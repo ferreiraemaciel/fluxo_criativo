@@ -3282,4 +3282,4 @@ A produção começa quando as pendências desta rodada fecharem. O plano de mí
 - **Rodapé:** sem número de telefone, com o logo do FMN.
 - **Contagem regressiva subiu para a barra fina do topo**, que fica fixa enquanto a pessoa rola.
 - **Segunda rodada de ajustes, no mesmo dia:** a esteira de contratos saiu (o laço não tem fundo transparente, ficou apagado sobre o preto), os dois cards que detalhavam os álbuns saíram (fica só a chamada "tem coisa física, mas você precisa ser um dos primeiros"), a frase "no dia, quem chega primeiro leva álbum" saiu do fecho, e a barra fina do topo virou amarela com o contador em preto, para puxar o olho.
-- **Em aberto:** a página está sem nenhuma peça visual. A animação certa ainda precisa ser escolhida.
+- **A esteira voltou, agora certa.** O arquivo `fmn/mcv/esteira-loop.webp` sempre teve canal alfa, o fundo dele é transparente. O que apagava a animação era a minha execução: opacidade em 38% mais um véu escuro por cima. Sem os dois, com máscara só nas laterais, os contratos aparecem nítidos no rodapé do hero.
