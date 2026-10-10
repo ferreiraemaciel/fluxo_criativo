@@ -991,9 +991,9 @@ const LINK_CHECKOUT_MCV_PARCELADO = 'https://pay.hotmart.com/W87258826R?off=2zbq
 const CUPOM_DESCONTO = 'DESCONTOEPRAQUEMPEDE';
 const LINK_CHECKOUT_MCV_CUPOM = `https://pay.hotmart.com/W87258826R?checkoutMode=10&sck=whatsapp-ah&offDiscount=${CUPOM_DESCONTO}`;
 // Link da página de vendas do Blindagem para o story do Instagram (09/10/2026).
-// A página monta o sck sozinha: instagram-ah-lp + separador + story (30 caracteres).
+// sck da tabela oficial (CLAUDE.md, Instagram Stories): instagram-lp + separador + stories (29).
 // É para colar no story, não para mandar no WhatsApp (marcaria a venda como story).
-const LINK_STORY_BLINDAGEM = 'https://www.contratosblindagem.fotografiaeomeunegocio.com.br/?utm_source=instagram-ah-lp&utm_medium=story&utm_campaign=blindagem';
+const LINK_STORY_BLINDAGEM = 'https://www.contratosblindagem.fotografiaeomeunegocio.com.br/?sck=instagram-lphQwK21wXxRstories&utm_source=instagram-lp&utm_medium=stories&utm_campaign=blindagem';
 const MENSAGENS_PRONTAS = [
   { id: 'story_blindagem', label: 'Link do story do Instagram (Blindagem)', icone: 'camera',
     texto: LINK_STORY_BLINDAGEM },
