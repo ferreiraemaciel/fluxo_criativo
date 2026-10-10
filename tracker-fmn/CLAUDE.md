@@ -477,6 +477,15 @@ O `classifyOrigin` do `dashboard.jsx` usa a fonte para a origem (Instagram, What
 meio para o detalhe ("Mensagem Direta", "Stories", "Link na Bio"...). O pageview da página de vendas
 (`increment_post_view`) não guarda parâmetro nenhum, então o `sck` é o único rastro que chega ao Tracker.
 
+**Conferência obrigatória antes de entregar qualquer link (reforçada pelo Felipe em 09/10/2026):**
+1. Contar os caracteres do `sck` (máximo 30) e conferir o separador `hQwK21wXxR`.
+2. O meio tem que ser um dos que o Tracker reconhece (`classifyOrigin` em `dashboard.jsx`, ex: `dm`,
+   `bio`, `stories`). Erro real em 09/10/2026: entreguei `story`, que o Tracker não reconhece, e a venda
+   ficaria sem origem. Para Stories é sempre `stories`.
+3. Link de página de vendas: abrir no navegador e conferir que o botão de compra leva o `sck` até a Hotmart.
+4. Todo link de uso diário entra também nas mensagens prontas (categoria "Links" no Blindagem, conta FMN,
+   e na lista `MENSAGENS_PRONTAS` do Tracker quando for para o atendimento).
+
 **Formato do `sck`:** `<canal>[-ah|-cl][-lp|-qz]` + `hQwK21wXxR` + `<meio>`, com 30 caracteres no total.
 Nunca corta palavra no meio: se passar de 30, sai primeiro o `-lp`/`-qz`, depois o meio inteiro
 (fica só a fonte). Um meio cortado ("stori") o Tracker não reconhece.
