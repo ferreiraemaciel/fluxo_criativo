@@ -113,7 +113,10 @@ async function syncMetaAdStatus(): Promise<{
     }
   }
 
-  const AINDA_NAO_LIVRE = new Set(["PAUSED", "IN_PROCESS", "PENDING_REVIEW", "DISAPPROVED", "WITH_ISSUES"]);
+  // ADSET_PAUSED e CAMPAIGN_PAUSED entraram em 12/10/2026: quem pausa é a campanha ou o
+  // conjunto, o anúncio em si continua "ativo" e o Meta devolve esses dois estados.
+  // Sem eles, a MCV 222 ficou pausada desde 07/10 com 8 anúncios "ativos" na aba Tráfego.
+  const AINDA_NAO_LIVRE = new Set(["PAUSED", "ADSET_PAUSED", "CAMPAIGN_PAUSED", "IN_PROCESS", "PENDING_REVIEW", "DISAPPROVED", "WITH_ISSUES"]);
   const SUMIU = new Set(["ARCHIVED", "DELETED"]);
 
   // Reconcilia todo card que já existe localmente — inclusive quem ainda não
