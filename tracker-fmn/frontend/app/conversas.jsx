@@ -995,6 +995,11 @@ const LINK_CHECKOUT_MCV_CUPOM = `https://pay.hotmart.com/W87258826R?checkoutMode
 // É para colar no story, não para mandar no WhatsApp (marcaria a venda como story).
 const LINK_STORY_BLINDAGEM = 'https://www.contratosblindagem.fotografiaeomeunegocio.com.br/?sck=instagram-lphQwK21wXxRstories&utm_source=instagram-lp&utm_medium=stories&utm_campaign=blindagem';
 const MENSAGENS_PRONTAS = [
+  // Mensagem pronta com vídeo (12/10/2026): `midia` é o link público do arquivo; o texto vira a legenda.
+  // O vídeo mora em depoimentos/ no R2 site-fmn, fora de organico/originais (que é apagado ao publicar).
+  { id: 'depoimento_25_contratos', label: 'Depoimento em vídeo: 25 contratos num dia', icone: 'video',
+    midia: 'https://pub-3af414794ad1436281d1d1b3e9feea36.r2.dev/depoimentos/depoimento-25-contratos-mesmo-dia.mp4',
+    texto: 'Olha esse depoimento de uma aluna: num dia ela mandou 25 contratos para os clientes dela e recebeu 22 de volta assinados no mesmo dia.' },
   { id: 'story_blindagem', label: 'Link do story do Instagram (Blindagem)', icone: 'camera',
     texto: LINK_STORY_BLINDAGEM },
   { id: 'checkout', label: 'Link de checkout (MCV)', icone: 'link',
@@ -1365,7 +1370,9 @@ function ConversasScreen({ telefoneAlvo = null, onConsumirAlvo } = {}) {
       const r = await fetch(`${SUPA_URL}/functions/v1/whatsapp-enviar`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPA_KEY}` },
-        body: JSON.stringify({ action: 'texto', to: selecionado, nome: contatoAtivo?.nome, texto: item.texto, origem: 'manual' }),
+        body: JSON.stringify(item.midia
+          ? { action: 'midia_link', to: selecionado, nome: contatoAtivo?.nome, url: item.midia, legenda: item.texto, origem: 'manual' }
+          : { action: 'texto', to: selecionado, nome: contatoAtivo?.nome, texto: item.texto, origem: 'manual' }),
       });
       const d = await r.json();
       if (!r.ok || d.error) throw new Error(d.error || 'falha no envio');
@@ -1781,7 +1788,7 @@ function ConversasScreen({ telefoneAlvo = null, onConsumirAlvo } = {}) {
                                 {enviando ? 'Enviando' : 'Enviar'}
                               </button>
                               {/* Colar na barra pra editar antes de mandar */}
-                              <button onClick={() => setTexto(item.texto)}
+                              <button onClick={() => { setTexto(item.texto); if (item.midia) setPendente({ tipo: 'link', url: item.midia, preview: item.midia, nome: item.label, mime: 'video/mp4' }); }}
                                 disabled={enviando}
                                 title="Colar na barra de mensagem pra editar antes de enviar"
                                 style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
