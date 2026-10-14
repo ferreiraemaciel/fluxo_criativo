@@ -24,7 +24,7 @@ async function processarPrecheckout(): Promise<Record<string, number>> {
   const corte = new Date(Date.now() - 5 * 60e3).toISOString();
   const { data: leads } = await supabase
     .from("quiz_leads")
-    .select("code, funnel_slug, email, nome, whatsapp, respostas")
+    .select("code, funnel_slug, email, nome, whatsapp, respostas, created_at")
     .eq("funnel_slug", "blindagem").eq("origem", "precheckout-lp")
     .eq("whatsapp_resultado_enviado", false)
     .lte("created_at", corte)
@@ -54,6 +54,15 @@ async function processarPrecheckout(): Promise<Record<string, number>> {
       .eq("telefone", tel).in("template_nome", ["blindagem_contato_solicitado", "blindagem_checkout_pendente"])
       .eq("status", "enviado").limit(1).maybeSingle();
     if (ja) { pulados++; continue; }
+    // O lead já escreveu pra gente depois do cadastro (o botão da página abre
+    // o WhatsApp com "Tenho uma dúvida sobre o Blindagem")? A conversa já
+    // começou, o aviso chegaria no meio dela perguntando o que ele quer.
+    // Aconteceu com Marcelo, Dario, Mike, João, Renato e Fabiana em out/2026.
+    const { data: jaFalou } = await supabase.from("whatsapp_mensagens").select("id")
+      .eq("telefone", tel).eq("direcao", "entrada")
+      .gte("created_at", new Date(new Date(lead.created_at).getTime() - 10 * 60e3).toISOString())
+      .limit(1).maybeSingle();
+    if (jaFalou) { pulados++; continue; }
 
     const primeiroNome = (lead.nome || "").trim().split(/\s+/)[0] || "tudo bem";
     const corpo = renderCorpoTemplate(template, [primeiroNome]);

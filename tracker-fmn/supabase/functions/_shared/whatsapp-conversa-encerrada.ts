@@ -5,7 +5,10 @@
 // bem", "Tmj", e a retomada de 24h ainda cutucou a Danielle no dia seguinte
 // à despedida, o que recomeçou o laço.
 
-const PALAVRAS_DE_ASSUNTO = /link|compr|pre[cç]|valor|quanto|pag|pix|cart|parcel|boleto|quero|acesso|entrar|senha|problema|erro|ajuda|d[uú]vida|como|onde|quando|qual|modelo|contrato|blindagem|plano/i;
+// Inclui adiamento ("à tarde finalizo", "vou pensar", "depois vejo"): isso é
+// lead quente pedindo tempo, não despedida. Achado em 14/10/2026 com o Raphael,
+// que escreveu "A tarde finalizo o processo" e ficou sem o link.
+const PALAVRAS_DE_ASSUNTO = /link|compr|pre[cç]|valor|quanto|pag|pix|cart|parcel|boleto|quero|acesso|entrar|senha|problema|erro|ajuda|d[uú]vida|como|onde|quando|qual|modelo|contrato|blindagem|plano|finaliz|fech|assin|depois|tarde|amanh|pens|vou ver|analis|revis|decid/i;
 
 const ORIGENS_NOSSAS = ["ia", "ia_retomada", "ia_retomada_reacao", "manual"];
 

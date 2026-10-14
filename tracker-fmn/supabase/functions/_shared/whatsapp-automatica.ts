@@ -58,6 +58,17 @@ export const PADROES_MSG_AUTOMATICA = [
   /que bom ter (voc[êe]|vc) por aqui/i,
   /fa[çc]o parte do time d[oa]/i,
   /antes da gente continuar/i,
+  // Saudações de estúdio que chegaram em segundos depois do aviso de compra
+  // do Blindagem (10 a 14/10/2026): Rô Fernandes, Lucas Gomes, Maysa e Rodney.
+  // O Claudinho respondeu como se fosse gente, e a Maysa terminou pedindo pra
+  // pararmos de mandar mensagem.
+  /seja (muito )?bem[- ]?vind/i,
+  /ficamos (muito )?felizes em receber/i,
+  /agilizar (o )?(seu |teu )?atendimento/i,
+  /em instantes (retorn|respond)/i,
+  /retornarei (a )?(sua )?mensagem/i,
+  /obrigad[oa] pelo (seu )?contato/i,
+  /fico muito feliz por (voc[êe]|vc) estar aqui/i,
 ];
 
 export function pareceMensagemAutomatica(texto: string): boolean {

@@ -7,7 +7,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { SYSTEM_PROMPT_MCV } from "../_shared/whatsapp-ia-prompt.ts";
 import { custoAnthropicUsd } from "../_shared/whatsapp-custos.ts";
-import { contatoSoRespondeAutomatico } from "../_shared/whatsapp-automatica.ts";
+import { contatoSoRespondeAutomatico, pareceMensagemAutomatica } from "../_shared/whatsapp-automatica.ts";
 import { aplicarCorrecoesAutomaticas } from "../_shared/whatsapp-texto-fixes.ts";
 import { conversaEncerrada } from "../_shared/whatsapp-conversa-encerrada.ts";
 import { portao } from "../_shared/portao.ts";
@@ -273,6 +273,13 @@ Deno.serve(async (req) => {
         .limit(20);
       // Conversa já encerrada com despedida dos dois lados: não cutuca.
       if (conversaEncerrada((historicoRaw || []).slice().reverse().filter((m: any) => m.corpo))) continue;
+      // Quem abriu a janela foi o robô do WhatsApp Business do lead, não a
+      // pessoa: nenhuma mensagem dele até aqui é de gente. Cutucar em cima
+      // disso trata a saudação automática como conversa. Caso real: Maysa,
+      // 11/10/2026, recebeu "Vi que você manja dos dois" em resposta à própria
+      // saudação automática e pediu pra pararmos de mandar mensagem.
+      const entradas = (historicoRaw || []).filter((m: any) => m.direcao === "entrada" && m.corpo);
+      if (entradas.length && entradas.every((m: any) => pareceMensagemAutomatica(m.corpo))) continue;
       const historico = (historicoRaw || []).slice().reverse().filter((m: any) => m.corpo)
         .map((m: any) => ({ role: m.direcao === "entrada" ? "user" : "assistant", content: m.corpo }));
 
