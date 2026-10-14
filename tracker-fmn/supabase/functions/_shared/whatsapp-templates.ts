@@ -9,6 +9,12 @@ const CORPOS: Record<string, string> = {
     "Você acabou de dar um passo que a maioria dos fotógrafos nunca dá: profissionalizar o próprio negócio com contrato de verdade.\n" +
     "A partir de agora você tem acesso aos Modelos de Contrato Visual, atualizações do método e conteúdos que não saem no Instagram, nem no YouTube.\n" +
     "Para ter acesso, entre no grupo da nossa comunidade: {{2}}",
+  // Convite da comunidade para quem compra o Blindagem, 3 minutos depois da chave
+  // (aprovado pelo Felipe em 14/10/2026). Mesmo grupo do MCV. Sai pela ponte do Khronus.
+  comunidade_blindagem:
+    "{{1}}, agora a segunda parte do seu acesso.\n" +
+    "Quem compra o Blindagem entra também na nossa comunidade, onde saem primeiro as novidades do app, as atualizações dos modelos de contrato e os conteúdos que não vão para o Instagram nem para o YouTube.\n" +
+    "Para entrar, é só tocar no link do grupo: {{2}}",
   resultado_quiz_mcv:
     "Oi, {{1}}. Aqui é do time do Fotografia é o Meu Negócio.\n" +
     "Seu resultado do quiz saiu: {{2}}.\n" +

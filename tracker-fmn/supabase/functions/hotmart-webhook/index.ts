@@ -1005,14 +1005,71 @@ async function enviarBoasVindasBlindagem(transactionId: string, telefoneRaw: str
     `Pra criar a sua conta é só entrar por este link, a chave já vai preenchida:\n` +
     `${BLINDAGEM_URL}/cadastro?codigo=${encodeURIComponent(chave)}\n\n` +
     `Qualquer dúvida no cadastro, me chama aqui mesmo.`;
-  await enfileirarBoasVindas(transactionId, telefoneRaw, nome, corpo, "Blindagem");
+  const enfileirada = await enfileirarBoasVindas(transactionId, telefoneRaw, nome, corpo, "Blindagem");
+  if (enfileirada) await enfileirarConviteComunidadeBlindagem(transactionId, enfileirada, primeiroNome);
+}
+
+// Convite da comunidade para quem compra o Blindagem (Felipe, 14/10/2026): 3 minutos
+// depois da chave, pelo mesmo número de suporte, com o MESMO grupo do MCV. Quem já
+// recebeu o convite do MCV não recebe de novo (o caso da Isabelle, em setembro, foi
+// exatamente a mensagem em dobro). A ponte respeita agendado_para.
+const CONVITE_COMUNIDADE_ATRASO_MS = 3 * 60_000;
+
+async function enfileirarConviteComunidadeBlindagem(
+  transactionId: string,
+  destino: { contatoId: string; telefone: string },
+  primeiroNome: string,
+) {
+  if (!WHATSAPP_GRUPO_LINK_MCV) {
+    console.log("Convite da comunidade (Blindagem): WHATSAPP_GRUPO_LINK_MCV ausente, pulando.");
+    return;
+  }
+  try {
+    // Já está na comunidade pelo MCV? Mesmo e-mail ou mesmo telefone com boas-vindas do MCV enviada.
+    const { data: venda } = await supabase.from("vendas")
+      .select("comprador_email, comprador_telefone").eq("hotmart_transaction_id", transactionId).maybeSingle();
+    const filtros: string[] = [];
+    if (venda?.comprador_email) filtros.push(`comprador_email.eq.${venda.comprador_email}`);
+    for (const t of variantesTelefoneKhronus(venda?.comprador_telefone || destino.telefone)) filtros.push(`comprador_telefone.eq.${t}`);
+    if (filtros.length) {
+      const { data: doMcv } = await supabase.from("vendas").select("hotmart_transaction_id")
+        .eq("produto_id", PRODUTO_ID_MCV).eq("whatsapp_boas_vindas_enviado", true).or(filtros.join(",")).limit(1);
+      if ((doMcv || []).length) {
+        console.log("Convite da comunidade (Blindagem) pulado, já recebeu pelo MCV:", transactionId);
+        return;
+      }
+    }
+    // Reenvio da boas-vindas não manda o convite de novo.
+    const { data: jaFoi } = await khronus.from("crm_whatsapp_fila_envio").select("id")
+      .eq("studio_id", STUDIO_ID_KHRONUS).eq("contato_id", destino.contatoId)
+      .ilike("corpo", "%a segunda parte do seu acesso%").limit(1);
+    if ((jaFoi || []).length) return;
+
+    const corpo = renderCorpoTemplate("comunidade_blindagem", [primeiroNome, WHATSAPP_GRUPO_LINK_MCV]);
+    const { error } = await khronus.from("crm_whatsapp_fila_envio").insert({
+      studio_id: STUDIO_ID_KHRONUS,
+      contato_id: destino.contatoId,
+      telefone: destino.telefone,
+      tipo: "texto",
+      corpo,
+      status: "pendente",
+      agendado_para: new Date(Date.now() + CONVITE_COMUNIDADE_ATRASO_MS).toISOString(),
+    });
+    if (error) throw new Error(error.message);
+    console.log("Convite da comunidade (Blindagem) agendado para daqui a 3 minutos:", transactionId);
+  } catch (err) {
+    console.error("Erro ao agendar o convite da comunidade (Blindagem):", transactionId, err);
+  }
 }
 
 // Manda a boas-vindas de aluno novo pelo número de suporte, via fila do
 // Khronus (Ponte, WhatsApp Web automatizado) — não é mais a API oficial do
 // Meta (mudou em 2026-08-26). Idempotente: quem chama já checou
 // vendas.whatsapp_boas_vindas_enviado antes.
-async function enfileirarBoasVindas(transactionId: string, telefoneRaw: string, nome: string | null, corpo: string, rotulo: string) {
+async function enfileirarBoasVindas(
+  transactionId: string, telefoneRaw: string, nome: string | null, corpo: string, rotulo: string,
+): Promise<{ contatoId: string; telefone: string } | null> {
+  let enfileirada: { contatoId: string; telefone: string } | null = null;
   const to = normalizarTelefoneWhatsapp(telefoneRaw);
   const variantesKhronus = variantesTelefoneKhronus(telefoneRaw);
   // A primeira variante é o número como ele é de verdade; é ela que vai pra
@@ -1052,6 +1109,7 @@ async function enfileirarBoasVindas(transactionId: string, telefoneRaw: string, 
       });
       if (errFila) throw new Error(`Enfileirar: ${errFila.message}`);
       await supabase.from("vendas").update({ whatsapp_boas_vindas_enviado: true }).eq("hotmart_transaction_id", transactionId);
+      enfileirada = { contatoId, telefone: telefoneKhronus };
       console.log(`Boas-vindas ${rotulo} enfileirada no Khronus:`, transactionId, telefoneKhronus);
     }
 
@@ -1067,6 +1125,7 @@ async function enfileirarBoasVindas(transactionId: string, telefoneRaw: string, 
   } catch (err) {
     console.error(`Erro ao enfileirar boas-vindas ${rotulo} no Khronus:`, err);
   }
+  return enfileirada;
 }
 
 async function verificarRegrasATP(adsNumero: number, metaAdId: string | null) {
