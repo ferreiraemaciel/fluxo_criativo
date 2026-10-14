@@ -53,6 +53,16 @@ def extrair_prompt():
     return m.group(1).strip()
 
 
+def extrair_override_blindagem():
+    """Bloco do Blindagem, lido do mesmo arquivo .ts. A IA de verdade junta
+    esse bloco ao fim do prompt do MCV quando o lead é do funil do Blindagem."""
+    texto = PROMPT_FILE.read_text(encoding="utf-8")
+    m = re.search(r"export const BLINDAGEM_PRODUTO_OVERRIDE\s*=\s*`(.*?)`\.trim\(\)", texto, re.S)
+    if not m:
+        raise SystemExit(f"Não consegui extrair BLINDAGEM_PRODUTO_OVERRIDE de {PROMPT_FILE}")
+    return "\n\n" + m.group(1).strip()
+
+
 TOOL_RESPONDER = {
     "name": "responder_lead",
     "description": "Responde a mensagem do lead no WhatsApp, no tom combinado, e sinaliza se a conversa precisa de um humano.",
@@ -215,6 +225,21 @@ def foco_beneficio_nao_ferramenta(r):
 # ── Aluno (regra de 11/09/2026) ─────────────────────────────────────────────
 # O código injeta este aviso quando o contato é aluno (whatsapp-ia.ts).
 # Manter o texto igual ao de lá.
+AVISO_AGRADECEU = (
+    "\n\n## ATENÇÃO: o lead acabou de receber o preço e respondeu só agradecendo\n"
+    "Isso é hesitação, não despedida (regra \"Hesitação não é recusa\"). Não se despeça. "
+    "Traga um argumento que ainda não apareceu nesta conversa e termine perguntando o que ficou pesando, "
+    "o valor ou alguma dúvida de como funciona."
+)
+
+
+def nao_se_despede(r):
+    m = (r.get("mensagem") or "").lower()
+    if re.search(r"fica à vontade|fica a vontade|qualquer coisa,? é só chamar|é só chamar|estou por aqui|tô por aqui", m):
+        return False, "se despediu"
+    return True, "não se despediu"
+
+
 AVISO_ALUNO = (
     "\n\n## ATENÇÃO: este contato JÁ É ALUNO (já comprou)\n"
     "Siga a regra \"Quando o contato é aluno\" do prompt: pedido de suporte vira "
@@ -235,6 +260,20 @@ def sem_venda_pra_aluno(r):
 def sem_handoff(r):
     ok = r.get("handoff") is not True
     return ok, "sem handoff" if ok else "marcou handoff sem precisar"
+
+def nao_recusa_audio(r):
+    m = (r.get("mensagem") or "").lower()
+    if re.search(r"áudio aqui não|audio aqui nao|não (consigo|posso) (ouvir|escutar)|não escuto|nao escuto", m):
+        return False, "disse que não escuta áudio"
+    return True, "não recusou áudio"
+
+
+def nao_fala_200_modelos(r):
+    m = r.get("mensagem") or ""
+    if re.search(r"\+?\s?200 modelos", m):
+        return False, "citou +200 modelos (número do MCV)"
+    return True, "não citou +200 modelos"
+
 
 def mensagem_vazia(r):
     ok = not (r.get("mensagem", "") or "").strip()
@@ -346,6 +385,46 @@ CENARIOS = [
         ],
         "checks": [mensagem_vazia, sem_handoff],
     },
+    {
+        "nome": "Blindagem: 'Obrigado' logo depois do preço é hesitação, não despedida",
+        "sistema_extra": "BLINDAGEM_AGRADECEU",
+        "historico": [
+            {"role": "user", "content": "Olá! Tenho uma dúvida sobre o Blindagem."},
+            {"role": "assistant", "content": "Opa, pode falar. Qual é a sua dúvida sobre o Blindagem?"},
+            {"role": "user", "content": "O valor"},
+            {"role": "assistant", "content": "Sobre o investimento: apenas 12x de R$ 41,06 (ou R$ 397,00 à vista). Ficou alguma dúvida sobre o valor ou é mais sobre como funciona na prática?"},
+            {"role": "user", "content": "Obrigado"},
+        ],
+        "checks": [nao_se_despede, termina_com_pergunta, sem_handoff],
+    },
+    {
+        "nome": "Blindagem: lead pergunta se pode mandar áudio",
+        "sistema_extra": "BLINDAGEM",
+        "historico": [
+            {"role": "user", "content": "Bom dia"},
+            {"role": "user", "content": "Vc pode escutar áudio?"},
+        ],
+        "checks": [nao_recusa_audio, sem_handoff],
+    },
+    {
+        "nome": "Blindagem: saudação automática de estúdio fica sem resposta",
+        "sistema_extra": "BLINDAGEM",
+        "historico": [
+            {"role": "assistant", "content": "Oi, Rozania, aqui é do time da Fotografia é o Meu Negócio. Vimos que você começou a compra do Blindagem e não chegou a finalizar. Se travou em alguma coisa no pagamento ou ficou alguma dúvida sobre o app, responde aqui que a gente te ajuda."},
+            {"role": "user", "content": "Olá! Ficamos felizes em receber a sua mensagem. Aqui o seu ensaio é realizado com a qualidade da Rô Fernandes Fotografia. Para agilizar o seu atendimento, informe seu nome e necessidade. Em instantes retornarei a sua mensagem"},
+        ],
+        "checks": [mensagem_vazia, sem_handoff],
+    },
+    {
+        "nome": "Blindagem: quantos contratos recebo, sem número do MCV",
+        "sistema_extra": "BLINDAGEM",
+        "historico": [
+            {"role": "user", "content": "Olá! Tenho uma dúvida sobre o Blindagem."},
+            {"role": "assistant", "content": "Fala, me conta aí, qual é a dúvida?"},
+            {"role": "user", "content": "Quantos contratos recebo?"},
+        ],
+        "checks": [nao_fala_200_modelos, termina_com_pergunta, sem_virgula_antes_e_ou],
+    },
 ]
 
 
@@ -357,6 +436,7 @@ def main():
     model = os.environ.get("ANTHROPIC_IA_MODEL") or env.get("ANTHROPIC_IA_MODEL") or "claude-haiku-4-5-20251001"
 
     system_prompt = extrair_prompt()
+    override_blindagem = extrair_override_blindagem()
     print(f"Prompt carregado de {PROMPT_FILE.relative_to(RAIZ)} ({len(system_prompt)} caracteres)\n")
 
     total_ok = 0
@@ -365,10 +445,19 @@ def main():
     tokens_in = 0
     tokens_out = 0
 
+    filtro = sys.argv[1].lower() if len(sys.argv) > 1 else ""
     for cenario in CENARIOS:
+        if filtro and filtro not in cenario["nome"].lower():
+            continue
         print(f"── {cenario['nome']}")
         try:
-            resposta, uso = chamar_anthropic(api_key, model, system_prompt + cenario.get("sistema_extra", ""), cenario["historico"])
+            extra = cenario.get("sistema_extra", "")
+            if extra == "BLINDAGEM":
+                extra = override_blindagem
+            elif extra == "BLINDAGEM_AGRADECEU":
+                # Mesmo aviso que whatsapp-ia.ts acrescenta quando hesitacao() == "agradeceu"
+                extra = override_blindagem + AVISO_AGRADECEU
+            resposta, uso = chamar_anthropic(api_key, model, system_prompt + extra, cenario["historico"])
         except (urllib.error.URLError, RuntimeError) as e:
             print(f"   ERRO DE CHAMADA: {e}\n")
             falhas.append((cenario["nome"], "chamada falhou", str(e)))

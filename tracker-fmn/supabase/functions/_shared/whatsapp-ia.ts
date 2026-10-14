@@ -7,7 +7,7 @@ import { upsertContato } from "./whatsapp-contatos.ts";
 import { custoAnthropicUsd } from "./whatsapp-custos.ts";
 import { pareceMensagemAutomatica, contatoSoRespondeAutomatico } from "./whatsapp-automatica.ts";
 import { aplicarCorrecoesAutomaticas } from "./whatsapp-texto-fixes.ts";
-import { conversaEncerrada } from "./whatsapp-conversa-encerrada.ts";
+import { conversaEncerrada, hesitacao } from "./whatsapp-conversa-encerrada.ts";
 
 const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
 const ANTHROPIC_MODEL   = Deno.env.get("ANTHROPIC_IA_MODEL") || "claude-haiku-4-5-20251001";
@@ -476,7 +476,13 @@ async function processarComIAInterno(supabase: any, telefone: string, nomeLead: 
   const avisoAluno = ehAluno
     ? `\n\n## ATENÇÃO: este contato JÁ É ALUNO (já comprou)\nSiga a regra "Quando o contato é aluno" do prompt: pedido de suporte vira indicação do número (48) 99966-2118, e qualquer outra coisa fica sem resposta (mensagem vazia, handoff false). Nunca venda nada.`
     : "";
-  const systemPrompt = `${SYSTEM_PROMPT_MCV}${produtoOverride}${contextoLead}${avisoAluno}\n\n## Estágio atual da conversa\n${estagioAtual}`;
+  const tipoHesitacao = ehAluno ? null : hesitacao(linhas);
+  const avisoHesitacao = tipoHesitacao === "agradeceu"
+    ? `\n\n## ATENÇÃO: o lead acabou de receber o preço e respondeu só agradecendo\nIsso é hesitação, não despedida (regra "Hesitação não é recusa"). Não se despeça. Traga um argumento que ainda não apareceu nesta conversa e termine perguntando o que ficou pesando, o valor ou alguma dúvida de como funciona.`
+    : tipoHesitacao === "adiou"
+    ? `\n\n## ATENÇÃO: o lead disse que vai decidir ou finalizar depois\nIsso é hesitação, não despedida (regra "Hesitação não é recusa"). Não se despeça. Mande o link de checkout pra facilitar quando ele for finalizar e termine com uma pergunta leve sobre o que falta pra ele decidir.`
+    : "";
+  const systemPrompt = `${SYSTEM_PROMPT_MCV}${produtoOverride}${contextoLead}${avisoAluno}${avisoHesitacao}\n\n## Estágio atual da conversa\n${estagioAtual}`;
 
   let resposta: any;
   try {
