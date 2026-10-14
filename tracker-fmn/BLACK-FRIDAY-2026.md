@@ -3345,3 +3345,4 @@ Com os dois trailers (ADS 395 e 396), a fase de antecipação fecha em **6 peça
 **O ADS 400 tem prompt de imagem**, como plano B. A primeira escolha continua sendo a foto real do envelope, porque a marca pede foto real sempre que der.
 
 **Dependência:** o envelope físico precisa existir antes de gravar o ADS 397.
+- **Três blocos novos na página de inscrição (13/10), para gerar desejo sem revelar oferta:** "o que muda quando o combinado sai do WhatsApp" (cinco linhas de resultado, em papel pardo), "o que você leva por estar lá dentro" (os quatro ganhos de estar na lista) e a prova social, reaproveitada das páginas de vendas: o contador de alunos ao vivo (mesma Edge Function do mapa, 1.267 hoje), os prints de conversa do MCV e a foto do cliente assinando pelo celular do Blindagem. Está na pré-visualização, esperando a avaliação do Felipe.
