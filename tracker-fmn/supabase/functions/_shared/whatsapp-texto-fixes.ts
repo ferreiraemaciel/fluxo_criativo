@@ -50,6 +50,19 @@ function removerFazSentidoAbertura(texto: string): string {
   return semAbertura.charAt(0).toUpperCase() + semAbertura.slice(1);
 }
 
+// Abertura de balcão ("Boa pergunta", "Estou aqui pra ajudar") é a marca mais
+// óbvia de robô. Contagem de 14/10/2026: 7 de 164 respostas abriam com "Boa
+// pergunta" ou "Ótima pergunta". O prompt proíbe, e o código garante.
+function removerAberturaDeBalcao(texto: string): string {
+  let t = texto.replace(/^(boa|ótima|otima|excelente|grande) pergunta(,\s*[^\s.!,]+)?\s*[.!,]?\s*/i, "");
+  t = t.replace(/,\s*(estou|tô|to) aqui (pra|para) (te )?ajudar([.!?])/gi, "$4");
+  t = t.replace(/(^|[.!?]\s+)(estou|tô|to) aqui (pra|para) (te )?ajudar[.!]\s*/gi, "$1");
+  t = t.replace(/(^|[.!?]\s+)fico (muito )?feliz em (te )?ajudar[.!]\s*/gi, "$1");
+  t = t.trim();
+  if (!t || t === texto) return texto;
+  return t.charAt(0).toUpperCase() + t.slice(1);
+}
+
 export function aplicarCorrecoesAutomaticas(texto: string): string {
   let t = texto;
   t = removerSaudacaoPeriodo(t);
@@ -58,5 +71,6 @@ export function aplicarCorrecoesAutomaticas(texto: string): string {
   t = removerVirgulaVocativoCurto(t);
   t = removerTransicaoDeReuniao(t);
   t = removerFazSentidoAbertura(t);
+  t = removerAberturaDeBalcao(t);
   return t;
 }

@@ -275,6 +275,34 @@ def nao_fala_200_modelos(r):
     return True, "não citou +200 modelos"
 
 
+def sem_abertura_balcao(r):
+    m = (r.get("mensagem") or "").strip().lower()
+    if re.match(r"(boa|ótima|otima|excelente) pergunta|estou aqui pra|fico feliz em", m):
+        return False, "abriu com frase de balcão"
+    return True, "sem abertura de balcão"
+
+
+def sem_tu(r):
+    m = (r.get("mensagem") or "").lower()
+    if re.search(r"\btu\b", m):
+        return False, "usou 'tu'"
+    return True, "sem 'tu'"
+
+
+def tom_descontraido(r):
+    m = (r.get("mensagem") or "").lower()
+    if re.search(r"kkk|haha|\btá\b|na boa|sacou|bora|imagina|que tal", m):
+        return True, "soltou o tom"
+    return False, "nenhuma marca de tom descontraído"
+
+
+def sem_risada(r):
+    m = (r.get("mensagem") or "").lower()
+    if re.search(r"kkk|haha|rsrs", m):
+        return False, "riu numa reclamação"
+    return True, "sem risada"
+
+
 def mensagem_vazia(r):
     ok = not (r.get("mensagem", "") or "").strip()
     return ok, "ficou em silêncio" if ok else f"respondeu: {r.get('mensagem')!r}"
@@ -424,6 +452,32 @@ CENARIOS = [
             {"role": "user", "content": "Quantos contratos recebo?"},
         ],
         "checks": [nao_fala_200_modelos, termina_com_pergunta, sem_virgula_antes_e_ou],
+    },
+    {
+        "nome": "Tom: pergunta simples sem abertura de balcão",
+        "sistema_extra": "BLINDAGEM",
+        "historico": [
+            {"role": "user", "content": "Fiquei com uma dúvida"},
+            {"role": "assistant", "content": "Pode falar, qual é a dúvida?"},
+            {"role": "user", "content": "É um site ou aplicativo?"},
+        ],
+        "checks": [sem_abertura_balcao, sem_tu, termina_com_pergunta],
+    },
+    {
+        "nome": "Tom: lead rindo puxa resposta descontraída",
+        "historico": [
+            {"role": "assistant", "content": "Você já blinda isso direto no orçamento, mas me diz uma coisa: isso que você escreve ali tem peso legal de verdade?"},
+            {"role": "user", "content": "Aí já não sei hehehe"},
+        ],
+        "checks": [tom_descontraido, sem_abertura_balcao, sem_tu, termina_com_pergunta],
+    },
+    {
+        "nome": "Tom: reclamação não leva brincadeira",
+        "historico": [
+            {"role": "assistant", "content": "E aí, como é esse processo? Você cria o contrato no Word, manda pro cliente e fica só torcendo pra ele assinar e devolver?"},
+            {"role": "user", "content": "não tenho problema com o retorno deles, não entendi \"torcendo\" por que vcs tem algum diferencial em relação a essa expectativa?"},
+        ],
+        "checks": [sem_risada, sem_abertura_balcao, sem_tu],
     },
 ]
 
