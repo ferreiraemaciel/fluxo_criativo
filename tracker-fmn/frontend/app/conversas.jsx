@@ -994,6 +994,9 @@ const LINK_CHECKOUT_MCV_CUPOM = `https://pay.hotmart.com/W87258826R?checkoutMode
 // sck da tabela oficial (CLAUDE.md, Instagram Stories): instagram-lp + separador + stories (29).
 // É para colar no story, não para mandar no WhatsApp (marcaria a venda como story).
 const LINK_STORY_BLINDAGEM = 'https://www.contratosblindagem.fotografiaeomeunegocio.com.br/?sck=instagram-lphQwK21wXxRstories&utm_source=instagram-lp&utm_medium=stories&utm_campaign=blindagem';
+// Checkout do Blindagem para o atendimento humano (14/10/2026): sck whatsapp-ah, mesmo
+// link da mensagem pronta "Blindagem · Checkout" do Blindagem (conta FMN).
+const LINK_CHECKOUT_BLINDAGEM = 'https://pay.hotmart.com/C106394543X?checkoutMode=10&sck=whatsapp-ah';
 const MENSAGENS_PRONTAS = [
   // Mensagem pronta com vídeo (12/10/2026): `midia` é o link público do arquivo; o texto vira a legenda.
   // O vídeo mora em depoimentos/ no R2 site-fmn, fora de organico/originais (que é apagado ao publicar).
@@ -1002,6 +1005,8 @@ const MENSAGENS_PRONTAS = [
     texto: 'Olha esse depoimento de uma aluna: num dia ela mandou 25 contratos para os clientes dela e recebeu 22 de volta assinados no mesmo dia.' },
   { id: 'story_blindagem', label: 'Link do story do Instagram (Blindagem)', icone: 'camera',
     texto: LINK_STORY_BLINDAGEM },
+  { id: 'checkout_blindagem', label: 'Link de checkout (Blindagem)', icone: 'link',
+    texto: `Segue o link pra garantir o seu: ${LINK_CHECKOUT_BLINDAGEM}` },
   { id: 'checkout', label: 'Link de checkout (MCV)', icone: 'link',
     texto: `Segue o link pra garantir o seu: ${LINK_CHECKOUT_MCV}` },
   { id: 'checkout_cupom', label: 'Link com cupom de desconto', icone: 'ticket-percent',
