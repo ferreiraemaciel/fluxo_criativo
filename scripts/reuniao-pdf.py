@@ -26,6 +26,8 @@ Formato do JSON (campos opcionais podem faltar):
      "pontos": ["ponto principal 1", "ponto principal 2"]}
   ],
   "decisoes": [{"titulo": "Comissão de 20%", "descricao": "..."}],
+  "sugestoes_intro": "frase opcional que abre a seção de sugestões",
+  "sugestoes": [{"titulo": "Arquivar contratos concluídos", "descricao": "...", "origem": "Luciana"}],
   "proximos_passos": [{"responsavel": "Lucas", "tarefa": "Instalar o app", "prazo": "opcional"}],
   "observacoes": "texto opcional no fim",
   "aviso": "texto opcional que substitui o aviso padrão de confidencialidade"
@@ -123,6 +125,16 @@ def montar_html(d: dict) -> str:
         for x in d.get("decisoes") or []
     )
 
+    # sugestões de implementação: ideias ainda sem decisão, com a origem de cada uma
+    sug_itens = "".join(
+        f'<div class="sugestao"><div class="sug-cab"><h3>{esc(x.get("titulo"))}</h3>'
+        + (f'<span class="sug-origem">Sugestão {esc(x["origem"])}</span>' if x.get("origem") else "")
+        + f'</div><p>{esc(x.get("descricao"))}</p></div>'
+        for x in d.get("sugestoes") or []
+    )
+    sug_intro = f'<p class="sug-intro">{esc(d["sugestoes_intro"])}</p>' if d.get("sugestoes_intro") else ""
+    sugestoes = sug_intro + sug_itens if sug_itens else ""
+
     # próximos passos agrupados por responsável, na ordem em que aparecem
     grupos: dict = {}
     for p in d.get("proximos_passos") or []:
@@ -193,6 +205,12 @@ p {{ margin:0 0 3mm; }}
 .detalhe li::before {{ content:""; position:absolute; left:0; top:2.1mm; width:1.7mm; height:1.7mm; border-radius:50%; background:var(--gold); }}
 .cartao {{ background:var(--cream); border-left:1.6mm solid var(--gold); border-radius:0 2mm 2mm 0; padding:4mm 5mm; margin-bottom:3.5mm; break-inside:avoid; }}
 .cartao p {{ margin:0; }}
+.sug-intro {{ color:var(--muted); font-size:9.5pt; margin:0 0 4mm; }}
+.sugestao {{ border:1px solid rgba(26,26,26,.14); border-left:1.6mm solid var(--gold-deep); border-radius:0 2mm 2mm 0; padding:3.5mm 5mm; margin-bottom:3mm; break-inside:avoid; }}
+.sugestao p {{ margin:0; font-size:10pt; }}
+.sug-cab {{ display:flex; justify-content:space-between; align-items:baseline; gap:4mm; margin-bottom:1mm; }}
+.sug-cab h3 {{ margin:0; }}
+.sug-origem {{ font-size:7.5pt; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--gold-deep); white-space:nowrap; }}
 .grupos {{ display:grid; grid-template-columns:1fr 1fr; gap:4mm; }}
 .grupo {{ border:1px solid rgba(26,26,26,.14); border-top:1.2mm solid var(--gold); border-radius:2mm; padding:4mm 5mm; break-inside:avoid; }}
 .grupo ul {{ margin:0; padding:0; list-style:none; }}
@@ -218,6 +236,7 @@ footer b {{ color:var(--orange); font-weight:700; letter-spacing:.06em; text-tra
 {secao("Pauta", pauta)}
 {secao("Detalhes da reunião", detalhes)}
 {secao("O que ficou decidido", decisoes)}
+{secao("Sugestões de implementação", sugestoes)}
 {secao("Próximos passos", passos)}
 {secao("Observações", obs)}
 </main></td></tr></tbody><tfoot><tr><td><div class="esp-base"></div></td></tr></tfoot></table>
