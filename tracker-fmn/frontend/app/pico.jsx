@@ -2439,7 +2439,74 @@ function AbaAgora({ tarefas, pecasPorTarefa, onToggle, onAbrirPeca, onMudar }) {
    O arquivo vai original para o R2 (fmn/pico/<projeto>/) pelo link assinado
    do worker fem-upload; a linha fica em pico_arquivos. */
 const UPLOAD_FEM = 'https://fem-upload.blindagem-fmn.workers.dev';
-const CATEGORIAS_ARQ = [['logo','Logos'],['arte','Artes'],['foto','Fotos'],['video','Vídeos'],['documento','Documentos']];
+const CATEGORIAS_ARQ = [['logo','Logos e fundos'],['grupo','Capas dos grupos'],['contagem','Jogo de contagem regressiva'],['bonus','Cards de revelação dos bônus'],['arte','Artes'],['foto','Fotos'],['video','Vídeos'],['documento','Documentos']];
+
+/* Mini manual de identidade por campanha (resumo da página de marca). */
+const IDENTIDADE_PICO = {
+  '8ea93841-0872-474e-a520-a36804c3d813': {
+    objeto: 'A campanha é feita do envelope pardo lacrado e carimbado, que fica na mesa a partir de outubro e é aberto ao vivo no dia 10. Três materiais: papel pardo, tinta de carimbo e preto de Black. O dourado da FMN é o fio que liga à casa, nunca o protagonista.',
+    cores: [
+      ['Pardo','#B98A57','Antecipação, envelope e bastidor'],
+      ['Preto','#0D0D0D','Oferta, contagem e carrinho'],
+      ['Tinta de carimbo','#9E2B25','Só selo, etiqueta de bônus e corte final'],
+      ['Dourado FMN','#EAAA41','Número da contagem, grifo e borda de destaque'],
+      ['Pardo claro','#E4C9A5','Texto secundário sobre pardo'],
+      ['Branco','#FFFFFF','Texto sobre preto, nunca fundo'],
+    ],
+    fontes: [['Montserrat 900','Título e número'],['Montserrat 600 / 500','Subtítulo e corpo'],['Roboto Mono 700','Etiqueta e carimbo']],
+    selo: 'Um carimbo, não um logo. Sempre no mesmo canto, levemente torto (3 graus). Versão completa no fundo pardo; reduzida em canto de card e capa de grupo.',
+    faz: ['Pardo na antecipação, preto no carrinho','Selo sempre no mesmo canto, torto','Grão leve no pardo, parecendo papel','Um assunto por peça, com muito espaço vazio','Foto real do álbum, do envelope e da mesa'],
+    naoFaz: ['Tinta de carimbo como fundo de peça','Selo reto e centralizado, como logo','Peça inteira de fundo branco','Preço, percentual ou combo antes do dia 10','Degradê colorido, brilho ou 3D'],
+    link: 'https://black-artes.pages.dev/marca',
+  },
+};
+
+function ManualIdentidade({ m }) {
+  const rot = { fontSize:11, fontWeight:600, letterSpacing:'.04em', color:'var(--text-2)', fontFamily:'Roboto,sans-serif', marginBottom:8 };
+  const txt = { fontSize:13, color:'var(--text-1)', fontFamily:'Roboto,sans-serif', lineHeight:1.5 };
+  return (
+    <div style={{ background:'var(--app-surface)', border:'1px solid var(--app-border)', borderRadius:16, padding:20, display:'flex', flexDirection:'column', gap:20 }}>
+      <p style={{ ...txt, color:'var(--text-2)' }}>{m.objeto}</p>
+      <div>
+        <p style={rot}>paleta</p>
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(150px, 1fr))', gap:10 }}>
+          {m.cores.map(([n, hex, uso]) => (
+            <button key={hex} onClick={() => navigator.clipboard?.writeText(hex)} title="Copiar o código da cor"
+              style={{ textAlign:'left', cursor:'pointer', border:'1px solid var(--app-border)', borderRadius:12, overflow:'hidden', background:'var(--app-surface-2)' }}>
+              <div style={{ height:44, background:hex }}/>
+              <div style={{ padding:'8px 10px' }}>
+                <p style={{ ...txt, fontWeight:600 }}>{n}</p>
+                <p style={{ fontSize:12, fontFamily:'Roboto Mono,monospace', color:'var(--app-primary)' }}>{hex}</p>
+                <p style={{ fontSize:12, color:'var(--text-2)', fontFamily:'Roboto,sans-serif', marginTop:2, lineHeight:1.35 }}>{uso}</p>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(260px, 1fr))', gap:20 }}>
+        <div>
+          <p style={rot}>tipografia</p>
+          {m.fontes.map(([f, uso]) => (
+            <p key={f} style={{ ...txt, display:'flex', justifyContent:'space-between', gap:12, padding:'6px 0', borderBottom:'1px solid var(--app-border)' }}>
+              <b style={{ fontWeight:600 }}>{f}</b><span style={{ color:'var(--text-2)' }}>{uso}</span>
+            </p>
+          ))}
+          <p style={{ ...rot, marginTop:16 }}>selo</p>
+          <p style={txt}>{m.selo}</p>
+        </div>
+        <div>
+          <p style={rot}>faz</p>
+          {m.faz.map(t => <p key={t} style={{ ...txt, display:'flex', gap:8, padding:'3px 0' }}><LucideIcon icon="check" size={14} style={{ color:'#79e06f', marginTop:3, flexShrink:0 }}/>{t}</p>)}
+          <p style={{ ...rot, marginTop:16 }}>não faz</p>
+          {m.naoFaz.map(t => <p key={t} style={{ ...txt, display:'flex', gap:8, padding:'3px 0' }}><LucideIcon icon="x" size={14} style={{ color:'#fe626c', marginTop:3, flexShrink:0 }}/>{t}</p>)}
+        </div>
+      </div>
+      <a href={m.link} target="_blank" rel="noopener" style={{ fontSize:13, color:'var(--app-primary)', fontFamily:'Roboto,sans-serif', display:'inline-flex', alignItems:'center', gap:6 }}>
+        <LucideIcon icon="external-link" size={14}/>Manual completo
+      </a>
+    </div>
+  );
+}
 const ehImagem = u => /\.(png|jpe?g|webp|gif|svg)(\?|$)/i.test(u);
 
 async function baixarArquivo(a) {
@@ -2487,13 +2554,36 @@ function AcervoArquivos({ projetoId }) {
     carregar();
   }
 
-  const lista = itens.filter(a => cat === 'todas' || a.categoria === cat);
+  const manual = IDENTIDADE_PICO[projetoId];
+  const secoes = [];
+  if (manual) secoes.push({ id:'identidade', titulo:'Identidade da campanha', corpo:<ManualIdentidade m={manual}/> });
+  CATEGORIAS_ARQ.forEach(([id, lb]) => {
+    const chave = a => { const m = a.nome.match(/\((\d{2})\/(\d{2})\)/); return m ? `${m[2]}${m[1]}` : '9999'; };
+    const doTipo = itens.filter(a => a.categoria === id)
+      .sort((x, y) => chave(x).localeCompare(chave(y)) || x.nome.localeCompare(y.nome, 'pt-BR', { numeric:true }));
+    if (!doTipo.length) return;
+    const sub = id === 'contagem'
+      ? [['Feed 1080x1350', doTipo.filter(a => !/story/i.test(a.url)), '4 / 5'], ['Story 1080x1920', doTipo.filter(a => /story/i.test(a.url)), '9 / 16']]
+      : [[null, doTipo, id === 'bonus' ? '4 / 5' : '1 / 1']];
+    secoes.push({ id, titulo:lb, n:doTipo.length, corpo:(
+      <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
+        {sub.filter(([, l]) => l.length).map(([rot, l, prop]) => (
+          <div key={rot || id}>
+            {rot && <p style={{ fontSize:12, color:'var(--text-2)', fontFamily:'Roboto,sans-serif', marginBottom:8 }}>{rot}</p>}
+            <div style={{ display:'grid', gridTemplateColumns:`repeat(auto-fill, minmax(${prop === '9 / 16' ? 130 : 170}px, 1fr))`, gap:16 }}>
+              {l.map(a => <ArquivoTile key={a.id} a={a} prop={prop} onRemover={remover}/>)}
+            </div>
+          </div>
+        ))}
+      </div>) });
+  });
+  const visiveis = secoes.filter(x => cat === 'todas' || x.id === cat);
   return (
-    <section style={{ display:'flex', flexDirection:'column', gap:12 }}>
+    <section style={{ display:'flex', flexDirection:'column', gap:16 }}>
       <div style={{ display:'flex', alignItems:'flex-end', justifyContent:'space-between', gap:12, flexWrap:'wrap' }}>
         <div>
           <p style={{ fontSize:16, fontWeight:600, fontFamily:'Roboto,sans-serif', color:'var(--text-1)' }}>Arquivos da campanha</p>
-          <p style={{ fontSize:13, color:'var(--text-2)', fontFamily:'Roboto,sans-serif', marginTop:2 }}>Logos, artes, fotos e documentos. Clique para baixar o original.</p>
+          <p style={{ fontSize:13, color:'var(--text-2)', fontFamily:'Roboto,sans-serif', marginTop:2 }}>Clique numa peça para baixar o original.</p>
         </div>
         <label style={{ display:'inline-flex', alignItems:'center', gap:8, height:36, padding:'0 16px', borderRadius:10, cursor:'pointer',
           background:'var(--app-primary)', color:'var(--app-primary-fg)', fontSize:14, fontWeight:500, fontFamily:'Roboto,sans-serif' }}>
@@ -2503,35 +2593,42 @@ function AcervoArquivos({ projetoId }) {
       </div>
       {msg && <span style={{ fontSize:12, color:'var(--text-2)', fontFamily:'Roboto,sans-serif' }}>{msg}</span>}
       <Pilulas valor={cat} onChange={setCat}
-        opcoes={[{ id:'todas', label:`Todos (${itens.length})` },
-          ...CATEGORIAS_ARQ.filter(([id]) => itens.some(a => a.categoria === id)).map(([id, lb]) => ({ id, label:`${lb} (${itens.filter(a => a.categoria === id).length})` }))]}/>
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(170px, 1fr))', gap:16 }}>
-        {lista.map(a => (
-          <div key={a.id} style={{ display:'flex', flexDirection:'column', gap:6 }}>
-            <button onClick={() => baixarArquivo(a)} title="Baixar o original"
-              style={{ position:'relative', width:'100%', aspectRatio:'1 / 1', borderRadius:12, overflow:'hidden', cursor:'pointer',
-                background: a.categoria === 'logo' ? 'repeating-conic-gradient(#14161b 0% 25%, #0e1115 0% 50%) 50% / 16px 16px' : 'var(--app-surface-2)',
-                border:'1px solid var(--app-border)', display:'flex', alignItems:'center', justifyContent:'center' }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--app-primary)'; e.currentTarget.lastChild.style.opacity = 1; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--app-border)'; e.currentTarget.lastChild.style.opacity = 0; }}>
-              {ehImagem(a.url)
-                ? <img src={a.url} loading="lazy" style={{ width:'100%', height:'100%', objectFit: a.categoria === 'logo' ? 'contain' : 'cover', padding: a.categoria === 'logo' ? 16 : 0, boxSizing:'border-box' }}/>
-                : <LucideIcon icon={a.categoria === 'video' ? 'film' : 'file-text'} size={36} style={{ color:'var(--text-2)' }}/>}
-              <span style={{ position:'absolute', inset:0, background:'rgba(0,0,0,.55)', display:'flex', alignItems:'center', justifyContent:'center',
-                gap:6, color:'#fff', fontSize:13, fontWeight:500, fontFamily:'Roboto,sans-serif', opacity:0, transition:'opacity 150ms' }}>
-                <LucideIcon icon="download" size={16}/>Baixar
-              </span>
-            </button>
-            <div style={{ display:'flex', alignItems:'flex-start', gap:6 }}>
-              <span style={{ flex:1, fontSize:13, color:'var(--text-1)', fontFamily:'Roboto,sans-serif', lineHeight:1.35 }}>{a.nome}</span>
-              <button onClick={() => remover(a)} title="Tirar do acervo" style={{ color:'var(--text-2)', cursor:'pointer', padding:2 }}>
-                <LucideIcon icon="x" size={14}/>
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
+        opcoes={[{ id:'todas', label:'Tudo' }, ...secoes.map(x => ({ id:x.id, label: x.n ? `${x.titulo} (${x.n})` : x.titulo }))]}/>
+      {visiveis.map(x => (
+        <div key={x.id} style={{ display:'flex', flexDirection:'column', gap:10 }}>
+          <p style={{ fontSize:14, fontWeight:600, fontFamily:'Roboto,sans-serif', color:'var(--text-1)' }}>{x.titulo}</p>
+          {x.corpo}
+        </div>
+      ))}
     </section>
+  );
+}
+
+function ArquivoTile({ a, prop, onRemover }) {
+  const logo = a.categoria === 'logo';
+  return (
+    <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+      <button onClick={() => baixarArquivo(a)} title="Baixar o original"
+        style={{ position:'relative', width:'100%', aspectRatio:prop, borderRadius:12, overflow:'hidden', cursor:'pointer',
+          background: logo ? 'repeating-conic-gradient(#14161b 0% 25%, #0e1115 0% 50%) 50% / 16px 16px' : 'var(--app-surface-2)',
+          border:'1px solid var(--app-border)', display:'flex', alignItems:'center', justifyContent:'center' }}
+        onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--app-primary)'; e.currentTarget.lastChild.style.opacity = 1; }}
+        onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--app-border)'; e.currentTarget.lastChild.style.opacity = 0; }}>
+        {ehImagem(a.url)
+          ? <img src={a.url} loading="lazy" style={{ width:'100%', height:'100%', objectFit: logo ? 'contain' : 'cover', padding: logo ? 16 : 0, boxSizing:'border-box' }}/>
+          : <LucideIcon icon={a.categoria === 'video' ? 'film' : 'file-text'} size={36} style={{ color:'var(--text-2)' }}/>}
+        <span style={{ position:'absolute', inset:0, background:'rgba(0,0,0,.55)', display:'flex', alignItems:'center', justifyContent:'center',
+          gap:6, color:'#fff', fontSize:13, fontWeight:500, fontFamily:'Roboto,sans-serif', opacity:0, transition:'opacity 150ms' }}>
+          <LucideIcon icon="download" size={16}/>Baixar
+        </span>
+      </button>
+      <div style={{ display:'flex', alignItems:'flex-start', gap:6 }}>
+        <span style={{ flex:1, fontSize:13, color:'var(--text-1)', fontFamily:'Roboto,sans-serif', lineHeight:1.35 }}>{a.nome}</span>
+        <button onClick={() => onRemover(a)} title="Tirar do acervo" style={{ color:'var(--text-2)', cursor:'pointer', padding:2 }}>
+          <LucideIcon icon="x" size={14}/>
+        </button>
+      </div>
+    </div>
   );
 }
 
