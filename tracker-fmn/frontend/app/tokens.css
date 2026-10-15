@@ -18,7 +18,7 @@
   --text-2: #a2a4ab;
   --text-3: rgba(255,255,255,.42);
 
-  /* Marca dentro das telas: #f9b64f, como no FMN Pro. As abas do menu usam #fbbf24 (shared.jsx). */
+  /* Marca dentro das telas: #f9b64f, como no FMN Pro. As abas do menu usam #f9b64f (shared.jsx). */
   --app-primary:    #f9b64f;
   --app-primary-fg: #06070a;
   --app-radius:     12px;

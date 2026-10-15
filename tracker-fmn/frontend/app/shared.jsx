@@ -419,10 +419,10 @@ function Sidebar({ activePage, onNavigate, collapsed = false, onToggle }) {
           height: 32, padding: collapsed ? 0 : '0 8px',
           borderRadius: 'var(--app-radius-md)', width: '100%', textAlign: 'left',
           // Padrão Blindagem / FMN Pro: ativo com fundo âmbar a 6% e borda a 28%.
-          background: active ? 'rgba(251,191,36,.06)' : hov ? 'rgba(255,255,255,.05)' : 'transparent',
-          border: `1px solid ${active ? 'rgba(251,191,36,.28)' : 'transparent'}`,
-          // Abas do menu: #fbbf24. Dentro das telas: #f9b64f (--app-primary). Igual ao FMN Pro.
-          color: active ? '#fbbf24' : hov ? '#fbbf24' : 'var(--text-1)',
+          background: active ? 'rgba(249,182,79,.06)' : hov ? 'rgba(255,255,255,.05)' : 'transparent',
+          border: `1px solid ${active ? 'rgba(249,182,79,.28)' : 'transparent'}`,
+          // Abas do menu: #f9b64f. Dentro das telas: #f9b64f (--app-primary). Igual ao FMN Pro.
+          color: active ? '#f9b64f' : hov ? '#f9b64f' : 'var(--text-1)',
           fontFamily: 'Roboto, sans-serif', fontWeight: 500,
           fontSize: 14, cursor: 'pointer', transition: 'all 150ms',
         }}>
