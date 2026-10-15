@@ -3357,3 +3357,99 @@ Com os dois trailers (ADS 395 e 396), a fase de antecipação fecha em **6 peça
 - **Caminho que não funcionou:** a remoção de fundo pela ferramenta da Adobe recusa URL de domínio próprio, só aceita arquivo escolhido no seletor dela ou domínio da lista dela. Para peça com foto nossa, o caminho curto é tratar no ChatGPT com a foto real e montar a tipografia aqui.
 - **ADS 400 refeito na mesma noite**, com a segunda versão da imagem do envelope. Dois ajustes: o preto sobrando no topo foi cortado para o envelope e a mão caberem inteiros acima do texto, e o carimbo da imagem veio escrito **CONFEDENCIAL**, com E no lugar do I, erro que a IA introduziu ao redesenhar o texto. Corrigido direto na imagem, repondo a textura do papel e reescrevendo a palavra em monoespaçada vermelha desbotada, com ruído, para casar com o resto do carimbo. Fica o alerta: sempre reler palavra por palavra o texto que a IA redesenha numa arte.
 - **Os três estáticos nativos ganharam os campos no Tracker (13/10).** ADS 371, 372 e 373 existiam só como título, o conteúdo estava apenas no caderno. Agora cada um tem headline, roteiro em gancho, desenvolvimento e CTA, estética visual, copy do Meta e as dependências escritas. Nenhum precisa de câmera: o 371 é print de conversa real sobre os álbuns, o 372 é print da caixinha respondida, o 373 é reação a notícia real, com crédito Reprodução/veículo.
+
+---
+
+# PARTE 27. PARCERIA PROPULSE CONTABILIDADE E O EVENTO "QUANTO SOBRA" (15/10/2026)
+
+> **Muda uma decisão anterior.** A decisão de 28/08 era fazer a Black sem parceiros (ver 7.14). A Propulse Contabilidade entra como a única parceira desta edição, com um evento ao vivo sem custo para quem comprar na Black. O resto da decisão de 7.14 segue valendo: o combo continua sustentado pelo acervo próprio, a parceria não vira dependência de régua.
+
+## 27.1 O que foi combinado
+
+A Propulse Contabilidade, focada em contabilidade para fotógrafos, entra como parceira. A contrapartida é um **evento ao vivo, online, de 1 hora**, sem custo, para quem comprar durante a Black. Elas fazem uma oferta no fim, mas o foco é instrução e tira-dúvidas. Quem quiser contratar contrata, quem não quiser sai tendo aprendido.
+
+**Regra de comunicação:** em nenhum lugar o evento é chamado de evento de contabilidade, workshop contábil ou equivalente. A peça vende o resultado, nunca a categoria.
+
+## 27.2 O lastro, do nosso próprio banco de linguagem
+
+Dinheiro é a segunda dor mais citada do público, atrás só de contrato (ver Parte 17):
+
+| Sinal | Pessoas |
+|---|---|
+| Estresse por ter que estar sempre atrás do dinheiro | 10.558 |
+| Medo do negócio não dar certo | 8.503 |
+| Já perdi dinheiro por não estar protegido | 6.901 |
+
+Falas literais que sustentam o ângulo: "Já sou empresa e cada dia tenho recebido propostas maiores", "Eu só deixei de ganhar um pouquinho a mais".
+
+## 27.3 O nome
+
+**Escolhido: QUANTO SOBRA**
+Subtítulo: *Uma hora para descobrir para onde vai o dinheiro que entra na sua conta.*
+
+Duas palavras, e é a pergunta que o fotógrafo não sabe responder. Ele sabe quanto cobrou, não sabe quanto ficou.
+
+**Descartados:**
+- *O dinheiro que some.* Mais emocional, perde em clareza do que a pessoa leva.
+- *Caixa preta.* Bom trocadilho (caixa do negócio e caixa da câmera), mas risco de soar como acusação de caixa dois, que a nossa marca não corre.
+
+## 27.4 O formato da hora
+
+| Tempo | O que acontece |
+|---|---|
+| 0 a 6 min | Felipe abre, com uma história própria de dinheiro que escorreu. É o que transfere a confiança da audiência dele para elas |
+| 6 a 16 min | Bloco 1. O Pix que a Receita já enxerga |
+| 16 a 26 min | Bloco 2. Quando o MEI começa a sair caro |
+| 26 a 36 min | Bloco 3. O job que você perdeu por não ter nota |
+| 36 a 55 min | Tira-dúvidas ao vivo, pergunta aberta |
+| 55 a 60 min | A Propulse apresenta o serviço, uma vez, sem insistir. Felipe fecha |
+
+**Os 19 minutos de pergunta aberta não são sobra de tempo, são o produto.** O fotógrafo nunca teve um contador para perguntar de graça. É isso que faz ele aparecer, e é isso que vende sozinho no fim.
+
+**Conteúdo de cada bloco:**
+1. **O Pix que a Receita já enxerga.** O que acontece com quem recebe tudo na conta pessoal há anos, o que a Receita cruza hoje, e o caminho de regularizar sem susto.
+2. **Quando o MEI começa a sair caro.** O teto, o que acontece ao estourar, e a conta lado a lado de quanto muda o imposto ao sair. Com número na tela.
+3. **O job que você perdeu por não ter nota.** Agência, marca e empresa só fecham com nota. Quanto de mercado fica na mesa, e o que precisa para emitir.
+
+Lógica da sequência: medo, dinheiro, oportunidade. Termina para cima, que é de onde sai vontade de contratar.
+
+## 27.5 Copy aprovada do card de bônus (página de vendas)
+
+> ### QUANTO SOBRA
+> **Encontro ao vivo, 1 hora, com a Propulse Contabilidade**
+>
+> Você sabe quanto cobrou no ensaio. Sabe quanto entrou na conta. Agora responde rápido: quanto sobrou de verdade depois do imposto, da taxa da maquininha, do cartão de memória que queimou e do combustível até a locação.
+>
+> A maior parte dos fotógrafos não sabe. Fatura razoavelmente bem, trabalha todo fim de semana, e no fim do ano tem a sensação de que o dinheiro passou sem parar.
+>
+> Nessa hora você vai entender o que a Receita já enxerga das suas transferências, a partir de quando continuar no MEI começa a custar mais caro que sair dele, e quanto trabalho de empresa você está perdendo por não conseguir emitir nota.
+>
+> Os últimos 20 minutos são só pergunta sua, respondida ao vivo por quem cuida de contabilidade de fotógrafo todo dia.
+>
+> **Sem custo para quem comprar na Black.**
+
+## 27.6 Copy aprovada do convite (WhatsApp, para quem já comprou)
+
+> Você garantiu um encontro que não estava na página quando eu abri a Black.
+>
+> Chama **Quanto Sobra**, é ao vivo, dura uma hora, e é com a Propulse, que é contabilidade feita para fotógrafo, não contador genérico que atende padaria, clínica e estúdio com a mesma régua.
+>
+> O assunto é o dinheiro que entra na sua conta e some antes de virar lucro. O Pix que a Receita já enxerga, a hora em que o MEI passa a custar caro, e o trabalho de empresa que você perde por não ter nota.
+>
+> Os últimos 20 minutos são seus, para perguntar o que quiser.
+>
+> {data} às {hora}. Anota aí que eu mando o link no dia.
+
+## 27.7 Alerta de linha editorial
+
+O tema passa perto de imposto, e o Felipe é advogado com nome exposto. **Toda a copy fala em pagar o certo e parar de perder, nunca em pagar menos.** Essa linha não se cruza sem decisão expressa dele.
+
+## 27.8 Pendências para fechar a parceria
+
+1. **Data e horário.** Sem isso o card não entra na página de vendas nem no e-mail
+2. **Quem apresenta pela Propulse**, nome e credencial, que é a autoridade do convite
+3. **Se já atendem fotógrafo de fato e quantos.** Número vira prova no card
+4. **Qual oferta elas fazem no fim**, para o conteúdo da hora não entregar tudo e esvaziar a proposta delas
+5. **Entrar na tabela de bônus da Parte 26.2** como bônus 7, depois de definido quem leva
+
+> Busca feita em 15/10/2026 não encontrou material público indexado da Propulse. A autoridade do card vai ter que vir do que elas informarem.
