@@ -107,6 +107,7 @@ async function criarCardDaTarefa(tarefa, projeto) {
       tipo: 'imagem',
       status: 'fazer',
       pico_projeto_id: projeto.id,
+      pico_tarefa_id: tarefa.id,   // a peça já nasce ligada à tarefa (aba Peças e Agora)
     }).select('id').single();
     if (error) throw new Error(error.message);
     return { tipo:'Anúncios', rotulo:`ADS ${String(n).padStart(3,'0')}`, hash:'#criativos',
@@ -119,6 +120,7 @@ async function criarCardDaTarefa(tarefa, projeto) {
       // O Organico nao tem coluna "Fazer": a primeira e "Fazendo".
       status: 'Fazendo',
       pico_projeto_id: projeto.id,
+      pico_tarefa_id: tarefa.id,   // a peça já nasce ligada à tarefa (aba Peças e Agora)
     }).select('id').single();
     if (error) throw new Error(error.message);
     return { tipo:'Orgânico', rotulo:tarefa.titulo, hash:'#organico',
@@ -2347,7 +2349,7 @@ function MiniPeca({ p, onAbrir, grande = false }) {
 }
 
 /* Tarefa em cartão, com as peças dela. Usado na aba Agora. */
-function CartaoTarefa({ t, pecas, onToggle, onAbrirPeca, atrasada }) {
+function CartaoTarefa({ t, pecas, onToggle, onAbrirPeca, atrasada, onMudar }) {
   const f = FASE_MAP[t.fase] || {};
   const feito = t.status === 'feito';
   return (
@@ -2375,58 +2377,188 @@ function CartaoTarefa({ t, pecas, onToggle, onAbrirPeca, atrasada }) {
           {pecas.map(p => <MiniPeca key={p.tipo + p.id} p={p} onAbrir={onAbrirPeca}/>)}
         </div>
       )}
+      {atrasada && onMudar && (
+        // Triagem das atrasadas: resolver numa batida, sem abrir nada (15/10/2026).
+        <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
+          {[['Já foi feita','check',{ status:'feito', data_conclusao: hojeISO() }],
+            ['Adiar 3 dias','calendar-plus',{ data_prevista: new Date(new Date(hojeISO() + 'T12:00:00').getTime() + 3 * 864e5).toISOString().slice(0, 10), data_travada: true }],
+            ['Não vai acontecer','circle-slash',{ status:'pulada' }]].map(([lb, ic, patch]) => (
+            <button key={lb} onClick={() => onMudar(t, patch)}
+              style={{ display:'inline-flex', alignItems:'center', gap:4, height:28, padding:'0 10px', borderRadius:999,
+                border:'1px solid var(--app-border)', background:'var(--app-bg)', color:'var(--text-2)',
+                fontSize:12, fontFamily:'Roboto,sans-serif', cursor:'pointer' }}>
+              <LucideIcon icon={ic} size={12}/>{lb}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
 
-function AbaAgora({ tarefas, pecasPorTarefa, onToggle, onAbrirPeca }) {
+function AbaAgora({ tarefas, pecasPorTarefa, onToggle, onAbrirPeca, onMudar }) {
   const hoje = hojeISO();
-  const ate = new Date(new Date(hoje + 'T12:00:00').getTime() + 7 * 864e5).toISOString().slice(0, 10);
-  const abertas = tarefas.filter(t => t.status !== 'feito' && t.status !== 'pulada');
+  const somar = n => new Date(new Date(hoje + 'T12:00:00').getTime() + n * 864e5).toISOString().slice(0, 10);
+  const amanha = somar(1), ate = somar(7);
+  const abertas = tarefas.filter(t => t.status !== 'feito' && t.status !== 'pulada')
+    .sort((x, y) => (x.data_prevista || '9') < (y.data_prevista || '9') ? -1 : 1);
+  const agora = abertas.filter(t => t.data_prevista === hoje || t.data_prevista === amanha);
   const atrasadas = abertas.filter(t => t.data_prevista && t.data_prevista < hoje);
-  const semana = abertas.filter(t => t.data_prevista && t.data_prevista >= hoje && t.data_prevista <= ate);
-  const validar = tarefas.filter(t => t.status === 'validar' && !(t.data_prevista && t.data_prevista < hoje));
+  const semana = abertas.filter(t => t.data_prevista && t.data_prevista > amanha && t.data_prevista <= ate);
   const grade = { display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(300px, 1fr))', gap:12 };
-  const Bloco = ({ titulo, lista, atrasada, vazio }) => (
+  const Bloco = ({ titulo, dica, lista, atrasada, vazio }) => (
     <section style={{ display:'flex', flexDirection:'column', gap:8 }}>
-      <p style={{ fontSize:14, fontWeight:600, fontFamily:'Roboto,sans-serif', color:'var(--text-1)' }}>
-        {titulo} <span style={{ color:'var(--text-2)', fontWeight:400 }}>({lista.length})</span>
-      </p>
+      <div>
+        <p style={{ fontSize:16, fontWeight:600, fontFamily:'Roboto,sans-serif', color:'var(--text-1)' }}>
+          {titulo} <span style={{ color:'var(--text-2)', fontWeight:400 }}>({lista.length})</span>
+        </p>
+        {dica && <p style={{ fontSize:13, color:'var(--text-2)', fontFamily:'Roboto,sans-serif', marginTop:2 }}>{dica}</p>}
+      </div>
       {lista.length ? (
         <div style={grade}>
           {lista.map(t => <CartaoTarefa key={t.id} t={t} pecas={pecasPorTarefa[t.id] || []}
-            onToggle={onToggle} onAbrirPeca={onAbrirPeca} atrasada={atrasada}/>)}
+            onToggle={onToggle} onAbrirPeca={onAbrirPeca} atrasada={atrasada} onMudar={onMudar}/>)}
         </div>
       ) : <span style={{ fontSize:13, color:'var(--text-2)', fontFamily:'Roboto,sans-serif' }}>{vazio}</span>}
     </section>
   );
   return (
-    <div style={{ display:'flex', flexDirection:'column', gap:24 }}>
-      {atrasadas.length > 0 && <Bloco titulo="Atrasadas" lista={atrasadas} atrasada vazio=""/>}
-      <Bloco titulo="Nos próximos 7 dias" lista={semana} vazio="Nada previsto para esta semana."/>
-      {validar.length > 0 && <Bloco titulo="Para validar" lista={validar} vazio=""/>}
+    <div style={{ display:'flex', flexDirection:'column', gap:32 }}>
+      <Bloco titulo="Hoje e amanhã" lista={agora} vazio="Nada marcado para hoje nem para amanhã."/>
+      {atrasadas.length > 0 && (
+        <Bloco titulo="Atrasadas" atrasada lista={atrasadas} vazio=""
+          dica="Resolva cada uma num clique: já foi feita, adiar 3 dias ou não vai acontecer."/>
+      )}
+      <Bloco titulo="No resto da semana" lista={semana} vazio="Nada previsto para o resto da semana."/>
     </div>
   );
 }
 
-function AbaPecas({ pecas, tarefas, onAbrirPeca }) {
+/* ── Acervo de arquivos da campanha (15/10/2026) ──────────────────────────────
+   Logos, artes, fotos, vídeos e documentos num lugar só, para ver e baixar.
+   O arquivo vai original para o R2 (fmn/pico/<projeto>/) pelo link assinado
+   do worker fem-upload; a linha fica em pico_arquivos. */
+const UPLOAD_FEM = 'https://fem-upload.blindagem-fmn.workers.dev';
+const CATEGORIAS_ARQ = [['logo','Logos'],['arte','Artes'],['foto','Fotos'],['video','Vídeos'],['documento','Documentos']];
+const ehImagem = u => /\.(png|jpe?g|webp|gif|svg)(\?|$)/i.test(u);
+
+async function baixarArquivo(a) {
+  try {
+    const r = await fetch(`${UPLOAD_FEM}/?url=${encodeURIComponent(a.url)}`);
+    if (!r.ok) throw new Error();
+    const blob = await r.blob();
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = decodeURIComponent(a.url.split('/').pop().split('?')[0]);
+    document.body.appendChild(link); link.click(); link.remove();
+    setTimeout(() => URL.revokeObjectURL(link.href), 4000);
+  } catch { window.open(a.url, '_blank'); }
+}
+
+function AcervoArquivos({ projetoId }) {
+  const [itens, setItens] = useState([]);
+  const [cat, setCat] = useState('todas');
+  const [msg, setMsg] = useState('');
+  const carregar = () => window.db.from('pico_arquivos').select('*').eq('projeto_id', projetoId)
+    .order('categoria').order('criado_em').then(({ data }) => setItens(data || []));
+  useEffect(() => { if (projetoId) carregar(); }, [projetoId]);
+
+  async function enviar(files) {
+    for (const f of files) {
+      setMsg(`Enviando ${f.name}...`);
+      try {
+        const nome = f.name.normalize('NFD').replace(/[̀-ͯ]/g, '');
+        const r = await fetch(`${UPLOAD_FEM}/presign`, { method:'POST', headers:{ 'Content-Type':'application/json' },
+          body: JSON.stringify({ prefix:`fmn/pico/${projetoId}`, filename:nome, contentType: f.type || 'application/octet-stream' }) });
+        const d = await r.json();
+        if (!r.ok || !d.uploadUrl) throw new Error(d.error || 'falha no link de envio');
+        const put = await fetch(d.uploadUrl, { method:'PUT', headers:{ 'Content-Type': f.type || 'application/octet-stream' }, body:f });
+        if (!put.ok) throw new Error('falha no envio');
+        const categoria = f.type.startsWith('video/') ? 'video' : f.type === 'application/pdf' ? 'documento'
+          : /logo|icone|ícone|selo|carimbo/i.test(f.name) ? 'logo' : f.type.startsWith('image/') ? 'arte' : 'documento';
+        await window.db.from('pico_arquivos').insert({ projeto_id: projetoId, nome: f.name.replace(/\.[^.]+$/, ''), categoria, url: d.url, tamanho: f.size });
+      } catch (e) { setMsg(`Não consegui enviar ${f.name}: ${e.message}`); return; }
+    }
+    setMsg(''); carregar();
+  }
+  async function remover(a) {
+    if (!window.confirm(`Tirar "${a.nome}" do acervo?`)) return;
+    await window.db.from('pico_arquivos').delete().eq('id', a.id);
+    carregar();
+  }
+
+  const lista = itens.filter(a => cat === 'todas' || a.categoria === cat);
+  return (
+    <section style={{ display:'flex', flexDirection:'column', gap:12 }}>
+      <div style={{ display:'flex', alignItems:'flex-end', justifyContent:'space-between', gap:12, flexWrap:'wrap' }}>
+        <div>
+          <p style={{ fontSize:16, fontWeight:600, fontFamily:'Roboto,sans-serif', color:'var(--text-1)' }}>Arquivos da campanha</p>
+          <p style={{ fontSize:13, color:'var(--text-2)', fontFamily:'Roboto,sans-serif', marginTop:2 }}>Logos, artes, fotos e documentos. Clique para baixar o original.</p>
+        </div>
+        <label style={{ display:'inline-flex', alignItems:'center', gap:8, height:36, padding:'0 16px', borderRadius:10, cursor:'pointer',
+          background:'var(--app-primary)', color:'var(--app-primary-fg)', fontSize:14, fontWeight:500, fontFamily:'Roboto,sans-serif' }}>
+          <LucideIcon icon="upload" size={16}/>Enviar arquivos
+          <input type="file" multiple style={{ display:'none' }} onChange={e => { const fs = [...e.target.files]; e.target.value = ''; if (fs.length) enviar(fs); }}/>
+        </label>
+      </div>
+      {msg && <span style={{ fontSize:12, color:'var(--text-2)', fontFamily:'Roboto,sans-serif' }}>{msg}</span>}
+      <Pilulas valor={cat} onChange={setCat}
+        opcoes={[{ id:'todas', label:`Todos (${itens.length})` },
+          ...CATEGORIAS_ARQ.filter(([id]) => itens.some(a => a.categoria === id)).map(([id, lb]) => ({ id, label:`${lb} (${itens.filter(a => a.categoria === id).length})` }))]}/>
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(170px, 1fr))', gap:16 }}>
+        {lista.map(a => (
+          <div key={a.id} style={{ display:'flex', flexDirection:'column', gap:6 }}>
+            <button onClick={() => baixarArquivo(a)} title="Baixar o original"
+              style={{ position:'relative', width:'100%', aspectRatio:'1 / 1', borderRadius:12, overflow:'hidden', cursor:'pointer',
+                background: a.categoria === 'logo' ? 'repeating-conic-gradient(#14161b 0% 25%, #0e1115 0% 50%) 50% / 16px 16px' : 'var(--app-surface-2)',
+                border:'1px solid var(--app-border)', display:'flex', alignItems:'center', justifyContent:'center' }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--app-primary)'; e.currentTarget.lastChild.style.opacity = 1; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--app-border)'; e.currentTarget.lastChild.style.opacity = 0; }}>
+              {ehImagem(a.url)
+                ? <img src={a.url} loading="lazy" style={{ width:'100%', height:'100%', objectFit: a.categoria === 'logo' ? 'contain' : 'cover', padding: a.categoria === 'logo' ? 16 : 0, boxSizing:'border-box' }}/>
+                : <LucideIcon icon={a.categoria === 'video' ? 'film' : 'file-text'} size={36} style={{ color:'var(--text-2)' }}/>}
+              <span style={{ position:'absolute', inset:0, background:'rgba(0,0,0,.55)', display:'flex', alignItems:'center', justifyContent:'center',
+                gap:6, color:'#fff', fontSize:13, fontWeight:500, fontFamily:'Roboto,sans-serif', opacity:0, transition:'opacity 150ms' }}>
+                <LucideIcon icon="download" size={16}/>Baixar
+              </span>
+            </button>
+            <div style={{ display:'flex', alignItems:'flex-start', gap:6 }}>
+              <span style={{ flex:1, fontSize:13, color:'var(--text-1)', fontFamily:'Roboto,sans-serif', lineHeight:1.35 }}>{a.nome}</span>
+              <button onClick={() => remover(a)} title="Tirar do acervo" style={{ color:'var(--text-2)', cursor:'pointer', padding:2 }}>
+                <LucideIcon icon="x" size={14}/>
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function AbaPecas({ pecas, tarefas, onAbrirPeca, projetoId }) {
   const faseDaTarefa = Object.fromEntries(tarefas.map(t => [t.id, t.fase]));
   const [filtro, setFiltro] = useState('todas');
   const lista = pecas.filter(p => filtro === 'todas' || p.tipo === filtro);
   const grupos = {};
   lista.forEach(p => { const f = (p.tarefaId && faseDaTarefa[p.tarefaId]) || 'sem_tarefa'; (grupos[f] ||= []).push(p); });
   const ordem = [...FASES.map(f => f.id), 'sem_tarefa'];
-  if (!pecas.length) return (
+  const acervo = <AcervoArquivos projetoId={projetoId}/>;
+  if (!pecas.length) return (<div style={{ display:'flex', flexDirection:'column', gap:32 }}>{acervo}
     <div style={{ background:'var(--app-surface)', border:'1px solid var(--app-border)', borderRadius:16, padding:40,
       textAlign:'center', fontFamily:'Roboto,sans-serif', display:'flex', flexDirection:'column', alignItems:'center', gap:12 }}>
       <LucideIcon icon="images" size={40} style={{ color:'var(--text-2)' }}/>
       <span style={{ fontSize:14, color:'var(--text-2)', maxWidth:460, lineHeight:1.5 }}>
         Ainda não há peças ligadas a esta campanha. Quando um card do Orgânico ou dos Anúncios for ligado a uma tarefa, a imagem dele aparece aqui.
       </span>
-    </div>
+    </div></div>
   );
   return (
     <div style={{ display:'flex', flexDirection:'column', gap:24 }}>
+      {acervo}
+      <div>
+        <p style={{ fontSize:16, fontWeight:600, fontFamily:'Roboto,sans-serif', color:'var(--text-1)' }}>Posts e anúncios</p>
+        <p style={{ fontSize:13, color:'var(--text-2)', fontFamily:'Roboto,sans-serif', marginTop:2 }}>Clique para abrir o card no Orgânico ou nos Anúncios.</p>
+      </div>
       <Pilulas valor={filtro} onChange={setFiltro}
         opcoes={[{ id:'todas', label:`Todas (${pecas.length})` },
           { id:'organico', label:`Orgânico (${pecas.filter(p => p.tipo === 'organico').length})` },
@@ -2443,6 +2575,96 @@ function AbaPecas({ pecas, tarefas, onAbrirPeca }) {
           </div>
         </section>
       ))}
+    </div>
+  );
+}
+
+/* ── Estratégia em uma tela (15/10/2026) ─────────────────────────────────────
+   O que vendemos, por quanto, para quem, com que bônus e a conta da meta.
+   A ficha completa continua logo abaixo, recolhida. */
+function ResumoEstrategia({ projeto }) {
+  const d = projeto?.declaracoes || {}, pm = projeto?.plano_midia || {};
+  const brl = v => v == null || v === '' ? '—' : Number(v).toLocaleString('pt-BR', { style:'currency', currency:'BRL', maximumFractionDigits:0 });
+  const vendas = Number(pm.vendas_meta) || 0, conv = Number(pm.taxa_conversao) || 0, cpl = Number(pm.cpl_meta) || 0;
+  const leads = conv ? Math.ceil(vendas / conv) : null;
+  const Cartao = ({ titulo, icon, children }) => (
+    <div style={{ background:'var(--app-surface)', border:'1px solid var(--app-border)', borderRadius:16, padding:20,
+      display:'flex', flexDirection:'column', gap:12, fontFamily:'Roboto,sans-serif' }}>
+      <p style={{ display:'flex', alignItems:'center', gap:8, fontSize:16, fontWeight:600, color:'var(--text-1)' }}>
+        <LucideIcon icon={icon} size={16} style={{ color:'var(--app-primary)' }}/>{titulo}
+      </p>
+      {children}
+    </div>
+  );
+  const Linha = ({ r, v, forte }) => (
+    <div style={{ display:'flex', justifyContent:'space-between', gap:12, fontSize:14 }}>
+      <span style={{ color:'var(--text-2)' }}>{r}</span>
+      <span style={{ color: forte ? 'var(--app-primary)' : 'var(--text-1)', fontWeight: forte ? 600 : 500, textAlign:'right' }}>{v}</span>
+    </div>
+  );
+  return (
+    <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(340px, 1fr))', gap:16 }}>
+      <Cartao titulo="A oferta" icon="tag">
+        <span style={{ fontSize:14, color:'var(--text-1)', lineHeight:1.4 }}>{d.produto || '—'}</span>
+        <div style={{ display:'flex', alignItems:'baseline', gap:8 }}>
+          <span style={{ fontSize:14, color:'var(--text-2)', textDecoration:'line-through' }}>{brl(d.preco_normal)}</span>
+          <span style={{ fontSize:30, fontWeight:600, color:'var(--app-primary)' }}>{brl(d.preco_pico)}</span>
+        </div>
+        {(d.combo_itens || []).map((i, k) => <Linha key={k} r={i.nome} v={brl(i.valor)}/>)}
+      </Cartao>
+      <Cartao titulo="Para quem já é aluno" icon="graduation-cap">
+        <span style={{ fontSize:14, color:'var(--text-1)', lineHeight:1.4 }}>{d.produto_aluno || '—'}</span>
+        <div style={{ display:'flex', alignItems:'baseline', gap:8 }}>
+          <span style={{ fontSize:14, color:'var(--text-2)', textDecoration:'line-through' }}>{brl(d.preco_normal_aluno)}</span>
+          <span style={{ fontSize:30, fontWeight:600, color:'var(--app-primary)' }}>{brl(d.preco_aluno)}</span>
+        </div>
+        <span style={{ fontSize:13, color:'var(--text-2)', lineHeight:1.5 }}>Quem já assina o Blindagem fica fora das duas ofertas.</span>
+      </Cartao>
+      <Cartao titulo="Bônus" icon="gift">
+        {(d.bonus_velocidade || []).length ? (d.bonus_velocidade || []).map((b, k) => (
+          <div key={k} style={{ display:'flex', gap:8, fontSize:14, color:'var(--text-1)', lineHeight:1.4 }}>
+            <LucideIcon icon="check" size={14} style={{ color:'var(--clr-pos)', marginTop:3, flexShrink:0 }}/>{b.nome}
+          </div>
+        )) : <span style={{ color:'var(--text-2)', fontSize:14 }}>—</span>}
+      </Cartao>
+      <Cartao titulo="A conta da meta" icon="target">
+        <Linha r="Meta de vendas" v={vendas || '—'} forte/>
+        <Linha r="Faturamento na meta" v={brl(vendas * (Number(d.preco_pico) || 0))}/>
+        <Linha r="Conversão esperada" v={conv ? `${(conv * 100).toFixed(0)}%` : '—'}/>
+        <Linha r="Inscritos necessários" v={leads ? leads.toLocaleString('pt-BR') : '—'}/>
+        <Linha r="Custo por inscrito (meta)" v={cpl ? brl(cpl) : '—'}/>
+        <Linha r="Verba de captação" v={leads && cpl ? brl(leads * cpl) : '—'}/>
+      </Cartao>
+      <Cartao titulo="A campanha" icon="megaphone">
+        <Linha r="Nome" v={d.nome_campanha || '—'}/>
+        <Linha r="Mote" v={d.mote || '—'}/>
+        <Linha r="Palavra para comentar" v={d.palavra_chave || '—'}/>
+        <span style={{ fontSize:13, color:'var(--text-2)', lineHeight:1.5 }}>{d.promessa}</span>
+      </Cartao>
+      <Cartao titulo="Páginas" icon="globe">
+        {[['Página de inscrição', d.pagina_captura], ['Página de obrigado', d.pagina_obrigado]].map(([r, u]) => (
+          <div key={r} style={{ display:'flex', justifyContent:'space-between', gap:12, fontSize:14 }}>
+            <span style={{ color:'var(--text-2)' }}>{r}</span>
+            {u ? <a href={u} target="_blank" rel="noreferrer" style={{ color:'var(--app-primary)', textDecoration:'none', display:'inline-flex', alignItems:'center', gap:4 }}>
+              Abrir<LucideIcon icon="external-link" size={13}/></a> : <span style={{ color:'var(--text-2)' }}>—</span>}
+          </div>
+        ))}
+      </Cartao>
+    </div>
+  );
+}
+
+/* Bloco recolhido com título, para guardar o detalhe sem poluir a tela. */
+function Recolhido({ titulo, dica, children, aberto: ini = false }) {
+  const [aberto, setAberto] = useState(ini);
+  return (
+    <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
+      <button onClick={() => setAberto(a => !a)} style={{ display:'flex', alignItems:'center', gap:8, cursor:'pointer', textAlign:'left' }}>
+        <LucideIcon icon={aberto ? 'chevron-down' : 'chevron-right'} size={16} style={{ color:'var(--text-2)' }}/>
+        <span style={{ fontSize:16, fontWeight:600, fontFamily:'Roboto,sans-serif', color:'var(--text-1)' }}>{titulo}</span>
+        {dica && <span style={{ fontSize:13, fontFamily:'Roboto,sans-serif', color:'var(--text-2)' }}>{dica}</span>}
+      </button>
+      {aberto && children}
     </div>
   );
 }
@@ -2522,6 +2744,12 @@ function PicoScreen({ onNavigate }) {
     await window.db.from('pico_tarefas')
       .update({ status:novo, data_conclusao: novo === 'feito' ? hojeISO() : null })
       .eq('id', t.id);
+  };
+
+  /* Triagem das atrasadas: feita, adiada ou pulada num clique */
+  const mudarTarefa = async (t, patch) => {
+    setTarefas(ts => ts.map(x => x.id === t.id ? { ...x, ...patch } : x));
+    await window.db.from('pico_tarefas').update(patch).eq('id', t.id);
   };
 
   /* Escolher decisão */
@@ -2820,11 +3048,13 @@ function PicoScreen({ onNavigate }) {
         </div>
 
         {aba === 'agora' && (
-          <AbaAgora tarefas={efetivas} pecasPorTarefa={pecasPorTarefa} onToggle={alternarTarefa} onAbrirPeca={abrirPeca}/>
+          <AbaAgora tarefas={efetivas} pecasPorTarefa={pecasPorTarefa} onToggle={alternarTarefa} onAbrirPeca={abrirPeca} onMudar={mudarTarefa}/>
         )}
-        {aba === 'pecas' && <AbaPecas pecas={pecas} tarefas={tarefas} onAbrirPeca={abrirPeca}/>}
+        {aba === 'pecas' && <AbaPecas pecas={pecas} tarefas={tarefas} onAbrirPeca={abrirPeca} projetoId={projetoId}/>}
 
-        {aba === 'estrategia' && (<>
+        {aba === 'estrategia' && (<div style={{ display:'flex', flexDirection:'column', gap:32 }}>
+        <ResumoEstrategia projeto={projeto}/>
+        <Recolhido titulo="Ficha completa, decisões e plano de mídia" dica="para editar os detalhes">
         <div style={{ marginBottom:14 }}>
           <BlocoFicha declaracoes={projeto?.declaracoes} onSalvar={salvarDeclaracao}
             semMentoria={(decisoes.find(d => d.chave === 'mentoria')?.escolha || '')
@@ -2857,51 +3087,16 @@ function PicoScreen({ onNavigate }) {
           </div>
         )}
 
-        </>)}
+        </Recolhido>
+        </div>)}
 
         {aba === 'plano' && (<>
-        {/* Controles da execução */}
-        <div style={{ display:'flex', alignItems:'center', gap:8, flexWrap:'wrap',
-          marginBottom:11 }}>
-          <div style={{ display:'flex', gap:4, padding:3, borderRadius:8,
-            background:'rgba(255,255,255,.04)' }}>
-            {[['fase','Por fase'],['trilha','Por trilha'],['calendario','Calendário']].map(([id,lb]) => (
-              <button key={id} onClick={()=>setVisao(id)}
-                style={{ padding:'5px 11px', borderRadius:6, cursor:'pointer', border:'none',
-                  fontSize:11.5, fontFamily:'Roboto,sans-serif', fontWeight:700,
-                  background: visao===id ? 'rgba(255,255,255,.08)' : 'transparent',
-                  color: visao===id ? 'var(--text-1)' : 'var(--text-3)' }}>{lb}</button>
-            ))}
-          </div>
-
-          <select value={filtroTrilha} onChange={e=>setFiltroTrilha(e.target.value)}
-            style={{ padding:'6px 10px', borderRadius:7, border:'1px solid var(--app-border)',
-              background:'rgba(255,255,255,.04)', color:'var(--text-2)', fontSize:11.5,
-              fontFamily:'Roboto,sans-serif', cursor:'pointer' }}>
-            <option value="todas">Todas as trilhas</option>
-            {TRILHAS.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
-          </select>
-
-          <button onClick={()=>setComandoGrupos(c => {
-              const acao = c.acao === 'fechar' ? 'abrir' : 'fechar';
-              window.dispatchEvent(new CustomEvent('secoes:recolher', { detail: acao }));
-              return { acao, n: (c.n || 0) + 1 };
-            })}
-            title="Abrir ou fechar todas as seções"
-            style={{ padding:'6px 9px', borderRadius:7, cursor:'pointer',
-              border:'1px solid var(--app-border)', background:'transparent',
-              color:'var(--text-3)', display:'flex', alignItems:'center' }}>
-            <LucideIcon icon={comandoGrupos.acao === 'fechar' ? 'chevrons-up-down' : 'chevrons-down-up'} size={13}/>
-          </button>
-
-          <button onClick={()=>setOcultarFeitas(v=>!v)}
-            style={{ padding:'6px 11px', borderRadius:7, cursor:'pointer',
-              border:'1px solid var(--app-border)', fontSize:11.5,
-              fontFamily:'Roboto,sans-serif', fontWeight:700,
-              background: ocultarFeitas ? 'rgba(121,224,111,.12)' : 'transparent',
-              color: ocultarFeitas ? '#79e06f' : 'var(--text-3)' }}>
-            {ocultarFeitas ? 'Mostrando pendentes' : 'Ocultar feitas'}
-          </button>
+        {/* Controles do plano: só o essencial (15/10/2026) */}
+        <div style={{ display:'flex', alignItems:'center', gap:16, flexWrap:'wrap', marginBottom:16 }}>
+          <Pilulas valor={visao} onChange={setVisao}
+            opcoes={[{ id:'fase', label:'Lista por fase' }, { id:'calendario', label:'Calendário' }]}/>
+          <Pilulas valor={ocultarFeitas ? 'pendentes' : 'todas'} onChange={v => setOcultarFeitas(v === 'pendentes')}
+            opcoes={[{ id:'todas', label:'Todas as tarefas' }, { id:'pendentes', label:'Só o que falta' }]}/>
         </div>
 
         {/* Execução */}
@@ -2939,10 +3134,12 @@ function PicoScreen({ onNavigate }) {
           <BlocoAuditoria projeto={projeto} tarefas={tarefas}/>
         </div>
         {/* Debriefing por último, é a última coisa que acontece */}
-        <div style={{ marginTop:14 }}>
+        <div style={{ marginTop:24 }}>
+        <Recolhido titulo="Debriefing" dica="preencha depois que o carrinho fechar">
           <BlocoDebriefing projeto={projeto} metricas={metricas} tarefas={tarefas}
             onSalvar={salvarDebrief} onSalvarResposta={salvarResposta}
             respostas={respostas}/>
+        </Recolhido>
         </div>
         </>)}
       </div>
