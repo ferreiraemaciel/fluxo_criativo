@@ -179,7 +179,7 @@ def capture_thumb(src, dst):
                      capture_output=True, text=True)
     if r.returncode!=0: raise RuntimeError(f"thumb falhou: {r.stderr[-300:]}")
 
-def process_video(numero, cid, drv, vid_file, uid, card=None):
+def process_video(numero, cid, drv, vid_file, uid, card=None, capa_url=None):
     print(f"  📹 vídeo: {vid_file['name']}")
     with tempfile.TemporaryDirectory() as wd:
         orig=str(Path(wd)/"orig.mp4"); prev=str(Path(wd)/"preview.mp4")
@@ -202,7 +202,9 @@ def process_video(numero, cid, drv, vid_file, uid, card=None):
         preview_url=f"{R2_PUBLIC}/{prev_key}"; thumb_url=f"{R2_PUBLIC}/{thumb_key}"; high_url=f"{R2_PUBLIC}/{high_key}"
         existentes = slides_existentes(card) if card else []
         slides=json.dumps(merge_slides(existentes, [preview_url]))
-        media_files=json.dumps([{"tipo":"video","url_alta":high_url,"thumb_url":thumb_url}])
+        mf={"tipo":"video","url_alta":high_url,"thumb_url":thumb_url}
+        if capa_url: mf["capa_url"]=capa_url  # capa própria do Reels (capa.jpg na pasta)
+        media_files=json.dumps([mf])
         sb_patch(cid, {"slides":slides, "media_files":media_files})
         print(f"  ✅ ORG {numero} — vídeo pronto (preview + alta no R2)")
         print(f"##DONE {numero}", flush=True)
@@ -219,7 +221,16 @@ def process(numero, drv, mapa, pasta=None):
 
     if vids:
         # Reels: um vídeo por card (usa o primeiro se houver mais de um na pasta).
-        process_video(numero, cid, drv, vids[0], uid, card=card)
+        # Capa do Reels (14/10/2026): imagem chamada "capa" na pasta vira a capa do
+        # Instagram, não slide. Vai para organico/capas (nunca apagado ao publicar).
+        capa=next((f for f in imgs if Path(f["name"]).stem.strip().lower()=="capa"), None)
+        capa_url=None
+        if capa:
+            with tempfile.TemporaryDirectory() as wd:
+                o=str(Path(wd)/"capa"); p=str(Path(wd)/"capa.jpg")
+                print("  🖼 capa do Reels…"); download(drv,capa["id"],o); optimize_image(o,p,1920)
+                k=f"organico/capas/{uid}.jpg"; r2_put(k,p); capa_url=f"{R2_PUBLIC}/{k}"
+        process_video(numero, cid, drv, vids[0], uid, card=card, capa_url=capa_url)
         return
 
     if not imgs: print(f"  ⏭️ pasta vazia"); print(f"##SKIP {numero}", flush=True); return

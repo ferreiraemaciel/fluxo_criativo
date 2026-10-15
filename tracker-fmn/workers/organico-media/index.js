@@ -75,7 +75,7 @@ function safeParse(v) {
 
 /* ── Reels: cria o container de vídeo e espera processar antes de publicar.
    Video processing no Instagram não é instantâneo (diferente de imagem). ── */
-async function createReelsContainer(graph, igId, token, videoUrl, caption, comFacebook, thumbUrl, colab = []) {
+async function createReelsContainer(graph, igId, token, videoUrl, caption, comFacebook, thumbUrl, colab = [], coverUrl = null) {
   const FB_PAGE_ID = '1738059673077819';
   const params = new URLSearchParams({
     media_type:   'REELS',
@@ -84,7 +84,10 @@ async function createReelsContainer(graph, igId, token, videoUrl, caption, comFa
     share_to_feed: 'true',
     access_token: token,
   });
-  if (thumbUrl) params.set('thumb_offset', '0');
+  // Capa própria (14/10/2026): imagem enviada no card ou capa.jpg da pasta do Drive.
+  // Sem ela, segue o primeiro quadro do vídeo, como antes.
+  if (coverUrl) params.set('cover_url', coverUrl);
+  else if (thumbUrl) params.set('thumb_offset', '0');
   if (comFacebook) params.set('fb_page_id', FB_PAGE_ID);
   if (colab.length) params.set('collaborators', JSON.stringify(colab));
   const r = await fetch(`${graph}/${igId}/media`, { method: 'POST', body: params });
@@ -520,6 +523,7 @@ async function handlePublish(request, env) {
     comFacebook,   // bool — cross-post para a Page do Facebook
     colaboradores, // perfis convidados para a collab
     cardId,        // card que está publicando (não conta como "em uso")
+    coverUrl,      // capa própria do Reels (opcional)
   } = body;
   const colab = normalizarColaboradores(colaboradores);
 
@@ -542,7 +546,7 @@ async function handlePublish(request, env) {
 
   if (tipo === 'reels') {
     /* ── Reels ── */
-    const containerId = await createReelsContainer(graph, igId, token, videoUrl, caption, comFacebook, thumbUrl, colab);
+    const containerId = await createReelsContainer(graph, igId, token, videoUrl, caption, comFacebook, thumbUrl, colab, coverUrl || null);
     const ready = await waitReelsReady(graph, containerId, token, 60, 3000);
     if (!ready) return json({ error: 'Vídeo ainda processando no Instagram — tente publicar de novo em instantes.' }, 202);
 
@@ -673,7 +677,7 @@ async function handleSchedule(request, env) {
       erro_publicacao_em: null,
       scheduled_at: scheduleAt,
       data_prevista: scheduleAt.slice(0, 10), // YYYY-MM-DD para o calendário
-      scheduled_media: { imageUrls, videoUrl, thumbUrl, origKeys: origKeys || [], caption, tipo, comFacebook: !!comFacebook, colaboradores: normalizarColaboradores(colaboradores) },
+      scheduled_media: { imageUrls, videoUrl, thumbUrl, coverUrl: body.coverUrl || null, origKeys: origKeys || [], caption, tipo, comFacebook: !!comFacebook, colaboradores: normalizarColaboradores(colaboradores) },
     }),
   });
 
@@ -854,7 +858,7 @@ async function runScheduledPublish(env) {
         // ORG 240 em 17/09/2026). Agora o container criado fica guardado no card
         // e os ciclos seguintes esperam o MESMO container, sem criar outro, por
         // até MAX_CICLOS_REELS ciclos de 15 min antes de desistir.
-        creationId = m.creationId || await createReelsContainer(graph, igId, token, videoUrl, caption, comFacebook, thumbUrl, colab);
+        creationId = m.creationId || await createReelsContainer(graph, igId, token, videoUrl, caption, comFacebook, thumbUrl, colab, m.coverUrl || null);
         const ready = await waitReelsReady(graph, creationId, token, 60, 3000);
         if (!ready) {
           const ciclos = (Number(m.ciclosProcessando) || 0) + 1;
@@ -1045,6 +1049,40 @@ async function handlePut(request, env, url) {
   const body = await request.arrayBuffer();
   await env.BUCKET.put(key, body, { httpMetadata: { contentType: ct } });
   return json({ ok: true, url: `${R2_PUBLIC}/${key}` });
+}
+
+/* ── Capa do Reels (14/10/2026) ────────────────────────────────────────────
+   O botão "Capa" do card manda a imagem já otimizada no navegador (JPEG 82%,
+   até 1920 px). Guarda em organico/capas (nunca apagado ao publicar) e grava
+   capa_url no item de vídeo do media_files do card. Sem arquivo = remove a capa. */
+async function handleReelsCapa(request, env) {
+  const form = await request.formData();
+  const cardId = String(form.get('cardId') || '');
+  if (!/^[0-9a-f-]{36}$/.test(cardId)) return json({ error: 'cardId inválido.' }, 400);
+  const file = form.get('file');
+  let capaUrl = null;
+  if (file && typeof file !== 'string') {
+    if (!/^image\/(jpeg|png|webp)$/.test(file.type)) return json({ error: 'A capa precisa ser imagem (JPG ou PNG).' }, 400);
+    const key = `organico/capas/${cardId.slice(0, 8)}_${Date.now()}.jpg`;
+    await env.BUCKET.put(key, await file.arrayBuffer(), { httpMetadata: { contentType: file.type } });
+    capaUrl = `${R2_PUBLIC}/${key}`;
+  }
+  const sb = { 'apikey': env.SUPABASE_SERVICE_KEY, 'Authorization': `Bearer ${env.SUPABASE_SERVICE_KEY}`, 'Content-Type': 'application/json' };
+  const r = await fetch(`${env.SUPABASE_URL}/rest/v1/conteudo_organico?id=eq.${cardId}&select=media_files`, { headers: sb });
+  const card = (await r.json())?.[0];
+  if (!card) return json({ error: 'Card não encontrado.' }, 404);
+  let mf = card.media_files;
+  if (typeof mf === 'string') { try { mf = JSON.parse(mf); } catch { mf = null; } }
+  if (!Array.isArray(mf)) mf = [];
+  const i = mf.findIndex(x => x && x.tipo === 'video');
+  if (i < 0) return json({ error: 'Importe o vídeo do Reels antes de colocar a capa.' }, 400);
+  mf[i] = { ...mf[i], capa_url: capaUrl };
+  if (!capaUrl) delete mf[i].capa_url;
+  await fetch(`${env.SUPABASE_URL}/rest/v1/conteudo_organico?id=eq.${cardId}`, {
+    method: 'PATCH', headers: { ...sb, 'Prefer': 'return=minimal' },
+    body: JSON.stringify({ media_files: JSON.stringify(mf) }),
+  });
+  return json({ ok: true, capaUrl });
 }
 
 /* ── Card slides ───────────────────────────────────────────────────────────
@@ -1299,6 +1337,7 @@ export default {
       if (method === 'GET'  && url.pathname === '/listar')      return await handleListar(request, env, url);
       if (method === 'POST' && url.pathname === '/slide-image') return await handleSlideImage(request, env);
       if (method === 'POST' && url.pathname === '/card-slides') return await handleCardSlides(request, env);
+      if (method === 'POST' && url.pathname === '/reels-capa')  return await handleReelsCapa(request, env);
       if (method === 'POST' && url.pathname === '/criar-pasta')  return await handleCriarPasta(request, env);
       if (method === 'GET'  && url.pathname === '/artigo-status')   return await handleArtigoStatus(request, env, url);
       if (method === 'POST' && url.pathname === '/artigo-publicar') return await handleArtigoPublicar(request, env);

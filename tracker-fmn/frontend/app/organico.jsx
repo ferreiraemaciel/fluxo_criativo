@@ -987,6 +987,43 @@ function PublishModal({ form, slidesArr, slideFiles, onClose, onSuccess, initial
     return Array.isArray(mf) ? mf.find(m => m.tipo === 'video') : null;
   })();
 
+  // Capa do Reels (14/10/2026): vem do card (botão abaixo ou capa.jpg na pasta do
+  // Drive). Lida de novo do banco ao abrir, porque o form pode estar desatualizado.
+  const [capa, setCapa]           = useState(reelsVideo?.capa_url || null);
+  const [capaMsg, setCapaMsg]     = useState('');
+  useEffect(() => {
+    if (!isReels || !form.id) return;
+    window.db.from('conteudo_organico').select('media_files').eq('id', form.id).single().then(({ data }) => {
+      let mf = data?.media_files;
+      if (typeof mf === 'string') { try { mf = JSON.parse(mf); } catch { mf = null; } }
+      const v = Array.isArray(mf) ? mf.find(m => m && m.tipo === 'video') : null;
+      setCapa(v?.capa_url || null);
+    });
+  }, [form.id]);
+
+  async function trocarCapa(file) {
+    setCapaMsg(file ? 'Enviando a capa...' : 'Removendo a capa...');
+    try {
+      const fd = new FormData();
+      fd.append('cardId', form.id);
+      if (file) {
+        // Regra de imagem dos projetos: JPEG 82%, aresta maior até 1920 px.
+        const img = await new Promise((ok, ruim) => { const i = new Image(); i.onload = () => ok(i); i.onerror = ruim; i.src = URL.createObjectURL(file); });
+        const esc = Math.min(1, 1920 / Math.max(img.naturalWidth, img.naturalHeight));
+        const c = document.createElement('canvas');
+        c.width = Math.round(img.naturalWidth * esc); c.height = Math.round(img.naturalHeight * esc);
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+        const blob = await new Promise(ok => c.toBlob(ok, 'image/jpeg', 0.82));
+        if (!blob) throw new Error('Não consegui otimizar a imagem. Exporte em JPG e tente de novo.');
+        fd.append('file', new File([blob], 'capa.jpg', { type: 'image/jpeg' }));
+      }
+      const r = await fetch(`${WORKER_URL}/reels-capa`, { method: 'POST', body: fd });
+      const d = await r.json();
+      if (!r.ok || d.error) throw new Error(d.error || 'Falha ao salvar a capa.');
+      setCapa(d.capaUrl || null); setCapaMsg('');
+    } catch (e) { setCapaMsg(e.message); }
+  }
+
   const hasImages = isReels
     ? !!reelsVideo?.url_alta
     : form.plataforma === 'Carrossel'
@@ -1021,7 +1058,7 @@ function PublishModal({ form, slidesArr, slideFiles, onClose, onSuccess, initial
         const r = await fetch(`${WORKER_URL}/schedule`, {
           method: 'POST', headers: { 'Content-Type':'application/json' },
           body: JSON.stringify({ itemId: form.id, scheduleAt, videoUrl: reelsVideo.url_alta,
-            thumbUrl: reelsVideo.thumb_url, caption, tipo: 'reels', comFacebook, colaboradores }),
+            thumbUrl: reelsVideo.thumb_url, coverUrl: capa, caption, tipo: 'reels', comFacebook, colaboradores }),
         });
         pubData = await r.json();
         if (!pubData.ok) throw new Error(pubData.error || 'Falha ao agendar.');
@@ -1029,8 +1066,8 @@ function PublishModal({ form, slidesArr, slideFiles, onClose, onSuccess, initial
         setMsg('Publicando Reels no Instagram' + (comFacebook ? ' e Facebook' : '') + '... isso pode levar até 1 minuto (processamento do vídeo).');
         const r = await fetch(`${WORKER_URL}/publish`, {
           method: 'POST', headers: { 'Content-Type':'application/json' },
-          body: JSON.stringify({ tipo: 'reels', videoUrl: reelsVideo.url_alta, thumbUrl: reelsVideo.thumb_url,
-            caption, scheduleAt: null, comFacebook, colaboradores }),
+          body: JSON.stringify({ cardId: form.id, tipo: 'reels', videoUrl: reelsVideo.url_alta, thumbUrl: reelsVideo.thumb_url,
+            coverUrl: capa, caption, scheduleAt: null, comFacebook, colaboradores }),
         });
         pubData = await r.json();
         if (!pubData.ok) throw new Error(pubData.error || 'Falha na publicação.');
@@ -1247,6 +1284,33 @@ function PublishModal({ form, slidesArr, slideFiles, onClose, onSuccess, initial
               border:'1px solid rgba(248,113,113,.2)', marginBottom:16,
               fontSize:11.5, fontFamily:'Roboto,sans-serif', color:'#f87171', lineHeight:1.5 }}>
               {msg}
+            </div>
+          )}
+
+          {/* Capa do Reels: sem capa, o Instagram usa o primeiro quadro do vídeo. */}
+          {isReels && reelsVideo && (
+            <div style={{ marginBottom:14 }}>
+              <label style={LABEL_STYLE}>Capa do Reels</label>
+              <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+                <div style={{ width:54, height:96, borderRadius:6, overflow:'hidden', flexShrink:0,
+                  background:'rgba(255,255,255,.04)', border:'1px solid var(--app-border)' }}>
+                  {(capa || reelsVideo.thumb_url) && <img src={capa || reelsVideo.thumb_url} style={{ width:'100%', height:'100%', objectFit:'cover', opacity: capa ? 1 : .45 }}/>}
+                </div>
+                <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+                  <span style={{ fontSize:11, fontFamily:'Roboto,sans-serif', color:'var(--text-3)', lineHeight:1.4 }}>
+                    {capa ? 'Capa própria escolhida.' : 'Sem capa: vai o primeiro quadro do vídeo. Também dá pra pôr um capa.jpg na pasta do Drive.'}
+                  </span>
+                  <div style={{ display:'flex', gap:6 }}>
+                    <label style={{ fontSize:11, fontWeight:700, fontFamily:'Roboto,sans-serif', color:'var(--fmn-gold)', cursor:'pointer' }}>
+                      {capa ? 'Trocar capa' : 'Escolher capa'}
+                      <input type="file" accept="image/jpeg,image/png,image/webp" style={{ display:'none' }}
+                        onChange={e => { const f = e.target.files?.[0]; e.target.value = ''; if (f) trocarCapa(f); }}/>
+                    </label>
+                    {capa && <span onClick={() => trocarCapa(null)} style={{ fontSize:11, fontFamily:'Roboto,sans-serif', color:'var(--text-3)', cursor:'pointer' }}>Remover</span>}
+                  </div>
+                  {capaMsg && <span style={{ fontSize:10.5, fontFamily:'Roboto,sans-serif', color:'var(--text-2)' }}>{capaMsg}</span>}
+                </div>
+              </div>
             </div>
           )}
 
