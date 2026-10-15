@@ -1093,13 +1093,17 @@ function HotmartTab({ dateRange }) {
   const productMap = {};
   vendas.forEach(v => {
     const k = v.produto_nome || 'Outros';
-    if (!productMap[k]) productMap[k] = { id:k, nome:k, vendas:0, aprovacoes:0, reembolsos:0, receita:0 };
+    if (!productMap[k]) productMap[k] = { id:k, nome:k, vendas:0, aprovacoes:0, reembolsos:0, receita:0, precos:{} };
     productMap[k].vendas++;
     // `preco_oferta` é o preço do produto sem os juros do parcelamento, que é
     // a base da nota. É o mesmo número que o Dashboard e a aba Despesas usam;
     // aqui era `valor_bruto`, e por isso a receita aparecia maior que no resto
     // do sistema (R$ 1.397 de diferença no histórico).
-    if (v.status==='aprovada')   { productMap[k].aprovacoes++; productMap[k].receita += Number(v.preco_oferta ?? v.valor_bruto); }
+    if (v.status==='aprovada') {
+      const pr = Number(v.preco_oferta ?? v.valor_bruto);
+      productMap[k].aprovacoes++; productMap[k].receita += pr;
+      productMap[k].precos[pr] = (productMap[k].precos[pr] || 0) + 1;
+    }
     if (v.status==='reembolsada') productMap[k].reembolsos++;
   });
   const hotmartProducts = Object.values(productMap).sort((a,b) => b.receita - a.receita);
@@ -1192,7 +1196,18 @@ function HotmartTab({ dateRange }) {
                     fontWeight:700, color:'var(--text-1)' }}>{p.nome}</td>
                   <td style={{ padding:'12px 16px', textAlign:'right', fontSize:13.5,
                     fontFamily:'Roboto,sans-serif', fontWeight:700, color:'var(--fmn-gold)' }}>
-                    {fmt(p.aprovacoes ? Math.round(p.receita / p.aprovacoes) : 0)}
+                    {/* Preço = o valor mais comum das vendas (15/10/2026). Antes era a média, e
+                        uma venda de R$ 100 do upsell fazia o Blindagem aparecer a R$ 338. */}
+                    {(() => {
+                      const moda = Number(Object.entries(p.precos).sort((a, b) => b[1] - a[1] || b[0] - a[0])[0]?.[0] || 0);
+                      const media = p.aprovacoes ? Math.round(p.receita / p.aprovacoes) : 0;
+                      return (<>
+                        {fmt(moda)}
+                        {media && Math.round(moda) !== media && (
+                          <div style={{ fontSize:11, fontWeight:400, color:'var(--text-2)' }}>média {fmt(media)}</div>
+                        )}
+                      </>);
+                    })()}
                   </td>
                   <td style={{ padding:'12px 16px', textAlign:'right', fontSize:13,
                     fontFamily:'Roboto,sans-serif', fontWeight:700, color:'var(--text-1)' }}>
