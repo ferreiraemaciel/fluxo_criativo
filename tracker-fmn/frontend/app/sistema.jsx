@@ -33,25 +33,25 @@ const AUTOMACOES_NUVEM = [
 // só a versão visual. Se a regra mudar, atualizar os dois.
 const TICKET_VAL = window.TICKET_PADRAO; // fonte única em shared.jsx
 const TAGS_PERFORMANCE = [
-  { tag: 'Ótimo',            cor: '#4ade80', condicao: '≥ 5 vendas E (CPA < R$297 OU CPA indefinido)' },
-  { tag: 'Testar novamente', cor: '#fbbf24', condicao: '0 vendas E gasto < R$297 — OU — fez venda, gasto < R$297 E CPA < R$297' },
+  { tag: 'Ótimo',            cor: '#79e06f', condicao: '≥ 5 vendas E (CPA < R$297 OU CPA indefinido)' },
+  { tag: 'Testar novamente', cor: '#f9b64f', condicao: '0 vendas E gasto < R$297 — OU — fez venda, gasto < R$297 E CPA < R$297' },
   { tag: 'Mediano',          cor: '#94a3b8', condicao: 'Qualquer outro caso (ex: 1+ venda com gasto ≥ R$297 e CPA ≥ R$297)' },
-  { tag: 'Ruim',             cor: '#f87171', condicao: '0 vendas E gasto ≥ R$297' },
+  { tag: 'Ruim',             cor: '#fe626c', condicao: '0 vendas E gasto ≥ R$297' },
 ];
 // Espelho de REGRAS-KANBAN-ORGANICO.md. Mantenha os dois em sincronia ao mudar
 // o fluxo do Orgânico (o markdown é a fonte, isto aqui é a vitrine no Tracker).
 const ETAPAS_ORGANICO = [
   { nome:'Sem etapa', icone:'circle-dashed', cor:'#94a3b8', desc:'Card recém-criado, ainda não classificado.' },
   { nome:'Copy',      icone:'pencil',        cor:'#a78bfa', desc:'Ainda escrevendo: headline, roteiro, legenda.' },
-  { nome:'Produção',  icone:'clapperboard',  cor:'#4ade80', desc:'Texto pronto, agora é gravar ou desenhar a peça.' },
+  { nome:'Produção',  icone:'clapperboard',  cor:'#79e06f', desc:'Texto pronto, agora é gravar ou desenhar a peça.' },
 ];
 
 const COLUNAS_ORGANICO = [
   { nome:'Fazendo',   cor:'#3b82f6', significa:'Em construção, é onde a peça nasce',
     entra:'Card criado (padrão)', sai:'Automático pra Feito ao receber qualquer mídia' },
-  { nome:'Feito',     cor:'#f59e42', significa:'Arte pronta, esperando data. É a fila de postagem',
+  { nome:'Feito',     cor:'#ff9845', significa:'Arte pronta, esperando data. É a fila de postagem',
     entra:'Recebeu mídia estando em Fazendo', sai:'Ao agendar (Agendado) ou publicar na hora (Arquivado)' },
-  { nome:'Agendado',  cor:'#4ade80', significa:'Data e hora marcadas, o robô publica sozinho',
+  { nome:'Agendado',  cor:'#79e06f', significa:'Data e hora marcadas, o robô publica sozinho',
     entra:'Agendamento confirmado no card ou no calendário', sai:'Automático pra Arquivado ao publicar; volta pra Feito se falhar' },
   { nome:'Arquivado', cor:'#94a3b8', significa:'Já publicado, fica como histórico e métrica',
     entra:'Publicação concluída', sai:'Não sai sozinho, só manualmente se for reaproveitar' },
@@ -60,11 +60,11 @@ const COLUNAS_ORGANICO = [
 const COLUNAS_KANBAN = [
   { nome: 'Fazendo',    cor: '#60a5fa', entra: 'Card criado (padrão) — mescla as antigas Fazer e Fazendo', tag: 'Sem tag',
     sai: 'Automático pra Feito, ao receber mídia via importação do Drive' },
-  { nome: 'Feito',      cor: '#fbbf24', entra: 'Sync detecta arquivo de mídia gravado no card, pronto pra ativar', tag: 'Sem tag',
+  { nome: 'Feito',      cor: '#f9b64f', entra: 'Sync detecta arquivo de mídia gravado no card, pronto pra ativar', tag: 'Sem tag',
     sai: 'Automático pra Ativos, quando o anúncio publica e vira ACTIVE no Meta' },
   { nome: 'Ativos',     cor: '#fb923c', entra: 'meta_ad_id preenchido + ACTIVE no Meta', tag: 'Nenhuma (nunca recebe tag enquanto ativo)',
     sai: 'Só quando o anúncio para de rodar de verdade no Meta (pausa via processar-pausas). Nunca sai só por performance enquanto ainda está gastando.' },
-  { nome: 'Campeões',   cor: '#4ade80', entra: 'Tag calculada = Ótimo (vindo de Ativos ou recalculado de Arquivados)', tag: 'Ótimo',
+  { nome: 'Campeões',   cor: '#79e06f', entra: 'Tag calculada = Ótimo (vindo de Ativos ou recalculado de Arquivados)', tag: 'Ótimo',
     sai: 'Pra Arquivados, se a tag recalculada deixar de ser Ótimo' },
   { nome: 'Arquivados', cor: '#94a3b8', entra: 'Tag calculada = Testar novamente / Mediano / Ruim', tag: 'A tag recalculada, atualizada a cada sync',
     sai: 'Pra Campeões, se a tag recalculada virar Ótimo' },
@@ -154,8 +154,8 @@ function SystemScreen() {
                     background:'var(--app-surface-2)', border:'1px solid var(--app-border)' }}>
                     <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:6 }}>
                       <span style={{ width:9, height:9, borderRadius:'50%', flexShrink:0,
-                        background: c.ok ? '#4ade80' : '#f87171',
-                        boxShadow: c.ok ? '0 0 6px #4ade80' : '0 0 6px #f87171' }}/>
+                        background: c.ok ? '#79e06f' : '#fe626c',
+                        boxShadow: c.ok ? '0 0 6px #79e06f' : '0 0 6px #fe626c' }}/>
                       <span style={{ fontSize:13.5, fontFamily:'Roboto,sans-serif', fontWeight:700, color:'var(--text-1)' }}>{c.nome}</span>
                     </div>
                     <div style={{ fontSize:11.5, fontFamily:'Roboto,sans-serif', color:'var(--text-3)' }}>{c.detalhe}</div>

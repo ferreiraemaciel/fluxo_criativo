@@ -15,19 +15,19 @@ const FASES = [
   { id:'organizar',       label:'Organizar',       cor:'#94a3b8' },
   { id:'antecipacao',     label:'Antecipação',     cor:'#38bdf8' },
   { id:'captacao',        label:'Captação',        cor:'#a78bfa' },
-  { id:'aquecimento',     label:'Aquecimento',     cor:'#f59e42' },
-  { id:'grande_dia',      label:'Grande Dia',      cor:'#f87171' },
-  { id:'carrinho_aberto', label:'Carrinho aberto', cor:'#4ade80' },
+  { id:'aquecimento',     label:'Aquecimento',     cor:'#ff9845' },
+  { id:'grande_dia',      label:'Grande Dia',      cor:'#fe626c' },
+  { id:'carrinho_aberto', label:'Carrinho aberto', cor:'#79e06f' },
   { id:'encerramento',    label:'Encerramento',    cor:'#fb923c' },
   { id:'pos',             label:'Pós',             cor:'#64748b' },
 ];
 const FASE_MAP = Object.fromEntries(FASES.map(f => [f.id, f]));
 
 const TRILHAS = [
-  { id:'oferta',     label:'Oferta e Narrativa', icon:'gift',           cor:'#f59e42' },
+  { id:'oferta',     label:'Oferta e Narrativa', icon:'gift',           cor:'#ff9845' },
   { id:'conteudo',   label:'Conteúdo',           icon:'megaphone',      cor:'#a78bfa' },
   { id:'trafego',    label:'Tráfego',            icon:'trending-up',    cor:'#38bdf8' },
-  { id:'comercial',  label:'Comercial',          icon:'message-circle', cor:'#4ade80' },
+  { id:'comercial',  label:'Comercial',          icon:'message-circle', cor:'#79e06f' },
   { id:'paginas',    label:'Páginas',            icon:'layout',         cor:'#f472b6' },
   { id:'mentoria',   label:'Mentoria',           icon:'users',          cor:'#fb923c' },
   { id:'debriefing', label:'Debriefing',         icon:'clipboard-list', cor:'#94a3b8' },
@@ -43,8 +43,8 @@ const NIVEIS = [
 const STATUS_CFG = {
   pendente: { label:'Pendente', cor:'#94a3b8', bg:'rgba(148,163,184,.12)' },
   fazendo:  { label:'Fazendo',  cor:'#38bdf8', bg:'rgba(56,189,248,.12)'  },
-  validar:  { label:'Validar Felipe', cor:'#f59e42', bg:'rgba(245,158,66,.12)' },
-  feito:    { label:'Feito',    cor:'#4ade80', bg:'rgba(74,222,128,.12)'  },
+  validar:  { label:'Validar Felipe', cor:'#ff9845', bg:'rgba(255,152,69,.12)' },
+  feito:    { label:'Feito',    cor:'#79e06f', bg:'rgba(121,224,111,.12)'  },
   pulada:   { label:'Pulada',   cor:'#64748b', bg:'rgba(100,116,139,.12)' },
 };
 
@@ -200,7 +200,7 @@ function CampoPercent({ valor, onSalvar, largura = 92, casas = 2 }) {
 }
 
 /* ── Barra de progresso ─────────────────────────────────────────*/
-function Progresso({ feitas, total, cor = '#4ade80', altura = 6 }) {
+function Progresso({ feitas, total, cor = '#79e06f', altura = 6 }) {
   const p = total > 0 ? Math.round((feitas / total) * 100) : 0;
   return (
     <div style={{ display:'flex', alignItems:'center', gap:8, minWidth:0 }}>
@@ -248,7 +248,7 @@ function LinhaTarefa({ t, onToggle, onAbrir, mostrarTrilha, onVirarCard, onDefin
       onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}
       style={{ display:'flex', alignItems:'flex-start', gap:10, padding:'9px 11px',
         borderRadius:9, background: hov || aberto ? 'rgba(255,255,255,.035)' : 'transparent',
-        border:'1px solid ' + (atrasada ? 'rgba(248,113,113,.28)' : 'transparent'),
+        border:'1px solid ' + (atrasada ? 'rgba(254,98,108,.28)' : 'transparent'),
         transition:'background 120ms', cursor: abre ? 'pointer' : 'default' }}
       onClick={()=>{ if (abre) setAberto(a => !a); else onAbrir(t); }}
     >
@@ -256,8 +256,8 @@ function LinhaTarefa({ t, onToggle, onAbrir, mostrarTrilha, onVirarCard, onDefin
         onClick={(e)=>{ e.stopPropagation(); onToggle(t); }}
         title={feito ? 'Desmarcar' : t.status === 'validar' ? 'Validar: marcar como feito' : 'Marcar como feito'}
         style={{ width:19, height:19, borderRadius:6, flexShrink:0, marginTop:1,
-          border:'1.5px solid ' + (feito ? '#4ade80' : t.status === 'validar' ? '#f59e42' : 'var(--app-border)'),
-          background: feito ? '#4ade80' : 'transparent', cursor:'pointer',
+          border:'1.5px solid ' + (feito ? '#79e06f' : t.status === 'validar' ? '#ff9845' : 'var(--app-border)'),
+          background: feito ? '#79e06f' : 'transparent', cursor:'pointer',
           display:'flex', alignItems:'center', justifyContent:'center', padding:0 }}>
         {feito && <LucideIcon icon="check" size={12} style={{ color:'#0b0b0d' }}/>}
       </button>
@@ -279,8 +279,8 @@ function LinhaTarefa({ t, onToggle, onAbrir, mostrarTrilha, onVirarCard, onDefin
           {t.status === 'validar' && (
             <span title="Lançado pelo Claude. Confira e marque o check para validar"
               style={{ fontSize:9.5, fontFamily:'Roboto,sans-serif', fontWeight:700,
-                padding:'1px 6px', borderRadius:4, background:'rgba(245,158,66,.12)',
-                color:'#f59e42', border:'1px solid rgba(245,158,66,.3)', letterSpacing:.3 }}>
+                padding:'1px 6px', borderRadius:4, background:'rgba(255,152,69,.12)',
+                color:'#ff9845', border:'1px solid rgba(255,152,69,.3)', letterSpacing:.3 }}>
               VALIDAR
             </span>
           )}
@@ -294,9 +294,9 @@ function LinhaTarefa({ t, onToggle, onAbrir, mostrarTrilha, onVirarCard, onDefin
         {t.observacoes && (
           <div style={{ fontSize:11, fontFamily:'Roboto,sans-serif', color:'var(--text-2)',
             marginTop:5, padding:'4px 8px', borderRadius:6, lineHeight:1.45,
-            background: t.status === 'validar' ? 'rgba(245,158,66,.07)' : feito ? 'rgba(74,222,128,.06)' : 'rgba(255,255,255,.03)',
-            border:'1px solid ' + (t.status === 'validar' ? 'rgba(245,158,66,.22)' : feito ? 'rgba(74,222,128,.18)' : 'var(--app-border)') }}>
-            <b style={{ color: t.status === 'validar' ? '#f59e42' : feito ? '#4ade80' : 'var(--text-3)' }}>
+            background: t.status === 'validar' ? 'rgba(255,152,69,.07)' : feito ? 'rgba(121,224,111,.06)' : 'rgba(255,255,255,.03)',
+            border:'1px solid ' + (t.status === 'validar' ? 'rgba(255,152,69,.22)' : feito ? 'rgba(121,224,111,.18)' : 'var(--app-border)') }}>
+            <b style={{ color: t.status === 'validar' ? '#ff9845' : feito ? '#79e06f' : 'var(--text-3)' }}>
               {t.status === 'validar' ? 'Para validar: ' : feito ? 'Definido: ' : pulada ? 'Motivo: ' : 'Nota: '}
             </b>
             {t.observacoes.replace(/^(Validar|Sugestão para validar|Rascunho para validar):\s*/, '')}
@@ -311,9 +311,9 @@ function LinhaTarefa({ t, onToggle, onAbrir, mostrarTrilha, onVirarCard, onDefin
             style={{ display:'flex', alignItems:'center', gap:3, fontSize:10,
               fontFamily:'Roboto,sans-serif', fontWeight:700,
               padding:'1px 6px', borderRadius:4,
-              color: preenchidos ? '#4ade80' : 'var(--text-3)',
-              background: preenchidos ? 'rgba(74,222,128,.1)' : 'rgba(255,255,255,.05)',
-              border:'1px solid ' + (preenchidos ? 'rgba(74,222,128,.25)' : 'var(--app-border)') }}>
+              color: preenchidos ? '#79e06f' : 'var(--text-3)',
+              background: preenchidos ? 'rgba(121,224,111,.1)' : 'rgba(255,255,255,.05)',
+              border:'1px solid ' + (preenchidos ? 'rgba(121,224,111,.25)' : 'var(--app-border)') }}>
             <LucideIcon icon={aberto ? 'chevron-up' : 'sliders-horizontal'} size={9}/>
             {preenchidos ? `${preenchidos}/${t.campos.length}` : 'definir'}
           </span>
@@ -334,14 +334,14 @@ function LinhaTarefa({ t, onToggle, onAbrir, mostrarTrilha, onVirarCard, onDefin
               title={`Abrir o card: ${t.entregavel_url}`}
               style={{ display:'flex', alignItems:'center', gap:3, padding:'1px 6px', borderRadius:4,
                 cursor:'pointer', fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700,
-                color:'#4ade80', background:'rgba(74,222,128,.1)',
-                border:'1px solid rgba(74,222,128,.3)' }}>
+                color:'#79e06f', background:'rgba(121,224,111,.1)',
+                border:'1px solid rgba(121,224,111,.3)' }}>
               <LucideIcon icon="external-link" size={9}/>
               {t.card_tipo === 'ads' ? 'ADS' : 'ORG'}
             </button>
           ) : (
             <span title={`Card criado: ${t.entregavel_url}`}
-              style={{ color:'#4ade80', display:'flex' }}>
+              style={{ color:'#79e06f', display:'flex' }}>
               <LucideIcon icon="link" size={12}/>
             </span>
           )
@@ -381,7 +381,7 @@ function LinhaTarefa({ t, onToggle, onAbrir, mostrarTrilha, onVirarCard, onDefin
           {rotuloD(t.offset_dias)}
         </span>
         <span style={{ fontSize:11, fontFamily:'Roboto,sans-serif',
-          color: atrasada ? '#f87171' : 'var(--text-3)',
+          color: atrasada ? '#fe626c' : 'var(--text-3)',
           fontVariantNumeric:'tabular-nums', minWidth:52, textAlign:'right' }}>
           {t.data_prevista ? `${fmtData(t.data_prevista)} ${diaSemana(t.data_prevista)}` : ''}
         </span>
@@ -468,9 +468,9 @@ function BlocoCaderno({ partes }) {
                 <button key={p.id} onClick={() => setSel(p.id)}
                   style={{ textAlign:'left', padding:'6px 9px', borderRadius:7, cursor:'pointer',
                     fontSize:11.5, fontFamily:'Roboto,sans-serif', lineHeight:1.35,
-                    border:'1px solid ' + (ativa ? 'rgba(251,191,36,.4)' : 'transparent'),
-                    background: ativa ? 'rgba(251,191,36,.1)' : 'transparent',
-                    color: ativa ? '#fbbf24' : 'var(--text-2)' }}>
+                    border:'1px solid ' + (ativa ? 'rgba(249,182,79,.4)' : 'transparent'),
+                    background: ativa ? 'rgba(249,182,79,.1)' : 'transparent',
+                    color: ativa ? '#f9b64f' : 'var(--text-2)' }}>
                   {p.numero ? <b style={{ marginRight:5 }}>{p.numero}.</b> : null}{p.titulo}
                 </button>
               );
@@ -755,7 +755,7 @@ function PainelDefinicao({ tarefa, onSalvar, onFechar }) {
                 )}
                 {c.alimenta && (
                   <span title={`Alimenta ${c.alimenta} automaticamente`}
-                    style={{ marginLeft:5, fontSize:9, color:'#4ade80', fontWeight:700 }}>
+                    style={{ marginLeft:5, fontSize:9, color:'#79e06f', fontWeight:700 }}>
                     entra no plano
                   </span>
                 )}
@@ -773,16 +773,16 @@ function PainelDefinicao({ tarefa, onSalvar, onFechar }) {
                 );
                 return (
                   <div style={{ display:'flex', alignItems:'center', gap:10, flexWrap:'wrap',
-                    padding:'9px 11px', borderRadius:8, background:'rgba(74,222,128,.07)',
-                    border:'1px solid rgba(74,222,128,.2)' }}>
+                    padding:'9px 11px', borderRadius:8, background:'rgba(121,224,111,.07)',
+                    border:'1px solid rgba(121,224,111,.2)' }}>
                     <span style={{ fontSize:12.5, fontFamily:'Roboto,sans-serif',
                       color:'var(--text-3)', textDecoration:'line-through' }}>{brl(pn)}</span>
                     <LucideIcon icon="arrow-right" size={13} style={{ color:'var(--text-3)' }}/>
                     <span style={{ fontSize:16, fontFamily:'Roboto,sans-serif', fontWeight:700,
-                      color:'#4ade80', fontVariantNumeric:'tabular-nums' }}>{brl(pp)}</span>
+                      color:'#79e06f', fontVariantNumeric:'tabular-nums' }}>{brl(pp)}</span>
                     <span style={{ fontSize:11.5, fontFamily:'Roboto,sans-serif', fontWeight:700,
-                      padding:'2px 8px', borderRadius:5, color:'#4ade80',
-                      background:'rgba(74,222,128,.15)' }}>
+                      padding:'2px 8px', borderRadius:5, color:'#79e06f',
+                      background:'rgba(121,224,111,.15)' }}>
                       {(dc * 100).toFixed(0)}% off
                     </span>
                     <span style={{ fontSize:11.5, fontFamily:'Roboto,sans-serif',
@@ -800,9 +800,9 @@ function PainelDefinicao({ tarefa, onSalvar, onFechar }) {
                 );
               })() : derivado ? (
                 <div style={{ padding:'6px 9px', borderRadius:7,
-                  background:'rgba(74,222,128,.07)', border:'1px solid rgba(74,222,128,.2)',
+                  background:'rgba(121,224,111,.07)', border:'1px solid rgba(121,224,111,.2)',
                   fontSize:12.5, fontFamily:'Roboto,sans-serif', fontWeight:700,
-                  color:'#4ade80', fontVariantNumeric:'tabular-nums' }}>
+                  color:'#79e06f', fontVariantNumeric:'tabular-nums' }}>
                   {dv == null ? '—'
                     : c.unidade === '%' ? dv.toFixed(1) + '%'
                     : c.unidade === 'un' ? Math.round(dv).toLocaleString('pt-BR')
@@ -824,9 +824,9 @@ function PainelDefinicao({ tarefa, onSalvar, onFechar }) {
                       <button key={op} onClick={() => set(c.chave, ativa ? null : op)}
                         style={{ padding:'5px 11px', borderRadius:7, cursor:'pointer',
                           fontSize:11.5, fontFamily:'Roboto,sans-serif', fontWeight:700,
-                          border:'1px solid ' + (ativa ? '#4ade80' : 'var(--app-border)'),
-                          background: ativa ? 'rgba(74,222,128,.14)' : 'transparent',
-                          color: ativa ? '#4ade80' : 'var(--text-2)' }}>
+                          border:'1px solid ' + (ativa ? '#79e06f' : 'var(--app-border)'),
+                          background: ativa ? 'rgba(121,224,111,.14)' : 'transparent',
+                          color: ativa ? '#79e06f' : 'var(--text-2)' }}>
                         {ativa && '✓ '}{op}
                       </button>
                     );
@@ -874,8 +874,8 @@ function BlocoDecisoes({ decisoes, onEscolher }) {
           const expl = d.explicacoes || {};
           return (
             <div key={d.id} style={{ padding:'10px 12px', borderRadius:9,
-              background: d.escolha ? 'rgba(74,222,128,.05)' : 'rgba(245,158,66,.05)',
-              border:'1px solid ' + (d.escolha ? 'rgba(74,222,128,.18)' : 'rgba(245,158,66,.2)') }}>
+              background: d.escolha ? 'rgba(121,224,111,.05)' : 'rgba(255,152,69,.05)',
+              border:'1px solid ' + (d.escolha ? 'rgba(121,224,111,.18)' : 'rgba(255,152,69,.2)') }}>
               <div style={{ fontSize:12.5, fontFamily:'Roboto,sans-serif', fontWeight:700,
                 color:'var(--text-1)', marginBottom: d.regra ? 3 : 7 }}>
                 {d.pergunta}
@@ -896,13 +896,13 @@ function BlocoDecisoes({ decisoes, onEscolher }) {
                   return (
                     <div key={op} style={{ display:'flex', alignItems:'stretch',
                       borderRadius:7, overflow:'hidden',
-                      border:'1px solid ' + (ativa ? '#4ade80' : 'var(--app-border)'),
-                      background: ativa ? 'rgba(74,222,128,.14)' : 'transparent' }}>
+                      border:'1px solid ' + (ativa ? '#79e06f' : 'var(--app-border)'),
+                      background: ativa ? 'rgba(121,224,111,.14)' : 'transparent' }}>
                       <button onClick={()=>onEscolher(d, ativa ? null : op)}
                         style={{ padding:'5px 10px', cursor:'pointer', border:'none',
                           background:'transparent', fontSize:11.5,
                           fontFamily:'Roboto,sans-serif', fontWeight:700,
-                          color: ativa ? '#4ade80' : 'var(--text-2)' }}>
+                          color: ativa ? '#79e06f' : 'var(--text-2)' }}>
                         {ativa && '✓ '}{op}
                       </button>
                       {temExp && (
@@ -910,7 +910,7 @@ function BlocoDecisoes({ decisoes, onEscolher }) {
                           onClick={()=>setAberta(mostrando ? null : chaveExp)}
                           title="O que isso quer dizer"
                           style={{ padding:'0 7px', cursor:'pointer', border:'none',
-                            borderLeft:'1px solid ' + (ativa ? 'rgba(74,222,128,.4)' : 'var(--app-border)'),
+                            borderLeft:'1px solid ' + (ativa ? 'rgba(121,224,111,.4)' : 'var(--app-border)'),
                             background: mostrando ? 'rgba(56,189,248,.18)' : 'transparent',
                             color: mostrando ? '#38bdf8' : 'var(--text-3)',
                             display:'flex', alignItems:'center' }}>
@@ -1077,9 +1077,9 @@ function CampoDeclarado({ campo, valor, onSalvar }) {
           <button key={op} onClick={() => onSalvar(ativa ? null : op)}
             style={{ padding:'5px 11px', borderRadius:7, cursor:'pointer',
               fontSize:11.5, fontFamily:'Roboto,sans-serif', fontWeight:700,
-              border:'1px solid ' + (ativa ? '#4ade80' : 'var(--app-border)'),
-              background: ativa ? 'rgba(74,222,128,.14)' : 'transparent',
-              color: ativa ? '#4ade80' : 'var(--text-2)' }}>
+              border:'1px solid ' + (ativa ? '#79e06f' : 'var(--app-border)'),
+              background: ativa ? 'rgba(121,224,111,.14)' : 'transparent',
+              color: ativa ? '#79e06f' : 'var(--text-2)' }}>
             {ativa && '✓ '}{op}
           </button>
         );
@@ -1133,7 +1133,7 @@ function BlocoFicha({ declaracoes, onSalvar, semMentoria }) {
               <span style={{ fontSize:10.5, fontFamily:'Roboto,sans-serif', fontWeight:700,
                 color:'var(--text-2)', letterSpacing:.4, textTransform:'uppercase' }}>{g}</span>
               <span style={{ fontSize:10.5, fontFamily:'Roboto,sans-serif',
-                color: gc === ks.length ? '#4ade80' : 'var(--text-3)' }}>{gc}/{ks.length}</span>
+                color: gc === ks.length ? '#79e06f' : 'var(--text-3)' }}>{gc}/{ks.length}</span>
             </div>
             <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(220px,1fr))',
               gap:10 }}>
@@ -1191,7 +1191,7 @@ function BlocoImaginacao({ metricas, onSalvar, precos = {}, metaPlano, plano = {
   };
   const quente = (Number(plano.verba_alunos_dia) || 0) * (Number(plano.dias_alunos) || 0) * (1 + imp);
   const roas = c => invest(c) > 0 ? fatMeta(c) / invest(c) : 0;
-  const res = v => <span style={{ color: v < 0 ? '#f87171' : undefined }}>{fmtMoeda(v)}</span>;
+  const res = v => <span style={{ color: v < 0 ? '#fe626c' : undefined }}>{fmtMoeda(v)}</span>;
   const leads = (c, taxa) => taxa > 0 ? Math.round(vn(c) / taxa) : 0;
 
   const tdBase = { padding:'5px 8px', textAlign:'right', fontSize:12, fontFamily:'Roboto,sans-serif',
@@ -1202,7 +1202,7 @@ function BlocoImaginacao({ metricas, onSalvar, precos = {}, metaPlano, plano = {
         color: destaque ? 'var(--text-1)' : 'var(--text-2)', fontWeight: destaque ? 700 : 400 }}>{rotulo}</td>
       {CENARIOS.map(c => (
         <td key={c} style={{ ...tdBase, fontWeight: destaque ? 700 : 400,
-          fontSize: destaque ? 12.5 : 12, color: destaque ? '#4ade80' : 'var(--text-2)' }}>{fn(c)}</td>
+          fontSize: destaque ? 12.5 : 12, color: destaque ? '#79e06f' : 'var(--text-2)' }}>{fn(c)}</td>
       ))}
     </tr>
   );
@@ -1306,8 +1306,8 @@ function BlocoImaginacao({ metricas, onSalvar, precos = {}, metaPlano, plano = {
 const ETAPAS_MIDIA = [
   { chave:'teaser',      label:'Teaser',      cor:'#38bdf8', objetivo:'Engajamento, 1-3-3, ABO',        dias:'dias_teaser',      fixa:'pct_teaser' },
   { chave:'captacao',    label:'Captura de Leads', cor:'#a78bfa', objetivo:'Leads, CBO, 4 conjuntos',   dias:'dias_captacao',    fixa:null },
-  { chave:'aquecimento', label:'Aquecimento', cor:'#f59e42', objetivo:'Relacionamento e lembrete, 50/50', dias:'dias_aquecimento', fixa:'pct_aquecimento' },
-  { chave:'remarketing', label:'Remarketing', cor:'#4ade80', objetivo:'Vendas, evento Compra, CBO',     dias:'dias_remarketing', fixa:null },
+  { chave:'aquecimento', label:'Aquecimento', cor:'#ff9845', objetivo:'Relacionamento e lembrete, 50/50', dias:'dias_aquecimento', fixa:'pct_aquecimento' },
+  { chave:'remarketing', label:'Remarketing', cor:'#79e06f', objetivo:'Vendas, evento Compra, CBO',     dias:'dias_remarketing', fixa:null },
 ];
 
 /* Rateio das 6 campanhas de lembrete, direto do slide do retiro. */
@@ -1358,7 +1358,7 @@ function LinhaCalc({ label, valor, destaque, alerta, dica }) {
         fontWeight: destaque ? 700 : 400, cursor: dica ? 'help' : 'default' }}>{label}</span>
       <span style={{ fontSize: destaque ? 13 : 12, fontFamily:'Roboto,sans-serif',
         fontWeight:700, fontVariantNumeric:'tabular-nums',
-        color: alerta ? '#fb923c' : destaque ? '#4ade80' : 'var(--text-1)' }}>{valor}</span>
+        color: alerta ? '#fb923c' : destaque ? '#79e06f' : 'var(--text-1)' }}>{valor}</span>
     </div>
   );
 }
@@ -1492,7 +1492,7 @@ function BlocoPlanoMidia({ plano, onSalvar, precoFicha }) {
             );
           })}
           {pctCapt <= 0 && (
-            <div style={{ fontSize:10.5, color:'#f87171', fontFamily:'Roboto,sans-serif' }}>
+            <div style={{ fontSize:10.5, color:'#fe626c', fontFamily:'Roboto,sans-serif' }}>
               As outras fases consumiram tudo. Não sobra verba para a captação.
             </div>
           )}
@@ -1607,13 +1607,13 @@ function GrupoRecolhivel({ id, titulo, cor, feitas, total, comando, children }) 
           color:'var(--text-1)', flexShrink:0 }}>{titulo}</span>
 
         {completo && (
-          <LucideIcon icon="check-circle" size={14} style={{ color:'#4ade80', flexShrink:0 }}/>
+          <LucideIcon icon="check-circle" size={14} style={{ color:'#79e06f', flexShrink:0 }}/>
         )}
 
         <div style={{ flex:1 }}/>
 
         <span style={{ fontSize:12, fontFamily:'Roboto,sans-serif', fontWeight:700,
-          color: completo ? '#4ade80' : 'var(--text-2)',
+          color: completo ? '#79e06f' : 'var(--text-2)',
           fontVariantNumeric:'tabular-nums', flexShrink:0, minWidth:38,
           textAlign:'right' }}>
           {pct}%
@@ -1627,7 +1627,7 @@ function GrupoRecolhivel({ id, titulo, cor, feitas, total, comando, children }) 
           <div style={{ height:5, borderRadius:99, background:'rgba(255,255,255,.07)',
             overflow:'hidden' }}>
             <div style={{ width:`${pct}%`, height:'100%', borderRadius:99,
-              background: cor || '#4ade80',
+              background: cor || '#79e06f',
               transition:'width 350ms cubic-bezier(.2,.7,.2,1)' }}/>
           </div>
         </div>
@@ -1744,10 +1744,10 @@ function Calendario({ tarefas, d0, onAbrir }) {
               onClick={()=>lista.length && setDiaAberto(diaAberto === iso ? null : iso)}
               style={{ minHeight:74, padding:'5px 6px', borderRadius:8,
                 cursor: lista.length ? 'pointer' : 'default',
-                background: ehD0 ? 'rgba(248,113,113,.12)'
+                background: ehD0 ? 'rgba(254,98,108,.12)'
                           : diaAberto === iso ? 'rgba(255,255,255,.07)'
                           : lista.length ? 'rgba(255,255,255,.025)' : 'transparent',
-                border:'1px solid ' + (ehD0 ? 'rgba(248,113,113,.45)'
+                border:'1px solid ' + (ehD0 ? 'rgba(254,98,108,.45)'
                           : ehHoje ? 'rgba(56,189,248,.45)'
                           : fer || ate ? 'rgba(251,146,60,.3)'
                           : 'var(--app-border)'),
@@ -1757,18 +1757,18 @@ function Calendario({ tarefas, d0, onAbrir }) {
                 gap:3 }}>
                 <span style={{ fontSize:11, fontFamily:'Roboto,sans-serif',
                   fontWeight: ehD0 || ehHoje ? 700 : 400,
-                  color: ehD0 ? '#f87171' : ehHoje ? '#38bdf8' : 'var(--text-2)',
+                  color: ehD0 ? '#fe626c' : ehHoje ? '#38bdf8' : 'var(--text-2)',
                   fontVariantNumeric:'tabular-nums' }}>
                   {Number(iso.slice(8))}
                 </span>
-                {ehD0 && <span style={{ fontSize:8.5, fontWeight:700, color:'#f87171',
+                {ehD0 && <span style={{ fontSize:8.5, fontWeight:700, color:'#fe626c',
                   fontFamily:'Roboto,sans-serif', letterSpacing:.3 }}>D0</span>}
                 {!ehD0 && (fer || ate) && (
                   <span title={fer || ate} style={{ color:'#fb923c', display:'flex' }}>
                     <LucideIcon icon="alert-triangle" size={9}/>
                   </span>
                 )}
-                {todasFeitas && <LucideIcon icon="check" size={10} style={{ color:'#4ade80' }}/>}
+                {todasFeitas && <LucideIcon icon="check" size={10} style={{ color:'#79e06f' }}/>}
               </div>
 
               {lista.slice(0, 3).map(t => {
@@ -1897,7 +1897,7 @@ function BlocoAuditoria({ projeto, tarefas }) {
       }>
 
       {dados?.erro && (
-        <div style={{ fontSize:12, color:'#f87171', fontFamily:'Roboto,sans-serif' }}>
+        <div style={{ fontSize:12, color:'#fe626c', fontFamily:'Roboto,sans-serif' }}>
           {dados.erro}
         </div>
       )}
@@ -1918,7 +1918,7 @@ function BlocoAuditoria({ projeto, tarefas }) {
               ['Verba planejada', brl(planejado), 'var(--text-1)'],
               ['Gasto real', brl(gasto), '#38bdf8'],
               ['Consumo', consumo == null ? '—' : consumo.toFixed(0) + '%',
-                consumo > 100 ? '#f87171' : '#4ade80'],
+                consumo > 100 ? '#fe626c' : '#79e06f'],
               ['Vendas no Meta', String(dados.compras), 'var(--text-1)'],
               ['CPA real', cpaReal ? brl(cpaReal) : '—', 'var(--text-1)'],
             ].map(([lb, v, cor]) => (
@@ -1937,11 +1937,11 @@ function BlocoAuditoria({ projeto, tarefas }) {
               <div style={{ height:7, borderRadius:99, background:'rgba(255,255,255,.07)',
                 overflow:'hidden' }}>
                 <div style={{ width: Math.min(100, consumo) + '%', height:'100%',
-                  borderRadius:99, background: consumo > 100 ? '#f87171' : '#38bdf8',
+                  borderRadius:99, background: consumo > 100 ? '#fe626c' : '#38bdf8',
                   transition:'width 350ms' }}/>
               </div>
               {consumo > 100 && (
-                <div style={{ fontSize:11, color:'#f87171', fontFamily:'Roboto,sans-serif',
+                <div style={{ fontSize:11, color:'#fe626c', fontFamily:'Roboto,sans-serif',
                   marginTop:4 }}>
                   O gasto passou do planejado em {brl(gasto - planejado)}.
                 </div>
@@ -2136,8 +2136,8 @@ function BlocoDebriefing({ projeto, metricas, tarefas, onSalvar, onSalvarRespost
       {msg && (
         <div style={{ marginBottom:10, padding:'7px 10px', borderRadius:7, fontSize:11.5,
           fontFamily:'Roboto,sans-serif', color:'var(--text-1)',
-          background: msg.t==='ok' ? 'rgba(74,222,128,.1)' : 'rgba(248,113,113,.1)',
-          border:'1px solid ' + (msg.t==='ok' ? 'rgba(74,222,128,.3)' : 'rgba(248,113,113,.3)') }}>
+          background: msg.t==='ok' ? 'rgba(121,224,111,.1)' : 'rgba(254,98,108,.1)',
+          border:'1px solid ' + (msg.t==='ok' ? 'rgba(121,224,111,.3)' : 'rgba(254,98,108,.3)') }}>
           {msg.x}
         </div>
       )}
@@ -2177,7 +2177,7 @@ function BlocoDebriefing({ projeto, metricas, tarefas, onSalvar, onSalvarRespost
                     </span>
                     {ind.auto && (
                       <span title="Vem do banco" style={{ marginLeft:5, fontSize:9,
-                        color:'#4ade80', fontFamily:'Roboto,sans-serif', fontWeight:700 }}>auto</span>
+                        color:'#79e06f', fontFamily:'Roboto,sans-serif', fontWeight:700 }}>auto</span>
                     )}
                   </td>
                   <td style={{ padding:'3px 8px', textAlign:'right' }}>
@@ -2224,7 +2224,7 @@ function BlocoDebriefing({ projeto, metricas, tarefas, onSalvar, onSalvarRespost
                   <td style={{ padding:'5px 8px', textAlign:'right', fontSize:11.5,
                     fontFamily:'Roboto,sans-serif', fontWeight:700,
                     fontVariantNumeric:'tabular-nums',
-                    color: varia == null ? 'var(--text-3)' : varia >= 0 ? '#4ade80' : '#f87171' }}>
+                    color: varia == null ? 'var(--text-3)' : varia >= 0 ? '#79e06f' : '#fe626c' }}>
                     {varia == null ? '—' : (varia >= 0 ? '+' : '') + varia.toFixed(0) + '%'}
                   </td>
                 </tr>
@@ -2573,15 +2573,15 @@ function PicoScreen({ onNavigate }) {
         {aviso && (
           <div style={{ marginBottom:11, padding:'8px 12px', borderRadius:8,
             display:'flex', alignItems:'center', gap:9,
-            background: aviso.tipo === 'ok' ? 'rgba(74,222,128,.1)' : 'rgba(248,113,113,.1)',
-            border:'1px solid ' + (aviso.tipo === 'ok' ? 'rgba(74,222,128,.3)' : 'rgba(248,113,113,.3)') }}>
+            background: aviso.tipo === 'ok' ? 'rgba(121,224,111,.1)' : 'rgba(254,98,108,.1)',
+            border:'1px solid ' + (aviso.tipo === 'ok' ? 'rgba(121,224,111,.3)' : 'rgba(254,98,108,.3)') }}>
             <LucideIcon icon={aviso.tipo === 'ok' ? 'check-circle' : 'alert-circle'} size={14}
-              style={{ color: aviso.tipo === 'ok' ? '#4ade80' : '#f87171' }}/>
+              style={{ color: aviso.tipo === 'ok' ? '#79e06f' : '#fe626c' }}/>
             <span style={{ flex:1, fontSize:12, fontFamily:'Roboto,sans-serif',
               color:'var(--text-1)' }}>{aviso.texto}</span>
             {aviso.hash && (
               <a href={aviso.hash} style={{ fontSize:11.5, fontFamily:'Roboto,sans-serif',
-                fontWeight:700, color:'#4ade80', textDecoration:'none' }}>abrir</a>
+                fontWeight:700, color:'#79e06f', textDecoration:'none' }}>abrir</a>
             )}
           </div>
         )}
@@ -2698,8 +2698,8 @@ function PicoScreen({ onNavigate }) {
             style={{ padding:'6px 11px', borderRadius:7, cursor:'pointer',
               border:'1px solid var(--app-border)', fontSize:11.5,
               fontFamily:'Roboto,sans-serif', fontWeight:700,
-              background: ocultarFeitas ? 'rgba(74,222,128,.12)' : 'transparent',
-              color: ocultarFeitas ? '#4ade80' : 'var(--text-3)' }}>
+              background: ocultarFeitas ? 'rgba(121,224,111,.12)' : 'transparent',
+              color: ocultarFeitas ? '#79e06f' : 'var(--text-3)' }}>
             {ocultarFeitas ? 'Mostrando pendentes' : 'Ocultar feitas'}
           </button>
         </div>

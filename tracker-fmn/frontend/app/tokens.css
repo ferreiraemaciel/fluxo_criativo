@@ -4,34 +4,34 @@
    ================================================================ */
 :root {
   /* Base backgrounds — dark mode */
-  --app-bg:        #0f1013;
-  --app-sidebar:   #0c0d11;
-  --app-surface:   #181a1f;
-  --app-surface-2: #1f2229;
-  --app-surface-3: #272b34;
+  --app-bg:        #080a0e;
+  --app-sidebar:   #06070a;
+  --app-surface:   #0e1115;
+  --app-surface-2: #14161b;
+  --app-surface-3: #1b1e24;
   --app-border:    rgba(255,255,255,.07);
   --app-border-2:  rgba(255,255,255,.13);
 
   /* Text hierarchy */
-  --text-1: rgba(255,255,255,.92);
+  --text-1: #f0f2f5;
   /* Padrão Blindagem / FMN Pro (15/10/2026): secundário mais legível. */
-  --text-2: rgba(255,255,255,.70);
+  --text-2: #a2a4ab;
   --text-3: rgba(255,255,255,.42);
 
-  /* Marca: mesmo âmbar do Blindagem (#fbbf24). Texto em cima dele: #0c0d11. */
-  --app-primary:    #fbbf24;
-  --app-primary-fg: #0c0d11;
+  /* Marca: mesmo âmbar do Blindagem (#f9b64f). Texto em cima dele: #06070a. */
+  --app-primary:    #f9b64f;
+  --app-primary-fg: #06070a;
   --app-radius:     12px;
   --app-radius-md:  10px;
   --app-radius-xl:  16px;
 
   /* Semantic data colors */
-  --clr-pos:      #4ade80;
-  --clr-pos-bg:   rgba(74,222,128,.1);
-  --clr-neg:      #f87171;
-  --clr-neg-bg:   rgba(248,113,113,.1);
-  --clr-warn:     #f59e42;
-  --clr-warn-bg:  rgba(245,158,66,.1);
+  --clr-pos:      #79e06f;
+  --clr-pos-bg:   rgba(121,224,111,.1);
+  --clr-neg:      #fe626c;
+  --clr-neg-bg:   rgba(254,98,108,.1);
+  --clr-warn:     #ff9845;
+  --clr-warn-bg:  rgba(255,152,69,.1);
   --clr-info:     #60a5fa;
   --clr-info-bg:  rgba(96,165,250,.1);
   --clr-teal:     #34d399;
@@ -122,7 +122,7 @@ input:focus, textarea:focus, select:focus {
 .caderno-corpo table { width: 100%; border-collapse: collapse; margin: 9px 0; font-size: 11.5px; }
 .caderno-corpo th { text-align: left; padding: 5px 8px; color: var(--text-3); font-weight: 700; border-bottom: 1px solid var(--app-border); }
 .caderno-corpo td { padding: 5px 8px; border-top: 1px solid var(--app-border); vertical-align: top; }
-.caderno-corpo blockquote { margin: 9px 0; padding: 6px 11px; border-left: 2px solid rgba(251,191,36,.5); background: rgba(255,255,255,.03); border-radius: 0 7px 7px 0; }
+.caderno-corpo blockquote { margin: 9px 0; padding: 6px 11px; border-left: 2px solid rgba(249,182,79,.5); background: rgba(255,255,255,.03); border-radius: 0 7px 7px 0; }
 .caderno-corpo code { background: rgba(255,255,255,.06); padding: 1px 5px; border-radius: 4px; font-size: 11.5px; }
 .caderno-corpo pre { background: rgba(255,255,255,.04); padding: 9px 11px; border-radius: 8px; overflow-x: auto; font-size: 11px; }
 .caderno-corpo hr { border: none; border-top: 1px solid var(--app-border); margin: 12px 0; }

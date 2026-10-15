@@ -378,10 +378,10 @@ function useTrafficData(mostrarDesativados) {
 
 /* ── Alert actions ──────────────────────────────────────────────*/
 const ACTIONS = [
-  { id:'pause',    label:'Pausar',         icon:'pause-circle', color:'#f87171' },
-  { id:'watch',    label:'Ficar de olho',  icon:'eye',          color:'#f59e42' },
-  { id:'bad',      label:'Perf. ruim',     icon:'thumbs-down',  color:'#f87171' },
-  { id:'good',     label:'Perf. boa',      icon:'thumbs-up',    color:'#4ade80' },
+  { id:'pause',    label:'Pausar',         icon:'pause-circle', color:'#fe626c' },
+  { id:'watch',    label:'Ficar de olho',  icon:'eye',          color:'#ff9845' },
+  { id:'bad',      label:'Perf. ruim',     icon:'thumbs-down',  color:'#fe626c' },
+  { id:'good',     label:'Perf. boa',      icon:'thumbs-up',    color:'#79e06f' },
   { id:'scale',    label:'Escalar budget', icon:'trending-up',  color:'#34d399' },
   { id:'creative', label:'Novo criativo',  icon:'clapperboard', color:'#60a5fa' },
 ];
@@ -400,10 +400,10 @@ const RULE_SV = { G1:'danger', G2:'danger', G3:'danger', G4:'warning', G5:'warni
 const ruleLabel = code => 'RG ' + code.replace('G','');
 const reLabel   = code => 'RE ' + code.replace('G','');
 const SV = {
-  danger:  { color:'#f87171', bg:'rgba(248,113,113,.1)',  bd:'rgba(248,113,113,.25)' },
-  warning: { color:'#f59e42', bg:'rgba(245,158,66,.1)',   bd:'rgba(245,158,66,.25)'  },
+  danger:  { color:'#fe626c', bg:'rgba(254,98,108,.1)',  bd:'rgba(254,98,108,.25)' },
+  warning: { color:'#ff9845', bg:'rgba(255,152,69,.1)',   bd:'rgba(255,152,69,.25)'  },
   info:    { color:'#60a5fa', bg:'rgba(96,165,250,.1)',   bd:'rgba(96,165,250,.25)'  },
-  gold:    { color:'#fbbf24', bg:'rgba(251,191,36,.1)',   bd:'rgba(251,191,36,.3)'   },
+  gold:    { color:'#f9b64f', bg:'rgba(249,182,79,.1)',   bd:'rgba(249,182,79,.3)'   },
 };
 
 /* ── Mapear regra → ação sugerida ───────────────────────────────*/
@@ -476,13 +476,13 @@ const fR = n => n==null?'—':window.fmtBRL(n);
 function bestThumb(adThumbUrl, mediaFiles, driveUrl) {
   return window.melhorThumbAd(adThumbUrl, mediaFiles, driveUrl);
 }
-const cpaCol    = c  => c==null?'var(--text-3)':c/TICKET>=1?'#f87171':c/TICKET>=.7?'#f59e42':'#4ade80';
-const roasCol   = v  => v==null?'var(--text-3)':v>=3?'#4ade80':v>=2?'#fbbf24':'#f87171';
-const cpmCol    = v  => v==null?'var(--text-3)':v<20?'#4ade80':v<40?'#f59e42':'#f87171';
-const ctrCol    = v  => v==null?'var(--text-3)':v>=0.02?'#4ade80':v>=0.01?'#fbbf24':'#f87171';
-const freqCol   = v  => v==null?'var(--text-3)':v<2?'#4ade80':v<3?'#fbbf24':'#f87171';
-const connectCol= v  => v==null?'var(--text-3)':v>=0.6?'#4ade80':v>=0.4?'#fbbf24':'#f87171';
-const hookCol   = v  => v==null?'var(--text-3)':v>=0.25?'#4ade80':v>=0.15?'#fbbf24':'#f87171';
+const cpaCol    = c  => c==null?'var(--text-3)':c/TICKET>=1?'#fe626c':c/TICKET>=.7?'#ff9845':'#79e06f';
+const roasCol   = v  => v==null?'var(--text-3)':v>=3?'#79e06f':v>=2?'#f9b64f':'#fe626c';
+const cpmCol    = v  => v==null?'var(--text-3)':v<20?'#79e06f':v<40?'#ff9845':'#fe626c';
+const ctrCol    = v  => v==null?'var(--text-3)':v>=0.02?'#79e06f':v>=0.01?'#f9b64f':'#fe626c';
+const freqCol   = v  => v==null?'var(--text-3)':v<2?'#79e06f':v<3?'#f9b64f':'#fe626c';
+const connectCol= v  => v==null?'var(--text-3)':v>=0.6?'#79e06f':v>=0.4?'#f9b64f':'#fe626c';
+const hookCol   = v  => v==null?'var(--text-3)':v>=0.25?'#79e06f':v>=0.15?'#f9b64f':'#fe626c';
 const pct       = v  => v==null?'—':`${(v*100).toFixed(1)}%`;
 const num       = v  => v==null||v===0?'—':v.toLocaleString('pt-BR');
 
@@ -538,7 +538,7 @@ function MCell({ m, col, row, onHover }) {
   return (
     <td {...handlers} style={{ padding:'0 6px', textAlign:'right', fontSize:12.5, width: col.w,
       fontFamily:'Roboto,sans-serif', fontWeight:700, color:col.color(v), whiteSpace:'nowrap',
-      boxShadow: hv ? 'inset 0 0 0 1px rgba(251,191,36,.45), inset 0 0 0 60px rgba(251,191,36,.12)' : 'none',
+      boxShadow: hv ? 'inset 0 0 0 1px rgba(249,182,79,.45), inset 0 0 0 60px rgba(249,182,79,.12)' : 'none',
       transition:'box-shadow 120ms' }}>
       {col.fmt(v)}
     </td>
@@ -714,8 +714,8 @@ function TrafficRow({ row, depth=0, period, viewMode='periodo', metricCol, onCel
   const PKEY = { hoje:'hoje', '3d':'d3', '5d':'d5', '7d':'d7', maximum:'hist' };
   const m = row[PKEY[period] || 'd3'] || null;
 
-  const baseBg  = (isPaused || isInactive) ? 'rgba(248,113,113,.03)' : 'transparent';
-  const focusBg = isFocused ? 'rgba(251,191,36,.06)' : baseBg;
+  const baseBg  = (isPaused || isInactive) ? 'rgba(254,98,108,.03)' : 'transparent';
+  const focusBg = isFocused ? 'rgba(249,182,79,.06)' : baseBg;
   const adCpaColor = isAd && m?.cpa != null
     ? cpaCol(m.cpa) : null;
 
@@ -725,8 +725,8 @@ function TrafficRow({ row, depth=0, period, viewMode='periodo', metricCol, onCel
         background: focusBg,
         opacity: isInactive ? 0.4 : isPaused ? 0.55 : faded ? 0.3 : 1,
         transition:'background 120ms, opacity 150ms',
-        outline: isFocused ? '1px solid rgba(251,191,36,.3)' : 'none' }}
-        onMouseEnter={e => { if (!isPaused && !faded) e.currentTarget.style.background=isFocused?'rgba(251,191,36,.09)':'rgba(255,255,255,.03)'; e.currentTarget.querySelectorAll('.pause-direct-btn').forEach(b => b.style.opacity='1'); }}
+        outline: isFocused ? '1px solid rgba(249,182,79,.3)' : 'none' }}
+        onMouseEnter={e => { if (!isPaused && !faded) e.currentTarget.style.background=isFocused?'rgba(249,182,79,.09)':'rgba(255,255,255,.03)'; e.currentTarget.querySelectorAll('.pause-direct-btn').forEach(b => b.style.opacity='1'); }}
         onMouseLeave={e => { e.currentTarget.style.background=focusBg; e.currentTarget.querySelectorAll('.pause-direct-btn').forEach(b => b.style.opacity='0'); }}>
 
         {/* ── Nome ── */}
@@ -739,8 +739,8 @@ function TrafficRow({ row, depth=0, period, viewMode='periodo', metricCol, onCel
               title={isFocused ? 'Remover foco' : 'Destacar linha'}
               style={{ width:18, height:18, borderRadius:4, flexShrink:0, cursor:'pointer', padding:0,
                 display:'flex', alignItems:'center', justifyContent:'center',
-                border:`1px solid ${isFocused?'rgba(251,191,36,.5)':'rgba(255,255,255,.1)'}`,
-                background: isFocused?'rgba(251,191,36,.15)':'rgba(255,255,255,.04)',
+                border:`1px solid ${isFocused?'rgba(249,182,79,.5)':'rgba(255,255,255,.1)'}`,
+                background: isFocused?'rgba(249,182,79,.15)':'rgba(255,255,255,.04)',
                 color: isFocused?'var(--fmn-gold)':'rgba(255,255,255,.3)', transition:'all 150ms' }}>
               <LucideIcon icon="eye" size={10}/>
             </button>
@@ -790,7 +790,7 @@ function TrafficRow({ row, depth=0, period, viewMode='periodo', metricCol, onCel
                   width:16, height:16, borderRadius:3, cursor:'pointer', padding:0,
                   background:'rgba(255,255,255,.05)', border:'1px solid rgba(255,255,255,.1)',
                   color:'rgba(255,255,255,.25)', transition:'all 150ms' }}
-                onMouseEnter={e => { e.currentTarget.style.background='rgba(251,191,36,.15)'; e.currentTarget.style.color='var(--fmn-gold)'; }}
+                onMouseEnter={e => { e.currentTarget.style.background='rgba(249,182,79,.15)'; e.currentTarget.style.color='var(--fmn-gold)'; }}
                 onMouseLeave={e => { e.currentTarget.style.background='rgba(255,255,255,.05)'; e.currentTarget.style.color='rgba(255,255,255,.25)'; }}>
                 <LucideIcon icon="plus" size={9}/>
               </button>
@@ -823,10 +823,10 @@ function TrafficRow({ row, depth=0, period, viewMode='periodo', metricCol, onCel
                 title="Pausar no Meta"
                 style={{ display:'flex', alignItems:'center', gap:3, flexShrink:0,
                   height:18, padding:'0 6px', borderRadius:3, cursor:'pointer',
-                  background:'rgba(248,113,113,.1)', border:'1px solid rgba(248,113,113,.25)',
-                  color:'#f87171', fontSize:9.5, fontFamily:'Roboto,sans-serif',
+                  background:'rgba(254,98,108,.1)', border:'1px solid rgba(254,98,108,.25)',
+                  color:'#fe626c', fontSize:9.5, fontFamily:'Roboto,sans-serif',
                   fontWeight:700, letterSpacing:'0.05em', transition:'all 150ms', opacity:0 }}
-                onMouseEnter={e => { e.currentTarget.style.opacity='1'; e.currentTarget.style.background='rgba(248,113,113,.2)'; }}
+                onMouseEnter={e => { e.currentTarget.style.opacity='1'; e.currentTarget.style.background='rgba(254,98,108,.2)'; }}
                 onMouseLeave={e => { e.currentTarget.style.opacity='0'; }}
                 className="pause-direct-btn">
                 <LucideIcon icon="pause-circle" size={10}/>
@@ -839,7 +839,7 @@ function TrafficRow({ row, depth=0, period, viewMode='periodo', metricCol, onCel
             {myRules.map(re => (
               <span key={re.id} style={{ padding:'1px 6px', borderRadius:999, fontSize:9, flexShrink:0,
                 fontFamily:'Roboto,sans-serif', fontWeight:900, letterSpacing:'0.06em',
-                background:'rgba(251,191,36,.12)', color:'var(--fmn-gold)', border:'1px solid rgba(251,191,36,.3)' }}>
+                background:'rgba(249,182,79,.12)', color:'var(--fmn-gold)', border:'1px solid rgba(249,182,79,.3)' }}>
                 {reLabel(re.rule)}
               </span>
             ))}
@@ -913,7 +913,7 @@ function AlertCard({ alert, userAction, onAction }) {
       {alert.suggestedAction && (
         <div style={{ display:'flex', alignItems:'center', gap:8,
           padding:'8px 12px', borderRadius:8,
-          background:'rgba(251,191,36,.06)', border:'1px solid rgba(251,191,36,.15)' }}>
+          background:'rgba(249,182,79,.06)', border:'1px solid rgba(249,182,79,.15)' }}>
           <LucideIcon icon="sparkles" size={12} color="var(--fmn-gold)"/>
           <span style={{ fontSize:11, fontFamily:'Roboto,sans-serif', color:'var(--text-3)' }}>Sugerido:</span>
           <span style={{ fontSize:11.5, fontFamily:'Roboto,sans-serif', fontWeight:700, color:'var(--fmn-gold)', flex:1 }}>
@@ -964,12 +964,12 @@ function AlertCard({ alert, userAction, onAction }) {
 function RECard({ re, onDelete }) {
   const sv = SV[RULE_SV[re.rule]] || SV.gold;
   return (
-    <div style={{ background:'rgba(251,191,36,.04)', border:'1px solid rgba(251,191,36,.25)',
+    <div style={{ background:'rgba(249,182,79,.04)', border:'1px solid rgba(249,182,79,.25)',
       borderRadius:12, padding:'12px 16px', display:'flex', alignItems:'flex-start', gap:12 }}>
       <div style={{ flexShrink:0, marginTop:1 }}>
         <span style={{ padding:'3px 8px', borderRadius:999, fontSize:10, fontFamily:'Roboto,sans-serif',
-          fontWeight:900, letterSpacing:'0.08em', background:'rgba(251,191,36,.15)',
-          color:'var(--fmn-gold)', border:'1px solid rgba(251,191,36,.3)' }}>
+          fontWeight:900, letterSpacing:'0.08em', background:'rgba(249,182,79,.15)',
+          color:'var(--fmn-gold)', border:'1px solid rgba(249,182,79,.3)' }}>
           {reLabel(re.rule)}
         </span>
       </div>
@@ -988,7 +988,7 @@ function RECard({ re, onDelete }) {
         style={{ width:24,height:24,borderRadius:6,background:'rgba(255,255,255,.05)',
           border:'1px solid var(--app-border)',color:'var(--text-3)',cursor:'pointer',
           display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,transition:'all 150ms' }}
-        onMouseEnter={e => { e.currentTarget.style.color='#f87171'; e.currentTarget.style.borderColor='rgba(248,113,113,.3)'; }}
+        onMouseEnter={e => { e.currentTarget.style.color='#fe626c'; e.currentTarget.style.borderColor='rgba(254,98,108,.3)'; }}
         onMouseLeave={e => { e.currentTarget.style.color='var(--text-3)'; e.currentTarget.style.borderColor='var(--app-border)'; }}>
         <LucideIcon icon="x" size={12}/>
       </button>
@@ -1102,14 +1102,14 @@ function PublicosModal({ onClose }) {
           )}
 
           {erro && (
-            <div style={{ ...CARD, borderColor:'rgba(248,113,113,.4)', background:'rgba(248,113,113,.08)' }}>
-              <span style={{ fontSize:12.5,fontFamily:'Roboto,sans-serif',color:'#f87171' }}>{erro}</span>
+            <div style={{ ...CARD, borderColor:'rgba(254,98,108,.4)', background:'rgba(254,98,108,.08)' }}>
+              <span style={{ fontSize:12.5,fontFamily:'Roboto,sans-serif',color:'#fe626c' }}>{erro}</span>
             </div>
           )}
 
           {resultado && (
-            <div style={{ ...CARD, borderColor:'rgba(74,222,128,.4)', background:'rgba(74,222,128,.08)' }}>
-              <span style={{ fontSize:12.5,fontFamily:'Roboto,sans-serif',color:'#4ade80',fontWeight:700 }}>
+            <div style={{ ...CARD, borderColor:'rgba(121,224,111,.4)', background:'rgba(121,224,111,.08)' }}>
+              <span style={{ fontSize:12.5,fontFamily:'Roboto,sans-serif',color:'#79e06f',fontWeight:700 }}>
                 {resultado.acao === 'atualizar' ? 'Público atualizado.' : 'Público criado.'}{' '}
                 {resultado.recebidos} de {resultado.enviados} aceitos pelo Meta
                 {resultado.invalidos > 0 ? `, ${resultado.invalidos} recusados` : ', nenhum recusado'}.
@@ -1135,7 +1135,7 @@ function PublicosModal({ onClose }) {
                   </span>
                   {alvo?.operation_status && (
                     <span style={{ fontSize:11,fontFamily:'Roboto,sans-serif',
-                      color: alvo.operation_status.code === 200 ? '#4ade80' : 'var(--fmn-gold)' }}>
+                      color: alvo.operation_status.code === 200 ? '#79e06f' : 'var(--fmn-gold)' }}>
                       {alvo.operation_status.description}
                     </span>
                   )}
@@ -1190,7 +1190,7 @@ function PublicosModal({ onClose }) {
                 <div style={{ display:'flex',flexWrap:'wrap',gap:6 }}>
                   {Object.entries(dados.cobertura).map(([campo, qtd]) => {
                     const pct = dados.compradores_unicos ? qtd / dados.compradores_unicos : 0;
-                    const cor = pct >= 0.95 ? '#4ade80' : pct >= 0.7 ? '#f59e42' : '#f87171';
+                    const cor = pct >= 0.95 ? '#79e06f' : pct >= 0.7 ? '#ff9845' : '#fe626c';
                     return (
                       <span key={campo} style={{ display:'flex',alignItems:'center',gap:5,padding:'3px 9px',
                         borderRadius:999,background:'rgba(255,255,255,.04)',border:'1px solid var(--app-border)',
@@ -1325,7 +1325,7 @@ function GlobalRulesModal({ rules, onChange, onCreate, onClose }) {
                   </div>
                   <div onClick={() => onChange(r.code, !r.active)}
                     style={{ width:36,height:20,borderRadius:999,cursor:'pointer',transition:'all 200ms',
-                      background:r.active?'#4ade80':'rgba(255,255,255,.15)',position:'relative',flexShrink:0 }}>
+                      background:r.active?'#79e06f':'rgba(255,255,255,.15)',position:'relative',flexShrink:0 }}>
                     <div style={{ position:'absolute',top:2,left:r.active?17:2,width:16,height:16,
                       borderRadius:'50%',background:'#fff',transition:'left 200ms' }}/>
                   </div>
@@ -1345,9 +1345,9 @@ function GlobalRulesModal({ rules, onChange, onCreate, onClose }) {
                   <button key={s} onClick={()=>setForm(p=>({...p,sev:s}))}
                     style={{ flex:1,padding:'7px 0',borderRadius:7,cursor:'pointer',transition:'all 130ms',
                       fontFamily:'Roboto,sans-serif',fontWeight:700,fontSize:12,
-                      background:form.sev===s?(s==='danger'?'rgba(248,113,113,.15)':s==='warning'?'rgba(245,158,66,.12)':'rgba(96,165,250,.12)'):'rgba(255,255,255,.05)',
-                      border:`1px solid ${form.sev===s?(s==='danger'?'rgba(248,113,113,.35)':s==='warning'?'rgba(245,158,66,.35)':'rgba(96,165,250,.35)'):'var(--app-border)'}`,
-                      color:form.sev===s?(s==='danger'?'#f87171':s==='warning'?'#f59e42':'#60a5fa'):'var(--text-3)' }}>
+                      background:form.sev===s?(s==='danger'?'rgba(254,98,108,.15)':s==='warning'?'rgba(255,152,69,.12)':'rgba(96,165,250,.12)'):'rgba(255,255,255,.05)',
+                      border:`1px solid ${form.sev===s?(s==='danger'?'rgba(254,98,108,.35)':s==='warning'?'rgba(255,152,69,.35)':'rgba(96,165,250,.35)'):'var(--app-border)'}`,
+                      color:form.sev===s?(s==='danger'?'#fe626c':s==='warning'?'#ff9845':'#60a5fa'):'var(--text-3)' }}>
                     {l}
                   </button>
                 ))}
@@ -1450,7 +1450,7 @@ function SpecificRulesModal({ rules, onAdd, onDelete, pausedIds, trafficData, in
                     <div key={re.id}
                       style={{ display:'flex',alignItems:'flex-start',gap:10,padding:'12px 14px',
                         borderRadius:10,background:isTargetPaused?'rgba(255,255,255,.02)':'var(--app-surface-2)',
-                        border:`1px solid ${isTargetPaused?'var(--app-border)':'rgba(251,191,36,.2)'}`,
+                        border:`1px solid ${isTargetPaused?'var(--app-border)':'rgba(249,182,79,.2)'}`,
                         opacity:isTargetPaused?0.4:1,transition:'all 150ms' }}>
                       <span style={{ padding:'3px 7px',borderRadius:999,fontSize:10,
                         fontFamily:'Roboto,sans-serif',fontWeight:900,flexShrink:0,
@@ -1466,12 +1466,12 @@ function SpecificRulesModal({ rules, onAdd, onDelete, pausedIds, trafficData, in
                           <span style={{ fontSize:10.5,color:'var(--text-3)',fontFamily:'Roboto,sans-serif',
                             textTransform:'capitalize' }}>{re.scope}</span>
                           {re.paramVal && (
-                            <span style={{ padding:'1px 6px',borderRadius:4,background:'rgba(251,191,36,.1)',
+                            <span style={{ padding:'1px 6px',borderRadius:4,background:'rgba(249,182,79,.1)',
                               color:'var(--fmn-gold)',fontSize:10.5,fontFamily:'Roboto,sans-serif',fontWeight:700 }}>
                               ×{re.paramVal}
                             </span>
                           )}
-                          {isTargetPaused && <span style={{ fontSize:10,color:'#f87171',fontFamily:'Roboto,sans-serif',fontWeight:700 }}>PAUSADO</span>}
+                          {isTargetPaused && <span style={{ fontSize:10,color:'#fe626c',fontFamily:'Roboto,sans-serif',fontWeight:700 }}>PAUSADO</span>}
                         </div>
                         {re.note && <div style={{ fontSize:11.5,color:'var(--text-3)',marginTop:2,lineHeight:1.4 }}>{re.note}</div>}
                       </div>
@@ -1479,7 +1479,7 @@ function SpecificRulesModal({ rules, onAdd, onDelete, pausedIds, trafficData, in
                         style={{ width:24,height:24,borderRadius:6,background:'rgba(255,255,255,.05)',
                           border:'1px solid var(--app-border)',color:'var(--text-3)',cursor:'pointer',
                           display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0 }}
-                        onMouseEnter={e => { e.currentTarget.style.color='#f87171'; }}
+                        onMouseEnter={e => { e.currentTarget.style.color='#fe626c'; }}
                         onMouseLeave={e => { e.currentTarget.style.color='var(--text-3)'; }}>
                         <LucideIcon icon="trash-2" size={12}/>
                       </button>
@@ -1498,8 +1498,8 @@ function SpecificRulesModal({ rules, onAdd, onDelete, pausedIds, trafficData, in
                     <button key={id} onClick={() => setForm(p => ({ ...p, scope:id, targetId:'' }))}
                       style={{ flex:1,padding:'8px',borderRadius:8,cursor:'pointer',
                         fontFamily:'Roboto,sans-serif',fontWeight:700,fontSize:12.5,transition:'all 150ms',
-                        background:form.scope===id?'rgba(251,191,36,.15)':'rgba(255,255,255,.05)',
-                        border:`1px solid ${form.scope===id?'rgba(251,191,36,.35)':'var(--app-border)'}`,
+                        background:form.scope===id?'rgba(249,182,79,.15)':'rgba(255,255,255,.05)',
+                        border:`1px solid ${form.scope===id?'rgba(249,182,79,.35)':'var(--app-border)'}`,
                         color:form.scope===id?'var(--fmn-gold)':'var(--text-2)' }}>
                       {l}
                     </button>
@@ -1690,11 +1690,11 @@ function BellPopover({ problemas, testMode, onConfirmOne, onIgnore, onClose, pos
         </div>
 
         {testMode && (
-          <div style={{ fontSize:10.5, fontFamily:'Roboto,sans-serif', color:'#f59e42',
+          <div style={{ fontSize:10.5, fontFamily:'Roboto,sans-serif', color:'#ff9845',
             padding:'5px 8px', borderRadius:6,
-            background:'rgba(245,158,66,.08)', border:'1px solid rgba(245,158,66,.2)',
+            background:'rgba(255,152,69,.08)', border:'1px solid rgba(255,152,69,.2)',
             display:'flex', alignItems:'center', gap:6 }}>
-            <LucideIcon icon="flask-conical" size={11} color="#f59e42"/>
+            <LucideIcon icon="flask-conical" size={11} color="#ff9845"/>
             Modo Teste — confirme para registrar o alerta.
           </div>
         )}
@@ -2039,7 +2039,7 @@ function SubstituirModal({ adNum, defaultAdsetId, defaultAdsetName, defaultCampI
                       </div>
                     ) : (
                       <div style={{ display:'flex', flexDirection:'column', gap:8, padding:12, borderRadius:10,
-                        background:'rgba(251,191,36,.06)', border:'1px solid rgba(251,191,36,.2)' }}>
+                        background:'rgba(249,182,79,.06)', border:'1px solid rgba(249,182,79,.2)' }}>
                         <input placeholder="Nome do conjunto" value={newAdsetName}
                           onChange={e => setNewAdsetName(e.target.value)} style={S.input}/>
                         <input placeholder="Orçamento diário (R$)" value={newAdsetBudget} type="number"
@@ -2079,8 +2079,8 @@ function SubstituirModal({ adNum, defaultAdsetId, defaultAdsetName, defaultCampI
           {/* STEP: confirm (gate) */}
           {step === 'confirm' && selected && (
             <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
-              <div style={{ padding:14, borderRadius:10, background:'rgba(251,191,36,.06)',
-                border:'1px solid rgba(251,191,36,.2)', display:'flex', flexDirection:'column', gap:8 }}>
+              <div style={{ padding:14, borderRadius:10, background:'rgba(249,182,79,.06)',
+                border:'1px solid rgba(249,182,79,.2)', display:'flex', flexDirection:'column', gap:8 }}>
                 <div style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700,
                   letterSpacing:'0.08em', textTransform:'uppercase', color:'var(--fmn-gold)' }}>
                   Resumo do que vai ser criado
@@ -2098,9 +2098,9 @@ function SubstituirModal({ adNum, defaultAdsetId, defaultAdsetName, defaultCampI
                 ))}
               </div>
               {errorMsg && (
-                <div style={{ fontSize:12, fontFamily:'Roboto,sans-serif', color:'#f87171',
-                  padding:'8px 12px', borderRadius:8, background:'rgba(248,113,113,.08)',
-                  border:'1px solid rgba(248,113,113,.25)' }}>{errorMsg}</div>
+                <div style={{ fontSize:12, fontFamily:'Roboto,sans-serif', color:'#fe626c',
+                  padding:'8px 12px', borderRadius:8, background:'rgba(254,98,108,.08)',
+                  border:'1px solid rgba(254,98,108,.25)' }}>{errorMsg}</div>
               )}
               <button onClick={handleUpload} disabled={uploading}
                 style={{ width:'100%', padding:'11px', borderRadius:9, cursor: uploading ? 'default' : 'pointer',
@@ -2114,9 +2114,9 @@ function SubstituirModal({ adNum, defaultAdsetId, defaultAdsetName, defaultCampI
           {/* STEP: success */}
           {step === 'success' && (
             <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:16, padding:'24px 0' }}>
-              <div style={{ width:52, height:52, borderRadius:'50%', background:'rgba(74,222,128,.15)',
-                border:'1px solid rgba(74,222,128,.35)', display:'flex', alignItems:'center', justifyContent:'center' }}>
-                <LucideIcon icon="check" size={26} style={{ color:'#4ade80' }}/>
+              <div style={{ width:52, height:52, borderRadius:'50%', background:'rgba(121,224,111,.15)',
+                border:'1px solid rgba(121,224,111,.35)', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                <LucideIcon icon="check" size={26} style={{ color:'#79e06f' }}/>
               </div>
               <div style={{ textAlign:'center' }}>
                 <div style={{ fontSize:15, fontFamily:'Roboto,sans-serif', fontWeight:700, color:'var(--text-1)', marginBottom:6 }}>
@@ -2146,15 +2146,15 @@ function SubstituirModal({ adNum, defaultAdsetId, defaultAdsetName, defaultCampI
           {/* STEP: error */}
           {step === 'error' && (
             <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:16, padding:'24px 0' }}>
-              <div style={{ width:52, height:52, borderRadius:'50%', background:'rgba(248,113,113,.12)',
-                border:'1px solid rgba(248,113,113,.3)', display:'flex', alignItems:'center', justifyContent:'center' }}>
-                <LucideIcon icon="x" size={26} style={{ color:'#f87171' }}/>
+              <div style={{ width:52, height:52, borderRadius:'50%', background:'rgba(254,98,108,.12)',
+                border:'1px solid rgba(254,98,108,.3)', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                <LucideIcon icon="x" size={26} style={{ color:'#fe626c' }}/>
               </div>
               <div style={{ textAlign:'center' }}>
                 <div style={{ fontSize:14, fontFamily:'Roboto,sans-serif', fontWeight:700, color:'var(--text-1)', marginBottom:6 }}>
                   Erro ao subir no Meta
                 </div>
-                <div style={{ fontSize:12, fontFamily:'Roboto,sans-serif', color:'#f87171', wordBreak:'break-word' }}>
+                <div style={{ fontSize:12, fontFamily:'Roboto,sans-serif', color:'#fe626c', wordBreak:'break-word' }}>
                   {errorMsg}
                 </div>
               </div>
@@ -2314,7 +2314,7 @@ function AnaliseCampanhas() {
               gerado em {dados.gerado_em_brasilia}
               {dados.gerado_em && (
                 <span style={{ marginLeft:8, padding:'2px 8px', borderRadius:99, fontWeight:700,
-                  background:'rgba(251,191,36,.14)', border:'1px solid rgba(251,191,36,.45)', color:'var(--fmn-gold)' }}>
+                  background:'rgba(249,182,79,.14)', border:'1px solid rgba(249,182,79,.45)', color:'var(--fmn-gold)' }}>
                   há {tempoDesde(dados.gerado_em)}
                 </span>
               )}
@@ -2774,13 +2774,13 @@ function TrafficScreen() {
     <div style={{ display:'flex',flexDirection:'column',height:'100%',overflow:'hidden' }}>
       {thumbModal && <MediaModal ad={thumbModal} onClose={() => setThumbModal(null)}/>}
       {testMode.ativo && (
-        <div style={{ background:'rgba(245,158,66,.08)', borderBottom:'1px solid rgba(245,158,66,.2)',
+        <div style={{ background:'rgba(255,152,69,.08)', borderBottom:'1px solid rgba(255,152,69,.2)',
           padding:'7px 24px', display:'flex', alignItems:'center', gap:10, flexShrink:0 }}>
-          <LucideIcon icon="flask-conical" size={14} color="#f59e42"/>
-          <span style={{ fontSize:12, fontFamily:'Roboto,sans-serif', color:'#f59e42', fontWeight:600 }}>
+          <LucideIcon icon="flask-conical" size={14} color="#ff9845"/>
+          <span style={{ fontSize:12, fontFamily:'Roboto,sans-serif', color:'#ff9845', fontWeight:600 }}>
             Modo Teste ativo — {testMode.diasRestantes} dia{testMode.diasRestantes !== 1 ? 's' : ''} restante{testMode.diasRestantes !== 1 ? 's' : ''}
           </span>
-          <span style={{ fontSize:11, fontFamily:'Roboto,sans-serif', color:'rgba(245,158,66,.6)' }}>
+          <span style={{ fontSize:11, fontFamily:'Roboto,sans-serif', color:'rgba(255,152,69,.6)' }}>
             Confirme cada alerta individualmente antes de aplicar. Após o período, você decide se as regras rodam de forma automática.
           </span>
         </div>
@@ -2793,19 +2793,19 @@ function TrafficScreen() {
             <Btn variant="ghost" size="sm" icon="target" onClick={() => setModal('specific')}>
               Regras Específicas
               {specificRules.length > 0 && (
-                <span style={{ marginLeft:4,padding:'1px 6px',borderRadius:999,background:'rgba(251,191,36,.2)',
+                <span style={{ marginLeft:4,padding:'1px 6px',borderRadius:999,background:'rgba(249,182,79,.2)',
                   color:'var(--fmn-gold)',fontSize:10,fontWeight:900 }}>{specificRules.length}</span>
               )}
             </Btn>
             {countdown !== null && !syncing && (
               <div style={{ display:'flex', alignItems:'center', gap:5,
                 padding:'4px 10px', borderRadius:7,
-                background: countdown === 0 ? 'rgba(74,222,128,.1)' : 'rgba(255,255,255,.04)',
-                border: `1px solid ${countdown === 0 ? 'rgba(74,222,128,.3)' : 'rgba(255,255,255,.1)'}` }}>
+                background: countdown === 0 ? 'rgba(121,224,111,.1)' : 'rgba(255,255,255,.04)',
+                border: `1px solid ${countdown === 0 ? 'rgba(121,224,111,.3)' : 'rgba(255,255,255,.1)'}` }}>
                 <LucideIcon icon={countdown === 0 ? 'check-circle' : 'timer'} size={12}
-                  color={countdown === 0 ? '#4ade80' : 'var(--text-3)'}/>
+                  color={countdown === 0 ? '#79e06f' : 'var(--text-3)'}/>
                 <span style={{ fontSize:11, fontFamily:'Roboto,sans-serif', fontWeight:700,
-                  color: countdown === 0 ? '#4ade80' : 'var(--text-3)', fontVariantNumeric:'tabular-nums' }}>
+                  color: countdown === 0 ? '#79e06f' : 'var(--text-3)', fontVariantNumeric:'tabular-nums' }}>
                   {countdown === 0
                     ? 'Sync disponível'
                     : `${String(Math.floor(countdown/60)).padStart(2,'0')}:${String(countdown%60).padStart(2,'0')}`}
@@ -2835,7 +2835,7 @@ function TrafficScreen() {
                 <button key={id} onClick={() => setViewMode(id)}
                   style={{ padding:'5px 13px', borderRadius:6, cursor:'pointer', fontSize:12,
                     fontFamily:'Roboto,sans-serif', fontWeight:700, transition:'all 150ms', border:'none',
-                    background: on ? 'rgba(251,191,36,.15)' : 'transparent',
+                    background: on ? 'rgba(249,182,79,.15)' : 'transparent',
                     color: on ? 'var(--fmn-gold)' : 'var(--text-3)' }}>
                   {l}
                 </button>
@@ -2854,8 +2854,8 @@ function TrafficScreen() {
                   <button key={tab.id} onClick={() => setSelectedPeriod(tab.id)}
                     style={{ padding:'6px 18px', borderRadius:8, cursor:'pointer', fontSize:12.5,
                       fontFamily:'Roboto,sans-serif', fontWeight:700, letterSpacing:'0.04em',
-                      border: active ? '1px solid rgba(251,191,36,.5)' : '1px solid var(--app-border)',
-                      background: active ? 'rgba(251,191,36,.12)' : 'rgba(255,255,255,.04)',
+                      border: active ? '1px solid rgba(249,182,79,.5)' : '1px solid var(--app-border)',
+                      background: active ? 'rgba(249,182,79,.12)' : 'rgba(255,255,255,.04)',
                       color: active ? 'var(--fmn-gold)' : 'var(--text-2)',
                       transition:'all 150ms' }}>
                     {tab.label}
@@ -2875,8 +2875,8 @@ function TrafficScreen() {
             style={{ display:'flex', alignItems:'center', gap:6, padding:'6px 14px', borderRadius:8,
               cursor:'pointer', fontSize:12.5, fontFamily:'Roboto,sans-serif', fontWeight:700,
               letterSpacing:'0.02em', transition:'all 150ms',
-              border: mostrarDesativados ? '1px solid rgba(251,191,36,.5)' : '1px solid var(--app-border)',
-              background: mostrarDesativados ? 'rgba(251,191,36,.12)' : 'rgba(255,255,255,.04)',
+              border: mostrarDesativados ? '1px solid rgba(249,182,79,.5)' : '1px solid var(--app-border)',
+              background: mostrarDesativados ? 'rgba(249,182,79,.12)' : 'rgba(255,255,255,.04)',
               color: mostrarDesativados ? 'var(--fmn-gold)' : 'var(--text-2)' }}>
             <LucideIcon icon={mostrarDesativados ? 'eye' : 'eye-off'} size={13}/>
             Mostrar desativados
@@ -2891,8 +2891,8 @@ function TrafficScreen() {
                   <button key={col.k} onClick={() => setSelectedMetric(col.k)}
                     style={{ padding:'5px 12px', borderRadius:999, cursor:'pointer', fontSize:12,
                       fontFamily:'Roboto,sans-serif', fontWeight:700, transition:'all 150ms',
-                      border: active ? '1px solid rgba(251,191,36,.5)' : '1px solid var(--app-border)',
-                      background: active ? 'rgba(251,191,36,.12)' : 'rgba(255,255,255,.04)',
+                      border: active ? '1px solid rgba(249,182,79,.5)' : '1px solid var(--app-border)',
+                      background: active ? 'rgba(249,182,79,.12)' : 'rgba(255,255,255,.04)',
                       color: active ? 'var(--fmn-gold)' : 'var(--text-2)' }}>
                     {col.head}
                   </button>
@@ -2967,7 +2967,7 @@ function TrafficScreen() {
         <div style={{ display:'flex',gap:14,padding:'8px 14px',background:'rgba(255,255,255,.02)',
           borderRadius:8,border:'1px solid var(--app-border)',flexWrap:'wrap' }}>
           <span style={{ fontSize:11,fontFamily:'Roboto,sans-serif',color:'var(--text-3)' }}>CPA:</span>
-          {[['#4ade80','< 70% do ticket'],['#f59e42','70–100%'],['#f87171','> ticket']].map(([c,l])=>(
+          {[['#79e06f','< 70% do ticket'],['#ff9845','70–100%'],['#fe626c','> ticket']].map(([c,l])=>(
             <span key={l} style={{ display:'flex',alignItems:'center',gap:5,fontSize:11,
               fontFamily:'Roboto,sans-serif',color:'var(--text-3)' }}>
               <span style={{ width:8,height:8,borderRadius:2,background:c }}/>

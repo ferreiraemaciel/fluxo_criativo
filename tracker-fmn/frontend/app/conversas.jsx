@@ -137,7 +137,7 @@ function statusResposta(contato) {
   return 'respondida';
 }
 const STATUS_RESPOSTA_COR = {
-  precisa: '#4ade80', respondida: 'var(--fmn-gold)', automatica: 'var(--text-3)', fechada: '#f87171',
+  precisa: '#79e06f', respondida: 'var(--fmn-gold)', automatica: 'var(--text-3)', fechada: '#fe626c',
 };
 const STATUS_RESPOSTA_LABEL = {
   precisa: 'Precisa responder', respondida: 'Já respondida, aguardando lead',
@@ -160,7 +160,7 @@ function chaveTelefone(raw) {
 const PRODUTOS_BOLINHA = [
   { chave: 'modelos de contrato', label: 'MCV',       cor: '#a78bfa' },
   { chave: 'blindagem',           label: 'Blindagem', cor: '#fb923c' },
-  { chave: 'mensagens que vendem', label: 'MQV',       cor: '#4ade80' },
+  { chave: 'mensagens que vendem', label: 'MQV',       cor: '#79e06f' },
 ];
 function classificarProdutoBolinha(nomeProduto) {
   const n = (nomeProduto || '').toLowerCase();
@@ -208,7 +208,7 @@ function ContatoItem({ contato, ativo, onClick, onDispensarAtencao }) {
   return (
     <div onClick={onClick} style={{
       display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', cursor: 'pointer',
-      background: ativo ? 'rgba(251,191,36,.10)' : 'transparent',
+      background: ativo ? 'rgba(249,182,79,.10)' : 'transparent',
       borderLeft: ativo ? '3px solid var(--fmn-gold)' : '3px solid transparent',
       borderBottom: '1px solid var(--app-border)',
     }}>
@@ -223,7 +223,7 @@ function ContatoItem({ contato, ativo, onClick, onDispensarAtencao }) {
         <div title={STATUS_RESPOSTA_LABEL[contato.statusResposta]} style={{
           position: 'absolute', bottom: -1, right: -1, width: 11, height: 11, borderRadius: '50%',
           background: STATUS_RESPOSTA_COR[contato.statusResposta],
-          border: '2px solid var(--app-surface, #0f1013)',
+          border: '2px solid var(--app-surface, #080a0e)',
         }} />
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
@@ -231,8 +231,8 @@ function ContatoItem({ contato, ativo, onClick, onDispensarAtencao }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: 5, minWidth: 0 }}>
             {contato.precisaHumano && (
               <span onClick={e => { e.stopPropagation(); onDispensarAtencao && onDispensarAtencao(contato.telefone); }}
-                title="Precisa de humano. Clique pra marcar como já atendido." style={{ flexShrink: 0, fontSize: 9, fontWeight: 800, color: '#f87171',
-                background: 'rgba(248,113,113,.14)', border: '1px solid rgba(248,113,113,.3)', borderRadius: 4, padding: '1px 4px', cursor: 'pointer' }}>!</span>
+                title="Precisa de humano. Clique pra marcar como já atendido." style={{ flexShrink: 0, fontSize: 9, fontWeight: 800, color: '#fe626c',
+                background: 'rgba(254,98,108,.14)', border: '1px solid rgba(254,98,108,.3)', borderRadius: 4, padding: '1px 4px', cursor: 'pointer' }}>!</span>
             )}
             <div style={{ fontSize: 13, fontWeight: contato.naoLidas > 0 ? 800 : 600, color: 'var(--text-1)',
               fontFamily: 'Roboto,sans-serif', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -273,8 +273,8 @@ function Bolha({ msg }) {
       <div style={{
         maxWidth: '72%', padding: '8px 12px', borderRadius: 12,
         borderBottomRightRadius: isSaida ? 3 : 12, borderBottomLeftRadius: isSaida ? 12 : 3,
-        background: isSaida ? 'rgba(251,191,36,.16)' : 'rgba(255,255,255,.05)',
-        border: '1px solid ' + (isSaida ? 'rgba(251,191,36,.25)' : 'var(--app-border)'),
+        background: isSaida ? 'rgba(249,182,79,.16)' : 'rgba(255,255,255,.05)',
+        border: '1px solid ' + (isSaida ? 'rgba(249,182,79,.25)' : 'var(--app-border)'),
       }}>
         {msg.tipo === 'template' && (
           <div style={{ fontSize: 9.5, color: 'var(--text-3)', marginBottom: 3, fontFamily: 'Roboto,sans-serif', textTransform: 'uppercase', letterSpacing: .4 }}>
@@ -431,7 +431,7 @@ function LogErrosClaudinhoModal({ onClose }) {
     }
   }
 
-  const STATUS_COR = { corrigido: '#4ade80', pendente: '#f59e42', reincidencia: '#f87171' };
+  const STATUS_COR = { corrigido: '#79e06f', pendente: '#ff9845', reincidencia: '#fe626c' };
   const STATUS_LABEL = { corrigido: 'Corrigido', pendente: 'Pendente', reincidencia: 'Reincidência' };
 
   return (
@@ -585,10 +585,10 @@ function NovoContatoModal({ onClose, onEnviado, SUPA_URL, SUPA_KEY }) {
 
 /* Mesma paleta e mesmo desenho do Kanban de Anúncios (kanban.jsx). */
 const ETAPAS = [
-  { id: 'lead_novo',   label: 'Lead novo',   colorDot: '#60a5fa', colorBg: 'rgba(96,165,250,.08)',  colorBorder: 'rgba(96,165,250,.25)' },
-  { id: 'em_conversa', label: 'Em conversa', colorDot: '#f59e42', colorBg: 'rgba(245,158,66,.08)',  colorBorder: 'rgba(245,158,66,.25)' },
-  { id: 'aluno',       label: 'Aluno',       colorDot: '#4ade80', colorBg: 'rgba(74,222,128,.08)',  colorBorder: 'rgba(74,222,128,.25)' },
-  { id: 'perdido',     label: 'Perdido',     colorDot: '#f87171', colorBg: 'rgba(248,113,113,.06)', colorBorder: 'rgba(248,113,113,.2)' },
+  { id: 'lead_novo',   label: 'Lead novo',   colorDot: '#60a5fa', colorBg:'rgba(14,17,21,.6)',  colorBorder:'rgba(255,255,255,.07)' },
+  { id: 'em_conversa', label: 'Em conversa', colorDot: '#ff9845', colorBg:'rgba(14,17,21,.6)',  colorBorder:'rgba(255,255,255,.07)' },
+  { id: 'aluno',       label: 'Aluno',       colorDot: '#79e06f', colorBg:'rgba(14,17,21,.6)',  colorBorder:'rgba(255,255,255,.07)' },
+  { id: 'perdido',     label: 'Perdido',     colorDot: '#fe626c', colorBg:'rgba(14,17,21,.6)', colorBorder:'rgba(255,255,255,.07)' },
 ];
 
 function ConvKanbanCard({ contato, col, onAbrir, onDragStart, onDropAntes }) {
@@ -617,8 +617,8 @@ function ConvKanbanCard({ contato, col, onAbrir, onDragStart, onDropAntes }) {
           width: 7, height: 7, borderRadius: '50%', flexShrink: 0,
           background: STATUS_RESPOSTA_COR[contato.statusResposta] }} />
         {contato.precisaHumano && (
-          <span title="Precisa de humano" style={{ flexShrink: 0, fontSize: 9, fontWeight: 800, color: '#f87171',
-            background: 'rgba(248,113,113,.14)', border: '1px solid rgba(248,113,113,.3)', borderRadius: 4, padding: '1px 4px' }}>!</span>
+          <span title="Precisa de humano" style={{ flexShrink: 0, fontSize: 9, fontWeight: 800, color: '#fe626c',
+            background: 'rgba(254,98,108,.14)', border: '1px solid rgba(254,98,108,.3)', borderRadius: 4, padding: '1px 4px' }}>!</span>
         )}
         <div style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--text-1)', fontFamily: 'Roboto,sans-serif',
           overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -1569,7 +1569,7 @@ function ConversasScreen({ telefoneAlvo = null, onConsumirAlvo } = {}) {
       {falhaIA && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px',
           background: 'rgba(239,68,68,0.12)', borderBottom: '1px solid rgba(239,68,68,0.35)',
-          color: '#f87171', fontSize: 13, fontFamily: 'Roboto,sans-serif' }}>
+          color: '#fe626c', fontSize: 13, fontFamily: 'Roboto,sans-serif' }}>
           <LucideIcon icon="alert-triangle" size={16} />
           <span style={{ flex: 1 }}>
             {/credit balance/i.test(falhaIA.mensagem)
@@ -1585,16 +1585,16 @@ function ConversasScreen({ telefoneAlvo = null, onConsumirAlvo } = {}) {
       )}
       {modoTreinamento && (
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, padding: '8px 16px',
-          background: 'rgba(245,158,66,.1)', borderBottom: '1px solid rgba(245,158,66,.3)',
-          fontSize: 12, fontFamily: 'Roboto,sans-serif', color: '#f59e42', fontWeight: 700 }}>
+          background: 'rgba(255,152,69,.1)', borderBottom: '1px solid rgba(255,152,69,.3)',
+          fontSize: 12, fontFamily: 'Roboto,sans-serif', color: '#ff9845', fontWeight: 700 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <LucideIcon icon="graduation-cap" size={14} />
             Etapa de treinamento do Claudinho: sem resposta automática ao vivo (exceto número de teste do Felipe), só retomada de janela nos últimos minutos antes de fechar.
           </div>
           <button onClick={() => setModalLogErros(true)}
             style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 5, cursor: 'pointer',
-              background: 'rgba(245,158,66,.14)', border: '1px solid rgba(245,158,66,.35)', borderRadius: 7,
-              padding: '4px 10px', fontSize: 11, fontWeight: 800, color: '#f59e42', fontFamily: 'Roboto,sans-serif' }}>
+              background: 'rgba(255,152,69,.14)', border: '1px solid rgba(255,152,69,.35)', borderRadius: 7,
+              padding: '4px 10px', fontSize: 11, fontWeight: 800, color: '#ff9845', fontFamily: 'Roboto,sans-serif' }}>
             <LucideIcon icon="list-checks" size={12} /> Log de erros
           </button>
         </div>
@@ -1669,7 +1669,7 @@ function ConversasScreen({ telefoneAlvo = null, onConsumirAlvo } = {}) {
                     <span onClick={() => dispensarAtencaoHumana(selecionado)}
                       title="A IA pediu ajuda de um humano nessa conversa. Clique pra marcar como já atendido."
                       style={{ fontSize: 10.5, fontFamily: 'Roboto,sans-serif', cursor: 'pointer',
-                      fontWeight: 800, color: '#f87171', background: 'rgba(248,113,113,.14)', border: '1px solid rgba(248,113,113,.3)',
+                      fontWeight: 800, color: '#fe626c', background: 'rgba(254,98,108,.14)', border: '1px solid rgba(254,98,108,.3)',
                       borderRadius: 999, padding: '3px 9px' }}>● precisa de humano</span>
                   )}
                   {iaAtivaGlobal && (
@@ -1680,9 +1680,9 @@ function ConversasScreen({ telefoneAlvo = null, onConsumirAlvo } = {}) {
                   )}
                   <div style={{
                     fontSize: 10.5, fontFamily: 'Roboto,sans-serif', padding: '3px 9px', borderRadius: 999,
-                    color: contatoAtivo?.janelaAberta ? '#4ade80' : 'var(--text-3)',
-                    background: contatoAtivo?.janelaAberta ? 'rgba(74,222,128,.12)' : 'rgba(255,255,255,.05)',
-                    border: '1px solid ' + (contatoAtivo?.janelaAberta ? 'rgba(74,222,128,.3)' : 'var(--app-border)'),
+                    color: contatoAtivo?.janelaAberta ? '#79e06f' : 'var(--text-3)',
+                    background: contatoAtivo?.janelaAberta ? 'rgba(121,224,111,.12)' : 'rgba(255,255,255,.05)',
+                    border: '1px solid ' + (contatoAtivo?.janelaAberta ? 'rgba(121,224,111,.3)' : 'var(--app-border)'),
                   }}>
                     {contatoAtivo?.janelaAberta
                       ? `Grátis · ${tempoRestanteJanela(contatoAtivo.ultimaEntradaData)}`
@@ -1702,22 +1702,22 @@ function ConversasScreen({ telefoneAlvo = null, onConsumirAlvo } = {}) {
                   {contatoAtivo?.etapa === 'aluno' ? (
                     <Btn size="sm" variant="ghost" title="Já marcada como fechada. Clique pra desfazer."
                       onClick={() => { if (window.confirm('Desfazer a marcação de venda fechada?')) moverEtapa(selecionado, 'em_conversa'); }}>
-                      <span style={{ color: '#4ade80' }}>✓ Fechada</span>
+                      <span style={{ color: '#79e06f' }}>✓ Fechada</span>
                     </Btn>
                   ) : contatoAtivo?.etapa === 'perdido' ? (
                     <Btn size="sm" variant="ghost" title="Já marcada como perdida. Clique pra desfazer."
                       onClick={() => { if (window.confirm('Desfazer a marcação de venda perdida?')) moverEtapa(selecionado, 'em_conversa'); }}>
-                      <span style={{ color: '#f87171' }}>✕ Perdida</span>
+                      <span style={{ color: '#fe626c' }}>✕ Perdida</span>
                     </Btn>
                   ) : (
                     <>
                       <Btn size="sm" variant="ghost" title="Marcar como venda fechada (para a retomada automática)"
                         onClick={() => { if (window.confirm('Marcar essa conversa como venda fechada? Ela sai do fluxo de retomada automática.')) moverEtapa(selecionado, 'aluno'); }}>
-                        <span style={{ color: '#4ade80' }}>✓ Fechada</span>
+                        <span style={{ color: '#79e06f' }}>✓ Fechada</span>
                       </Btn>
                       <Btn size="sm" variant="ghost" title="Marcar como venda perdida (para a retomada automática)"
                         onClick={() => { if (window.confirm('Marcar essa conversa como venda perdida? Ela sai do fluxo de retomada automática e some do Chat.')) moverEtapa(selecionado, 'perdido'); }}>
-                        <span style={{ color: '#f87171' }}>✕ Perdida</span>
+                        <span style={{ color: '#fe626c' }}>✕ Perdida</span>
                       </Btn>
                     </>
                   )}
@@ -1746,7 +1746,7 @@ function ConversasScreen({ telefoneAlvo = null, onConsumirAlvo } = {}) {
                   })}
                   {dragOverThread && (
                     <div style={{ position: 'absolute', inset: 8, borderRadius: 10, border: '2px dashed var(--fmn-gold)',
-                      background: 'rgba(251,191,36,.08)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      background: 'rgba(249,182,79,.08)', display: 'flex', alignItems: 'center', justifyContent: 'center',
                       fontSize: 13, fontWeight: 700, color: 'var(--fmn-gold)', fontFamily: 'Roboto,sans-serif', pointerEvents: 'none' }}>
                       Solte o arquivo pra enviar
                     </div>
@@ -1784,8 +1784,8 @@ function ConversasScreen({ telefoneAlvo = null, onConsumirAlvo } = {}) {
                               <button onClick={() => enviarPronta(item)} disabled={!janelaOk || enviando}
                                 title={janelaOk ? 'Enviar agora, sem editar' : 'Janela de 24h fechada'}
                                 style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
-                                  padding: '5px 6px', borderRadius: 6, border: '1px solid rgba(251,191,36,.35)',
-                                  background: 'rgba(251,191,36,.14)', color: 'var(--fmn-gold)',
+                                  padding: '5px 6px', borderRadius: 6, border: '1px solid rgba(249,182,79,.35)',
+                                  background: 'rgba(249,182,79,.14)', color: 'var(--fmn-gold)',
                                   fontSize: 10, fontWeight: 700, fontFamily: 'Roboto,sans-serif',
                                   cursor: janelaOk && !enviando ? 'pointer' : 'not-allowed' }}>
                                 <LucideIcon icon={enviando ? 'loader' : 'send'} size={10}
@@ -1815,11 +1815,11 @@ function ConversasScreen({ telefoneAlvo = null, onConsumirAlvo } = {}) {
 
               {pendente && (
                 <div style={{ padding: '10px 12px', borderTop: '1px solid var(--app-border)', display: 'flex', alignItems: 'center', gap: 10,
-                  background: 'rgba(251,191,36,.06)' }}>
+                  background: 'rgba(249,182,79,.06)' }}>
                   {pendente.audio ? (
                     <div style={{ width: 52, height: 52, borderRadius: 8, border: '1px solid var(--app-border)',
                       display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                      background: 'rgba(251,191,36,.1)' }}>
+                      background: 'rgba(249,182,79,.1)' }}>
                       <LucideIcon icon="mic" size={18} style={{ color: 'var(--fmn-gold)' }} />
                     </div>
                   ) : pendente.preview && (pendente.mime?.startsWith('image/') || (!pendente.mime && pendente.tipo === 'link')) ? (
@@ -1852,8 +1852,8 @@ function ConversasScreen({ telefoneAlvo = null, onConsumirAlvo } = {}) {
               )}
               {gravando ? (
                 <div style={{ padding: 12, borderTop: '1px solid var(--app-border)', display: 'flex',
-                  gap: 10, alignItems: 'center', background: 'rgba(248,113,113,.06)' }}>
-                  <span style={{ width: 9, height: 9, borderRadius: '50%', background: '#f87171',
+                  gap: 10, alignItems: 'center', background: 'rgba(254,98,108,.06)' }}>
+                  <span style={{ width: 9, height: 9, borderRadius: '50%', background: '#fe626c',
                     animation: 'rec-blink 1.1s ease-in-out infinite', flexShrink: 0 }} />
                   <span style={{ fontFamily: 'Roboto,sans-serif', fontSize: 13, fontWeight: 700,
                     color: 'var(--text-1)', fontVariantNumeric: 'tabular-nums' }}>

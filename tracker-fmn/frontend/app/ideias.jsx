@@ -10,11 +10,11 @@ const ALL_FMTS = window.PLATAFORMAS; // fonte única em shared.jsx (Reels, Carro
 const STATUS_COLS = ['Ideia', 'Convertido'];
 const COL_CFG = {
   'Ideia':      { dot:'#3b82f6', bg:'rgba(59,130,246,.05)',  border:'rgba(59,130,246,.2)' },
-  'Convertido': { dot:'#4ade80', bg:'rgba(74,222,128,.05)', border:'rgba(74,222,128,.2)' },
+  'Convertido': { dot:'#79e06f', bg:'rgba(121,224,111,.05)', border:'rgba(121,224,111,.2)' },
 };
 const DESTINOS = ['Anúncio', 'Orgânico'];
 const DESTINO_CFG = {
-  'Anúncio': { color:'#f87171', bg:'rgba(248,113,113,.1)', border:'rgba(248,113,113,.25)', icon:'megaphone' },
+  'Anúncio': { color:'#fe626c', bg:'rgba(254,98,108,.1)', border:'rgba(254,98,108,.25)', icon:'megaphone' },
   'Orgânico':{ color:'#a78bfa', bg:'rgba(167,139,250,.1)', border:'rgba(167,139,250,.25)', icon:'leaf' },
 };
 
@@ -72,11 +72,11 @@ function RefPreview({ r, embed }) {
     }
     if (ytId) {
       return (
-        <div style={{ height:32, borderRadius:7, background:'rgba(248,113,113,.06)',
-          border:'1px solid rgba(248,113,113,.15)', display:'flex', alignItems:'center',
+        <div style={{ height:32, borderRadius:7, background:'rgba(254,98,108,.06)',
+          border:'1px solid rgba(254,98,108,.15)', display:'flex', alignItems:'center',
           padding:'0 10px', gap:7, overflow:'hidden' }}>
-          <LucideIcon icon="youtube" size={12} color="#f87171"/>
-          <span style={{ fontSize:11, fontFamily:'Roboto,sans-serif', color:'#f87171',
+          <LucideIcon icon="youtube" size={12} color="#fe626c"/>
+          <span style={{ fontSize:11, fontFamily:'Roboto,sans-serif', color:'#fe626c',
             overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
             YouTube · {ytId}
           </span>
@@ -117,8 +117,8 @@ function IdeaCard({ idea, colCfg, onEdit, onConvert, onDelete }) {
         <button onClick={e => { e.stopPropagation(); onDelete(idea.id); }}
           style={{ position:'absolute', top:10, right:10, width:24, height:24,
             borderRadius:6, display:'flex', alignItems:'center', justifyContent:'center',
-            background:'rgba(248,113,113,.12)', border:'1px solid rgba(248,113,113,.25)',
-            color:'#f87171', cursor:'pointer', transition:'all 130ms', zIndex:1 }}>
+            background:'rgba(254,98,108,.12)', border:'1px solid rgba(254,98,108,.25)',
+            color:'#fe626c', cursor:'pointer', transition:'all 130ms', zIndex:1 }}>
           <LucideIcon icon="trash-2" size={11}/>
         </button>
       )}
@@ -164,7 +164,7 @@ function IdeaCard({ idea, colCfg, onEdit, onConvert, onDelete }) {
         {!converted ? (
           <button onClick={() => onConvert(idea.id)}
             style={{ flex:1, padding:'6px', borderRadius:6, cursor:'pointer',
-              background:'rgba(251,191,36,.08)', border:'1px solid rgba(251,191,36,.2)',
+              background:'rgba(249,182,79,.08)', border:'1px solid rgba(249,182,79,.2)',
               color:'var(--fmn-gold)', fontFamily:'Roboto,sans-serif', fontSize:11, fontWeight:700,
               display:'flex', alignItems:'center', justifyContent:'center', gap:5, transition:'all 130ms' }}>
             <LucideIcon icon="send" size={11}/>{idea.destino === 'Orgânico' ? 'Produzir' : 'Gerar ADS'}
@@ -285,8 +285,8 @@ function IdeaModal({ idea, onClose, onSave }) {
                   style={{ padding:'7px 16px', borderRadius:999, cursor:'pointer',
                     fontFamily:'Roboto,sans-serif', fontWeight:700, fontSize:12.5, transition:'all 150ms',
                     display:'flex', alignItems:'center', gap:6,
-                    background:sel?'rgba(251,191,36,.18)':'rgba(255,255,255,.06)',
-                    border:`1px solid ${sel?'rgba(251,191,36,.4)':'var(--app-border)'}`,
+                    background:sel?'rgba(249,182,79,.18)':'rgba(255,255,255,.06)',
+                    border:`1px solid ${sel?'rgba(249,182,79,.4)':'var(--app-border)'}`,
                     color:sel?'var(--fmn-gold)':'var(--text-2)' }}>
                   <LucideIcon icon={(window.PLAT_ICON||{})[f]||'file'} size={13}/>{f}
                 </button>
@@ -302,8 +302,8 @@ function IdeaModal({ idea, onClose, onSave }) {
               <button key={s} onClick={()=>setForm(p=>({...p,status:s}))}
                 style={{ padding:'7px 16px', borderRadius:999, cursor:'pointer',
                   fontFamily:'Roboto,sans-serif', fontWeight:700, fontSize:12, transition:'all 150ms',
-                  background:form.status===s?'rgba(251,191,36,.18)':'rgba(255,255,255,.06)',
-                  border:`1px solid ${form.status===s?'rgba(251,191,36,.4)':'var(--app-border)'}`,
+                  background:form.status===s?'rgba(249,182,79,.18)':'rgba(255,255,255,.06)',
+                  border:`1px solid ${form.status===s?'rgba(249,182,79,.4)':'var(--app-border)'}`,
                   color:form.status===s?'var(--fmn-gold)':'var(--text-2)' }}>
                 {s}
               </button>
@@ -320,8 +320,8 @@ function IdeaModal({ idea, onClose, onSave }) {
               <button key={id} onClick={()=>setRefMode(id)}
                 style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'center', gap:6,
                   padding:'6px', borderRadius:6, cursor:'pointer', transition:'all 130ms',
-                  background:refMode===id?'rgba(251,191,36,.15)':'transparent',
-                  border:`1px solid ${refMode===id?'rgba(251,191,36,.2)':'transparent'}`,
+                  background:refMode===id?'rgba(249,182,79,.15)':'transparent',
+                  border:`1px solid ${refMode===id?'rgba(249,182,79,.2)':'transparent'}`,
                   color:refMode===id?'var(--fmn-gold)':'rgba(255,255,255,.42)',
                   fontFamily:'Roboto,sans-serif', fontWeight:700, fontSize:11.5 }}>
                 <LucideIcon icon={ic} size={13}/>{l}
@@ -335,8 +335,8 @@ function IdeaModal({ idea, onClose, onSave }) {
                 placeholder="https://..." style={{...INP, flex:1}}
                 onKeyDown={e=>{ if(e.key==='Enter') applyUrl(); }}/>
               <button onClick={applyUrl}
-                style={{ padding:'8px 14px', borderRadius:8, background:'rgba(251,191,36,.15)',
-                  border:'1px solid rgba(251,191,36,.25)', color:'var(--fmn-gold)',
+                style={{ padding:'8px 14px', borderRadius:8, background:'rgba(249,182,79,.15)',
+                  border:'1px solid rgba(249,182,79,.25)', color:'var(--fmn-gold)',
                   fontFamily:'Roboto,sans-serif', fontWeight:700, fontSize:12, cursor:'pointer' }}>
                 OK
               </button>
@@ -350,7 +350,7 @@ function IdeaModal({ idea, onClose, onSave }) {
                   background:'rgba(255,255,255,.03)', border:'2px dashed rgba(255,255,255,.12)',
                   color:'var(--text-3)', fontFamily:'Roboto,sans-serif', fontSize:12.5, fontWeight:700,
                   display:'flex', alignItems:'center', justifyContent:'center', gap:8, transition:'all 150ms' }}
-                onMouseEnter={e=>{e.currentTarget.style.borderColor='rgba(251,191,36,.3)';e.currentTarget.style.color='var(--fmn-gold)';}}
+                onMouseEnter={e=>{e.currentTarget.style.borderColor='rgba(249,182,79,.3)';e.currentTarget.style.color='var(--fmn-gold)';}}
                 onMouseLeave={e=>{e.currentTarget.style.borderColor='rgba(255,255,255,.12)';e.currentTarget.style.color='var(--text-3)';}}>
                 <LucideIcon icon="upload-cloud" size={18}/>Clique para enviar vídeo ou imagem
               </button>
@@ -363,8 +363,8 @@ function IdeaModal({ idea, onClose, onSave }) {
                 <RefPreview r={form.ref} embed={true}/>
               </div>
               <button onClick={()=>setForm(p=>({...p,ref:null}))}
-                style={{ width:22,height:22,borderRadius:'50%',background:'rgba(248,113,113,.15)',
-                  border:'none',color:'#f87171',display:'flex',alignItems:'center',
+                style={{ width:22,height:22,borderRadius:'50%',background:'rgba(254,98,108,.15)',
+                  border:'none',color:'#fe626c',display:'flex',alignItems:'center',
                   justifyContent:'center',cursor:'pointer',flexShrink:0 }}>
                 <LucideIcon icon="x" size={11}/>
               </button>
@@ -558,10 +558,10 @@ function IdeiaScreen() {
       {convertedInfo && (
         <div style={{ position:'fixed', bottom:24, left:'50%', transform:'translateX(-50%)', zIndex:800,
           display:'flex', alignItems:'center', gap:8, padding:'12px 18px', borderRadius:10,
-          background:'rgba(74,222,128,.12)', border:'1px solid rgba(74,222,128,.3)',
+          background:'rgba(121,224,111,.12)', border:'1px solid rgba(121,224,111,.3)',
           boxShadow:'0 12px 40px rgba(0,0,0,.5)' }}>
-          <LucideIcon icon="check-circle" size={16} color="#4ade80"/>
-          <span style={{ fontSize:13, fontFamily:'Roboto,sans-serif', fontWeight:700, color:'#4ade80' }}>
+          <LucideIcon icon="check-circle" size={16} color="#79e06f"/>
+          <span style={{ fontSize:13, fontFamily:'Roboto,sans-serif', fontWeight:700, color:'#79e06f' }}>
             {convertedInfo}
           </span>
         </div>
@@ -574,8 +574,8 @@ function IdeiaScreen() {
               {['Todos', ...ALL_FMTS].map(f => (
                 <button key={f} onClick={() => setFmtFilter(f)}
                   style={{ padding:'5px 11px', borderRadius:6, cursor:'pointer', transition:'all 130ms',
-                    background:fmtFilter===f?'rgba(251,191,36,.15)':'transparent',
-                    border:`1px solid ${fmtFilter===f?'rgba(251,191,36,.2)':'transparent'}`,
+                    background:fmtFilter===f?'rgba(249,182,79,.15)':'transparent',
+                    border:`1px solid ${fmtFilter===f?'rgba(249,182,79,.2)':'transparent'}`,
                     color:fmtFilter===f?'var(--fmn-gold)':'rgba(255,255,255,.42)',
                     fontFamily:'Roboto,sans-serif', fontWeight:700, fontSize:11 }}>
                   {f}

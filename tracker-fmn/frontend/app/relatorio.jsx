@@ -106,13 +106,13 @@ function GraficoAreaEstatico({ data }) {
     <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', height: 'auto', display: 'block' }}>
       <defs>
         <linearGradient id="rpFat" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#4ade80" stopOpacity="0.35"/>
-          <stop offset="100%" stopColor="#4ade80" stopOpacity="0"/>
+          <stop offset="0%" stopColor="#79e06f" stopOpacity="0.35"/>
+          <stop offset="100%" stopColor="#79e06f" stopOpacity="0"/>
         </linearGradient>
       </defs>
       <path d={area('fat')} fill="url(#rpFat)"/>
-      <path d={linha('fat')} fill="none" stroke="#4ade80" strokeWidth="2"/>
-      <path d={linha('gasto')} fill="none" stroke="#fbbf24" strokeWidth="2"/>
+      <path d={linha('fat')} fill="none" stroke="#79e06f" strokeWidth="2"/>
+      <path d={linha('gasto')} fill="none" stroke="#f9b64f" strokeWidth="2"/>
       {[0, 0.5, 1].map(f => (
         <text key={f} x={4} y={y(maxV * f) + 3} fontSize="8.5" fill="rgba(255,255,255,.35)" fontFamily="Roboto,sans-serif">
           {Math.round(maxV * f)}
@@ -123,9 +123,9 @@ function GraficoAreaEstatico({ data }) {
           textAnchor="middle" fontFamily="Roboto,sans-serif">{d.label}</text>
       ))}
       <g transform={`translate(${W - 130}, 6)`}>
-        <circle cx={0} cy={0} r={3} fill="#4ade80"/>
+        <circle cx={0} cy={0} r={3} fill="#79e06f"/>
         <text x={8} y={3} fontSize="9" fill="rgba(255,255,255,.6)" fontFamily="Roboto,sans-serif">Faturamento</text>
-        <circle cx={80} cy={0} r={3} fill="#fbbf24"/>
+        <circle cx={80} cy={0} r={3} fill="#f9b64f"/>
         <text x={88} y={3} fontSize="9" fill="rgba(255,255,255,.6)" fontFamily="Roboto,sans-serif">Gasto</text>
       </g>
     </svg>
@@ -296,7 +296,7 @@ function garantirCssImpressao() {
   style.textContent = `
     @media print {
       html, body {
-        background: #0f1013 !important;
+        background: #080a0e !important;
         /* tokens.css trava overflow:hidden e height:100% no app inteiro (pra
            tela normal), o que soma no corte de página junto com o fixed
            abaixo. Vira documento normal só durante a impressão. */
@@ -399,7 +399,7 @@ function RelatorioButton({ rangeFrom, rangeTo, dados }) {
       <div style={{ position: 'relative' }}>
         <button onClick={() => setMenuAberto(a => !a)} style={{
           display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 8,
-          background: 'rgba(251,191,36,.1)', border: '1px solid rgba(251,191,36,.3)',
+          background: 'rgba(249,182,79,.1)', border: '1px solid rgba(249,182,79,.3)',
           color: 'var(--fmn-gold)', fontFamily: 'Roboto,sans-serif', fontWeight: 700, fontSize: 12,
           cursor: 'pointer',
         }}>

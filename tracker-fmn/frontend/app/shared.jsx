@@ -107,14 +107,14 @@ function Btn({ variant = 'primary', size = 'md', children, onClick, style = {}, 
 function Badge({ children, tone = 'default', dot = false, style = {} }) {
   const tones = {
     default:  { background: 'rgba(255,255,255,.08)', color: 'rgba(255,255,255,.62)' },
-    gold:     { background: 'rgba(251,191,36,.15)',  color: 'var(--app-primary)' },
-    success:  { background: 'rgba(74,222,128,.12)',  color: 'var(--clr-pos)' },
-    danger:   { background: 'rgba(248,113,113,.12)', color: 'var(--clr-neg)' },
-    warning:  { background: 'rgba(245,158,66,.12)',  color: 'var(--clr-warn)' },
+    gold:     { background: 'rgba(249,182,79,.15)',  color: 'var(--app-primary)' },
+    success:  { background: 'rgba(121,224,111,.12)',  color: 'var(--clr-pos)' },
+    danger:   { background: 'rgba(254,98,108,.12)', color: 'var(--clr-neg)' },
+    warning:  { background: 'rgba(255,152,69,.12)',  color: 'var(--clr-warn)' },
     info:     { background: 'rgba(96,165,250,.12)',  color: 'var(--clr-info)' },
     teal:     { background: 'rgba(52,211,153,.12)',  color: 'var(--clr-teal)' },
     amber:    { background: 'rgba(245,158,11,.12)',  color: '#f59e0b' },
-    reels:    { background: 'rgba(251,191,36,.12)',  color: 'var(--fmn-gold)' },
+    reels:    { background: 'rgba(249,182,79,.12)',  color: 'var(--fmn-gold)' },
     image:    { background: 'rgba(96,165,250,.12)',  color: 'var(--clr-info)' },
     carousel: { background: 'rgba(52,211,153,.12)',  color: 'var(--clr-teal)' },
   };
@@ -142,15 +142,15 @@ function CardKPI({ label, value, delta, deltaLabel, icon, accent = false, title,
   const dv = typeof delta === 'number' ? `${delta >= 0 ? '+' : ''}${delta}%` : delta;
   const [hov, setHov] = useState(false);
   const cor = alerta ? 'var(--clr-neg)' : 'var(--app-primary)';
-  const fundo = alerta ? 'rgba(248,113,113,.15)' : 'rgba(251,191,36,.15)';
-  const borda = alerta ? 'rgba(248,113,113,.3)' : 'rgba(251,191,36,.3)';
+  const fundo = alerta ? 'rgba(254,98,108,.15)' : 'rgba(249,182,79,.15)';
+  const borda = alerta ? 'rgba(254,98,108,.3)' : 'rgba(249,182,79,.3)';
   return (
     <div title={title} onClick={onClick}
       onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
       style={{
         flex: 1, minWidth: 0, background: 'var(--app-surface)',
-        border: `1px solid ${onClick && hov ? 'rgba(251,191,36,.5)' : 'var(--app-border)'}`,
-        borderRadius: 'var(--app-radius)', padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,.1)',
+        border: `1px solid ${onClick && hov ? 'rgba(249,182,79,.5)' : 'var(--app-border)'}`,
+        borderRadius: 'var(--app-radius-xl)', padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,.1)',
         display: 'flex', alignItems: 'center', gap: 12, cursor: onClick ? 'pointer' : (title ? 'help' : 'default'),
         transition: 'border-color 150ms',
       }}>
@@ -187,8 +187,8 @@ function Atalho({ icon, numero, rotulo, acao, onClick, carregando, alerta = fals
     <button onClick={tem ? onClick : undefined}
       onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
       style={{ textAlign: 'left', borderRadius: 'var(--app-radius)', padding: 12, display: 'flex', flexDirection: 'column', gap: 8,
-        border: `1px solid ${hov && tem ? 'rgba(251,191,36,.5)' : 'var(--app-border)'}`,
-        background: tem ? 'var(--app-surface)' : 'rgba(31,34,41,.2)', cursor: tem ? 'pointer' : 'default',
+        border: `1px solid ${hov && tem ? 'rgba(249,182,79,.5)' : 'var(--app-border)'}`,
+        background: tem ? 'var(--app-surface)' : 'rgba(20,22,27,.2)', cursor: tem ? 'pointer' : 'default',
         transition: 'border-color 150ms', fontFamily: 'Roboto, sans-serif' }}>
       <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         <LucideIcon icon={icon} size={16} style={{ color: tem ? (alerta ? 'var(--clr-neg)' : 'var(--app-primary)') : 'var(--text-2)' }}/>
@@ -219,7 +219,7 @@ function Pilulas({ opcoes, valor, onChange }) {
               background: ativo ? 'var(--app-primary)' : 'var(--app-bg)',
               color: ativo ? 'var(--app-primary-fg)' : 'var(--text-2)',
               border: `1px solid ${ativo ? 'var(--app-primary)' : 'var(--app-border)'}` }}
-            onMouseEnter={e => { if (!ativo) e.currentTarget.style.borderColor = 'rgba(251,191,36,.4)'; }}
+            onMouseEnter={e => { if (!ativo) e.currentTarget.style.borderColor = 'rgba(249,182,79,.4)'; }}
             onMouseLeave={e => { if (!ativo) e.currentTarget.style.borderColor = 'var(--app-border)'; }}>
             {label}
           </button>
@@ -254,7 +254,7 @@ function SectionCard({ title, children, style = {}, headerRight, noPad = false,
   return (
     <div style={{
       background: 'var(--app-surface)', border: '1px solid var(--app-border)',
-      borderRadius: 'var(--app-radius)', overflow: 'hidden',
+      borderRadius: 'var(--app-radius-xl)', overflow: 'hidden',
       boxShadow: '0 1px 3px rgba(0,0,0,.1)', ...style
     }}>
       {title && (
@@ -340,6 +340,14 @@ function Sidebar({ activePage, onNavigate, collapsed = false, onToggle }) {
     return () => clearInterval(t);
   }, []);
 
+  const [usuario, setUsuario] = useState(null);
+  useEffect(() => {
+    window.db?.auth.getUser().then(({ data }) => {
+      const u = data?.user; if (!u) return;
+      setUsuario({ email: u.email, nome: u.user_metadata?.nome || u.user_metadata?.full_name || 'Ferreira e Maciel' });
+    });
+  }, []);
+
   /* Menu em grupos, como no FMN Pro (15/10/2026). */
   const navGrupos = [
     { titulo: null, itens: [
@@ -380,9 +388,9 @@ function Sidebar({ activePage, onNavigate, collapsed = false, onToggle }) {
           height: 32, padding: collapsed ? 0 : '0 8px',
           borderRadius: 'var(--app-radius-md)', width: '100%', textAlign: 'left',
           // Padrão Blindagem / FMN Pro: ativo com fundo âmbar a 6% e borda a 28%.
-          background: active ? 'rgba(251,191,36,.08)' : hov ? 'rgba(255,255,255,.05)' : 'transparent',
+          background: active ? 'rgba(251,191,36,.06)' : hov ? 'rgba(255,255,255,.05)' : 'transparent',
           border: `1px solid ${active ? 'rgba(251,191,36,.28)' : 'transparent'}`,
-          color: active ? 'var(--app-primary)' : hov ? 'var(--app-primary)' : 'var(--text-1)',
+          color: active ? '#fbbf24' : hov ? '#fbbf24' : 'var(--text-1)',
           fontFamily: 'Roboto, sans-serif', fontWeight: 500,
           fontSize: 14, cursor: 'pointer', transition: 'all 150ms',
         }}>
@@ -391,7 +399,7 @@ function Sidebar({ activePage, onNavigate, collapsed = false, onToggle }) {
           {alerta && (
             <span title="Precisa de humano" style={{
               position: 'absolute', top: -3, right: -3, width: 8, height: 8, borderRadius: '50%',
-              background: '#f87171', border: '1.5px solid var(--app-bg, #0f1013)' }} />
+              background: '#fe626c', border: '1.5px solid var(--app-bg, #080a0e)' }} />
           )}
         </span>
         {!collapsed && item.label}
@@ -462,17 +470,25 @@ function Sidebar({ activePage, onNavigate, collapsed = false, onToggle }) {
           <div key={gi} style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: gi === 0 ? 0 : 12 }}>
             {g.titulo && !collapsed && (
               <div style={{ height: 32, display: 'flex', alignItems: 'center', padding: '0 8px',
-                fontSize: 12, fontWeight: 500, fontFamily: 'Roboto, sans-serif', color: 'var(--text-2)' }}>{g.titulo}</div>
+                fontSize: 12, fontWeight: 500, fontFamily: 'Roboto, sans-serif', color: 'rgba(240,242,245,.7)' }}>{g.titulo}</div>
             )}
             {g.itens.map(item => <NavItem key={item.id} item={item} />)}
           </div>
         ))}
       </nav>
 
-      {/* Sistema (sem botão de colapso aqui) */}
+      {/* Sistema e, embaixo, quem está logado e o sair (como no FMN Pro) */}
       <div style={{ padding: collapsed ? '8px 4px' : '8px 8px',
         borderTop: '1px solid var(--app-border)', flexShrink: 0 }}>
         <NavItem item={{ id: 'sistema', icon: 'settings', label: 'Sistema' }} />
+        {!collapsed && usuario && (
+          <div style={{ padding: '12px 8px 4px', fontFamily: 'Roboto, sans-serif' }}>
+            <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-1)' }}>{usuario.nome}</div>
+            <div style={{ fontSize: 12, color: 'var(--text-2)', overflow: 'hidden', textOverflow: 'ellipsis' }}>{usuario.email}</div>
+            <button onClick={async () => { await window.db.auth.signOut(); location.reload(); }}
+              style={{ marginTop: 10, fontSize: 12, fontWeight: 500, color: 'var(--text-1)', cursor: 'pointer' }}>Sair da conta</button>
+          </div>
+        )}
       </div>
     </aside>
   );
@@ -483,18 +499,16 @@ function TopBar({ title, period, onPeriodChange, actions, backButton }) {
   const periods = ['Hoje', '7d', '14d', '30d'];
   return (
     <header style={{
-      height: 'var(--topbar-h)', background: 'rgba(15,16,19,.8)',
-      backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
-      borderBottom: '1px solid var(--app-border)', position: 'sticky', top: 0, zIndex: 10,
-      padding: '0 24px', display: 'flex', alignItems: 'center',
-      justifyContent: 'space-between', flexShrink: 0,
+      // Cabeçalho de página do FMN Pro (15/10/2026): título grande, ações à direita.
+      padding: '28px 32px 16px', display: 'flex', alignItems: 'flex-end', gap: 12, flexWrap: 'wrap',
+      justifyContent: 'space-between', flexShrink: 0, background: 'var(--app-bg)',
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
         {backButton}
-        <span style={{ fontFamily: 'Roboto, sans-serif', fontWeight: 600, fontSize: 15,
-          color: 'var(--text-1)' }}>
+        <h1 style={{ fontFamily: 'Roboto, sans-serif', fontWeight: 600, fontSize: 30, lineHeight: '36px',
+          letterSpacing: '-0.75px', color: 'var(--text-1)', margin: 0 }}>
           {title}
-        </span>
+        </h1>
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
         {period !== undefined && (
@@ -597,7 +611,7 @@ function RefBlock({ value, onChange }) {
           <textarea value={draft} onChange={e => setDraft(e.target.value)}
             rows={2} placeholder="Cole um link ou descreva a referência..."
             style={fieldStyle}
-            onFocus={e => e.target.style.borderColor='rgba(251,191,36,.4)'}
+            onFocus={e => e.target.style.borderColor='rgba(249,182,79,.4)'}
             onBlur={e => e.target.style.borderColor='var(--app-border)'}/>
           <div style={{ display:'flex', gap:6, justifyContent:'flex-end' }}>
             {editing && (
@@ -608,8 +622,8 @@ function RefBlock({ value, onChange }) {
             )}
             <button onClick={() => { onChange(draft.trim()); setEditing(false); }}
               style={{ fontSize:11, fontFamily:'Roboto,sans-serif', padding:'5px 12px',
-                borderRadius:6, border:'1px solid rgba(251,191,36,.3)',
-                background:'rgba(251,191,36,.1)', color:'var(--fmn-gold)', cursor:'pointer', fontWeight:700 }}>
+                borderRadius:6, border:'1px solid rgba(249,182,79,.3)',
+                background:'rgba(249,182,79,.1)', color:'var(--fmn-gold)', cursor:'pointer', fontWeight:700 }}>
               Salvar referência
             </button>
           </div>

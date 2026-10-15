@@ -44,8 +44,8 @@ function DateFilter({ from, to, onChange }) {
         {presets.map(p => (
           <button key={p} onClick={() => aplicarPreset(p)}
             style={{ padding:'5px 12px', borderRadius:6, cursor:'pointer', transition:'all 130ms',
-              background: presetAtivo(p) ? 'rgba(251,191,36,.15)' : 'transparent',
-              border: `1px solid ${presetAtivo(p) ? 'rgba(251,191,36,.2)' : 'transparent'}`,
+              background: presetAtivo(p) ? 'rgba(249,182,79,.15)' : 'transparent',
+              border: `1px solid ${presetAtivo(p) ? 'rgba(249,182,79,.2)' : 'transparent'}`,
               color: presetAtivo(p) ? 'var(--fmn-gold)' : 'rgba(255,255,255,.42)',
               fontFamily:'Roboto,sans-serif', fontWeight:700, fontSize:11.5 }}>
             {p}
@@ -246,8 +246,8 @@ function AddExpenseModal({ onClose, onSaved }) {
           </select>
         </div>
         {erro && (
-          <div style={{ padding:'9px 11px',borderRadius:8,background:'rgba(248,113,113,.08)',
-            border:'1px solid rgba(248,113,113,.3)',fontSize:11.5,color:'#f87171',
+          <div style={{ padding:'9px 11px',borderRadius:8,background:'rgba(254,98,108,.08)',
+            border:'1px solid rgba(254,98,108,.3)',fontSize:11.5,color:'#fe626c',
             fontFamily:'Roboto,sans-serif',lineHeight:1.5 }}>{erro}</div>
         )}
         <div style={{ display:'flex',gap:8,marginTop:4 }}>
@@ -398,8 +398,8 @@ function AddRevenueModal({ onClose, onSaved }) {
             onChange={e=>set('observacoes',e.target.value)} style={inp}/>
         </div>
         {erro && (
-          <div style={{ padding:'9px 11px',borderRadius:8,background:'rgba(248,113,113,.08)',
-            border:'1px solid rgba(248,113,113,.3)',fontSize:11.5,color:'#f87171',
+          <div style={{ padding:'9px 11px',borderRadius:8,background:'rgba(254,98,108,.08)',
+            border:'1px solid rgba(254,98,108,.3)',fontSize:11.5,color:'#fe626c',
             fontFamily:'Roboto,sans-serif',lineHeight:1.5 }}>{erro}</div>
         )}
         <div style={{ display:'flex',gap:8,marginTop:4 }}>
@@ -526,8 +526,8 @@ function ExpensesTab({ dateRange }) {
           {[['despesas','Despesas'],['receitas','Receitas'],['balanco','Balanço']].map(([id,l])=>(
             <button key={id} onClick={()=>setView(id)}
               style={{ padding:'6px 14px', borderRadius:6, cursor:'pointer', transition:'all 130ms',
-                background:view===id?'rgba(251,191,36,.15)':'transparent',
-                border:`1px solid ${view===id?'rgba(251,191,36,.2)':'transparent'}`,
+                background:view===id?'rgba(249,182,79,.15)':'transparent',
+                border:`1px solid ${view===id?'rgba(249,182,79,.2)':'transparent'}`,
                 color:view===id?'var(--fmn-gold)':'rgba(255,255,255,.42)',
                 fontFamily:'Roboto,sans-serif', fontWeight:700, fontSize:11.5 }}>
               {l}
@@ -645,8 +645,8 @@ function FinTableRow({ row, isLast, onDelete, onEncerrar }) {
           <button onClick={onEncerrar} title="Encerrar: para de cobrar daqui pra frente, sem mexer no passado"
             style={{
               height: 26, padding: '0 9px', borderRadius: 6, display: 'inline-flex', alignItems: 'center',
-              gap: 5, cursor: 'pointer', background: 'rgba(245,158,66,.1)', marginRight: 6,
-              border: '1px solid rgba(245,158,66,.25)', color: 'var(--clr-warn)',
+              gap: 5, cursor: 'pointer', background: 'rgba(255,152,69,.1)', marginRight: 6,
+              border: '1px solid rgba(255,152,69,.25)', color: 'var(--clr-warn)',
               fontFamily: 'Roboto,sans-serif', fontSize: 11, fontWeight: 700,
             }}>
             <LucideIcon icon="calendar-x" size={12} />Encerrar
@@ -655,8 +655,8 @@ function FinTableRow({ row, isLast, onDelete, onEncerrar }) {
         {hov && !row.automatica && (
           <button onClick={onDelete} style={{
             width: 26, height: 26, borderRadius: 6, display: 'flex', alignItems: 'center',
-            justifyContent: 'center', cursor: 'pointer', background: 'rgba(248,113,113,.1)',
-            border: '1px solid rgba(248,113,113,.2)', color: 'var(--clr-neg)',
+            justifyContent: 'center', cursor: 'pointer', background: 'rgba(254,98,108,.1)',
+            border: '1px solid rgba(254,98,108,.2)', color: 'var(--clr-neg)',
             display: 'inline-flex',
           }}>
             <LucideIcon icon="trash-2" size={13} />
@@ -794,7 +794,7 @@ function TaxesTab({ dateRange }) {
         <TaxRow label="Imposto calculado" value={fmt(Math.round(notaTax))} accent />
         <TaxRow label="Imposto por venda (média)" value={fmt(vendasCount ? notaTax / vendasCount : 0)} />
         <div style={{ marginTop: 12, padding: '10px 12px', borderRadius: 8,
-          background: 'rgba(248,113,113,.07)', border: '1px solid rgba(248,113,113,.15)' }}>
+          background: 'rgba(254,98,108,.07)', border: '1px solid rgba(254,98,108,.15)' }}>
           <p style={{ fontSize: 12, fontFamily: 'var(--font-body)', color: 'var(--clr-neg)',
             lineHeight: 1.55, margin: 0 }}>
             Imposto sobre a nota fiscal emitida nas vendas. Ajuste a alíquota conforme a faixa do seu Simples Nacional muda ao longo do ano.
@@ -810,7 +810,7 @@ function TaxesTab({ dateRange }) {
         <TaxRow label="Base (gasto Meta)" value={fmt(Math.round(gastoMeta))} />
         {periodoAnteriorAoHistorico && (
           <div style={{ marginTop:8, padding:'8px 10px', borderRadius:8,
-            background:'rgba(245,158,66,.07)', border:'1px solid rgba(245,158,66,.18)',
+            background:'rgba(255,152,69,.07)', border:'1px solid rgba(255,152,69,.18)',
             fontSize:11, fontFamily:'var(--font-body)', color:'var(--clr-warn)', lineHeight:1.5 }}>
             O gasto dia a dia só existe a partir de {inicioGastoDiario.split('-').reverse().join('/')}.
             O que veio antes disso não entra nesta conta.
@@ -819,7 +819,7 @@ function TaxesTab({ dateRange }) {
         <TaxRow label="Imposto calculado" value={fmt(Math.round(metaTax))} accent />
         <TaxRow label="Imposto por venda (média)" value={fmt(vendasCount ? metaTax / vendasCount : 0)} />
         <div style={{ marginTop: 12, padding: '10px 12px', borderRadius: 8,
-          background: 'rgba(248,113,113,.07)', border: '1px solid rgba(248,113,113,.15)' }}>
+          background: 'rgba(254,98,108,.07)', border: '1px solid rgba(254,98,108,.15)' }}>
           <p style={{ fontSize: 12, fontFamily: 'var(--font-body)', color: 'var(--clr-neg)',
             lineHeight: 1.55, margin: 0 }}>
             Cobrado pela Meta sobre pagamentos feitos a contas de anúncio em BRL, conforme regulamentação tributária brasileira.
@@ -840,7 +840,7 @@ function TaxesTab({ dateRange }) {
         <TaxRow label="Vendas no período" value={`${vendasCount} vendas`} />
         <TaxRow label="Total retido Hotmart" value={fmt(Math.round(hotmartTax))} accent />
         <div style={{ marginTop: 12, padding: '10px 12px', borderRadius: 8,
-          background: 'rgba(245,158,66,.07)', border: '1px solid rgba(245,158,66,.15)' }}>
+          background: 'rgba(255,152,69,.07)', border: '1px solid rgba(255,152,69,.15)' }}>
           <p style={{ fontSize: 12, fontFamily: 'var(--font-body)', color: 'var(--clr-warn)',
             lineHeight: 1.55, margin: 0 }}>
             Taxa cobrada pela Hotmart sobre cada transação aprovada. Valores retidos na liquidação do período.
@@ -878,7 +878,7 @@ function SinalHotmart({ faixa, registros }) {
 
   const horas = ultima ? (Date.now() - new Date(ultima)) / 3600000 : null;
   const ok    = horas != null && horas < 48;
-  const cor   = ultima === undefined ? '#8a8a8a' : ok ? '#4ade80' : '#f59e42';
+  const cor   = ultima === undefined ? '#8a8a8a' : ok ? '#79e06f' : '#ff9845';
   const texto = ultima === undefined ? 'Conferindo a integração...'
     : ultima === null ? 'Nenhuma venda registrada ainda'
     : horas < 1  ? 'Última venda há menos de 1 hora'
@@ -948,7 +948,7 @@ function InfraTab({ dateRange }) {
   return (
     <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
       {alerta && (
-        <div style={{ padding:'10px 14px', borderRadius:10, background:'rgba(248,113,113,.1)', border:'1px solid rgba(248,113,113,.45)', color:'#f87171', fontFamily:'Roboto,sans-serif', fontSize:13 }}>
+        <div style={{ padding:'10px 14px', borderRadius:10, background:'rgba(254,98,108,.1)', border:'1px solid rgba(254,98,108,.45)', color:'#fe626c', fontFamily:'Roboto,sans-serif', fontSize:13 }}>
           A projeção do mês ({fmt(projecao)}) passou do limite de {fmt(cfg.alerta_projecao_brl)}.
         </div>
       )}
@@ -960,7 +960,7 @@ function InfraTab({ dateRange }) {
         <CardKPI label="Por GB de fotos do Kairós" value={gbFotos ? fmt(projecao / gbFotos) : '—'} icon="hard-drive"/>
       </div>
       {semR2 && (
-        <div style={{ padding:'10px 14px', borderRadius:10, background:'rgba(245,158,66,.08)', border:'1px solid rgba(245,158,66,.3)', color:'#f59e42', fontFamily:'Roboto,sans-serif', fontSize:12.5, lineHeight:1.5 }}>
+        <div style={{ padding:'10px 14px', borderRadius:10, background:'rgba(255,152,69,.08)', border:'1px solid rgba(255,152,69,.3)', color:'#ff9845', fontFamily:'Roboto,sans-serif', fontSize:12.5, lineHeight:1.5 }}>
           O uso da Cloudflare (fotos do Kairós no R2 e pedidos dos Workers) ainda não está sendo medido: falta o token de leitura de análise. Por enquanto entra só a mensalidade fixa dos Workers.
         </div>
       )}
@@ -1033,7 +1033,7 @@ function AsaasTab({ dateRange }) {
   const conta = rotulo => aprovadas.filter(v => (v.oferta_nome || '').includes(rotulo)).length;
   const reembolsos = vendas.filter(v => v.status === 'reembolsada' || v.status === 'chargeback');
   const forma = v => v.metodo_pagamento === 'pix' ? 'Pix' : `Cartão ${v.parcelas || 1}x`;
-  const cores = { 'Renovação':'#60a5fa', 'Upgrade':'#4ade80', 'Renovação + Upgrade':'#c084fc', 'Primeira compra':'var(--fmn-gold)' };
+  const cores = { 'Renovação':'#60a5fa', 'Upgrade':'#79e06f', 'Renovação + Upgrade':'#c084fc', 'Primeira compra':'var(--fmn-gold)' };
 
   if (loading) return <div style={{padding:40,textAlign:'center',color:'var(--text-3)',fontFamily:'Roboto,sans-serif'}}>Carregando...</div>;
   return (
@@ -1160,8 +1160,8 @@ function HotmartTab({ dateRange }) {
       </div>
 
       {cortouLista && (
-        <div style={{ padding:'8px 12px', borderRadius:9, background:'rgba(245,158,66,.07)',
-          border:'1px solid rgba(245,158,66,.18)', fontSize:11.5, fontFamily:'Roboto,sans-serif',
+        <div style={{ padding:'8px 12px', borderRadius:9, background:'rgba(255,152,69,.07)',
+          border:'1px solid rgba(255,152,69,.18)', fontSize:11.5, fontFamily:'Roboto,sans-serif',
           color:'var(--clr-warn)', lineHeight:1.5 }}>
           A lista abaixo mostra as {LIMITE_LISTA} vendas mais recentes de {vendasFiltradas.length} no período.
           Os totais e os cartões acima consideram todas.
@@ -1169,8 +1169,8 @@ function HotmartTab({ dateRange }) {
       )}
 
       {outrosProblemas.length > 0 && (
-        <div style={{ padding:'8px 12px', borderRadius:9, background:'rgba(248,113,113,.07)',
-          border:'1px solid rgba(248,113,113,.2)', fontSize:11.5, fontFamily:'Roboto,sans-serif',
+        <div style={{ padding:'8px 12px', borderRadius:9, background:'rgba(254,98,108,.07)',
+          border:'1px solid rgba(254,98,108,.2)', fontSize:11.5, fontFamily:'Roboto,sans-serif',
           color:'var(--clr-neg)', lineHeight:1.5 }}>
           {outrosProblemas.length === 1 ? 'Há 1 venda' : `Há ${outrosProblemas.length} vendas`} com
           chargeback ou protesto no período. Veja no filtro "Problemas".
@@ -1208,21 +1208,21 @@ function HotmartTab({ dateRange }) {
                     {p.vendas}
                   </td>
                   <td style={{ padding:'12px 16px', textAlign:'right', fontSize:13,
-                    fontFamily:'Roboto,sans-serif', fontWeight:700, color:'#4ade80' }}>
+                    fontFamily:'Roboto,sans-serif', fontWeight:700, color:'#79e06f' }}>
                     {p.aprovacoes}
                   </td>
                   <td style={{ padding:'12px 16px', textAlign:'right' }}>
                     <div style={{ display:'flex', alignItems:'center', justifyContent:'flex-end', gap:6 }}>
                       <span style={{ fontSize:13, fontFamily:'Roboto,sans-serif', fontWeight:700,
-                        color:p.reembolsos>0?'#f87171':'var(--text-3)' }}>{p.reembolsos}</span>
+                        color:p.reembolsos>0?'#fe626c':'var(--text-3)' }}>{p.reembolsos}</span>
                       {p.reembolsos > 0 && (
                         <span style={{ fontSize:10.5, fontFamily:'Roboto,sans-serif',
-                          color:'rgba(248,113,113,.6)' }}>({txReemb.toFixed(1)}%)</span>
+                          color:'rgba(254,98,108,.6)' }}>({txReemb.toFixed(1)}%)</span>
                       )}
                     </div>
                   </td>
                   <td style={{ padding:'12px 16px', textAlign:'right', fontSize:14,
-                    fontFamily:'Roboto,sans-serif', fontWeight:900, color:'#4ade80' }}>
+                    fontFamily:'Roboto,sans-serif', fontWeight:900, color:'#79e06f' }}>
                     {fmt(p.receita)}
                   </td>
                 </tr>
@@ -1234,7 +1234,7 @@ function HotmartTab({ dateRange }) {
               <td colSpan={5} style={{ padding:'12px 16px', fontSize:12,
                 fontFamily:'Roboto,sans-serif', fontWeight:700, color:'var(--text-2)' }}>Total</td>
               <td style={{ padding:'12px 16px', textAlign:'right', fontSize:15,
-                fontFamily:'Roboto,sans-serif', fontWeight:900, color:'#4ade80' }}>
+                fontFamily:'Roboto,sans-serif', fontWeight:900, color:'#79e06f' }}>
                 {fmt(totalReceita)}
               </td>
             </tr>
@@ -1252,8 +1252,8 @@ function HotmartTab({ dateRange }) {
             {filters.map(f => (
               <button key={f} onClick={() => setActiveFilter(f)}
                 style={{ padding:'4px 10px', borderRadius:5, cursor:'pointer', transition:'all 130ms',
-                  background:activeFilter===f?'rgba(251,191,36,.15)':'transparent',
-                  border:`1px solid ${activeFilter===f?'rgba(251,191,36,.2)':'transparent'}`,
+                  background:activeFilter===f?'rgba(249,182,79,.15)':'transparent',
+                  border:`1px solid ${activeFilter===f?'rgba(249,182,79,.2)':'transparent'}`,
                   color:activeFilter===f?'var(--fmn-gold)':'rgba(255,255,255,.42)',
                   fontFamily:'Roboto,sans-serif', fontWeight:700, fontSize:11 }}>
                 {f}
@@ -1286,7 +1286,7 @@ function HotmartTab({ dateRange }) {
                   fontFamily:'Roboto,sans-serif', maxWidth:260 }}>{v.produto_nome}</td>
                 <td style={{ padding:'11px 16px', textAlign:'right', fontSize:13.5,
                   fontFamily:'Roboto,sans-serif', fontWeight:700,
-                  color:v.status==='reembolsada'?'#f87171':'#4ade80' }}>
+                  color:v.status==='reembolsada'?'#fe626c':'#79e06f' }}>
                   {v.status==='reembolsada'?`–${fmt(Math.round(Number(v.preco_oferta ?? v.valor_bruto)))}`:fmt(Math.round(Number(v.preco_oferta ?? v.valor_bruto)))}
                 </td>
                 <td style={{ padding:'11px 16px', textAlign:'right' }}>

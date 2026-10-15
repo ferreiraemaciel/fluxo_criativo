@@ -20,7 +20,7 @@ const RESPONSAVEIS = ['Felipe', 'Amanda', 'Lígia'];
 // Card sem responsável usa a foto "todos": espaço vazio lê como
 // "esqueceram de atribuir", a foto comum diz "é de quem pegar primeiro".
 const RESPONSAVEL_CONFIG = {
-  'Felipe': { initials:'FE', color:'#fbbf24', bg:'rgba(251,191,36,.18)', photo:'assets/avatar-felipe.png' },
+  'Felipe': { initials:'FE', color:'#f9b64f', bg:'rgba(249,182,79,.18)', photo:'assets/avatar-felipe.png' },
   'Amanda': { initials:'A',  color:'#a78bfa', bg:'rgba(167,139,250,.18)', photo:'assets/avatar-amanda.png' },
   'Lígia':  { initials:'L',  color:'#f472b6', bg:'rgba(244,114,182,.18)', photo:'assets/avatar-ligia.png' },
 };
@@ -56,16 +56,16 @@ function proximoLivre(items) {
 }
 
 const COLUMNS = [
-  { id:'Fazendo',   label:'Fazendo',   colorDot:'#3b82f6', colorBg:'rgba(59,130,246,.08)',  colorBorder:'rgba(59,130,246,.25)' },
-  { id:'Feito',     label:'Feito',     colorDot:'#f59e42', colorBg:'rgba(245,158,66,.08)',  colorBorder:'rgba(245,158,66,.25)' },
-  { id:'Agendado',  label:'Agendado',  colorDot:'#4ade80', colorBg:'rgba(74,222,128,.08)',  colorBorder:'rgba(74,222,128,.25)' },
-  { id:'Arquivado', label:'Arquivado', colorDot:'#94a3b8', colorBg:'rgba(148,163,184,.05)', colorBorder:'rgba(148,163,184,.2)'  },
+  { id:'Fazendo',   label:'Fazendo',   colorDot:'#3b82f6', colorBg:'rgba(14,17,21,.6)',  colorBorder:'rgba(255,255,255,.07)' },
+  { id:'Feito',     label:'Feito',     colorDot:'#ff9845', colorBg:'rgba(14,17,21,.6)',  colorBorder:'rgba(255,255,255,.07)' },
+  { id:'Agendado',  label:'Agendado',  colorDot:'#79e06f', colorBg:'rgba(14,17,21,.6)',  colorBorder:'rgba(255,255,255,.07)' },
+  { id:'Arquivado', label:'Arquivado', colorDot:'#94a3b8', colorBg:'rgba(14,17,21,.6)', colorBorder:'rgba(255,255,255,.07)'  },
 ];
 
 // Sub-etapas dentro de "Fazendo" (mesmo padrão de ads.etapa).
 const ETAPAS_ORG = {
   copy:     { label:'Copy',     icon:'pencil',       cor:'#a78bfa' },
-  producao: { label:'Produção', icon:'clapperboard', cor:'#4ade80' },
+  producao: { label:'Produção', icon:'clapperboard', cor:'#79e06f' },
 };
 
 const PLAT_COLOR = window.PLAT_COLOR; // fonte única em shared.jsx
@@ -285,14 +285,14 @@ function ContentCard({ item, col, onOpen, onDragStart, onEtapaToggle }) {
           <span title={importacao.etapa || 'Importando mídia do Drive'}
             style={{ display:'inline-flex', alignItems:'center', gap:4, padding:'2px 7px', borderRadius:5,
               fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700,
-              background:'rgba(251,191,36,.12)', color:'var(--fmn-gold)', border:'1px solid rgba(251,191,36,.3)' }}>
+              background:'rgba(249,182,79,.12)', color:'var(--fmn-gold)', border:'1px solid rgba(249,182,79,.3)' }}>
             <LucideIcon icon="loader" size={9}/>Importando {Math.round(importacao.pct || 0)}%
           </span>
         )}
         {importacao?.estado === 'erro' && (
           <span title={importacao.msg}
             style={{ padding:'2px 7px', borderRadius:5, fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700,
-              background:'rgba(248,113,113,.1)', color:'#f87171', border:'1px solid rgba(248,113,113,.3)' }}>
+              background:'rgba(254,98,108,.1)', color:'#fe626c', border:'1px solid rgba(254,98,108,.3)' }}>
             Falha na importação
           </span>
         )}
@@ -320,8 +320,8 @@ function ContentCard({ item, col, onOpen, onDragStart, onEtapaToggle }) {
       {item.erro_publicacao && (
         <div title={item.erro_publicacao}
           style={{ display:'flex', alignItems:'center', gap:5, padding:'4px 8px', borderRadius:6,
-            background:'rgba(248,113,113,.1)', border:'1px solid rgba(248,113,113,.3)',
-            fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700, color:'#f87171' }}>
+            background:'rgba(254,98,108,.1)', border:'1px solid rgba(254,98,108,.3)',
+            fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700, color:'#fe626c' }}>
           <LucideIcon icon="alert-triangle" size={10}/>
           Falhou ao publicar
           {item.erro_publicacao_em && (
@@ -416,9 +416,9 @@ function CopyBtn({ text }) {
   return (
     <button onClick={copy} title="Copiar prompt"
       style={{ display:'flex', alignItems:'center', gap:5, padding:'4px 10px', borderRadius:6,
-        border: copied?'1px solid rgba(74,222,128,.4)':'1px solid rgba(255,255,255,.12)',
-        background: copied?'rgba(74,222,128,.1)':'rgba(255,255,255,.04)',
-        color: copied?'#4ade80':'var(--text-3)',
+        border: copied?'1px solid rgba(121,224,111,.4)':'1px solid rgba(255,255,255,.12)',
+        background: copied?'rgba(121,224,111,.1)':'rgba(255,255,255,.04)',
+        color: copied?'#79e06f':'var(--text-3)',
         fontSize:10.5, fontFamily:'Roboto,sans-serif', fontWeight:700,
         cursor: text?'pointer':'default', transition:'all 150ms', flexShrink:0 }}>
       <LucideIcon icon={copied?'check':'copy'} size={11}/>{copied?'Copiado':'Copiar'}
@@ -441,9 +441,9 @@ function CopyAllPromptsBtn({ slidesArr }) {
   return (
     <button onClick={copy} disabled={!has}
       style={{ display:'flex', alignItems:'center', gap:5, padding:'5px 12px', borderRadius:6,
-        border: copied?'1px solid rgba(74,222,128,.4)':'1px solid rgba(96,165,250,.3)',
-        background: copied?'rgba(74,222,128,.1)':'rgba(96,165,250,.1)',
-        color: copied?'#4ade80':'#60a5fa',
+        border: copied?'1px solid rgba(121,224,111,.4)':'1px solid rgba(96,165,250,.3)',
+        background: copied?'rgba(121,224,111,.1)':'rgba(96,165,250,.1)',
+        color: copied?'#79e06f':'#60a5fa',
         fontSize:11, fontFamily:'Roboto,sans-serif', fontWeight:700,
         cursor:has?'pointer':'default', transition:'all 150ms', flexShrink:0 }}>
       <LucideIcon icon={copied?'check':'sparkles'} size={12}/>{copied?'Copiado!':'Copiar prompts p/ ChatGPT'}
@@ -550,8 +550,8 @@ function AdicionarCriativoOrganicoBtn({ numero, cardId, onDone }) {
   return (
     <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
       {imp?.estado === 'erro' && (
-        <div style={{ padding:'6px 10px', borderRadius:8, background:'rgba(248,113,113,.08)',
-          border:'1px solid rgba(248,113,113,.3)', fontSize:11, color:'#f87171', lineHeight:1.4 }}>{imp.msg}</div>
+        <div style={{ padding:'6px 10px', borderRadius:8, background:'rgba(254,98,108,.08)',
+          border:'1px solid rgba(254,98,108,.3)', fontSize:11, color:'#fe626c', lineHeight:1.4 }}>{imp.msg}</div>
       )}
       <Btn variant="secondary" size="sm" icon="image-plus" style={{ width:'100%', justifyContent:'center' }}
         onClick={() => iniciarImportacao(cardId, null)} title="Puxa a mídia da pasta ORG deste card no Drive">Importar</Btn>
@@ -594,7 +594,7 @@ function SlideBlock({ slide, index, total, onChange, onRemove, file, uploading, 
         <div style={{ display:'flex', alignItems:'center', gap:6 }}>
           {total > 1 && (
             <button onClick={e=>{e.stopPropagation();onRemove(index);}}
-              style={{ border:'none', background:'rgba(248,113,113,.12)', color:'#f87171',
+              style={{ border:'none', background:'rgba(254,98,108,.12)', color:'#fe626c',
                 borderRadius:5, width:22, height:22, cursor:'pointer',
                 display:'flex', alignItems:'center', justifyContent:'center' }}>
               <LucideIcon icon="trash-2" size={11}/>
@@ -728,7 +728,7 @@ function PublicarArtigoModal({ form, onClose, onSuccess, initialDate }) {
         <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
           <div style={{ display:'flex', alignItems:'center', gap:10 }}>
             <div style={{ width:34, height:34, borderRadius:9, display:'flex', alignItems:'center',
-              justifyContent:'center', background:'rgba(251,191,36,.12)', border:'1px solid rgba(251,191,36,.3)' }}>
+              justifyContent:'center', background:'rgba(249,182,79,.12)', border:'1px solid rgba(249,182,79,.3)' }}>
               <LucideIcon icon="newspaper" size={16} style={{ color:'var(--fmn-gold)' }}/>
             </div>
             <div>
@@ -755,8 +755,8 @@ function PublicarArtigoModal({ form, onClose, onSuccess, initialDate }) {
 
   if (fase === 'erro' && !artigo) return (
     <Caixa>
-      <div style={{ padding:'10px 12px', borderRadius:9, background:'rgba(248,113,113,.08)',
-        border:'1px solid rgba(248,113,113,.3)', fontSize:12, color:'#f87171', lineHeight:1.5 }}>{erro}</div>
+      <div style={{ padding:'10px 12px', borderRadius:9, background:'rgba(254,98,108,.08)',
+        border:'1px solid rgba(254,98,108,.3)', fontSize:12, color:'#fe626c', lineHeight:1.5 }}>{erro}</div>
       <Btn variant="ghost" size="sm" onClick={onClose} style={{ justifyContent:'center' }}>Fechar</Btn>
     </Caixa>
   );
@@ -794,7 +794,7 @@ function PublicarArtigoModal({ form, onClose, onSuccess, initialDate }) {
             : 'Sem data marcada. Vai ao ar sem data, do jeito que está no admin.'}
         </span>
         {artigo.ativo && (
-          <span style={{ fontSize:11, fontFamily:'Roboto,sans-serif', color:'#f59e42', marginTop:2 }}>
+          <span style={{ fontSize:11, fontFamily:'Roboto,sans-serif', color:'#ff9845', marginTop:2 }}>
             Este artigo já está no ar.
           </span>
         )}
@@ -806,8 +806,8 @@ function PublicarArtigoModal({ form, onClose, onSuccess, initialDate }) {
             style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'center', gap:6,
               padding:'8px 10px', borderRadius:8, cursor:'pointer',
               fontFamily:'Roboto,sans-serif', fontSize:12, fontWeight:700,
-              background: modo===v ? 'rgba(251,191,36,.14)' : 'rgba(255,255,255,.04)',
-              border: modo===v ? '1px solid rgba(251,191,36,.45)' : '1px solid var(--app-border)',
+              background: modo===v ? 'rgba(249,182,79,.14)' : 'rgba(255,255,255,.04)',
+              border: modo===v ? '1px solid rgba(249,182,79,.45)' : '1px solid var(--app-border)',
               color: modo===v ? 'var(--fmn-gold)' : 'var(--text-3)' }}>
             <LucideIcon icon={icone} size={13}/>{rotulo}
           </button>
@@ -834,8 +834,8 @@ function PublicarArtigoModal({ form, onClose, onSuccess, initialDate }) {
       </>)}
 
       {erro && (
-        <div style={{ padding:'9px 11px', borderRadius:9, background:'rgba(248,113,113,.08)',
-          border:'1px solid rgba(248,113,113,.3)', fontSize:11.5, color:'#f87171', lineHeight:1.5 }}>{erro}</div>
+        <div style={{ padding:'9px 11px', borderRadius:9, background:'rgba(254,98,108,.08)',
+          border:'1px solid rgba(254,98,108,.3)', fontSize:11.5, color:'#fe626c', lineHeight:1.5 }}>{erro}</div>
       )}
 
       <Btn onClick={enviar} disabled={fase === 'enviando'} style={{ justifyContent:'center' }}>
@@ -913,8 +913,8 @@ function PublicarYoutubeModal({ form, onClose, onSuccess, initialDate }) {
         </div>
 
         {!video && (
-          <div style={{ padding:'10px 12px', borderRadius:8, background:'rgba(245,158,66,.08)', border:'1px solid rgba(245,158,66,.25)',
-            fontSize:11.5, color:'#f59e42', lineHeight:1.5 }}>
+          <div style={{ padding:'10px 12px', borderRadius:8, background:'rgba(255,152,69,.08)', border:'1px solid rgba(255,152,69,.25)',
+            fontSize:11.5, color:'#ff9845', lineHeight:1.5 }}>
             Este card ainda não tem vídeo importado. Importe o vídeo do Drive antes de publicar.
           </div>
         )}
@@ -923,7 +923,7 @@ function PublicarYoutubeModal({ form, onClose, onSuccess, initialDate }) {
           <div style={{ fontSize:12.5, color:'var(--text-2)', lineHeight:1.6 }}>
             {resultado?.scheduled ? 'Vídeo enviado e agendado no YouTube.' : 'Vídeo enviado ao YouTube.'}
             {resultado?.privado_pela_auditoria && (
-              <div style={{ marginTop:8, color:'#f59e42' }}>
+              <div style={{ marginTop:8, color:'#ff9845' }}>
                 Ele ficou privado porque o Google ainda não liberou a publicação pela API. Quando a auditoria sair, os próximos entram públicos.
               </div>
             )}
@@ -936,7 +936,7 @@ function PublicarYoutubeModal({ form, onClose, onSuccess, initialDate }) {
                 style={{ flex:1, padding:'8px', borderRadius:7, cursor:'pointer',
                   background: modo===id ? 'rgba(239,68,68,.15)' : 'transparent',
                   border: modo===id ? '1px solid rgba(239,68,68,.35)' : '1px solid transparent',
-                  color: modo===id ? '#f87171' : 'var(--text-3)', fontFamily:'Roboto,sans-serif', fontWeight:700, fontSize:12,
+                  color: modo===id ? '#fe626c' : 'var(--text-3)', fontFamily:'Roboto,sans-serif', fontWeight:700, fontSize:12,
                   display:'flex', alignItems:'center', justifyContent:'center', gap:6 }}>
                 <LucideIcon icon={icon} size={13}/>{label}
               </button>
@@ -962,8 +962,8 @@ function PublicarYoutubeModal({ form, onClose, onSuccess, initialDate }) {
           </div>
 
           {erro && (
-            <div style={{ padding:'9px 11px', borderRadius:9, background:'rgba(248,113,113,.08)', border:'1px solid rgba(248,113,113,.3)',
-              fontSize:11.5, color:'#f87171', lineHeight:1.5 }}>{erro}</div>
+            <div style={{ padding:'9px 11px', borderRadius:9, background:'rgba(254,98,108,.08)', border:'1px solid rgba(254,98,108,.3)',
+              fontSize:11.5, color:'#fe626c', lineHeight:1.5 }}>{erro}</div>
           )}
 
           <Btn onClick={enviar} disabled={!video || !titulo.trim() || fase === 'enviando' || (modo === 'agendar' && !data)} style={{ justifyContent:'center' }}>
@@ -1269,9 +1269,9 @@ function PublishModal({ form, slidesArr, slideFiles, onClose, onSuccess, initial
 
         <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:20 }}>
           <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-            <div style={{ width:34, height:34, borderRadius:10, background:'rgba(251,191,36,.15)',
-              border:'1px solid rgba(251,191,36,.3)', display:'flex', alignItems:'center', justifyContent:'center' }}>
-              <LucideIcon icon="send" size={16} style={{ color:'#fbbf24' }}/>
+            <div style={{ width:34, height:34, borderRadius:10, background:'rgba(249,182,79,.15)',
+              border:'1px solid rgba(249,182,79,.3)', display:'flex', alignItems:'center', justifyContent:'center' }}>
+              <LucideIcon icon="send" size={16} style={{ color:'#f9b64f' }}/>
             </div>
             <div>
               <div style={{ fontSize:14, fontFamily:'Roboto,sans-serif', fontWeight:900, color:'var(--text-1)' }}>
@@ -1296,9 +1296,9 @@ function PublishModal({ form, slidesArr, slideFiles, onClose, onSuccess, initial
             {[['agora','Publicar agora','zap'],['agendar','Agendar','clock']].map(([id,label,icon]) => (
               <button key={id} onClick={()=>setModo(id)}
                 style={{ flex:1, padding:'9px', borderRadius:7, cursor:'pointer',
-                  background: modo===id ? 'rgba(251,191,36,.18)' : 'transparent',
-                  border: modo===id ? '1px solid rgba(251,191,36,.35)' : '1px solid transparent',
-                  color: modo===id ? '#fbbf24' : 'var(--text-3)',
+                  background: modo===id ? 'rgba(249,182,79,.18)' : 'transparent',
+                  border: modo===id ? '1px solid rgba(249,182,79,.35)' : '1px solid transparent',
+                  color: modo===id ? '#f9b64f' : 'var(--text-3)',
                   fontFamily:'Roboto,sans-serif', fontWeight:700, fontSize:12, transition:'all 130ms',
                   display:'flex', alignItems:'center', justifyContent:'center', gap:6 }}>
                 <LucideIcon icon={icon} size={13}/>{label}
@@ -1323,18 +1323,18 @@ function PublishModal({ form, slidesArr, slideFiles, onClose, onSuccess, initial
           )}
 
           {!hasImages && (
-            <div style={{ padding:'10px 12px', borderRadius:8, background:'rgba(245,158,66,.08)',
-              border:'1px solid rgba(245,158,66,.2)', marginBottom:16,
-              fontSize:11.5, fontFamily:'Roboto,sans-serif', color:'#f59e42', lineHeight:1.5 }}>
+            <div style={{ padding:'10px 12px', borderRadius:8, background:'rgba(255,152,69,.08)',
+              border:'1px solid rgba(255,152,69,.2)', marginBottom:16,
+              fontSize:11.5, fontFamily:'Roboto,sans-serif', color:'#ff9845', lineHeight:1.5 }}>
               <LucideIcon icon="alert-triangle" size={13} style={{ marginRight:6 }}/>
               Selecione ao menos uma imagem nos slides antes de publicar.
             </div>
           )}
 
           {phase === 'error' && (
-            <div style={{ padding:'10px 12px', borderRadius:8, background:'rgba(248,113,113,.08)',
-              border:'1px solid rgba(248,113,113,.2)', marginBottom:16,
-              fontSize:11.5, fontFamily:'Roboto,sans-serif', color:'#f87171', lineHeight:1.5 }}>
+            <div style={{ padding:'10px 12px', borderRadius:8, background:'rgba(254,98,108,.08)',
+              border:'1px solid rgba(254,98,108,.2)', marginBottom:16,
+              fontSize:11.5, fontFamily:'Roboto,sans-serif', color:'#fe626c', lineHeight:1.5 }}>
               {msg}
             </div>
           )}
@@ -1384,7 +1384,7 @@ function PublishModal({ form, slidesArr, slideFiles, onClose, onSuccess, initial
           <button onClick={run}
             disabled={!hasImages || (modo==='agendar' && !schedDate)}
             style={{ width:'100%', padding:'13px', borderRadius:10, cursor:'pointer',
-              background: (hasImages && (modo==='agora'||schedDate)) ? '#fbbf24' : 'rgba(255,255,255,.08)',
+              background: (hasImages && (modo==='agora'||schedDate)) ? '#f9b64f' : 'rgba(255,255,255,.08)',
               color: (hasImages && (modo==='agora'||schedDate)) ? '#000' : 'var(--text-3)',
               border:'none', fontFamily:'Roboto,sans-serif', fontWeight:900, fontSize:13,
               transition:'all 150ms', display:'flex', alignItems:'center', justifyContent:'center', gap:8 }}>
@@ -1438,14 +1438,14 @@ function PublishModal({ form, slidesArr, slideFiles, onClose, onSuccess, initial
               <div style={{
                 position:'absolute', fontSize:46,
                 animation:'org-launch 2.4s cubic-bezier(.4,0,.2,1) infinite',
-                filter:'drop-shadow(0 0 10px rgba(251,191,36,.55))',
+                filter:'drop-shadow(0 0 10px rgba(249,182,79,.55))',
               }}>🚀</div>
 
               {/* Partículas */}
               {[
                 {c:'#f59e0b',d:0,   tx:'-18px'},{c:'#ef4444',d:.08, tx:'14px'},
-                {c:'#fbbf24',d:.16, tx:'-8px'}, {c:'#f97316',d:.06, tx:'20px'},
-                {c:'#f59e42',d:.22, tx:'-22px'},{c:'#ef4444',d:.12, tx:'6px'},
+                {c:'#f9b64f',d:.16, tx:'-8px'}, {c:'#f97316',d:.06, tx:'20px'},
+                {c:'#ff9845',d:.22, tx:'-22px'},{c:'#ef4444',d:.12, tx:'6px'},
               ].map((p,i) => (
                 <div key={i} style={{
                   position:'absolute', width:6, height:6, borderRadius:'50%',
@@ -1472,18 +1472,18 @@ function PublishModal({ form, slidesArr, slideFiles, onClose, onSuccess, initial
 
         {phase === 'done' && (
           <div style={{ textAlign:'center', padding:'20px 0' }}>
-            <div style={{ width:52, height:52, borderRadius:'50%', background:'rgba(74,222,128,.12)',
-              border:'1px solid rgba(74,222,128,.3)', display:'flex', alignItems:'center',
+            <div style={{ width:52, height:52, borderRadius:'50%', background:'rgba(121,224,111,.12)',
+              border:'1px solid rgba(121,224,111,.3)', display:'flex', alignItems:'center',
               justifyContent:'center', margin:'0 auto 14px' }}>
-              <LucideIcon icon="check" size={26} style={{ color:'#4ade80' }}/>
+              <LucideIcon icon="check" size={26} style={{ color:'#79e06f' }}/>
             </div>
             <div style={{ fontSize:14, fontFamily:'Roboto,sans-serif', fontWeight:900, color:'var(--text-1)', marginBottom:6 }}>
               {modo === 'agendar' ? 'Agendado!' : 'Publicado!'}
             </div>
             <div style={{ fontSize:12, fontFamily:'Roboto,sans-serif', color:'var(--text-3)', marginBottom:20 }}>{msg}</div>
             <button onClick={onClose}
-              style={{ padding:'10px 28px', borderRadius:8, background:'rgba(74,222,128,.15)',
-                border:'1px solid rgba(74,222,128,.3)', color:'#4ade80',
+              style={{ padding:'10px 28px', borderRadius:8, background:'rgba(121,224,111,.15)',
+                border:'1px solid rgba(121,224,111,.3)', color:'#79e06f',
                 fontFamily:'Roboto,sans-serif', fontWeight:700, fontSize:12, cursor:'pointer' }}>
               Fechar
             </button>
@@ -1814,7 +1814,7 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
                     color:'var(--text-1)', lineHeight:1.4, background:'transparent',
                     border:'1px solid transparent', borderRadius:6, padding:'2px 6px',
                     outline:'none', flex:'1 1 auto', minWidth:0, width:'100%', transition:'border-color 150ms' }}
-                  onFocus={e => e.target.style.borderColor='rgba(251,191,36,.4)'}
+                  onFocus={e => e.target.style.borderColor='rgba(249,182,79,.4)'}
                   onBlur={e => e.target.style.borderColor='transparent'}/>
               )}
             </div>
@@ -1842,8 +1842,8 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
               {canShowPublish && (
                 <button onClick={()=>setShowPublish(true)}
                   style={{ display:'flex', alignItems:'center', gap:6, padding:'7px 14px',
-                    borderRadius:8, cursor:'pointer', background:'rgba(251,191,36,.12)',
-                    border:'1px solid rgba(251,191,36,.35)', color:'#fbbf24',
+                    borderRadius:8, cursor:'pointer', background:'rgba(249,182,79,.12)',
+                    border:'1px solid rgba(249,182,79,.35)', color:'#f9b64f',
                     fontFamily:'Roboto,sans-serif', fontWeight:700, fontSize:12, transition:'all 140ms' }}>
                   <LucideIcon icon="send" size={13}/>Publicar
                 </button>
@@ -1851,10 +1851,10 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
               {!isNew && (
                 deleteConfirm ? (
                   <div style={{ display:'flex', alignItems:'center', gap:6, padding:'6px 10px',
-                    borderRadius:8, background:'rgba(248,113,113,.1)', border:'1px solid rgba(248,113,113,.3)' }}>
-                    <span style={{ fontSize:11, fontFamily:'Roboto,sans-serif', color:'#f87171' }}>Confirmar?</span>
+                    borderRadius:8, background:'rgba(254,98,108,.1)', border:'1px solid rgba(254,98,108,.3)' }}>
+                    <span style={{ fontSize:11, fontFamily:'Roboto,sans-serif', color:'#fe626c' }}>Confirmar?</span>
                     <button onClick={()=>onDelete(form.id)}
-                      style={{ padding:'4px 10px', borderRadius:6, background:'#f87171', color:'#fff',
+                      style={{ padding:'4px 10px', borderRadius:6, background:'#fe626c', color:'#fff',
                         fontFamily:'Roboto,sans-serif', fontWeight:700, fontSize:11, cursor:'pointer' }}>
                       Apagar
                     </button>
@@ -1868,8 +1868,8 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
                 ) : (
                   <button onClick={()=>setDeleteConfirm(true)}
                     style={{ display:'flex', alignItems:'center', gap:5, padding:'7px 12px',
-                      borderRadius:8, cursor:'pointer', background:'rgba(248,113,113,.08)',
-                      border:'1px solid rgba(248,113,113,.2)', color:'#f87171',
+                      borderRadius:8, cursor:'pointer', background:'rgba(254,98,108,.08)',
+                      border:'1px solid rgba(254,98,108,.2)', color:'#fe626c',
                       fontFamily:'Roboto,sans-serif', fontWeight:700, fontSize:12 }}>
                     <LucideIcon icon="trash-2" size={13}/>
                   </button>
@@ -1981,7 +1981,7 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
                         padding:'7px 12px', borderRadius:8, textDecoration:'none',
                         background:'rgba(255,255,255,.04)', border:'1px solid var(--app-border)',
                         color:'var(--text-2)', fontFamily:'Roboto,sans-serif', fontSize:11.5, fontWeight:700 }}
-                      onMouseEnter={e => { e.currentTarget.style.borderColor='rgba(251,191,36,.4)'; e.currentTarget.style.color='var(--fmn-gold)'; }}
+                      onMouseEnter={e => { e.currentTarget.style.borderColor='rgba(249,182,79,.4)'; e.currentTarget.style.color='var(--fmn-gold)'; }}
                       onMouseLeave={e => { e.currentTarget.style.borderColor='var(--app-border)'; e.currentTarget.style.color='var(--text-2)'; }}>
                       <LucideIcon icon="folder-open" size={13}/>Abrir pasta no Drive
                     </a>
@@ -2151,7 +2151,7 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
                           {(dia || agendado) && (
                             <button onClick={retirar} title="Retirar data"
                               style={{ display:'flex', alignItems:'center', gap:5, padding:'7px 10px', borderRadius:8, cursor:'pointer',
-                                background:'transparent', border:'1px solid rgba(248,113,113,.3)', color:'#f87171',
+                                background:'transparent', border:'1px solid rgba(254,98,108,.3)', color:'#fe626c',
                                 fontFamily:'Roboto,sans-serif', fontWeight:700, fontSize:11.5 }}>
                               <LucideIcon icon="x" size={12}/>Retirar data
                             </button>
@@ -2186,7 +2186,7 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
                       style={{ width:'100%', boxSizing:'border-box', padding:'9px 12px', borderRadius:8,
                         background:'var(--app-surface-2)', border:'1px solid var(--app-border)',
                         color:'var(--text-1)', fontFamily:'Roboto,sans-serif', fontSize:13, outline:'none' }}
-                      onFocus={e=>e.target.style.borderColor='rgba(251,191,36,.4)'}
+                      onFocus={e=>e.target.style.borderColor='rgba(249,182,79,.4)'}
                       onBlur={e=>e.target.style.borderColor='var(--app-border)'}/>
                   </div>
 
@@ -2201,7 +2201,7 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
                       style={{ width:'100%', boxSizing:'border-box', padding:'9px 12px', borderRadius:8, resize:'vertical',
                         background:'var(--app-surface-2)', border:'1px solid var(--app-border)',
                         color:'var(--text-1)', fontFamily:'Roboto,sans-serif', fontSize:13, outline:'none', lineHeight:1.55 }}
-                      onFocus={e=>e.target.style.borderColor='rgba(251,191,36,.4)'}
+                      onFocus={e=>e.target.style.borderColor='rgba(249,182,79,.4)'}
                       onBlur={e=>e.target.style.borderColor='var(--app-border)'}/>
                   </div>
 
@@ -2242,7 +2242,7 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
                         style={{ width:'100%', boxSizing:'border-box', padding:'9px 12px', borderRadius:8, resize:'vertical',
                           background:'var(--app-surface-2)', border:'1px solid var(--app-border)',
                           color:'var(--text-1)', fontFamily:'Roboto,sans-serif', fontSize:13, outline:'none', lineHeight:1.55 }}
-                        onFocus={e=>e.target.style.borderColor='rgba(251,191,36,.4)'}
+                        onFocus={e=>e.target.style.borderColor='rgba(249,182,79,.4)'}
                         onBlur={e=>e.target.style.borderColor='var(--app-border)'}/>
                     </div>
 
@@ -2257,7 +2257,7 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
                         style={{ width:'100%', boxSizing:'border-box', padding:'9px 12px', borderRadius:8, resize:'vertical',
                           background:'var(--app-surface-2)', border:'1px solid var(--app-border)',
                           color:'var(--text-1)', fontFamily:'Roboto,sans-serif', fontSize:13, outline:'none', lineHeight:1.55 }}
-                        onFocus={e=>e.target.style.borderColor='rgba(251,191,36,.4)'}
+                        onFocus={e=>e.target.style.borderColor='rgba(249,182,79,.4)'}
                         onBlur={e=>e.target.style.borderColor='var(--app-border)'}/>
                     </div>
 
@@ -2292,7 +2292,7 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
                           const perto  = !passou && n > LIMITE_LEGENDA - 150;
                           return (
                             <span style={{ fontSize:10.5, fontFamily:'Roboto,sans-serif', fontWeight:700,
-                              color: passou ? 'var(--clr-neg)' : perto ? '#f59e42' : 'var(--text-3)' }}
+                              color: passou ? 'var(--clr-neg)' : perto ? '#ff9845' : 'var(--text-3)' }}
                               title={passou ? `Passou ${n - LIMITE_LEGENDA} caracteres do limite do Instagram` : 'Limite do Instagram'}>
                               {n}/{LIMITE_LEGENDA}{passou ? ` (${n - LIMITE_LEGENDA} a mais)` : ''}
                             </span>
@@ -2306,7 +2306,7 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
                       style={{ width:'100%', boxSizing:'border-box', padding:'9px 12px', borderRadius:8, resize:'vertical',
                         background:'var(--app-surface-2)', border:'1px solid var(--app-border)',
                         color:'var(--text-1)', fontFamily:'Roboto,sans-serif', fontSize:13, outline:'none', lineHeight:1.55 }}
-                      onFocus={e=>e.target.style.borderColor='rgba(251,191,36,.4)'}
+                      onFocus={e=>e.target.style.borderColor='rgba(249,182,79,.4)'}
                       onBlur={e=>e.target.style.borderColor='var(--app-border)'}/>
                   </div>
 
@@ -2321,7 +2321,7 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
                       style={{ width:'100%', boxSizing:'border-box', padding:'9px 12px', borderRadius:8, resize:'vertical',
                         background:'var(--app-surface-2)', border:'1px solid var(--app-border)',
                         color:'var(--text-1)', fontFamily:'Roboto,sans-serif', fontSize:13, outline:'none', lineHeight:1.55 }}
-                      onFocus={e=>e.target.style.borderColor='rgba(251,191,36,.4)'}
+                      onFocus={e=>e.target.style.borderColor='rgba(249,182,79,.4)'}
                       onBlur={e=>e.target.style.borderColor='var(--app-border)'}/>
                   </div>
 
@@ -2339,14 +2339,15 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
 }
 
 /* ── FilterPill ──────────────────────────────────────────────────*/
-function FilterPill({ label, active, color, onClick }) {
+function FilterPill({ label, active, onClick }) {
+  // Pílula de filtro do FMN Pro (FiltroPills): ativa em âmbar cheio.
   return (
     <button onClick={onClick}
-      style={{ padding:'5px 12px', borderRadius:999, cursor:'pointer', fontSize:11,
-        fontFamily:'Roboto,sans-serif', fontWeight:700, transition:'all 130ms',
-        background: active?(color?`${color}22`:'rgba(251,191,36,.15)'):'rgba(255,255,255,.04)',
-        border: active?`1px solid ${color||'rgba(251,191,36,.4)'}66`:'1px solid rgba(255,255,255,.1)',
-        color: active?(color||'var(--fmn-gold)'):'rgba(255,255,255,.42)' }}>
+      style={{ padding:'6px 12px', borderRadius:999, cursor:'pointer', fontSize:12,
+        fontFamily:'Roboto,sans-serif', fontWeight:400, transition:'all 130ms', whiteSpace:'nowrap',
+        background: active ? 'var(--app-primary)' : 'var(--app-bg)',
+        border: `1px solid ${active ? 'var(--app-primary)' : 'var(--app-border)'}`,
+        color: active ? 'var(--app-primary-fg)' : 'var(--text-2)' }}>
       {label}
     </button>
   );
@@ -2439,7 +2440,7 @@ function ProgramarModal({ dateStr, items, onEscolher, onCriarNovo, onClose }) {
                   borderRadius:9, cursor:'pointer', textAlign:'left',
                   background:'var(--app-surface-2)', border:'1px solid var(--app-border)',
                   transition:'all 120ms' }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor='rgba(251,191,36,.45)'; e.currentTarget.style.background='rgba(251,191,36,.07)'; }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor='rgba(249,182,79,.45)'; e.currentTarget.style.background='rgba(249,182,79,.07)'; }}
                 onMouseLeave={e => { e.currentTarget.style.borderColor='var(--app-border)'; e.currentTarget.style.background='var(--app-surface-2)'; }}>
                 <div style={{ width:38, height:38, borderRadius:6, flexShrink:0, overflow:'hidden',
                   background:`${cor}18`, border:'1px solid rgba(255,255,255,.08)',
@@ -2463,7 +2464,7 @@ function ProgramarModal({ dateStr, items, onEscolher, onCriarNovo, onClose }) {
                     {it.tema || 'Sem tema'}
                   </div>
                   {it.data_prevista && it.data_prevista !== dateStr && (
-                    <div style={{ fontSize:10.5, fontFamily:'Roboto,sans-serif', color:'#f59e42', marginTop:1 }}>
+                    <div style={{ fontSize:10.5, fontFamily:'Roboto,sans-serif', color:'#ff9845', marginTop:1 }}>
                       hoje está em {fmtData(it.data_prevista)}, vai mudar para {fmtData(dateStr)}
                     </div>
                   )}
@@ -2525,7 +2526,7 @@ function ScheduleEditPopover({ item, onSave, onClose }) {
         <button onClick={()=>date && time && onSave(date, time)}
           disabled={!date || !time}
           style={{ flex:1, padding:'6px 0', borderRadius:6, border:'none',
-            background: (date && time) ? '#fbbf24' : 'rgba(255,255,255,.08)',
+            background: (date && time) ? '#f9b64f' : 'rgba(255,255,255,.08)',
             color: (date && time) ? '#000' : 'var(--text-3)', fontSize:11,
             fontFamily:'Roboto,sans-serif', fontWeight:700,
             cursor: (date && time) ? 'pointer' : 'not-allowed' }}>
@@ -2646,12 +2647,12 @@ function CalendarioView({ items, onOpen, onNewWithDate, onReschedule, onEditSche
             const isToday  = dateStr === todayStr;
 
             let bgColor = 'var(--app-surface-2)';
-            if (isToday)    bgColor = 'rgba(251,191,36,.06)';
+            if (isToday)    bgColor = 'rgba(249,182,79,.06)';
             else if (fora)  bgColor = 'transparent';
             else if (isWeekend) bgColor = 'rgba(255,255,255,.015)';
 
             let borderColor = 'var(--app-border)';
-            if (isToday)        borderColor = 'rgba(251,191,36,.45)';
+            if (isToday)        borderColor = 'rgba(249,182,79,.45)';
             else if (fora)      borderColor = 'rgba(255,255,255,.035)';
             else if (isWeekend) borderColor = 'rgba(255,255,255,.06)';
 
@@ -2668,9 +2669,9 @@ function CalendarioView({ items, onOpen, onNewWithDate, onReschedule, onEditSche
                   if (dragId) onReschedule(dragId, dateStr);
                   setDragId(null);
                 }}
-                style={{ border: isDragOver ? '1px solid rgba(251,191,36,.7)' : `1px solid ${borderColor}`,
+                style={{ border: isDragOver ? '1px solid rgba(249,182,79,.7)' : `1px solid ${borderColor}`,
                   borderRadius:8, padding:'7px 8px',
-                  background: isDragOver ? 'rgba(251,191,36,.1)' : bgColor,
+                  background: isDragOver ? 'rgba(249,182,79,.1)' : bgColor,
                   cursor:'pointer', display:'flex', flexDirection:'column', gap:4,
                   overflow:'hidden',
                   transition:'border-color 150ms, background 150ms, opacity 150ms',
@@ -2683,7 +2684,7 @@ function CalendarioView({ items, onOpen, onNewWithDate, onReschedule, onEditSche
                 {/* Número do dia */}
                 <span style={{ fontSize:11, fontFamily:'Roboto,sans-serif', fontWeight:900,
                   color: isToday ? 'var(--fmn-gold)' : fora ? 'rgba(148,163,184,.4)' : isWeekend ? 'rgba(148,163,184,.5)' : 'var(--text-3)',
-                  background: isToday ? 'rgba(251,191,36,.15)' : 'transparent',
+                  background: isToday ? 'rgba(249,182,79,.15)' : 'transparent',
                   borderRadius:5, padding: isToday ? '1px 5px' : '0',
                   alignSelf:'flex-start', lineHeight:1.6, flexShrink:0 }}>
                   {dia}
@@ -2692,7 +2693,7 @@ function CalendarioView({ items, onOpen, onNewWithDate, onReschedule, onEditSche
                 {/* Chips dos conteúdos */}
                 {dayItems.map(item => {
                   const isFeito = item.status === 'Arquivado';
-                  const color = isFeito ? '#4ade80' : (PLAT_COLOR[item.plataforma] || '#94a3b8');
+                  const color = isFeito ? '#79e06f' : (PLAT_COLOR[item.plataforma] || '#94a3b8');
                   const num   = String(item.numero||0).padStart(3,'0');
                   // Vídeo (Reels): thumb JPG vem de media_files, nunca do .mp4 de slides
                   // (mesma regra do card do Kanban acima) — <img> não renderiza vídeo.
@@ -3264,7 +3265,7 @@ function OrganicoScreen({ targetCard, onConsumeTarget }) {
                   style={{ display:'flex', alignItems:'center', gap:5, padding:'5px 11px',
                     borderRadius:6, cursor:'pointer', fontSize:11, fontFamily:'Roboto,sans-serif',
                     fontWeight:700, transition:'all 130ms', border:'none',
-                    background: viewMode===id ? 'rgba(251,191,36,.18)' : 'transparent',
+                    background: viewMode===id ? 'rgba(249,182,79,.18)' : 'transparent',
                     color: viewMode===id ? 'var(--fmn-gold)' : 'var(--text-3)' }}>
                   <LucideIcon icon={icon} size={12}/>{label}
                 </button>
@@ -3293,12 +3294,10 @@ function OrganicoScreen({ targetCard, onConsumeTarget }) {
       )}
 
       {/* Barra de filtros */}
-      <div style={{ padding:'8px 24px', borderBottom:'1px solid var(--app-border)',
-        background:'var(--app-bg)', display:'flex', alignItems:'center', gap:16, flexShrink:0,
+      <div style={{ padding:'0 32px 16px', background:'var(--app-bg)', display:'flex', alignItems:'center', gap:16, flexShrink:0,
         flexWrap:'wrap' }}>
         <div style={{ display:'flex', alignItems:'center', gap:6 }}>
-          <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700,
-            letterSpacing:'0.08em', textTransform:'uppercase', color:'var(--text-3)' }}>Plataforma</span>
+          <span style={{ fontSize:12, fontFamily:'Roboto,sans-serif', fontWeight:500, color:'var(--text-2)' }}>Plataforma</span>
           <div style={{ display:'flex', gap:4 }}>
             {['Todos',...PLATAFORMAS].map(p => (
               <FilterPill key={p} label={p} active={platFilter===p}
@@ -3308,8 +3307,7 @@ function OrganicoScreen({ targetCard, onConsumeTarget }) {
         </div>
         <div style={{ width:1, height:20, background:'var(--app-border)', flexShrink:0 }}/>
         <div style={{ display:'flex', alignItems:'center', gap:6 }}>
-          <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700,
-            letterSpacing:'0.08em', textTransform:'uppercase', color:'var(--text-3)' }}>Origem</span>
+          <span style={{ fontSize:12, fontFamily:'Roboto,sans-serif', fontWeight:500, color:'var(--text-2)' }}>Origem</span>
           <div style={{ display:'flex', gap:4 }}>
             {['Todos','Perpétuo','Pico'].map(o => (
               <FilterPill key={o} label={o} active={origemFilter===o}
@@ -3319,18 +3317,17 @@ function OrganicoScreen({ targetCard, onConsumeTarget }) {
         </div>
         <div style={{ width:1, height:20, background:'var(--app-border)', flexShrink:0 }}/>
         <div style={{ display:'flex', alignItems:'center', gap:6 }}>
-          <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700,
-            letterSpacing:'0.08em', textTransform:'uppercase', color:'var(--text-3)' }}>Responsável</span>
+          <span style={{ fontSize:12, fontFamily:'Roboto,sans-serif', fontWeight:500, color:'var(--text-2)' }}>Responsável</span>
           {/* Só as fotos, com contorno na cor de cada um (padrão do Khronus).
               Inativo fica em cinza e apagado, então dá pra ver de longe quem
               está selecionado. 'Comum' filtra os cards sem responsável. */}
           <div style={{ display:'flex', gap:5, alignItems:'center' }}>
             <button onClick={()=>setRespFilter('Todos')} title="Todos os responsáveis"
-              style={{ padding:'3px 9px', borderRadius:999, cursor:'pointer',
-                fontSize:10.5, fontFamily:'Roboto,sans-serif', fontWeight:700,
-                background: respFilter==='Todos' ? 'rgba(251,191,36,.14)' : 'rgba(255,255,255,.04)',
-                border: respFilter==='Todos' ? '1px solid rgba(251,191,36,.45)' : '1px solid var(--app-border)',
-                color: respFilter==='Todos' ? 'var(--fmn-gold)' : 'var(--text-3)' }}>
+              style={{ padding:'6px 12px', borderRadius:999, cursor:'pointer',
+                fontSize:12, fontFamily:'Roboto,sans-serif', fontWeight:400,
+                background: respFilter==='Todos' ? 'var(--app-primary)' : 'var(--app-bg)',
+                border: `1px solid ${respFilter==='Todos' ? 'var(--app-primary)' : 'var(--app-border)'}`,
+                color: respFilter==='Todos' ? 'var(--app-primary-fg)' : 'var(--text-2)' }}>
               Todos
             </button>
             {[...RESPONSAVEIS, 'Comum'].map(r => {
@@ -3359,7 +3356,7 @@ function OrganicoScreen({ targetCard, onConsumeTarget }) {
               background:'rgba(255,255,255,.05)', color:'var(--text-1)',
               fontFamily:'Roboto,sans-serif', fontSize:11.5, outline:'none', width:200,
               transition:'border-color 130ms' }}
-            onFocus={e => e.target.style.borderColor='rgba(251,191,36,.4)'}
+            onFocus={e => e.target.style.borderColor='rgba(249,182,79,.4)'}
             onBlur={e => e.target.style.borderColor='rgba(255,255,255,.1)'}
           />
           {searchQuery && (
@@ -3373,7 +3370,7 @@ function OrganicoScreen({ targetCard, onConsumeTarget }) {
         {temFiltroAtivo && (
           <button onClick={()=>{ setPlatFilter('Todos'); setOrigemFilter('Todos'); setRespFilter('Todos'); setSearchQuery(''); }}
             style={{ display:'flex', alignItems:'center', gap:4, padding:'4px 8px', borderRadius:6,
-              background:'rgba(248,113,113,.08)', border:'1px solid rgba(248,113,113,.2)',
+              background:'rgba(254,98,108,.08)', border:'1px solid rgba(254,98,108,.2)',
               color:'var(--clr-neg)', fontSize:10.5, fontFamily:'Roboto,sans-serif',
               fontWeight:700, cursor:'pointer' }}>
             <LucideIcon icon="x" size={11}/>Limpar
@@ -3382,7 +3379,7 @@ function OrganicoScreen({ targetCard, onConsumeTarget }) {
       </div>
 
       {viewMode === 'kanban' ? (
-        <div style={{ flex:1, display:'flex', gap:10, padding:'16px 20px',
+        <div style={{ flex:1, display:'flex', gap:12, padding:'8px 32px 24px',
           overflowX:'auto', overflowY:'hidden', minHeight:0 }}>
           {COLUMNS.map(col => (
             <OrgColumn key={col.id} col={col}
