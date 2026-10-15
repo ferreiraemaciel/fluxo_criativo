@@ -132,9 +132,9 @@ function LeadsTable({ leads, adsMap = {} }) {
   };
 
   const TH = ({ children, w }) => (
-    <th style={{ padding:'8px 10px', textAlign:'left', fontSize:10, fontFamily:'Roboto,sans-serif',
-      fontWeight:700, letterSpacing:'0.1em', color:'var(--text-3)', textTransform:'uppercase',
-      whiteSpace:'nowrap', width:w, borderBottom:'1px solid var(--app-border)' }}>
+    <th style={{ padding:'8px 10px', textAlign:'left', fontSize:12, fontFamily:'Roboto,sans-serif',
+      fontWeight:500, color:'var(--text-2)',
+      whiteSpace:'nowrap', width:w, borderBottom:'1px solid var(--app-border)', textTransform:'uppercase', letterSpacing:'.05em' }}>
       {children}
     </th>
   );
@@ -594,8 +594,8 @@ function EnviarRecuperacaoModal({ item, onClose }) {
   };
 
   return (
-    <div onClick={onClose} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,.7)', zIndex:900,
-      display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
+    <div onClick={onClose} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,.8)', zIndex:900,
+      display:'flex', alignItems:'center', justifyContent:'center', padding:20, backdropFilter:'blur(4px)', WebkitBackdropFilter:'blur(4px)' }}>
       <div onClick={e => e.stopPropagation()} style={{ width:'100%', maxWidth:440, background:'var(--app-surface)',
         border:'1px solid var(--app-border)', borderRadius:14, padding:22, display:'flex', flexDirection:'column', gap:14 }}>
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
@@ -672,8 +672,8 @@ function CarrinhoTable({ itens, recuperados, contatadosOficial, contatadosSuport
   const contagemSituacao = {};
   itens.forEach(it => { contagemSituacao[it.situacao] = (contagemSituacao[it.situacao] || 0) + 1; });
 
-  const th = { padding:'8px 10px', textAlign:'left', fontSize:9.5, fontFamily:'Roboto,sans-serif',
-    fontWeight:700, letterSpacing:'0.06em', textTransform:'uppercase', color:'var(--text-3)', whiteSpace:'nowrap' };
+  const th = { padding:'8px 10px', textAlign:'left', fontSize:12, fontFamily:'Roboto,sans-serif',
+    fontWeight:500, color:'var(--text-2)', whiteSpace:'nowrap' };
   const td = { padding:'9px 10px', fontSize:12.5, fontFamily:'Roboto,sans-serif', color:'var(--text-2)' };
 
   return (
@@ -923,7 +923,7 @@ function InsightOne({ ins, kind, onNavigate }) {
   if (!ins) return (
     <div style={{ background: cfg.bg, border: `1px dashed ${cfg.border}`, borderRadius: 14, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12, opacity: .75 }}>
       <LucideIcon icon={cfg.icon} size={18} color={cfg.accent} />
-      <div><div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: cfg.accent, fontFamily: 'Roboto,sans-serif' }}>{cfg.label}</div>
+      <div><div style={{ fontSize: 12, fontWeight: 500, color: cfg.accent, fontFamily: 'Roboto,sans-serif' }}>{cfg.label}</div>
         <div style={{ fontSize: 12, color: 'var(--text-2)', fontFamily: 'Roboto,sans-serif', marginTop: 2 }}>{kind === 'claude' ? 'O Claudinho gera o insight de hoje às 9h.' : 'Ainda não gerado hoje.'}</div></div>
     </div>
   );
@@ -940,7 +940,7 @@ function InsightOne({ ins, kind, onNavigate }) {
     <div style={{ background: cfg.bg, border: `1px solid ${cfg.border}`, borderRadius: 14, padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 8, minWidth: 0 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         <LucideIcon icon={cfg.icon} size={16} color={cfg.accent} />
-        <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: cfg.accent, fontFamily: 'Roboto,sans-serif' }}>{cfg.label}</span>
+        <span style={{ fontSize: 12, fontWeight: 500, color: cfg.accent, fontFamily: 'Roboto,sans-serif' }}>{cfg.label}</span>
       </div>
       <div style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--text-1)', fontFamily: 'Roboto,sans-serif', lineHeight: 1.3 }}>{ins.titulo}</div>
       <div style={{ fontSize: 11.5, color: 'var(--text-2)', fontFamily: 'Roboto,sans-serif', lineHeight: 1.45, flex: 1 }}>{ins.gancho}</div>
@@ -1020,7 +1020,7 @@ function CardCustoPorLead({ range, funnel }) {
   const brl  = v => v == null ? '—' : window.fmtBRL(v);
   const dm   = iso => iso ? iso.slice(8, 10) + '/' + iso.slice(5, 7) : '';
   const tile = { background:'var(--app-bg)', border:'1px solid var(--app-border)', borderRadius:12, padding:'12px 14px', flex:1, minWidth:180 };
-  const rot  = { fontSize:10, fontWeight:700, letterSpacing:'0.06em', textTransform:'uppercase', color:'var(--text-3)', fontFamily:'Roboto,sans-serif' };
+  const rot  = { fontSize:12, fontWeight:500, color:'var(--text-2)', fontFamily:'Roboto,sans-serif' };
 
   return (
     <SectionCard title="Custo por lead"

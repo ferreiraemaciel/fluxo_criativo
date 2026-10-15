@@ -566,8 +566,7 @@ function RefBlock({ value, onChange }) {
   return (
     <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
       <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-        <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700,
-          letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)' }}>Referência</span>
+        <span style={{ fontSize:12, fontFamily:'Roboto,sans-serif', fontWeight:500, color:'var(--text-2)' }}>Referência</span>
         {value && !editing && (
           <button onClick={() => { setDraft(value); setEditing(true); }}
             style={{ fontSize:10, fontFamily:'Roboto,sans-serif', color:'var(--text-3)',
@@ -655,8 +654,8 @@ function CarouselLightbox({ urls, initialIdx, onClose }) {
 
   return (
     <div onClick={onClose}
-      style={{ position:'fixed', inset:0, background:'rgba(0,0,0,.88)', zIndex:900,
-        display:'flex', alignItems:'center', justifyContent:'center' }}>
+      style={{ position:'fixed', inset:0, background:'rgba(0,0,0,.8)', zIndex:900,
+        display:'flex', alignItems:'center', justifyContent:'center', backdropFilter:'blur(4px)', WebkitBackdropFilter:'blur(4px)' }}>
 
       {/* Imagem/vídeo central */}
       <div onClick={e => e.stopPropagation()}

@@ -179,8 +179,7 @@ function SystemScreen() {
                   <tr style={{ borderBottom:'1px solid var(--app-border)' }}>
                     {['Automação','Frequência (Brasília)','O que faz'].map((h,i)=>(
                       <th key={i} style={{ padding:'10px 16px', textAlign:'left',
-                        fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700,
-                        letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)' }}>{h}</th>
+                        fontSize:12, fontFamily:'Roboto,sans-serif', fontWeight:500, color:'var(--text-2)', textTransform:'uppercase', letterSpacing:'.05em' }}>{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -191,9 +190,8 @@ function SystemScreen() {
                       <React.Fragment key={a.nome}>
                         {novoGrupo && (
                           <tr>
-                            <td colSpan={3} style={{ padding:'10px 16px 4px', fontSize:9.5,
-                              fontFamily:'Roboto,sans-serif', fontWeight:700, letterSpacing:'0.1em',
-                              textTransform:'uppercase', color:'var(--fmn-gold)',
+                            <td colSpan={3} style={{ padding:'10px 16px 4px', fontSize:12,
+                              fontFamily:'Roboto,sans-serif', fontWeight:500, color:'var(--fmn-gold)',
                               borderTop: i===0 ? 'none' : '1px solid var(--app-border)' }}>{a.grupo}</td>
                           </tr>
                         )}
@@ -224,8 +222,7 @@ function SystemScreen() {
 
                 {/* Tags de performance */}
                 <div>
-                  <div style={{ fontSize:11, fontFamily:'Roboto,sans-serif', fontWeight:700,
-                    letterSpacing:'0.08em', textTransform:'uppercase', color:'var(--text-3)', marginBottom:8 }}>
+                  <div style={{ fontSize:12, fontFamily:'Roboto,sans-serif', fontWeight:500, color:'var(--text-2)', marginBottom:8 }}>
                     Tags de performance (sobre a somatória histórica do criativo)
                   </div>
                   <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:10 }}>
@@ -244,8 +241,7 @@ function SystemScreen() {
 
                 {/* Fluxo das colunas */}
                 <div>
-                  <div style={{ fontSize:11, fontFamily:'Roboto,sans-serif', fontWeight:700,
-                    letterSpacing:'0.08em', textTransform:'uppercase', color:'var(--text-3)', marginBottom:8 }}>
+                  <div style={{ fontSize:12, fontFamily:'Roboto,sans-serif', fontWeight:500, color:'var(--text-2)', marginBottom:8 }}>
                     Fluxo das colunas — entrada, tag e saída
                   </div>
                   <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
@@ -270,8 +266,7 @@ function SystemScreen() {
 
                 {/* Automações do kanban */}
                 <div>
-                  <div style={{ fontSize:11, fontFamily:'Roboto,sans-serif', fontWeight:700,
-                    letterSpacing:'0.08em', textTransform:'uppercase', color:'var(--text-3)', marginBottom:8 }}>
+                  <div style={{ fontSize:12, fontFamily:'Roboto,sans-serif', fontWeight:500, color:'var(--text-2)', marginBottom:8 }}>
                     Gatilhos automáticos
                   </div>
                   <div style={{ display:'flex', flexDirection:'column', gap:6, fontSize:11.5,
@@ -305,8 +300,7 @@ function SystemScreen() {
 
                 {/* Sub-etapas dentro de Fazendo */}
                 <div>
-                  <div style={{ fontSize:11, fontFamily:'Roboto,sans-serif', fontWeight:700,
-                    letterSpacing:'0.08em', textTransform:'uppercase', color:'var(--text-3)', marginBottom:8 }}>
+                  <div style={{ fontSize:12, fontFamily:'Roboto,sans-serif', fontWeight:500, color:'var(--text-2)', marginBottom:8 }}>
                     Sub-etapa dentro de "Fazendo" (clique no ícone do card pra alternar)
                   </div>
                   <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:10 }}>
@@ -330,8 +324,7 @@ function SystemScreen() {
 
                 {/* Fluxo das colunas */}
                 <div>
-                  <div style={{ fontSize:11, fontFamily:'Roboto,sans-serif', fontWeight:700,
-                    letterSpacing:'0.08em', textTransform:'uppercase', color:'var(--text-3)', marginBottom:8 }}>
+                  <div style={{ fontSize:12, fontFamily:'Roboto,sans-serif', fontWeight:500, color:'var(--text-2)', marginBottom:8 }}>
                     Fluxo das colunas — entrada e saída
                   </div>
                   <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
@@ -356,8 +349,7 @@ function SystemScreen() {
 
                 {/* Gatilhos automáticos */}
                 <div>
-                  <div style={{ fontSize:11, fontFamily:'Roboto,sans-serif', fontWeight:700,
-                    letterSpacing:'0.08em', textTransform:'uppercase', color:'var(--text-3)', marginBottom:8 }}>
+                  <div style={{ fontSize:12, fontFamily:'Roboto,sans-serif', fontWeight:500, color:'var(--text-2)', marginBottom:8 }}>
                     Gatilhos automáticos
                   </div>
                   <div style={{ display:'flex', flexDirection:'column', gap:6, fontSize:11.5,

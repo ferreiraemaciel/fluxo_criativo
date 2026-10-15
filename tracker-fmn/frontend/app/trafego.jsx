@@ -558,8 +558,7 @@ function MetricHoverPopover({ hover }) {
       background:'var(--app-surface)', border:'1px solid var(--app-border-2)', borderRadius:10,
       boxShadow:'0 12px 32px rgba(0,0,0,.5)', padding:'10px 12px',
       display:'flex', flexDirection:'column', gap:6 }}>
-      <div style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:900, letterSpacing:'0.08em',
-        textTransform:'uppercase', color:'var(--fmn-gold)', marginBottom:2 }}>{col.head}</div>
+      <div style={{ fontSize:12, fontFamily:'Roboto,sans-serif', fontWeight:500, color:'var(--fmn-gold)', marginBottom:2 }}>{col.head}</div>
       {PERIOD_COLS.map(p => {
         const v = row[p.pk]?.[col.k];
         return (
@@ -595,9 +594,8 @@ function MediaModal({ ad, onClose }) {
   }
 
   const overlay = {
-    position:'fixed', inset:0, background:'rgba(0,0,0,.85)', zIndex:9000,
-    display:'flex', alignItems:'center', justifyContent:'center',
-  };
+    position:'fixed', inset:0, background:'rgba(0,0,0,.8)', zIndex:9000,
+    display:'flex', alignItems:'center', justifyContent:'center', backdropFilter:'blur(4px)', WebkitBackdropFilter:'blur(4px)' };
   const box = {
     position:'relative', background:'#18191c', borderRadius:16,
     maxWidth:'90vw', maxHeight:'90vh', overflow:'hidden',
@@ -927,8 +925,7 @@ function AlertCard({ alert, userAction, onAction }) {
                 style={{ display:'flex', alignItems:'center', gap:5, padding:'5px 12px',
                   borderRadius:7, cursor:'pointer', transition:'all 130ms',
                   background:'var(--fmn-gold)', border:'none', color:'var(--fmn-black)',
-                  fontFamily:'Roboto,sans-serif', fontWeight:900, fontSize:10.5,
-                  letterSpacing:'0.04em', textTransform:'uppercase', whiteSpace:'nowrap' }}>
+                  fontFamily:'Roboto,sans-serif', fontWeight:500, fontSize:12, whiteSpace:'nowrap' }}>
                 <LucideIcon icon="zap" size={11}/>
                 Realizar ação
               </button>
@@ -1069,15 +1066,14 @@ function PublicosModal({ onClose }) {
 
   const CARD = { padding:'14px 16px', borderRadius:11, background:'var(--app-surface-2)',
     border:'1px solid var(--app-border)' };
-  const LBL = { fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700, letterSpacing:'0.1em',
-    textTransform:'uppercase', color:'var(--text-3)', marginBottom:6, display:'block' };
+  const LBL = { fontSize:12, fontFamily:'Roboto,sans-serif', fontWeight:500, color:'var(--text-2)', marginBottom:6, display:'block' };
   const INP = { width:'100%', padding:'8px 11px', borderRadius:7, background:'var(--app-surface-2)',
     border:'1px solid var(--app-border)', color:'var(--text-1)', fontFamily:'Roboto,sans-serif', fontSize:13 };
 
   return (
     <div onClick={onClose}
-      style={{ position:'fixed',inset:0,background:'rgba(0,0,0,.68)',zIndex:500,
-        display:'flex',alignItems:'center',justifyContent:'center' }}>
+      style={{ position:'fixed',inset:0,background:'rgba(0,0,0,.8)',zIndex:500,
+        display:'flex',alignItems:'center',justifyContent:'center', backdropFilter:'blur(4px)', WebkitBackdropFilter:'blur(4px)' }}>
       <div onClick={e => e.stopPropagation()}
         style={{ background:'var(--app-surface)',border:'1px solid var(--app-border-2)',
           borderRadius:16,width:560,maxHeight:'86vh',display:'flex',flexDirection:'column',
@@ -1248,8 +1244,7 @@ function GlobalRulesModal({ rules, onChange, onCreate, onClose }) {
   const [form, setForm] = useState({ name:'', sev:'warning', paramLabel:'', paramVal:'' });
   const INP = { width:'100%', padding:'8px 11px', borderRadius:7, background:'var(--app-surface-2)',
     border:'1px solid var(--app-border)', color:'var(--text-1)', fontFamily:'Roboto,sans-serif', fontSize:13 };
-  const LBL = { fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700, letterSpacing:'0.1em',
-    textTransform:'uppercase', color:'var(--text-3)', marginBottom:5, display:'block' };
+  const LBL = { fontSize:12, fontFamily:'Roboto,sans-serif', fontWeight:500, color:'var(--text-2)', marginBottom:5, display:'block' };
   const handleCreate = () => {
     if (!form.name.trim()) return;
     onCreate({ name:form.name, sev:form.sev,
@@ -1259,8 +1254,8 @@ function GlobalRulesModal({ rules, onChange, onCreate, onClose }) {
   };
   return (
     <div onClick={onClose}
-      style={{ position:'fixed',inset:0,background:'rgba(0,0,0,.68)',zIndex:500,
-        display:'flex',alignItems:'center',justifyContent:'center' }}>
+      style={{ position:'fixed',inset:0,background:'rgba(0,0,0,.8)',zIndex:500,
+        display:'flex',alignItems:'center',justifyContent:'center', backdropFilter:'blur(4px)', WebkitBackdropFilter:'blur(4px)' }}>
       <div onClick={e => e.stopPropagation()}
         style={{ background:'var(--app-surface)',border:'1px solid var(--app-border-2)',
           borderRadius:16,width:520,maxHeight:'82vh',display:'flex',flexDirection:'column',
@@ -1387,8 +1382,7 @@ function SpecificRulesModal({ rules, onAdd, onDelete, pausedIds, trafficData, in
   const inputStyle = { width:'100%',padding:'8px 12px',borderRadius:8,
     background:'var(--app-surface-2)',border:'1px solid var(--app-border)',
     color:'var(--text-1)',fontFamily:'Roboto,sans-serif',fontSize:13,colorScheme:'dark' };
-  const LBL = { fontSize:10,fontFamily:'Roboto,sans-serif',fontWeight:700,
-    letterSpacing:'0.1em',textTransform:'uppercase',color:'var(--text-3)',marginBottom:5,display:'block' };
+  const LBL = { fontSize:12,fontFamily:'Roboto,sans-serif',fontWeight:500,color:'var(--text-2)',marginBottom:5,display:'block' };
 
   const handleAdd = () => {
     if (!form.targetId) return;
@@ -1400,8 +1394,8 @@ function SpecificRulesModal({ rules, onAdd, onDelete, pausedIds, trafficData, in
 
   return (
     <div onClick={onClose}
-      style={{ position:'fixed',inset:0,background:'rgba(0,0,0,.68)',zIndex:500,
-        display:'flex',alignItems:'center',justifyContent:'center' }}>
+      style={{ position:'fixed',inset:0,background:'rgba(0,0,0,.8)',zIndex:500,
+        display:'flex',alignItems:'center',justifyContent:'center', backdropFilter:'blur(4px)', WebkitBackdropFilter:'blur(4px)' }}>
       <div onClick={e => e.stopPropagation()}
         style={{ background:'var(--app-surface)',border:'1px solid var(--app-border-2)',
           borderRadius:16,width:520,maxHeight:'88vh',display:'flex',flexDirection:'column',
@@ -1881,16 +1875,15 @@ function SubstituirModal({ adNum, defaultAdsetId, defaultAdsetName, defaultCampI
     else { setResultId(d.ad_id || ''); setStep('success'); }
   }
 
-  const overlay = { position:'fixed', inset:0, background:'rgba(0,0,0,.75)', zIndex:1000,
-    display:'flex', alignItems:'center', justifyContent:'center' };
+  const overlay = { position:'fixed', inset:0, background:'rgba(0,0,0,.8)', zIndex:1000,
+    display:'flex', alignItems:'center', justifyContent:'center', backdropFilter:'blur(4px)', WebkitBackdropFilter:'blur(4px)' };
   const box = { background:'var(--app-surface)', border:'1px solid var(--app-border-2)',
     borderRadius:16, width:480, maxHeight:'85vh', display:'flex', flexDirection:'column',
     boxShadow:'0 24px 64px rgba(0,0,0,.6)', overflow:'hidden' };
   const hdr = { padding:'14px 18px', borderBottom:'1px solid var(--app-border)',
     display:'flex', alignItems:'center', justifyContent:'space-between', flexShrink:0 };
   const S = {
-    label: { fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700, letterSpacing:'0.08em',
-      textTransform:'uppercase', color:'var(--text-3)', marginBottom:5, display:'block' },
+    label: { fontSize:12, fontFamily:'Roboto,sans-serif', fontWeight:500, color:'var(--text-2)', marginBottom:5, display:'block' },
     select: { width:'100%', padding:'9px 12px', borderRadius:8, background:'var(--app-surface-2)',
       border:'1px solid var(--app-border)', color:'var(--text-1)', fontFamily:'Roboto,sans-serif',
       fontSize:13, cursor:'pointer', colorScheme:'dark', appearance:'none', WebkitAppearance:'none' },
@@ -2081,8 +2074,7 @@ function SubstituirModal({ adNum, defaultAdsetId, defaultAdsetName, defaultCampI
             <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
               <div style={{ padding:14, borderRadius:10, background:'rgba(251,191,36,.06)',
                 border:'1px solid rgba(251,191,36,.2)', display:'flex', flexDirection:'column', gap:8 }}>
-                <div style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700,
-                  letterSpacing:'0.08em', textTransform:'uppercase', color:'var(--fmn-gold)' }}>
+                <div style={{ fontSize:12, fontFamily:'Roboto,sans-serif', fontWeight:500, color:'var(--fmn-gold)' }}>
                   Resumo do que vai ser criado
                 </div>
                 {[
@@ -2200,8 +2192,8 @@ function MiniTable({ cols, rows, empty }) {
           <tr>
             {cols.map(c => (
               <th key={c.key} style={{ textAlign: c.right ? 'right' : 'left', padding:'6px 10px',
-                fontSize:10, fontWeight:700, letterSpacing:'0.06em', textTransform:'uppercase',
-                color:'var(--text-3)', borderBottom:'1px solid var(--app-border)', whiteSpace:'nowrap' }}>
+                fontSize:12, fontWeight:500,
+                color:'var(--text-2)', borderBottom:'1px solid var(--app-border)', whiteSpace:'nowrap', textTransform:'uppercase', letterSpacing:'.05em' }}>
                 {c.label}
               </th>
             ))}
@@ -2348,8 +2340,7 @@ function AnaliseCampanhas() {
           {/* Resumo executivo */}
           {Object.entries(dados.resumo_por_produto || {}).map(([produto, r]) => (
             <div key={produto}>
-              <div style={{ fontSize:11, fontWeight:700, color:'var(--fmn-gold)', fontFamily:'Roboto,sans-serif',
-                letterSpacing:'0.06em', textTransform:'uppercase', marginBottom:8 }}>{produto}</div>
+              <div style={{ fontSize:12, fontWeight:500, color:'var(--fmn-gold)', fontFamily:'Roboto,sans-serif', marginBottom:8 }}>{produto}</div>
               <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(150px,1fr))', gap:10 }}>
                 <CardKPI label="Ativos" value={r.ativos}/>
                 <CardKPI label="Gasto 5d" value={window.fmtBRL(r.gasto_5d)}/>
@@ -2489,8 +2480,7 @@ function AnaliseCampanhas() {
             <div style={{ padding:'0 18px 12px' }}>
               {Object.entries(dados.orcamento_receita.por_produto || {}).map(([produto, p]) => (
                 <div key={produto} style={{ marginBottom:12 }}>
-                  <div style={{ fontSize:11, fontWeight:700, color:'var(--fmn-gold)', fontFamily:'Roboto,sans-serif',
-                    letterSpacing:'0.06em', textTransform:'uppercase', margin:'10px 0 6px' }}>
+                  <div style={{ fontSize:12, fontWeight:500, color:'var(--fmn-gold)', fontFamily:'Roboto,sans-serif', margin:'10px 0 6px' }}>
                     {produto} ({p.ativos_hoje} ativo{p.ativos_hoje === 1 ? '' : 's'} hoje)
                   </div>
                   <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(150px,1fr))', gap:10 }}>
@@ -2914,10 +2904,10 @@ function TrafficScreen() {
             <thead>
               <tr>
                 <th style={{ width: viewMode==='metrica' ? undefined : 300, minWidth: 300,
-                  padding:'8px 12px', textAlign:'left', fontSize:10, fontFamily:'Roboto,sans-serif',
-                  fontWeight:700, letterSpacing:'0.08em', textTransform:'uppercase', color:'var(--text-3)',
+                  padding:'8px 12px', textAlign:'left', fontSize:12, fontFamily:'Roboto,sans-serif',
+                  fontWeight:500, color:'var(--text-2)',
                   position:'sticky', top:0, zIndex:2, background:'var(--app-surface)',
-                  borderBottom:'1px solid var(--app-border)' }}>
+                  borderBottom:'1px solid var(--app-border)', textTransform:'uppercase', letterSpacing:'.05em' }}>
                   Campanha / Conjunto / Anúncio
                   {viewMode === 'metrica' && (
                     <span style={{ marginLeft:8, color:'var(--fmn-gold)', letterSpacing:'0.08em' }}>· {metricCol.head}</span>
@@ -2925,11 +2915,10 @@ function TrafficScreen() {
                 </th>
                 {(viewMode === 'metrica' ? PERIOD_COLS : COLS).map(col => (
                   <th key={col.pk || col.k} style={{ width: viewMode==='metrica' ? 84 : col.w,
-                    padding:'8px 6px', textAlign:'right', fontSize:9.5,
-                    fontFamily:'Roboto,sans-serif', fontWeight:700, letterSpacing:'0.04em',
-                    textTransform:'uppercase', color:'var(--text-3)', whiteSpace:'nowrap',
+                    padding:'8px 6px', textAlign:'right', fontSize:12,
+                    fontFamily:'Roboto,sans-serif', fontWeight:500, color:'var(--text-2)', whiteSpace:'nowrap',
                     position:'sticky', top:0, zIndex:2, background:'var(--app-surface)',
-                    borderBottom:'1px solid var(--app-border)' }}>
+                    borderBottom:'1px solid var(--app-border)', textTransform:'uppercase', letterSpacing:'.05em' }}>
                     {col.head}
                   </th>
                 ))}

@@ -410,8 +410,8 @@ function ListaReferencias({ refs }) {
       style={{ marginTop:2, marginBottom:6, marginLeft:29, padding:'10px 12px',
         borderRadius:9, background:'rgba(56,189,248,.04)',
         border:'1px solid rgba(56,189,248,.16)' }}>
-      <div style={{ fontSize:10.5, fontFamily:'Roboto,sans-serif', fontWeight:700,
-        color:'var(--text-3)', letterSpacing:.4, textTransform:'uppercase', marginBottom:7 }}>
+      <div style={{ fontSize:12, fontFamily:'Roboto,sans-serif', fontWeight:500,
+        color:'var(--text-2)', letterSpacing:.4, marginBottom:7 }}>
         Referências do retiro
       </div>
       <div style={{ display:'flex', flexDirection:'column', gap:5 }}>
@@ -610,8 +610,8 @@ function BlocoBiblioteca({ itens, onAdicionar, onRemover }) {
           <div key={c} style={{ marginBottom:14 }}>
             <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:7, paddingBottom:5,
               borderBottom:'1px solid var(--app-border)' }}>
-              <span style={{ fontSize:10.5, fontFamily:'Roboto,sans-serif', fontWeight:700,
-                color:'var(--text-2)', letterSpacing:.4, textTransform:'uppercase' }}>{c}</span>
+              <span style={{ fontSize:12, fontFamily:'Roboto,sans-serif', fontWeight:500,
+                color:'var(--text-2)', letterSpacing:.4 }}>{c}</span>
               <span style={{ fontSize:10.5, fontFamily:'Roboto,sans-serif', color:'var(--text-3)' }}>{lista.length}</span>
             </div>
             <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(290px,1fr))', gap:6 }}>
@@ -720,8 +720,8 @@ function PainelDefinicao({ tarefa, onSalvar, onFechar }) {
         border:'1px solid var(--app-border)' }}>
       <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between',
         marginBottom:10 }}>
-        <span style={{ fontSize:10.5, fontFamily:'Roboto,sans-serif', fontWeight:700,
-          color:'var(--text-3)', letterSpacing:.4, textTransform:'uppercase' }}>
+        <span style={{ fontSize:12, fontFamily:'Roboto,sans-serif', fontWeight:500,
+          color:'var(--text-2)', letterSpacing:.4 }}>
           O que foi definido
         </span>
         <button onClick={onFechar} style={{ background:'none', border:'none',
@@ -1130,8 +1130,8 @@ function BlocoFicha({ declaracoes, onSalvar, semMentoria }) {
           <div key={g} style={{ marginBottom:14 }}>
             <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:8,
               paddingBottom:5, borderBottom:'1px solid var(--app-border)' }}>
-              <span style={{ fontSize:10.5, fontFamily:'Roboto,sans-serif', fontWeight:700,
-                color:'var(--text-2)', letterSpacing:.4, textTransform:'uppercase' }}>{g}</span>
+              <span style={{ fontSize:12, fontFamily:'Roboto,sans-serif', fontWeight:500,
+                color:'var(--text-2)', letterSpacing:.4 }}>{g}</span>
               <span style={{ fontSize:10.5, fontFamily:'Roboto,sans-serif',
                 color: gc === ks.length ? '#79e06f' : 'var(--text-3)' }}>{gc}/{ks.length}</span>
             </div>
@@ -1229,8 +1229,8 @@ function BlocoImaginacao({ metricas, onSalvar, precos = {}, metaPlano, plano = {
     </tr>
   );
   const subtitulo = texto => (
-    <tr><td colSpan={4} style={{ padding:'14px 8px 4px', fontSize:10.5, fontFamily:'Roboto,sans-serif',
-      fontWeight:700, color:'var(--text-3)', letterSpacing:.4, textTransform:'uppercase' }}>{texto}</td></tr>
+    <tr><td colSpan={4} style={{ padding:'14px 8px 4px', fontSize:12, fontFamily:'Roboto,sans-serif',
+      fontWeight:500, color:'var(--text-2)', letterSpacing:.4 }}>{texto}</td></tr>
   );
 
   return (
@@ -1406,8 +1406,8 @@ function BlocoPlanoMidia({ plano, onSalvar, precoFicha }) {
       <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(230px,1fr))', gap:16 }}>
 
         <div style={{ display:'flex', flexDirection:'column', gap:7 }}>
-          <div style={{ fontSize:10.5, fontFamily:'Roboto,sans-serif', fontWeight:700,
-            color:'var(--text-3)', letterSpacing:.4, textTransform:'uppercase' }}>Você define</div>
+          <div style={{ fontSize:12, fontFamily:'Roboto,sans-serif', fontWeight:500,
+            color:'var(--text-2)', letterSpacing:.4 }}>Você define</div>
           <CampoNum label="Vendas esperadas" valor={p.vendas_meta} onSalvar={set('vendas_meta')} sufixo="un"/>
           {precoFicha ? (
             <LinhaCalc label="Ticket da oferta principal" valor={brl(ticket)}
@@ -1435,8 +1435,8 @@ function BlocoPlanoMidia({ plano, onSalvar, precoFicha }) {
         </div>
 
         <div style={{ display:'flex', flexDirection:'column' }}>
-          <div style={{ fontSize:10.5, fontFamily:'Roboto,sans-serif', fontWeight:700,
-            color:'var(--text-3)', letterSpacing:.4, textTransform:'uppercase',
+          <div style={{ fontSize:12, fontFamily:'Roboto,sans-serif', fontWeight:500,
+            color:'var(--text-2)', letterSpacing:.4,
             marginBottom:4 }}>A conta devolve</div>
           <LinhaCalc label="Leads necessários" valor={leads ? leads.toLocaleString('pt-BR') : '—'}
             dica="Vendas divididas pela taxa de conversão."/>
@@ -1452,8 +1452,8 @@ function BlocoPlanoMidia({ plano, onSalvar, precoFicha }) {
         </div>
 
         <div style={{ display:'flex', flexDirection:'column', gap:5 }}>
-          <div style={{ fontSize:10.5, fontFamily:'Roboto,sans-serif', fontWeight:700,
-            color:'var(--text-3)', letterSpacing:.4, textTransform:'uppercase' }}>
+          <div style={{ fontSize:12, fontFamily:'Roboto,sans-serif', fontWeight:500,
+            color:'var(--text-2)', letterSpacing:.4 }}>
             Verba por fase
           </div>
           {ETAPAS_MIDIA.map(e => {
@@ -1501,8 +1501,8 @@ function BlocoPlanoMidia({ plano, onSalvar, precoFicha }) {
 
       {verbaLembrete > 0 && (
         <div style={{ marginTop:14, paddingTop:12, borderTop:'1px solid var(--app-border)' }}>
-          <div style={{ fontSize:10.5, fontFamily:'Roboto,sans-serif', fontWeight:700,
-            color:'var(--text-3)', letterSpacing:.4, textTransform:'uppercase',
+          <div style={{ fontSize:12, fontFamily:'Roboto,sans-serif', fontWeight:500,
+            color:'var(--text-2)', letterSpacing:.4,
             marginBottom:7 }}>
             As 6 campanhas de lembrete, com orçamento total
           </div>
@@ -1532,8 +1532,8 @@ function BlocoPlanoMidia({ plano, onSalvar, precoFicha }) {
 
       {/* Público quente: só alunos, verba própria, fora da meta */}
       <div style={{ marginTop:14, paddingTop:12, borderTop:'1px solid var(--app-border)' }}>
-        <div style={{ fontSize:10.5, fontFamily:'Roboto,sans-serif', fontWeight:700,
-          color:'var(--text-3)', letterSpacing:.4, textTransform:'uppercase', marginBottom:8 }}>
+        <div style={{ fontSize:12, fontFamily:'Roboto,sans-serif', fontWeight:500,
+          color:'var(--text-2)', letterSpacing:.4, marginBottom:8 }}>
           Público quente: alunos, fora da meta
         </div>
         <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(200px,1fr))', gap:8 }}>
@@ -1724,9 +1724,8 @@ function Calendario({ tarefas, d0, onAbrir }) {
     >
       <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', gap:4 }}>
         {['dom','seg','ter','qua','qui','sex','sáb'].map(d => (
-          <div key={d} style={{ textAlign:'center', fontSize:10, fontWeight:700,
-            fontFamily:'Roboto,sans-serif', color:'var(--text-3)', padding:'2px 0',
-            textTransform:'uppercase', letterSpacing:.3 }}>{d}</div>
+          <div key={d} style={{ textAlign:'center', fontSize:12, fontWeight:500,
+            fontFamily:'Roboto,sans-serif', color:'var(--text-2)', padding:'2px 0', letterSpacing:.3 }}>{d}</div>
         ))}
 
         {celulas.map((iso, i) => {
@@ -1949,8 +1948,8 @@ function BlocoAuditoria({ projeto, tarefas }) {
             </div>
           )}
 
-          <div style={{ fontSize:10.5, fontFamily:'Roboto,sans-serif', fontWeight:700,
-            color:'var(--text-3)', letterSpacing:.4, textTransform:'uppercase',
+          <div style={{ fontSize:12, fontFamily:'Roboto,sans-serif', fontWeight:500,
+            color:'var(--text-2)', letterSpacing:.4,
             marginBottom:6 }}>
             Anúncios deste pico ({dados.total}
             {dados.comId < dados.total ? `, ${dados.total - dados.comId} ainda sem publicar` : ''})
@@ -2146,18 +2145,14 @@ function BlocoDebriefing({ projeto, metricas, tarefas, onSalvar, onSalvarRespost
         <table style={{ width:'100%', borderCollapse:'collapse', minWidth:460 }}>
           <thead>
             <tr>
-              <th style={{ textAlign:'left', padding:'5px 8px', fontSize:10.5,
-                fontFamily:'Roboto,sans-serif', color:'var(--text-3)', fontWeight:700,
-                textTransform:'uppercase', letterSpacing:.3 }}>Indicador</th>
-              <th style={{ textAlign:'right', padding:'5px 8px', fontSize:10.5,
-                fontFamily:'Roboto,sans-serif', color:'var(--text-3)', fontWeight:700,
-                textTransform:'uppercase', letterSpacing:.3 }}>Meta</th>
-              <th style={{ textAlign:'right', padding:'5px 8px', fontSize:10.5,
-                fontFamily:'Roboto,sans-serif', color:'var(--text-3)', fontWeight:700,
-                textTransform:'uppercase', letterSpacing:.3 }}>Realizado</th>
-              <th style={{ textAlign:'right', padding:'5px 8px', fontSize:10.5,
-                fontFamily:'Roboto,sans-serif', color:'var(--text-3)', fontWeight:700,
-                textTransform:'uppercase', letterSpacing:.3 }}>Variação</th>
+              <th style={{ textAlign:'left', padding:'5px 8px', fontSize:12,
+                fontFamily:'Roboto,sans-serif', color:'var(--text-2)', fontWeight:500, letterSpacing:.3, textTransform:'uppercase', letterSpacing:'.05em' }}>Indicador</th>
+              <th style={{ textAlign:'right', padding:'5px 8px', fontSize:12,
+                fontFamily:'Roboto,sans-serif', color:'var(--text-2)', fontWeight:500, letterSpacing:.3, textTransform:'uppercase', letterSpacing:'.05em' }}>Meta</th>
+              <th style={{ textAlign:'right', padding:'5px 8px', fontSize:12,
+                fontFamily:'Roboto,sans-serif', color:'var(--text-2)', fontWeight:500, letterSpacing:.3, textTransform:'uppercase', letterSpacing:'.05em' }}>Realizado</th>
+              <th style={{ textAlign:'right', padding:'5px 8px', fontSize:12,
+                fontFamily:'Roboto,sans-serif', color:'var(--text-2)', fontWeight:500, letterSpacing:.3, textTransform:'uppercase', letterSpacing:'.05em' }}>Variação</th>
             </tr>
           </thead>
           <tbody>
@@ -2235,8 +2230,8 @@ function BlocoDebriefing({ projeto, metricas, tarefas, onSalvar, onSalvarRespost
       </div>
 
       <div style={{ marginTop:15, paddingTop:12, borderTop:'1px solid var(--app-border)' }}>
-        <div style={{ fontSize:10.5, fontFamily:'Roboto,sans-serif', fontWeight:700,
-          color:'var(--text-3)', letterSpacing:.4, textTransform:'uppercase',
+        <div style={{ fontSize:12, fontFamily:'Roboto,sans-serif', fontWeight:500,
+          color:'var(--text-2)', letterSpacing:.4,
           marginBottom:9 }}>As 9 perguntas</div>
         <div style={{ display:'flex', flexDirection:'column', gap:9 }}>
           {PERGUNTAS_DEBRIEF.map((q, i) => (

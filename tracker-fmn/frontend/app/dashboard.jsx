@@ -674,8 +674,8 @@ function RecuperacaoList({ items }) {
       {/* Modal de detalhe */}
       {selected && (
         <div onClick={() => setSelected(null)}
-          style={{ position:'fixed', inset:0, background:'rgba(0,0,0,.65)', zIndex:600,
-            display:'flex', alignItems:'center', justifyContent:'center' }}>
+          style={{ position:'fixed', inset:0, background:'rgba(0,0,0,.8)', zIndex:600,
+            display:'flex', alignItems:'center', justifyContent:'center', backdropFilter:'blur(4px)', WebkitBackdropFilter:'blur(4px)' }}>
           <div onClick={e => e.stopPropagation()}
             style={{ background:'var(--app-surface)', border:'1px solid var(--app-border-2)',
               borderRadius:16, padding:'24px', width:380, display:'flex', flexDirection:'column', gap:14,
@@ -1052,8 +1052,8 @@ function AbandonedCart({ carts }) {
       </div>
       {selected && (
         <div onClick={() => setSelected(null)}
-          style={{ position:'fixed', inset:0, background:'rgba(0,0,0,.6)', zIndex:500,
-            display:'flex', alignItems:'center', justifyContent:'center' }}>
+          style={{ position:'fixed', inset:0, background:'rgba(0,0,0,.8)', zIndex:500,
+            display:'flex', alignItems:'center', justifyContent:'center', backdropFilter:'blur(4px)', WebkitBackdropFilter:'blur(4px)' }}>
           <div onClick={e => e.stopPropagation()}
             style={{ background:'var(--app-surface)', border:'1px solid var(--app-border-2)',
               borderRadius:16, padding:'24px', width:360, display:'flex', flexDirection:'column', gap:16,
@@ -1387,18 +1387,16 @@ function AdsRanking({ ads, onNavigate }) {
           gap:8, alignItems:'center', flex:1 }}>
           <div/>
           {['#','','Criativo','Tipo','Status','Gasto','Vendas','CPA'].map((h,i) => (
-            <span key={i} style={{ fontSize:9.5, fontFamily:'Roboto,sans-serif', fontWeight:700,
-              letterSpacing:'0.08em', textTransform:'uppercase', color:'var(--text-3)',
+            <span key={i} style={{ fontSize:12, fontFamily:'Roboto,sans-serif', fontWeight:500, color:'var(--text-2)',
               textAlign: i >= 5 ? 'right' : 'left' }}>{h}</span>
           ))}
         </div>
         {hasCustomOrder && (
           <button onClick={resetOrder}
             title="Restaurar ordem por gasto"
-            style={{ fontSize:9.5, fontFamily:'Roboto,sans-serif', fontWeight:700,
-              color:'var(--text-3)', background:'none', border:'1px solid var(--app-border)',
-              cursor:'pointer', padding:'3px 8px', borderRadius:4, marginLeft:8, flexShrink:0,
-              letterSpacing:'0.04em', textTransform:'uppercase' }}>
+            style={{ fontSize:12, fontFamily:'Roboto,sans-serif', fontWeight:500,
+              color:'var(--text-2)', background:'none', border:'1px solid var(--app-border)',
+              cursor:'pointer', padding:'3px 8px', borderRadius:4, marginLeft:8, flexShrink:0 }}>
             resetar ordem
           </button>
         )}
@@ -1497,8 +1495,7 @@ function BreakdownTable({ rows, margem }) {
         <div style={{ marginTop:8, padding:'7px 12px', borderRadius:8,
           background:'rgba(121,224,111,.08)', border:'1px solid rgba(121,224,111,.15)',
           display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-          <span style={{ fontSize:11, fontFamily:'Roboto,sans-serif', fontWeight:700,
-            letterSpacing:'0.06em', textTransform:'uppercase', color:'var(--clr-pos)' }}>Margem líquida</span>
+          <span style={{ fontSize:12, fontFamily:'Roboto,sans-serif', fontWeight:500, color:'var(--clr-pos)' }}>Margem líquida</span>
           <span style={{ fontSize:14, fontFamily:'Roboto,sans-serif', fontWeight:900, color:'var(--clr-pos)' }}>{margem.toFixed(1)}%</span>
         </div>
       )}
@@ -1824,8 +1821,7 @@ function RecentSalesFeed({ sales }) {
         {/* cabeçalho */}
         <div style={{ display:'grid', gridTemplateColumns:COLS, gap:8, padding:'0 8px 8px' }}>
           {HEADERS.map((h,i) => (
-            <span key={i} style={{ fontSize:9.5, fontFamily:'Roboto,sans-serif', fontWeight:700,
-              letterSpacing:'0.08em', textTransform:'uppercase', color:'var(--text-3)' }}>{h}</span>
+            <span key={i} style={{ fontSize:12, fontFamily:'Roboto,sans-serif', fontWeight:500, color:'var(--text-2)' }}>{h}</span>
           ))}
         </div>
 
@@ -2207,8 +2203,8 @@ function UpsellFunnelCard({ data }) {
             background:'var(--app-surface-2)', border:'1px solid var(--app-border)' }}>
             <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:2 }}>
               <LucideIcon icon={m.icon} size={13} color="var(--text-3)"/>
-              <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700,
-                color:'var(--text-3)', letterSpacing:'0.04em', textTransform:'uppercase' }}>
+              <span style={{ fontSize:12, fontFamily:'Roboto,sans-serif', fontWeight:500,
+                color:'var(--text-2)' }}>
                 {m.label}
               </span>
             </div>

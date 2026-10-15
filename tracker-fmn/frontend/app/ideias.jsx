@@ -217,14 +217,13 @@ function IdeaModal({ idea, onClose, onSave }) {
   const INP = { width:'100%', padding:'8px 12px', borderRadius:8,
     background:'var(--app-surface-2)', border:'1px solid var(--app-border)',
     color:'var(--text-1)', fontFamily:'Roboto,sans-serif', fontSize:13 };
-  const LBL = { fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700,
-    letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)',
+  const LBL = { fontSize:12, fontFamily:'Roboto,sans-serif', fontWeight:500, color:'var(--text-2)',
     marginBottom:5, display:'block' };
 
   return (
     <div onClick={e => window.cliqueFoiNoFundo(e) && onClose()}
-      style={{ position:'fixed', inset:0, background:'rgba(0,0,0,.72)', zIndex:400,
-        display:'flex', alignItems:'center', justifyContent:'center' }}>
+      style={{ position:'fixed', inset:0, background:'rgba(0,0,0,.8)', zIndex:400,
+        display:'flex', alignItems:'center', justifyContent:'center', backdropFilter:'blur(4px)', WebkitBackdropFilter:'blur(4px)' }}>
       <div onClick={e=>e.stopPropagation()}
         style={{ background:'var(--app-surface)', border:'1px solid var(--app-border-2)',
           borderRadius:16, padding:'24px', width:480, maxHeight:'90vh', overflowY:'auto',

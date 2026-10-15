@@ -73,13 +73,14 @@ const PLAT_ICON  = window.PLAT_ICON;  // fonte única em shared.jsx
 
 const FIELD_STYLE = {
   width:'100%', boxSizing:'border-box',
-  background:'var(--app-surface-2)', border:'1px solid var(--app-border)',
-  color:'#fff', padding:'10px 12px', borderRadius:8,
-  fontFamily:'Roboto,sans-serif', fontSize:13, outline:'none', resize:'vertical',
+  // Campo e rótulo do FMN Pro (15/10/2026): campo com canto 10 e texto de 14 px,
+  // rótulo em 14 px peso 500 na cor do texto.
+  background:'var(--app-bg)', border:'1px solid var(--app-surface-2)',
+  color:'var(--text-1)', padding:'8px 12px', borderRadius:10,
+  fontFamily:'Roboto,sans-serif', fontSize:14, outline:'none', resize:'vertical',
 };
 const LABEL_STYLE = {
-  display:'block', fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700,
-  letterSpacing:'1.2px', color:'rgba(255,255,255,.4)', textTransform:'uppercase', marginBottom:6,
+  display:'block', fontSize:14, fontFamily:'Roboto,sans-serif', fontWeight:500, color:'var(--text-1)', marginBottom:6,
 };
 
 /* ── Compressão no browser ───────────────────────────────────────*/
@@ -242,8 +243,7 @@ function ContentCard({ item, col, onOpen, onDragStart, onEtapaToggle }) {
             ? <img src={thumbUrl} style={{ width:'100%', height:'100%', objectFit:'cover' }}/>
             : <LucideIcon icon={platIcon} size={14} style={{ color }}/>}
         </div>
-        <span style={{ fontSize:13, fontFamily:'Roboto,sans-serif', fontWeight:900,
-          letterSpacing:'0.06em', color:col.colorDot, textTransform:'uppercase', flexShrink:0 }}>
+        <span style={{ fontSize:13, fontFamily:'Roboto,sans-serif', fontWeight:500, color:col.colorDot, flexShrink:0 }}>
           ORG {num}
         </span>
         <div style={{ marginLeft:'auto', display:'flex', gap:4, alignItems:'center', flexShrink:0 }}>
@@ -720,8 +720,8 @@ function PublicarArtigoModal({ form, onClose, onSuccess, initialDate }) {
 
   const Caixa = ({ children }) => (
     <div onClick={e => cliqueFoiNoFundo(e) && onClose()}
-      style={{ position:'fixed', inset:0, background:'rgba(0,0,0,.75)', zIndex:900,
-        display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
+      style={{ position:'fixed', inset:0, background:'rgba(0,0,0,.8)', zIndex:900,
+        display:'flex', alignItems:'center', justifyContent:'center', padding:20, backdropFilter:'blur(4px)', WebkitBackdropFilter:'blur(4px)' }}>
       <div style={{ width:'100%', maxWidth:420, background:'var(--app-surface)',
         border:'1px solid var(--app-border)', borderRadius:14, padding:22,
         display:'flex', flexDirection:'column', gap:14 }}>
@@ -776,8 +776,7 @@ function PublicarArtigoModal({ form, onClose, onSuccess, initialDate }) {
       {/* O título vem do site, não do card: é o que vai aparecer no blog. */}
       <div style={{ padding:'10px 12px', borderRadius:9, background:'var(--app-surface-2)',
         border:'1px solid var(--app-border)', display:'flex', flexDirection:'column', gap:4 }}>
-        <span style={{ fontSize:9.5, fontFamily:'Roboto,sans-serif', fontWeight:700,
-          letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)' }}>Artigo no site</span>
+        <span style={{ fontSize:12, fontFamily:'Roboto,sans-serif', fontWeight:500, color:'var(--text-2)' }}>Artigo no site</span>
         <span style={{ fontSize:12.5, fontFamily:'Roboto,sans-serif', color:'var(--text-1)', lineHeight:1.45 }}>
           {artigo.titulo}
         </span>
@@ -885,13 +884,12 @@ function PublicarYoutubeModal({ form, onClose, onSuccess, initialDate }) {
 
   const campo = { width:'100%', padding:'9px 11px', borderRadius:8, background:'rgba(255,255,255,.04)',
     border:'1px solid var(--app-border)', color:'var(--text-1)', fontFamily:'Roboto,sans-serif', fontSize:12.5, boxSizing:'border-box' };
-  const rotulo = { fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700, letterSpacing:'0.1em',
-    textTransform:'uppercase', color:'var(--text-3)', display:'block', marginBottom:5 };
+  const rotulo = { fontSize:12, fontFamily:'Roboto,sans-serif', fontWeight:500, color:'var(--text-2)', display:'block', marginBottom:5 };
 
   return (
     <div onClick={e => cliqueFoiNoFundo(e) && fase !== 'enviando' && onClose()}
-      style={{ position:'fixed', inset:0, background:'rgba(0,0,0,.75)', zIndex:900,
-        display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
+      style={{ position:'fixed', inset:0, background:'rgba(0,0,0,.8)', zIndex:900,
+        display:'flex', alignItems:'center', justifyContent:'center', padding:20, backdropFilter:'blur(4px)', WebkitBackdropFilter:'blur(4px)' }}>
       <div style={{ width:'100%', maxWidth:440, background:'var(--app-surface)', border:'1px solid var(--app-border)',
         borderRadius:14, padding:22, display:'flex', flexDirection:'column', gap:14 }}>
         <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
@@ -1259,8 +1257,8 @@ function PublishModal({ form, slidesArr, slideFiles, onClose, onSuccess, initial
   };
 
   return (
-    <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,.75)', zIndex:800,
-      display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}
+    <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,.8)', zIndex:800,
+      display:'flex', alignItems:'center', justifyContent:'center', padding:20, backdropFilter:'blur(4px)', WebkitBackdropFilter:'blur(4px)' }}
       onClick={e => cliqueFoiNoFundo(e) && phase !== 'uploading' && phase !== 'publishing' && onClose()}>
 
       <div style={{ background:'#1a1b1f', border:'1px solid rgba(255,255,255,.12)',
@@ -1747,8 +1745,8 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
 
       {/* overlay full-screen */}
       <div onClick={e => cliqueFoiNoFundo(e) && onClose()}
-        style={{ position:'fixed', inset:0, background:'rgba(0,0,0,.75)', zIndex:700,
-          display:'flex', alignItems:'stretch', justifyContent:'stretch', padding:20 }}>
+        style={{ position:'fixed', inset:0, background:'rgba(0,0,0,.8)', zIndex:700,
+          display:'flex', alignItems:'stretch', justifyContent:'stretch', padding:20, backdropFilter:'blur(4px)', WebkitBackdropFilter:'blur(4px)' }}>
 
         {/* container principal */}
         <div onClick={e => e.stopPropagation()}
@@ -1762,8 +1760,7 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
             <div style={{ display:'flex', alignItems:'center', gap:10, minWidth:0, flex:1 }}>
               <button onClick={onClose}
                 style={{ display:'flex', alignItems:'center', gap:5, color:'var(--text-2)',
-                  cursor:'pointer', fontFamily:'Roboto,sans-serif', fontSize:11, fontWeight:700,
-                  letterSpacing:'0.04em', textTransform:'uppercase', padding:'5px 10px',
+                  cursor:'pointer', fontFamily:'Roboto,sans-serif', fontSize:12, fontWeight:500, padding:'5px 10px',
                   borderRadius:6, background:'rgba(255,255,255,.05)', border:'1px solid var(--app-border)',
                   transition:'color 150ms', flexShrink:0 }}
                 onMouseEnter={e=>e.currentTarget.style.color='var(--fmn-gold)'}
@@ -1796,8 +1793,7 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
                 </div>
               )}
               {!isNew && item?.numero && (
-                <span style={{ fontSize:12, fontFamily:'Roboto,sans-serif', fontWeight:900,
-                  letterSpacing:'0.08em', textTransform:'uppercase', color:currentCol.colorDot,
+                <span style={{ fontSize:12, fontFamily:'Roboto,sans-serif', fontWeight:500, color:currentCol.colorDot,
                   background:`${currentCol.colorDot}1a`, border:`1px solid ${currentCol.colorDot}40`,
                   borderRadius:6, padding:'3px 9px', flexShrink:0 }}>
                   ORG {String(item.numero).padStart(3,'0')}
@@ -1955,8 +1951,7 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
                       display:'flex', alignItems:'center', justifyContent:'center' }}>
                       <LucideIcon icon={PLAT_ICON[form.plataforma]||'image'} size={28} color="rgba(255,255,255,.22)"/>
                     </div>
-                    <span style={{ fontSize:11, fontFamily:'Roboto,sans-serif', fontWeight:700,
-                      letterSpacing:'0.06em', textTransform:'uppercase', color:'var(--text-3)' }}>Prévia da Mídia</span>
+                    <span style={{ fontSize:12, fontFamily:'Roboto,sans-serif', fontWeight:500, color:'var(--text-2)' }}>Prévia da Mídia</span>
                     <span style={{ fontSize:11, fontFamily:'Roboto,sans-serif', color:'var(--text-3)',
                       textAlign:'center', maxWidth:160, lineHeight:1.5 }}>Sincronize a pasta no Drive</span>
                   </div>
@@ -2025,7 +2020,7 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
                   {/* Plataforma + Responsável */}
                   <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
                     <div style={{ display:'flex', flexDirection:'column', gap:7 }}>
-                      <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)' }}>Plataforma</span>
+                      <span style={{ fontSize:12, fontFamily:'Roboto,sans-serif', fontWeight:500, color:'var(--text-2)' }}>Plataforma</span>
                       <div style={{ display:'flex', gap:4, flexWrap:'wrap' }}>
                         {PLATAFORMAS.map(p => {
                           const active = form.plataforma === p;
@@ -2044,7 +2039,7 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
                       </div>
                     </div>
                     <div style={{ display:'flex', flexDirection:'column', gap:7 }}>
-                      <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)' }}>Responsável</span>
+                      <span style={{ fontSize:12, fontFamily:'Roboto,sans-serif', fontWeight:500, color:'var(--text-2)' }}>Responsável</span>
                       <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
                         {[null, ...RESPONSAVEIS].map(r => {
                           const cfg = r ? (RESPONSAVEL_CONFIG[r] || { color:'#94a3b8', bg:'rgba(148,163,184,.18)' })
@@ -2068,7 +2063,7 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
 
                   {/* Status */}
                   <div style={{ display:'flex', flexDirection:'column', gap:7 }}>
-                    <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)' }}>Status</span>
+                    <span style={{ fontSize:12, fontFamily:'Roboto,sans-serif', fontWeight:500, color:'var(--text-2)' }}>Status</span>
                     <div style={{ display:'flex', gap:5, flexWrap:'wrap' }}>
                       {COLUMNS.map(col => {
                         const active = form.status === col.id;
@@ -2090,8 +2085,7 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
                       desmarca, voltando pra "sem etapa". */}
                   {form.status === 'Fazendo' && (
                     <div style={{ display:'flex', flexDirection:'column', gap:7 }}>
-                      <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700,
-                        letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)' }}>Etapa</span>
+                      <span style={{ fontSize:12, fontFamily:'Roboto,sans-serif', fontWeight:500, color:'var(--text-2)' }}>Etapa</span>
                       <div style={{ display:'flex', gap:5, flexWrap:'wrap' }}>
                         {Object.entries(ETAPAS_ORG).map(([id, e]) => {
                           const active = form.etapa === id;
@@ -2141,7 +2135,7 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
                     };
                     return (
                       <div style={{ display:'flex', flexDirection:'column', gap:7 }}>
-                        <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)' }}>Postagem programada</span>
+                        <span style={{ fontSize:12, fontFamily:'Roboto,sans-serif', fontWeight:500, color:'var(--text-2)' }}>Postagem programada</span>
                         <div style={{ display:'flex', gap:8, alignItems:'center', flexWrap:'wrap' }}>
                           <input type="date" value={dia} onChange={e => reagendar(e.target.value, hora)} style={campo}/>
                           <input type="time" value={hora} disabled={!agendado}
@@ -2178,7 +2172,7 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
                   {/* Tema */}
                   <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
                     <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-                      <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)' }}>Tema / Título</span>
+                      <span style={{ fontSize:12, fontFamily:'Roboto,sans-serif', fontWeight:500, color:'var(--text-2)' }}>Tema / Título</span>
                       <CopyBtn text={form.tema}/>
                     </div>
                     <input value={form.tema} onChange={e=>set('tema',e.target.value)}
@@ -2193,7 +2187,7 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
                   {/* Headline */}
                   <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
                     <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-                      <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)' }}>{form.plataforma==='Artigo' ? 'Título do artigo' : 'Headline'}</span>
+                      <span style={{ fontSize:12, fontFamily:'Roboto,sans-serif', fontWeight:500, color:'var(--text-2)' }}>{form.plataforma==='Artigo' ? 'Título do artigo' : 'Headline'}</span>
                       <CopyBtn text={form.headline||''}/>
                     </div>
                     <textarea value={form.headline||''} onChange={e=>set('headline',e.target.value)}
@@ -2208,7 +2202,7 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
                   {form.plataforma === 'Carrossel' ? (<>
                     <div>
                       <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:10 }}>
-                        <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)' }}>Slides ({slidesArr.length})</span>
+                        <span style={{ fontSize:12, fontFamily:'Roboto,sans-serif', fontWeight:500, color:'var(--text-2)' }}>Slides ({slidesArr.length})</span>
                         <div style={{ display:'flex', gap:6 }}>
                           <CopyAllPromptsBtn slidesArr={slidesArr}/>
                           <button onClick={addSlide}
@@ -2234,7 +2228,7 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
                     {/* Roteiro (Gancho + Desenvolvimento + CTA, sempre as 3 partes presentes) — em Artigo vira a estrutura do texto */}
                     <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
                       <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-                        <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)' }}>{form.plataforma==='Artigo' ? 'Estrutura do artigo' : 'Roteiro'}</span>
+                        <span style={{ fontSize:12, fontFamily:'Roboto,sans-serif', fontWeight:500, color:'var(--text-2)' }}>{form.plataforma==='Artigo' ? 'Estrutura do artigo' : 'Roteiro'}</span>
                         <CopyBtn text={form.roteiro||''}/>
                       </div>
                       <textarea value={form.roteiro||''} onChange={e=>set('roteiro',e.target.value)}
@@ -2249,7 +2243,7 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
                     {/* Estética Visual */}
                     <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
                       <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-                        <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)' }}>{form.plataforma==='Artigo' ? 'Direção visual' : 'Estética Visual'}</span>
+                        <span style={{ fontSize:12, fontFamily:'Roboto,sans-serif', fontWeight:500, color:'var(--text-2)' }}>{form.plataforma==='Artigo' ? 'Direção visual' : 'Estética Visual'}</span>
                         <CopyBtn text={form.estetica_visual||''}/>
                       </div>
                       <textarea value={form.estetica_visual||''} onChange={e=>set('estetica_visual',e.target.value)}
@@ -2265,7 +2259,7 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
                     {(form.plataforma === 'Imagem' || form.plataforma === 'Artigo') && (
                       <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
                         <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-                          <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)' }}>{form.plataforma==='Artigo' ? 'Prompt da imagem de capa' : 'Prompt'}</span>
+                          <span style={{ fontSize:12, fontFamily:'Roboto,sans-serif', fontWeight:500, color:'var(--text-2)' }}>{form.plataforma==='Artigo' ? 'Prompt da imagem de capa' : 'Prompt'}</span>
                           <CopyBtn text={form.prompt||''}/>
                         </div>
                         <textarea value={form.prompt||''} onChange={e=>set('prompt',e.target.value)}
@@ -2282,7 +2276,7 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
                   {/* Legenda da postagem — Reels, Carrossel e Imagem. Em Artigo vira o resumo/meta description */}
                   <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
                     <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-                      <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)' }}>{form.plataforma==='Artigo' ? 'Resumo / meta description' : 'Legenda da postagem'}</span>
+                      <span style={{ fontSize:12, fontFamily:'Roboto,sans-serif', fontWeight:500, color:'var(--text-2)' }}>{form.plataforma==='Artigo' ? 'Resumo / meta description' : 'Legenda da postagem'}</span>
                       <div style={{ display:'flex', alignItems:'center', gap:8 }}>
                         {/* Contador só no que vai pro Instagram. O limite não é
                             estilo: passar dele faz o Instagram recusar a peça. */}
@@ -2313,7 +2307,7 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
                   {/* Informações Adicionais */}
                   <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
                     <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-                      <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)' }}>Informações Adicionais</span>
+                      <span style={{ fontSize:12, fontFamily:'Roboto,sans-serif', fontWeight:500, color:'var(--text-2)' }}>Informações Adicionais</span>
                       <CopyBtn text={form.observacoes||''}/>
                     </div>
                     <textarea value={form.observacoes||''} onChange={e=>set('observacoes',e.target.value)}
@@ -2378,8 +2372,8 @@ function ProgramarModal({ dateStr, items, onEscolher, onCriarNovo, onClose }) {
 
   return (
     <div onClick={e => cliqueFoiNoFundo(e) && onClose()}
-      style={{ position:'fixed', inset:0, background:'rgba(0,0,0,.7)', zIndex:900,
-        display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
+      style={{ position:'fixed', inset:0, background:'rgba(0,0,0,.8)', zIndex:900,
+        display:'flex', alignItems:'center', justifyContent:'center', padding:20, backdropFilter:'blur(4px)', WebkitBackdropFilter:'blur(4px)' }}>
       <div onClick={e => e.stopPropagation()}
         style={{ width:560, maxWidth:'94vw', maxHeight:'82vh', display:'flex', flexDirection:'column',
           background:'var(--app-surface)', border:'1px solid var(--app-border-2)', borderRadius:14,
@@ -2504,8 +2498,7 @@ function ScheduleEditPopover({ item, onSave, onClose }) {
         background:'#1a1b1f', border:'1px solid rgba(255,255,255,.15)', borderRadius:10,
         padding:12, boxShadow:'0 12px 32px rgba(0,0,0,.5)', width:200,
         display:'flex', flexDirection:'column', gap:8 }}>
-      <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700,
-        letterSpacing:'0.08em', textTransform:'uppercase', color:'var(--text-3)' }}>
+      <span style={{ fontSize:12, fontFamily:'Roboto,sans-serif', fontWeight:500, color:'var(--text-2)' }}>
         Editar agendamento
       </span>
       <input type="date" value={date} onChange={e=>setDate(e.target.value)}
@@ -2623,10 +2616,9 @@ function CalendarioView({ items, onOpen, onNewWithDate, onReschedule, onEditSche
           {DIAS_SEMANA_GRID.map((d, i) => {
             const isWeekend = i === 5 || i === 6;
             return (
-              <div key={d} style={{ textAlign:'center', fontSize:10.5, fontFamily:'Roboto,sans-serif',
-                fontWeight:900, letterSpacing:'0.06em',
-                color: isWeekend ? 'rgba(148,163,184,.45)' : 'var(--text-3)',
-                textTransform:'uppercase', padding:'4px 0' }}>
+              <div key={d} style={{ textAlign:'center', fontSize:12, fontFamily:'Roboto,sans-serif',
+                fontWeight:500,
+                color: isWeekend ? 'rgba(148,163,184,.45)' : 'var(--text-2)', padding:'4px 0' }}>
                 {d}
               </div>
             );
@@ -2815,8 +2807,7 @@ function DesempenhoView({ metricas }) {
   const card = (label, value) => (
     <div style={{ flex:1, minWidth:130, padding:'12px 14px', borderRadius:10,
       background:'var(--app-surface)', border:'1px solid var(--app-border)' }}>
-      <div style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700,
-        letterSpacing:'0.08em', textTransform:'uppercase', color:'var(--text-3)' }}>{label}</div>
+      <div style={{ fontSize:12, fontFamily:'Roboto,sans-serif', fontWeight:500, color:'var(--text-2)' }}>{label}</div>
       <div style={{ fontSize:20, fontWeight:800, color:'var(--fmn-gold)', marginTop:4 }}>{value}</div>
     </div>
   );
@@ -2843,13 +2834,13 @@ function DesempenhoView({ metricas }) {
             <thead>
               <tr>
                 <th style={{ textAlign:'left', padding:'8px 10px', borderBottom:'1px solid var(--app-border)',
-                  color:'var(--text-3)', fontSize:10, fontWeight:700, letterSpacing:'0.06em', textTransform:'uppercase' }}>Post</th>
+                  color:'var(--text-2)', fontSize:12, fontWeight:500, textTransform:'uppercase', letterSpacing:'.05em' }}>Post</th>
                 {COLS.map(([k, label, align]) => (
                   <th key={k} onClick={()=>toggleSort(k)}
                     style={{ textAlign:align, padding:'8px 10px', cursor:'pointer',
                       borderBottom:'1px solid var(--app-border)', userSelect:'none', whiteSpace:'nowrap',
-                      color: sortKey===k ? 'var(--fmn-gold)' : 'var(--text-3)',
-                      fontSize:10, fontWeight:700, letterSpacing:'0.06em', textTransform:'uppercase' }}>
+                      color: sortKey===k ? 'var(--fmn-gold)' : 'var(--text-2)',
+                      fontSize:12, fontWeight:500, textTransform:'uppercase', letterSpacing:'.05em' }}>
                     {label}{sortKey===k ? (sortDir==='asc' ? ' ↑' : ' ↓') : ''}
                   </th>
                 ))}

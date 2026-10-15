@@ -281,8 +281,7 @@ function KanbanCard({ card, col, onOpen, onDragStart, podeArrastar, onDropAntes,
                 style={{ color: semPreview ? 'var(--clr-warn,#ff9845)' : 'rgba(255,255,255,.25)' }}/>
           }
         </div>
-        <span style={{ fontSize:13, fontFamily:'Roboto,sans-serif', fontWeight:900,
-          letterSpacing:'0.06em', color:col.colorDot, textTransform:'uppercase', flexShrink:0 }}>
+        <span style={{ fontSize:13, fontFamily:'Roboto,sans-serif', fontWeight:500, color:col.colorDot, flexShrink:0 }}>
           ADS {card.num}
         </span>
         <div style={{ marginLeft:'auto', display:'flex', gap:4, alignItems:'center', flexShrink:0 }}>
@@ -369,15 +368,13 @@ function KanbanCard({ card, col, onOpen, onDragStart, podeArrastar, onDropAntes,
         <div style={{ display:'flex', gap:12, paddingTop:6, borderTop:'1px solid var(--app-border)' }}>
           {card.vendas !== null && (
             <div>
-              <div style={{ fontSize:9, fontFamily:'Roboto,sans-serif', fontWeight:700,
-                letterSpacing:'0.1em', color:'var(--text-3)', textTransform:'uppercase' }}>Vendas</div>
+              <div style={{ fontSize:12, fontFamily:'Roboto,sans-serif', fontWeight:500, color:'var(--text-2)' }}>Vendas</div>
               <div style={{ fontSize:15, fontFamily:'Roboto,sans-serif', fontWeight:900, color:'var(--text-1)' }}>{card.vendas}</div>
             </div>
           )}
           {card.cpa !== null && (
             <div>
-              <div style={{ fontSize:9, fontFamily:'Roboto,sans-serif', fontWeight:700,
-                letterSpacing:'0.1em', color:'var(--text-3)', textTransform:'uppercase' }}>CPA</div>
+              <div style={{ fontSize:12, fontFamily:'Roboto,sans-serif', fontWeight:500, color:'var(--text-2)' }}>CPA</div>
               <div style={{ fontSize:15, fontFamily:'Roboto,sans-serif', fontWeight:900, color:cpaColor }}>
                 R${card.cpa}
               </div>
@@ -850,8 +847,7 @@ function MetaAdModal({ card, onClose }) {
   const S = {
     select:  { ...field, cursor:'pointer', appearance:'none', WebkitAppearance:'none' },
     input:   { ...field, outline:'none', boxSizing:'border-box' },
-    label:   { fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700,
-               letterSpacing:'0.08em', textTransform:'uppercase', color:'var(--text-3)',
+    label:   { fontSize:12, fontFamily:'Roboto,sans-serif', fontWeight:500, color:'var(--text-2)',
                marginBottom:4, display:'block' },
     linkBtn: { background:'none', border:'none', color:'var(--fmn-gold)', fontSize:11,
                fontFamily:'Roboto,sans-serif', cursor:'pointer', padding:0 },
@@ -865,8 +861,8 @@ function MetaAdModal({ card, onClose }) {
   };
 
   return (
-    <div onClick={e => window.cliqueFoiNoFundo(e) && onClose()} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,.7)', zIndex:700,
-      display:'flex', alignItems:'center', justifyContent:'center' }}>
+    <div onClick={e => window.cliqueFoiNoFundo(e) && onClose()} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,.8)', zIndex:700,
+      display:'flex', alignItems:'center', justifyContent:'center', backdropFilter:'blur(4px)', WebkitBackdropFilter:'blur(4px)' }}>
       <div onClick={e=>e.stopPropagation()}
         style={{ background:'var(--app-surface)', border:'1px solid var(--app-border-2)',
           borderRadius:16, padding:'24px', width:480, maxHeight:'90vh', overflowY:'auto',
@@ -1285,8 +1281,7 @@ function MetaIdField({ card, onSaved }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <span style={{ fontSize: 10, fontFamily: 'Roboto,sans-serif', fontWeight: 700,
-          letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--text-3)' }}>
+        <span style={{ fontSize: 12, fontFamily: 'Roboto,sans-serif', fontWeight: 500, color: 'var(--text-2)' }}>
           Meta Ad ID
         </span>
         {statusText && (
@@ -1432,8 +1427,7 @@ function CopyField({ id, label, fieldKey, rows = 3, hint, fields, set, copiedFie
   return (
     <div style={{ display:'flex', flexDirection:'column', gap:5 }}>
       <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-        <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700,
-          letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)' }}>{label}</span>
+        <span style={{ fontSize:12, fontFamily:'Roboto,sans-serif', fontWeight:500, color:'var(--text-2)' }}>{label}</span>
         <button onClick={() => copyToClipboard(fields[fieldKey], id)}
           style={{ display:'flex', alignItems:'center', gap:4, padding:'3px 8px', borderRadius:5,
             background: copiedField===id ? 'rgba(121,224,111,.15)' : 'rgba(255,255,255,.06)',
@@ -1472,11 +1466,11 @@ function AdsSlidesBlock({ fields, set }) {
   const addSlide     = () => save([...slidesArr, { roteiro:'', estetica_visual:'', prompt:'' }]);
   const removeSlide  = i  => save(slidesArr.filter((_, idx) => idx!==i));
 
-  const fieldStyle = { width:'100%', boxSizing:'border-box', padding:'8px 10px', borderRadius:7, resize:'vertical',
-    background:'var(--app-surface-2)', border:'1px solid var(--app-border)',
-    color:'var(--text-1)', fontFamily:'Roboto,sans-serif', fontSize:12.5, outline:'none', lineHeight:1.5 };
-  const labelStyle = { fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700,
-    letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)', display:'block', marginBottom:5 };
+  // Campo e rótulo do FMN Pro (15/10/2026).
+  const fieldStyle = { width:'100%', boxSizing:'border-box', padding:'8px 12px', borderRadius:10, resize:'vertical',
+    background:'var(--app-bg)', border:'1px solid var(--app-surface-2)',
+    color:'var(--text-1)', fontFamily:'Roboto,sans-serif', fontSize:14, outline:'none', lineHeight:1.5 };
+  const labelStyle = { fontSize:14, fontFamily:'Roboto,sans-serif', fontWeight:500, color:'var(--text-1)', display:'block', marginBottom:6 };
 
   return (
     <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
@@ -1807,8 +1801,7 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
   function PropRow({ label, children }) {
     return (
       <div style={{ display:'flex', flexDirection:'column', gap:4 }}>
-        <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700,
-          letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)' }}>{label}</span>
+        <span style={{ fontSize:12, fontFamily:'Roboto,sans-serif', fontWeight:500, color:'var(--text-2)' }}>{label}</span>
         <div style={{ fontSize:13, fontFamily:'Roboto,sans-serif', fontWeight:500, color:'var(--text-1)', lineHeight:1.4 }}>
           {children}
         </div>
@@ -1821,10 +1814,9 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
   return (
     <>
       <div onClick={e => window.cliqueFoiNoFundo(e) && onClose()} style={{
-        position:'fixed', inset:0, background:'rgba(0,0,0,.75)', zIndex:500,
+        position:'fixed', inset:0, background:'rgba(0,0,0,.8)', zIndex:500,
         display:'flex', alignItems:'stretch', justifyContent:'stretch',
-        padding:'20px',
-      }}>
+        padding:'20px', backdropFilter:'blur(4px)', WebkitBackdropFilter:'blur(4px)' }}>
         <div onClick={e=>e.stopPropagation()}
           style={{ flex:1, background:'var(--app-surface)',
             border:'1px solid var(--app-border-2)', borderRadius:16, overflow:'hidden',
@@ -1837,7 +1829,7 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
               <button onClick={onClose}
                 style={{ display:'flex', alignItems:'center', gap:5, flexShrink:0,
                   color:'var(--text-2)', cursor:'pointer', fontFamily:'Roboto,sans-serif',
-                  fontSize:11, fontWeight:700, letterSpacing:'0.04em', textTransform:'uppercase',
+                  fontSize:12, fontWeight:500,
                   padding:'5px 10px', borderRadius:6, background:'rgba(255,255,255,.05)',
                   border:'1px solid var(--app-border)', transition:'color 150ms' }}
                 onMouseEnter={e=>e.currentTarget.style.color='var(--fmn-gold)'}
@@ -1883,8 +1875,7 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
                 <option value="MCV">MCV</option>
                 <option value="BLI">BLI</option>
               </select>
-              <span style={{ fontSize:12, fontFamily:'Roboto,sans-serif', fontWeight:900,
-                letterSpacing:'0.08em', textTransform:'uppercase', color:currentCol.colorDot,
+              <span style={{ fontSize:12, fontFamily:'Roboto,sans-serif', fontWeight:500, color:currentCol.colorDot,
                 background:`${currentCol.colorDot}20`, border:`1px solid ${currentCol.colorDot}40`,
                 borderRadius:6, padding:'3px 9px', flexShrink:0 }}>
                 ADS {card.num}
@@ -2066,8 +2057,7 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
                         display:'flex', alignItems:'center', justifyContent:'center' }}>
                         <LucideIcon icon="play-circle" size={28} color="rgba(255,255,255,.22)"/>
                       </div>
-                      <span style={{ fontSize:11, fontFamily:'Roboto,sans-serif', fontWeight:700,
-                        letterSpacing:'0.06em', textTransform:'uppercase', color:'var(--text-3)' }}>Prévia da Mídia</span>
+                      <span style={{ fontSize:12, fontFamily:'Roboto,sans-serif', fontWeight:500, color:'var(--text-2)' }}>Prévia da Mídia</span>
                       <span style={{ fontSize:11, fontFamily:'Roboto,sans-serif', color:'var(--text-3)',
                         textAlign:'center', maxWidth:160, lineHeight:1.5 }}>Sincronize a pasta no Drive</span>
                     </div>
@@ -2176,8 +2166,7 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
                 <div style={{ padding:'16px', display:'flex', flexDirection:'column', gap:14 }}>
                   {/* Status — chips */}
                   <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
-                    <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700,
-                      letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)' }}>Status</span>
+                    <span style={{ fontSize:12, fontFamily:'Roboto,sans-serif', fontWeight:500, color:'var(--text-2)' }}>Status</span>
                     <div style={{ display:'flex', gap:5, flexWrap:'wrap' }}>
                       {ADS_COLUMNS.map(c => {
                         const active = fields.status === c.id;
@@ -2198,8 +2187,7 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
                   {/* Etapa — só dentro de Fazendo (status=fazer) */}
                   {fields.status === 'fazer' && (
                     <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
-                      <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700,
-                        letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)' }}>Etapa</span>
+                      <span style={{ fontSize:12, fontFamily:'Roboto,sans-serif', fontWeight:500, color:'var(--text-2)' }}>Etapa</span>
                       <div style={{ display:'flex', gap:5, flexWrap:'wrap' }}>
                         {[{ id:'copy', label:'Copy', icon:'pencil', cor:'#a78bfa' }, { id:'producao', label:'Produção', icon:'clapperboard', cor:'#79e06f' }].map(e => {
                           const active = fields.etapa === e.id;
@@ -2221,8 +2209,7 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
 
                   {/* Tipo — chips com ícone */}
                   <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
-                    <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700,
-                      letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)' }}>
+                    <span style={{ fontSize:12, fontFamily:'Roboto,sans-serif', fontWeight:500, color:'var(--text-2)' }}>
                       Tipo
                     </span>
                     <div style={{ display:'flex', gap:5, flexWrap:'wrap' }}>
@@ -2264,8 +2251,7 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
 
                   {/* URL do anúncio */}
                   <div style={{ display:'flex', flexDirection:'column', gap:5 }}>
-                    <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700,
-                      letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)' }}>URL do Anúncio</span>
+                    <span style={{ fontSize:12, fontFamily:'Roboto,sans-serif', fontWeight:500, color:'var(--text-2)' }}>URL do Anúncio</span>
                     <input value={fields.meta_ad_url} onChange={e => set('meta_ad_url', e.target.value)}
                       placeholder="https://www.facebook.com/ads/manager/..."
                       style={{ width:'100%', padding:'8px 12px', borderRadius:8,
@@ -2382,8 +2368,8 @@ function NovoAdsModal({ onClose, onCreated }) {
     colorScheme:'dark' };
 
   return (
-    <div onClick={e => window.cliqueFoiNoFundo(e) && onClose()} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,.75)', zIndex:600,
-      display:'flex', alignItems:'center', justifyContent:'center' }}>
+    <div onClick={e => window.cliqueFoiNoFundo(e) && onClose()} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,.8)', zIndex:600,
+      display:'flex', alignItems:'center', justifyContent:'center', backdropFilter:'blur(4px)', WebkitBackdropFilter:'blur(4px)' }}>
       <div onClick={e=>e.stopPropagation()}
         style={{ width:420, background:'var(--app-surface)', border:'1px solid var(--app-border-2)',
           borderRadius:16, padding:24, display:'flex', flexDirection:'column', gap:16,
@@ -2396,8 +2382,7 @@ function NovoAdsModal({ onClose, onCreated }) {
 
         <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
           <div>
-            <div style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700,
-              letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)', marginBottom:5 }}>Título</div>
+            <div style={{ fontSize:12, fontFamily:'Roboto,sans-serif', fontWeight:500, color:'var(--text-2)', marginBottom:5 }}>Título</div>
             <input value={titulo} onChange={e=>setTitulo(e.target.value)} placeholder="Ex: Contrato em latim"
               style={inputStyle}
               onFocus={e=>e.target.style.borderColor='rgba(251,191,36,.4)'}
@@ -2406,8 +2391,7 @@ function NovoAdsModal({ onClose, onCreated }) {
           </div>
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
             <div>
-              <div style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700,
-                letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)', marginBottom:5 }}>Tipo</div>
+              <div style={{ fontSize:12, fontFamily:'Roboto,sans-serif', fontWeight:500, color:'var(--text-2)', marginBottom:5 }}>Tipo</div>
               <select value={tipo} onChange={e=>setTipo(e.target.value)} style={{ ...inputStyle, appearance:'none' }}>
                 <option value="reels">Reels</option>
                 <option value="imagem">Imagem</option>
@@ -2415,8 +2399,7 @@ function NovoAdsModal({ onClose, onCreated }) {
               </select>
             </div>
             <div>
-              <div style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700,
-                letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)', marginBottom:5 }}>Coluna</div>
+              <div style={{ fontSize:12, fontFamily:'Roboto,sans-serif', fontWeight:500, color:'var(--text-2)', marginBottom:5 }}>Coluna</div>
               <select value={status} onChange={e=>setStatus(e.target.value)} style={{ ...inputStyle, appearance:'none' }}>
                 {ADS_COLUMNS.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
               </select>
@@ -2518,8 +2501,8 @@ function AtivarMetaModal({ itens, onClose, onDone, onEdit }) {
   }
 
   return (
-    <div onClick={e => window.cliqueFoiNoFundo(e) && onClose()} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,.75)', zIndex:700,
-      display:'flex', alignItems:'center', justifyContent:'center' }}>
+    <div onClick={e => window.cliqueFoiNoFundo(e) && onClose()} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,.8)', zIndex:700,
+      display:'flex', alignItems:'center', justifyContent:'center', backdropFilter:'blur(4px)', WebkitBackdropFilter:'blur(4px)' }}>
       <div onClick={e => e.stopPropagation()} style={{ width:480, maxHeight:'80vh', display:'flex', flexDirection:'column',
         background:'var(--app-surface)', border:'1px solid var(--app-border-2)', borderRadius:16,
         boxShadow:'0 20px 60px rgba(0,0,0,.6)' }}>
@@ -2886,8 +2869,7 @@ function KanbanScreen({ targetAd, onConsumeTarget }) {
         background:'var(--app-bg)', display:'flex', alignItems:'center', gap:16, flexShrink:0,
         flexWrap:'wrap' }}>
         <div style={{ display:'flex', alignItems:'center', gap:6 }}>
-          <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700,
-            letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)', whiteSpace:'nowrap' }}>Produto</span>
+          <span style={{ fontSize:12, fontFamily:'Roboto,sans-serif', fontWeight:500, color:'var(--text-2)', whiteSpace:'nowrap' }}>Produto</span>
           <div style={{ display:'flex', gap:4 }}>
             {['Todos','MCV','BLI'].map(pr => (
               <FilterPill key={pr} label={pr} active={prodFilter===pr} onClick={()=>setProdFilter(pr)}/>
@@ -2896,8 +2878,7 @@ function KanbanScreen({ targetAd, onConsumeTarget }) {
         </div>
         <div style={{ width:1, height:16, background:'var(--app-border)' }}/>
         <div style={{ display:'flex', alignItems:'center', gap:6 }}>
-          <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700,
-            letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)', whiteSpace:'nowrap' }}>Origem</span>
+          <span style={{ fontSize:12, fontFamily:'Roboto,sans-serif', fontWeight:500, color:'var(--text-2)', whiteSpace:'nowrap' }}>Origem</span>
           <div style={{ display:'flex', gap:4 }}>
             {['Todos','Perpétuo','Pico'].map(o => (
               <FilterPill key={o} label={o} active={origemFilter===o} onClick={()=>setOrigemFilter(o)}/>
@@ -2906,8 +2887,7 @@ function KanbanScreen({ targetAd, onConsumeTarget }) {
         </div>
         <div style={{ width:1, height:16, background:'var(--app-border)' }}/>
         <div style={{ display:'flex', alignItems:'center', gap:6 }}>
-          <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700,
-            letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)', whiteSpace:'nowrap' }}>Formato</span>
+          <span style={{ fontSize:12, fontFamily:'Roboto,sans-serif', fontWeight:500, color:'var(--text-2)', whiteSpace:'nowrap' }}>Formato</span>
           <div style={{ display:'flex', gap:4 }}>
             {['Todos','Reels','Imagem','Carrossel'].map(f => (
               <FilterPill key={f} label={f} active={fmtFilter===f} onClick={()=>setFmtFilter(f)}/>
@@ -2916,8 +2896,7 @@ function KanbanScreen({ targetAd, onConsumeTarget }) {
         </div>
         <div style={{ width:1, height:16, background:'var(--app-border)' }}/>
         <div style={{ display:'flex', alignItems:'center', gap:6 }}>
-          <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700,
-            letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)', whiteSpace:'nowrap' }}>Tag</span>
+          <span style={{ fontSize:12, fontFamily:'Roboto,sans-serif', fontWeight:500, color:'var(--text-2)', whiteSpace:'nowrap' }}>Tag</span>
           <div style={{ display:'flex', gap:4 }}>
             {['Todas','Ótimo','Testar novamente','Mediano','Ruim'].map(t => (
               <FilterPill key={t} label={t} active={tagFilter===t} onClick={()=>setTagFilter(t)}/>
@@ -2927,8 +2906,7 @@ function KanbanScreen({ targetAd, onConsumeTarget }) {
         <div style={{ width:1, height:16, background:'var(--app-border)' }}/>
         <div style={{ display:'flex', alignItems:'center', gap:6 }}
           title={sortBy !== 'manual' ? 'Volte pra "Manual" pra poder arrastar os cards' : 'Arraste os cards pra reordenar'}>
-          <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700,
-            letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)', whiteSpace:'nowrap' }}>Ordenar</span>
+          <span style={{ fontSize:12, fontFamily:'Roboto,sans-serif', fontWeight:500, color:'var(--text-2)', whiteSpace:'nowrap' }}>Ordenar</span>
           <div style={{ display:'flex', gap:4 }}>
             {[['manual','Manual'],['nome','Nome'],['vendas','Vendas'],['cpa','CPA']].map(([val, label]) => (
               <FilterPill key={val} label={label} active={sortBy===val} onClick={()=>setSortBy(val)}/>

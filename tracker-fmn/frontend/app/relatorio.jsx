@@ -77,8 +77,7 @@ function KpiRelatorio({ label, value, accent }) {
   return (
     <div style={{ flex: 1, background: 'var(--app-surface)', border: '1px solid var(--app-border)',
       borderRadius: 12, padding: '14px 16px', breakInside: 'avoid', pageBreakInside: 'avoid' }}>
-      <div style={{ fontSize: 9.5, fontFamily: 'Roboto,sans-serif', fontWeight: 700,
-        letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--text-3)', marginBottom: 6 }}>
+      <div style={{ fontSize: 12, fontFamily: 'Roboto,sans-serif', fontWeight: 500, color: 'var(--text-2)', marginBottom: 6 }}>
         {label}
       </div>
       <div style={{ fontSize: 19, fontFamily: 'Roboto,sans-serif', fontWeight: 700,
@@ -162,7 +161,7 @@ function RelatorioConteudo({ destinatario, rangeFrom, rangeTo, dados }) {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         paddingBottom: 16, borderBottom: '1px solid var(--app-border)', marginBottom: 18 }}>
         <div>
-          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase',
+          <div style={{ fontSize: 12, fontWeight: 500,
             color: 'var(--fmn-gold)' }}>Tracker FMN</div>
           <div style={{ fontSize: 19, fontWeight: 700, color: 'var(--text-1)', marginTop: 3 }}>
             Relatório Financeiro
@@ -177,8 +176,8 @@ function RelatorioConteudo({ destinatario, rangeFrom, rangeTo, dados }) {
             border: '2px solid var(--fmn-gold)',
           }}/>
           <div>
-            <div style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase',
-              color: 'var(--text-3)' }}>Preparado para</div>
+            <div style={{ fontSize: 12, fontWeight: 500,
+              color: 'var(--text-2)' }}>Preparado para</div>
             <div style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--text-1)' }}>{dest.nome}</div>
           </div>
         </div>
@@ -372,7 +371,7 @@ function RelatorioOverlay({ destinatario, rangeFrom, rangeTo, dados, onClose }) 
 
   return createPortal((
     <div className="relatorio-overlay-print" style={{ position: 'fixed', inset: 0, zIndex: 9999,
-      background: 'rgba(0,0,0,.75)', overflowY: 'auto', padding: '24px 0' }}>
+      background: 'rgba(0,0,0,.8)', overflowY: 'auto', padding: '24px 0', backdropFilter:'blur(4px)', WebkitBackdropFilter:'blur(4px)' }}>
       <div style={{ position: 'sticky', top: 12, display: 'flex', justifyContent: 'center',
         marginBottom: 12 }} className="no-print">
         <button onClick={onClose} style={{

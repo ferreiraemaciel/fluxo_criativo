@@ -65,8 +65,7 @@ function SeparadorData({ rotulo }) {
       <span style={{ padding: '3px 12px', borderRadius: 999,
         background: 'var(--overlay-08)', border: '1px solid var(--app-border)',
         backdropFilter: 'blur(6px)', fontFamily: 'Roboto,sans-serif',
-        fontSize: 10.5, fontWeight: 700, letterSpacing: '.04em',
-        textTransform: 'uppercase', color: 'var(--text-3)' }}>
+        fontSize: 12, fontWeight: 500, color: 'var(--text-2)' }}>
         {rotulo}
       </span>
     </div>
@@ -277,12 +276,12 @@ function Bolha({ msg }) {
         border: '1px solid ' + (isSaida ? 'rgba(251,191,36,.25)' : 'var(--app-border)'),
       }}>
         {msg.tipo === 'template' && (
-          <div style={{ fontSize: 9.5, color: 'var(--text-3)', marginBottom: 3, fontFamily: 'Roboto,sans-serif', textTransform: 'uppercase', letterSpacing: .4 }}>
+          <div style={{ fontSize: 12, color: 'var(--text-2)', marginBottom: 3, fontFamily: 'Roboto,sans-serif', letterSpacing: .4 }}>
             modelo: {msg.template_nome}
           </div>
         )}
         {msg.origem === 'ia' && (
-          <div style={{ fontSize: 9.5, color: 'var(--fmn-gold)', marginBottom: 3, fontFamily: 'Roboto,sans-serif', textTransform: 'uppercase', letterSpacing: .4 }}>
+          <div style={{ fontSize: 12, color: 'var(--fmn-gold)', marginBottom: 3, fontFamily: 'Roboto,sans-serif', letterSpacing: .4 }}>
             Claudinho
           </div>
         )}
@@ -361,7 +360,7 @@ function PromptClaudinhoModal({ onClose, SUPA_URL, SUPA_KEY }) {
   }) : null;
 
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.6)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.8)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter:'blur(4px)', WebkitBackdropFilter:'blur(4px)' }}
       onClick={onClose}>
       <div onClick={e => e.stopPropagation()} style={{ width: 720, maxWidth: '92vw', maxHeight: '85vh', display: 'flex', flexDirection: 'column',
         background: 'var(--app-surface)', border: '1px solid var(--app-border)', borderRadius: 12, overflow: 'hidden' }}>
@@ -435,7 +434,7 @@ function LogErrosClaudinhoModal({ onClose }) {
   const STATUS_LABEL = { corrigido: 'Corrigido', pendente: 'Pendente', reincidencia: 'Reincidência' };
 
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.6)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.8)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter:'blur(4px)', WebkitBackdropFilter:'blur(4px)' }}
       onClick={onClose}>
       <div onClick={e => e.stopPropagation()} style={{ width: 620, maxWidth: '92vw', maxHeight: '85vh', display: 'flex', flexDirection: 'column',
         background: 'var(--app-surface)', border: '1px solid var(--app-border)', borderRadius: 12, overflow: 'hidden' }}>
@@ -541,7 +540,7 @@ function NovoContatoModal({ onClose, onEnviado, SUPA_URL, SUPA_KEY }) {
   }
 
   return (
-    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.55)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.8)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter:'blur(4px)', WebkitBackdropFilter:'blur(4px)' }}>
       <div onClick={e => e.stopPropagation()} style={{ width: 380, background: 'var(--app-surface)', border: '1px solid var(--app-border)', borderRadius: 14, padding: 20 }}>
         <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text-1)', fontFamily: 'Roboto,sans-serif', marginBottom: 4 }}>Novo contato</div>
         <div style={{ fontSize: 11.5, color: 'var(--text-3)', fontFamily: 'Roboto,sans-serif', marginBottom: 14 }}>
@@ -939,7 +938,7 @@ function MetricasView({ contatosDb, msgs, onPrecisaJanela }) {
         <CardKPI label="Precisando de humano" value={stats.intervencaoHumana} icon="alert-triangle" />
       </div>
 
-      <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-3)', margin: '18px 0 2px', fontFamily: 'Roboto,sans-serif', textTransform: 'uppercase', letterSpacing: .4 }}>
+      <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-2)', margin: '18px 0 2px', fontFamily: 'Roboto,sans-serif', letterSpacing: .4 }}>
         Custos (estimados, ver/ajustar em custo_precos)
       </div>
       <div style={{ fontSize: 10.5, color: 'var(--text-3)', fontFamily: 'Roboto,sans-serif', marginBottom: 8 }}>

@@ -184,8 +184,8 @@ function AddExpenseModal({ onClose, onSaved }) {
     background:'var(--app-surface-2)', border:'1px solid var(--app-border)', color:'var(--text-1)',
     colorScheme:'dark', width:'100%', boxSizing:'border-box' };
   return (
-    <div onClick={onClose} style={{ position:'fixed',inset:0,background:'rgba(0,0,0,.6)',zIndex:500,
-      display:'flex',alignItems:'center',justifyContent:'center' }}>
+    <div onClick={onClose} style={{ position:'fixed',inset:0,background:'rgba(0,0,0,.8)',zIndex:500,
+      display:'flex',alignItems:'center',justifyContent:'center', backdropFilter:'blur(4px)', WebkitBackdropFilter:'blur(4px)' }}>
       <div onClick={e=>e.stopPropagation()} style={{ background:'var(--app-surface)',
         border:'1px solid var(--app-border-2)',borderRadius:16,padding:24,width:400,
         display:'flex',flexDirection:'column',gap:14,boxShadow:'0 20px 60px rgba(0,0,0,.5)' }}>
@@ -195,15 +195,13 @@ function AddExpenseModal({ onClose, onSaved }) {
             color:'var(--text-2)',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',fontSize:16 }}>×</button>
         </div>
         <div style={{ display:'flex',flexDirection:'column',gap:5 }}>
-          <span style={{ fontSize:11,fontFamily:'Roboto,sans-serif',fontWeight:700,color:'var(--text-3)',
-            letterSpacing:'0.06em',textTransform:'uppercase' }}>Descrição</span>
+          <span style={{ fontSize:12,fontFamily:'Roboto,sans-serif',fontWeight:500,color:'var(--text-2)' }}>Descrição</span>
           <input type="text" value={form.descricao} placeholder="Ex: UTMify, Hotmart Pages..."
             onChange={e=>set('descricao',e.target.value)} style={inp}/>
         </div>
         <div style={{ display:'flex',gap:10 }}>
           <div style={{ flex:1,display:'flex',flexDirection:'column',gap:5 }}>
-            <span style={{ fontSize:11,fontFamily:'Roboto,sans-serif',fontWeight:700,color:'var(--text-3)',
-              letterSpacing:'0.06em',textTransform:'uppercase' }}>Tipo</span>
+            <span style={{ fontSize:12,fontFamily:'Roboto,sans-serif',fontWeight:500,color:'var(--text-2)' }}>Tipo</span>
             <select value={form.tipo} onChange={e=>set('tipo',e.target.value)} style={{...inp,cursor:'pointer'}}>
               <option value="recorrente">Recorrente</option>
               <option value="unico">Único</option>
@@ -211,8 +209,7 @@ function AddExpenseModal({ onClose, onSaved }) {
           </div>
           {form.tipo === 'recorrente' && (
             <div style={{ flex:1,display:'flex',flexDirection:'column',gap:5 }}>
-              <span style={{ fontSize:11,fontFamily:'Roboto,sans-serif',fontWeight:700,color:'var(--text-3)',
-                letterSpacing:'0.06em',textTransform:'uppercase' }}>Recorrência</span>
+              <span style={{ fontSize:12,fontFamily:'Roboto,sans-serif',fontWeight:500,color:'var(--text-2)' }}>Recorrência</span>
               <select value={form.recorrencia} onChange={e=>set('recorrencia',e.target.value)} style={{...inp,cursor:'pointer'}}>
                 <option value="mensal">Mensal</option>
                 <option value="anual">Anual</option>
@@ -222,16 +219,14 @@ function AddExpenseModal({ onClose, onSaved }) {
         </div>
         <div style={{ display:'flex',gap:10 }}>
           <div style={{ flex:1,display:'flex',flexDirection:'column',gap:5 }}>
-            <span style={{ fontSize:11,fontFamily:'Roboto,sans-serif',fontWeight:700,color:'var(--text-3)',
-              letterSpacing:'0.06em',textTransform:'uppercase' }}>
+            <span style={{ fontSize:12,fontFamily:'Roboto,sans-serif',fontWeight:500,color:'var(--text-2)' }}>
               {form.tipo==='unico' ? 'Valor (R$)' : form.recorrencia==='anual' ? 'Valor anual (R$)' : 'Valor mensal (R$)'}
             </span>
             <input type="number" value={form.valor} placeholder="0.00"
               onChange={e=>set('valor',e.target.value)} style={inp}/>
           </div>
           <div style={{ flex:1,display:'flex',flexDirection:'column',gap:5 }}>
-            <span style={{ fontSize:11,fontFamily:'Roboto,sans-serif',fontWeight:700,color:'var(--text-3)',
-              letterSpacing:'0.06em',textTransform:'uppercase' }}>
+            <span style={{ fontSize:12,fontFamily:'Roboto,sans-serif',fontWeight:500,color:'var(--text-2)' }}>
               {form.tipo==='unico' ? 'Data' : 'Início'}
             </span>
             <input type="date" value={form.data}
@@ -239,8 +234,7 @@ function AddExpenseModal({ onClose, onSaved }) {
           </div>
         </div>
         <div style={{ display:'flex',flexDirection:'column',gap:5 }}>
-          <span style={{ fontSize:11,fontFamily:'Roboto,sans-serif',fontWeight:700,color:'var(--text-3)',
-            letterSpacing:'0.06em',textTransform:'uppercase' }}>Categoria</span>
+          <span style={{ fontSize:12,fontFamily:'Roboto,sans-serif',fontWeight:500,color:'var(--text-2)' }}>Categoria</span>
           <select value={form.categoria} onChange={e=>set('categoria',e.target.value)} style={{...inp,cursor:'pointer'}}>
             {categorias.map(c=><option key={c.chave} value={c.chave}>{c.label}</option>)}
           </select>
@@ -332,11 +326,10 @@ function AddRevenueModal({ onClose, onSaved }) {
   const inp = { padding:'7px 10px', borderRadius:7, fontSize:12.5, fontFamily:'Roboto,sans-serif',
     background:'var(--app-surface-2)', border:'1px solid var(--app-border)', color:'var(--text-1)',
     colorScheme:'dark', width:'100%', boxSizing:'border-box' };
-  const lbl = { fontSize:11, fontFamily:'Roboto,sans-serif', fontWeight:700, color:'var(--text-3)',
-    letterSpacing:'0.06em', textTransform:'uppercase' };
+  const lbl = { fontSize:12, fontFamily:'Roboto,sans-serif', fontWeight:500, color:'var(--text-2)' };
   return (
-    <div onClick={onClose} style={{ position:'fixed',inset:0,background:'rgba(0,0,0,.6)',zIndex:500,
-      display:'flex',alignItems:'center',justifyContent:'center' }}>
+    <div onClick={onClose} style={{ position:'fixed',inset:0,background:'rgba(0,0,0,.8)',zIndex:500,
+      display:'flex',alignItems:'center',justifyContent:'center', backdropFilter:'blur(4px)', WebkitBackdropFilter:'blur(4px)' }}>
       <div onClick={e=>e.stopPropagation()} style={{ background:'var(--app-surface)',
         border:'1px solid var(--app-border-2)',borderRadius:16,padding:24,width:400,
         display:'flex',flexDirection:'column',gap:14,boxShadow:'0 20px 60px rgba(0,0,0,.5)' }}>
@@ -556,9 +549,8 @@ function ExpensesTab({ dateRange }) {
               <tr style={{ borderBottom:'1px solid var(--app-border)' }}>
                 {['Data','Tipo','Categoria','Descrição','Valor',''].map((h,i)=>(
                   <th key={i} style={{ padding:'10px 16px', textAlign:i>=4?'right':'left',
-                    fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700,
-                    letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)',
-                    whiteSpace:'nowrap' }}>{h}</th>
+                    fontSize:12, fontFamily:'Roboto,sans-serif', fontWeight:500, color:'var(--text-2)',
+                    whiteSpace:'nowrap', textTransform:'uppercase', letterSpacing:'.05em' }}>{h}</th>
                 ))}
               </tr>
             </thead>
@@ -1058,8 +1050,8 @@ function AsaasTab({ dateRange }) {
             <thead>
               <tr style={{ borderBottom:'1px solid var(--app-border)' }}>
                 {['Data','Cliente','Etiqueta','Forma','Preço','Pago','Recebido','Situação'].map((h,i) => (
-                  <th key={i} style={{ padding:'10px 14px', textAlign:i>=4&&i<=6?'right':'left', fontSize:10, fontFamily:'Roboto,sans-serif',
-                    fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)' }}>{h}</th>
+                  <th key={i} style={{ padding:'10px 14px', textAlign:i>=4&&i<=6?'right':'left', fontSize:12, fontFamily:'Roboto,sans-serif',
+                    fontWeight:500, color:'var(--text-2)', textTransform:'uppercase', letterSpacing:'.05em' }}>{h}</th>
                 ))}
               </tr>
             </thead>
@@ -1184,8 +1176,7 @@ function HotmartTab({ dateRange }) {
             <tr style={{ borderBottom:'1px solid var(--app-border)' }}>
               {['Produto','Preço','Vendas','Aprovações','Reembolsos','Receita'].map((h,i) => (
                 <th key={i} style={{ padding:'10px 16px', textAlign:i===0?'left':'right',
-                  fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700,
-                  letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)' }}>
+                  fontSize:12, fontFamily:'Roboto,sans-serif', fontWeight:500, color:'var(--text-2)', textTransform:'uppercase', letterSpacing:'.05em' }}>
                   {h}
                 </th>
               ))}
@@ -1266,8 +1257,7 @@ function HotmartTab({ dateRange }) {
             <tr style={{ borderBottom:'1px solid var(--app-border)' }}>
               {['Data','Produto','Valor','Status'].map((h,i) => (
                 <th key={i} style={{ padding:'10px 16px', textAlign:i>=2?'right':'left',
-                  fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700,
-                  letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)' }}>
+                  fontSize:12, fontFamily:'Roboto,sans-serif', fontWeight:500, color:'var(--text-2)', textTransform:'uppercase', letterSpacing:'.05em' }}>
                   {h}
                 </th>
               ))}

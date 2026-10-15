@@ -281,9 +281,8 @@ function SiteScreen() {
                 <div style={{display:'flex',flexDirection:'column',gap:0}}>
                   {/* Header */}
                   <div style={{display:'grid',gridTemplateColumns:'1fr 70px 120px',
-                    gap:12,padding:'5px 8px',marginBottom:4,fontSize:9.5,
-                    fontFamily:'Roboto,sans-serif',fontWeight:700,letterSpacing:'.07em',
-                    textTransform:'uppercase',color:'rgba(255,255,255,.24)',
+                    gap:12,padding:'5px 8px',marginBottom:4,fontSize:12,
+                    fontFamily:'Roboto,sans-serif',fontWeight:500,color:'rgba(255,255,255,.24)',
                     borderBottom:'1px solid rgba(255,255,255,.05)'}}>
                     <span>Página</span>
                     <span style={{textAlign:'right'}}>Views</span>
@@ -347,9 +346,8 @@ function SiteScreen() {
                 <div style={{display:'flex',flexDirection:'column',gap:0}}>
                   {/* Header */}
                   <div style={{display:'grid',gridTemplateColumns:'44px 1fr 64px 70px 110px 28px',
-                    gap:10,padding:'5px 8px',marginBottom:4,fontSize:9.5,
-                    fontFamily:'Roboto,sans-serif',fontWeight:700,letterSpacing:'.07em',
-                    textTransform:'uppercase',color:'rgba(255,255,255,.24)',
+                    gap:10,padding:'5px 8px',marginBottom:4,fontSize:12,
+                    fontFamily:'Roboto,sans-serif',fontWeight:500,color:'rgba(255,255,255,.24)',
                     borderBottom:'1px solid rgba(255,255,255,.05)'}}>
                     <span/>
                     <span>Post</span>
