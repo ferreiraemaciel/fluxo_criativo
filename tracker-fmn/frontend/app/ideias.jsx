@@ -285,9 +285,9 @@ function IdeaModal({ idea, onClose, onSave }) {
                   style={{ padding:'7px 16px', borderRadius:999, cursor:'pointer',
                     fontFamily:'Roboto,sans-serif', fontWeight:700, fontSize:12.5, transition:'all 150ms',
                     display:'flex', alignItems:'center', gap:6,
-                    background:sel?'rgba(251,191,36,.18)':'rgba(255,255,255,.06)',
-                    border:`1px solid ${sel?'rgba(251,191,36,.4)':'var(--app-border)'}`,
-                    color:sel?'var(--fmn-gold)':'var(--text-2)' }}>
+                    background:sel? 'var(--app-primary)':'rgba(255,255,255,.06)',
+                    border:`1px solid ${sel?'var(--app-primary)':'var(--app-border)'}`,
+                    color:sel? 'var(--app-primary-fg)':'var(--text-2)' }}>
                   <LucideIcon icon={(window.PLAT_ICON||{})[f]||'file'} size={13}/>{f}
                 </button>
               );
@@ -302,9 +302,9 @@ function IdeaModal({ idea, onClose, onSave }) {
               <button key={s} onClick={()=>setForm(p=>({...p,status:s}))}
                 style={{ padding:'7px 16px', borderRadius:999, cursor:'pointer',
                   fontFamily:'Roboto,sans-serif', fontWeight:700, fontSize:12, transition:'all 150ms',
-                  background:form.status===s?'rgba(251,191,36,.18)':'rgba(255,255,255,.06)',
-                  border:`1px solid ${form.status===s?'rgba(251,191,36,.4)':'var(--app-border)'}`,
-                  color:form.status===s?'var(--fmn-gold)':'var(--text-2)' }}>
+                  background:form.status===s? 'var(--app-primary)':'rgba(255,255,255,.06)',
+                  border:`1px solid ${form.status===s?'var(--app-primary)':'var(--app-border)'}`,
+                  color:form.status===s? 'var(--app-primary-fg)':'var(--text-2)' }}>
                 {s}
               </button>
             ))}
@@ -320,9 +320,9 @@ function IdeaModal({ idea, onClose, onSave }) {
               <button key={id} onClick={()=>setRefMode(id)}
                 style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'center', gap:6,
                   padding:'6px', borderRadius:6, cursor:'pointer', transition:'all 130ms',
-                  background:refMode===id?'rgba(251,191,36,.15)':'transparent',
-                  border:`1px solid ${refMode===id?'rgba(251,191,36,.2)':'transparent'}`,
-                  color:refMode===id?'var(--fmn-gold)':'rgba(255,255,255,.42)',
+                  background:refMode===id? 'var(--app-primary)':'transparent',
+                  border:`1px solid ${refMode===id?'var(--app-primary)':'transparent'}`,
+                  color:refMode===id? 'var(--app-primary-fg)':'rgba(255,255,255,.42)',
                   fontFamily:'Roboto,sans-serif', fontWeight:700, fontSize:11.5 }}>
                 <LucideIcon icon={ic} size={13}/>{l}
               </button>
@@ -574,9 +574,9 @@ function IdeiaScreen() {
               {['Todos', ...ALL_FMTS].map(f => (
                 <button key={f} onClick={() => setFmtFilter(f)}
                   style={{ padding:'5px 11px', borderRadius:6, cursor:'pointer', transition:'all 130ms',
-                    background:fmtFilter===f?'rgba(251,191,36,.15)':'transparent',
-                    border:`1px solid ${fmtFilter===f?'rgba(251,191,36,.2)':'transparent'}`,
-                    color:fmtFilter===f?'var(--fmn-gold)':'rgba(255,255,255,.42)',
+                    background:fmtFilter===f? 'var(--app-primary)':'transparent',
+                    border:`1px solid ${fmtFilter===f?'var(--app-primary)':'transparent'}`,
+                    color:fmtFilter===f? 'var(--app-primary-fg)':'rgba(255,255,255,.42)',
                     fontFamily:'Roboto,sans-serif', fontWeight:700, fontSize:11 }}>
                   {f}
                 </button>
@@ -590,7 +590,7 @@ function IdeiaScreen() {
 
       {/* Board — CSS grid garante 2 colunas sempre iguais e tela cheia */}
       <div style={{ flex:1, display:'grid', gridTemplateColumns:'1fr 1fr', gridTemplateRows:'1fr',
-        gap:16, padding:'16px 24px', overflow:'hidden', minHeight:0 }}>
+        gap:16, padding:'8px 32px 24px', overflow:'hidden', minHeight:0 }}>
         {STATUS_COLS.map(col => (
           <IdeaColumn
             key={col} colId={col}

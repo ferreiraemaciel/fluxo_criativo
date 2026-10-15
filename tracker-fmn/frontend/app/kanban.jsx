@@ -1305,9 +1305,9 @@ function MetaIdField({ card, onSaved }) {
         />
         <button onClick={() => saveId(val)} disabled={!val || status === 'saving'}
           style={{ padding: '8px 12px', borderRadius: 8, cursor: val ? 'pointer' : 'not-allowed',
-            background: val ? 'rgba(251,191,36,.15)' : 'rgba(255,255,255,.05)',
-            border: `1px solid ${val ? 'rgba(251,191,36,.3)' : 'var(--app-border)'}`,
-            color: val ? 'var(--fmn-gold)' : 'var(--text-3)',
+            background: val ? 'var(--app-primary)' : 'rgba(255,255,255,.05)',
+            border: `1px solid ${val ? 'var(--app-primary)' : 'var(--app-border)'}`,
+            color: val ? 'var(--app-primary-fg)' : 'var(--text-3)',
             fontFamily: 'Roboto,sans-serif', fontWeight: 700, fontSize: 11, whiteSpace: 'nowrap' }}>
           Salvar
         </button>
@@ -2082,8 +2082,8 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
                           style={{ flex:1, padding:'6px 0', borderRadius:7, fontSize:11,
                             fontFamily:'Roboto,sans-serif', fontWeight:700, cursor:'pointer',
                             border: driveInputTipo === val ? '1.5px solid var(--fmn-gold)' : '1px solid var(--app-border)',
-                            background: driveInputTipo === val ? 'rgba(251,191,36,.15)' : 'rgba(255,255,255,.04)',
-                            color: driveInputTipo === val ? 'var(--fmn-gold)' : 'var(--text-3)',
+                            background: driveInputTipo === val ? 'var(--app-primary)' : 'rgba(255,255,255,.04)',
+                            color: driveInputTipo === val ? 'var(--app-primary-fg)' : 'var(--text-3)',
                             transition:'all 120ms' }}>
                           {label}
                         </button>

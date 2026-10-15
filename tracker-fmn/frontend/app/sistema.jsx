@@ -130,16 +130,11 @@ function SystemScreen() {
 
   return (
     <div style={{ display:'flex', flexDirection:'column', height:'100%', minHeight:0, width:'100%', overflow:'hidden' }}>
-      <div style={{ height:'var(--topbar-h)', background:'var(--app-bg)',
-        borderBottom:'1px solid var(--app-border)', padding:'0 24px',
-        display:'flex', alignItems:'center', justifyContent:'space-between', flexShrink:0 }}>
-        <span style={{ fontFamily:'Roboto,sans-serif', fontWeight:700, fontSize:14.5, color:'var(--text-1)' }}>Sistema</span>
-        <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-          <Btn variant="ghost" size="sm" icon="database" onClick={load}>Recarregar dados</Btn>
-        </div>
-      </div>
+      <TopBar title="Sistema" actions={
+        <Btn variant="secondary" size="sm" icon="database" onClick={load}>Recarregar dados</Btn>
+      }/>
 
-      <div style={{ flex:1, minHeight:0, overflowY:'auto', padding:'18px 24px', display:'flex',
+      <div style={{ flex:1, minHeight:0, overflowY:'auto', padding:'8px 32px 32px', display:'flex',
         flexDirection:'column', gap:16, width:'100%', minWidth:0, boxSizing:'border-box' }}>
 
         {loading ? (

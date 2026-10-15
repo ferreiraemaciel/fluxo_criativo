@@ -44,9 +44,9 @@ function DateFilter({ from, to, onChange }) {
         {presets.map(p => (
           <button key={p} onClick={() => aplicarPreset(p)}
             style={{ padding:'5px 12px', borderRadius:6, cursor:'pointer', transition:'all 130ms',
-              background: presetAtivo(p) ? 'rgba(251,191,36,.15)' : 'transparent',
-              border: `1px solid ${presetAtivo(p) ? 'rgba(251,191,36,.2)' : 'transparent'}`,
-              color: presetAtivo(p) ? 'var(--fmn-gold)' : 'rgba(255,255,255,.42)',
+              background: presetAtivo(p) ? 'var(--app-primary)' : 'transparent',
+              border: `1px solid ${presetAtivo(p) ? 'var(--app-primary)' : 'transparent'}`,
+              color: presetAtivo(p) ? 'var(--app-primary-fg)' : 'rgba(255,255,255,.42)',
               fontFamily:'Roboto,sans-serif', fontWeight:700, fontSize:11.5 }}>
             {p}
           </button>
@@ -526,9 +526,9 @@ function ExpensesTab({ dateRange }) {
           {[['despesas','Despesas'],['receitas','Receitas'],['balanco','Balanço']].map(([id,l])=>(
             <button key={id} onClick={()=>setView(id)}
               style={{ padding:'6px 14px', borderRadius:6, cursor:'pointer', transition:'all 130ms',
-                background:view===id?'rgba(251,191,36,.15)':'transparent',
-                border:`1px solid ${view===id?'rgba(251,191,36,.2)':'transparent'}`,
-                color:view===id?'var(--fmn-gold)':'rgba(255,255,255,.42)',
+                background:view===id? 'var(--app-primary)':'transparent',
+                border:`1px solid ${view===id?'var(--app-primary)':'transparent'}`,
+                color:view===id? 'var(--app-primary-fg)':'rgba(255,255,255,.42)',
                 fontFamily:'Roboto,sans-serif', fontWeight:700, fontSize:11.5 }}>
               {l}
             </button>
@@ -1252,9 +1252,9 @@ function HotmartTab({ dateRange }) {
             {filters.map(f => (
               <button key={f} onClick={() => setActiveFilter(f)}
                 style={{ padding:'4px 10px', borderRadius:5, cursor:'pointer', transition:'all 130ms',
-                  background:activeFilter===f?'rgba(251,191,36,.15)':'transparent',
-                  border:`1px solid ${activeFilter===f?'rgba(251,191,36,.2)':'transparent'}`,
-                  color:activeFilter===f?'var(--fmn-gold)':'rgba(255,255,255,.42)',
+                  background:activeFilter===f? 'var(--app-primary)':'transparent',
+                  border:`1px solid ${activeFilter===f?'var(--app-primary)':'transparent'}`,
+                  color:activeFilter===f? 'var(--app-primary-fg)':'rgba(255,255,255,.42)',
                   fontFamily:'Roboto,sans-serif', fontWeight:700, fontSize:11 }}>
                 {f}
               </button>
@@ -1340,7 +1340,7 @@ function FinancialScreen() {
         ))}
       </div>
       {/* Content */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '20px 24px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', padding: '8px 32px 32px' }}>
         {tab === 'hotmart'  && <HotmartTab dateRange={dateRange}/>}
         {tab === 'asaas'    && <AsaasTab dateRange={dateRange}/>}
         {tab === 'infra'    && <InfraTab dateRange={dateRange}/>}

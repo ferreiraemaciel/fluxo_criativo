@@ -1498,9 +1498,9 @@ function SpecificRulesModal({ rules, onAdd, onDelete, pausedIds, trafficData, in
                     <button key={id} onClick={() => setForm(p => ({ ...p, scope:id, targetId:'' }))}
                       style={{ flex:1,padding:'8px',borderRadius:8,cursor:'pointer',
                         fontFamily:'Roboto,sans-serif',fontWeight:700,fontSize:12.5,transition:'all 150ms',
-                        background:form.scope===id?'rgba(251,191,36,.15)':'rgba(255,255,255,.05)',
-                        border:`1px solid ${form.scope===id?'rgba(251,191,36,.35)':'var(--app-border)'}`,
-                        color:form.scope===id?'var(--fmn-gold)':'var(--text-2)' }}>
+                        background:form.scope===id? 'var(--app-primary)':'rgba(255,255,255,.05)',
+                        border:`1px solid ${form.scope===id?'var(--app-primary)':'var(--app-border)'}`,
+                        color:form.scope===id? 'var(--app-primary-fg)':'var(--text-2)' }}>
                       {l}
                     </button>
                   ))}
@@ -2890,9 +2890,9 @@ function TrafficScreen() {
                   <button key={col.k} onClick={() => setSelectedMetric(col.k)}
                     style={{ padding:'5px 12px', borderRadius:999, cursor:'pointer', fontSize:12,
                       fontFamily:'Roboto,sans-serif', fontWeight:700, transition:'all 150ms',
-                      border: active ? '1px solid rgba(251,191,36,.5)' : '1px solid var(--app-border)',
-                      background: active ? 'rgba(251,191,36,.12)' : 'rgba(255,255,255,.04)',
-                      color: active ? 'var(--fmn-gold)' : 'var(--text-2)' }}>
+                      border: active ? '1px solid var(--app-primary)' : '1px solid var(--app-border)',
+                      background: active ? 'var(--app-primary)' : 'rgba(255,255,255,.04)',
+                      color: active ? 'var(--app-primary-fg)' : 'var(--text-2)' }}>
                     {col.head}
                   </button>
                 );

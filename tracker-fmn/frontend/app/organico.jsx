@@ -806,9 +806,9 @@ function PublicarArtigoModal({ form, onClose, onSuccess, initialDate }) {
             style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'center', gap:6,
               padding:'8px 10px', borderRadius:8, cursor:'pointer',
               fontFamily:'Roboto,sans-serif', fontSize:12, fontWeight:700,
-              background: modo===v ? 'rgba(251,191,36,.14)' : 'rgba(255,255,255,.04)',
-              border: modo===v ? '1px solid rgba(251,191,36,.45)' : '1px solid var(--app-border)',
-              color: modo===v ? 'var(--fmn-gold)' : 'var(--text-3)' }}>
+              background: modo===v ? 'var(--app-primary)' : 'rgba(255,255,255,.04)',
+              border: modo===v ? '1px solid var(--app-primary)' : '1px solid var(--app-border)',
+              color: modo===v ? 'var(--app-primary-fg)' : 'var(--text-3)' }}>
             <LucideIcon icon={icone} size={13}/>{rotulo}
           </button>
         ))}
@@ -1296,9 +1296,9 @@ function PublishModal({ form, slidesArr, slideFiles, onClose, onSuccess, initial
             {[['agora','Publicar agora','zap'],['agendar','Agendar','clock']].map(([id,label,icon]) => (
               <button key={id} onClick={()=>setModo(id)}
                 style={{ flex:1, padding:'9px', borderRadius:7, cursor:'pointer',
-                  background: modo===id ? 'rgba(251,191,36,.18)' : 'transparent',
-                  border: modo===id ? '1px solid rgba(251,191,36,.35)' : '1px solid transparent',
-                  color: modo===id ? '#fbbf24' : 'var(--text-3)',
+                  background: modo===id ? 'var(--app-primary)' : 'transparent',
+                  border: modo===id ? '1px solid var(--app-primary)' : '1px solid transparent',
+                  color: modo===id ? 'var(--app-primary-fg)' : 'var(--text-3)',
                   fontFamily:'Roboto,sans-serif', fontWeight:700, fontSize:12, transition:'all 130ms',
                   display:'flex', alignItems:'center', justifyContent:'center', gap:6 }}>
                 <LucideIcon icon={icon} size={13}/>{label}
@@ -3265,8 +3265,8 @@ function OrganicoScreen({ targetCard, onConsumeTarget }) {
                   style={{ display:'flex', alignItems:'center', gap:5, padding:'5px 11px',
                     borderRadius:6, cursor:'pointer', fontSize:11, fontFamily:'Roboto,sans-serif',
                     fontWeight:700, transition:'all 130ms', border:'none',
-                    background: viewMode===id ? 'rgba(251,191,36,.18)' : 'transparent',
-                    color: viewMode===id ? 'var(--fmn-gold)' : 'var(--text-3)' }}>
+                    background: viewMode===id ? 'var(--app-primary)' : 'transparent',
+                    color: viewMode===id ? 'var(--app-primary-fg)' : 'var(--text-3)' }}>
                   <LucideIcon icon={icon} size={12}/>{label}
                 </button>
               ))}

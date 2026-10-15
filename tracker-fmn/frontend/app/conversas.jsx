@@ -208,7 +208,7 @@ function ContatoItem({ contato, ativo, onClick, onDispensarAtencao }) {
   return (
     <div onClick={onClick} style={{
       display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', cursor: 'pointer',
-      background: ativo ? 'rgba(251,191,36,.10)' : 'transparent',
+      background: ativo ? 'var(--app-primary)' : 'transparent',
       borderLeft: ativo ? '3px solid var(--fmn-gold)' : '3px solid transparent',
       borderBottom: '1px solid var(--app-border)',
     }}>

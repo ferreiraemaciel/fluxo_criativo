@@ -311,9 +311,9 @@ function LeadsByQuestion({ leads }) {
         {PERGUNTAS.map(p => (
           <button key={p.field} onClick={() => setPergAtiva(p.field)}
             style={{ textAlign:'left', padding:'8px 10px', borderRadius:8, cursor:'pointer',
-              background: pergAtiva === p.field ? 'rgba(251,191,36,.12)' : 'rgba(255,255,255,.03)',
-              border: `1px solid ${pergAtiva === p.field ? 'rgba(251,191,36,.3)' : 'transparent'}`,
-              color: pergAtiva === p.field ? 'var(--fmn-gold)' : 'var(--text-2)',
+              background: pergAtiva === p.field ? 'var(--app-primary)' : 'rgba(255,255,255,.03)',
+              border: `1px solid ${pergAtiva === p.field ? 'var(--app-primary)' : 'transparent'}`,
+              color: pergAtiva === p.field ? 'var(--app-primary-fg)' : 'var(--text-2)',
               fontFamily:'Roboto,sans-serif', fontSize:11.5, fontWeight: pergAtiva === p.field ? 700 : 400,
               transition:'all 120ms' }}>
             {p.label}
@@ -415,9 +415,9 @@ function VizCard({ title, hint, items, total }) {
   const Toggle = ({ id, icon }) => (
     <button onClick={() => setView(id)} title={id === 'pizza' ? 'Pizza' : 'Barras'}
       style={{ width: 27, height: 24, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
-        background: view === id ? 'rgba(251,191,36,.15)' : 'transparent',
-        border: `1px solid ${view === id ? 'rgba(251,191,36,.3)' : 'var(--app-border)'}`,
-        color: view === id ? 'var(--fmn-gold)' : 'var(--text-3)' }}>
+        background: view === id ? 'var(--app-primary)' : 'transparent',
+        border: `1px solid ${view === id ? 'var(--app-primary)' : 'var(--app-border)'}`,
+        color: view === id ? 'var(--app-primary-fg)' : 'var(--text-3)' }}>
       <LucideIcon icon={icon} size={13} /></button>
   );
   return (
@@ -687,9 +687,9 @@ function CarrinhoTable({ itens, recuperados, contatadosOficial, contatadosSuport
           <button key={id} onClick={() => setFiltro(id)}
             style={{ padding:'7px 14px', borderRadius:999, cursor:'pointer', fontSize:11.5,
               fontFamily:'Roboto,sans-serif', fontWeight:700,
-              border: filtro===id ? '1px solid rgba(251,191,36,.5)' : '1px solid var(--app-border)',
-              background: filtro===id ? 'rgba(251,191,36,.12)' : 'rgba(255,255,255,.04)',
-              color: filtro===id ? 'var(--fmn-gold)' : 'var(--text-2)' }}>
+              border: filtro===id ? '1px solid var(--app-primary)' : '1px solid var(--app-border)',
+              background: filtro===id ? 'var(--app-primary)' : 'rgba(255,255,255,.04)',
+              color: filtro===id ? 'var(--app-primary-fg)' : 'var(--text-2)' }}>
             {label}
           </button>
         ))}
@@ -1335,9 +1335,9 @@ function FunisScreen({ onNavigate }) {
       {FUNIS.map(f => (
         <button key={f.id} onClick={() => setFunnel(f.id)}
           style={{ padding:'5px 11px', borderRadius:6, cursor:'pointer',
-            background: funnel===f.id ? 'rgba(251,191,36,.15)' : 'transparent',
-            border: `1px solid ${funnel===f.id ? 'rgba(251,191,36,.2)' : 'transparent'}`,
-            color: funnel===f.id ? 'var(--fmn-gold)' : 'rgba(255,255,255,.42)',
+            background: funnel===f.id ? 'var(--app-primary)' : 'transparent',
+            border: `1px solid ${funnel===f.id ? 'var(--app-primary)' : 'transparent'}`,
+            color: funnel===f.id ? 'var(--app-primary-fg)' : 'rgba(255,255,255,.42)',
             fontFamily:'Roboto,sans-serif', fontWeight:700, fontSize:11 }}>
           {f.label}
         </button>
@@ -1351,9 +1351,9 @@ function FunisScreen({ onNavigate }) {
         {PERIODOS.map(p => (
           <button key={p.id} onClick={() => setPeriodo(p.id)}
             style={{ padding:'5px 11px', borderRadius:6, cursor:'pointer',
-              background: periodo===p.id ? 'rgba(251,191,36,.15)' : 'transparent',
-              border: `1px solid ${periodo===p.id ? 'rgba(251,191,36,.2)' : 'transparent'}`,
-              color: periodo===p.id ? 'var(--fmn-gold)' : 'rgba(255,255,255,.42)',
+              background: periodo===p.id ? 'var(--app-primary)' : 'transparent',
+              border: `1px solid ${periodo===p.id ? 'var(--app-primary)' : 'transparent'}`,
+              color: periodo===p.id ? 'var(--app-primary-fg)' : 'rgba(255,255,255,.42)',
               fontFamily:'Roboto,sans-serif', fontWeight:700, fontSize:11 }}>
             {p.label}
           </button>
@@ -1375,7 +1375,7 @@ function FunisScreen({ onNavigate }) {
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
       <TopBar title="Funis" actions={<div style={{ display:'flex', gap:10, alignItems:'center' }}><FunnelBar/><PeriodBar/></div>}/>
 
-      <div style={{ flex: 1, overflowY: 'auto', padding: '18px 24px', display: 'flex', flexDirection: 'column', gap: 0, minHeight: 0 }}>
+      <div style={{ flex: 1, overflowY: 'auto', padding: '8px 32px 32px', display: 'flex', flexDirection: 'column', gap: 0, minHeight: 0 }}>
 
         {/* Tabs */}
         <div style={{ display:'flex', gap:2, borderBottom:'1px solid var(--app-border)', marginBottom:18 }}>

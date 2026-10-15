@@ -218,9 +218,9 @@ function SiteScreen() {
         <button key={p.id} onClick={()=>setPeriodo(p.id)}
           style={{padding:'5px 12px',borderRadius:6,cursor:'pointer',fontSize:11.5,
             fontFamily:'Roboto,sans-serif',fontWeight:600,border:'1px solid',transition:'all 130ms',
-            background:periodo===p.id?'rgba(251,191,36,.12)':'transparent',
-            borderColor:periodo===p.id?'rgba(251,191,36,.35)':'rgba(255,255,255,.1)',
-            color:periodo===p.id?'var(--fmn-gold)':'rgba(255,255,255,.4)'}}>
+            background:periodo===p.id? 'var(--app-primary)':'transparent',
+            borderColor:periodo===p.id?'var(--app-primary)':'rgba(255,255,255,.1)',
+            color:periodo===p.id? 'var(--app-primary-fg)':'rgba(255,255,255,.4)'}}>
           {p.label}
         </button>
       ))}
@@ -256,7 +256,7 @@ function SiteScreen() {
     <div style={{display:'flex',flexDirection:'column',height:'100%',overflowY:'auto'}}>
       <TopBar title="Site" actions={PeriodBar}/>
 
-      <div style={{flex:1,padding:'20px 28px',display:'flex',flexDirection:'column',gap:16}}>
+      <div style={{flex:1,padding:'8px 32px 32px',display:'flex',flexDirection:'column',gap:16}}>
 
         {/* KPIs */}
         <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12}}>
@@ -326,9 +326,9 @@ function SiteScreen() {
                     <button key={id} onClick={()=>setSortBy(id)}
                       style={{padding:'4px 9px',borderRadius:5,cursor:'pointer',fontSize:10.5,
                         fontFamily:'Roboto,sans-serif',fontWeight:600,letterSpacing:'.03em',border:'1px solid',
-                        background:sortBy===id?'rgba(251,191,36,.1)':'transparent',
-                        borderColor:sortBy===id?'rgba(251,191,36,.28)':'rgba(255,255,255,.08)',
-                        color:sortBy===id?'var(--fmn-gold)':'rgba(255,255,255,.32)',transition:'all 130ms'}}>
+                        background:sortBy===id? 'var(--app-primary)':'transparent',
+                        borderColor:sortBy===id?'var(--app-primary)':'rgba(255,255,255,.08)',
+                        color:sortBy===id? 'var(--app-primary-fg)':'rgba(255,255,255,.32)',transition:'all 130ms'}}>
                       {lbl}
                     </button>
                   ))}
