@@ -20,7 +20,7 @@ const RESPONSAVEIS = ['Felipe', 'Amanda', 'Lígia'];
 // Card sem responsável usa a foto "todos": espaço vazio lê como
 // "esqueceram de atribuir", a foto comum diz "é de quem pegar primeiro".
 const RESPONSAVEL_CONFIG = {
-  'Felipe': { initials:'FE', color:'#f9b64f', bg:'rgba(249,182,79,.18)', photo:'assets/avatar-felipe.png' },
+  'Felipe': { initials:'FE', color:'#fbbf24', bg:'rgba(251,191,36,.18)', photo:'assets/avatar-felipe.png' },
   'Amanda': { initials:'A',  color:'#a78bfa', bg:'rgba(167,139,250,.18)', photo:'assets/avatar-amanda.png' },
   'Lígia':  { initials:'L',  color:'#f472b6', bg:'rgba(244,114,182,.18)', photo:'assets/avatar-ligia.png' },
 };
@@ -285,7 +285,7 @@ function ContentCard({ item, col, onOpen, onDragStart, onEtapaToggle }) {
           <span title={importacao.etapa || 'Importando mídia do Drive'}
             style={{ display:'inline-flex', alignItems:'center', gap:4, padding:'2px 7px', borderRadius:5,
               fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700,
-              background:'rgba(249,182,79,.12)', color:'var(--fmn-gold)', border:'1px solid rgba(249,182,79,.3)' }}>
+              background:'rgba(251,191,36,.12)', color:'var(--fmn-gold)', border:'1px solid rgba(251,191,36,.3)' }}>
             <LucideIcon icon="loader" size={9}/>Importando {Math.round(importacao.pct || 0)}%
           </span>
         )}
@@ -728,7 +728,7 @@ function PublicarArtigoModal({ form, onClose, onSuccess, initialDate }) {
         <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
           <div style={{ display:'flex', alignItems:'center', gap:10 }}>
             <div style={{ width:34, height:34, borderRadius:9, display:'flex', alignItems:'center',
-              justifyContent:'center', background:'rgba(249,182,79,.12)', border:'1px solid rgba(249,182,79,.3)' }}>
+              justifyContent:'center', background:'rgba(251,191,36,.12)', border:'1px solid rgba(251,191,36,.3)' }}>
               <LucideIcon icon="newspaper" size={16} style={{ color:'var(--fmn-gold)' }}/>
             </div>
             <div>
@@ -806,8 +806,8 @@ function PublicarArtigoModal({ form, onClose, onSuccess, initialDate }) {
             style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'center', gap:6,
               padding:'8px 10px', borderRadius:8, cursor:'pointer',
               fontFamily:'Roboto,sans-serif', fontSize:12, fontWeight:700,
-              background: modo===v ? 'rgba(249,182,79,.14)' : 'rgba(255,255,255,.04)',
-              border: modo===v ? '1px solid rgba(249,182,79,.45)' : '1px solid var(--app-border)',
+              background: modo===v ? 'rgba(251,191,36,.14)' : 'rgba(255,255,255,.04)',
+              border: modo===v ? '1px solid rgba(251,191,36,.45)' : '1px solid var(--app-border)',
               color: modo===v ? 'var(--fmn-gold)' : 'var(--text-3)' }}>
             <LucideIcon icon={icone} size={13}/>{rotulo}
           </button>
@@ -1269,9 +1269,9 @@ function PublishModal({ form, slidesArr, slideFiles, onClose, onSuccess, initial
 
         <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:20 }}>
           <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-            <div style={{ width:34, height:34, borderRadius:10, background:'rgba(249,182,79,.15)',
-              border:'1px solid rgba(249,182,79,.3)', display:'flex', alignItems:'center', justifyContent:'center' }}>
-              <LucideIcon icon="send" size={16} style={{ color:'#f9b64f' }}/>
+            <div style={{ width:34, height:34, borderRadius:10, background:'rgba(251,191,36,.15)',
+              border:'1px solid rgba(251,191,36,.3)', display:'flex', alignItems:'center', justifyContent:'center' }}>
+              <LucideIcon icon="send" size={16} style={{ color:'#fbbf24' }}/>
             </div>
             <div>
               <div style={{ fontSize:14, fontFamily:'Roboto,sans-serif', fontWeight:900, color:'var(--text-1)' }}>
@@ -1296,9 +1296,9 @@ function PublishModal({ form, slidesArr, slideFiles, onClose, onSuccess, initial
             {[['agora','Publicar agora','zap'],['agendar','Agendar','clock']].map(([id,label,icon]) => (
               <button key={id} onClick={()=>setModo(id)}
                 style={{ flex:1, padding:'9px', borderRadius:7, cursor:'pointer',
-                  background: modo===id ? 'rgba(249,182,79,.18)' : 'transparent',
-                  border: modo===id ? '1px solid rgba(249,182,79,.35)' : '1px solid transparent',
-                  color: modo===id ? '#f9b64f' : 'var(--text-3)',
+                  background: modo===id ? 'rgba(251,191,36,.18)' : 'transparent',
+                  border: modo===id ? '1px solid rgba(251,191,36,.35)' : '1px solid transparent',
+                  color: modo===id ? '#fbbf24' : 'var(--text-3)',
                   fontFamily:'Roboto,sans-serif', fontWeight:700, fontSize:12, transition:'all 130ms',
                   display:'flex', alignItems:'center', justifyContent:'center', gap:6 }}>
                 <LucideIcon icon={icon} size={13}/>{label}
@@ -1384,7 +1384,7 @@ function PublishModal({ form, slidesArr, slideFiles, onClose, onSuccess, initial
           <button onClick={run}
             disabled={!hasImages || (modo==='agendar' && !schedDate)}
             style={{ width:'100%', padding:'13px', borderRadius:10, cursor:'pointer',
-              background: (hasImages && (modo==='agora'||schedDate)) ? '#f9b64f' : 'rgba(255,255,255,.08)',
+              background: (hasImages && (modo==='agora'||schedDate)) ? '#fbbf24' : 'rgba(255,255,255,.08)',
               color: (hasImages && (modo==='agora'||schedDate)) ? '#000' : 'var(--text-3)',
               border:'none', fontFamily:'Roboto,sans-serif', fontWeight:900, fontSize:13,
               transition:'all 150ms', display:'flex', alignItems:'center', justifyContent:'center', gap:8 }}>
@@ -1438,13 +1438,13 @@ function PublishModal({ form, slidesArr, slideFiles, onClose, onSuccess, initial
               <div style={{
                 position:'absolute', fontSize:46,
                 animation:'org-launch 2.4s cubic-bezier(.4,0,.2,1) infinite',
-                filter:'drop-shadow(0 0 10px rgba(249,182,79,.55))',
+                filter:'drop-shadow(0 0 10px rgba(251,191,36,.55))',
               }}>🚀</div>
 
               {/* Partículas */}
               {[
                 {c:'#f59e0b',d:0,   tx:'-18px'},{c:'#ef4444',d:.08, tx:'14px'},
-                {c:'#f9b64f',d:.16, tx:'-8px'}, {c:'#f97316',d:.06, tx:'20px'},
+                {c:'#fbbf24',d:.16, tx:'-8px'}, {c:'#f97316',d:.06, tx:'20px'},
                 {c:'#ff9845',d:.22, tx:'-22px'},{c:'#ef4444',d:.12, tx:'6px'},
               ].map((p,i) => (
                 <div key={i} style={{
@@ -1814,7 +1814,7 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
                     color:'var(--text-1)', lineHeight:1.4, background:'transparent',
                     border:'1px solid transparent', borderRadius:6, padding:'2px 6px',
                     outline:'none', flex:'1 1 auto', minWidth:0, width:'100%', transition:'border-color 150ms' }}
-                  onFocus={e => e.target.style.borderColor='rgba(249,182,79,.4)'}
+                  onFocus={e => e.target.style.borderColor='rgba(251,191,36,.4)'}
                   onBlur={e => e.target.style.borderColor='transparent'}/>
               )}
             </div>
@@ -1842,8 +1842,8 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
               {canShowPublish && (
                 <button onClick={()=>setShowPublish(true)}
                   style={{ display:'flex', alignItems:'center', gap:6, padding:'7px 14px',
-                    borderRadius:8, cursor:'pointer', background:'rgba(249,182,79,.12)',
-                    border:'1px solid rgba(249,182,79,.35)', color:'#f9b64f',
+                    borderRadius:8, cursor:'pointer', background:'rgba(251,191,36,.12)',
+                    border:'1px solid rgba(251,191,36,.35)', color:'#fbbf24',
                     fontFamily:'Roboto,sans-serif', fontWeight:700, fontSize:12, transition:'all 140ms' }}>
                   <LucideIcon icon="send" size={13}/>Publicar
                 </button>
@@ -1981,7 +1981,7 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
                         padding:'7px 12px', borderRadius:8, textDecoration:'none',
                         background:'rgba(255,255,255,.04)', border:'1px solid var(--app-border)',
                         color:'var(--text-2)', fontFamily:'Roboto,sans-serif', fontSize:11.5, fontWeight:700 }}
-                      onMouseEnter={e => { e.currentTarget.style.borderColor='rgba(249,182,79,.4)'; e.currentTarget.style.color='var(--fmn-gold)'; }}
+                      onMouseEnter={e => { e.currentTarget.style.borderColor='rgba(251,191,36,.4)'; e.currentTarget.style.color='var(--fmn-gold)'; }}
                       onMouseLeave={e => { e.currentTarget.style.borderColor='var(--app-border)'; e.currentTarget.style.color='var(--text-2)'; }}>
                       <LucideIcon icon="folder-open" size={13}/>Abrir pasta no Drive
                     </a>
@@ -2186,7 +2186,7 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
                       style={{ width:'100%', boxSizing:'border-box', padding:'9px 12px', borderRadius:8,
                         background:'var(--app-surface-2)', border:'1px solid var(--app-border)',
                         color:'var(--text-1)', fontFamily:'Roboto,sans-serif', fontSize:13, outline:'none' }}
-                      onFocus={e=>e.target.style.borderColor='rgba(249,182,79,.4)'}
+                      onFocus={e=>e.target.style.borderColor='rgba(251,191,36,.4)'}
                       onBlur={e=>e.target.style.borderColor='var(--app-border)'}/>
                   </div>
 
@@ -2201,7 +2201,7 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
                       style={{ width:'100%', boxSizing:'border-box', padding:'9px 12px', borderRadius:8, resize:'vertical',
                         background:'var(--app-surface-2)', border:'1px solid var(--app-border)',
                         color:'var(--text-1)', fontFamily:'Roboto,sans-serif', fontSize:13, outline:'none', lineHeight:1.55 }}
-                      onFocus={e=>e.target.style.borderColor='rgba(249,182,79,.4)'}
+                      onFocus={e=>e.target.style.borderColor='rgba(251,191,36,.4)'}
                       onBlur={e=>e.target.style.borderColor='var(--app-border)'}/>
                   </div>
 
@@ -2242,7 +2242,7 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
                         style={{ width:'100%', boxSizing:'border-box', padding:'9px 12px', borderRadius:8, resize:'vertical',
                           background:'var(--app-surface-2)', border:'1px solid var(--app-border)',
                           color:'var(--text-1)', fontFamily:'Roboto,sans-serif', fontSize:13, outline:'none', lineHeight:1.55 }}
-                        onFocus={e=>e.target.style.borderColor='rgba(249,182,79,.4)'}
+                        onFocus={e=>e.target.style.borderColor='rgba(251,191,36,.4)'}
                         onBlur={e=>e.target.style.borderColor='var(--app-border)'}/>
                     </div>
 
@@ -2257,7 +2257,7 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
                         style={{ width:'100%', boxSizing:'border-box', padding:'9px 12px', borderRadius:8, resize:'vertical',
                           background:'var(--app-surface-2)', border:'1px solid var(--app-border)',
                           color:'var(--text-1)', fontFamily:'Roboto,sans-serif', fontSize:13, outline:'none', lineHeight:1.55 }}
-                        onFocus={e=>e.target.style.borderColor='rgba(249,182,79,.4)'}
+                        onFocus={e=>e.target.style.borderColor='rgba(251,191,36,.4)'}
                         onBlur={e=>e.target.style.borderColor='var(--app-border)'}/>
                     </div>
 
@@ -2306,7 +2306,7 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
                       style={{ width:'100%', boxSizing:'border-box', padding:'9px 12px', borderRadius:8, resize:'vertical',
                         background:'var(--app-surface-2)', border:'1px solid var(--app-border)',
                         color:'var(--text-1)', fontFamily:'Roboto,sans-serif', fontSize:13, outline:'none', lineHeight:1.55 }}
-                      onFocus={e=>e.target.style.borderColor='rgba(249,182,79,.4)'}
+                      onFocus={e=>e.target.style.borderColor='rgba(251,191,36,.4)'}
                       onBlur={e=>e.target.style.borderColor='var(--app-border)'}/>
                   </div>
 
@@ -2321,7 +2321,7 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
                       style={{ width:'100%', boxSizing:'border-box', padding:'9px 12px', borderRadius:8, resize:'vertical',
                         background:'var(--app-surface-2)', border:'1px solid var(--app-border)',
                         color:'var(--text-1)', fontFamily:'Roboto,sans-serif', fontSize:13, outline:'none', lineHeight:1.55 }}
-                      onFocus={e=>e.target.style.borderColor='rgba(249,182,79,.4)'}
+                      onFocus={e=>e.target.style.borderColor='rgba(251,191,36,.4)'}
                       onBlur={e=>e.target.style.borderColor='var(--app-border)'}/>
                   </div>
 
@@ -2440,7 +2440,7 @@ function ProgramarModal({ dateStr, items, onEscolher, onCriarNovo, onClose }) {
                   borderRadius:9, cursor:'pointer', textAlign:'left',
                   background:'var(--app-surface-2)', border:'1px solid var(--app-border)',
                   transition:'all 120ms' }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor='rgba(249,182,79,.45)'; e.currentTarget.style.background='rgba(249,182,79,.07)'; }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor='rgba(251,191,36,.45)'; e.currentTarget.style.background='rgba(251,191,36,.07)'; }}
                 onMouseLeave={e => { e.currentTarget.style.borderColor='var(--app-border)'; e.currentTarget.style.background='var(--app-surface-2)'; }}>
                 <div style={{ width:38, height:38, borderRadius:6, flexShrink:0, overflow:'hidden',
                   background:`${cor}18`, border:'1px solid rgba(255,255,255,.08)',
@@ -2526,7 +2526,7 @@ function ScheduleEditPopover({ item, onSave, onClose }) {
         <button onClick={()=>date && time && onSave(date, time)}
           disabled={!date || !time}
           style={{ flex:1, padding:'6px 0', borderRadius:6, border:'none',
-            background: (date && time) ? '#f9b64f' : 'rgba(255,255,255,.08)',
+            background: (date && time) ? '#fbbf24' : 'rgba(255,255,255,.08)',
             color: (date && time) ? '#000' : 'var(--text-3)', fontSize:11,
             fontFamily:'Roboto,sans-serif', fontWeight:700,
             cursor: (date && time) ? 'pointer' : 'not-allowed' }}>
@@ -2647,12 +2647,12 @@ function CalendarioView({ items, onOpen, onNewWithDate, onReschedule, onEditSche
             const isToday  = dateStr === todayStr;
 
             let bgColor = 'var(--app-surface-2)';
-            if (isToday)    bgColor = 'rgba(249,182,79,.06)';
+            if (isToday)    bgColor = 'rgba(251,191,36,.06)';
             else if (fora)  bgColor = 'transparent';
             else if (isWeekend) bgColor = 'rgba(255,255,255,.015)';
 
             let borderColor = 'var(--app-border)';
-            if (isToday)        borderColor = 'rgba(249,182,79,.45)';
+            if (isToday)        borderColor = 'rgba(251,191,36,.45)';
             else if (fora)      borderColor = 'rgba(255,255,255,.035)';
             else if (isWeekend) borderColor = 'rgba(255,255,255,.06)';
 
@@ -2669,9 +2669,9 @@ function CalendarioView({ items, onOpen, onNewWithDate, onReschedule, onEditSche
                   if (dragId) onReschedule(dragId, dateStr);
                   setDragId(null);
                 }}
-                style={{ border: isDragOver ? '1px solid rgba(249,182,79,.7)' : `1px solid ${borderColor}`,
+                style={{ border: isDragOver ? '1px solid rgba(251,191,36,.7)' : `1px solid ${borderColor}`,
                   borderRadius:8, padding:'7px 8px',
-                  background: isDragOver ? 'rgba(249,182,79,.1)' : bgColor,
+                  background: isDragOver ? 'rgba(251,191,36,.1)' : bgColor,
                   cursor:'pointer', display:'flex', flexDirection:'column', gap:4,
                   overflow:'hidden',
                   transition:'border-color 150ms, background 150ms, opacity 150ms',
@@ -2684,7 +2684,7 @@ function CalendarioView({ items, onOpen, onNewWithDate, onReschedule, onEditSche
                 {/* Número do dia */}
                 <span style={{ fontSize:11, fontFamily:'Roboto,sans-serif', fontWeight:900,
                   color: isToday ? 'var(--fmn-gold)' : fora ? 'rgba(148,163,184,.4)' : isWeekend ? 'rgba(148,163,184,.5)' : 'var(--text-3)',
-                  background: isToday ? 'rgba(249,182,79,.15)' : 'transparent',
+                  background: isToday ? 'rgba(251,191,36,.15)' : 'transparent',
                   borderRadius:5, padding: isToday ? '1px 5px' : '0',
                   alignSelf:'flex-start', lineHeight:1.6, flexShrink:0 }}>
                   {dia}
@@ -3265,7 +3265,7 @@ function OrganicoScreen({ targetCard, onConsumeTarget }) {
                   style={{ display:'flex', alignItems:'center', gap:5, padding:'5px 11px',
                     borderRadius:6, cursor:'pointer', fontSize:11, fontFamily:'Roboto,sans-serif',
                     fontWeight:700, transition:'all 130ms', border:'none',
-                    background: viewMode===id ? 'rgba(249,182,79,.18)' : 'transparent',
+                    background: viewMode===id ? 'rgba(251,191,36,.18)' : 'transparent',
                     color: viewMode===id ? 'var(--fmn-gold)' : 'var(--text-3)' }}>
                   <LucideIcon icon={icon} size={12}/>{label}
                 </button>
@@ -3356,7 +3356,7 @@ function OrganicoScreen({ targetCard, onConsumeTarget }) {
               background:'rgba(255,255,255,.05)', color:'var(--text-1)',
               fontFamily:'Roboto,sans-serif', fontSize:11.5, outline:'none', width:200,
               transition:'border-color 130ms' }}
-            onFocus={e => e.target.style.borderColor='rgba(249,182,79,.4)'}
+            onFocus={e => e.target.style.borderColor='rgba(251,191,36,.4)'}
             onBlur={e => e.target.style.borderColor='rgba(255,255,255,.1)'}
           />
           {searchQuery && (

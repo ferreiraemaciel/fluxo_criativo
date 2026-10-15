@@ -468,9 +468,9 @@ function BlocoCaderno({ partes }) {
                 <button key={p.id} onClick={() => setSel(p.id)}
                   style={{ textAlign:'left', padding:'6px 9px', borderRadius:7, cursor:'pointer',
                     fontSize:11.5, fontFamily:'Roboto,sans-serif', lineHeight:1.35,
-                    border:'1px solid ' + (ativa ? 'rgba(249,182,79,.4)' : 'transparent'),
-                    background: ativa ? 'rgba(249,182,79,.1)' : 'transparent',
-                    color: ativa ? '#f9b64f' : 'var(--text-2)' }}>
+                    border:'1px solid ' + (ativa ? 'rgba(251,191,36,.4)' : 'transparent'),
+                    background: ativa ? 'rgba(251,191,36,.1)' : 'transparent',
+                    color: ativa ? '#fbbf24' : 'var(--text-2)' }}>
                   {p.numero ? <b style={{ marginRight:5 }}>{p.numero}.</b> : null}{p.titulo}
                 </button>
               );

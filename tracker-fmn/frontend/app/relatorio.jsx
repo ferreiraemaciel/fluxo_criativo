@@ -112,7 +112,7 @@ function GraficoAreaEstatico({ data }) {
       </defs>
       <path d={area('fat')} fill="url(#rpFat)"/>
       <path d={linha('fat')} fill="none" stroke="#79e06f" strokeWidth="2"/>
-      <path d={linha('gasto')} fill="none" stroke="#f9b64f" strokeWidth="2"/>
+      <path d={linha('gasto')} fill="none" stroke="#fbbf24" strokeWidth="2"/>
       {[0, 0.5, 1].map(f => (
         <text key={f} x={4} y={y(maxV * f) + 3} fontSize="8.5" fill="rgba(255,255,255,.35)" fontFamily="Roboto,sans-serif">
           {Math.round(maxV * f)}
@@ -125,7 +125,7 @@ function GraficoAreaEstatico({ data }) {
       <g transform={`translate(${W - 130}, 6)`}>
         <circle cx={0} cy={0} r={3} fill="#79e06f"/>
         <text x={8} y={3} fontSize="9" fill="rgba(255,255,255,.6)" fontFamily="Roboto,sans-serif">Faturamento</text>
-        <circle cx={80} cy={0} r={3} fill="#f9b64f"/>
+        <circle cx={80} cy={0} r={3} fill="#fbbf24"/>
         <text x={88} y={3} fontSize="9" fill="rgba(255,255,255,.6)" fontFamily="Roboto,sans-serif">Gasto</text>
       </g>
     </svg>
@@ -399,7 +399,7 @@ function RelatorioButton({ rangeFrom, rangeTo, dados }) {
       <div style={{ position: 'relative' }}>
         <button onClick={() => setMenuAberto(a => !a)} style={{
           display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 8,
-          background: 'rgba(249,182,79,.1)', border: '1px solid rgba(249,182,79,.3)',
+          background: 'rgba(251,191,36,.1)', border: '1px solid rgba(251,191,36,.3)',
           color: 'var(--fmn-gold)', fontFamily: 'Roboto,sans-serif', fontWeight: 700, fontSize: 12,
           cursor: 'pointer',
         }}>

@@ -1,7 +1,7 @@
 /* A landing do Blindagem embute este mapa com ?tema=verde e usa a paleta
    dela. Sem o parametro, tudo segue no dourado do Tracker. */
 var MAPA_RGB = '234,170,65';
-var MAPA_HEX = '#f9b64f';
+var MAPA_HEX = '#fbbf24';
 try {
   if (new URLSearchParams(location.search).get('tema') === 'verde') {
     MAPA_RGB = '47,158,92';

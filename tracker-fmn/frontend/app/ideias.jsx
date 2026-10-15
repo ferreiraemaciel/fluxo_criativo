@@ -164,7 +164,7 @@ function IdeaCard({ idea, colCfg, onEdit, onConvert, onDelete }) {
         {!converted ? (
           <button onClick={() => onConvert(idea.id)}
             style={{ flex:1, padding:'6px', borderRadius:6, cursor:'pointer',
-              background:'rgba(249,182,79,.08)', border:'1px solid rgba(249,182,79,.2)',
+              background:'rgba(251,191,36,.08)', border:'1px solid rgba(251,191,36,.2)',
               color:'var(--fmn-gold)', fontFamily:'Roboto,sans-serif', fontSize:11, fontWeight:700,
               display:'flex', alignItems:'center', justifyContent:'center', gap:5, transition:'all 130ms' }}>
             <LucideIcon icon="send" size={11}/>{idea.destino === 'Orgânico' ? 'Produzir' : 'Gerar ADS'}
@@ -285,8 +285,8 @@ function IdeaModal({ idea, onClose, onSave }) {
                   style={{ padding:'7px 16px', borderRadius:999, cursor:'pointer',
                     fontFamily:'Roboto,sans-serif', fontWeight:700, fontSize:12.5, transition:'all 150ms',
                     display:'flex', alignItems:'center', gap:6,
-                    background:sel?'rgba(249,182,79,.18)':'rgba(255,255,255,.06)',
-                    border:`1px solid ${sel?'rgba(249,182,79,.4)':'var(--app-border)'}`,
+                    background:sel?'rgba(251,191,36,.18)':'rgba(255,255,255,.06)',
+                    border:`1px solid ${sel?'rgba(251,191,36,.4)':'var(--app-border)'}`,
                     color:sel?'var(--fmn-gold)':'var(--text-2)' }}>
                   <LucideIcon icon={(window.PLAT_ICON||{})[f]||'file'} size={13}/>{f}
                 </button>
@@ -302,8 +302,8 @@ function IdeaModal({ idea, onClose, onSave }) {
               <button key={s} onClick={()=>setForm(p=>({...p,status:s}))}
                 style={{ padding:'7px 16px', borderRadius:999, cursor:'pointer',
                   fontFamily:'Roboto,sans-serif', fontWeight:700, fontSize:12, transition:'all 150ms',
-                  background:form.status===s?'rgba(249,182,79,.18)':'rgba(255,255,255,.06)',
-                  border:`1px solid ${form.status===s?'rgba(249,182,79,.4)':'var(--app-border)'}`,
+                  background:form.status===s?'rgba(251,191,36,.18)':'rgba(255,255,255,.06)',
+                  border:`1px solid ${form.status===s?'rgba(251,191,36,.4)':'var(--app-border)'}`,
                   color:form.status===s?'var(--fmn-gold)':'var(--text-2)' }}>
                 {s}
               </button>
@@ -320,8 +320,8 @@ function IdeaModal({ idea, onClose, onSave }) {
               <button key={id} onClick={()=>setRefMode(id)}
                 style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'center', gap:6,
                   padding:'6px', borderRadius:6, cursor:'pointer', transition:'all 130ms',
-                  background:refMode===id?'rgba(249,182,79,.15)':'transparent',
-                  border:`1px solid ${refMode===id?'rgba(249,182,79,.2)':'transparent'}`,
+                  background:refMode===id?'rgba(251,191,36,.15)':'transparent',
+                  border:`1px solid ${refMode===id?'rgba(251,191,36,.2)':'transparent'}`,
                   color:refMode===id?'var(--fmn-gold)':'rgba(255,255,255,.42)',
                   fontFamily:'Roboto,sans-serif', fontWeight:700, fontSize:11.5 }}>
                 <LucideIcon icon={ic} size={13}/>{l}
@@ -335,8 +335,8 @@ function IdeaModal({ idea, onClose, onSave }) {
                 placeholder="https://..." style={{...INP, flex:1}}
                 onKeyDown={e=>{ if(e.key==='Enter') applyUrl(); }}/>
               <button onClick={applyUrl}
-                style={{ padding:'8px 14px', borderRadius:8, background:'rgba(249,182,79,.15)',
-                  border:'1px solid rgba(249,182,79,.25)', color:'var(--fmn-gold)',
+                style={{ padding:'8px 14px', borderRadius:8, background:'rgba(251,191,36,.15)',
+                  border:'1px solid rgba(251,191,36,.25)', color:'var(--fmn-gold)',
                   fontFamily:'Roboto,sans-serif', fontWeight:700, fontSize:12, cursor:'pointer' }}>
                 OK
               </button>
@@ -350,7 +350,7 @@ function IdeaModal({ idea, onClose, onSave }) {
                   background:'rgba(255,255,255,.03)', border:'2px dashed rgba(255,255,255,.12)',
                   color:'var(--text-3)', fontFamily:'Roboto,sans-serif', fontSize:12.5, fontWeight:700,
                   display:'flex', alignItems:'center', justifyContent:'center', gap:8, transition:'all 150ms' }}
-                onMouseEnter={e=>{e.currentTarget.style.borderColor='rgba(249,182,79,.3)';e.currentTarget.style.color='var(--fmn-gold)';}}
+                onMouseEnter={e=>{e.currentTarget.style.borderColor='rgba(251,191,36,.3)';e.currentTarget.style.color='var(--fmn-gold)';}}
                 onMouseLeave={e=>{e.currentTarget.style.borderColor='rgba(255,255,255,.12)';e.currentTarget.style.color='var(--text-3)';}}>
                 <LucideIcon icon="upload-cloud" size={18}/>Clique para enviar vídeo ou imagem
               </button>
@@ -574,8 +574,8 @@ function IdeiaScreen() {
               {['Todos', ...ALL_FMTS].map(f => (
                 <button key={f} onClick={() => setFmtFilter(f)}
                   style={{ padding:'5px 11px', borderRadius:6, cursor:'pointer', transition:'all 130ms',
-                    background:fmtFilter===f?'rgba(249,182,79,.15)':'transparent',
-                    border:`1px solid ${fmtFilter===f?'rgba(249,182,79,.2)':'transparent'}`,
+                    background:fmtFilter===f?'rgba(251,191,36,.15)':'transparent',
+                    border:`1px solid ${fmtFilter===f?'rgba(251,191,36,.2)':'transparent'}`,
                     color:fmtFilter===f?'var(--fmn-gold)':'rgba(255,255,255,.42)',
                     fontFamily:'Roboto,sans-serif', fontWeight:700, fontSize:11 }}>
                   {f}

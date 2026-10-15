@@ -208,7 +208,7 @@ function ContatoItem({ contato, ativo, onClick, onDispensarAtencao }) {
   return (
     <div onClick={onClick} style={{
       display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', cursor: 'pointer',
-      background: ativo ? 'rgba(249,182,79,.10)' : 'transparent',
+      background: ativo ? 'rgba(251,191,36,.10)' : 'transparent',
       borderLeft: ativo ? '3px solid var(--fmn-gold)' : '3px solid transparent',
       borderBottom: '1px solid var(--app-border)',
     }}>
@@ -273,8 +273,8 @@ function Bolha({ msg }) {
       <div style={{
         maxWidth: '72%', padding: '8px 12px', borderRadius: 12,
         borderBottomRightRadius: isSaida ? 3 : 12, borderBottomLeftRadius: isSaida ? 12 : 3,
-        background: isSaida ? 'rgba(249,182,79,.16)' : 'rgba(255,255,255,.05)',
-        border: '1px solid ' + (isSaida ? 'rgba(249,182,79,.25)' : 'var(--app-border)'),
+        background: isSaida ? 'rgba(251,191,36,.16)' : 'rgba(255,255,255,.05)',
+        border: '1px solid ' + (isSaida ? 'rgba(251,191,36,.25)' : 'var(--app-border)'),
       }}>
         {msg.tipo === 'template' && (
           <div style={{ fontSize: 9.5, color: 'var(--text-3)', marginBottom: 3, fontFamily: 'Roboto,sans-serif', textTransform: 'uppercase', letterSpacing: .4 }}>
@@ -1746,7 +1746,7 @@ function ConversasScreen({ telefoneAlvo = null, onConsumirAlvo } = {}) {
                   })}
                   {dragOverThread && (
                     <div style={{ position: 'absolute', inset: 8, borderRadius: 10, border: '2px dashed var(--fmn-gold)',
-                      background: 'rgba(249,182,79,.08)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      background: 'rgba(251,191,36,.08)', display: 'flex', alignItems: 'center', justifyContent: 'center',
                       fontSize: 13, fontWeight: 700, color: 'var(--fmn-gold)', fontFamily: 'Roboto,sans-serif', pointerEvents: 'none' }}>
                       Solte o arquivo pra enviar
                     </div>
@@ -1784,8 +1784,8 @@ function ConversasScreen({ telefoneAlvo = null, onConsumirAlvo } = {}) {
                               <button onClick={() => enviarPronta(item)} disabled={!janelaOk || enviando}
                                 title={janelaOk ? 'Enviar agora, sem editar' : 'Janela de 24h fechada'}
                                 style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
-                                  padding: '5px 6px', borderRadius: 6, border: '1px solid rgba(249,182,79,.35)',
-                                  background: 'rgba(249,182,79,.14)', color: 'var(--fmn-gold)',
+                                  padding: '5px 6px', borderRadius: 6, border: '1px solid rgba(251,191,36,.35)',
+                                  background: 'rgba(251,191,36,.14)', color: 'var(--fmn-gold)',
                                   fontSize: 10, fontWeight: 700, fontFamily: 'Roboto,sans-serif',
                                   cursor: janelaOk && !enviando ? 'pointer' : 'not-allowed' }}>
                                 <LucideIcon icon={enviando ? 'loader' : 'send'} size={10}
@@ -1815,11 +1815,11 @@ function ConversasScreen({ telefoneAlvo = null, onConsumirAlvo } = {}) {
 
               {pendente && (
                 <div style={{ padding: '10px 12px', borderTop: '1px solid var(--app-border)', display: 'flex', alignItems: 'center', gap: 10,
-                  background: 'rgba(249,182,79,.06)' }}>
+                  background: 'rgba(251,191,36,.06)' }}>
                   {pendente.audio ? (
                     <div style={{ width: 52, height: 52, borderRadius: 8, border: '1px solid var(--app-border)',
                       display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                      background: 'rgba(249,182,79,.1)' }}>
+                      background: 'rgba(251,191,36,.1)' }}>
                       <LucideIcon icon="mic" size={18} style={{ color: 'var(--fmn-gold)' }} />
                     </div>
                   ) : pendente.preview && (pendente.mime?.startsWith('image/') || (!pendente.mime && pendente.tipo === 'link')) ? (
