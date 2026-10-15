@@ -144,8 +144,8 @@ function CardKPI({ label, value, delta, deltaLabel, icon, accent = false, title 
     <div style={{
       flex: 1, minWidth: 0, background: 'var(--app-surface)',
       border: `1px solid ${accent ? 'rgba(251,191,36,.3)' : 'var(--app-border)'}`,
-      borderRadius: 'var(--app-radius-xl)', padding: 20, display: 'flex', flexDirection: 'column', gap: 10,
-      boxShadow: '0 1px 2px rgba(0,0,0,.25)',
+      borderRadius: 'var(--app-radius)', padding: 20, display: 'flex', flexDirection: 'column', gap: 10,
+      boxShadow: '0 1px 3px rgba(0,0,0,.1)',
     }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <span style={{ fontSize: 12, fontFamily: 'Roboto, sans-serif', fontWeight: 500,
@@ -154,7 +154,7 @@ function CardKPI({ label, value, delta, deltaLabel, icon, accent = false, title 
         </span>
         {icon && (
           <div onMouseEnter={() => title && setHovIcon(true)} onMouseLeave={() => setHovIcon(false)}
-            style={{ position: 'relative', width: 40, height: 40, borderRadius: 'var(--app-radius)', display: 'flex',
+            style={{ position: 'relative', width: 40, height: 40, borderRadius: 8, display: 'flex',
             alignItems: 'center', justifyContent: 'center', flexShrink: 0,
             background: 'rgba(251,191,36,.15)', border: '1px solid rgba(251,191,36,.3)',
             color: 'var(--app-primary)',
@@ -202,7 +202,7 @@ function CardKPI({ label, value, delta, deltaLabel, icon, accent = false, title 
    guardada por idRecolher. O evento "secoes:recolher" abre ou fecha
    todos de uma vez. */
 function SectionCard({ title, children, style = {}, headerRight, noPad = false,
-                       recolhivel = false, idRecolher }) {
+                       recolhivel = false, idRecolher, icon }) {
   const chave = idRecolher ? 'secao:recolhida:' + idRecolher : null;
   const [fechado, setFechado] = useState(() => {
     if (!recolhivel || !chave) return false;
@@ -222,12 +222,12 @@ function SectionCard({ title, children, style = {}, headerRight, noPad = false,
   return (
     <div style={{
       background: 'var(--app-surface)', border: '1px solid var(--app-border)',
-      borderRadius: 'var(--app-radius-xl)', overflow: 'hidden',
-      boxShadow: '0 1px 2px rgba(0,0,0,.25)', ...style
+      borderRadius: 'var(--app-radius)', overflow: 'hidden',
+      boxShadow: '0 1px 3px rgba(0,0,0,.1)', ...style
     }}>
       {title && (
         <div onClick={recolhivel ? alternar : undefined}
-          style={{ padding: recolhivel && fechado ? '12px 18px' : '12px 18px 8px',
+          style={{ padding: recolhivel && fechado ? '16px 20px' : '20px 20px 0',
             display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10,
             cursor: recolhivel ? 'pointer' : 'default', userSelect: recolhivel ? 'none' : 'auto' }}>
           <span style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
@@ -235,7 +235,8 @@ function SectionCard({ title, children, style = {}, headerRight, noPad = false,
               <LucideIcon icon={fechado ? 'chevron-right' : 'chevron-down'} size={14}
                 style={{ color: 'var(--text-3)' }}/>
             )}
-            <span style={{ fontSize: 14, fontFamily: 'Roboto, sans-serif', fontWeight: 600,
+            {icon && <LucideIcon icon={icon} size={16} style={{ color: 'var(--app-primary)' }}/>}
+            <span style={{ fontSize: 16, fontFamily: 'Roboto, sans-serif', fontWeight: 600,
               color: 'var(--text-1)' }}>{title}</span>
           </span>
           {headerRight && (
@@ -244,8 +245,43 @@ function SectionCard({ title, children, style = {}, headerRight, noPad = false,
         </div>
       )}
       {!(recolhivel && fechado) && (
-        <div style={noPad ? {} : { padding: '10px 18px 18px' }}>{children}</div>
+        <div style={noPad ? { paddingTop: title ? 16 : 0 } : { padding: title ? '16px 20px 20px' : 20 }}>{children}</div>
       )}
+    </div>
+  );
+}
+
+/* ── Moldura de página (padrão FMN Pro, 15/10/2026) ──────────────
+   PageBody: rola, centraliza o conteúdo em até 1152 px, 32 px de respiro
+   e 24 px entre os blocos. PageHeader: título de 30 px, descrição em
+   cinza logo abaixo e ações à direita, alinhadas pela base. */
+function PageBody({ children, maxWidth = 1152, style = {} }) {
+  return (
+    <div style={{ flex: 1, overflowY: 'auto', width: '100%', minWidth: 0 }}>
+      <div style={{ maxWidth, margin: '0 auto', padding: 32, boxSizing: 'border-box',
+        display: 'flex', flexDirection: 'column', gap: 24, ...style }}>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function PageHeader({ title, description, actions, extra }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between',
+      gap: 12, flexWrap: 'wrap' }}>
+      <div style={{ minWidth: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <h1 style={{ fontFamily: 'Roboto, sans-serif', fontSize: 30, fontWeight: 600,
+            letterSpacing: '-0.025em', lineHeight: 1.2, color: 'var(--text-1)', margin: 0 }}>{title}</h1>
+          {extra}
+        </div>
+        {description && (
+          <p style={{ fontFamily: 'Roboto, sans-serif', fontSize: 14, color: 'var(--text-2)',
+            marginTop: 4 }}>{description}</p>
+        )}
+      </div>
+      {actions && <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>{actions}</div>}
     </div>
   );
 }
@@ -723,4 +759,4 @@ let alvoDoMouseDown = null;
 document.addEventListener('mousedown', e => { alvoDoMouseDown = e.target; }, true);
 const cliqueFoiNoFundo = e => e.target === e.currentTarget && alvoDoMouseDown === e.currentTarget;
 
-Object.assign(window, { TICKET_PADRAO, cliqueFoiNoFundo, buscarTudo, LucideIcon, Btn, Badge, CardKPI, SectionCard, Divider, Sidebar, TopBar, fmtBRL, RefBlock, UTM_GLOBAL, PLATAFORMAS, PLAT_COLOR, PLAT_ICON, CarouselLightbox, novoJobId, BarraProgresso, melhorThumbAd });
+Object.assign(window, { TICKET_PADRAO, cliqueFoiNoFundo, buscarTudo, LucideIcon, Btn, Badge, CardKPI, SectionCard, PageBody, PageHeader, Divider, Sidebar, TopBar, fmtBRL, RefBlock, UTM_GLOBAL, PLATAFORMAS, PLAT_COLOR, PLAT_ICON, CarouselLightbox, novoJobId, BarraProgresso, melhorThumbAd });

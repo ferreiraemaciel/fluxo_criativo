@@ -2,7 +2,7 @@
    Tracker FMN — Dashboard Screen v3 (dados reais Supabase)
    ================================================================ */
 const { useState, useRef, useEffect } = React;
-const { CardKPI, SectionCard, TopBar, LucideIcon, Badge } = window;
+const { CardKPI, SectionCard, TopBar, LucideIcon, Badge, PageBody, PageHeader } = window;
 // FotoMap captured at render time to avoid race with map.jsx loading
 
 /* ── Helpers ─────────────────────────────────────────────────────*/
@@ -2509,30 +2509,21 @@ function DashboardScreen({ period, onPeriodChange, dateRange, onDateRangeChange,
   return (
     <div style={{ display:'flex', flexDirection:'column', height:'100%', width:'100%',
       flex:1, minWidth:0, overflow:'hidden' }}>
-      <div style={{ height:'var(--topbar-h)', background:'var(--app-bg)',
-        borderBottom:'1px solid var(--app-border)', padding:'0 24px',
-        display:'flex', alignItems:'center', justifyContent:'space-between', flexShrink:0 }}>
-        <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-          <span style={{ fontFamily:'Roboto,sans-serif', fontWeight:700, fontSize:14.5,
-            color:'var(--text-1)', letterSpacing:'-0.01em' }}>Visão Geral</span>
-          {loading && (
-            <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', color:'var(--text-3)',
-              background:'rgba(255,255,255,.05)', border:'1px solid var(--app-border)',
-              padding:'2px 8px', borderRadius:99 }}>atualizando...</span>
+      <PageBody maxWidth={1280}>
+        <PageHeader title="Visão Geral"
+          description="Como as vendas, o tráfego e o caixa estão andando no período."
+          extra={loading && (
+            <span style={{ fontSize:12, fontFamily:'Roboto,sans-serif', color:'var(--text-2)',
+              background:'var(--app-surface-2)', padding:'2px 10px', borderRadius:10 }}>atualizando...</span>
           )}
-        </div>
-        <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-          <DateRangePicker period={period} onPeriodChange={onPeriodChange}
-            dateRange={dateRange} onDateRangeChange={onDateRangeChange}/>
-          {window.RelatorioButton && (
-            <window.RelatorioButton rangeFrom={rangeFrom} rangeTo={rangeTo}
-              dados={{ data, chartDays, weeklySales, periodHeatmap, salesByProduct: data?.salesByProduct, salesBySource: data?.salesBySource }}/>
-          )}
-        </div>
-      </div>
-
-      <div style={{ flex:1, overflowY:'auto', padding:'18px 24px', display:'flex',
-        flexDirection:'column', gap:12, width:'100%', minWidth:0, boxSizing:'border-box' }}>
+          actions={<>
+            <DateRangePicker period={period} onPeriodChange={onPeriodChange}
+              dateRange={dateRange} onDateRangeChange={onDateRangeChange}/>
+            {window.RelatorioButton && (
+              <window.RelatorioButton rangeFrom={rangeFrom} rangeTo={rangeTo}
+                dados={{ data, chartDays, weeklySales, periodHeatmap, salesByProduct: data?.salesByProduct, salesBySource: data?.salesBySource }}/>
+            )}
+          </>}/>
 
         {/* Alarme de atendimento: primeira coisa da tela quando existe lead
             esperando. Some sozinho quando não há nada pendente. */}
@@ -2540,7 +2531,7 @@ function DashboardScreen({ period, onPeriodChange, dateRange, onDateRangeChange,
         <AlarmeAtendimento onNavigate={onNavigate}/>
 
         {/* KPIs reais — linha 1 */}
-        <div style={{ display:'flex', gap:12 }}>
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(5, minmax(0,1fr))', gap:16 }}>
           <CardKPI label="Faturamento"  value={fmtCur(fat)}   icon="trending-up" accent/>
           <CardKPI label="Lucro Real"   value={fmtCur(lucro)} icon="wallet"/>
           <CardKPI label="Gasto Meta"   value={fmtCur(gasto)} icon="zap"/>
@@ -2549,7 +2540,7 @@ function DashboardScreen({ period, onPeriodChange, dateRange, onDateRangeChange,
         </div>
 
         {/* KPIs reais — linha 2 (retorno sobre investimento) */}
-        <div style={{ display:'flex', gap:12 }}>
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(5, minmax(0,1fr))', gap:16, marginTop:-8 }}>
           <CardKPI label="ROAS"          value={roas != null ? `${roas.toFixed(2)}x` : '—'} icon="rotate-cw"
             title="Retorno sobre Gasto de Anúncio: faturamento ÷ gasto no Meta. Quanto cada real investido em anúncio virou de faturamento."/>
           <CardKPI label="ROI"           value={roi != null ? `${(roi*100).toFixed(1)}%` : '—'} icon="trending-up"
@@ -2563,8 +2554,8 @@ function DashboardScreen({ period, onPeriodChange, dateRange, onDateRangeChange,
         </div>
 
         {/* Chart + Breakdown */}
-        <div style={{ display:'grid', gridTemplateColumns:'1.5fr 1fr', gap:12 }}>
-          <SectionCard title="Gasto × Faturamento"
+        <div style={{ display:'grid', gridTemplateColumns:'2fr 1fr', gap:16 }}>
+          <SectionCard title="Gasto × Faturamento" icon="chart-line"
             headerRight={
               <div style={{ display:'flex', gap:12 }}>
                 {[['rgba(251,191,36,.8)','Gasto'],['rgba(74,222,128,.7)','Faturamento']].map(([c,l])=>(
@@ -2578,11 +2569,11 @@ function DashboardScreen({ period, onPeriodChange, dateRange, onDateRangeChange,
             }>
             <LineAreaChart data={chartDays}/>
           </SectionCard>
-          <SectionCard title="Detalhamento Financeiro"><BreakdownTable rows={bkRows} margem={margem}/></SectionCard>
+          <SectionCard title="Detalhamento Financeiro" icon="receipt"><BreakdownTable rows={bkRows} margem={margem}/></SectionCard>
         </div>
 
         {/* Últimas Vendas com atribuição — só renderiza se houver dados */}
-        <SectionCard title="Últimas Vendas" style={{ flexShrink:0 }}
+        <SectionCard title="Últimas Vendas" icon="shopping-cart" style={{ flexShrink:0 }}
           headerRight={
             <div style={{ display:'flex', alignItems:'center', gap:10 }}>
               <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', color:'var(--text-3)',
@@ -2602,7 +2593,7 @@ function DashboardScreen({ period, onPeriodChange, dateRange, onDateRangeChange,
         </SectionCard>
 
         {/* Linha 3 — Ranking de ADS (linha completa) */}
-        <SectionCard title="Ranking de ADS" style={{ flexShrink:0 }}
+        <SectionCard title="Ranking de ADS" icon="trophy" style={{ flexShrink:0 }}
           headerRight={
             <div style={{ display:'flex', alignItems:'center', gap:8 }}>
               <div style={{ display:'flex', borderRadius:6, overflow:'hidden',
@@ -2686,7 +2677,7 @@ function DashboardScreen({ period, onPeriodChange, dateRange, onDateRangeChange,
         </div>
 
 
-      </div>
+      </PageBody>
     </div>
   );
 }
