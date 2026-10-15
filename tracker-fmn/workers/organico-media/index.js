@@ -1076,6 +1076,11 @@ async function handleReelsCapa(request, env) {
   if (!Array.isArray(mf)) mf = [];
   const i = mf.findIndex(x => x && x.tipo === 'video');
   if (i < 0) return json({ error: 'Importe o vídeo do Reels antes de colocar a capa.' }, 400);
+  // Trocou ou removeu: a capa anterior sai do R2 (só dentro de organico/capas).
+  const anterior = mf[i].capa_url;
+  if (anterior && anterior !== capaUrl && anterior.startsWith(`${R2_PUBLIC}/organico/capas/`)) {
+    await env.BUCKET.delete(anterior.replace(`${R2_PUBLIC}/`, '')).catch(() => {});
+  }
   mf[i] = { ...mf[i], capa_url: capaUrl };
   if (!capaUrl) delete mf[i].capa_url;
   await fetch(`${env.SUPABASE_URL}/rest/v1/conteudo_organico?id=eq.${cardId}`, {

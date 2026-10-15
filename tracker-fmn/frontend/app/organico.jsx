@@ -976,6 +976,72 @@ function PublicarYoutubeModal({ form, onClose, onSuccess, initialDate }) {
   );
 }
 
+/* ── Capa do Reels (14 e 15/10/2026) ────────────────────────────────────────
+   Aparece no próprio card e na tela de publicar. Lê do banco ao abrir, porque o
+   form pode estar desatualizado. Trocar ou remover apaga a anterior do R2. */
+function CapaReels({ cardId, thumbUrl, compacto = false }) {
+  const [capa, setCapa] = useState(null);
+  const [msg, setMsg]   = useState('');
+  useEffect(() => {
+    if (!cardId || !window.db) return;
+    window.db.from('conteudo_organico').select('media_files').eq('id', cardId).single().then(({ data }) => {
+      let mf = data?.media_files;
+      if (typeof mf === 'string') { try { mf = JSON.parse(mf); } catch { mf = null; } }
+      const v = Array.isArray(mf) ? mf.find(m => m && m.tipo === 'video') : null;
+      setCapa(v?.capa_url || null);
+    });
+  }, [cardId]);
+
+  async function trocar(file) {
+    if (!file && !window.confirm('Remover a capa? O arquivo da capa é apagado e o Reels volta a usar o primeiro quadro do vídeo.')) return;
+    setMsg(file ? 'Enviando a capa...' : 'Removendo a capa...');
+    try {
+      const fd = new FormData();
+      fd.append('cardId', cardId);
+      if (file) {
+        // Regra de imagem dos projetos: JPEG 82%, aresta maior até 1920 px.
+        const img = await new Promise((ok, ruim) => { const i = new Image(); i.onload = () => ok(i); i.onerror = ruim; i.src = URL.createObjectURL(file); });
+        const esc = Math.min(1, 1920 / Math.max(img.naturalWidth, img.naturalHeight));
+        const c = document.createElement('canvas');
+        c.width = Math.round(img.naturalWidth * esc); c.height = Math.round(img.naturalHeight * esc);
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+        const blob = await new Promise(ok => c.toBlob(ok, 'image/jpeg', 0.82));
+        if (!blob) throw new Error('Não consegui otimizar a imagem. Exporte em JPG e tente de novo.');
+        fd.append('file', new File([blob], 'capa.jpg', { type: 'image/jpeg' }));
+      }
+      const r = await fetch(`${WORKER_URL}/reels-capa`, { method: 'POST', body: fd });
+      const d = await r.json();
+      if (!r.ok || d.error) throw new Error(d.error || 'Falha ao salvar a capa.');
+      setCapa(d.capaUrl || null); setMsg('');
+      window.dispatchEvent(new CustomEvent('reels-capa', { detail: { cardId, capaUrl: d.capaUrl || null } }));
+    } catch (e) { setMsg(e.message); }
+  }
+
+  return (
+    <div style={{ width:'100%', display:'flex', alignItems:'center', gap:10 }}>
+      <div style={{ width: compacto ? 54 : 63, height: compacto ? 96 : 112, borderRadius:8, overflow:'hidden', flexShrink:0,
+        background:'var(--app-surface-2)', border:'1px solid var(--app-border)' }}>
+        {(capa || thumbUrl) && <img src={capa || thumbUrl} style={{ width:'100%', height:'100%', objectFit:'cover', opacity: capa ? 1 : .45 }}/>}
+      </div>
+      <div style={{ display:'flex', flexDirection:'column', gap:6, minWidth:0 }}>
+        <span style={{ fontSize:13, fontWeight:600, fontFamily:'Roboto,sans-serif', color:'var(--text-1)' }}>Capa do Reels</span>
+        <span style={{ fontSize:11.5, fontFamily:'Roboto,sans-serif', color:'var(--text-2)', lineHeight:1.4 }}>
+          {capa ? 'Capa própria escolhida.' : 'Sem capa: vai o primeiro quadro do vídeo. Também dá pra pôr um capa.jpg na pasta do Drive.'}
+        </span>
+        <div style={{ display:'flex', gap:12 }}>
+          <label style={{ fontSize:12, fontWeight:500, fontFamily:'Roboto,sans-serif', color:'var(--app-primary)', cursor:'pointer' }}>
+            {capa ? 'Trocar capa' : 'Escolher capa'}
+            <input type="file" accept="image/jpeg,image/png,image/webp" style={{ display:'none' }}
+              onChange={e => { const f = e.target.files?.[0]; e.target.value = ''; if (f) trocar(f); }}/>
+          </label>
+          {capa && <span onClick={() => trocar(null)} style={{ fontSize:12, fontFamily:'Roboto,sans-serif', color:'var(--clr-neg)', cursor:'pointer' }}>Remover</span>}
+        </div>
+        {msg && <span style={{ fontSize:11, fontFamily:'Roboto,sans-serif', color:'var(--text-2)' }}>{msg}</span>}
+      </div>
+    </div>
+  );
+}
+
 function PublishModal({ form, slidesArr, slideFiles, onClose, onSuccess, initialDate, initialModo }) {
   // initialModo/initialDate: quando vem do calendário, já abre em "Agendar"
   // com o dia clicado preenchido, faltando só o horário.
@@ -995,42 +1061,20 @@ function PublishModal({ form, slidesArr, slideFiles, onClose, onSuccess, initial
     return Array.isArray(mf) ? mf.find(m => m.tipo === 'video') : null;
   })();
 
-  // Capa do Reels (14/10/2026): vem do card (botão abaixo ou capa.jpg na pasta do
-  // Drive). Lida de novo do banco ao abrir, porque o form pode estar desatualizado.
-  const [capa, setCapa]           = useState(reelsVideo?.capa_url || null);
-  const [capaMsg, setCapaMsg]     = useState('');
+  // Capa do Reels: a peça CapaReels guarda e avisa por evento; aqui só lemos para publicar.
+  const [capa, setCapa] = useState(reelsVideo?.capa_url || null);
   useEffect(() => {
-    if (!isReels || !form.id) return;
+    if (!isReels || !form.id || !window.db) return;
     window.db.from('conteudo_organico').select('media_files').eq('id', form.id).single().then(({ data }) => {
       let mf = data?.media_files;
       if (typeof mf === 'string') { try { mf = JSON.parse(mf); } catch { mf = null; } }
       const v = Array.isArray(mf) ? mf.find(m => m && m.tipo === 'video') : null;
       setCapa(v?.capa_url || null);
     });
+    const ouvir = e => { if (e.detail?.cardId === form.id) setCapa(e.detail.capaUrl); };
+    window.addEventListener('reels-capa', ouvir);
+    return () => window.removeEventListener('reels-capa', ouvir);
   }, [form.id]);
-
-  async function trocarCapa(file) {
-    setCapaMsg(file ? 'Enviando a capa...' : 'Removendo a capa...');
-    try {
-      const fd = new FormData();
-      fd.append('cardId', form.id);
-      if (file) {
-        // Regra de imagem dos projetos: JPEG 82%, aresta maior até 1920 px.
-        const img = await new Promise((ok, ruim) => { const i = new Image(); i.onload = () => ok(i); i.onerror = ruim; i.src = URL.createObjectURL(file); });
-        const esc = Math.min(1, 1920 / Math.max(img.naturalWidth, img.naturalHeight));
-        const c = document.createElement('canvas');
-        c.width = Math.round(img.naturalWidth * esc); c.height = Math.round(img.naturalHeight * esc);
-        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
-        const blob = await new Promise(ok => c.toBlob(ok, 'image/jpeg', 0.82));
-        if (!blob) throw new Error('Não consegui otimizar a imagem. Exporte em JPG e tente de novo.');
-        fd.append('file', new File([blob], 'capa.jpg', { type: 'image/jpeg' }));
-      }
-      const r = await fetch(`${WORKER_URL}/reels-capa`, { method: 'POST', body: fd });
-      const d = await r.json();
-      if (!r.ok || d.error) throw new Error(d.error || 'Falha ao salvar a capa.');
-      setCapa(d.capaUrl || null); setCapaMsg('');
-    } catch (e) { setCapaMsg(e.message); }
-  }
 
   const hasImages = isReels
     ? !!reelsVideo?.url_alta
@@ -1298,27 +1342,7 @@ function PublishModal({ form, slidesArr, slideFiles, onClose, onSuccess, initial
           {/* Capa do Reels: sem capa, o Instagram usa o primeiro quadro do vídeo. */}
           {isReels && reelsVideo && (
             <div style={{ marginBottom:14 }}>
-              <label style={LABEL_STYLE}>Capa do Reels</label>
-              <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-                <div style={{ width:54, height:96, borderRadius:6, overflow:'hidden', flexShrink:0,
-                  background:'rgba(255,255,255,.04)', border:'1px solid var(--app-border)' }}>
-                  {(capa || reelsVideo.thumb_url) && <img src={capa || reelsVideo.thumb_url} style={{ width:'100%', height:'100%', objectFit:'cover', opacity: capa ? 1 : .45 }}/>}
-                </div>
-                <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
-                  <span style={{ fontSize:11, fontFamily:'Roboto,sans-serif', color:'var(--text-3)', lineHeight:1.4 }}>
-                    {capa ? 'Capa própria escolhida.' : 'Sem capa: vai o primeiro quadro do vídeo. Também dá pra pôr um capa.jpg na pasta do Drive.'}
-                  </span>
-                  <div style={{ display:'flex', gap:6 }}>
-                    <label style={{ fontSize:11, fontWeight:700, fontFamily:'Roboto,sans-serif', color:'var(--fmn-gold)', cursor:'pointer' }}>
-                      {capa ? 'Trocar capa' : 'Escolher capa'}
-                      <input type="file" accept="image/jpeg,image/png,image/webp" style={{ display:'none' }}
-                        onChange={e => { const f = e.target.files?.[0]; e.target.value = ''; if (f) trocarCapa(f); }}/>
-                    </label>
-                    {capa && <span onClick={() => trocarCapa(null)} style={{ fontSize:11, fontFamily:'Roboto,sans-serif', color:'var(--text-3)', cursor:'pointer' }}>Remover</span>}
-                  </div>
-                  {capaMsg && <span style={{ fontSize:10.5, fontFamily:'Roboto,sans-serif', color:'var(--text-2)' }}>{capaMsg}</span>}
-                </div>
-              </div>
+              <CapaReels cardId={form.id} thumbUrl={reelsVideo.thumb_url} compacto/>
             </div>
           )}
 
@@ -1938,6 +1962,14 @@ function ContentModal({ item, defaultStatus, prefillDate, siblings=[], onNavigat
                   </div>
                 )}
               </div>
+
+              {!isNew && form.plataforma === 'Reels' && previewIsVideo && (
+                <CapaReels cardId={item.id} thumbUrl={(() => {
+                  let mf = form.media_files ?? item.media_files;
+                  if (typeof mf === 'string') { try { mf = JSON.parse(mf); } catch { mf = null; } }
+                  return Array.isArray(mf) ? (mf.find(m => m && m.tipo === 'video')?.thumb_url || null) : null;
+                })()}/>
+              )}
 
               {!isNew && item?.numero && (
                 <div style={{ width:'100%', display:'flex', flexDirection:'column', gap:8 }}>
