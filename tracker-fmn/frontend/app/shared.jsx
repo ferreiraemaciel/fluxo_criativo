@@ -287,6 +287,33 @@ function SectionCard({ title, children, style = {}, headerRight, noPad = false,
   );
 }
 
+/* ── Barra do topo do app (igual ao FMN Pro, 15/10/2026) ─────────
+   Fina, com o risco embaixo alinhado ao do cabeçalho do menu. À direita,
+   o selo Admin, o nome e a foto, como no FMN Pro. */
+function AppTopBar() {
+  const [u, setU] = useState(null);
+  useEffect(() => {
+    window.db?.auth.getUser().then(({ data }) => {
+      const x = data?.user; if (!x) return;
+      setU({ nome: x.user_metadata?.nome || x.user_metadata?.full_name || 'Ferreira e Maciel' });
+    });
+  }, []);
+  return (
+    <header style={{ height: 'var(--topbar-h)', flexShrink: 0, borderBottom: '1px solid var(--app-border)',
+      background: 'rgba(8,10,14,.8)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
+      display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 12, padding: '0 24px' }}>
+      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 10px', borderRadius: 999,
+        border: '1px solid rgba(249,182,79,.5)', color: 'var(--app-primary)', fontSize: 12, fontWeight: 600,
+        fontFamily: 'Roboto, sans-serif' }}>
+        <LucideIcon icon="shield" size={12}/>Admin
+      </span>
+      {u && <span style={{ fontSize: 14, fontFamily: 'Roboto, sans-serif', color: 'var(--text-1)' }}>{u.nome}</span>}
+      <img src="assets/icon-yellow.png" alt="" style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'contain',
+        background: 'var(--app-surface-2)', padding: 5, boxSizing: 'border-box' }}/>
+    </header>
+  );
+}
+
 /* ── Moldura de página (padrão FMN Pro, 15/10/2026) ──────────────
    PageBody: rola, centraliza o conteúdo em até 1152 px, 32 px de respiro
    e 24 px entre os blocos. PageHeader: título de 30 px, descrição em
@@ -827,4 +854,4 @@ let alvoDoMouseDown = null;
 document.addEventListener('mousedown', e => { alvoDoMouseDown = e.target; }, true);
 const cliqueFoiNoFundo = e => e.target === e.currentTarget && alvoDoMouseDown === e.currentTarget;
 
-Object.assign(window, { TICKET_PADRAO, cliqueFoiNoFundo, buscarTudo, LucideIcon, Btn, Badge, CardKPI, Atalho, Pilulas, SectionCard, PageBody, PageHeader, Divider, Sidebar, TopBar, fmtBRL, RefBlock, UTM_GLOBAL, PLATAFORMAS, PLAT_COLOR, PLAT_ICON, CarouselLightbox, novoJobId, BarraProgresso, melhorThumbAd });
+Object.assign(window, { TICKET_PADRAO, cliqueFoiNoFundo, buscarTudo, LucideIcon, Btn, Badge, CardKPI, Atalho, Pilulas, SectionCard, PageBody, PageHeader, AppTopBar, Divider, Sidebar, TopBar, fmtBRL, RefBlock, UTM_GLOBAL, PLATAFORMAS, PLAT_COLOR, PLAT_ICON, CarouselLightbox, novoJobId, BarraProgresso, melhorThumbAd });

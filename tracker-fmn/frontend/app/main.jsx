@@ -89,7 +89,10 @@
         <Sidebar activePage={screen} onNavigate={navigate}
           collapsed={sidebarCollapsed} onToggle={()=>setSidebarCollapsed(p=>!p)}/>
         <div style={{ flex:1, display:'flex', flexDirection:'column', overflow:'hidden', minWidth:0, minHeight:0 }}>
-          {currentScreen}
+          <window.AppTopBar/>
+          <div style={{ flex:1, display:'flex', flexDirection:'column', overflow:'hidden', minWidth:0, minHeight:0 }}>
+            {currentScreen}
+          </div>
         </div>
       </div>
     );
