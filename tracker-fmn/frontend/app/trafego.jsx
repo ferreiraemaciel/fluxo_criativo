@@ -2764,9 +2764,9 @@ function TrafficScreen() {
 
   const PERIOD_TABS = [
     { id:'hoje',    label:'Hoje'   },
-    { id:'3d',      label:'3D'     },
-    { id:'5d',      label:'5D'     },
-    { id:'7d',      label:'7D'     },
+    { id:'3d',      label:'3 dias' },
+    { id:'5d',      label:'5 dias' },
+    { id:'7d',      label:'7 dias' },
     { id:'maximum', label:'Máximo' },
   ];
 
@@ -2821,22 +2821,22 @@ function TrafficScreen() {
       {/* A janela inteira rola. Antes era overflow:hidden com a tabela ocupando
           o resto (flex:1), e abrir a análise espremia a tabela numa caixinha
           com rolagem própria. */}
-      <div style={{ flex:1,minHeight:0,overflowY:'auto',overflowX:'auto',padding:'20px 24px',display:'flex',flexDirection:'column',gap:16 }}>
+      <div style={{ flex:1,minHeight:0,overflowY:'auto',overflowX:'auto',padding:'8px 32px 32px',display:'flex',flexDirection:'column',gap:16 }}>
 
         {/* ── Modo de visualização + seletor ── */}
         <div style={{ display:'flex', alignItems:'center', gap:10, flexWrap:'wrap' }}>
 
           {/* Toggle de modo */}
-          <div style={{ display:'inline-flex', padding:3, borderRadius:9,
-            background:'rgba(255,255,255,.04)', border:'1px solid var(--app-border)' }}>
+          <div style={{ display:'inline-flex', padding:4, borderRadius:'var(--app-radius)', gap:2,
+            background:'var(--app-surface-2)' }}>
             {[['periodo','Por período'],['metrica','Por métrica']].map(([id,l]) => {
               const on = viewMode === id;
               return (
                 <button key={id} onClick={() => setViewMode(id)}
-                  style={{ padding:'5px 13px', borderRadius:6, cursor:'pointer', fontSize:12,
-                    fontFamily:'Roboto,sans-serif', fontWeight:700, transition:'all 150ms', border:'none',
-                    background: on ? 'rgba(249,182,79,.15)' : 'transparent',
-                    color: on ? 'var(--fmn-gold)' : 'var(--text-3)' }}>
+                  style={{ padding:'4px 12px', borderRadius:'var(--app-radius-md)', cursor:'pointer', fontSize:13,
+                    fontFamily:'Roboto,sans-serif', fontWeight:500, transition:'all 150ms', border:'none',
+                    background: on ? 'var(--app-bg)' : 'transparent', boxShadow: on ? '0 1px 2px rgba(0,0,0,.3)' : 'none',
+                    color: on ? 'var(--text-1)' : 'var(--text-2)' }}>
                   {l}
                 </button>
               );
@@ -2852,11 +2852,11 @@ function TrafficScreen() {
                 const active = selectedPeriod === tab.id;
                 return (
                   <button key={tab.id} onClick={() => setSelectedPeriod(tab.id)}
-                    style={{ padding:'6px 18px', borderRadius:8, cursor:'pointer', fontSize:12.5,
-                      fontFamily:'Roboto,sans-serif', fontWeight:700, letterSpacing:'0.04em',
-                      border: active ? '1px solid rgba(249,182,79,.5)' : '1px solid var(--app-border)',
-                      background: active ? 'rgba(249,182,79,.12)' : 'rgba(255,255,255,.04)',
-                      color: active ? 'var(--fmn-gold)' : 'var(--text-2)',
+                    style={{ padding:'6px 12px', borderRadius:999, cursor:'pointer', fontSize:12,
+                      fontFamily:'Roboto,sans-serif', fontWeight:400,
+                      border: `1px solid ${active ? 'var(--app-primary)' : 'var(--app-border)'}`,
+                      background: active ? 'var(--app-primary)' : 'var(--app-bg)',
+                      color: active ? 'var(--app-primary-fg)' : 'var(--text-2)',
                       transition:'all 150ms' }}>
                     {tab.label}
                   </button>
@@ -2872,12 +2872,11 @@ function TrafficScreen() {
               fora da lista, essa regra não muda. */}
           <button onClick={() => setMostrarDesativados(v => !v)}
             title="Mostra, dentro das campanhas ativas, os conjuntos e anúncios já desativados (só visualização)"
-            style={{ display:'flex', alignItems:'center', gap:6, padding:'6px 14px', borderRadius:8,
-              cursor:'pointer', fontSize:12.5, fontFamily:'Roboto,sans-serif', fontWeight:700,
-              letterSpacing:'0.02em', transition:'all 150ms',
-              border: mostrarDesativados ? '1px solid rgba(249,182,79,.5)' : '1px solid var(--app-border)',
-              background: mostrarDesativados ? 'rgba(249,182,79,.12)' : 'rgba(255,255,255,.04)',
-              color: mostrarDesativados ? 'var(--fmn-gold)' : 'var(--text-2)' }}>
+            style={{ display:'flex', alignItems:'center', gap:6, padding:'6px 12px', borderRadius:999,
+              cursor:'pointer', fontSize:12, fontFamily:'Roboto,sans-serif', fontWeight:400, transition:'all 150ms',
+              border: `1px solid ${mostrarDesativados ? 'var(--app-primary)' : 'var(--app-border)'}`,
+              background: mostrarDesativados ? 'var(--app-primary)' : 'var(--app-bg)',
+              color: mostrarDesativados ? 'var(--app-primary-fg)' : 'var(--text-2)' }}>
             <LucideIcon icon={mostrarDesativados ? 'eye' : 'eye-off'} size={13}/>
             Mostrar desativados
           </button>
