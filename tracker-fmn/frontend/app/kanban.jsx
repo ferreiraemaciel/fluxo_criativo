@@ -2806,6 +2806,31 @@ function KanbanScreen({ targetAd, onConsumeTarget }) {
       <TopBar title="Criativos"
         actions={
           <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+            <div style={{ position:'relative', display:'flex', alignItems:'center' }}>
+          <span style={{ position:'absolute', left:8, pointerEvents:'none', color:'rgba(255,255,255,.3)', display:'flex' }}>
+            <LucideIcon icon="search" size={12}/>
+          </span>
+          <input
+            type="text"
+            placeholder="Buscar ADS, headline, hook..."
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            style={{ paddingLeft:26, paddingRight:searchQuery ? 26 : 10, paddingTop:4, paddingBottom:4,
+              height:32, borderRadius:10, border:'1px solid var(--app-surface-2)',
+              background:'var(--app-bg)', color:'var(--text-1)',
+              fontFamily:'Roboto,sans-serif', fontSize:13, outline:'none', width:240,
+              transition:'border-color 130ms' }}
+            onFocus={e => e.target.style.borderColor='rgba(249,182,79,.4)'}
+            onBlur={e => e.target.style.borderColor='var(--app-surface-2)'}
+          />
+          {searchQuery && (
+            <button onClick={() => setSearchQuery('')}
+              style={{ position:'absolute', right:6, background:'none', border:'none',
+                color:'rgba(255,255,255,.35)', cursor:'pointer', padding:0, display:'flex' }}>
+              <LucideIcon icon="x" size={11}/>
+            </button>
+          )}
+        </div>
             {loading && (
               <span style={{ fontSize:10, fontFamily:'Roboto,sans-serif', color:'var(--text-3)',
                 background:'rgba(255,255,255,.05)', border:'1px solid var(--app-border)',
@@ -2913,32 +2938,7 @@ function KanbanScreen({ targetAd, onConsumeTarget }) {
             ))}
           </div>
         </div>
-        <div style={{ width:1, height:16, background:'var(--app-border)' }}/>
-        <div style={{ position:'relative', display:'flex', alignItems:'center' }}>
-          <span style={{ position:'absolute', left:8, pointerEvents:'none', color:'rgba(255,255,255,.3)', display:'flex' }}>
-            <LucideIcon icon="search" size={12}/>
-          </span>
-          <input
-            type="text"
-            placeholder="Buscar ADS, headline, hook..."
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            style={{ paddingLeft:26, paddingRight:searchQuery ? 26 : 10, paddingTop:4, paddingBottom:4,
-              borderRadius:8, border:'1px solid rgba(255,255,255,.1)',
-              background:'rgba(255,255,255,.05)', color:'var(--text-1)',
-              fontFamily:'Roboto,sans-serif', fontSize:11.5, outline:'none', width:200,
-              transition:'border-color 130ms' }}
-            onFocus={e => e.target.style.borderColor='rgba(249,182,79,.4)'}
-            onBlur={e => e.target.style.borderColor='rgba(255,255,255,.1)'}
-          />
-          {searchQuery && (
-            <button onClick={() => setSearchQuery('')}
-              style={{ position:'absolute', right:6, background:'none', border:'none',
-                color:'rgba(255,255,255,.35)', cursor:'pointer', padding:0, display:'flex' }}>
-              <LucideIcon icon="x" size={11}/>
-            </button>
-          )}
-        </div>
+
         {hasActiveFilters && (
           <button onClick={()=>{ setProdFilter('Todos'); setOrigemFilter('Todos'); setFmtFilter('Todos'); setTagFilter('Todas'); setSearchQuery(''); }}
             style={{ display:'flex', alignItems:'center', gap:4, padding:'4px 8px', borderRadius:6,
