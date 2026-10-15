@@ -132,67 +132,99 @@ function Badge({ children, tone = 'default', dot = false, style = {} }) {
   );
 }
 
-/* ── CardKPI ─────────────────────────────────────────────────────*/
-function CardKPI({ label, value, delta, deltaLabel, icon, accent = false, title }) {
-  const [hovIcon, setHovIcon] = useState(false);
+/* ── CardKPI ─────────────────────────────────────────────────────
+   Igual ao CardKPI do FMN Pro (15/10/2026): ícone à esquerda num quadrado
+   âmbar de 40 px, rótulo pequeno, número grande e a comparação embaixo.
+   `alerta` pinta de vermelho quando o número em si é má notícia. */
+function CardKPI({ label, value, delta, deltaLabel, icon, accent = false, title, alerta = false, onClick }) {
   const isStr = typeof delta === 'string';
   const deltaPos = isStr ? delta.startsWith('+') : (typeof delta === 'number' ? delta >= 0 : true);
-  const dc = deltaPos ? 'var(--clr-pos)' : 'var(--clr-neg)';
-  const db = deltaPos ? 'var(--clr-pos-bg)' : 'var(--clr-neg-bg)';
   const dv = typeof delta === 'number' ? `${delta >= 0 ? '+' : ''}${delta}%` : delta;
+  const [hov, setHov] = useState(false);
+  const cor = alerta ? 'var(--clr-neg)' : 'var(--app-primary)';
+  const fundo = alerta ? 'rgba(248,113,113,.15)' : 'rgba(251,191,36,.15)';
+  const borda = alerta ? 'rgba(248,113,113,.3)' : 'rgba(251,191,36,.3)';
   return (
-    <div style={{
-      flex: 1, minWidth: 0, background: 'var(--app-surface)',
-      border: `1px solid ${accent ? 'rgba(251,191,36,.3)' : 'var(--app-border)'}`,
-      borderRadius: 'var(--app-radius)', padding: 20, display: 'flex', flexDirection: 'column', gap: 10,
-      boxShadow: '0 1px 3px rgba(0,0,0,.1)',
-    }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span style={{ fontSize: 12, fontFamily: 'Roboto, sans-serif', fontWeight: 500,
-          color: 'var(--text-2)' }}>
-          {label}
-        </span>
-        {icon && (
-          <div onMouseEnter={() => title && setHovIcon(true)} onMouseLeave={() => setHovIcon(false)}
-            style={{ position: 'relative', width: 40, height: 40, borderRadius: 8, display: 'flex',
-            alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-            background: 'rgba(251,191,36,.15)', border: '1px solid rgba(251,191,36,.3)',
-            color: 'var(--app-primary)',
-            cursor: title ? 'help' : 'default' }}>
-            <LucideIcon icon={icon} size={20} />
-            {hovIcon && title && (
-              <div style={{ position: 'absolute', bottom: 'calc(100% + 8px)', right: -6, zIndex: 20,
-                width: 220, padding: '9px 11px', borderRadius: 9,
-                background: '#1a1b1f', border: '1px solid rgba(255,255,255,.14)',
-                boxShadow: '0 12px 32px rgba(0,0,0,.5)',
-                fontSize: 11, lineHeight: 1.5, fontFamily: 'Roboto, sans-serif',
-                fontWeight: 500, color: 'var(--text-2)', textTransform: 'none',
-                letterSpacing: 'normal', pointerEvents: 'none' }}>
-                {title}
-                <div style={{ position: 'absolute', top: '100%', right: 10, width: 0, height: 0,
-                  borderLeft: '6px solid transparent', borderRight: '6px solid transparent',
-                  borderTop: '6px solid #1a1b1f' }}/>
-              </div>
-            )}
+    <div title={title} onClick={onClick}
+      onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
+      style={{
+        flex: 1, minWidth: 0, background: 'var(--app-surface)',
+        border: `1px solid ${onClick && hov ? 'rgba(251,191,36,.5)' : 'var(--app-border)'}`,
+        borderRadius: 'var(--app-radius)', padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,.1)',
+        display: 'flex', alignItems: 'center', gap: 12, cursor: onClick ? 'pointer' : (title ? 'help' : 'default'),
+        transition: 'border-color 150ms',
+      }}>
+      {icon && (
+        <div style={{ width: 40, height: 40, borderRadius: 8, flexShrink: 0, display: 'flex',
+          alignItems: 'center', justifyContent: 'center', background: fundo, border: `1px solid ${borda}`, color: cor }}>
+          <LucideIcon icon={icon} size={20} />
+        </div>
+      )}
+      <div style={{ minWidth: 0 }}>
+        <div style={{ fontSize: 12, fontFamily: 'Roboto, sans-serif', color: 'var(--text-2)',
+          whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{label}</div>
+        <div style={{ fontFamily: 'Roboto, sans-serif', fontWeight: 600, fontSize: 24, lineHeight: 1.25,
+          color: alerta ? 'var(--clr-neg)' : 'var(--text-1)', fontVariantNumeric: 'tabular-nums',
+          whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{value}</div>
+        {(delta !== undefined && delta !== null) && (
+          <div style={{ fontSize: 11, fontFamily: 'Roboto, sans-serif', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+            color: deltaPos ? 'var(--clr-pos)' : 'var(--clr-neg)' }}>
+            {dv}{deltaLabel ? <span style={{ color: 'var(--text-2)' }}> {deltaLabel}</span> : null}
           </div>
         )}
       </div>
-      <div style={{ fontFamily: 'Roboto, sans-serif', fontWeight: 600, fontSize: 24,
-        letterSpacing: '-0.01em', lineHeight: 1.1,
-        color: accent ? 'var(--app-primary)' : 'var(--text-1)' }}>
-        {value}
-      </div>
-      {delta !== undefined && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3,
-            padding: '2px 7px', borderRadius: 6, fontSize: 10.5,
-            fontFamily: 'Roboto, sans-serif', fontWeight: 700, background: db, color: dc }}>
-            <LucideIcon icon={deltaPos ? 'trending-up' : 'trending-down'} size={10} />
-            {dv}
-          </span>
-          {deltaLabel && <span style={{ fontSize: 10.5, color: 'var(--text-3)' }}>{deltaLabel}</span>}
-        </div>
-      )}
+    </div>
+  );
+}
+
+/* ── Atalho ("O que espera por você", padrão FMN Pro) ─────────────
+   Só a contagem e o botão que leva para resolver, na tela certa. */
+function Atalho({ icon, numero, rotulo, acao, onClick, carregando, alerta = false }) {
+  const tem = numero > 0;
+  const [hov, setHov] = useState(false);
+  const corNum = tem ? (alerta ? 'var(--clr-neg)' : 'var(--text-1)') : 'var(--text-2)';
+  return (
+    <button onClick={tem ? onClick : undefined}
+      onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
+      style={{ textAlign: 'left', borderRadius: 'var(--app-radius)', padding: 12, display: 'flex', flexDirection: 'column', gap: 8,
+        border: `1px solid ${hov && tem ? 'rgba(251,191,36,.5)' : 'var(--app-border)'}`,
+        background: tem ? 'var(--app-surface)' : 'rgba(31,34,41,.2)', cursor: tem ? 'pointer' : 'default',
+        transition: 'border-color 150ms', fontFamily: 'Roboto, sans-serif' }}>
+      <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <LucideIcon icon={icon} size={16} style={{ color: tem ? (alerta ? 'var(--clr-neg)' : 'var(--app-primary)') : 'var(--text-2)' }}/>
+        <span style={{ fontSize: 24, fontWeight: 600, fontVariantNumeric: 'tabular-nums', color: corNum }}>{carregando ? '…' : numero}</span>
+      </span>
+      <span style={{ fontSize: 12, color: 'var(--text-2)', lineHeight: 1.3, minHeight: 32 }}>{rotulo}</span>
+      <span style={{ fontSize: 12, fontWeight: 500, display: 'inline-flex', alignItems: 'center', gap: 4,
+        color: tem ? 'var(--app-primary)' : 'var(--text-2)' }}>
+        {tem ? acao : 'Nada agora'}
+        {tem && <LucideIcon icon="arrow-right" size={12} style={{ transform: hov ? 'translateX(2px)' : 'none', transition: 'transform 150ms' }}/>}
+      </span>
+    </button>
+  );
+}
+
+/* ── Pílulas de filtro (FiltroPills do FMN Pro) ──────────────────*/
+function Pilulas({ opcoes, valor, onChange }) {
+  return (
+    <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8 }}>
+      {opcoes.map(o => {
+        const id = typeof o === 'string' ? o : o.id;
+        const label = typeof o === 'string' ? o : o.label;
+        const ativo = valor === id;
+        return (
+          <button key={id} onClick={() => onChange(id)}
+            style={{ fontSize: 12, padding: '6px 12px', borderRadius: 999, fontFamily: 'Roboto, sans-serif',
+              cursor: 'pointer', transition: 'all 150ms',
+              background: ativo ? 'var(--app-primary)' : 'var(--app-bg)',
+              color: ativo ? 'var(--app-primary-fg)' : 'var(--text-2)',
+              border: `1px solid ${ativo ? 'var(--app-primary)' : 'var(--app-border)'}` }}
+            onMouseEnter={e => { if (!ativo) e.currentTarget.style.borderColor = 'rgba(251,191,36,.4)'; }}
+            onMouseLeave={e => { if (!ativo) e.currentTarget.style.borderColor = 'var(--app-border)'; }}>
+            {label}
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -308,18 +340,28 @@ function Sidebar({ activePage, onNavigate, collapsed = false, onToggle }) {
     return () => clearInterval(t);
   }, []);
 
-  /* Ordem: Visão Geral · Ideias · Orgânico · Anúncios · Tráfego · Financeiro */
-  const navMain = [
-    { id: 'dashboard',  icon: 'layout-dashboard', label: 'Visão Geral' },
-    { id: 'ideias',     icon: 'lightbulb',         label: 'Ideias' },
-    { id: 'organico',   icon: 'leaf',              label: 'Orgânico' },
-    { id: 'criativos',  icon: 'clapperboard',      label: 'Anúncios' },
-    { id: 'trafego',    icon: 'trending-up',        label: 'Tráfego' },
-    { id: 'funis',      icon: 'filter',             label: 'Funis' },
-    { id: 'conversas',  icon: 'message-circle',     label: 'Conversas' },
-    { id: 'financeiro', icon: 'wallet',             label: 'Financeiro' },
-    { id: 'pico',       icon: 'calendar-clock',    label: 'Picos de Venda' },
-    { id: 'site',       icon: 'globe',              label: 'Site'       },
+  /* Menu em grupos, como no FMN Pro (15/10/2026). */
+  const navGrupos = [
+    { titulo: null, itens: [
+      { id: 'dashboard',  icon: 'layout-dashboard', label: 'Visão Geral' },
+    ]},
+    { titulo: 'Hoje', itens: [
+      { id: 'conversas',  icon: 'message-circle',   label: 'Conversas' },
+      { id: 'funis',      icon: 'filter',           label: 'Funis' },
+    ]},
+    { titulo: 'Conteúdo', itens: [
+      { id: 'ideias',     icon: 'lightbulb',        label: 'Ideias' },
+      { id: 'organico',   icon: 'leaf',             label: 'Orgânico' },
+      { id: 'criativos',  icon: 'clapperboard',     label: 'Anúncios' },
+    ]},
+    { titulo: 'Vendas', itens: [
+      { id: 'trafego',    icon: 'trending-up',      label: 'Tráfego' },
+      { id: 'pico',       icon: 'calendar-clock',   label: 'Picos de Venda' },
+      { id: 'financeiro', icon: 'wallet',           label: 'Financeiro' },
+    ]},
+    { titulo: 'Presença', itens: [
+      { id: 'site',       icon: 'globe',            label: 'Site' },
+    ]},
   ];
 
   function NavItem({ item }) {
@@ -338,10 +380,10 @@ function Sidebar({ activePage, onNavigate, collapsed = false, onToggle }) {
           height: 32, padding: collapsed ? 0 : '0 8px',
           borderRadius: 'var(--app-radius-md)', width: '100%', textAlign: 'left',
           // Padrão Blindagem / FMN Pro: ativo com fundo âmbar a 6% e borda a 28%.
-          background: active ? 'rgba(251,191,36,.06)' : hov ? 'rgba(255,255,255,.05)' : 'transparent',
+          background: active ? 'rgba(251,191,36,.08)' : hov ? 'rgba(255,255,255,.05)' : 'transparent',
           border: `1px solid ${active ? 'rgba(251,191,36,.28)' : 'transparent'}`,
-          color: active ? 'var(--app-primary)' : 'var(--text-1)',
-          fontFamily: 'Roboto, sans-serif', fontWeight: active ? 500 : 400,
+          color: active ? 'var(--app-primary)' : hov ? 'var(--app-primary)' : 'var(--text-1)',
+          fontFamily: 'Roboto, sans-serif', fontWeight: 500,
           fontSize: 14, cursor: 'pointer', transition: 'all 150ms',
         }}>
         <span style={{ position: 'relative', display: 'inline-flex' }}>
@@ -416,7 +458,15 @@ function Sidebar({ activePage, onNavigate, collapsed = false, onToggle }) {
       {/* Nav principal */}
       <nav style={{ flex: 1, padding: collapsed ? '8px 4px' : '8px',
         display: 'flex', flexDirection: 'column', gap: 4, overflowY: 'auto' }}>
-        {navMain.map(item => <NavItem key={item.id} item={item} />)}
+        {navGrupos.map((g, gi) => (
+          <div key={gi} style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: gi === 0 ? 0 : 12 }}>
+            {g.titulo && !collapsed && (
+              <div style={{ height: 32, display: 'flex', alignItems: 'center', padding: '0 8px',
+                fontSize: 12, fontWeight: 500, fontFamily: 'Roboto, sans-serif', color: 'var(--text-2)' }}>{g.titulo}</div>
+            )}
+            {g.itens.map(item => <NavItem key={item.id} item={item} />)}
+          </div>
+        ))}
       </nav>
 
       {/* Sistema (sem botão de colapso aqui) */}
@@ -759,4 +809,4 @@ let alvoDoMouseDown = null;
 document.addEventListener('mousedown', e => { alvoDoMouseDown = e.target; }, true);
 const cliqueFoiNoFundo = e => e.target === e.currentTarget && alvoDoMouseDown === e.currentTarget;
 
-Object.assign(window, { TICKET_PADRAO, cliqueFoiNoFundo, buscarTudo, LucideIcon, Btn, Badge, CardKPI, SectionCard, PageBody, PageHeader, Divider, Sidebar, TopBar, fmtBRL, RefBlock, UTM_GLOBAL, PLATAFORMAS, PLAT_COLOR, PLAT_ICON, CarouselLightbox, novoJobId, BarraProgresso, melhorThumbAd });
+Object.assign(window, { TICKET_PADRAO, cliqueFoiNoFundo, buscarTudo, LucideIcon, Btn, Badge, CardKPI, Atalho, Pilulas, SectionCard, PageBody, PageHeader, Divider, Sidebar, TopBar, fmtBRL, RefBlock, UTM_GLOBAL, PLATAFORMAS, PLAT_COLOR, PLAT_ICON, CarouselLightbox, novoJobId, BarraProgresso, melhorThumbAd });

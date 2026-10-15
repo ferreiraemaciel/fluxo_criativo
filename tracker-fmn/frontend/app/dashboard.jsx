@@ -2,7 +2,7 @@
    Tracker FMN — Dashboard Screen v3 (dados reais Supabase)
    ================================================================ */
 const { useState, useRef, useEffect } = React;
-const { CardKPI, SectionCard, TopBar, LucideIcon, Badge, PageBody, PageHeader } = window;
+const { CardKPI, SectionCard, TopBar, LucideIcon, Badge, PageBody, PageHeader, Atalho, Pilulas } = window;
 // FotoMap captured at render time to avoid race with map.jsx loading
 
 /* ── Helpers ─────────────────────────────────────────────────────*/
@@ -786,6 +786,48 @@ function RecuperacaoList({ items }) {
 }
 
 /* ── DateRangePicker ─────────────────────────────────────────────*/
+/* ── O que espera por você (padrão FMN Pro, 15/10/2026) ──────────
+   Só a contagem e o atalho para a tela que resolve. */
+function OQueEspera({ onNavigate }) {
+  const [n, setN] = useState(null);
+  useEffect(() => {
+    if (!window.db) return;
+    const hojeBR = new Date(Date.now() - 3 * 3600e3).toISOString().slice(0, 10);
+    const ini = new Date(`${hojeBR}T00:00:00-03:00`).toISOString();
+    const fim = new Date(`${hojeBR}T23:59:59.999-03:00`).toISOString();
+    const db = window.db;
+    const conta = q => q.then(r => r.count || 0).catch(() => 0);
+    Promise.all([
+      conta(db.from('whatsapp_contatos').select('telefone', { count:'exact', head:true }).eq('precisa_humano', true).eq('is_spam', false)),
+      conta(db.from('conteudo_organico').select('id', { count:'exact', head:true }).eq('status', 'Agendado').gte('scheduled_at', ini).lte('scheduled_at', fim)),
+      conta(db.from('conteudo_organico').select('id', { count:'exact', head:true }).not('erro_publicacao', 'is', null).neq('status', 'Arquivado')),
+      conta(db.from('conteudo_organico').select('id', { count:'exact', head:true }).eq('status', 'Fazendo').lte('data_prevista', hojeBR)),
+      conta(db.from('ads').select('id', { count:'exact', head:true }).in('status', ['fazer', 'fazendo'])),
+      conta(db.from('ads').select('id', { count:'exact', head:true }).eq('status', 'ativo')),
+      conta(db.from('pico_tarefas').select('id', { count:'exact', head:true }).in('status', ['pendente', 'fazendo']).lte('data_prevista', hojeBR)),
+      conta(db.from('pico_tarefas').select('id', { count:'exact', head:true }).eq('status', 'validar')),
+    ]).then(([humano, agHoje, erro, atrasOrg, adsFazer, adsAtivos, picoHoje, picoValidar]) =>
+      setN({ humano, agHoje, erro, atrasOrg, adsFazer, adsAtivos, picoHoje, picoValidar }));
+  }, []);
+  const c = !n;
+  const v = k => (n ? n[k] : 0);
+  return (
+    <section style={{ display:'flex', flexDirection:'column', gap:8 }}>
+      <p style={{ fontSize:14, fontWeight:600, fontFamily:'Roboto,sans-serif', color:'var(--text-1)' }}>O que espera por você</p>
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(4, minmax(0,1fr))', gap:12 }}>
+        <Atalho icon="message-circle" numero={v('humano')} rotulo="Conversas esperando atendimento" acao="Responder" carregando={c} onClick={() => onNavigate('conversas')}/>
+        <Atalho icon="calendar-clock" numero={v('agHoje')} rotulo="Posts agendados para hoje" acao="Ver no Orgânico" carregando={c} onClick={() => onNavigate('organico')}/>
+        <Atalho icon="triangle-alert" numero={v('erro')} rotulo="Publicações que falharam" acao="Resolver" alerta carregando={c} onClick={() => onNavigate('organico')}/>
+        <Atalho icon="leaf" numero={v('atrasOrg')} rotulo="Posts em produção com a data vencida" acao="Produzir" alerta carregando={c} onClick={() => onNavigate('organico')}/>
+        <Atalho icon="clapperboard" numero={v('adsFazer')} rotulo="Anúncios para fazer" acao="Fazer" carregando={c} onClick={() => onNavigate('criativos')}/>
+        <Atalho icon="trending-up" numero={v('adsAtivos')} rotulo="Anúncios rodando no Meta" acao="Ver o tráfego" carregando={c} onClick={() => onNavigate('trafego')}/>
+        <Atalho icon="square-check" numero={v('picoHoje')} rotulo="Tarefas do pico de hoje e atrasadas" acao="Fazer" alerta carregando={c} onClick={() => onNavigate('pico')}/>
+        <Atalho icon="badge-check" numero={v('picoValidar')} rotulo="Tarefas do pico para validar" acao="Validar" carregando={c} onClick={() => onNavigate('pico')}/>
+      </div>
+    </section>
+  );
+}
+
 function DateRangePicker({ period, onPeriodChange, dateRange, onDateRangeChange }) {
   const [open, setOpen] = useState(false);
   const [from, setFrom] = useState(dateRange.from);
@@ -803,31 +845,13 @@ function DateRangePicker({ period, onPeriodChange, dateRange, onDateRangeChange 
     color: 'var(--text-1)', colorScheme: 'dark', cursor: 'pointer',
   };
   return (
-    <div ref={ref} style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 4 }}>
-      <div style={{ display: 'flex', background: 'rgba(255,255,255,.04)',
-        border: '1px solid var(--app-border)', borderRadius: 8, padding: 3, gap: 1 }}>
-        {presets.map(p => (
-          <button key={p} onClick={() => { onPeriodChange(p); setOpen(false); }}
-            style={{ padding: '5px 11px', borderRadius: 6, cursor: 'pointer', transition: 'all 130ms',
-              background: period === p ? 'rgba(251,191,36,.15)' : 'transparent',
-              border: `1px solid ${period === p ? 'rgba(251,191,36,.2)' : 'transparent'}`,
-              color: period === p ? 'var(--fmn-gold)' : 'rgba(255,255,255,.42)',
-              fontFamily: 'Roboto, sans-serif', fontWeight: 700, fontSize: 11, letterSpacing: '0.03em' }}>
-            {p}
-          </button>
-        ))}
-        <button onClick={() => setOpen(!open)}
-          style={{ padding: '5px 11px', borderRadius: 6, cursor: 'pointer', transition: 'all 130ms',
-            background: period === 'Custom' ? 'rgba(251,191,36,.15)' : 'transparent',
-            border: `1px solid ${period === 'Custom' ? 'rgba(251,191,36,.2)' : 'transparent'}`,
-            color: period === 'Custom' ? 'var(--fmn-gold)' : 'rgba(255,255,255,.42)',
-            fontFamily: 'Roboto, sans-serif', fontWeight: 700, fontSize: 11, display: 'flex', alignItems: 'center', gap: 4 }}>
-          <LucideIcon icon="calendar" size={11} />
-          Personalizar
-        </button>
-      </div>
+    <div ref={ref} style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 8 }}>
+      <Pilulas valor={period}
+        opcoes={[{ id:'Hoje', label:'Hoje' }, { id:'7d', label:'7 dias' }, { id:'14d', label:'14 dias' },
+          { id:'30d', label:'30 dias' }, { id:'Máximo', label:'Máximo' }, { id:'Custom', label:'Personalizar' }]}
+        onChange={id => { if (id === 'Custom') setOpen(o => !o); else { onPeriodChange(id); setOpen(false); } }}/>
       {open && (
-        <div style={{ position: 'absolute', top: 'calc(100% + 8px)', right: 0, zIndex: 200,
+        <div style={{ position: 'absolute', top: 'calc(100% + 8px)', left: 0, zIndex: 200,
           background: 'var(--app-surface)', border: '1px solid var(--app-border-2)',
           borderRadius: 10, padding: '14px 16px', display: 'flex', gap: 10, alignItems: 'center',
           boxShadow: '0 12px 32px rgba(0,0,0,.4)', whiteSpace: 'nowrap' }}>
@@ -835,9 +859,9 @@ function DateRangePicker({ period, onPeriodChange, dateRange, onDateRangeChange 
           <span style={{ fontSize: 11, color: 'var(--text-3)' }}>até</span>
           <input type="date" value={to} onChange={e => setTo(e.target.value)} style={inputStyle} />
           <button onClick={() => { onDateRangeChange({ from, to }); onPeriodChange('Custom'); setOpen(false); }}
-            style={{ padding: '6px 14px', background: 'var(--fmn-gold)', color: 'var(--fmn-black)',
-              borderRadius: 6, fontSize: 11, fontFamily: 'Roboto, sans-serif', fontWeight: 700,
-              cursor: 'pointer', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+            style={{ height: 32, padding: '0 12px', background: 'var(--app-primary)', color: 'var(--app-primary-fg)',
+              borderRadius: 'var(--app-radius-md)', fontSize: 12, fontFamily: 'Roboto, sans-serif', fontWeight: 500,
+              cursor: 'pointer' }}>
             Aplicar
           </button>
         </div>
@@ -2517,13 +2541,14 @@ function DashboardScreen({ period, onPeriodChange, dateRange, onDateRangeChange,
               background:'var(--app-surface-2)', padding:'2px 10px', borderRadius:10 }}>atualizando...</span>
           )}
           actions={<>
-            <DateRangePicker period={period} onPeriodChange={onPeriodChange}
-              dateRange={dateRange} onDateRangeChange={onDateRangeChange}/>
             {window.RelatorioButton && (
               <window.RelatorioButton rangeFrom={rangeFrom} rangeTo={rangeTo}
                 dados={{ data, chartDays, weeklySales, periodHeatmap, salesByProduct: data?.salesByProduct, salesBySource: data?.salesBySource }}/>
             )}
           </>}/>
+
+        <DateRangePicker period={period} onPeriodChange={onPeriodChange}
+          dateRange={dateRange} onDateRangeChange={onDateRangeChange}/>
 
         {/* Alarme de atendimento: primeira coisa da tela quando existe lead
             esperando. Some sozinho quando não há nada pendente. */}
@@ -2552,6 +2577,10 @@ function DashboardScreen({ period, onPeriodChange, dateRange, onDateRangeChange,
           <CardKPI label="LTV"           value={ltv != null ? fmtCur(ltv) : '—'} icon="repeat"
             title="Valor médio por cliente: soma de TODO o histórico de compras (mesmo antes do período) de quem comprou no período, dividido pelo nº de clientes únicos."/>
         </div>
+
+        <OQueEspera onNavigate={onNavigate}/>
+
+        <p style={{ fontSize:14, fontWeight:600, fontFamily:'Roboto,sans-serif', color:'var(--text-1)', marginBottom:-16 }}>Números do período</p>
 
         {/* Chart + Breakdown */}
         <div style={{ display:'grid', gridTemplateColumns:'2fr 1fr', gap:16 }}>
