@@ -605,7 +605,7 @@ function RecuperacaoList({ items }) {
                 background: feito ? 'rgba(74,222,128,.04)' : 'var(--app-surface-2)',
                 border:`1px solid ${feito ? 'rgba(74,222,128,.2)' : 'var(--app-border)'}`,
                 transition:'all 130ms', opacity: feito ? 0.7 : 1 }}
-              onMouseEnter={e => e.currentTarget.style.borderColor = feito ? 'rgba(74,222,128,.4)' : 'rgba(234,170,65,.3)'}
+              onMouseEnter={e => e.currentTarget.style.borderColor = feito ? 'rgba(74,222,128,.4)' : 'rgba(251,191,36,.3)'}
               onMouseLeave={e => e.currentTarget.style.borderColor = feito ? 'rgba(74,222,128,.2)' : 'var(--app-border)'}>
 
               {/* badge status */}
@@ -809,8 +809,8 @@ function DateRangePicker({ period, onPeriodChange, dateRange, onDateRangeChange 
         {presets.map(p => (
           <button key={p} onClick={() => { onPeriodChange(p); setOpen(false); }}
             style={{ padding: '5px 11px', borderRadius: 6, cursor: 'pointer', transition: 'all 130ms',
-              background: period === p ? 'rgba(234,170,65,.15)' : 'transparent',
-              border: `1px solid ${period === p ? 'rgba(234,170,65,.2)' : 'transparent'}`,
+              background: period === p ? 'rgba(251,191,36,.15)' : 'transparent',
+              border: `1px solid ${period === p ? 'rgba(251,191,36,.2)' : 'transparent'}`,
               color: period === p ? 'var(--fmn-gold)' : 'rgba(255,255,255,.42)',
               fontFamily: 'Roboto, sans-serif', fontWeight: 700, fontSize: 11, letterSpacing: '0.03em' }}>
             {p}
@@ -818,8 +818,8 @@ function DateRangePicker({ period, onPeriodChange, dateRange, onDateRangeChange 
         ))}
         <button onClick={() => setOpen(!open)}
           style={{ padding: '5px 11px', borderRadius: 6, cursor: 'pointer', transition: 'all 130ms',
-            background: period === 'Custom' ? 'rgba(234,170,65,.15)' : 'transparent',
-            border: `1px solid ${period === 'Custom' ? 'rgba(234,170,65,.2)' : 'transparent'}`,
+            background: period === 'Custom' ? 'rgba(251,191,36,.15)' : 'transparent',
+            border: `1px solid ${period === 'Custom' ? 'rgba(251,191,36,.2)' : 'transparent'}`,
             color: period === 'Custom' ? 'var(--fmn-gold)' : 'rgba(255,255,255,.42)',
             fontFamily: 'Roboto, sans-serif', fontWeight: 700, fontSize: 11, display: 'flex', alignItems: 'center', gap: 4 }}>
           <LucideIcon icon="calendar" size={11} />
@@ -880,7 +880,7 @@ function FlowFunnel({ steps }) {
     <svg viewBox={`0 0 ${W} ${H}`} style={{ width:'100%', height:'auto', display:'block' }}>
       <defs>
         <linearGradient id="fg1" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0%"   stopColor="#eaaa41" stopOpacity="0.9"/>
+          <stop offset="0%"   stopColor="#fbbf24" stopOpacity="0.9"/>
           <stop offset="55%"  stopColor="#e8820a" stopOpacity="0.85"/>
           <stop offset="100%" stopColor="#c84a14" stopOpacity="0.8"/>
         </linearGradient>
@@ -921,7 +921,7 @@ function FlowFunnel({ steps }) {
             )}
             {/* badge retangular uniforme */}
             <rect x={bx} y={BADGE_TOP} width={txtW} height={BADGE_H} rx="5"
-              fill="rgba(15,16,19,.90)" stroke="rgba(234,170,65,.45)" strokeWidth="1"/>
+              fill="rgba(15,16,19,.90)" stroke="rgba(251,191,36,.45)" strokeWidth="1"/>
             <text x={cx} y={BADGE_TOP + BADGE_H * 0.68} fontSize={BADGE_FS}
               fill="rgba(255,255,255,.95)" textAnchor="middle"
               fontFamily="Roboto,sans-serif" fontWeight="700">
@@ -1166,8 +1166,8 @@ function LineAreaChart({ data }) {
         onMouseMove={handleMouseMove} onMouseLeave={() => setTooltip(null)}>
         <defs>
           <linearGradient id="lcGasto" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%"   stopColor="rgba(234,170,65,.28)"/>
-            <stop offset="100%" stopColor="rgba(234,170,65,.00)"/>
+            <stop offset="0%"   stopColor="rgba(251,191,36,.28)"/>
+            <stop offset="100%" stopColor="rgba(251,191,36,.00)"/>
           </linearGradient>
           <linearGradient id="lcFat" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%"   stopColor="rgba(74,222,128,.20)"/>
@@ -1194,7 +1194,7 @@ function LineAreaChart({ data }) {
 
         {/* Linhas */}
         <path d={buildCurve('gasto')} fill="none"
-          stroke="rgba(234,170,65,.85)" strokeWidth="1.5"
+          stroke="rgba(251,191,36,.85)" strokeWidth="1.5"
           strokeLinecap="round" strokeLinejoin="round"/>
         <path d={buildCurve('fat')} fill="none"
           stroke="rgba(74,222,128,.80)" strokeWidth="1.5"
@@ -1212,7 +1212,7 @@ function LineAreaChart({ data }) {
           return (
             <g key={i}>
               <circle cx={xPos(i)} cy={yPos(d.gasto)} r={isHovered ? 4.5 : (d.gasto > 0 ? 2.5 : 1.5)}
-                fill={isHovered ? 'rgba(234,170,65,1)' : (d.gasto > 0 ? 'rgba(234,170,65,.95)' : 'rgba(234,170,65,.2)')}
+                fill={isHovered ? 'rgba(251,191,36,1)' : (d.gasto > 0 ? 'rgba(251,191,36,.95)' : 'rgba(251,191,36,.2)')}
                 stroke="rgba(15,16,19,.9)" strokeWidth={isHovered ? 2 : 1.5}/>
               <circle cx={xPos(i)} cy={yPos(d.fat)} r={isHovered ? 4.5 : (d.fat > 0 ? 2.5 : 1.5)}
                 fill={isHovered ? 'rgba(74,222,128,1)' : (d.fat > 0 ? 'rgba(74,222,128,.95)' : 'rgba(74,222,128,.2)')}
@@ -1243,10 +1243,10 @@ function LineAreaChart({ data }) {
             </div>
             <div style={{ display:'flex', flexDirection:'column', gap:4 }}>
               <div style={{ display:'flex', alignItems:'center', gap:6 }}>
-                <span style={{ width:8, height:2, borderRadius:1, background:'rgba(234,170,65,.9)', display:'inline-block' }}/>
+                <span style={{ width:8, height:2, borderRadius:1, background:'rgba(251,191,36,.9)', display:'inline-block' }}/>
                 <span style={{ fontSize:11, fontFamily:'Roboto,sans-serif', color:'var(--text-2)' }}>Gasto</span>
                 <span style={{ fontSize:13, fontFamily:'Roboto,sans-serif', fontWeight:700,
-                  color:'rgba(234,170,65,.95)', marginLeft:'auto', paddingLeft:16 }}>
+                  color:'rgba(251,191,36,.95)', marginLeft:'auto', paddingLeft:16 }}>
                   {fmtCur(tip.gasto)}
                 </span>
               </div>
@@ -1287,7 +1287,7 @@ function AdsRanking({ ads, onNavigate }) {
   // mais — corrigido junto da mesclagem Fazer+Fazendo de 2026-08-02.
   const statusColor = {
     'fazer':     '#3b82f6', // Fazendo (produção)
-    'fazendo':   '#eaaa41', // Feito (pronto, falta ativar)
+    'fazendo':   '#fbbf24', // Feito (pronto, falta ativar)
     'ativo':     '#fb923c',
     'campeoes':  '#4ade80',
     'arquivado': '#94a3b8',
@@ -1392,9 +1392,9 @@ function AdsRanking({ ads, onNavigate }) {
             padding:'8px', gap:8, borderRadius:8, alignItems:'center', cursor:'grab',
             userSelect:'none', WebkitUserSelect:'none',
             background: dragOver === ad.numero
-              ? 'rgba(234,170,65,.12)'
+              ? 'rgba(251,191,36,.12)'
               : i % 2 === 0 ? 'rgba(255,255,255,.02)' : 'transparent',
-            outline: dragOver === ad.numero ? '1px solid rgba(234,170,65,.4)' : 'none',
+            outline: dragOver === ad.numero ? '1px solid rgba(251,191,36,.4)' : 'none',
             transition:'background 100ms, outline 100ms' }}
           onMouseEnter={e => { if (dragOver !== ad.numero) e.currentTarget.style.background = 'rgba(255,255,255,.05)'; }}
           onMouseLeave={e => { if (dragOver !== ad.numero) e.currentTarget.style.background = i % 2 === 0 ? 'rgba(255,255,255,.02)' : 'transparent'; }}>
@@ -1499,11 +1499,11 @@ function WeeklySalesChart({ data }) {
         return (
           <g key={i} opacity={opacity}>
             <rect x={cx-bW/2} y={H-mb-bH} width={bW} height={bH}
-              fill={active ? 'rgba(234,170,65,.8)' : 'rgba(234,170,65,.3)'} rx="3"/>
+              fill={active ? 'rgba(251,191,36,.8)' : 'rgba(251,191,36,.3)'} rx="3"/>
             <text x={cx} y={H-mb-bH-4} fontSize="8.5"
-              fill={active ? 'rgba(234,170,65,.9)' : 'rgba(255,255,255,.4)'}
+              fill={active ? 'rgba(251,191,36,.9)' : 'rgba(255,255,255,.4)'}
               textAnchor="middle" fontFamily="Roboto,sans-serif" fontWeight="700">{d.sales}</text>
-            <text x={cx} y={H-6} fontSize="8.5" fill={isToday ? 'rgba(234,170,65,.8)' : 'rgba(255,255,255,.35)'}
+            <text x={cx} y={H-6} fontSize="8.5" fill={isToday ? 'rgba(251,191,36,.8)' : 'rgba(255,255,255,.35)'}
               textAnchor="middle" fontFamily="Roboto,sans-serif" fontWeight={isToday ? '700' : '400'}>{d.day}</text>
           </g>
         );
@@ -1926,8 +1926,8 @@ function RecentSalesFeed({ sales }) {
                   <span title="O Agente de Vendas da Hotmart entrou no caminho dessa venda. O anúncio de origem continua sendo o mostrado aqui."
                     style={{ flexShrink:0, fontSize:9, fontFamily:'Roboto,sans-serif', fontWeight:700,
                       padding:'1px 5px', borderRadius:4, whiteSpace:'nowrap',
-                      color:'#fbbf24', background:'rgba(251,191,36,.12)',
-                      border:'1px solid rgba(251,191,36,.3)' }}>
+                      color:'#f59e42', background:'rgba(245,158,66,.12)',
+                      border:'1px solid rgba(245,158,66,.3)' }}>
                     agente Hotmart
                   </span>
                 )}
@@ -2098,7 +2098,7 @@ function Dicas({ data }) {
 
   const COR = {
     pos:  { color:'var(--clr-pos)',  bg:'rgba(74,222,128,.08)',  border:'rgba(74,222,128,.2)'  },
-    warn: { color:'var(--fmn-gold)', bg:'rgba(234,170,65,.08)',  border:'rgba(234,170,65,.2)'  },
+    warn: { color:'var(--fmn-gold)', bg:'rgba(251,191,36,.08)',  border:'rgba(251,191,36,.2)'  },
     neg:  { color:'var(--clr-neg)',  bg:'rgba(239,68,68,.08)',   border:'rgba(239,68,68,.2)'   },
   };
 
@@ -2207,7 +2207,7 @@ function UpsellFunnelCard({ data }) {
           </div>
           <div style={{ background:'rgba(255,255,255,.07)', borderRadius:999, height:8, overflow:'hidden' }}>
             <div style={{ height:'100%', borderRadius:999,
-              background:'linear-gradient(90deg,rgba(234,170,65,.9),rgba(232,130,10,.8))',
+              background:'linear-gradient(90deg,rgba(251,191,36,.9),rgba(232,130,10,.8))',
               width:`${Math.min(taxaConversao,100)}%`, transition:'width .6s ease' }}/>
           </div>
           <div style={{ marginTop:6, fontSize:10, fontFamily:'Roboto,sans-serif',
@@ -2381,7 +2381,7 @@ function AlarmeAtendimento({ onNavigate }) {
 
   const espera = [...humano, ...mudo].reduce((m, i) => Math.max(m, i.horas || 0), 0);
   const urgente = humano.length > 0 || espera >= ALARME_URGENTE;
-  const cor = urgente ? '#f87171' : '#eaaa41';
+  const cor = urgente ? '#f87171' : '#fbbf24';
   const fmtEspera = h => h == null ? '' : h < 24 ? `${Math.floor(h)}h` : `${Math.floor(h/24)}d`;
 
   const partes = [];
@@ -2428,8 +2428,8 @@ function AlarmeAtendimento({ onNavigate }) {
               </span>
               <span style={{ padding:'1px 7px', borderRadius:99, fontSize:9.5, fontWeight:700,
                 whiteSpace:'nowrap',
-                background: i.tag === 'pediu humano' ? 'rgba(248,113,113,.14)' : 'rgba(234,170,65,.12)',
-                border: `1px solid ${i.tag === 'pediu humano' ? 'rgba(248,113,113,.4)' : 'rgba(234,170,65,.35)'}`,
+                background: i.tag === 'pediu humano' ? 'rgba(248,113,113,.14)' : 'rgba(251,191,36,.12)',
+                border: `1px solid ${i.tag === 'pediu humano' ? 'rgba(248,113,113,.4)' : 'rgba(251,191,36,.35)'}`,
                 color: i.tag === 'pediu humano' ? '#f87171' : 'var(--fmn-gold)' }}>
                 {i.tag}
               </span>
@@ -2567,7 +2567,7 @@ function DashboardScreen({ period, onPeriodChange, dateRange, onDateRangeChange,
           <SectionCard title="Gasto × Faturamento"
             headerRight={
               <div style={{ display:'flex', gap:12 }}>
-                {[['rgba(234,170,65,.8)','Gasto'],['rgba(74,222,128,.7)','Faturamento']].map(([c,l])=>(
+                {[['rgba(251,191,36,.8)','Gasto'],['rgba(74,222,128,.7)','Faturamento']].map(([c,l])=>(
                   <span key={l} style={{ display:'flex', alignItems:'center', gap:5, fontSize:10.5,
                     fontFamily:'Roboto,sans-serif', fontWeight:700, color:'var(--text-3)' }}>
                     <span style={{ width:16, height:2, borderRadius:1, background:c, display:'block' }}/>

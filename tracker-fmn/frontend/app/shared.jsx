@@ -62,34 +62,40 @@ function LucideIcon({ icon, size = 18, color, style = {}, className }) {
 /* ── Button ──────────────────────────────────────────────────────*/
 function Btn({ variant = 'primary', size = 'md', children, onClick, style = {}, icon, disabled }) {
   const [pressed, setPressed] = useState(false);
+  // Padrão Blindagem / FMN Pro (15/10/2026): altura fixa, 14px peso 500, sem maiúsculas, raio 10.
   const sizes = {
-    sm: { p: '7px 13px', fs: 11, gap: 5, is: 13 },
-    md: { p: '9px 16px', fs: 12.5, gap: 6, is: 15 },
-    lg: { p: '12px 22px', fs: 13.5, gap: 7, is: 17 },
+    sm: { h: 32, px: 12, fs: 12, gap: 6, is: 14 },
+    md: { h: 36, px: 16, fs: 14, gap: 8, is: 16 },
+    lg: { h: 40, px: 22, fs: 14, gap: 8, is: 16 },
   };
   const variants = {
-    primary:   { background: 'var(--fmn-gold)',              color: 'var(--fmn-black)',  border: '1.5px solid var(--fmn-gold)' },
-    secondary: { background: 'transparent',                  color: 'var(--fmn-gold)',   border: '1.5px solid rgba(234,170,65,.45)' },
-    ghost:     { background: 'rgba(255,255,255,.06)',         color: 'var(--text-1)',     border: '1.5px solid var(--app-border)' },
-    danger:    { background: 'rgba(248,113,113,.1)',          color: 'var(--clr-neg)',    border: '1.5px solid rgba(248,113,113,.25)' },
-    meta:      { background: '#1877f2',                       color: '#fff',              border: '1.5px solid #1877f2' },
+    primary:   { background: 'var(--app-primary)',  color: 'var(--app-primary-fg)', border: '1px solid var(--app-primary)', boxShadow: '0 1px 2px rgba(0,0,0,.25)' },
+    secondary: { background: 'var(--app-bg)',       color: 'var(--text-1)',         border: '1px solid var(--app-surface-2)' },
+    ghost:     { background: 'transparent',         color: 'var(--text-1)',         border: '1px solid transparent' },
+    danger:    { background: 'var(--clr-neg)',      color: '#fff',                  border: '1px solid var(--clr-neg)' },
+    meta:      { background: '#1877f2',             color: '#fff',                  border: '1px solid #1877f2' },
   };
+  const [hover, setHover] = useState(false);
+  const hoverStyle = !hover || disabled ? {} :
+    variant === 'primary' || variant === 'danger' || variant === 'meta' ? { opacity: 0.9 } :
+    { background: 'var(--app-surface-2)' };
   const s = sizes[size] || sizes.md;
   const v = variants[variant] || variants.ghost;
   return (
     <button onClick={onClick} disabled={disabled}
       onMouseDown={() => setPressed(true)}
       onMouseUp={() => setPressed(false)}
-      onMouseLeave={() => setPressed(false)}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => { setPressed(false); setHover(false); }}
       style={{
-        display: 'inline-flex', alignItems: 'center', gap: s.gap, padding: s.p,
-        fontSize: s.fs, fontFamily: 'Roboto, sans-serif', fontWeight: 700,
-        letterSpacing: '0.04em', textTransform: 'uppercase',
-        borderRadius: 8, cursor: disabled ? 'default' : 'pointer',
+        display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: s.gap,
+        height: s.h, padding: `0 ${s.px}px`,
+        fontSize: s.fs, fontFamily: 'Roboto, sans-serif', fontWeight: 500,
+        borderRadius: 'var(--app-radius-md)', cursor: disabled ? 'default' : 'pointer',
         transition: 'all 150ms var(--ease-out)',
-        transform: pressed ? 'scale(0.97)' : 'scale(1)',
-        opacity: disabled ? 0.45 : 1, whiteSpace: 'nowrap',
-        ...v, ...style
+        transform: pressed ? 'scale(0.98)' : 'scale(1)',
+        opacity: disabled ? 0.5 : 1, whiteSpace: 'nowrap',
+        ...v, ...hoverStyle, ...style
       }}>
       {icon && <LucideIcon icon={icon} size={s.is} />}
       {children}
@@ -101,14 +107,14 @@ function Btn({ variant = 'primary', size = 'md', children, onClick, style = {}, 
 function Badge({ children, tone = 'default', dot = false, style = {} }) {
   const tones = {
     default:  { background: 'rgba(255,255,255,.08)', color: 'rgba(255,255,255,.62)' },
-    gold:     { background: 'rgba(234,170,65,.15)',  color: 'var(--fmn-gold)' },
+    gold:     { background: 'rgba(251,191,36,.15)',  color: 'var(--app-primary)' },
     success:  { background: 'rgba(74,222,128,.12)',  color: 'var(--clr-pos)' },
     danger:   { background: 'rgba(248,113,113,.12)', color: 'var(--clr-neg)' },
-    warning:  { background: 'rgba(251,191,36,.12)',  color: 'var(--clr-warn)' },
+    warning:  { background: 'rgba(245,158,66,.12)',  color: 'var(--clr-warn)' },
     info:     { background: 'rgba(96,165,250,.12)',  color: 'var(--clr-info)' },
     teal:     { background: 'rgba(52,211,153,.12)',  color: 'var(--clr-teal)' },
     amber:    { background: 'rgba(245,158,11,.12)',  color: '#f59e0b' },
-    reels:    { background: 'rgba(234,170,65,.12)',  color: 'var(--fmn-gold)' },
+    reels:    { background: 'rgba(251,191,36,.12)',  color: 'var(--fmn-gold)' },
     image:    { background: 'rgba(96,165,250,.12)',  color: 'var(--clr-info)' },
     carousel: { background: 'rgba(52,211,153,.12)',  color: 'var(--clr-teal)' },
   };
@@ -116,9 +122,8 @@ function Badge({ children, tone = 'default', dot = false, style = {} }) {
   return (
     <span style={{
       display: 'inline-flex', alignItems: 'center', gap: 4,
-      padding: '3px 8px', borderRadius: 999,
-      fontSize: 10, fontFamily: 'Roboto, sans-serif', fontWeight: 700,
-      letterSpacing: '0.1em', textTransform: 'uppercase',
+      padding: '2px 10px', borderRadius: 'var(--app-radius-md)',
+      fontSize: 12, fontFamily: 'Roboto, sans-serif', fontWeight: 600,
       flexShrink: 0, ...t, ...style
     }}>
       {dot && <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'currentColor' }} />}
@@ -138,22 +143,23 @@ function CardKPI({ label, value, delta, deltaLabel, icon, accent = false, title 
   return (
     <div style={{
       flex: 1, minWidth: 0, background: 'var(--app-surface)',
-      border: `1px solid ${accent ? 'rgba(234,170,65,.2)' : 'var(--app-border)'}`,
-      borderRadius: 14, padding: '16px 18px', display: 'flex', flexDirection: 'column', gap: 10,
+      border: `1px solid ${accent ? 'rgba(251,191,36,.3)' : 'var(--app-border)'}`,
+      borderRadius: 'var(--app-radius-xl)', padding: 20, display: 'flex', flexDirection: 'column', gap: 10,
+      boxShadow: '0 1px 2px rgba(0,0,0,.25)',
     }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span style={{ fontSize: 10.5, fontFamily: 'Roboto, sans-serif', fontWeight: 700,
-          letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--text-2)' }}>
+        <span style={{ fontSize: 12, fontFamily: 'Roboto, sans-serif', fontWeight: 500,
+          color: 'var(--text-2)' }}>
           {label}
         </span>
         {icon && (
           <div onMouseEnter={() => title && setHovIcon(true)} onMouseLeave={() => setHovIcon(false)}
-            style={{ position: 'relative', width: 28, height: 28, borderRadius: 7, display: 'flex',
+            style={{ position: 'relative', width: 40, height: 40, borderRadius: 'var(--app-radius)', display: 'flex',
             alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-            background: accent ? 'rgba(234,170,65,.1)' : 'rgba(255,255,255,.05)',
-            color: accent ? 'var(--fmn-gold)' : 'var(--text-3)',
+            background: 'rgba(251,191,36,.15)', border: '1px solid rgba(251,191,36,.3)',
+            color: 'var(--app-primary)',
             cursor: title ? 'help' : 'default' }}>
-            <LucideIcon icon={icon} size={14} />
+            <LucideIcon icon={icon} size={20} />
             {hovIcon && title && (
               <div style={{ position: 'absolute', bottom: 'calc(100% + 8px)', right: -6, zIndex: 20,
                 width: 220, padding: '9px 11px', borderRadius: 9,
@@ -171,9 +177,9 @@ function CardKPI({ label, value, delta, deltaLabel, icon, accent = false, title 
           </div>
         )}
       </div>
-      <div style={{ fontFamily: 'Roboto, sans-serif', fontWeight: 900, fontSize: 24,
-        letterSpacing: '-0.02em', lineHeight: 1.1,
-        color: accent ? 'var(--fmn-gold)' : 'var(--text-1)' }}>
+      <div style={{ fontFamily: 'Roboto, sans-serif', fontWeight: 600, fontSize: 24,
+        letterSpacing: '-0.01em', lineHeight: 1.1,
+        color: accent ? 'var(--app-primary)' : 'var(--text-1)' }}>
         {value}
       </div>
       {delta !== undefined && (
@@ -215,8 +221,9 @@ function SectionCard({ title, children, style = {}, headerRight, noPad = false,
 
   return (
     <div style={{
-      background: 'var(--app-surface)',
-      borderRadius: 14, overflow: 'hidden', ...style
+      background: 'var(--app-surface)', border: '1px solid var(--app-border)',
+      borderRadius: 'var(--app-radius-xl)', overflow: 'hidden',
+      boxShadow: '0 1px 2px rgba(0,0,0,.25)', ...style
     }}>
       {title && (
         <div onClick={recolhivel ? alternar : undefined}
@@ -228,8 +235,8 @@ function SectionCard({ title, children, style = {}, headerRight, noPad = false,
               <LucideIcon icon={fechado ? 'chevron-right' : 'chevron-down'} size={14}
                 style={{ color: 'var(--text-3)' }}/>
             )}
-            <span style={{ fontSize: 12.5, fontFamily: 'Roboto, sans-serif', fontWeight: 700,
-              letterSpacing: '0.02em', color: 'var(--text-1)' }}>{title}</span>
+            <span style={{ fontSize: 14, fontFamily: 'Roboto, sans-serif', fontWeight: 600,
+              color: 'var(--text-1)' }}>{title}</span>
           </span>
           {headerRight && (
             <span onClick={e => recolhivel && e.stopPropagation()}>{headerRight}</span>
@@ -290,15 +297,16 @@ function Sidebar({ activePage, onNavigate, collapsed = false, onToggle }) {
         style={{
           position: 'relative',
           display: 'flex', alignItems: 'center',
-          gap: collapsed ? 0 : 10,
+          gap: collapsed ? 0 : 8,
           justifyContent: collapsed ? 'center' : 'flex-start',
-          padding: collapsed ? '9px 0' : '9px 12px',
-          borderRadius: 8, width: '100%', textAlign: 'left',
-          background: active ? 'rgba(234,170,65,.1)' : hov ? 'rgba(255,255,255,.04)' : 'transparent',
-          border: `1px solid ${active ? 'rgba(234,170,65,.15)' : 'transparent'}`,
-          color: active ? 'var(--fmn-gold)' : hov ? 'rgba(255,255,255,.72)' : 'rgba(255,255,255,.44)',
-          fontFamily: 'Roboto, sans-serif', fontWeight: active ? 700 : 500,
-          fontSize: 13, letterSpacing: '0.01em', cursor: 'pointer', transition: 'all 150ms',
+          height: 32, padding: collapsed ? 0 : '0 8px',
+          borderRadius: 'var(--app-radius-md)', width: '100%', textAlign: 'left',
+          // Padrão Blindagem / FMN Pro: ativo com fundo âmbar a 6% e borda a 28%.
+          background: active ? 'rgba(251,191,36,.06)' : hov ? 'rgba(255,255,255,.05)' : 'transparent',
+          border: `1px solid ${active ? 'rgba(251,191,36,.28)' : 'transparent'}`,
+          color: active ? 'var(--app-primary)' : 'var(--text-1)',
+          fontFamily: 'Roboto, sans-serif', fontWeight: active ? 500 : 400,
+          fontSize: 14, cursor: 'pointer', transition: 'all 150ms',
         }}>
         <span style={{ position: 'relative', display: 'inline-flex' }}>
           <LucideIcon icon={item.icon} size={16} />
@@ -335,8 +343,8 @@ function Sidebar({ activePage, onNavigate, collapsed = false, onToggle }) {
 
   return (
     <aside style={{
-      width: collapsed ? 52 : 'var(--sidebar-w)',
-      minWidth: collapsed ? 52 : 'var(--sidebar-w)',
+      width: collapsed ? 48 : 'var(--sidebar-w)',
+      minWidth: collapsed ? 48 : 'var(--sidebar-w)',
       height: '100vh', background: 'var(--app-sidebar)',
       borderRight: '1px solid var(--app-border)',
       display: 'flex', flexDirection: 'column', flexShrink: 0,
@@ -356,10 +364,10 @@ function Sidebar({ activePage, onNavigate, collapsed = false, onToggle }) {
           <>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
               <img src="assets/icon-yellow.png" alt="FMN"
-                style={{ height: 26, width: 26, objectFit: 'contain', flexShrink: 0 }} />
-              <span style={{ fontFamily: 'Roboto, sans-serif', fontWeight: 900, fontSize: 15,
-                letterSpacing: '-0.01em', color: 'var(--text-1)', whiteSpace: 'nowrap' }}>
-                Tracker <span style={{ color: 'var(--fmn-gold)' }}>FMN</span>
+                style={{ height: 28, width: 28, objectFit: 'contain', flexShrink: 0 }} />
+              <span style={{ fontFamily: 'Roboto, sans-serif', fontWeight: 600, fontSize: 15,
+                color: 'var(--text-1)', whiteSpace: 'nowrap' }}>
+                Tracker <span style={{ color: 'var(--app-primary)' }}>FMN</span>
               </span>
             </div>
             <CollapseBtn />
@@ -370,8 +378,8 @@ function Sidebar({ activePage, onNavigate, collapsed = false, onToggle }) {
       </div>
 
       {/* Nav principal */}
-      <nav style={{ flex: 1, padding: collapsed ? '10px 4px' : '10px 8px',
-        display: 'flex', flexDirection: 'column', gap: 1, overflowY: 'auto' }}>
+      <nav style={{ flex: 1, padding: collapsed ? '8px 4px' : '8px',
+        display: 'flex', flexDirection: 'column', gap: 4, overflowY: 'auto' }}>
         {navMain.map(item => <NavItem key={item.id} item={item} />)}
       </nav>
 
@@ -389,31 +397,32 @@ function TopBar({ title, period, onPeriodChange, actions, backButton }) {
   const periods = ['Hoje', '7d', '14d', '30d'];
   return (
     <header style={{
-      height: 'var(--topbar-h)', background: 'var(--app-bg)',
-      borderBottom: '1px solid var(--app-border)',
+      height: 'var(--topbar-h)', background: 'rgba(15,16,19,.8)',
+      backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
+      borderBottom: '1px solid var(--app-border)', position: 'sticky', top: 0, zIndex: 10,
       padding: '0 24px', display: 'flex', alignItems: 'center',
       justifyContent: 'space-between', flexShrink: 0,
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
         {backButton}
-        <span style={{ fontFamily: 'Roboto, sans-serif', fontWeight: 700, fontSize: 14.5,
-          color: 'var(--text-1)', letterSpacing: '-0.01em' }}>
+        <span style={{ fontFamily: 'Roboto, sans-serif', fontWeight: 600, fontSize: 15,
+          color: 'var(--text-1)' }}>
           {title}
         </span>
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
         {period !== undefined && (
-          <div style={{ display: 'flex', background: 'rgba(255,255,255,.04)',
-            border: '1px solid var(--app-border)', borderRadius: 8, padding: 3, gap: 1 }}>
+          <div style={{ display: 'flex', background: 'var(--app-surface-2)',
+            borderRadius: 'var(--app-radius)', padding: 4, gap: 2 }}>
             {periods.map(p => (
               <button key={p} onClick={() => onPeriodChange && onPeriodChange(p)}
                 style={{
-                  padding: '5px 11px', borderRadius: 6, cursor: 'pointer',
-                  background: period === p ? 'rgba(234,170,65,.15)' : 'transparent',
-                  border: `1px solid ${period === p ? 'rgba(234,170,65,.2)' : 'transparent'}`,
-                  color: period === p ? 'var(--fmn-gold)' : 'rgba(255,255,255,.42)',
-                  fontFamily: 'Roboto, sans-serif', fontWeight: 700, fontSize: 11,
-                  letterSpacing: '0.04em', transition: 'all 130ms',
+                  padding: '4px 12px', borderRadius: 'var(--app-radius-md)', cursor: 'pointer',
+                  background: period === p ? 'var(--app-bg)' : 'transparent',
+                  boxShadow: period === p ? '0 1px 2px rgba(0,0,0,.3)' : 'none',
+                  color: period === p ? 'var(--text-1)' : 'var(--text-2)',
+                  fontFamily: 'Roboto, sans-serif', fontWeight: 500, fontSize: 13,
+                  transition: 'all 130ms',
                 }}>
                 {p}
               </button>
@@ -502,7 +511,7 @@ function RefBlock({ value, onChange }) {
           <textarea value={draft} onChange={e => setDraft(e.target.value)}
             rows={2} placeholder="Cole um link ou descreva a referência..."
             style={fieldStyle}
-            onFocus={e => e.target.style.borderColor='rgba(234,170,65,.4)'}
+            onFocus={e => e.target.style.borderColor='rgba(251,191,36,.4)'}
             onBlur={e => e.target.style.borderColor='var(--app-border)'}/>
           <div style={{ display:'flex', gap:6, justifyContent:'flex-end' }}>
             {editing && (
@@ -513,8 +522,8 @@ function RefBlock({ value, onChange }) {
             )}
             <button onClick={() => { onChange(draft.trim()); setEditing(false); }}
               style={{ fontSize:11, fontFamily:'Roboto,sans-serif', padding:'5px 12px',
-                borderRadius:6, border:'1px solid rgba(234,170,65,.3)',
-                background:'rgba(234,170,65,.1)', color:'var(--fmn-gold)', cursor:'pointer', fontWeight:700 }}>
+                borderRadius:6, border:'1px solid rgba(251,191,36,.3)',
+                background:'rgba(251,191,36,.1)', color:'var(--fmn-gold)', cursor:'pointer', fontWeight:700 }}>
               Salvar referência
             </button>
           </div>

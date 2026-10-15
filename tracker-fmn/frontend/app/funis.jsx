@@ -9,7 +9,7 @@ const { LucideIcon, CardKPI, SectionCard, TopBar } = window;
 
 const nf = n => (n == null ? '—' : Number(n).toLocaleString('pt-BR'));
 const pc = (a, b) => (b ? Math.round((a / b) * 100) : 0);
-const PALETTE = ['#eaaa41', '#60a5fa', '#4ade80', '#f472b6', '#a78bfa', '#34d399', '#fbbf24', '#f87171'];
+const PALETTE = ['#fbbf24', '#60a5fa', '#4ade80', '#f472b6', '#a78bfa', '#34d399', '#f59e42', '#f87171'];
 const DOW = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
 const PERIODOS = [
@@ -311,8 +311,8 @@ function LeadsByQuestion({ leads }) {
         {PERGUNTAS.map(p => (
           <button key={p.field} onClick={() => setPergAtiva(p.field)}
             style={{ textAlign:'left', padding:'8px 10px', borderRadius:8, cursor:'pointer',
-              background: pergAtiva === p.field ? 'rgba(234,170,65,.12)' : 'rgba(255,255,255,.03)',
-              border: `1px solid ${pergAtiva === p.field ? 'rgba(234,170,65,.3)' : 'transparent'}`,
+              background: pergAtiva === p.field ? 'rgba(251,191,36,.12)' : 'rgba(255,255,255,.03)',
+              border: `1px solid ${pergAtiva === p.field ? 'rgba(251,191,36,.3)' : 'transparent'}`,
               color: pergAtiva === p.field ? 'var(--fmn-gold)' : 'var(--text-2)',
               fontFamily:'Roboto,sans-serif', fontSize:11.5, fontWeight: pergAtiva === p.field ? 700 : 400,
               transition:'all 120ms' }}>
@@ -415,8 +415,8 @@ function VizCard({ title, hint, items, total }) {
   const Toggle = ({ id, icon }) => (
     <button onClick={() => setView(id)} title={id === 'pizza' ? 'Pizza' : 'Barras'}
       style={{ width: 27, height: 24, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
-        background: view === id ? 'rgba(234,170,65,.15)' : 'transparent',
-        border: `1px solid ${view === id ? 'rgba(234,170,65,.3)' : 'var(--app-border)'}`,
+        background: view === id ? 'rgba(251,191,36,.15)' : 'transparent',
+        border: `1px solid ${view === id ? 'rgba(251,191,36,.3)' : 'var(--app-border)'}`,
         color: view === id ? 'var(--fmn-gold)' : 'var(--text-3)' }}>
       <LucideIcon icon={icon} size={13} /></button>
   );
@@ -523,14 +523,14 @@ const variantesTel = raw => {
 
 const SITUACAO_INFO = {
   abandonou:    { label: 'Abandonou o carrinho', cor: '#94a3b8' },
-  pendente:     { label: 'Pagamento pendente',   cor: '#fbbf24' },
+  pendente:     { label: 'Pagamento pendente',   cor: '#f59e42' },
   recusada:     { label: 'Cartão recusado',      cor: '#f87171' },
   expirada:     { label: 'Pix ou boleto vencido', cor: '#f87171' },
   cancelada:    { label: 'Cancelada',            cor: '#f87171' },
-  atrasada:     { label: 'Pagamento atrasado',   cor: '#fbbf24' },
+  atrasada:     { label: 'Pagamento atrasado',   cor: '#f59e42' },
   bloqueada:    { label: 'Bloqueada',            cor: '#f87171' },
   pre_aprovada: { label: 'Pré-aprovada',         cor: '#60a5fa' },
-  recuperacao:  { label: 'Em recuperação',       cor: '#fbbf24' },
+  recuperacao:  { label: 'Em recuperação',       cor: '#f59e42' },
   protesto:     { label: 'Pediu reembolso',      cor: '#fb923c' },
 };
 
@@ -687,8 +687,8 @@ function CarrinhoTable({ itens, recuperados, contatadosOficial, contatadosSuport
           <button key={id} onClick={() => setFiltro(id)}
             style={{ padding:'7px 14px', borderRadius:999, cursor:'pointer', fontSize:11.5,
               fontFamily:'Roboto,sans-serif', fontWeight:700,
-              border: filtro===id ? '1px solid rgba(234,170,65,.5)' : '1px solid var(--app-border)',
-              background: filtro===id ? 'rgba(234,170,65,.12)' : 'rgba(255,255,255,.04)',
+              border: filtro===id ? '1px solid rgba(251,191,36,.5)' : '1px solid var(--app-border)',
+              background: filtro===id ? 'rgba(251,191,36,.12)' : 'rgba(255,255,255,.04)',
               color: filtro===id ? 'var(--fmn-gold)' : 'var(--text-2)' }}>
             {label}
           </button>
@@ -756,8 +756,8 @@ function CarrinhoTable({ itens, recuperados, contatadosOficial, contatadosSuport
                         : null;
                       if (!rotulo) return null;
                       const cor = ehBli ? '#60a5fa' : 'var(--fmn-gold)';
-                      const fundo = ehBli ? 'rgba(96,165,250,.12)' : 'rgba(234,170,65,.12)';
-                      const borda = ehBli ? 'rgba(96,165,250,.35)' : 'rgba(234,170,65,.35)';
+                      const fundo = ehBli ? 'rgba(96,165,250,.12)' : 'rgba(251,191,36,.12)';
+                      const borda = ehBli ? 'rgba(96,165,250,.35)' : 'rgba(251,191,36,.35)';
                       return (
                         <div title={it.produto_nome || ''}
                           style={{ display:'inline-block', marginTop:3, marginRight:4, padding:'1px 7px',
@@ -785,7 +785,7 @@ function CarrinhoTable({ itens, recuperados, contatadosOficial, contatadosSuport
                       {jaSuporte && !falhouSuporte && (
                         <div style={{ display:'inline-block', padding:'1px 7px', borderRadius:999,
                           fontSize:9.5, fontWeight:700, fontFamily:'Roboto,sans-serif', whiteSpace:'nowrap',
-                          background:'rgba(234,170,65,.12)', border:'1px solid rgba(234,170,65,.35)', color:'var(--fmn-gold)' }}>
+                          background:'rgba(251,191,36,.12)', border:'1px solid rgba(251,191,36,.35)', color:'var(--fmn-gold)' }}>
                           Já contatado pelo suporte
                         </div>
                       )}
@@ -821,8 +821,8 @@ function CarrinhoTable({ itens, recuperados, contatadosOficial, contatadosSuport
                         ? 'Já recebeu mensagem pela API oficial — confira antes de mandar pelo suporte'
                         : 'Mandar mensagem de recuperação (número de suporte)'}
                       style={{ width:28, height:28, borderRadius:8,
-                        border: falhouSuporte ? '1px solid rgba(248,113,113,.35)' : jaSuporte ? '1px solid rgba(234,170,65,.35)' : jaContatado ? '1px solid rgba(96,165,250,.35)' : '1px solid rgba(74,222,128,.3)',
-                        background: falhouSuporte ? 'rgba(248,113,113,.1)' : jaSuporte ? 'rgba(234,170,65,.1)' : jaContatado ? 'rgba(96,165,250,.1)' : 'rgba(74,222,128,.1)',
+                        border: falhouSuporte ? '1px solid rgba(248,113,113,.35)' : jaSuporte ? '1px solid rgba(251,191,36,.35)' : jaContatado ? '1px solid rgba(96,165,250,.35)' : '1px solid rgba(74,222,128,.3)',
+                        background: falhouSuporte ? 'rgba(248,113,113,.1)' : jaSuporte ? 'rgba(251,191,36,.1)' : jaContatado ? 'rgba(96,165,250,.1)' : 'rgba(74,222,128,.1)',
                         color: falhouSuporte ? '#f87171' : jaSuporte ? 'var(--fmn-gold)' : jaContatado ? '#60a5fa' : '#4ade80', cursor:'pointer',
                         display:'inline-flex', alignItems:'center', justifyContent:'center' }}>
                       <LucideIcon icon="message-circle" size={14}/>
@@ -919,7 +919,7 @@ function InsightOne({ ins, kind, onNavigate }) {
   const [busy, setBusy] = useState(false);
   const cfg = kind === 'claude'
     ? { label: 'Insight do Claudinho', icon: 'sparkles', accent: '#a78bfa', bg: 'linear-gradient(100deg, rgba(167,139,250,.16), rgba(167,139,250,.04))', border: 'rgba(167,139,250,.32)' }
-    : { label: 'Insight do dia · dos dados', icon: 'lightbulb', accent: 'var(--fmn-gold)', bg: 'linear-gradient(100deg, rgba(234,170,65,.14), rgba(234,170,65,.04))', border: 'rgba(234,170,65,.3)' };
+    : { label: 'Insight do dia · dos dados', icon: 'lightbulb', accent: 'var(--fmn-gold)', bg: 'linear-gradient(100deg, rgba(251,191,36,.14), rgba(251,191,36,.04))', border: 'rgba(251,191,36,.3)' };
   if (!ins) return (
     <div style={{ background: cfg.bg, border: `1px dashed ${cfg.border}`, borderRadius: 14, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12, opacity: .75 }}>
       <LucideIcon icon={cfg.icon} size={18} color={cfg.accent} />
@@ -1335,8 +1335,8 @@ function FunisScreen({ onNavigate }) {
       {FUNIS.map(f => (
         <button key={f.id} onClick={() => setFunnel(f.id)}
           style={{ padding:'5px 11px', borderRadius:6, cursor:'pointer',
-            background: funnel===f.id ? 'rgba(234,170,65,.15)' : 'transparent',
-            border: `1px solid ${funnel===f.id ? 'rgba(234,170,65,.2)' : 'transparent'}`,
+            background: funnel===f.id ? 'rgba(251,191,36,.15)' : 'transparent',
+            border: `1px solid ${funnel===f.id ? 'rgba(251,191,36,.2)' : 'transparent'}`,
             color: funnel===f.id ? 'var(--fmn-gold)' : 'rgba(255,255,255,.42)',
             fontFamily:'Roboto,sans-serif', fontWeight:700, fontSize:11 }}>
           {f.label}
@@ -1351,8 +1351,8 @@ function FunisScreen({ onNavigate }) {
         {PERIODOS.map(p => (
           <button key={p.id} onClick={() => setPeriodo(p.id)}
             style={{ padding:'5px 11px', borderRadius:6, cursor:'pointer',
-              background: periodo===p.id ? 'rgba(234,170,65,.15)' : 'transparent',
-              border: `1px solid ${periodo===p.id ? 'rgba(234,170,65,.2)' : 'transparent'}`,
+              background: periodo===p.id ? 'rgba(251,191,36,.15)' : 'transparent',
+              border: `1px solid ${periodo===p.id ? 'rgba(251,191,36,.2)' : 'transparent'}`,
               color: periodo===p.id ? 'var(--fmn-gold)' : 'rgba(255,255,255,.42)',
               fontFamily:'Roboto,sans-serif', fontWeight:700, fontSize:11 }}>
             {p.label}

@@ -15,7 +15,7 @@ const FASES = [
   { id:'organizar',       label:'Organizar',       cor:'#94a3b8' },
   { id:'antecipacao',     label:'Antecipação',     cor:'#38bdf8' },
   { id:'captacao',        label:'Captação',        cor:'#a78bfa' },
-  { id:'aquecimento',     label:'Aquecimento',     cor:'#fbbf24' },
+  { id:'aquecimento',     label:'Aquecimento',     cor:'#f59e42' },
   { id:'grande_dia',      label:'Grande Dia',      cor:'#f87171' },
   { id:'carrinho_aberto', label:'Carrinho aberto', cor:'#4ade80' },
   { id:'encerramento',    label:'Encerramento',    cor:'#fb923c' },
@@ -24,7 +24,7 @@ const FASES = [
 const FASE_MAP = Object.fromEntries(FASES.map(f => [f.id, f]));
 
 const TRILHAS = [
-  { id:'oferta',     label:'Oferta e Narrativa', icon:'gift',           cor:'#fbbf24' },
+  { id:'oferta',     label:'Oferta e Narrativa', icon:'gift',           cor:'#f59e42' },
   { id:'conteudo',   label:'Conteúdo',           icon:'megaphone',      cor:'#a78bfa' },
   { id:'trafego',    label:'Tráfego',            icon:'trending-up',    cor:'#38bdf8' },
   { id:'comercial',  label:'Comercial',          icon:'message-circle', cor:'#4ade80' },
@@ -43,7 +43,7 @@ const NIVEIS = [
 const STATUS_CFG = {
   pendente: { label:'Pendente', cor:'#94a3b8', bg:'rgba(148,163,184,.12)' },
   fazendo:  { label:'Fazendo',  cor:'#38bdf8', bg:'rgba(56,189,248,.12)'  },
-  validar:  { label:'Validar Felipe', cor:'#fbbf24', bg:'rgba(251,191,36,.12)' },
+  validar:  { label:'Validar Felipe', cor:'#f59e42', bg:'rgba(245,158,66,.12)' },
   feito:    { label:'Feito',    cor:'#4ade80', bg:'rgba(74,222,128,.12)'  },
   pulada:   { label:'Pulada',   cor:'#64748b', bg:'rgba(100,116,139,.12)' },
 };
@@ -256,7 +256,7 @@ function LinhaTarefa({ t, onToggle, onAbrir, mostrarTrilha, onVirarCard, onDefin
         onClick={(e)=>{ e.stopPropagation(); onToggle(t); }}
         title={feito ? 'Desmarcar' : t.status === 'validar' ? 'Validar: marcar como feito' : 'Marcar como feito'}
         style={{ width:19, height:19, borderRadius:6, flexShrink:0, marginTop:1,
-          border:'1.5px solid ' + (feito ? '#4ade80' : t.status === 'validar' ? '#fbbf24' : 'var(--app-border)'),
+          border:'1.5px solid ' + (feito ? '#4ade80' : t.status === 'validar' ? '#f59e42' : 'var(--app-border)'),
           background: feito ? '#4ade80' : 'transparent', cursor:'pointer',
           display:'flex', alignItems:'center', justifyContent:'center', padding:0 }}>
         {feito && <LucideIcon icon="check" size={12} style={{ color:'#0b0b0d' }}/>}
@@ -279,8 +279,8 @@ function LinhaTarefa({ t, onToggle, onAbrir, mostrarTrilha, onVirarCard, onDefin
           {t.status === 'validar' && (
             <span title="Lançado pelo Claude. Confira e marque o check para validar"
               style={{ fontSize:9.5, fontFamily:'Roboto,sans-serif', fontWeight:700,
-                padding:'1px 6px', borderRadius:4, background:'rgba(251,191,36,.12)',
-                color:'#fbbf24', border:'1px solid rgba(251,191,36,.3)', letterSpacing:.3 }}>
+                padding:'1px 6px', borderRadius:4, background:'rgba(245,158,66,.12)',
+                color:'#f59e42', border:'1px solid rgba(245,158,66,.3)', letterSpacing:.3 }}>
               VALIDAR
             </span>
           )}
@@ -294,9 +294,9 @@ function LinhaTarefa({ t, onToggle, onAbrir, mostrarTrilha, onVirarCard, onDefin
         {t.observacoes && (
           <div style={{ fontSize:11, fontFamily:'Roboto,sans-serif', color:'var(--text-2)',
             marginTop:5, padding:'4px 8px', borderRadius:6, lineHeight:1.45,
-            background: t.status === 'validar' ? 'rgba(251,191,36,.07)' : feito ? 'rgba(74,222,128,.06)' : 'rgba(255,255,255,.03)',
-            border:'1px solid ' + (t.status === 'validar' ? 'rgba(251,191,36,.22)' : feito ? 'rgba(74,222,128,.18)' : 'var(--app-border)') }}>
-            <b style={{ color: t.status === 'validar' ? '#fbbf24' : feito ? '#4ade80' : 'var(--text-3)' }}>
+            background: t.status === 'validar' ? 'rgba(245,158,66,.07)' : feito ? 'rgba(74,222,128,.06)' : 'rgba(255,255,255,.03)',
+            border:'1px solid ' + (t.status === 'validar' ? 'rgba(245,158,66,.22)' : feito ? 'rgba(74,222,128,.18)' : 'var(--app-border)') }}>
+            <b style={{ color: t.status === 'validar' ? '#f59e42' : feito ? '#4ade80' : 'var(--text-3)' }}>
               {t.status === 'validar' ? 'Para validar: ' : feito ? 'Definido: ' : pulada ? 'Motivo: ' : 'Nota: '}
             </b>
             {t.observacoes.replace(/^(Validar|Sugestão para validar|Rascunho para validar):\s*/, '')}
@@ -468,9 +468,9 @@ function BlocoCaderno({ partes }) {
                 <button key={p.id} onClick={() => setSel(p.id)}
                   style={{ textAlign:'left', padding:'6px 9px', borderRadius:7, cursor:'pointer',
                     fontSize:11.5, fontFamily:'Roboto,sans-serif', lineHeight:1.35,
-                    border:'1px solid ' + (ativa ? 'rgba(234,170,65,.4)' : 'transparent'),
-                    background: ativa ? 'rgba(234,170,65,.1)' : 'transparent',
-                    color: ativa ? '#eaaa41' : 'var(--text-2)' }}>
+                    border:'1px solid ' + (ativa ? 'rgba(251,191,36,.4)' : 'transparent'),
+                    background: ativa ? 'rgba(251,191,36,.1)' : 'transparent',
+                    color: ativa ? '#fbbf24' : 'var(--text-2)' }}>
                   {p.numero ? <b style={{ marginRight:5 }}>{p.numero}.</b> : null}{p.titulo}
                 </button>
               );
@@ -874,8 +874,8 @@ function BlocoDecisoes({ decisoes, onEscolher }) {
           const expl = d.explicacoes || {};
           return (
             <div key={d.id} style={{ padding:'10px 12px', borderRadius:9,
-              background: d.escolha ? 'rgba(74,222,128,.05)' : 'rgba(251,191,36,.05)',
-              border:'1px solid ' + (d.escolha ? 'rgba(74,222,128,.18)' : 'rgba(251,191,36,.2)') }}>
+              background: d.escolha ? 'rgba(74,222,128,.05)' : 'rgba(245,158,66,.05)',
+              border:'1px solid ' + (d.escolha ? 'rgba(74,222,128,.18)' : 'rgba(245,158,66,.2)') }}>
               <div style={{ fontSize:12.5, fontFamily:'Roboto,sans-serif', fontWeight:700,
                 color:'var(--text-1)', marginBottom: d.regra ? 3 : 7 }}>
                 {d.pergunta}
@@ -1306,7 +1306,7 @@ function BlocoImaginacao({ metricas, onSalvar, precos = {}, metaPlano, plano = {
 const ETAPAS_MIDIA = [
   { chave:'teaser',      label:'Teaser',      cor:'#38bdf8', objetivo:'Engajamento, 1-3-3, ABO',        dias:'dias_teaser',      fixa:'pct_teaser' },
   { chave:'captacao',    label:'Captura de Leads', cor:'#a78bfa', objetivo:'Leads, CBO, 4 conjuntos',   dias:'dias_captacao',    fixa:null },
-  { chave:'aquecimento', label:'Aquecimento', cor:'#fbbf24', objetivo:'Relacionamento e lembrete, 50/50', dias:'dias_aquecimento', fixa:'pct_aquecimento' },
+  { chave:'aquecimento', label:'Aquecimento', cor:'#f59e42', objetivo:'Relacionamento e lembrete, 50/50', dias:'dias_aquecimento', fixa:'pct_aquecimento' },
   { chave:'remarketing', label:'Remarketing', cor:'#4ade80', objetivo:'Vendas, evento Compra, CBO',     dias:'dias_remarketing', fixa:null },
 ];
 

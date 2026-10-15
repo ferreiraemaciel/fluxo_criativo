@@ -33,7 +33,7 @@ const ADS_MEDIA_WORKER = 'https://ads-media.blindagem-fmn.workers.dev';
 // continuam os mesmos, só o significado exibido inverteu.
 const ADS_COLUMNS = [
   { id:'fazer',           label:'Fazendo',          colorDot:'#3b82f6', colorBg:'rgba(59,130,246,.08)',  colorBorder:'rgba(59,130,246,.25)' },
-  { id:'fazendo',         label:'Feito',            colorDot:'#fbbf24', colorBg:'rgba(251,191,36,.08)',  colorBorder:'rgba(251,191,36,.25)' },
+  { id:'fazendo',         label:'Feito',            colorDot:'#f59e42', colorBg:'rgba(245,158,66,.08)',  colorBorder:'rgba(245,158,66,.25)' },
   { id:'ativo',           label:'Ativos',           colorDot:'#f97316', colorBg:'rgba(249,115,22,.08)',  colorBorder:'rgba(249,115,22,.3)'  },
   { id:'campeoes',        label:'Campeões',         colorDot:'#4ade80', colorBg:'rgba(74,222,128,.08)',  colorBorder:'rgba(74,222,128,.25)' },
   { id:'arquivado',       label:'Arquivados',       colorDot:'#94a3b8', colorBg:'rgba(148,163,184,.05)', colorBorder:'rgba(148,163,184,.2)' },
@@ -208,7 +208,7 @@ const FORMAT_TONE  = { Reels:'reels', Imagem:'image', Carrossel:'carousel', Copy
 /* ── MedalBadge ──────────────────────────────────────────────────*/
 function MedalBadge({ rank }) {
   const s = rank===1 ? {bg:'#ffd700',color:'#000'} : rank===2 ? {bg:'#c0c0c0',color:'#000'}
-           : rank===3 ? {bg:'#cd7f32',color:'#fff'} : {bg:'rgba(234,170,65,.25)',color:'#eaaa41'};
+           : rank===3 ? {bg:'#cd7f32',color:'#fff'} : {bg:'rgba(251,191,36,.25)',color:'#fbbf24'};
   return (
     <div style={{ display:'flex', alignItems:'center', gap:3, padding:'2px 6px', borderRadius:999, background:s.bg, flexShrink:0 }}>
       <LucideIcon icon="award" size={9} color={s.color}/>
@@ -278,7 +278,7 @@ function KanbanCard({ card, col, onOpen, onDragStart, podeArrastar, onDropAntes,
             ? <img src={thumb} alt="" draggable={false} onError={e => { e.currentTarget.style.display='none'; }}
                 style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }}/>
             : <LucideIcon icon={tipoIcon} size={15}
-                style={{ color: semPreview ? 'var(--clr-warn,#fbbf24)' : 'rgba(255,255,255,.25)' }}/>
+                style={{ color: semPreview ? 'var(--clr-warn,#f59e42)' : 'rgba(255,255,255,.25)' }}/>
           }
         </div>
         <span style={{ fontSize:13, fontFamily:'Roboto,sans-serif', fontWeight:900,
@@ -305,8 +305,8 @@ function KanbanCard({ card, col, onOpen, onDragStart, podeArrastar, onDropAntes,
           {semPreview && (
             <div title="Sem preview — o criativo ainda não foi otimizado para o R2"
               style={{ display:'flex', alignItems:'center', gap:3, padding:'1px 5px', borderRadius:999,
-                background:'rgba(251,191,36,.15)', border:'1px solid rgba(251,191,36,.3)', fontSize:9,
-                fontFamily:'Roboto,sans-serif', fontWeight:700, color:'#fbbf24', whiteSpace:'nowrap' }}>
+                background:'rgba(245,158,66,.15)', border:'1px solid rgba(245,158,66,.3)', fontSize:9,
+                fontFamily:'Roboto,sans-serif', fontWeight:700, color:'#f59e42', whiteSpace:'nowrap' }}>
               <LucideIcon icon="image-off" size={9}/>sem preview
             </div>
           )}
@@ -337,8 +337,8 @@ function KanbanCard({ card, col, onOpen, onDragStart, podeArrastar, onDropAntes,
               style={{ fontSize:10, fontFamily:'Roboto,sans-serif', fontWeight:700,
                 letterSpacing:'0.04em', borderRadius:5, padding:'2px 7px',
                 color: azul ? '#60a5fa' : 'var(--fmn-gold)',
-                background: azul ? 'rgba(96,165,250,.12)' : 'rgba(234,170,65,.12)',
-                border: `1px solid ${azul ? 'rgba(96,165,250,.35)' : 'rgba(234,170,65,.35)'}` }}>
+                background: azul ? 'rgba(96,165,250,.12)' : 'rgba(251,191,36,.12)',
+                border: `1px solid ${azul ? 'rgba(96,165,250,.35)' : 'rgba(251,191,36,.35)'}` }}>
               {prod}
             </span>
           );
@@ -970,8 +970,8 @@ function MetaAdModal({ card, onClose }) {
             </div>
 
             {avisoDuplicidade && (
-              <div style={{ padding:'10px 12px', borderRadius:8, background:'rgba(234,170,65,.08)',
-                border:'1px solid rgba(234,170,65,.3)', fontSize:12, color:'var(--fmn-gold)', lineHeight:1.5,
+              <div style={{ padding:'10px 12px', borderRadius:8, background:'rgba(251,191,36,.08)',
+                border:'1px solid rgba(251,191,36,.3)', fontSize:12, color:'var(--fmn-gold)', lineHeight:1.5,
                 display:'flex', gap:8, alignItems:'flex-start' }}>
                 <LucideIcon icon="alert-triangle" size={14} style={{ marginTop:1, flexShrink:0 }}/>
                 <span>{avisoDuplicidade}</span>
@@ -1003,7 +1003,7 @@ function MetaAdModal({ card, onClose }) {
                           onChange={e => setNewAdsetName(e.target.value)}/>
                         {campaignIsCbo
                           ? <div style={{ fontSize:11.5, color:'var(--fmn-gold)', padding:'8px 10px',
-                              borderRadius:8, background:'rgba(234,170,65,.06)', border:'1px solid rgba(234,170,65,.2)' }}>
+                              borderRadius:8, background:'rgba(251,191,36,.06)', border:'1px solid rgba(251,191,36,.2)' }}>
                               Orçamento fica na campanha (CBO). O conjunto não define valor.
                             </div>
                           : <div style={{ display:'flex', alignItems:'center', gap:8 }}>
@@ -1054,8 +1054,8 @@ function MetaAdModal({ card, onClose }) {
                         <label key={p.storyId} title={p.link || ''} style={{ display:'flex', alignItems:'center', gap:8,
                           padding:'6px 8px', borderRadius:7, cursor: ok ? 'pointer' : 'not-allowed', fontSize:11.5,
                           fontFamily:'Roboto,sans-serif', opacity: ok ? 1 : .5,
-                          background: sel ? 'rgba(234,170,65,.1)' : 'transparent',
-                          border: `1px solid ${sel ? 'rgba(234,170,65,.4)' : 'var(--app-border)'}` }}>
+                          background: sel ? 'rgba(251,191,36,.1)' : 'transparent',
+                          border: `1px solid ${sel ? 'rgba(251,191,36,.4)' : 'var(--app-border)'}` }}>
                           <input type="radio" name="post-reaproveitar" disabled={!ok} checked={sel}
                             onChange={() => setPostAnterior(p)}/>
                           <span style={{ color:'var(--text-2)', minWidth:74 }}>{p.criado ? p.criado.split('-').reverse().join('/') : '—'}</span>
@@ -1118,8 +1118,8 @@ function MetaAdModal({ card, onClose }) {
             </div>
 
             {!hasMedia && !reaproveitar && (
-              <div style={{ padding:'8px 12px', borderRadius:8, background:'rgba(234,170,65,.06)',
-                border:'1px solid rgba(234,170,65,.2)', fontSize:11, color:'var(--fmn-gold)',
+              <div style={{ padding:'8px 12px', borderRadius:8, background:'rgba(251,191,36,.06)',
+                border:'1px solid rgba(251,191,36,.2)', fontSize:11, color:'var(--fmn-gold)',
                 lineHeight:1.6 }}>
                 {soPreviaComOrigem ? (
                   <>
@@ -1158,8 +1158,8 @@ function MetaAdModal({ card, onClose }) {
         {/* Gate de confirmação */}
         {confirm && status !== 'success' && (
           <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
-            <div style={{ padding:'14px', borderRadius:10, background:'rgba(234,170,65,.06)',
-              border:'1px solid rgba(234,170,65,.2)', lineHeight:1.8 }}>
+            <div style={{ padding:'14px', borderRadius:10, background:'rgba(251,191,36,.06)',
+              border:'1px solid rgba(251,191,36,.2)', lineHeight:1.8 }}>
               <div style={{ fontWeight:700, fontSize:13, color:'var(--text-1)', marginBottom:6 }}>Confirmar publicação</div>
               <div style={{ fontSize:12, color:'var(--text-2)' }}>
                 <b>Campanha:</b> {campaignName}<br/>
@@ -1300,13 +1300,13 @@ function MetaIdField({ card, onSaved }) {
           onChange={e => setVal(e.target.value)}
           placeholder="Ex: 120244206034940167"
           style={inputStyle}
-          onFocus={e => e.target.style.borderColor = 'rgba(234,170,65,.4)'}
+          onFocus={e => e.target.style.borderColor = 'rgba(251,191,36,.4)'}
           onBlur={e => e.target.style.borderColor = 'var(--app-border)'}
         />
         <button onClick={() => saveId(val)} disabled={!val || status === 'saving'}
           style={{ padding: '8px 12px', borderRadius: 8, cursor: val ? 'pointer' : 'not-allowed',
-            background: val ? 'rgba(234,170,65,.15)' : 'rgba(255,255,255,.05)',
-            border: `1px solid ${val ? 'rgba(234,170,65,.3)' : 'var(--app-border)'}`,
+            background: val ? 'rgba(251,191,36,.15)' : 'rgba(255,255,255,.05)',
+            border: `1px solid ${val ? 'rgba(251,191,36,.3)' : 'var(--app-border)'}`,
             color: val ? 'var(--fmn-gold)' : 'var(--text-3)',
             fontFamily: 'Roboto,sans-serif', fontWeight: 700, fontSize: 11, whiteSpace: 'nowrap' }}>
           Salvar
@@ -1329,7 +1329,7 @@ function MetaIdField({ card, onSaved }) {
                 background: 'transparent', border: '1px solid transparent',
                 color: 'var(--text-2)', fontFamily: 'Roboto,sans-serif', fontSize: 11, lineHeight: 1.4,
                 transition: 'all 120ms' }}
-              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(234,170,65,.08)'; e.currentTarget.style.borderColor = 'rgba(234,170,65,.2)'; }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(251,191,36,.08)'; e.currentTarget.style.borderColor = 'rgba(251,191,36,.2)'; }}
               onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = 'transparent'; }}>
               <span style={{ color: 'var(--fmn-gold)', fontWeight: 700 }}>{ad.id}</span>
               {' — '}{ad.name}
@@ -1452,7 +1452,7 @@ function CopyField({ id, label, fieldKey, rows = 3, hint, fields, set, copiedFie
           background:'var(--app-surface-2)', border:'1px solid var(--app-border)',
           color:'var(--text-1)', fontFamily:'Roboto,sans-serif', fontSize:13, lineHeight:1.55,
           transition:'border-color 150ms' }}
-        onFocus={e=>e.target.style.borderColor='rgba(234,170,65,.4)'}
+        onFocus={e=>e.target.style.borderColor='rgba(251,191,36,.4)'}
         onBlur={e=>e.target.style.borderColor='var(--app-border)'}/>
     </div>
   );
@@ -1877,8 +1877,8 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
                 style={{ fontSize:11, fontFamily:'Roboto,sans-serif', fontWeight:900,
                   letterSpacing:'0.06em', flexShrink:0, cursor:'pointer', outline:'none',
                   color: fields.produto === 'BLI' ? '#60a5fa' : 'var(--fmn-gold)',
-                  background: fields.produto === 'BLI' ? 'rgba(96,165,250,.12)' : 'rgba(234,170,65,.12)',
-                  border: `1px solid ${fields.produto === 'BLI' ? 'rgba(96,165,250,.4)' : 'rgba(234,170,65,.4)'}`,
+                  background: fields.produto === 'BLI' ? 'rgba(96,165,250,.12)' : 'rgba(251,191,36,.12)',
+                  border: `1px solid ${fields.produto === 'BLI' ? 'rgba(96,165,250,.4)' : 'rgba(251,191,36,.4)'}`,
                   borderRadius:6, padding:'3px 7px' }}>
                 <option value="MCV">MCV</option>
                 <option value="BLI">BLI</option>
@@ -1895,7 +1895,7 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
                   color:'var(--text-1)', lineHeight:1.4, background:'transparent',
                   border:'1px solid transparent', borderRadius:6, padding:'2px 6px',
                   outline:'none', flex:'1 1 auto', minWidth:0, width:'100%', transition:'border-color 150ms' }}
-                onFocus={e => e.target.style.borderColor='rgba(234,170,65,.4)'}
+                onFocus={e => e.target.style.borderColor='rgba(251,191,36,.4)'}
                 onBlur={e => e.target.style.borderColor='transparent'}/>
             </div>
             <div style={{ display:'flex', gap:8, flexShrink:0, alignItems:'center' }}>
@@ -1951,8 +1951,8 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
               <div style={{ position:'relative' }}>
                 <button onClick={() => { const temMidia = r2Urls.length || raw.meta_image_hash || raw.meta_video_id || mediaFiles.length; if (!temMidia) { setNoMediaAlert(true); setTimeout(() => setNoMediaAlert(false), 3500); } else setShowMeta(true); }}
                   style={{ display:'flex', alignItems:'center', gap:6, padding:'8px 14px',
-                    background:'rgba(234,170,65,.12)', color:'var(--fmn-gold)', borderRadius:8,
-                    border:'1px solid rgba(234,170,65,.35)', fontFamily:'Roboto,sans-serif',
+                    background:'rgba(251,191,36,.12)', color:'var(--fmn-gold)', borderRadius:8,
+                    border:'1px solid rgba(251,191,36,.35)', fontFamily:'Roboto,sans-serif',
                     fontWeight:700, fontSize:11.5, cursor:'pointer' }}>
                   <LucideIcon icon="send" size={14}/>Publicar
                 </button>
@@ -2082,7 +2082,7 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
                           style={{ flex:1, padding:'6px 0', borderRadius:7, fontSize:11,
                             fontFamily:'Roboto,sans-serif', fontWeight:700, cursor:'pointer',
                             border: driveInputTipo === val ? '1.5px solid var(--fmn-gold)' : '1px solid var(--app-border)',
-                            background: driveInputTipo === val ? 'rgba(234,170,65,.15)' : 'rgba(255,255,255,.04)',
+                            background: driveInputTipo === val ? 'rgba(251,191,36,.15)' : 'rgba(255,255,255,.04)',
                             color: driveInputTipo === val ? 'var(--fmn-gold)' : 'var(--text-3)',
                             transition:'all 120ms' }}>
                           {label}
@@ -2271,7 +2271,7 @@ function AdsDetailModal({ card, onClose, onUpdate, siblings=[], onNavigate }) {
                       style={{ width:'100%', padding:'8px 12px', borderRadius:8,
                         background:'var(--app-surface-2)', border:'1px solid var(--app-border)',
                         color:'var(--text-1)', fontFamily:'Roboto,sans-serif', fontSize:12 }}
-                      onFocus={e=>e.target.style.borderColor='rgba(234,170,65,.4)'}
+                      onFocus={e=>e.target.style.borderColor='rgba(251,191,36,.4)'}
                       onBlur={e=>e.target.style.borderColor='var(--app-border)'}/>
                   </div>
 
@@ -2400,7 +2400,7 @@ function NovoAdsModal({ onClose, onCreated }) {
               letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-3)', marginBottom:5 }}>Título</div>
             <input value={titulo} onChange={e=>setTitulo(e.target.value)} placeholder="Ex: Contrato em latim"
               style={inputStyle}
-              onFocus={e=>e.target.style.borderColor='rgba(234,170,65,.4)'}
+              onFocus={e=>e.target.style.borderColor='rgba(251,191,36,.4)'}
               onBlur={e=>e.target.style.borderColor='var(--app-border)'}
               onKeyDown={e=>e.key==='Enter'&&criar()}/>
           </div>
@@ -2809,8 +2809,8 @@ function KanbanScreen({ targetAd, onConsumeTarget }) {
     return (
       <button onClick={onClick}
         style={{ padding:'4px 10px', borderRadius:999, cursor:'pointer', transition:'all 130ms',
-          background: active ? 'rgba(234,170,65,.15)' : 'transparent',
-          border: `1px solid ${active ? 'rgba(234,170,65,.3)' : 'rgba(255,255,255,.08)'}`,
+          background: active ? 'rgba(251,191,36,.15)' : 'transparent',
+          border: `1px solid ${active ? 'rgba(251,191,36,.3)' : 'rgba(255,255,255,.08)'}`,
           color: active ? 'var(--fmn-gold)' : 'rgba(255,255,255,.42)',
           fontFamily:'Roboto,sans-serif', fontWeight:700, fontSize:10.5,
           letterSpacing:'0.04em', whiteSpace:'nowrap' }}>
@@ -2951,7 +2951,7 @@ function KanbanScreen({ targetAd, onConsumeTarget }) {
               background:'rgba(255,255,255,.05)', color:'var(--text-1)',
               fontFamily:'Roboto,sans-serif', fontSize:11.5, outline:'none', width:200,
               transition:'border-color 130ms' }}
-            onFocus={e => e.target.style.borderColor='rgba(234,170,65,.4)'}
+            onFocus={e => e.target.style.borderColor='rgba(251,191,36,.4)'}
             onBlur={e => e.target.style.borderColor='rgba(255,255,255,.1)'}
           />
           {searchQuery && (
