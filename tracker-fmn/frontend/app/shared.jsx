@@ -108,6 +108,9 @@ function Badge({ children, tone = 'default', dot = false, style = {} }) {
   const tones = {
     default:  { background: 'rgba(255,255,255,.08)', color: 'rgba(255,255,255,.62)' },
     gold:     { background: 'rgba(249,182,79,.15)',  color: 'var(--app-primary)' },
+    ok:       { background: 'rgba(121,224,111,.12)',  color: 'var(--clr-pos)' },
+    warn:     { background: 'rgba(255,152,69,.12)',  color: 'var(--clr-warn)' },
+    neutral:  { background: 'rgba(255,255,255,.08)', color: 'var(--text-2)' },
     success:  { background: 'rgba(121,224,111,.12)',  color: 'var(--clr-pos)' },
     danger:   { background: 'rgba(254,98,108,.12)', color: 'var(--clr-neg)' },
     warning:  { background: 'rgba(255,152,69,.12)',  color: 'var(--clr-warn)' },
@@ -168,7 +171,8 @@ function CardKPI({ label, value, delta, deltaLabel, icon, accent = false, title,
           whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{value}</div>
         {(delta !== undefined && delta !== null) && (
           <div style={{ fontSize: 11, fontFamily: 'Roboto, sans-serif', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-            color: deltaPos ? 'var(--clr-pos)' : 'var(--clr-neg)' }}>
+            // Texto sem sinal (+/-) é informação neutra, em cinza.
+            color: isStr && !/^[+\-−]/.test(delta) ? 'var(--text-2)' : deltaPos ? 'var(--clr-pos)' : 'var(--clr-neg)' }}>
             {dv}{deltaLabel ? <span style={{ color: 'var(--text-2)' }}> {deltaLabel}</span> : null}
           </div>
         )}

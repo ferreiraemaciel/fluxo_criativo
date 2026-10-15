@@ -8,7 +8,7 @@
    move junto, exceto o que estiver travado.
    ================================================================ */
 const { useState, useEffect, useMemo } = React;
-const { LucideIcon, Btn, Badge, TopBar, SectionCard, CardKPI, fmtBRL } = window;
+const { LucideIcon, Btn, Badge, TopBar, SectionCard, CardKPI, fmtBRL, Pilulas } = window;
 
 /* ── Vocabulário ────────────────────────────────────────────────*/
 const FASES = [
@@ -2146,13 +2146,13 @@ function BlocoDebriefing({ projeto, metricas, tarefas, onSalvar, onSalvarRespost
           <thead>
             <tr>
               <th style={{ textAlign:'left', padding:'5px 8px', fontSize:12,
-                fontFamily:'Roboto,sans-serif', color:'var(--text-2)', fontWeight:500, letterSpacing:.3, textTransform:'uppercase', letterSpacing:'.05em' }}>Indicador</th>
+                fontFamily:'Roboto,sans-serif', color:'var(--text-2)', fontWeight:500, textTransform:'uppercase', letterSpacing:'.05em' }}>Indicador</th>
               <th style={{ textAlign:'right', padding:'5px 8px', fontSize:12,
-                fontFamily:'Roboto,sans-serif', color:'var(--text-2)', fontWeight:500, letterSpacing:.3, textTransform:'uppercase', letterSpacing:'.05em' }}>Meta</th>
+                fontFamily:'Roboto,sans-serif', color:'var(--text-2)', fontWeight:500, textTransform:'uppercase', letterSpacing:'.05em' }}>Meta</th>
               <th style={{ textAlign:'right', padding:'5px 8px', fontSize:12,
-                fontFamily:'Roboto,sans-serif', color:'var(--text-2)', fontWeight:500, letterSpacing:.3, textTransform:'uppercase', letterSpacing:'.05em' }}>Realizado</th>
+                fontFamily:'Roboto,sans-serif', color:'var(--text-2)', fontWeight:500, textTransform:'uppercase', letterSpacing:'.05em' }}>Realizado</th>
               <th style={{ textAlign:'right', padding:'5px 8px', fontSize:12,
-                fontFamily:'Roboto,sans-serif', color:'var(--text-2)', fontWeight:500, letterSpacing:.3, textTransform:'uppercase', letterSpacing:'.05em' }}>Variação</th>
+                fontFamily:'Roboto,sans-serif', color:'var(--text-2)', fontWeight:500, textTransform:'uppercase', letterSpacing:'.05em' }}>Variação</th>
             </tr>
           </thead>
           <tbody>
@@ -2263,6 +2263,190 @@ function BlocoDebriefing({ projeto, metricas, tarefas, onSalvar, onSalvarRespost
 }
 
 /* ── Tela principal ─────────────────────────────────────────────*/
+/* ── Peças da campanha (15/10/2026) ──────────────────────────────────────────
+   Cards do Orgânico e dos Anúncios ligados ao pico: pela tarefa (card_id) ou
+   pelas colunas pico_projeto_id / pico_tarefa_id do próprio card. */
+function miniaturaOrganico(c) {
+  let mf = c.media_files;
+  if (typeof mf === 'string') { try { mf = JSON.parse(mf); } catch { mf = null; } }
+  const v = Array.isArray(mf) ? mf.find(m => m && m.tipo === 'video') : null;
+  if (v) return v.capa_url || v.thumb_url || null;
+  let sl = c.slides;
+  if (typeof sl === 'string') { try { sl = JSON.parse(sl); } catch { sl = null; } }
+  const img = Array.isArray(sl) ? sl.map(x => x && x.image_url).find(u => u && !/\.(mp4|mov|webm|m4v)$/i.test(u)) : null;
+  return img || null;
+}
+
+function usePecasDoPico(projetoId, tarefas) {
+  const [pecas, setPecas] = useState([]);
+  const chave = tarefas.map(t => t.card_id || '').join(',');
+  useEffect(() => {
+    if (!projetoId || !window.db) return;
+    const idsOrg = tarefas.filter(t => t.card_tipo === 'organico' && t.card_id).map(t => t.card_id);
+    const idsAds = tarefas.filter(t => t.card_tipo === 'ads' && t.card_id).map(t => t.card_id);
+    const tarefaDoCard = {};
+    tarefas.forEach(t => { if (t.card_id) tarefaDoCard[t.card_id] = t.id; });
+    const filtro = ids => ids.length ? `pico_projeto_id.eq.${projetoId},id.in.(${ids.join(',')})` : `pico_projeto_id.eq.${projetoId}`;
+    Promise.all([
+      window.db.from('conteudo_organico')
+        .select('id,numero,plataforma,status,headline,tema,slides,media_files,scheduled_at,data_prevista,published_at,pico_tarefa_id')
+        .or(filtro(idsOrg)),
+      window.db.from('ads')
+        .select('id,numero,titulo,tipo,status,thumb_url,pico_tarefa_id')
+        .or(filtro(idsAds)),
+    ]).then(([o, a]) => {
+      const org = (o.data || []).map(c => ({
+        id: c.id, tipo: 'organico', numero: c.numero, rotulo: `ORG ${String(c.numero).padStart(3, '0')}`,
+        titulo: c.headline || c.tema || '', formato: c.plataforma, status: c.status,
+        quando: c.scheduled_at ? c.scheduled_at.slice(0, 10) : (c.published_at || '').slice(0, 10) || c.data_prevista,
+        img: miniaturaOrganico(c), tarefaId: c.pico_tarefa_id || tarefaDoCard[c.id] || null,
+      }));
+      const ads = (a.data || []).map(c => ({
+        id: c.id, tipo: 'ads', numero: c.numero, rotulo: `ADS ${c.numero}`,
+        titulo: (c.titulo || '').replace(/^ADS\s*\d+\s*-\s*/i, ''), formato: c.tipo, status: c.status,
+        quando: null, img: c.thumb_url || null, tarefaId: c.pico_tarefa_id || tarefaDoCard[c.id] || null,
+      }));
+      setPecas([...org, ...ads]);
+    });
+  }, [projetoId, chave]);
+  return pecas;
+}
+
+const STATUS_PECA = {
+  Fazendo:'Em produção', Feito:'Pronto', Agendado:'Agendado', Arquivado:'Publicado',
+  fazer:'Para fazer', fazendo:'Em produção', ativo:'Rodando', campeoes:'Campeão', arquivado:'Pausado',
+};
+
+function MiniPeca({ p, onAbrir, grande = false }) {
+  const [hov, setHov] = useState(false);
+  const w = grande ? '100%' : 64;
+  return (
+    <button onClick={() => onAbrir(p)} title={`${p.rotulo} · ${p.titulo}`}
+      onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
+      style={{ display:'flex', flexDirection:'column', gap:6, width: grande ? '100%' : 64, textAlign:'left', cursor:'pointer' }}>
+      <div style={{ width:w, aspectRatio:'4 / 5', borderRadius: grande ? 12 : 8, overflow:'hidden',
+        background:'var(--app-surface-2)', border:`1px solid ${hov ? 'var(--app-primary)' : 'var(--app-border)'}`,
+        display:'flex', alignItems:'center', justifyContent:'center', transition:'border-color 150ms' }}>
+        {p.img ? <img src={p.img} style={{ width:'100%', height:'100%', objectFit:'cover' }}/>
+          : <LucideIcon icon={p.tipo === 'ads' ? 'clapperboard' : 'leaf'} size={grande ? 28 : 18} style={{ color:'var(--text-2)' }}/>}
+      </div>
+      {grande ? (
+        <div style={{ fontFamily:'Roboto,sans-serif' }}>
+          <div style={{ display:'flex', alignItems:'center', gap:6, fontSize:12 }}>
+            <span style={{ fontWeight:600, color:'var(--app-primary)' }}>{p.rotulo}</span>
+            <span style={{ color:'var(--text-2)' }}>{STATUS_PECA[p.status] || p.status}{p.quando ? ` · ${fmtData(p.quando)}` : ''}</span>
+          </div>
+          <div style={{ fontSize:13, color:'var(--text-1)', lineHeight:1.35, marginTop:2,
+            display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical', overflow:'hidden' }}>{p.titulo}</div>
+        </div>
+      ) : (
+        <span style={{ fontSize:11, fontFamily:'Roboto,sans-serif', color:'var(--text-2)', textAlign:'center' }}>{p.rotulo}</span>
+      )}
+    </button>
+  );
+}
+
+/* Tarefa em cartão, com as peças dela. Usado na aba Agora. */
+function CartaoTarefa({ t, pecas, onToggle, onAbrirPeca, atrasada }) {
+  const f = FASE_MAP[t.fase] || {};
+  const feito = t.status === 'feito';
+  return (
+    <div style={{ background:'var(--app-surface)', border:`1px solid ${atrasada ? 'rgba(254,98,108,.4)' : 'var(--app-border)'}`,
+      borderRadius:16, padding:16, display:'flex', flexDirection:'column', gap:12, fontFamily:'Roboto,sans-serif' }}>
+      <div style={{ display:'flex', alignItems:'flex-start', gap:10 }}>
+        <button onClick={() => onToggle(t)} title={feito ? 'Marcar como pendente' : 'Marcar como feita'}
+          style={{ width:20, height:20, borderRadius:6, flexShrink:0, marginTop:1, cursor:'pointer',
+            border:`1px solid ${feito ? 'var(--clr-pos)' : 'var(--app-border-2)'}`,
+            background: feito ? 'var(--clr-pos)' : 'transparent', display:'flex', alignItems:'center', justifyContent:'center' }}>
+          {feito && <LucideIcon icon="check" size={13} style={{ color:'#06070a' }}/>}
+        </button>
+        <div style={{ minWidth:0, flex:1 }}>
+          <div style={{ fontSize:14, fontWeight:500, color: feito ? 'var(--text-2)' : 'var(--text-1)',
+            textDecoration: feito ? 'line-through' : 'none' }}>{t.titulo}</div>
+          <div style={{ fontSize:12, color: atrasada ? 'var(--clr-neg)' : 'var(--text-2)', marginTop:4, display:'flex', gap:8, flexWrap:'wrap' }}>
+            <span>{t.data_prevista ? `${diaSemana(t.data_prevista)}, ${fmtData(t.data_prevista)}` : 'sem data'}</span>
+            <span style={{ color: f.cor }}>● {f.label}</span>
+            {t.status === 'validar' && <span style={{ color:'var(--clr-warn)' }}>para validar</span>}
+          </div>
+        </div>
+      </div>
+      {pecas.length > 0 && (
+        <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
+          {pecas.map(p => <MiniPeca key={p.tipo + p.id} p={p} onAbrir={onAbrirPeca}/>)}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function AbaAgora({ tarefas, pecasPorTarefa, onToggle, onAbrirPeca }) {
+  const hoje = hojeISO();
+  const ate = new Date(new Date(hoje + 'T12:00:00').getTime() + 7 * 864e5).toISOString().slice(0, 10);
+  const abertas = tarefas.filter(t => t.status !== 'feito' && t.status !== 'pulada');
+  const atrasadas = abertas.filter(t => t.data_prevista && t.data_prevista < hoje);
+  const semana = abertas.filter(t => t.data_prevista && t.data_prevista >= hoje && t.data_prevista <= ate);
+  const validar = tarefas.filter(t => t.status === 'validar' && !(t.data_prevista && t.data_prevista < hoje));
+  const grade = { display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(300px, 1fr))', gap:12 };
+  const Bloco = ({ titulo, lista, atrasada, vazio }) => (
+    <section style={{ display:'flex', flexDirection:'column', gap:8 }}>
+      <p style={{ fontSize:14, fontWeight:600, fontFamily:'Roboto,sans-serif', color:'var(--text-1)' }}>
+        {titulo} <span style={{ color:'var(--text-2)', fontWeight:400 }}>({lista.length})</span>
+      </p>
+      {lista.length ? (
+        <div style={grade}>
+          {lista.map(t => <CartaoTarefa key={t.id} t={t} pecas={pecasPorTarefa[t.id] || []}
+            onToggle={onToggle} onAbrirPeca={onAbrirPeca} atrasada={atrasada}/>)}
+        </div>
+      ) : <span style={{ fontSize:13, color:'var(--text-2)', fontFamily:'Roboto,sans-serif' }}>{vazio}</span>}
+    </section>
+  );
+  return (
+    <div style={{ display:'flex', flexDirection:'column', gap:24 }}>
+      {atrasadas.length > 0 && <Bloco titulo="Atrasadas" lista={atrasadas} atrasada vazio=""/>}
+      <Bloco titulo="Nos próximos 7 dias" lista={semana} vazio="Nada previsto para esta semana."/>
+      {validar.length > 0 && <Bloco titulo="Para validar" lista={validar} vazio=""/>}
+    </div>
+  );
+}
+
+function AbaPecas({ pecas, tarefas, onAbrirPeca }) {
+  const faseDaTarefa = Object.fromEntries(tarefas.map(t => [t.id, t.fase]));
+  const [filtro, setFiltro] = useState('todas');
+  const lista = pecas.filter(p => filtro === 'todas' || p.tipo === filtro);
+  const grupos = {};
+  lista.forEach(p => { const f = (p.tarefaId && faseDaTarefa[p.tarefaId]) || 'sem_tarefa'; (grupos[f] ||= []).push(p); });
+  const ordem = [...FASES.map(f => f.id), 'sem_tarefa'];
+  if (!pecas.length) return (
+    <div style={{ background:'var(--app-surface)', border:'1px solid var(--app-border)', borderRadius:16, padding:40,
+      textAlign:'center', fontFamily:'Roboto,sans-serif', display:'flex', flexDirection:'column', alignItems:'center', gap:12 }}>
+      <LucideIcon icon="images" size={40} style={{ color:'var(--text-2)' }}/>
+      <span style={{ fontSize:14, color:'var(--text-2)', maxWidth:460, lineHeight:1.5 }}>
+        Ainda não há peças ligadas a esta campanha. Quando um card do Orgânico ou dos Anúncios for ligado a uma tarefa, a imagem dele aparece aqui.
+      </span>
+    </div>
+  );
+  return (
+    <div style={{ display:'flex', flexDirection:'column', gap:24 }}>
+      <Pilulas valor={filtro} onChange={setFiltro}
+        opcoes={[{ id:'todas', label:`Todas (${pecas.length})` },
+          { id:'organico', label:`Orgânico (${pecas.filter(p => p.tipo === 'organico').length})` },
+          { id:'ads', label:`Anúncios (${pecas.filter(p => p.tipo === 'ads').length})` }]}/>
+      {ordem.filter(f => grupos[f]).map(f => (
+        <section key={f} style={{ display:'flex', flexDirection:'column', gap:10 }}>
+          <p style={{ fontSize:14, fontWeight:600, fontFamily:'Roboto,sans-serif', color:'var(--text-1)', display:'flex', alignItems:'center', gap:8 }}>
+            <span style={{ color: FASE_MAP[f]?.cor || 'var(--text-2)' }}>●</span>
+            {FASE_MAP[f]?.label || 'Da campanha, sem tarefa'}
+            <span style={{ color:'var(--text-2)', fontWeight:400 }}>({grupos[f].length})</span>
+          </p>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(150px, 1fr))', gap:16 }}>
+            {grupos[f].map(p => <MiniPeca key={p.tipo + p.id} p={p} onAbrir={onAbrirPeca} grande/>)}
+          </div>
+        </section>
+      ))}
+    </div>
+  );
+}
+
 function PicoScreen({ onNavigate }) {
   const [projetos, setProjetos]   = useState([]);
   const [projetoId, setProjetoId] = useState(null);
@@ -2274,6 +2458,8 @@ function PicoScreen({ onNavigate }) {
   const [ocultarFeitas, setOcultarFeitas] = useState(false);
   const [comandoGrupos, setComandoGrupos] = useState({ acao:null, n:0 });
   const [carregando, setCarregando] = useState(true);
+  const [aba, setAbaEstado] = useState(() => { try { return localStorage.getItem('pico:aba') || 'agora'; } catch { return 'agora'; } });
+  const setAba = a => { setAbaEstado(a); try { localStorage.setItem('pico:aba', a); } catch {} };
 
   const projeto = projetos.find(p => p.id === projetoId) || null;
 
@@ -2515,6 +2701,17 @@ function PicoScreen({ onNavigate }) {
   const paraValidar = tarefas.filter(t => t.status === 'validar').length;
   const diasParaD0 = projeto?.data_abertura ? diasEntre(hojeISO(), projeto.data_abertura) : null;
 
+  const pecas = usePecasDoPico(projetoId, tarefas);
+  const pecasPorTarefa = useMemo(() => {
+    const m = {}; pecas.forEach(p => { if (p.tarefaId) (m[p.tarefaId] ||= []).push(p); }); return m;
+  }, [pecas]);
+  const abrirPeca = p => onNavigate && onNavigate(p.tipo === 'ads' ? 'criativos' : 'organico', p.tipo === 'ads' ? p.numero : p.id);
+  const faseAtual = (() => {
+    const hoje = hojeISO();
+    const prox = [...tarefas].filter(t => t.data_prevista && t.data_prevista >= hoje).sort((a, b) => a.data_prevista < b.data_prevista ? -1 : 1)[0];
+    return prox ? (FASE_MAP[prox.fase]?.label || prox.fase) : '—';
+  })();
+
   const porGrupo = useMemo(() => {
     if (visao === 'calendario') return {};
     const chave = visao === 'trilha' ? 'trilha' : 'fase';
@@ -2581,44 +2778,53 @@ function PicoScreen({ onNavigate }) {
           </div>
         )}
 
-        {/* Cabeçalho: projeto, D0 e progresso */}
-        <div style={{ display:'flex', alignItems:'center', gap:10, flexWrap:'wrap',
-          marginBottom:14 }}>
+        {/* Projeto e data de abertura */}
+        <div style={{ display:'flex', alignItems:'center', gap:10, flexWrap:'wrap', marginBottom:16 }}>
           <select value={projetoId || ''} onChange={e=>setProjetoId(e.target.value)}
-            style={{ padding:'7px 11px', borderRadius:8, border:'1px solid var(--app-border)',
-              background:'rgba(255,255,255,.04)', color:'var(--text-1)', fontSize:13,
-              fontFamily:'Roboto,sans-serif', fontWeight:700, cursor:'pointer' }}>
+            style={{ height:36, padding:'0 12px', borderRadius:10, border:'1px solid var(--app-surface-2)',
+              background:'var(--app-bg)', color:'var(--text-1)', fontSize:14,
+              fontFamily:'Roboto,sans-serif', fontWeight:500, cursor:'pointer' }}>
             {projetos.map(p => <option key={p.id} value={p.id}>{p.nome}</option>)}
           </select>
-
-          <div style={{ display:'flex', alignItems:'center', gap:7 }}>
-            <span style={{ fontSize:11.5, fontFamily:'Roboto,sans-serif',
-              color:'var(--text-3)' }}>Abre em</span>
-            <input type="date" value={projeto?.data_abertura || ''}
-              onChange={e=>mudarAbertura(e.target.value)}
-              style={{ padding:'6px 9px', borderRadius:7, border:'1px solid var(--app-border)',
-                background:'rgba(255,255,255,.04)', color:'var(--text-1)', fontSize:12,
-                fontFamily:'Roboto,sans-serif' }}/>
-            {projeto?.data_abertura && feriadoDe(projeto.data_abertura) && (
-              <Badge tone="warn">feriado: {feriadoDe(projeto.data_abertura)}</Badge>
-            )}
-          </div>
-
-          {diasParaD0 !== null && (
-            <Badge tone={diasParaD0 < 0 ? 'ok' : diasParaD0 < 15 ? 'warn' : 'neutral'}>
-              {diasParaD0 > 0 ? `faltam ${diasParaD0} dias`
-                : diasParaD0 === 0 ? 'é hoje'
-                : `carrinho aberto há ${Math.abs(diasParaD0)} dias`}
-            </Badge>
+          <span style={{ fontSize:13, fontFamily:'Roboto,sans-serif', color:'var(--text-2)' }}>abre em</span>
+          <input type="date" value={projeto?.data_abertura || ''}
+            onChange={e=>mudarAbertura(e.target.value)}
+            style={{ height:36, padding:'0 10px', borderRadius:10, border:'1px solid var(--app-surface-2)',
+              background:'var(--app-bg)', color:'var(--text-1)', fontSize:14, fontFamily:'Roboto,sans-serif' }}/>
+          {projeto?.data_abertura && feriadoDe(projeto.data_abertura) && (
+            <Badge tone="warning">feriado: {feriadoDe(projeto.data_abertura)}</Badge>
           )}
-          {atrasadas > 0 && <Badge tone="danger">{atrasadas} atrasada{atrasadas>1?'s':''}</Badge>}
-          {paraValidar > 0 && <Badge tone="warn">{paraValidar} para validar</Badge>}
-
-          <div style={{ flex:1, minWidth:120, maxWidth:260 }}>
-            <Progresso feitas={feitas} total={tarefas.length}/>
-          </div>
         </div>
 
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(4, minmax(0,1fr))', gap:16, marginBottom:24 }}>
+          <CardKPI label="Abertura do carrinho" icon="calendar-clock"
+            value={diasParaD0 === null ? '—' : diasParaD0 > 0 ? `faltam ${diasParaD0} dias` : diasParaD0 === 0 ? 'é hoje' : `aberto há ${Math.abs(diasParaD0)} dias`}
+            delta={projeto?.data_abertura ? fmtData(projeto.data_abertura) : undefined}/>
+          <CardKPI label="Fase atual" icon="flag" value={faseAtual}/>
+          <CardKPI label="Tarefas feitas" icon="list-checks" value={`${feitas} de ${tarefas.length}`}
+            delta={tarefas.length ? `${Math.round(feitas / tarefas.length * 100)}%` : undefined}/>
+          <CardKPI label="Atrasadas e para validar" icon="alarm-clock" alerta={atrasadas > 0}
+            value={`${atrasadas} · ${paraValidar}`} onClick={() => setAba('agora')}/>
+        </div>
+
+        <div style={{ display:'inline-flex', padding:4, borderRadius:12, gap:2, background:'var(--app-surface-2)', marginBottom:24 }}>
+          {[['agora','Agora','zap'],['pecas','Peças','images'],['plano','Plano','list-checks'],['estrategia','Estratégia','target'],['resultado','Resultado','chart-line']].map(([id, lb, ic]) => (
+            <button key={id} onClick={() => setAba(id)}
+              style={{ display:'flex', alignItems:'center', gap:6, padding:'6px 14px', borderRadius:10, cursor:'pointer',
+                fontSize:14, fontWeight:500, fontFamily:'Roboto,sans-serif', transition:'all 150ms',
+                background: aba === id ? 'var(--app-bg)' : 'transparent', boxShadow: aba === id ? '0 1px 2px rgba(0,0,0,.3)' : 'none',
+                color: aba === id ? 'var(--text-1)' : 'var(--text-2)' }}>
+              <LucideIcon icon={ic} size={15}/>{lb}{id === 'pecas' && pecas.length ? ` (${pecas.length})` : ''}
+            </button>
+          ))}
+        </div>
+
+        {aba === 'agora' && (
+          <AbaAgora tarefas={efetivas} pecasPorTarefa={pecasPorTarefa} onToggle={alternarTarefa} onAbrirPeca={abrirPeca}/>
+        )}
+        {aba === 'pecas' && <AbaPecas pecas={pecas} tarefas={tarefas} onAbrirPeca={abrirPeca}/>}
+
+        {aba === 'estrategia' && (<>
         <div style={{ marginBottom:14 }}>
           <BlocoFicha declaracoes={projeto?.declaracoes} onSalvar={salvarDeclaracao}
             semMentoria={(decisoes.find(d => d.chave === 'mentoria')?.escolha || '')
@@ -2642,10 +2848,6 @@ function PicoScreen({ onNavigate }) {
         </div>
 
         <div style={{ marginBottom:14 }}>
-          <BlocoAuditoria projeto={projeto} tarefas={tarefas}/>
-        </div>
-
-        <div style={{ marginBottom:14 }}>
           <BlocoBiblioteca itens={biblioteca} onAdicionar={addExemplo} onRemover={delExemplo}/>
         </div>
 
@@ -2655,6 +2857,9 @@ function PicoScreen({ onNavigate }) {
           </div>
         )}
 
+        </>)}
+
+        {aba === 'plano' && (<>
         {/* Controles da execução */}
         <div style={{ display:'flex', alignItems:'center', gap:8, flexWrap:'wrap',
           marginBottom:11 }}>
@@ -2727,12 +2932,19 @@ function PicoScreen({ onNavigate }) {
         </div>
         )}
 
+        </>)}
+
+        {aba === 'resultado' && (<>
+        <div style={{ marginBottom:14 }}>
+          <BlocoAuditoria projeto={projeto} tarefas={tarefas}/>
+        </div>
         {/* Debriefing por último, é a última coisa que acontece */}
         <div style={{ marginTop:14 }}>
           <BlocoDebriefing projeto={projeto} metricas={metricas} tarefas={tarefas}
             onSalvar={salvarDebrief} onSalvarResposta={salvarResposta}
             respostas={respostas}/>
         </div>
+        </>)}
       </div>
     </div>
   );
