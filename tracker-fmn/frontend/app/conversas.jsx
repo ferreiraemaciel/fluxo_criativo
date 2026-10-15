@@ -206,10 +206,12 @@ function tempoAteArquivar(referencia) {
 function ContatoItem({ contato, ativo, onClick, onDispensarAtencao }) {
   return (
     <div onClick={onClick} style={{
-      display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', cursor: 'pointer',
-      background: ativo ? 'var(--app-primary)' : 'transparent',
-      borderLeft: ativo ? '3px solid var(--fmn-gold)' : '3px solid transparent',
-      borderBottom: '1px solid var(--app-border)',
+      // Conversa aberta: só um detalhe, como no atendimento do FMN Pro (fundo âmbar a 6%,
+      // contorno a 28% e cantos arredondados). Pedido do Felipe em 15/10/2026.
+      display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', cursor: 'pointer',
+      margin: '2px 6px', borderRadius: 12,
+      background: ativo ? 'rgba(249,182,79,.06)' : 'transparent',
+      border: `1px solid ${ativo ? 'rgba(249,182,79,.28)' : 'transparent'}`,
     }}>
       <div style={{ position: 'relative', flexShrink: 0 }}>
         <div style={{
