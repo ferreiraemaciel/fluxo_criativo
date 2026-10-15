@@ -25,7 +25,7 @@
   <!-- FMN Design System tokens -->
   <style>
     :root {
-      --fmn-gold:#fbbf24; --fmn-gold-deep:#c88a2e; --fmn-gold-soft:#f2c878;
+      --fmn-gold:#f9b64f; --fmn-gold-deep:#c88a2e; --fmn-gold-soft:#f2c878;
       --fmn-orange:#e8600a; --fmn-cream:#f5f0e8; --fmn-white:#ffffff;
       --fmn-charcoal:#3f3f3f; --fmn-black:#1a1a1a; --fmn-navy:#1a1f2e;
       --font-display:"BwSurco","Antonio","Bebas Neue",system-ui,sans-serif;
@@ -54,7 +54,7 @@
     #loginScreen::before {
       content:'';
       position:absolute; inset:0;
-      background: radial-gradient(ellipse 60% 50% at 50% 40%, rgba(251,191,36,.07) 0%, transparent 70%);
+      background: radial-gradient(ellipse 60% 50% at 50% 40%, rgba(249,182,79,.07) 0%, transparent 70%);
       pointer-events:none;
     }
     .ls-box {
@@ -70,7 +70,7 @@
       text-align: center; margin-bottom: 8px; line-height: 0;
     }
     .ls-logo img { height: 52px; width: auto; display: inline-block;
-      filter: drop-shadow(0 0 16px rgba(251,191,36,.3)); }
+      filter: drop-shadow(0 0 16px rgba(249,182,79,.3)); }
     .ls-title {
       font-family: "BwSurco", sans-serif; font-weight: 500;
       font-size: 11px; letter-spacing: 2.5px; color: rgba(255,255,255,.3);
@@ -90,9 +90,9 @@
       font-family: "Aleo", serif; outline: none;
       transition: border .15s; margin-bottom: 16px;
     }
-    .ls-input:focus { border-color: rgba(251,191,36,.45); }
+    .ls-input:focus { border-color: rgba(249,182,79,.45); }
     .ls-btn {
-      width: 100%; background: #fbbf24; color: #000;
+      width: 100%; background: #f9b64f; color: #000;
       border: none; padding: 14px; border-radius: 8px;
       font-size: 13px; font-weight: 700;
       font-family: "BwSurco", sans-serif; letter-spacing: .5px;
@@ -112,7 +112,7 @@
       text-decoration: underline; text-underline-offset: 3px;
       transition: color .15s;
     }
-    .ls-forgot:hover { color: rgba(251,191,36,.6); }
+    .ls-forgot:hover { color: rgba(249,182,79,.6); }
 
     /* Spinner de carregamento. O ícone "loader" do Lucide é uma roda de raios,
        parada ela parece um ícone quebrado em vez de espera. Girando, o usuário
@@ -192,19 +192,19 @@
   <script src="app/auth.js?v=afab71b2"></script>
   <script src="app/audio-ogg.js?v=183c4f61"></script>
   <script src="app/financas.js?v=c73c160a"></script>
-  <script type="text/babel" src="app/shared.jsx?v=0fd85b7c"></script>
-  <script type="text/babel" src="app/map.jsx?v=d6b7d84d"></script>
-  <script type="text/babel" src="app/dashboard.jsx?v=d2d9cf72"></script>
-  <script type="text/babel" src="app/relatorio.jsx?v=f4fdc51c"></script>
-  <script type="text/babel" src="app/kanban.jsx?v=d442ba06"></script>
+  <script type="text/babel" src="app/shared.jsx?v=d102e93b"></script>
+  <script type="text/babel" src="app/map.jsx?v=1be13c93"></script>
+  <script type="text/babel" src="app/dashboard.jsx?v=ebda4563"></script>
+  <script type="text/babel" src="app/relatorio.jsx?v=7fdf2411"></script>
+  <script type="text/babel" src="app/kanban.jsx?v=5577d15b"></script>
   <script type="text/babel" src="app/financeiro.jsx?v=ca91d32c"></script>
-  <script type="text/babel" src="app/ideias.jsx?v=750f2817"></script>
-  <script type="text/babel" src="app/organico.jsx?v=68cb18fa"></script>
-  <script type="text/babel" src="app/trafego.jsx?v=121bf9db"></script>
-  <script type="text/babel" src="app/funis.jsx?v=7cf17ea7"></script>
-  <script type="text/babel" src="app/conversas.jsx?v=943cebf9"></script>
-  <script type="text/babel" src="app/sistema.jsx?v=4df49d20"></script>
-  <script type="text/babel" src="app/site.jsx?v=96afe2de"></script>
+  <script type="text/babel" src="app/ideias.jsx?v=8b01593e"></script>
+  <script type="text/babel" src="app/organico.jsx?v=bb8df1a7"></script>
+  <script type="text/babel" src="app/trafego.jsx?v=e92b1914"></script>
+  <script type="text/babel" src="app/funis.jsx?v=e81fadcf"></script>
+  <script type="text/babel" src="app/conversas.jsx?v=ab1127ac"></script>
+  <script type="text/babel" src="app/sistema.jsx?v=83feddbb"></script>
+  <script type="text/babel" src="app/site.jsx?v=97edfab9"></script>
   <script type="text/babel" src="app/pico.jsx?v=49562172"></script>
   <script type="text/babel" src="app/main.jsx?v=3410c3b4"></script>
 
@@ -229,7 +229,7 @@
     async function lsEsqueciSenha() {
       const email = document.getElementById('lsEmail').value || 'contato@ferreiraemaciel.com.br';
       const err = document.getElementById('lsErr');
-      err.style.color = '#fbbf24';
+      err.style.color = '#f9b64f';
       err.textContent = 'Enviando link de redefinição…';
       try {
         await fetch('https://wntzzzuqoqmfcjebmzul.supabase.co/auth/v1/recover', {

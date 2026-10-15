@@ -403,7 +403,7 @@ const SV = {
   danger:  { color:'#fe626c', bg:'rgba(254,98,108,.1)',  bd:'rgba(254,98,108,.25)' },
   warning: { color:'#ff9845', bg:'rgba(255,152,69,.1)',   bd:'rgba(255,152,69,.25)'  },
   info:    { color:'#60a5fa', bg:'rgba(96,165,250,.1)',   bd:'rgba(96,165,250,.25)'  },
-  gold:    { color:'#fbbf24', bg:'rgba(251,191,36,.1)',   bd:'rgba(251,191,36,.3)'   },
+  gold:    { color:'#f9b64f', bg:'rgba(249,182,79,.1)',   bd:'rgba(249,182,79,.3)'   },
 };
 
 /* ── Mapear regra → ação sugerida ───────────────────────────────*/
@@ -477,12 +477,12 @@ function bestThumb(adThumbUrl, mediaFiles, driveUrl) {
   return window.melhorThumbAd(adThumbUrl, mediaFiles, driveUrl);
 }
 const cpaCol    = c  => c==null?'var(--text-3)':c/TICKET>=1?'#fe626c':c/TICKET>=.7?'#ff9845':'#79e06f';
-const roasCol   = v  => v==null?'var(--text-3)':v>=3?'#79e06f':v>=2?'#fbbf24':'#fe626c';
+const roasCol   = v  => v==null?'var(--text-3)':v>=3?'#79e06f':v>=2?'#f9b64f':'#fe626c';
 const cpmCol    = v  => v==null?'var(--text-3)':v<20?'#79e06f':v<40?'#ff9845':'#fe626c';
-const ctrCol    = v  => v==null?'var(--text-3)':v>=0.02?'#79e06f':v>=0.01?'#fbbf24':'#fe626c';
-const freqCol   = v  => v==null?'var(--text-3)':v<2?'#79e06f':v<3?'#fbbf24':'#fe626c';
-const connectCol= v  => v==null?'var(--text-3)':v>=0.6?'#79e06f':v>=0.4?'#fbbf24':'#fe626c';
-const hookCol   = v  => v==null?'var(--text-3)':v>=0.25?'#79e06f':v>=0.15?'#fbbf24':'#fe626c';
+const ctrCol    = v  => v==null?'var(--text-3)':v>=0.02?'#79e06f':v>=0.01?'#f9b64f':'#fe626c';
+const freqCol   = v  => v==null?'var(--text-3)':v<2?'#79e06f':v<3?'#f9b64f':'#fe626c';
+const connectCol= v  => v==null?'var(--text-3)':v>=0.6?'#79e06f':v>=0.4?'#f9b64f':'#fe626c';
+const hookCol   = v  => v==null?'var(--text-3)':v>=0.25?'#79e06f':v>=0.15?'#f9b64f':'#fe626c';
 const pct       = v  => v==null?'—':`${(v*100).toFixed(1)}%`;
 const num       = v  => v==null||v===0?'—':v.toLocaleString('pt-BR');
 
@@ -538,7 +538,7 @@ function MCell({ m, col, row, onHover }) {
   return (
     <td {...handlers} style={{ padding:'0 6px', textAlign:'right', fontSize:12.5, width: col.w,
       fontFamily:'Roboto,sans-serif', fontWeight:700, color:col.color(v), whiteSpace:'nowrap',
-      boxShadow: hv ? 'inset 0 0 0 1px rgba(251,191,36,.45), inset 0 0 0 60px rgba(251,191,36,.12)' : 'none',
+      boxShadow: hv ? 'inset 0 0 0 1px rgba(249,182,79,.45), inset 0 0 0 60px rgba(249,182,79,.12)' : 'none',
       transition:'box-shadow 120ms' }}>
       {col.fmt(v)}
     </td>
@@ -713,7 +713,7 @@ function TrafficRow({ row, depth=0, period, viewMode='periodo', metricCol, onCel
   const m = row[PKEY[period] || 'd3'] || null;
 
   const baseBg  = (isPaused || isInactive) ? 'rgba(254,98,108,.03)' : 'transparent';
-  const focusBg = isFocused ? 'rgba(251,191,36,.06)' : baseBg;
+  const focusBg = isFocused ? 'rgba(249,182,79,.06)' : baseBg;
   const adCpaColor = isAd && m?.cpa != null
     ? cpaCol(m.cpa) : null;
 
@@ -723,8 +723,8 @@ function TrafficRow({ row, depth=0, period, viewMode='periodo', metricCol, onCel
         background: focusBg,
         opacity: isInactive ? 0.4 : isPaused ? 0.55 : faded ? 0.3 : 1,
         transition:'background 120ms, opacity 150ms',
-        outline: isFocused ? '1px solid rgba(251,191,36,.3)' : 'none' }}
-        onMouseEnter={e => { if (!isPaused && !faded) e.currentTarget.style.background=isFocused?'rgba(251,191,36,.09)':'rgba(255,255,255,.03)'; e.currentTarget.querySelectorAll('.pause-direct-btn').forEach(b => b.style.opacity='1'); }}
+        outline: isFocused ? '1px solid rgba(249,182,79,.3)' : 'none' }}
+        onMouseEnter={e => { if (!isPaused && !faded) e.currentTarget.style.background=isFocused?'rgba(249,182,79,.09)':'rgba(255,255,255,.03)'; e.currentTarget.querySelectorAll('.pause-direct-btn').forEach(b => b.style.opacity='1'); }}
         onMouseLeave={e => { e.currentTarget.style.background=focusBg; e.currentTarget.querySelectorAll('.pause-direct-btn').forEach(b => b.style.opacity='0'); }}>
 
         {/* ── Nome ── */}
@@ -737,8 +737,8 @@ function TrafficRow({ row, depth=0, period, viewMode='periodo', metricCol, onCel
               title={isFocused ? 'Remover foco' : 'Destacar linha'}
               style={{ width:18, height:18, borderRadius:4, flexShrink:0, cursor:'pointer', padding:0,
                 display:'flex', alignItems:'center', justifyContent:'center',
-                border:`1px solid ${isFocused?'rgba(251,191,36,.5)':'rgba(255,255,255,.1)'}`,
-                background: isFocused?'rgba(251,191,36,.15)':'rgba(255,255,255,.04)',
+                border:`1px solid ${isFocused?'rgba(249,182,79,.5)':'rgba(255,255,255,.1)'}`,
+                background: isFocused?'rgba(249,182,79,.15)':'rgba(255,255,255,.04)',
                 color: isFocused?'var(--fmn-gold)':'rgba(255,255,255,.3)', transition:'all 150ms' }}>
               <LucideIcon icon="eye" size={10}/>
             </button>
@@ -788,7 +788,7 @@ function TrafficRow({ row, depth=0, period, viewMode='periodo', metricCol, onCel
                   width:16, height:16, borderRadius:3, cursor:'pointer', padding:0,
                   background:'rgba(255,255,255,.05)', border:'1px solid rgba(255,255,255,.1)',
                   color:'rgba(255,255,255,.25)', transition:'all 150ms' }}
-                onMouseEnter={e => { e.currentTarget.style.background='rgba(251,191,36,.15)'; e.currentTarget.style.color='var(--fmn-gold)'; }}
+                onMouseEnter={e => { e.currentTarget.style.background='rgba(249,182,79,.15)'; e.currentTarget.style.color='var(--fmn-gold)'; }}
                 onMouseLeave={e => { e.currentTarget.style.background='rgba(255,255,255,.05)'; e.currentTarget.style.color='rgba(255,255,255,.25)'; }}>
                 <LucideIcon icon="plus" size={9}/>
               </button>
@@ -837,7 +837,7 @@ function TrafficRow({ row, depth=0, period, viewMode='periodo', metricCol, onCel
             {myRules.map(re => (
               <span key={re.id} style={{ padding:'1px 6px', borderRadius:999, fontSize:9, flexShrink:0,
                 fontFamily:'Roboto,sans-serif', fontWeight:900, letterSpacing:'0.06em',
-                background:'rgba(251,191,36,.12)', color:'var(--fmn-gold)', border:'1px solid rgba(251,191,36,.3)' }}>
+                background:'rgba(249,182,79,.12)', color:'var(--fmn-gold)', border:'1px solid rgba(249,182,79,.3)' }}>
                 {reLabel(re.rule)}
               </span>
             ))}
@@ -911,7 +911,7 @@ function AlertCard({ alert, userAction, onAction }) {
       {alert.suggestedAction && (
         <div style={{ display:'flex', alignItems:'center', gap:8,
           padding:'8px 12px', borderRadius:8,
-          background:'rgba(251,191,36,.06)', border:'1px solid rgba(251,191,36,.15)' }}>
+          background:'rgba(249,182,79,.06)', border:'1px solid rgba(249,182,79,.15)' }}>
           <LucideIcon icon="sparkles" size={12} color="var(--fmn-gold)"/>
           <span style={{ fontSize:11, fontFamily:'Roboto,sans-serif', color:'var(--text-3)' }}>Sugerido:</span>
           <span style={{ fontSize:11.5, fontFamily:'Roboto,sans-serif', fontWeight:700, color:'var(--fmn-gold)', flex:1 }}>
@@ -961,12 +961,12 @@ function AlertCard({ alert, userAction, onAction }) {
 function RECard({ re, onDelete }) {
   const sv = SV[RULE_SV[re.rule]] || SV.gold;
   return (
-    <div style={{ background:'rgba(251,191,36,.04)', border:'1px solid rgba(251,191,36,.25)',
+    <div style={{ background:'rgba(249,182,79,.04)', border:'1px solid rgba(249,182,79,.25)',
       borderRadius:12, padding:'12px 16px', display:'flex', alignItems:'flex-start', gap:12 }}>
       <div style={{ flexShrink:0, marginTop:1 }}>
         <span style={{ padding:'3px 8px', borderRadius:999, fontSize:10, fontFamily:'Roboto,sans-serif',
-          fontWeight:900, letterSpacing:'0.08em', background:'rgba(251,191,36,.15)',
-          color:'var(--fmn-gold)', border:'1px solid rgba(251,191,36,.3)' }}>
+          fontWeight:900, letterSpacing:'0.08em', background:'rgba(249,182,79,.15)',
+          color:'var(--fmn-gold)', border:'1px solid rgba(249,182,79,.3)' }}>
           {reLabel(re.rule)}
         </span>
       </div>
@@ -1444,7 +1444,7 @@ function SpecificRulesModal({ rules, onAdd, onDelete, pausedIds, trafficData, in
                     <div key={re.id}
                       style={{ display:'flex',alignItems:'flex-start',gap:10,padding:'12px 14px',
                         borderRadius:10,background:isTargetPaused?'rgba(255,255,255,.02)':'var(--app-surface-2)',
-                        border:`1px solid ${isTargetPaused?'var(--app-border)':'rgba(251,191,36,.2)'}`,
+                        border:`1px solid ${isTargetPaused?'var(--app-border)':'rgba(249,182,79,.2)'}`,
                         opacity:isTargetPaused?0.4:1,transition:'all 150ms' }}>
                       <span style={{ padding:'3px 7px',borderRadius:999,fontSize:10,
                         fontFamily:'Roboto,sans-serif',fontWeight:900,flexShrink:0,
@@ -1460,7 +1460,7 @@ function SpecificRulesModal({ rules, onAdd, onDelete, pausedIds, trafficData, in
                           <span style={{ fontSize:10.5,color:'var(--text-3)',fontFamily:'Roboto,sans-serif',
                             textTransform:'capitalize' }}>{re.scope}</span>
                           {re.paramVal && (
-                            <span style={{ padding:'1px 6px',borderRadius:4,background:'rgba(251,191,36,.1)',
+                            <span style={{ padding:'1px 6px',borderRadius:4,background:'rgba(249,182,79,.1)',
                               color:'var(--fmn-gold)',fontSize:10.5,fontFamily:'Roboto,sans-serif',fontWeight:700 }}>
                               ×{re.paramVal}
                             </span>
@@ -2032,7 +2032,7 @@ function SubstituirModal({ adNum, defaultAdsetId, defaultAdsetName, defaultCampI
                       </div>
                     ) : (
                       <div style={{ display:'flex', flexDirection:'column', gap:8, padding:12, borderRadius:10,
-                        background:'rgba(251,191,36,.06)', border:'1px solid rgba(251,191,36,.2)' }}>
+                        background:'rgba(249,182,79,.06)', border:'1px solid rgba(249,182,79,.2)' }}>
                         <input placeholder="Nome do conjunto" value={newAdsetName}
                           onChange={e => setNewAdsetName(e.target.value)} style={S.input}/>
                         <input placeholder="Orçamento diário (R$)" value={newAdsetBudget} type="number"
@@ -2072,8 +2072,8 @@ function SubstituirModal({ adNum, defaultAdsetId, defaultAdsetName, defaultCampI
           {/* STEP: confirm (gate) */}
           {step === 'confirm' && selected && (
             <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
-              <div style={{ padding:14, borderRadius:10, background:'rgba(251,191,36,.06)',
-                border:'1px solid rgba(251,191,36,.2)', display:'flex', flexDirection:'column', gap:8 }}>
+              <div style={{ padding:14, borderRadius:10, background:'rgba(249,182,79,.06)',
+                border:'1px solid rgba(249,182,79,.2)', display:'flex', flexDirection:'column', gap:8 }}>
                 <div style={{ fontSize:12, fontFamily:'Roboto,sans-serif', fontWeight:500, color:'var(--fmn-gold)' }}>
                   Resumo do que vai ser criado
                 </div>
@@ -2306,7 +2306,7 @@ function AnaliseCampanhas() {
               gerado em {dados.gerado_em_brasilia}
               {dados.gerado_em && (
                 <span style={{ marginLeft:8, padding:'2px 8px', borderRadius:99, fontWeight:700,
-                  background:'rgba(251,191,36,.14)', border:'1px solid rgba(251,191,36,.45)', color:'var(--fmn-gold)' }}>
+                  background:'rgba(249,182,79,.14)', border:'1px solid rgba(249,182,79,.45)', color:'var(--fmn-gold)' }}>
                   há {tempoDesde(dados.gerado_em)}
                 </span>
               )}
@@ -2783,7 +2783,7 @@ function TrafficScreen() {
             <Btn variant="ghost" size="sm" icon="target" onClick={() => setModal('specific')}>
               Regras Específicas
               {specificRules.length > 0 && (
-                <span style={{ marginLeft:4,padding:'1px 6px',borderRadius:999,background:'rgba(251,191,36,.2)',
+                <span style={{ marginLeft:4,padding:'1px 6px',borderRadius:999,background:'rgba(249,182,79,.2)',
                   color:'var(--fmn-gold)',fontSize:10,fontWeight:900 }}>{specificRules.length}</span>
               )}
             </Btn>

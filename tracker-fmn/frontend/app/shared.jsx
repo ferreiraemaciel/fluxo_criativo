@@ -107,14 +107,14 @@ function Btn({ variant = 'primary', size = 'md', children, onClick, style = {}, 
 function Badge({ children, tone = 'default', dot = false, style = {} }) {
   const tones = {
     default:  { background: 'rgba(255,255,255,.08)', color: 'rgba(255,255,255,.62)' },
-    gold:     { background: 'rgba(251,191,36,.15)',  color: 'var(--app-primary)' },
+    gold:     { background: 'rgba(249,182,79,.15)',  color: 'var(--app-primary)' },
     success:  { background: 'rgba(121,224,111,.12)',  color: 'var(--clr-pos)' },
     danger:   { background: 'rgba(254,98,108,.12)', color: 'var(--clr-neg)' },
     warning:  { background: 'rgba(255,152,69,.12)',  color: 'var(--clr-warn)' },
     info:     { background: 'rgba(96,165,250,.12)',  color: 'var(--clr-info)' },
     teal:     { background: 'rgba(52,211,153,.12)',  color: 'var(--clr-teal)' },
     amber:    { background: 'rgba(245,158,11,.12)',  color: '#f59e0b' },
-    reels:    { background: 'rgba(251,191,36,.12)',  color: 'var(--fmn-gold)' },
+    reels:    { background: 'rgba(249,182,79,.12)',  color: 'var(--fmn-gold)' },
     image:    { background: 'rgba(96,165,250,.12)',  color: 'var(--clr-info)' },
     carousel: { background: 'rgba(52,211,153,.12)',  color: 'var(--clr-teal)' },
   };
@@ -142,14 +142,14 @@ function CardKPI({ label, value, delta, deltaLabel, icon, accent = false, title,
   const dv = typeof delta === 'number' ? `${delta >= 0 ? '+' : ''}${delta}%` : delta;
   const [hov, setHov] = useState(false);
   const cor = alerta ? 'var(--clr-neg)' : 'var(--app-primary)';
-  const fundo = alerta ? 'rgba(254,98,108,.15)' : 'rgba(251,191,36,.15)';
-  const borda = alerta ? 'rgba(254,98,108,.3)' : 'rgba(251,191,36,.3)';
+  const fundo = alerta ? 'rgba(254,98,108,.15)' : 'rgba(249,182,79,.15)';
+  const borda = alerta ? 'rgba(254,98,108,.3)' : 'rgba(249,182,79,.3)';
   return (
     <div title={title} onClick={onClick}
       onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
       style={{
         flex: 1, minWidth: 0, background: 'var(--app-surface)',
-        border: `1px solid ${onClick && hov ? 'rgba(251,191,36,.5)' : 'var(--app-border)'}`,
+        border: `1px solid ${onClick && hov ? 'rgba(249,182,79,.5)' : 'var(--app-border)'}`,
         borderRadius: 'var(--app-radius-xl)', padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,.1)',
         display: 'flex', alignItems: 'center', gap: 12, cursor: onClick ? 'pointer' : (title ? 'help' : 'default'),
         transition: 'border-color 150ms',
@@ -187,7 +187,7 @@ function Atalho({ icon, numero, rotulo, acao, onClick, carregando, alerta = fals
     <button onClick={tem ? onClick : undefined}
       onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
       style={{ textAlign: 'left', borderRadius: 'var(--app-radius)', padding: 12, display: 'flex', flexDirection: 'column', gap: 8,
-        border: `1px solid ${hov && tem ? 'rgba(251,191,36,.5)' : 'var(--app-border)'}`,
+        border: `1px solid ${hov && tem ? 'rgba(249,182,79,.5)' : 'var(--app-border)'}`,
         background: tem ? 'var(--app-surface)' : 'rgba(20,22,27,.2)', cursor: tem ? 'pointer' : 'default',
         transition: 'border-color 150ms', fontFamily: 'Roboto, sans-serif' }}>
       <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -219,7 +219,7 @@ function Pilulas({ opcoes, valor, onChange }) {
               background: ativo ? 'var(--app-primary)' : 'var(--app-bg)',
               color: ativo ? 'var(--app-primary-fg)' : 'var(--text-2)',
               border: `1px solid ${ativo ? 'var(--app-primary)' : 'var(--app-border)'}` }}
-            onMouseEnter={e => { if (!ativo) e.currentTarget.style.borderColor = 'rgba(251,191,36,.4)'; }}
+            onMouseEnter={e => { if (!ativo) e.currentTarget.style.borderColor = 'rgba(249,182,79,.4)'; }}
             onMouseLeave={e => { if (!ativo) e.currentTarget.style.borderColor = 'var(--app-border)'; }}>
             {label}
           </button>
@@ -390,6 +390,7 @@ function Sidebar({ activePage, onNavigate, collapsed = false, onToggle }) {
           // Padrão Blindagem / FMN Pro: ativo com fundo âmbar a 6% e borda a 28%.
           background: active ? 'rgba(251,191,36,.06)' : hov ? 'rgba(255,255,255,.05)' : 'transparent',
           border: `1px solid ${active ? 'rgba(251,191,36,.28)' : 'transparent'}`,
+          // Abas do menu: #fbbf24. Dentro das telas: #f9b64f (--app-primary). Igual ao FMN Pro.
           color: active ? '#fbbf24' : hov ? '#fbbf24' : 'var(--text-1)',
           fontFamily: 'Roboto, sans-serif', fontWeight: 500,
           fontSize: 14, cursor: 'pointer', transition: 'all 150ms',
@@ -610,7 +611,7 @@ function RefBlock({ value, onChange }) {
           <textarea value={draft} onChange={e => setDraft(e.target.value)}
             rows={2} placeholder="Cole um link ou descreva a referência..."
             style={fieldStyle}
-            onFocus={e => e.target.style.borderColor='rgba(251,191,36,.4)'}
+            onFocus={e => e.target.style.borderColor='rgba(249,182,79,.4)'}
             onBlur={e => e.target.style.borderColor='var(--app-border)'}/>
           <div style={{ display:'flex', gap:6, justifyContent:'flex-end' }}>
             {editing && (
@@ -621,8 +622,8 @@ function RefBlock({ value, onChange }) {
             )}
             <button onClick={() => { onChange(draft.trim()); setEditing(false); }}
               style={{ fontSize:11, fontFamily:'Roboto,sans-serif', padding:'5px 12px',
-                borderRadius:6, border:'1px solid rgba(251,191,36,.3)',
-                background:'rgba(251,191,36,.1)', color:'var(--fmn-gold)', cursor:'pointer', fontWeight:700 }}>
+                borderRadius:6, border:'1px solid rgba(249,182,79,.3)',
+                background:'rgba(249,182,79,.1)', color:'var(--fmn-gold)', cursor:'pointer', fontWeight:700 }}>
               Salvar referência
             </button>
           </div>

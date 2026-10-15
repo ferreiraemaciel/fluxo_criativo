@@ -9,7 +9,7 @@ const { LucideIcon, CardKPI, SectionCard, TopBar } = window;
 
 const nf = n => (n == null ? '—' : Number(n).toLocaleString('pt-BR'));
 const pc = (a, b) => (b ? Math.round((a / b) * 100) : 0);
-const PALETTE = ['#fbbf24', '#60a5fa', '#79e06f', '#f472b6', '#a78bfa', '#34d399', '#ff9845', '#fe626c'];
+const PALETTE = ['#f9b64f', '#60a5fa', '#79e06f', '#f472b6', '#a78bfa', '#34d399', '#ff9845', '#fe626c'];
 const DOW = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
 const PERIODOS = [
@@ -756,8 +756,8 @@ function CarrinhoTable({ itens, recuperados, contatadosOficial, contatadosSuport
                         : null;
                       if (!rotulo) return null;
                       const cor = ehBli ? '#60a5fa' : 'var(--fmn-gold)';
-                      const fundo = ehBli ? 'rgba(96,165,250,.12)' : 'rgba(251,191,36,.12)';
-                      const borda = ehBli ? 'rgba(96,165,250,.35)' : 'rgba(251,191,36,.35)';
+                      const fundo = ehBli ? 'rgba(96,165,250,.12)' : 'rgba(249,182,79,.12)';
+                      const borda = ehBli ? 'rgba(96,165,250,.35)' : 'rgba(249,182,79,.35)';
                       return (
                         <div title={it.produto_nome || ''}
                           style={{ display:'inline-block', marginTop:3, marginRight:4, padding:'1px 7px',
@@ -785,7 +785,7 @@ function CarrinhoTable({ itens, recuperados, contatadosOficial, contatadosSuport
                       {jaSuporte && !falhouSuporte && (
                         <div style={{ display:'inline-block', padding:'1px 7px', borderRadius:999,
                           fontSize:9.5, fontWeight:700, fontFamily:'Roboto,sans-serif', whiteSpace:'nowrap',
-                          background:'rgba(251,191,36,.12)', border:'1px solid rgba(251,191,36,.35)', color:'var(--fmn-gold)' }}>
+                          background:'rgba(249,182,79,.12)', border:'1px solid rgba(249,182,79,.35)', color:'var(--fmn-gold)' }}>
                           Já contatado pelo suporte
                         </div>
                       )}
@@ -821,8 +821,8 @@ function CarrinhoTable({ itens, recuperados, contatadosOficial, contatadosSuport
                         ? 'Já recebeu mensagem pela API oficial — confira antes de mandar pelo suporte'
                         : 'Mandar mensagem de recuperação (número de suporte)'}
                       style={{ width:28, height:28, borderRadius:8,
-                        border: falhouSuporte ? '1px solid rgba(254,98,108,.35)' : jaSuporte ? '1px solid rgba(251,191,36,.35)' : jaContatado ? '1px solid rgba(96,165,250,.35)' : '1px solid rgba(121,224,111,.3)',
-                        background: falhouSuporte ? 'rgba(254,98,108,.1)' : jaSuporte ? 'rgba(251,191,36,.1)' : jaContatado ? 'rgba(96,165,250,.1)' : 'rgba(121,224,111,.1)',
+                        border: falhouSuporte ? '1px solid rgba(254,98,108,.35)' : jaSuporte ? '1px solid rgba(249,182,79,.35)' : jaContatado ? '1px solid rgba(96,165,250,.35)' : '1px solid rgba(121,224,111,.3)',
+                        background: falhouSuporte ? 'rgba(254,98,108,.1)' : jaSuporte ? 'rgba(249,182,79,.1)' : jaContatado ? 'rgba(96,165,250,.1)' : 'rgba(121,224,111,.1)',
                         color: falhouSuporte ? '#fe626c' : jaSuporte ? 'var(--fmn-gold)' : jaContatado ? '#60a5fa' : '#79e06f', cursor:'pointer',
                         display:'inline-flex', alignItems:'center', justifyContent:'center' }}>
                       <LucideIcon icon="message-circle" size={14}/>
@@ -919,7 +919,7 @@ function InsightOne({ ins, kind, onNavigate }) {
   const [busy, setBusy] = useState(false);
   const cfg = kind === 'claude'
     ? { label: 'Insight do Claudinho', icon: 'sparkles', accent: '#a78bfa', bg: 'linear-gradient(100deg, rgba(167,139,250,.16), rgba(167,139,250,.04))', border: 'rgba(167,139,250,.32)' }
-    : { label: 'Insight do dia · dos dados', icon: 'lightbulb', accent: 'var(--fmn-gold)', bg: 'linear-gradient(100deg, rgba(251,191,36,.14), rgba(251,191,36,.04))', border: 'rgba(251,191,36,.3)' };
+    : { label: 'Insight do dia · dos dados', icon: 'lightbulb', accent: 'var(--fmn-gold)', bg: 'linear-gradient(100deg, rgba(249,182,79,.14), rgba(249,182,79,.04))', border: 'rgba(249,182,79,.3)' };
   if (!ins) return (
     <div style={{ background: cfg.bg, border: `1px dashed ${cfg.border}`, borderRadius: 14, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12, opacity: .75 }}>
       <LucideIcon icon={cfg.icon} size={18} color={cfg.accent} />

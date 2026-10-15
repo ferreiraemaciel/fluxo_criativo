@@ -34,7 +34,7 @@ const AUTOMACOES_NUVEM = [
 const TICKET_VAL = window.TICKET_PADRAO; // fonte única em shared.jsx
 const TAGS_PERFORMANCE = [
   { tag: 'Ótimo',            cor: '#79e06f', condicao: '≥ 5 vendas E (CPA < R$297 OU CPA indefinido)' },
-  { tag: 'Testar novamente', cor: '#fbbf24', condicao: '0 vendas E gasto < R$297 — OU — fez venda, gasto < R$297 E CPA < R$297' },
+  { tag: 'Testar novamente', cor: '#f9b64f', condicao: '0 vendas E gasto < R$297 — OU — fez venda, gasto < R$297 E CPA < R$297' },
   { tag: 'Mediano',          cor: '#94a3b8', condicao: 'Qualquer outro caso (ex: 1+ venda com gasto ≥ R$297 e CPA ≥ R$297)' },
   { tag: 'Ruim',             cor: '#fe626c', condicao: '0 vendas E gasto ≥ R$297' },
 ];
@@ -60,7 +60,7 @@ const COLUNAS_ORGANICO = [
 const COLUNAS_KANBAN = [
   { nome: 'Fazendo',    cor: '#60a5fa', entra: 'Card criado (padrão) — mescla as antigas Fazer e Fazendo', tag: 'Sem tag',
     sai: 'Automático pra Feito, ao receber mídia via importação do Drive' },
-  { nome: 'Feito',      cor: '#fbbf24', entra: 'Sync detecta arquivo de mídia gravado no card, pronto pra ativar', tag: 'Sem tag',
+  { nome: 'Feito',      cor: '#f9b64f', entra: 'Sync detecta arquivo de mídia gravado no card, pronto pra ativar', tag: 'Sem tag',
     sai: 'Automático pra Ativos, quando o anúncio publica e vira ACTIVE no Meta' },
   { nome: 'Ativos',     cor: '#fb923c', entra: 'meta_ad_id preenchido + ACTIVE no Meta', tag: 'Nenhuma (nunca recebe tag enquanto ativo)',
     sai: 'Só quando o anúncio para de rodar de verdade no Meta (pausa via processar-pausas). Nunca sai só por performance enquanto ainda está gastando.' },

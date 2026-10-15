@@ -74,9 +74,9 @@ function BarraProgressoSite({ pct, color='var(--fmn-gold)', h=3 }) {
 function Thumb({ src, titulo }) {
   const [err, setErr] = useS(false);
   if (!src || err) return (
-    <div style={{width:44,height:33,borderRadius:5,flexShrink:0,background:'rgba(251,191,36,.07)',
-      border:'1px solid rgba(251,191,36,.14)',display:'flex',alignItems:'center',justifyContent:'center',
-      fontSize:13,fontWeight:700,color:'rgba(251,191,36,.4)',fontFamily:'Roboto,sans-serif'}}>
+    <div style={{width:44,height:33,borderRadius:5,flexShrink:0,background:'rgba(249,182,79,.07)',
+      border:'1px solid rgba(249,182,79,.14)',display:'flex',alignItems:'center',justifyContent:'center',
+      fontSize:13,fontWeight:700,color:'rgba(249,182,79,.4)',fontFamily:'Roboto,sans-serif'}}>
       {(titulo||'?')[0].toUpperCase()}
     </div>
   );
@@ -237,8 +237,8 @@ function SiteScreen() {
               fontFamily:'Roboto,sans-serif'}}/>
           <button onClick={()=>load('custom',cFrom,cTo)}
             style={{padding:'4px 10px',borderRadius:5,cursor:'pointer',fontSize:11,
-              fontFamily:'Roboto,sans-serif',fontWeight:700,border:'1px solid rgba(251,191,36,.35)',
-              background:'rgba(251,191,36,.1)',color:'var(--fmn-gold)'}}>Buscar</button>
+              fontFamily:'Roboto,sans-serif',fontWeight:700,border:'1px solid rgba(249,182,79,.35)',
+              background:'rgba(249,182,79,.1)',color:'var(--fmn-gold)'}}>Buscar</button>
         </div>
       )}
       <button onClick={()=>load(periodo,cFrom,cTo)}
@@ -293,7 +293,7 @@ function SiteScreen() {
                       style={{display:'grid',gridTemplateColumns:'1fr 70px 120px',
                         gap:12,padding:'9px 8px',borderRadius:7,alignItems:'center',
                         background:i%2===0?'rgba(255,255,255,.02)':'transparent',transition:'background 100ms'}}
-                      onMouseEnter={e=>e.currentTarget.style.background='rgba(251,191,36,.05)'}
+                      onMouseEnter={e=>e.currentTarget.style.background='rgba(249,182,79,.05)'}
                       onMouseLeave={e=>e.currentTarget.style.background=i%2===0?'rgba(255,255,255,.02)':'transparent'}>
                       <div style={{minWidth:0}}>
                         <div style={{display:'flex',alignItems:'center',gap:7,marginBottom:5}}>
@@ -369,7 +369,7 @@ function SiteScreen() {
                         style={{display:'grid',gridTemplateColumns:'44px 1fr 64px 70px 110px 28px',
                           gap:10,padding:'8px 8px',borderRadius:7,alignItems:'center',
                           background:i%2===0?'rgba(255,255,255,.018)':'transparent',transition:'background 100ms'}}
-                        onMouseEnter={e=>e.currentTarget.style.background='rgba(251,191,36,.05)'}
+                        onMouseEnter={e=>e.currentTarget.style.background='rgba(249,182,79,.05)'}
                         onMouseLeave={e=>e.currentTarget.style.background=i%2===0?'rgba(255,255,255,.018)':'transparent'}>
                         <Thumb src={thumb} titulo={titulo}/>
                         <div style={{minWidth:0}}>
@@ -395,7 +395,7 @@ function SiteScreen() {
                             width:24,height:24,borderRadius:5,background:'rgba(255,255,255,.04)',
                             border:'1px solid rgba(255,255,255,.08)',color:'rgba(255,255,255,.3)',
                             textDecoration:'none',transition:'all 130ms'}}
-                          onMouseEnter={e=>{e.currentTarget.style.background='rgba(251,191,36,.12)';e.currentTarget.style.color='var(--fmn-gold)';}}
+                          onMouseEnter={e=>{e.currentTarget.style.background='rgba(249,182,79,.12)';e.currentTarget.style.color='var(--fmn-gold)';}}
                           onMouseLeave={e=>{e.currentTarget.style.background='rgba(255,255,255,.04)';e.currentTarget.style.color='rgba(255,255,255,.3)';}}>
                           <LucideIcon icon="external-link" size={11}/>
                         </a>
@@ -453,7 +453,7 @@ function SiteScreen() {
                           </span>
                         </span>
                       </div>
-                      <BarraProgressoSite pct={Math.round(count/maxRef*100)} color="rgba(251,191,36,.5)"/>
+                      <BarraProgressoSite pct={Math.round(count/maxRef*100)} color="rgba(249,182,79,.5)"/>
                     </div>
                   ))}
                 </div>
@@ -472,15 +472,15 @@ function SiteScreen() {
                   {sessions.map((evts,i)=>{
                     const first = evts[0];
                     return (
-                      <div key={i} style={{borderLeft:'2px solid rgba(251,191,36,.18)',paddingLeft:10}}>
+                      <div key={i} style={{borderLeft:'2px solid rgba(249,182,79,.18)',paddingLeft:10}}>
                         <div style={{display:'flex',alignItems:'center',gap:5,marginBottom:5}}>
                           <LucideIcon icon={first.device==='desktop'?'monitor':'smartphone'} size={11} color="rgba(255,255,255,.28)"/>
                           <span style={{fontSize:10.5,fontFamily:'Roboto,sans-serif',color:'rgba(255,255,255,.28)'}}>
                             {fmtRelative(first.viewed_at)}
                           </span>
                           {evts.length>1&&(
-                            <span style={{fontSize:10,fontFamily:'Roboto,sans-serif',color:'rgba(251,191,36,.5)',
-                              background:'rgba(251,191,36,.08)',borderRadius:4,padding:'1px 5px'}}>
+                            <span style={{fontSize:10,fontFamily:'Roboto,sans-serif',color:'rgba(249,182,79,.5)',
+                              background:'rgba(249,182,79,.08)',borderRadius:4,padding:'1px 5px'}}>
                               {evts.length} páginas
                             </span>
                           )}
@@ -498,7 +498,7 @@ function SiteScreen() {
                               marginBottom:j<evts.length-1?5:0}}>
                               {j>0&&<div style={{width:8,height:1,background:'rgba(255,255,255,.1)',flexShrink:0}}/>}
                               {isPage
-                                ? <LucideIcon icon={pageCfg?.icon||'globe'} size={12} color="rgba(251,191,36,.4)"/>
+                                ? <LucideIcon icon={pageCfg?.icon||'globe'} size={12} color="rgba(249,182,79,.4)"/>
                                 : thumb
                                   ? <img src={thumb} alt="" style={{width:20,height:15,objectFit:'cover',borderRadius:3,flexShrink:0}}/>
                                   : <LucideIcon icon="file-text" size={12} color="rgba(255,255,255,.2)"/>
