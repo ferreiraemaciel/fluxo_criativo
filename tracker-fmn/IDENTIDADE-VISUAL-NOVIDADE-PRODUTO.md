@@ -210,4 +210,4 @@ Combinado com o Felipe em 16/10/2026. As capas dos vídeos de tutorial do app (t
 
 **No app, a miniatura é automática.** O Blindagem monta a imagem pelo endereço `i.ytimg.com/vi/<id>/maxresdefault.jpg` (e `mqdefault` no admin). Trocou no YouTube, o app acompanha sozinho, com um pequeno atraso de cache. Não existe campo de capa no app para subir imagem.
 
-**Texto do tutorial por escrito.** Cada tutorial tem um passo a passo em `tracker-fmn/tutoriais-blindagem/`. Antes de escrever, abrir o código da tela (nome de aba, cartão e botão) para não descrever o que mudou.
+**Texto do tutorial por escrito.** Cada tutorial tem um passo a passo em `tracker-fmn/tutoriais-blindagem/`. Antes de escrever, abrir o código da tela (nome de aba, cartão e botão) para não descrever o que mudou. **Onde o texto aparece no app:** a aba Tutoriais mostra `public.perguntas_frequentes` (campo `resposta`, até 4.000 caracteres, texto simples com quebras de linha). O passo a passo vai NO FIM da `resposta` da pergunta que o vídeo responde (a que tem o mesmo `youtube_video_id`), não na `descricao` de `tutorials`, que só o admin vê. Atualizar as duas costuma valer a pena.
