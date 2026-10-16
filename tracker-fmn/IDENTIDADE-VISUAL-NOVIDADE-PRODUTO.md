@@ -107,6 +107,12 @@ Produto novo: copie a logo para `novidade-visual/marcas/<produto>/logo.png` e ca
 5. **Leia o relatório** que ele imprime (linhas do título, escala do hero, avisos) e **olhe a imagem**.
 6. **Escreva a legenda** (regras abaixo) e **lance no Tracker** (passos abaixo).
 
+**Versão em vídeo (opcional).** Acrescente `--video` ao comando do passo 4: o gerador anima a mesma
+arte e entrega um MP4 1080x1350, 30 quadros por segundo, em cerca de 9 segundos. A ordem é: o título
+entra primeiro (é o gancho), o bloco se monta em seguida (cada tipo de hero tem a sua coreografia) e o
+rodapé fecha. Precisa de `node` e `ffmpeg`; na primeira vez, `cd novidade-visual/motion && npm install`.
+O vídeo sai sem áudio. Para Reels (9:16) o quadro precisa ser refeito mais alto: ainda não existe.
+
 ---
 
 ## Regras de texto

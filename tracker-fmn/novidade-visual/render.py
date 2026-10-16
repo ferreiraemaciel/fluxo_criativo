@@ -423,7 +423,110 @@ document.fonts.ready.then(function () {
 """
 
 
-def montar(spec, marca):
+
+# Roteiro de movimento: só entra com --video. Cada animação é pausada e controlada por tempo (window.__ir),
+# para o capturar.js tirar um quadro por instante. Usa as propriedades individuais translate/scale/rotate,
+# que somam ao transform 3D da arte sem desfazê-lo.
+MOTION_JS = r"""
+(function () {
+  var anims = [], contadores = [];
+  var EASE = 'cubic-bezier(.2,.8,.2,1)', POP = 'cubic-bezier(.34,1.56,.64,1)';
+  function $(s, r) { return (r || document).querySelector(s); }
+  function $$(s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); }
+  function A(el, kf, t0, dur, ease, opt) {
+    if (!el) return null;
+    var o = Object.assign({ duration: dur * 1000, delay: t0 * 1000, fill: 'both', easing: ease || EASE }, opt || {});
+    var a = el.animate(kf, o); a.pause(); anims.push(a); return a;
+  }
+  function entra(el, t0, dx, dy, dur) { return A(el, [{ opacity: 0, translate: dx + 'px ' + dy + 'px' }, { opacity: 1, translate: '0 0' }], t0, dur || .7); }
+
+  window.__ir = function (t) {
+    anims.forEach(function (a) { a.currentTime = t * 1000; });
+    contadores.forEach(function (c) {
+      var p = Math.min(1, Math.max(0, (t - c.t0) / c.dur)); p = 1 - Math.pow(1 - p, 3);
+      c.el.textContent = Math.round(c.de + (c.ate - c.de) * p) + c.sufixo;
+    });
+  };
+
+  window.__montar = function () {
+    var hero = $('.hero'), t = 1.5;
+    // topo
+    A($('.marca img'), [{ opacity: 0, scale: .5, translate: '-40px 0' }, { opacity: 1, scale: 1, translate: '0 0' }], 0, .8, POP);
+    entra($('.marca span'), .25, -30, 0, .6);
+    A($('.selo'), [{ opacity: 0, scale: .6, translate: '60px 0' }, { opacity: 1, scale: 1, translate: '0 0' }], .35, .7, POP);
+    // o título é o gancho: entra primeiro, o bloco se monta depois
+    A($('.grande'), [{ clipPath: 'inset(0 100% 0 0)', translate: '0 26px', opacity: 0 }, { clipPath: 'inset(0 0% 0 0)', translate: '0 0', opacity: 1 }], .5, .8);
+    entra($('.apoio'), 1.1, 0, 22, .6);
+    // o bloco respira durante todo o vídeo
+    A(hero, [{ translate: '0 0' }, { translate: '0 -9px' }, { translate: '0 0' }], 0, 5, 'ease-in-out', { iterations: Infinity });
+
+    if (hero.classList.contains('corrente')) {
+      var cards = $$('.hero > .cartao'), elos = $$('.hero > .elo');
+      cards.forEach(function (c, i) {
+        var dest = c.classList.contains('destaque');
+        A(c, dest
+          ? [{ opacity: 0, translate: '0 30px -260px', scale: .9 }, { opacity: 1, translate: '0 0 0', scale: 1 }]
+          : [{ opacity: 0, translate: '-140px 30px', scale: .94 }, { opacity: 1, translate: '0 0', scale: 1 }], t, dest ? .9 : .8, dest ? POP : EASE);
+        A($('.icone', c), [{ scale: .3, opacity: 0 }, { scale: 1, opacity: 1 }], t + .3, .5, POP);
+        entra($('.chip', c), t + .5, 20, 0, .5);
+        A($('.etiqueta', c), [{ opacity: 0, scale: 2.4, rotate: '-14deg' }, { opacity: 1, scale: 1, rotate: '0deg' }], t + .7, .45, POP);
+        A($('.tags em', c), [{ opacity: 0, scale: .4 }, { opacity: 1, scale: 1.12 }, { opacity: 1, scale: 1 }], t + .9, .6);
+        var cod = $$('.codigo span', c);
+        cod.forEach(function (s, k) { A(s, [{ opacity: 0, scale: 1.7, translate: '0 -14px' }, { opacity: 1, scale: 1, translate: '0 0' }], t + .9 + k * .14, .3, POP); });
+        t += dest ? .9 + cod.length * .14 + .35 : 1.0;
+        if (elos[i]) {
+          A(elos[i], [{ clipPath: 'inset(0 0 100% 0)' }, { clipPath: 'inset(0 0 0% 0)' }], t, .5, EASE, { pseudoElement: '::before' });
+          A($('svg', elos[i]), [{ scale: 0, opacity: 0 }, { scale: 1, opacity: 1 }], t + .15, .45, POP);
+          t += .45;
+        }
+      });
+    } else if (hero.classList.contains('tela')) {
+      var jan = $('.janela');
+      A(jan, [{ opacity: 0, translate: '0 80px' }, { opacity: 1, translate: '0 0' }], t, .8);
+      $$('.linha').forEach(function (l, i) {
+        var d = l.classList.contains('destaque'), t0 = t + .5 + i * .42;
+        A(l, [{ opacity: 0, translate: '-60px 0' }, { opacity: 1, translate: '0 0' }], t0, .6);
+        A($('.icone', l), [{ scale: .3, opacity: 0 }, { scale: 1, opacity: 1 }], t0 + .25, .45, POP);
+        A($('.etiqueta', l), [{ opacity: 0, scale: 2.4, rotate: '-14deg' }, { opacity: 1, scale: 1, rotate: '0deg' }], t0 + .5, .45, POP);
+        A($('.tog i', l), [{ translate: '-40px 0' }, { translate: '0 0' }], t0 + .7, .4, POP);
+        A($('.qr', l), [{ opacity: 0, scale: .3, rotate: '-20deg' }, { opacity: 1, scale: 1, rotate: '0deg' }], t0 + .4, .6, POP);
+        A($('.selo-verde', l), [{ opacity: 0, scale: .4 }, { opacity: 1, scale: 1.1 }, { opacity: 1, scale: 1 }], t0 + .8, .6);
+        A($('.chip', l), [{ opacity: 0 }, { opacity: 1 }], t0 + .4, .5);
+      });
+      t += .5 + $$('.linha').length * .42 + .6;
+    } else if (hero.classList.contains('lista')) {
+      $$('.cartao.mini').forEach(function (c, i) {
+        A(c, [{ opacity: 0, translate: '0 60px', scale: .92 }, { opacity: 1, translate: '0 0', scale: 1 }], t + i * .16, .6, POP);
+        A($('.icone', c), [{ scale: .3, opacity: 0 }, { scale: 1, opacity: 1 }], t + i * .16 + .25, .4, POP);
+      });
+      t += $$('.cartao.mini').length * .16 + .7;
+    } else if (hero.classList.contains('numero')) {
+      var card = $('.cartao.numero');
+      A(card, [{ opacity: 0, translate: '0 40px -240px', scale: .92 }, { opacity: 1, translate: '0 0 0', scale: 1 }], t, .9, POP);
+      var gn = $('.grande-num'), txt = gn.textContent, m = txt.match(/^(\D*)(\d+)(\D*)$/);
+      if (m) contadores.push({ el: gn, de: 0, ate: +m[2], sufixo: m[3], t0: t + .5, dur: 1.4 });
+      entra($('.rot', card), t + .3, 0, 20, .6); entra($('.sub-num', card), t + 1.3, 0, 20, .6);
+      $$('.passo').forEach(function (p, i) { A(p, [{ opacity: 0, scale: .5, translate: '0 20px' }, { opacity: 1, scale: 1, translate: '0 0' }], t + 1.7 + i * .3, .45, POP); });
+      t += 1.7 + $$('.passo').length * .3 + .4;
+    } else if (hero.classList.contains('comparativo')) {
+      var col = $$('.cartao.col'), vai = $('.vai');
+      A(col[0], [{ opacity: 0, translate: '-140px 20px' }, { opacity: 1, translate: '0 0' }], t, .8);
+      A(vai, [{ scale: 0, opacity: 0 }, { scale: 1, opacity: 1 }], t + 1.0, .5, POP);
+      A(col[1], [{ opacity: 0, translate: '140px 20px', scale: .94 }, { opacity: 1, translate: '0 0', scale: 1 }], t + 1.4, .9, POP);
+      A($('.etiqueta', col[1]), [{ opacity: 0, scale: 2.4, rotate: '-14deg' }, { opacity: 1, scale: 1, rotate: '0deg' }], t + 2.1, .45, POP);
+      $$('.previa').forEach(function (p, i) { A(p, [{ opacity: 0, translate: '0 30px' }, { opacity: 1, translate: '0 0' }], t + .5 + i * 1.4, .7); });
+      t += 2.5;
+    }
+    // rodapé fecha a peça
+    entra($('.rodape'), t, 0, 30, .6);
+    A($('.rodape .fim svg'), [{ translate: '0 0' }, { translate: '10px 0' }, { translate: '0 0' }], t + .7, 1.2, 'ease-in-out', { iterations: 3 });
+    return t + 2.2;
+  };
+})();
+"""
+
+
+def montar(spec, marca, movimento=False):
     t = dict(marca)
     t["espessura_card"] = espessura(rampa(*marca["rampa"], 10))
     t["espessura_ouro"] = espessura(rampa("#b57a1c", "#2f1b06", 12))
@@ -446,7 +549,8 @@ def montar(spec, marca):
   <div class="heroarea"><div class="hero %(tipo)s">%(hero)s</div></div>
   <div class="bloco"><div class="grande">%(titulo)s</div><div class="apoio">%(apoio)s</div></div>
   <div class="rodape"><div class="fim">%(rodape)s %(seta)s</div></div>
-</div><script>%(js)s</script></body></html>""" % dict(
+</div><script>%(js)s</script>%(movimento)s</body></html>""" % dict(
+        movimento=("<script>%s</script>" % MOTION_JS) if movimento else "",
         titulo_plano=esc(sem_marcas(spec["titulo"])), css=css, logo="logo.png", nome=esc(marca["nome"]),
         selo=esc(spec.get("selo", "Novidade")), tipo=tipo, hero=HEROS[tipo](hero),
         titulo=fmt_titulo(spec["titulo"]), apoio=fmt_apoio(spec["apoio"]), rodape=esc(rodape), seta=ico("seta"), js=JS)
@@ -462,6 +566,8 @@ def main():
     ap = argparse.ArgumentParser(description="Gera a arte de Novidade de Produto (1080x1350).")
     ap.add_argument("spec", help="arquivo .json com a especificação")
     ap.add_argument("--saida", help="pasta de saída (padrão: saida/ ao lado do spec)")
+    ap.add_argument("--video", action="store_true", help="gera também o vídeo MP4 animado (precisa do node e do ffmpeg)")
+    ap.add_argument("--fps", type=int, default=30, help="quadros por segundo do vídeo (padrão 30)")
     a = ap.parse_args()
 
     spec_path = Path(a.spec).resolve()
@@ -486,6 +592,14 @@ def main():
     chrome(["--screenshot=%s" % png_path, "file://%s" % html_path])
 
     print("PNG:  %s\nHTML: %s" % (png_path, html_path))
+    if a.video:
+        mov_html = saida / (nome + "-movimento.html")
+        mov_html.write_text(montar(spec, marca, movimento=True), encoding="utf-8")
+        node = AQUI / "motion" / "capturar.js"
+        print("Gerando o vídeo (pode levar alguns minutos)...")
+        r = subprocess.run(["node", str(node), str(mov_html), str(saida), nome + "-movimento", str(a.fps)], text=True)
+        if r.returncode != 0:
+            print("AVISO: o vídeo não saiu, veja o erro acima.")
     if not rel:
         print("AVISO: não consegui ler o relatório de conferência. Olhe a imagem com cuidado.")
         return
