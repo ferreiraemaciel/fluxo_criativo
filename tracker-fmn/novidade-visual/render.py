@@ -634,7 +634,7 @@ html.capa .glow.g1 { right:60px; top:60px; }
 .lc-corpo { position:relative; padding:0 36px 34px; }
 .lc-avatar { position:absolute; left:36px; top:-62px; width:132px; height:132px; border-radius:50%; background-repeat:no-repeat; z-index:3;
   border:5px solid var(--ouro); box-shadow:0 14px 34px rgba(0,0,0,.6), 0 0 40px rgba(249,182,79,.4); }
-.lc-avatar .etiqueta { top:auto; bottom:-14px; right:auto; left:50%; transform:translateX(-50%); white-space:nowrap; font-size:15px; padding:5px 12px; }
+.lc-avatar .etiqueta { color:#1a1204 !important; text-shadow:none; top:auto; bottom:-14px; right:auto; left:50%; transform:translateX(-50%); white-space:nowrap; font-size:15px; padding:5px 12px; }
 .lc-nome { padding:90px 0 0 0; margin-left:0; }
 .lc-nome b { display:block; font-size:36px; font-weight:800; letter-spacing:-.02em; }
 .lc-nome small { display:block; margin-top:4px; font-size:22px; color:var(--suave); font-weight:500; }
