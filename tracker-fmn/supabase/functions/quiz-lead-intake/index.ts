@@ -45,6 +45,15 @@ const ORIGENS_PERMITIDAS = [
   "quiz-blindagem.pages.dev",
   // pré-checkout da landing do Blindagem (modal com nome, e-mail e telefone)
   "contratosblindagem.fotografiaeomeunegocio.com.br",
+  // Domínio principal do site, onde moram as páginas próprias (ex: a captura da
+  // Black em /black-2026). Como a checagem aceita o domínio e os subdomínios,
+  // esta linha cobre www e qualquer subdomínio nosso de uma vez.
+  // Sem ela, a página de inscrição da Black ficou de 13/10 a 16/10 no ar
+  // recusando todo cadastro com 403 "origem não autorizada", e ninguém viu,
+  // porque a página aparentava funcionar e o erro só saía depois do envio.
+  "fotografiaeomeunegocio.com.br",
+  // pré-visualização do site antes de publicar
+  "fmn-site.pages.dev",
 ];
 
 // De onde o lead veio dentro do mesmo funil. O quiz manda "novo"; a landing

@@ -3463,3 +3463,53 @@ O tema passa perto de imposto, e o Felipe é advogado com nome exposto. **Toda a
 5. **Entrar na tabela de bônus da Parte 26.2** como bônus 7, depois de definido quem leva
 
 > Busca feita em 15/10/2026 não encontrou material público indexado da Propulse. A autoridade do card vai ter que vir do que elas informarem.
+
+
+---
+
+# PARTE 28. A ANTECIPAÇÃO, FECHADA PELOS SLIDES E PELOS VÍDEOS (16/10/2026)
+
+> Fecha a confusão de CTA que custou duas voltas em 15 e 16/10. Daqui em diante é esta a régua.
+
+## 28.1 O que os slides do Samuel definem
+
+**Pré-requisitos:** 1 a 3 vídeos de teaser, com apelo e um certo mistério proposital ("vai ter Black Friday..."), mais os públicos personalizados já criados no gerenciador.
+
+**Estrutura:** objetivo de campanha **ENGAJAMENTO**, estrutura **1-3-3**, orçamento **ABO**.
+
+| Conjunto | Público | Anúncios |
+|---|---|---|
+| 1 | Envolvimento 30D + viu 75% dos vídeos 30D + enviou direct 30D | 1, 2, 3 |
+| 2 | Visitante da página de vendas + checkout 90D + leads de picos passados | 1, 2, 3 |
+| 3 | Envolvimento 180D + viu 75% dos vídeos 180D + enviou direct 180D | 1, 2, 3 |
+
+## 28.2 Os 5 vídeos de exemplo do slide, com o fim de cada um conferido
+
+Baixados e olhados quadro a quadro em 16/10, porque a dúvida era exatamente o que aparece no fecho.
+
+| Vídeo | Fecho |
+|---|---|
+| Teaser da Big Black Friday, BF24 | **CLIQUE NO LINK E ENTRE NO GRUPO DO WHATSAPP**, cartela de tela cheia |
+| Leandro sonhando, BF24 | **CLIQUE NO LINK E INSCREVA-SE**, lettering ciano |
+| A primeira Black Friday infinita, BF24 | **CLIQUE NO LINK E INSCREVA-SE** |
+| Ultra Black Infinita 01, BF25 | só a data, sem CTA |
+| Ultra Black Infinita 02, BF25 | AGUARDE, sem CTA |
+
+**Placar: 3 de 5 têm CTA de link.** Os três são de 2024, os dois sem CTA são de 2025.
+
+## 28.3 A régua que fica
+
+**Campanha de Engajamento não impede CTA de link.** São camadas separadas, e foi aí que eu embolei: o objetivo diz a quem o Meta entrega, a CTA diz o que a pessoa faz quando quer. O playbook confirma nos dois lugares, no bloco 6 do roteiro do trailer ("CTA para página e grupo") e no movimento 11 do manifesto do Nobre ("Comente EU QUERO e se inscreva agora").
+
+**A CTA das 7 peças é comentário mais link**, no formato do Nobre. O comentário dispara o ManyChat, que entrega o link em DM; quem já está decidido clica em Saiba Mais.
+
+**Palavra-chave: ENVELOPE**, não BLACK, porque em novembro "comenta BLACK" vai estar em todo lugar.
+
+## 28.4 Restrição do ManyChat que muda a publicação
+
+**O ManyChat não enxerga dark post.** O gatilho de comentário só lê post que está no feed. Anúncio criado direto no Gerenciador nunca aparece no perfil, então a automação não dispara.
+
+**Consequência operacional: a peça vai ao feed primeiro, e o anúncio usa a publicação existente.** Ganho de brinde: curtida e comentário se acumulam num post só, virando prova social, em vez de se espalharem por três conjuntos.
+
+O ADS 401 já está resolvido assim, porque o manifesto foi publicado como ORG 309 em 15/10.
+
