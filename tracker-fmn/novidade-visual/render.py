@@ -249,7 +249,7 @@ def hero_demo(d):
     pessoa2 = d.get("estudio", "Estúdio Ipê Fotografia")
     arq1 = d.get("arquivo_ok", "contrato-maria.pdf")
     arq2 = d.get("arquivo_alterado", "contrato-maria-editado.pdf")
-    linhas = "".join('<div class="ln %s"></div>' % c for c in "m s m m s m s m m s m s m s".split())
+    linhas = "".join('<div class="ln %s"></div>' % c for c in "m s m m s m s m m s m s m s m m s m s m m s".split())
     ok = ico("check")
     def elo(n, titulo, ator, carimbo=""):
         return ('<div class="elo4 b-e%d"><span class="n">%d</span><b>%s</b><span class="at">%s</span>%s<span class="ck">%s</span></div>'
@@ -534,6 +534,7 @@ body { font-family:"Inter","Helvetica Neue",Arial,sans-serif; color:var(--branco
 .papel { position:absolute; left:50%; top:22px; width:440px; height:500px; margin-left:-220px; border-radius:10px; background:linear-gradient(180deg,#fbf8f1,#efe9db); box-shadow:0 24px 60px rgba(0,0,0,.55); color:#2a2a32; padding:26px 28px; }
 .papel .ph { font-size:15px; font-weight:800; letter-spacing:.08em; text-align:center; color:#33333c; margin-bottom:12px; }
 .papel .ln { height:8px; border-radius:4px; background:rgba(60,60,70,.16); margin-top:11px; }
+.papel .ln:nth-child(n+16) { display:none; }
 .papel .ln.s { width:68%; } .papel .ln.m { width:92%; }
 .papel .assin { position:absolute; left:28px; bottom:52px; width:160px; border-top:1.5px solid rgba(60,60,70,.45); padding-top:6px; font-size:13px; color:#555; }
 .papel .qrbox { position:absolute; right:26px; bottom:56px; width:118px; height:118px; }
@@ -597,14 +598,27 @@ body { font-family:"Inter","Helvetica Neue",Arial,sans-serif; color:var(--branco
 .vposter .etiqueta { top:-20px; right:auto; left:50%; transform:translate(-50%,0) translateZ(40px); font-size:19px; padding:8px 20px; }
 
 /* ===== formato reels 1080x1920 (vídeo vertical): folga em cima e embaixo para a interface do Reels ===== */
-@property --rx { syntax:"<angle>"; inherits:false; initial-value:7deg; }
-@property --ry { syntax:"<angle>"; inherits:false; initial-value:13deg; }
+@property --rx { syntax:"<angle>"; inherits:false; initial-value:6deg; }
+@property --ry { syntax:"<angle>"; inherits:false; initial-value:10deg; }
 html.reels, html.reels body { width:1080px; height:1920px; }
 html.reels .arte { width:1080px; height:1920px; padding:200px 72px 310px; }
 html.reels .heroarea { padding:0 0 30px; }
 html.reels .hero { max-width:888px; transform:perspective(1900px) scale(1.05) rotateX(var(--rx)) rotateY(var(--ry)) rotateZ(-.8deg); transform-origin:50% 50%; }
 html.reels .glow.g1 { top:380px; } html.reels .glow.g2 { top:1100px; }
 html.reels .rodape { margin-top:20px; }
+
+.bloco.pilha { display:grid; }
+.bloco.pilha .tb { grid-area:1/1; }
+/* demo no formato reels: janela mais alta, cenas centradas na vertical, respiro dos lados */
+html.reels .arte { padding:190px 72px 240px; }
+html.reels .cartao.dtela { height:800px; min-height:800px; }
+html.reels .papel { height:660px; top:42px; }
+html.reels .papel .ln:nth-child(n+16) { display:block; }
+html.reels .mira, html.reels .ping { top:507px; }
+html.reels .cenaB, html.reels .cenaC { justify-content:center; padding-top:20px; padding-bottom:20px; gap:20px; }
+html.reels .hero { transform:perspective(1900px) scale(.94) rotateX(var(--rx)) rotateY(var(--ry)) rotateZ(-.6deg); }
+html.reels .heroarea { padding:0 0 10px; }
+
 
 /* ===== carrossel (páginas de contrato lado a lado, cortadas nas pontas) ===== */
 .hero.carrossel { max-width:none; width:1080px; margin:0 -96px; transform:perspective(2600px) rotateY(7deg) rotateZ(-.6deg) scale(1.02) !important; }
@@ -676,9 +690,11 @@ document.fonts.ready.then(function () {
   var g = document.querySelector('.grande'), a = document.querySelector('.apoio');
   function linhas(el) { var lh = parseFloat(getComputedStyle(el).lineHeight); return Math.round(el.getBoundingClientRect().height / lh); }
   var dc = document.documentElement.classList, CAPA = dc.contains('capa'), P = dc.contains('reels') || CAPA, MAXL = CAPA ? 4 : (P ? 3 : 2);
-  var fs = CAPA ? 118 : (P ? 104 : 98); g.style.fontSize = fs + 'px';
-  while (linhas(g) > MAXL && fs > (CAPA ? 84 : (P ? 70 : 74))) { fs -= 4; g.style.fontSize = fs + 'px'; }
-  rel.tituloLinhas = linhas(g); rel.tituloFonte = fs; rel.apoioLinhas = linhas(a);
+  var gs = [].slice.call(document.querySelectorAll('.grande')), as = [].slice.call(document.querySelectorAll('.apoio'));
+  function maxl(l) { return Math.max.apply(null, l.map(linhas)); }
+  var fs = CAPA ? 118 : (P ? 104 : 98); gs.forEach(function (x) { x.style.fontSize = fs + 'px'; });
+  while (maxl(gs) > MAXL && fs > (CAPA ? 84 : (P ? 70 : 74))) { fs -= 4; gs.forEach(function (x) { x.style.fontSize = fs + 'px'; }); }
+  rel.tituloLinhas = maxl(gs); rel.tituloFonte = fs; rel.apoioLinhas = maxl(as);
   var tr = document.querySelector('.trilho'), fo = tr && tr.querySelector('.foco');
   if (fo) { tr.style.transform = 'translateX(' + (tr.parentElement.clientWidth / 2 - (fo.offsetLeft + fo.offsetWidth / 2)) + 'px)'; }
   var area = document.querySelector('.heroarea'), h = document.querySelector('.hero');
@@ -854,14 +870,19 @@ DEMO_JS = r"""
     // profundidade barata: o brilho passeia e o bloco respira
     K($('.glow.g1'), [[0, { translate: '0 0' }], [8, { translate: '-60px 50px' }], [16, { translate: '0 0' }]]);
     K($('.glow.g2'), [[0, { translate: '0 0' }], [8, { translate: '70px -40px' }], [16, { translate: '0 0' }]]);
+    // título e apoio trocam com a cena: cada um entra subindo e sai subindo, no tempo da cena
+    var tbs = [].slice.call(document.querySelectorAll('.tb')), JAN = [[0, 3.05], [3.05, 8.4], [8.4, 12.3], [12.3, 15.7]];
+    tbs.forEach(function (el, i) {
+      var j = JAN[i] || [0, 0], dn = S(0, '0 18px'), up = S(0, '0 -18px');
+      if (i === 0) { K(el, [[0, S(1)], [j[1] - .15, S(1)], [j[1] + .25, up], [15.5, dn], [15.9, S(1)]]); }
+      else { K(el, [[0, dn], [j[0] + .1, dn], [j[0] + .55, S(1)], [j[1] - .15, S(1)], [j[1] + .25, up], [16, up]]); }
+    });
     if (document.documentElement.classList.contains('reels')) {
-      var c0 = { '--ry': '13deg', '--rx': '7deg', scale: 1, translate: '0 0' };
+      var c0 = { '--ry': '10deg', '--rx': '6deg', scale: 1, translate: '0 0' };
       K($('.hero'), [[0, c0],
-        [2.6, { '--ry': '7deg', '--rx': '9deg', scale: 1.07, translate: '-12px 8px' }],
-        [5.5, { '--ry': '16deg', '--rx': '5deg', scale: 1.0, translate: '0 -16px' }],
-        [8.4, { '--ry': '9deg', '--rx': '10deg', scale: 1.06, translate: '-20px 10px' }],
-        [11.0, { '--ry': '17deg', '--rx': '6deg', scale: 1.09, translate: '0 -8px' }],
-        [13.6, { '--ry': '8deg', '--rx': '9deg', scale: 1.05, translate: '-10px 6px' }],
+        [4, { '--ry': '8deg', '--rx': '5deg', scale: 1.02, translate: '-4px 3px' }],
+        [8, { '--ry': '11.5deg', '--rx': '6.5deg', scale: 1, translate: '0 -5px' }],
+        [12, { '--ry': '8.5deg', '--rx': '5deg', scale: 1.025, translate: '-4px 3px' }],
         [16, c0]]);
     } else {
       K($('.hero'), [[0, { scale: .985, translate: '0 0' }], [8, { scale: 1.015, translate: '0 -8px' }], [16, { scale: .985, translate: '0 0' }]]);
@@ -899,7 +920,7 @@ def montar(spec, marca, movimento=False):
 <body><div class="arte">%(glows)s
   <div class="topo"><div class="marca"><img src="%(logo)s" alt="%(nome)s"><span>%(nome)s</span></div><div class="selo"><i></i>%(selo)s</div></div>
   <div class="heroarea"><div class="hero %(tipo)s">%(hero)s</div></div>
-  <div class="bloco"><div class="grande">%(titulo)s</div><div class="apoio">%(apoio)s</div></div>
+  %(bloco)s
   <div class="rodape"><div class="fim">%(rodape)s %(seta)s</div></div>
 </div><script>%(js)s</script>%(movimento)s</body></html>""" % dict(
         glows='<div class="glow g1"></div><div class="glow g2"></div>' if tipo == "demo" else "",
@@ -907,7 +928,8 @@ def montar(spec, marca, movimento=False):
                    if tipo == "demo" else (("<script>%s</script>" % MOTION_JS) if movimento else "")),
         classe_html=spec.get("formato") if spec.get("formato") in ("reels", "capa") else "", titulo_plano=esc(sem_marcas(spec["titulo"])), css=css, logo="logo.png", nome=esc(marca["nome"]),
         selo=esc(spec.get("selo", "Novidade")), tipo=tipo, hero=HEROS[tipo](hero),
-        titulo=fmt_titulo(spec["titulo"]), apoio=fmt_apoio(spec["apoio"]), rodape=esc(rodape), seta=ico("seta"), js=JS)
+        bloco=('<div class="bloco pilha">%s</div>' % "".join('<div class="tb"><div class="grande">%s</div><div class="apoio">%s</div></div>' % (fmt_titulo(x["titulo"]), fmt_apoio(x["apoio"])) for x in hero["titulos"]))
+              if tipo == "demo" and hero.get("titulos") else '<div class="bloco"><div class="grande">%s</div><div class="apoio">%s</div></div>' % (fmt_titulo(spec["titulo"]), fmt_apoio(spec["apoio"])), rodape=esc(rodape), seta=ico("seta"), js=JS)
 
 
 TAMANHO = {"w": 1080, "h": 1350}

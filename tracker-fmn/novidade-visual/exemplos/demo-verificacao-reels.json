@@ -8,7 +8,25 @@
   "hero": {
     "tipo": "demo",
     "cena": "verificacao",
-    "quadro": 14.0
+    "quadro": 14.0,
+    "titulos": [
+      {
+        "titulo": "{ouro:Aponte a câmera} para o contrato",
+        "apoio": "**O QR Code leva direto à página de conferência.** Sem cadastro, sem senha."
+      },
+      {
+        "titulo": "Veja {ouro:cada etapa} do registro",
+        "apoio": "**Quem criou, quem confirmou o e-mail e quem assinou,** na ordem em que aconteceu."
+      },
+      {
+        "titulo": "Arraste o {ouro:PDF} que você recebeu",
+        "apoio": "**A conferência acontece no seu aparelho,** em segundos."
+      },
+      {
+        "titulo": "Mudou uma vírgula, {ouro:a página acusa}",
+        "apoio": "**Arquivo diferente do registrado.** Não confie no conteúdo dele."
+      }
+    ]
   },
   "formato": "reels"
 }
