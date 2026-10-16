@@ -1,0 +1,37 @@
+{
+  "nome": "demo-contrato-do-inicio-ao-fim",
+  "produto": "blindagem",
+  "textura": "camurca",
+  "formato": "reels",
+  "selo": "Como funciona",
+  "titulo": "Contrato do início ao fim",
+  "apoio": "**Do modelo à assinatura.**",
+  "rodape": "Conheça o Blindagem",
+  "hero": {
+    "tipo": "demo",
+    "cena": "contrato",
+    "quadro": 8.0,
+    "titulos": [
+      {
+        "titulo": "Escolha o {ouro:modelo} do seu trabalho",
+        "apoio": "**Mais de 35 modelos prontos,** do casamento ao ensaio de estúdio."
+      },
+      {
+        "titulo": "Personalize em {ouro:poucos campos}",
+        "apoio": "**Os entregáveis já vêm do seu padrão.** Você ajusta só o que muda."
+      },
+      {
+        "titulo": "Salve e {ouro:copie o link}",
+        "apoio": "**O cliente recebe um link só dele** para preencher os dados e assinar."
+      },
+      {
+        "titulo": "O cliente {ouro:assina} pelo celular",
+        "apoio": "**Preenche, confere e assina** de onde estiver."
+      },
+      {
+        "titulo": "Pronto, {ouro:contrato assinado}",
+        "apoio": "**Fica registrado com dia e hora,** e o PDF pode ser conferido quando quiser."
+      }
+    ]
+  }
+}

@@ -242,6 +242,8 @@ def hero_comparativo(d):
 def hero_demo(d):
     """Demonstração em movimento de uma função do produto, dentro de uma janela de navegador.
     Cena disponível: "verificacao" (conferência de autenticidade). Os dados são de exemplo."""
+    if d.get("cena") == "contrato":
+        return hero_demo_contrato(d)
     if d.get("cena", "verificacao") != "verificacao":
         sys.exit("Cena de demo desconhecida: %s" % d.get("cena"))
     cod = d.get("codigo", "BLD-7K2M-9QXD")
@@ -290,6 +292,53 @@ def hero_demo(d):
             e2=elo(2, "E-mail confirmado por código", "Contratante 1"),
             e3=elo(3, "Assinatura eletrônica", "Contratante 1", "2 carimbos de tempo"),
             e4=elo(4, "Assinatura eletrônica", "Fotógrafo", "2 carimbos de tempo"))
+
+
+def hero_demo_contrato(d):
+    """Demo do fluxo inteiro: escolher o modelo, personalizar, salvar e copiar o link, o cliente assina, contrato assinado.
+    Textos e rótulos são os do app. Dados de exemplo (fictícios)."""
+    ok = ico("check")
+    modelos = [("Casamento", "Fotografia e filmagem", "pessoas"), ("Newborn", "Fotografia", "presente"), ("Gestante", "Estúdio ou externo", "estrela"),
+               ("Formatura", "Fotografia e filmagem", "documento"), ("Ensaio", "Estúdio ou externo", "camera"), ("Quinze Anos", "Fotografia e filmagem", "presente")]
+    cards = "".join('<div class="mod%s"><div class="icone peq">%s</div><div class="texto"><b>%s</b><small>%s</small></div>%s</div>' % (
+        " foco" if i == 0 else "", ico(ic), esc(n), esc(sub), '<span class="sel">%s</span>' % ok if i == 0 else "")
+        for i, (n, sub, ic) in enumerate(modelos))
+    campos = [("Nome do contrato", d.get("nome_contrato", "Casamento Rafael e Thiago")), ("Contratante 1", d.get("contratante", "Rafael Moraes Tavares")),
+              ("Data da celebração", d.get("data_evento", "07/05/2027")), ("Local", d.get("local", "Jardim Botânico, Salvador - BA")),
+              ("Entregáveis", d.get("entregaveis", "Galeria digital com 200 fotos tratadas")), ("Pagamento", d.get("pagamento", "A prazo, Pix, 3 parcelas"))]
+    linhas = "".join('<div class="cp"><label>%s</label><div class="val"><span>%s</span></div>%s</div>' % (
+        esc(r), esc(v), '<em class="padrao">do seu padrão</em>' if r == "Entregáveis" else "") for r, v in campos)
+    url = d.get("link", "blindagem.fotografiaeomeunegocio.com.br/c/Xk3m9")
+    cod = d.get("codigo", "BLD-7K2M-9QXD")
+    return (
+        '<div class="cartao dtela"><div class="dbarra"><i></i><i></i><i></i><span class="url">blindagem.fotografiaeomeunegocio.com.br</span></div>'
+        '<div class="dclip">'
+        # 1 modelo
+        '<div class="cena k1"><div class="sec k1t">%(busca)s Novo contrato</div><div class="fakebusca k1b">Buscar tipo de contrato...</div>'
+        '<div class="mods">%(cards)s</div></div>'
+        # 2 personalizar
+        '<div class="cena k2"><div class="sec k2t"><span class="chipm">Casamento</span> Personalize os dados</div>%(linhas)s'
+        '<div class="botao k2b">Salvar contrato</div></div>'
+        # 3 link
+        '<div class="cena k3"><div class="toast k3a">%(ok)s<span>Contrato criado. Envie o link para o cliente assinar.</span></div>'
+        '<div class="lcard k3b"><div class="sec">%(elo)s Link de coleta</div><div class="status">Aguardando assinatura</div>'
+        '<div class="urlbox"><span>%(url)s</span></div><div class="botao copiar"><span class="b1">%(cop)s Copiar link</span><span class="b2">%(ok)s Link copiado</span></div></div></div>'
+        # 4 cliente no celular
+        '<div class="cena k4"><div class="fone"><div class="entalhe"></div>'
+        '<div class="tela t1"><h5>Preencha seus dados</h5><div class="fc"><label>Nome</label><div>Rafael Moraes Tavares</div></div>'
+        '<div class="fc"><label>CPF</label><div>104.204.304-04</div></div><div class="fc"><label>E-mail</label><div>rafael@exemplo.com.br</div></div>'
+        '<div class="fbtn">Confirmar informações</div></div>'
+        '<div class="tela t2"><h5>Leia o contrato e assine</h5><div class="mini"><i></i><i class="s"></i><i></i><i></i><i class="s"></i><i></i></div>'
+        '<div class="assin2"><svg viewBox="0 0 300 80"><path class="traco" d="M10 55 C 40 5, 60 75, 85 38 S 130 12, 150 50 S 200 70, 230 25 S 270 40, 290 30"/></svg><span>Assinatura</span></div>'
+        '<div class="fbtn b2">Assinar contrato</div></div></div></div>'
+        # 5 pronto
+        '<div class="cena k5"><div class="grande-ok"><div class="anel"></div>%(escudo)s</div>'
+        '<div class="rcard verde k5a"><div class="ic">%(ok)s</div><div><b>Contrato assinado por todas as partes</b><small>O registro guarda cada etapa, com dia e hora.</small></div></div>'
+        '<div class="quem k5b"><span>Rafael Moraes Tavares</span><em>20/10/2026 às 14:32</em></div>'
+        '<div class="quem k5c"><span>Marina Costa Fotografia</span><em>20/10/2026 às 14:40</em></div>'
+        '<div class="codigo2 k5d">%(cod)s</div></div>'
+        '</div></div>') % dict(busca=ico("busca"), cards=cards, linhas=linhas, ok=ok, elo=ico("elo"), url=esc(url), cop=ico("documento"),
+                               escudo=ico("escudo"), cod=esc(cod))
 
 
 def _copia_img(caminho):
@@ -670,6 +719,60 @@ html.capa .glow.g1 { right:60px; top:60px; }
 .lc-botao { margin-top:20px; text-align:center; font-weight:800; font-size:26px; color:#1a1204; padding:18px; border-radius:16px;
   background:linear-gradient(135deg,#ffd48a,var(--ouro) 60%,var(--ouro-escuro)); box-shadow:0 8px 0 #8f5d16, 0 16px 34px rgba(249,182,79,.35); }
 
+/* ===== demo do contrato (modelo, dados, link, cliente, assinado) ===== */
+.fakebusca { padding:16px 22px; border-radius:14px; background:rgba(0,0,0,.28); border:1px solid var(--borda); color:var(--suave); font-size:24px; }
+.mods { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:6px; }
+.mod { position:relative; display:flex; align-items:center; gap:16px; padding:20px 20px; border-radius:18px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); }
+.mod .texto b { font-size:27px; } .mod .texto small { font-size:20px; margin-top:3px; }
+.mod.foco { border:1.5px solid rgba(255,214,140,.95); background:linear-gradient(200deg, rgba(255,205,120,.30), rgba(249,182,79,.10)); box-shadow:0 0 50px rgba(249,182,79,.35); }
+.mod .sel { position:absolute; right:16px; top:16px; width:34px; height:34px; border-radius:50%; background:var(--ouro); display:grid; place-items:center; }
+.mod .sel svg { width:20px; height:20px; stroke:#1a1204; fill:none; stroke-width:3.4; stroke-linecap:round; stroke-linejoin:round; }
+.chipm { font-size:19px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; color:#1a1204; background:var(--ouro); padding:6px 14px; border-radius:999px; }
+.cp { position:relative; display:flex; flex-direction:column; gap:6px; }
+.cp label { font-size:19px; color:var(--suave); font-weight:600; }
+.cp .val { padding:15px 20px; border-radius:14px; background:rgba(0,0,0,.28); border:1px solid var(--borda); font-size:26px; font-weight:600; overflow:hidden; white-space:nowrap; }
+.cp .padrao { position:absolute; right:14px; top:30px; font-style:normal; font-size:16px; color:#bfe7c8; background:rgba(46,160,90,.18); border:1px solid rgba(120,220,150,.4); padding:4px 12px; border-radius:999px; }
+.botao { text-align:center; font-weight:800; font-size:27px; color:#1a1204; padding:18px; border-radius:16px; background:linear-gradient(135deg,#ffd48a,var(--ouro) 60%,var(--ouro-escuro)); box-shadow:0 8px 0 #8f5d16, 0 16px 34px rgba(249,182,79,.35); }
+.k2 .botao { margin-top:auto; }
+.k3 { padding:26px 28px; display:flex; flex-direction:column; gap:20px; justify-content:center; }
+.toast { display:flex; align-items:center; gap:14px; padding:20px 24px; border-radius:18px; background:rgba(46,160,90,.20); border:1.5px solid rgba(130,230,165,.55); font-size:25px; font-weight:700; }
+.toast svg { width:34px; height:34px; stroke:#7ff0a8; fill:none; stroke-width:3; stroke-linecap:round; stroke-linejoin:round; flex:none; }
+.lcard { position:relative; padding:24px 26px 28px; border-radius:20px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.14); display:flex; flex-direction:column; gap:18px; }
+.lcard .status { position:absolute; right:22px; top:22px; font-size:18px; font-weight:700; color:#ffe3b3; background:rgba(249,182,79,.16); border:1px solid rgba(249,182,79,.5); padding:6px 14px; border-radius:999px; }
+.urlbox { padding:18px 20px; border-radius:14px; background:rgba(0,0,0,.34); border:1px solid var(--borda); font-family:"SF Mono",Menlo,monospace; font-size:21px; color:#ffe3b3; overflow:hidden; white-space:nowrap; }
+.copiar { position:relative; } .copiar .b1, .copiar .b2 { display:inline-flex; align-items:center; gap:10px; }
+.copiar .b2 { position:absolute; left:0; right:0; top:18px; justify-content:center; }
+.copiar svg { width:28px; height:28px; stroke:#1a1204; fill:none; stroke-width:2.6; stroke-linecap:round; stroke-linejoin:round; }
+.k4 { display:grid; place-items:center; }
+.fone { position:relative; width:392px; height:690px; border-radius:50px; border:6px solid #2a2f4a; background:#0b0f26; box-shadow:0 30px 70px rgba(0,0,0,.6), inset 0 0 0 2px rgba(255,255,255,.06); overflow:hidden; }
+.entalhe { position:absolute; left:50%; top:12px; width:110px; height:28px; margin-left:-55px; border-radius:20px; background:#04050f; z-index:4; }
+.tela { position:absolute; inset:0; padding:70px 24px 24px; display:flex; flex-direction:column; gap:14px; background:linear-gradient(180deg,#141a3d,#0b0f26); }
+.tela h5 { font-size:30px; font-weight:800; letter-spacing:-.02em; margin-bottom:6px; }
+.fc label { display:block; font-size:17px; color:var(--suave); margin-bottom:5px; font-weight:600; }
+.fc div { padding:14px 16px; border-radius:12px; background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.14); font-size:21px; font-weight:600; white-space:nowrap; overflow:hidden; }
+.fbtn { margin-top:auto; text-align:center; font-weight:800; font-size:23px; color:#1a1204; padding:16px; border-radius:14px; background:linear-gradient(135deg,#ffd48a,var(--ouro) 60%,var(--ouro-escuro)); }
+.mini { padding:20px; border-radius:12px; background:linear-gradient(180deg,#fbf8f1,#efe9db); display:flex; flex-direction:column; gap:10px; }
+.mini i { height:8px; border-radius:4px; background:rgba(60,60,70,.2); } .mini i.s { width:64%; }
+.assin2 { position:relative; margin-top:6px; height:130px; border-radius:12px; background:rgba(255,255,255,.07); border:1.5px dashed rgba(255,255,255,.3); }
+.assin2 svg { position:absolute; inset:10px 14px 28px; width:calc(100% - 28px); height:calc(100% - 38px); }
+.assin2 .traco { fill:none; stroke:#ffd48a; stroke-width:5; stroke-linecap:round; stroke-linejoin:round; stroke-dasharray:700; stroke-dashoffset:700; }
+.assin2 span { position:absolute; left:0; right:0; bottom:6px; text-align:center; font-size:15px; color:var(--suave); }
+.k5 { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:18px; padding:20px 30px; }
+.grande-ok { position:relative; width:170px; height:170px; border-radius:50%; display:grid; place-items:center; background:radial-gradient(circle at 35% 30%, #3fcf86, #1c7a4a); box-shadow:0 0 70px rgba(63,207,134,.5); }
+.grande-ok svg { width:96px; height:96px; fill:none; stroke:#eafff3; stroke-width:2.3; stroke-linecap:round; stroke-linejoin:round; }
+.grande-ok .anel { position:absolute; inset:-14px; border-radius:50%; border:4px solid rgba(127,240,168,.7); }
+.k5 .rcard { width:100%; }
+.quem { width:100%; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:16px 22px; border-radius:14px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); font-size:23px; font-weight:700; }
+.quem em { font-style:normal; font-weight:500; font-size:20px; color:var(--suave); }
+.codigo2 { font-family:"SF Mono",Menlo,monospace; font-size:24px; font-weight:800; color:#ffe3b3; background:rgba(7,10,24,.72); border:1px solid rgba(249,182,79,.6); padding:10px 22px; border-radius:12px; }
+html.reels .k1, html.reels .k2 { padding:26px 28px; display:flex; flex-direction:column; gap:16px; justify-content:center; }
+html.reels .k2 { justify-content:flex-start; gap:11px; padding-top:34px; padding-bottom:22px; }
+.k2 .cp .val { padding:11px 18px; font-size:24px; }
+.k2 .cp label { font-size:17px; }
+.k2 .cp .padrao { top:24px; }
+.k2 .botao { padding:15px; font-size:25px; }
+.k2 .sec { font-size:25px; margin:0 0 2px; }
+
 /* título, apoio, rodapé */
 .bloco { flex:none; }
 .grande, .apoio, .sub-num, .duplo .texto { text-wrap:balance; }
@@ -892,6 +995,86 @@ DEMO_JS = r"""
 })();
 """
 
+# Roteiro da demo "contrato" (22 s): modelo, dados, link, cliente assina, pronto. Começa e termina com a janela vazia (fade),
+# então o laço fecha sem salto.
+DEMO2_JS = r"""
+(function () {
+  var L = 22, anims = [];
+  var E = 'cubic-bezier(.4,0,.2,1)', POP = 'cubic-bezier(.34,1.56,.64,1)';
+  function $(s, r) { return (r || document).querySelector(s); }
+  function $$(s, r) { return [].slice.call((r || document).querySelectorAll(s)); }
+  function S(o, tr, sc) { return { opacity: o, translate: tr || '0 0', scale: sc == null ? 1 : sc }; }
+  function K(el, pts) {
+    if (!el) return;
+    var kf = pts.map(function (p) { return Object.assign({ offset: p[0] / L, easing: p[2] || E }, p[1]); });
+    if (kf[0].offset > 0) kf.unshift(Object.assign({}, kf[0], { offset: 0 }));
+    if (kf[kf.length - 1].offset < 1) kf.push(Object.assign({}, kf[kf.length - 1], { offset: 1 }));
+    var a = el.animate(kf, { duration: L * 1000, fill: 'both', easing: 'linear' }); a.pause(); anims.push(a);
+  }
+  // elemento que aparece em t e some em f (some = estado final), subindo 20px
+  function ENT(el, t, f, de) { var h = S(0, de || '0 20px', .96); K(el, [[0, h], [t, h], [t + .5, S(1), POP], [f, S(1)], [f + .4, S(0, '0 -14px')], [L, S(0, '0 -14px')]]); }
+  function CENA(el, a, b) { K(el, [[0, S(0)], [a, S(0)], [a + .35, S(1)], [b, S(1)], [b + .35, S(0)], [L, S(0)]]); }
+  window.__ir = function (t) { anims.forEach(function (x) { x.currentTime = (t % L) * 1000; }); };
+  window.__montar = function () {
+    K($('.dclip'), [[0, S(0)], [.4, S(1)], [21.4, S(1)], [21.9, S(0)]]);
+    // 1) escolher o modelo (0 a 4,3)
+    CENA($('.k1'), 0, 4.0);
+    ENT($('.k1t'), .35, 4.0); ENT($('.k1b'), .55, 4.0);
+    $$('.mod').forEach(function (m, i) {
+      ENT(m, .75 + .16 * i, 4.0);
+      if (i > 0) K($('.texto', m), [[0, S(1)], [2.5, S(1)], [2.9, S(.4)], [16, S(.4)]]);
+    });
+    K($('.mod.foco'), [[0, S(0, '0 20px', .96)], [.75, S(0, '0 20px', .96)], [1.25, S(1), POP], [2.5, S(1)], [2.9, S(1, '0 0', 1.04)], [4.0, S(1, '0 0', 1.04)], [4.4, S(0)], [L, S(0)]]);
+    K($('.mod .sel'), [[0, S(0, '0 0', 0)], [3.0, S(0, '0 0', 0)], [3.4, S(1), POP], [4.0, S(1)], [4.4, S(0)], [L, S(0)]]);
+    // 2) personalizar (4,3 a 10,3)
+    CENA($('.k2'), 4.3, 10.0);
+    ENT($('.k2t'), 4.6, 9.9);
+    $$('.cp').forEach(function (c, i) {
+      var t = 4.9 + .55 * i;
+      ENT(c, t, 9.9);
+      K($('.val span', c), [[0, { clipPath: 'inset(0 100% 0 0)' }], [t + .3, { clipPath: 'inset(0 100% 0 0)' }], [t + .9, { clipPath: 'inset(0 0 0 0)' }, 'linear'], [L, { clipPath: 'inset(0 0 0 0)' }]]);
+    });
+    K($('.padrao'), [[0, S(0, '0 0', .8)], [8.0, S(0, '0 0', .8)], [8.4, S(1), POP], [9.9, S(1)], [10.3, S(0)], [L, S(0)]]);
+    ENT($('.k2b'), 8.9, 9.9);
+    K($('.k2b'), [[0, S(0, '0 20px', .96)], [8.9, S(0, '0 20px', .96)], [9.4, S(1), POP], [9.55, S(1, '0 0', .95)], [9.75, S(1)], [10.0, S(1)], [10.4, S(0)], [L, S(0)]]);
+    // 3) salvar e copiar o link (10,3 a 13,8)
+    CENA($('.k3'), 10.3, 13.5);
+    ENT($('.k3a'), 10.55, 13.4, '0 -30px'); ENT($('.k3b'), 11.0, 13.4);
+    K($('.copiar .b1'), [[0, S(1)], [12.2, S(1)], [12.3, S(0)], [L, S(0)]]);
+    K($('.copiar .b2'), [[0, S(0)], [12.2, S(0)], [12.35, S(1)], [13.4, S(1)], [13.8, S(0)], [L, S(0)]]);
+    K($('.copiar'), [[0, S(1)], [12.0, S(1)], [12.15, S(1, '0 0', .95)], [12.35, S(1)], [L, S(1)]]);
+    // 4) cliente no celular (13,8 a 19)
+    CENA($('.k4'), 13.8, 18.7);
+    K($('.fone'), [[0, S(0, '0 50px', .94)], [14.0, S(0, '0 50px', .94)], [14.6, S(1), POP], [18.6, S(1)], [19.0, S(0)], [L, S(0)]]);
+    K($('.t1'), [[0, S(1)], [16.4, S(1)], [16.8, S(0, '-40px 0')], [L, S(0, '-40px 0')]]);
+    $$('.t1 .fc').forEach(function (c, i) { ENT(c, 14.9 + .35 * i, 16.5); });
+    K($('.t1 .fbtn'), [[0, S(1)], [16.0, S(1)], [16.12, S(1, '0 0', .95)], [16.3, S(1)], [L, S(1)]]);
+    K($('.t2'), [[0, S(0, '40px 0')], [16.5, S(0, '40px 0')], [16.9, S(1)], [18.6, S(1)], [L, S(1)]]);
+    var tr = $('.traco'); if (tr) { var a = tr.animate([{ strokeDashoffset: 700 }, { strokeDashoffset: 0 }, { strokeDashoffset: 0 }, { strokeDashoffset: 700 }], { duration: L * 1000, fill: 'both', easing: 'linear' }); a.pause(); anims.push(a);
+      a.effect.setKeyframes([{ offset: 0, strokeDashoffset: 700 }, { offset: 17.0 / L, strokeDashoffset: 700 }, { offset: 18.0 / L, strokeDashoffset: 0, easing: 'ease-in-out' }, { offset: 1, strokeDashoffset: 0 }]); }
+    K($('.t2 .fbtn'), [[0, S(1)], [18.15, S(1)], [18.27, S(1, '0 0', .95)], [18.45, S(1)], [L, S(1)]]);
+    // 5) pronto (19 a 21,9)
+    CENA($('.k5'), 19.0, 21.5);
+    K($('.grande-ok'), [[0, S(0, '0 0', .3)], [19.2, S(0, '0 0', .3)], [19.7, S(1), POP], [21.5, S(1)], [21.9, S(0)], [L, S(0)]]);
+    K($('.grande-ok .anel'), [[0, S(0, '0 0', .8)], [19.6, S(0, '0 0', .8)], [19.8, S(.9)], [20.6, S(0, '0 0', 1.35)], [L, S(0, '0 0', 1.35)]]);
+    ENT($('.k5a'), 20.0, 21.5); ENT($('.k5b'), 20.35, 21.5); ENT($('.k5c'), 20.6, 21.5); ENT($('.k5d'), 20.9, 21.5);
+    // título por cena
+    var tbs = $$('.tb'), JAN = [[.1, 4.3], [4.3, 10.3], [10.3, 13.8], [13.8, 19.0], [19.0, 21.7]];
+    tbs.forEach(function (el, i) {
+      var j = JAN[i] || [0, 0], dn = S(0, '0 18px'), up = S(0, '0 -18px');
+      K(el, [[0, dn], [j[0] + .1, dn], [j[0] + .55, S(1)], [j[1] - .15, S(1)], [j[1] + .25, up], [L, up]]);
+    });
+    var c0 = { '--ry': '10deg', '--rx': '6deg', scale: 1, translate: '0 0' };
+    K($('.hero'), [[0, c0],
+      [5.5, { '--ry': '8deg', '--rx': '5deg', scale: 1.02, translate: '-4px 3px' }],
+      [11, { '--ry': '11.5deg', '--rx': '6.5deg', scale: 1, translate: '0 -5px' }],
+      [16.5, { '--ry': '8.5deg', '--rx': '5deg', scale: 1.025, translate: '-4px 3px' }],
+      [L, c0]]);
+    return L;
+  };
+})();
+"""
+
 PREVIEW_JS = r"""
 document.fonts.ready.then(function () { setTimeout(function () {
   if (window.__preview != null) { window.__montar(); window.__ir(window.__preview); }
@@ -924,7 +1107,7 @@ def montar(spec, marca, movimento=False):
   <div class="rodape"><div class="fim">%(rodape)s %(seta)s</div></div>
 </div><script>%(js)s</script>%(movimento)s</body></html>""" % dict(
         glows='<div class="glow g1"></div><div class="glow g2"></div>' if tipo == "demo" else "",
-        movimento=(("<script>%s</script>" % DEMO_JS + ("" if movimento else "<script>window.__preview=%s;</script>" % hero.get("quadro", 14.0)) + "<script>%s</script>" % PREVIEW_JS)
+        movimento=(("<script>%s</script>" % (DEMO2_JS if hero.get("cena") == "contrato" else DEMO_JS) + ("" if movimento else "<script>window.__preview=%s;</script>" % hero.get("quadro", 14.0)) + "<script>%s</script>" % PREVIEW_JS)
                    if tipo == "demo" else (("<script>%s</script>" % MOTION_JS) if movimento else "")),
         classe_html=spec.get("formato") if spec.get("formato") in ("reels", "capa") else "", titulo_plano=esc(sem_marcas(spec["titulo"])), css=css, logo="logo.png", nome=esc(marca["nome"]),
         selo=esc(spec.get("selo", "Novidade")), tipo=tipo, hero=HEROS[tipo](hero),
