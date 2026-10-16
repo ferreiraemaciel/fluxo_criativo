@@ -17,6 +17,7 @@ import argparse, html, json, re, shutil, subprocess, sys
 from pathlib import Path
 
 AQUI = Path(__file__).resolve().parent
+CONTEXTO = {}  # preenchido no main: pasta do spec e pasta de saída
 CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 
 # ---------------------------------------------------------------- marcas
@@ -65,6 +66,29 @@ ICONES = {
 
 def ico(nome):
     return '<svg viewBox="0 0 24 24">%s</svg>' % ICONES.get(nome or "documento", ICONES["documento"])
+
+
+def qr_simbolico(semente=7):
+    """QR Code só para ilustrar (não lê, de propósito): três cantos de posição e miolo pseudoaleatório."""
+    n = 25
+    m = [[0] * n for _ in range(n)]
+    def canto(r0, c0):
+        for r in range(7):
+            for c in range(7):
+                borda = r in (0, 6) or c in (0, 6)
+                miolo = 2 <= r <= 4 and 2 <= c <= 4
+                m[r0 + r][c0 + c] = 1 if (borda or miolo) else 0
+    canto(0, 0); canto(0, n - 7); canto(n - 7, 0)
+    x = semente
+    for r in range(n):
+        for c in range(n):
+            if (r < 8 and c < 8) or (r < 8 and c > n - 9) or (r > n - 9 and c < 8):
+                continue
+            x = (x * 1103515245 + 12345) & 0x7FFFFFFF
+            m[r][c] = 1 if (x >> 16) % 100 < 48 else 0
+    q = 2
+    ret = "".join('<rect x="%d" y="%d" width="1" height="1"/>' % (c + q, r + q) for r in range(n) for c in range(n) if m[r][c])
+    return '<svg viewBox="0 0 %d %d" shape-rendering="crispEdges"><rect width="%d" height="%d" rx="1.2" fill="#fff"/><g fill="#0b1020">%s</g></svg>' % (n + 2 * q, n + 2 * q, n + 2 * q, n + 2 * q, ret)
 
 
 def esc(t):
@@ -145,9 +169,13 @@ def hero_tela(d):
             ctrl = '<div class="chip">%s</div>' % esc(ln.get("valor", ""))
         elif tipo == "valor":
             ctrl = '<div class="valor">%s</div>' % esc(ln.get("valor", ""))
+        elif tipo == "qr":
+            ctrl = '<div class="qr">%s</div>' % qr_simbolico()
+        elif tipo == "selo":
+            ctrl = '<div class="selo-verde">%s %s</div>' % (ico("check"), esc(ln.get("valor", "")))
         linhas.append(
             '<div class="linha%s">%s<div class="icone peq">%s</div><div class="texto"><b>%s</b>%s</div>%s</div>' % (
-                " destaque" if ln.get("destaque") else "",
+                (" destaque verde" if ln.get("destaque") == "verde" else " destaque") if ln.get("destaque") else "",
                 '<div class="etiqueta">%s</div>' % esc(ln["etiqueta"]) if ln.get("etiqueta") else "",
                 ico(ln.get("icone")), esc(ln["titulo"]),
                 "<small>%s</small>" % esc(ln["sub"]) if ln.get("sub") else "", ctrl))
@@ -183,8 +211,17 @@ def hero_comparativo(d):
         if not pv:
             return ""
         capa = ('<img src="logo.png" alt="">' if pv.get("capa") == "marca" else ico("camera"))
-        return ('<div class="previa"><div class="capa %s">%s</div><div class="pt"><b>%s</b><small>%s</small></div></div>') % (
-            "marca" if pv.get("capa") == "marca" else "foto", capa, esc(pv.get("titulo", "")), esc(pv.get("sub", "")))
+        estilo = ""
+        if pv.get("imagem"):
+            src = Path(pv["imagem"])
+            if not src.is_absolute():
+                src = (CONTEXTO["spec_dir"] / src).resolve()
+            dest = "img-" + src.name
+            shutil.copy(src, CONTEXTO["saida"] / dest)
+            estilo = " style=\"background-image:url('%s'); background-size:cover; background-position:%s\"" % (dest, pv.get("posicao", "50% 30%"))
+            capa = ""
+        return ('<div class="previa"><div class="capa %s"%s>%s</div><div class="pt"><b>%s</b><small>%s</small></div></div>') % (
+            "marca" if pv.get("capa") == "marca" else "foto", estilo, capa, esc(pv.get("titulo", "")), esc(pv.get("sub", "")))
 
     def lado(x, novo):
         return ('<div class="cartao col%s">%s<div class="icone">%s</div><div class="rot">%s</div>'
@@ -294,6 +331,16 @@ body { font-family:"Inter","Helvetica Neue",Arial,sans-serif; color:var(--branco
   background:linear-gradient(200deg, rgba(255,205,120,.30), rgba(249,182,79,.10)), {{base_ouro}};
   box-shadow:-12px 18px 40px rgba(0,0,0,.55), 0 20px 70px rgba(249,182,79,.30); }
 .linha .etiqueta { right:24px; top:-16px; }
+.linha.destaque.verde { border-color:rgba(130,230,165,.9);
+  background:linear-gradient(200deg, rgba(90,210,140,.26), rgba(46,160,90,.08)), {{base_card}};
+  box-shadow:-12px 18px 40px rgba(0,0,0,.55), 0 20px 70px rgba(60,200,120,.28); }
+.linha.destaque.verde .icone { background:linear-gradient(135deg,#9af2bc,#2fbf71); border:none; box-shadow:0 12px 28px rgba(60,200,120,.5), 0 6px 0 #1c8a50, inset 0 2px 0 rgba(255,255,255,.55); }
+.linha.destaque.verde .icone svg { stroke:#06210f; stroke-width:2.4; }
+.selo-verde { flex:none; display:inline-flex; align-items:center; gap:8px; font-size:22px; font-weight:800; color:#c6f6d8; padding:10px 18px; border-radius:999px;
+  background:rgba(46,160,90,.22); border:1px solid rgba(130,230,165,.7); box-shadow:0 8px 20px rgba(0,0,0,.4); }
+.selo-verde svg { width:22px; height:22px; stroke:#7ff0a8; fill:none; stroke-width:3; stroke-linecap:round; stroke-linejoin:round; }
+.qr { flex:none; width:96px; height:96px; padding:6px; border-radius:16px; background:#fff; box-shadow:0 10px 24px rgba(0,0,0,.5); transform:translateZ(14px); }
+.qr svg { width:100%; height:100%; display:block; }
 .valor { flex:none; font-size:38px; font-weight:800; color:var(--ouro); letter-spacing:-.02em; }
 .tog { flex:none; position:relative; width:92px; height:52px; border-radius:999px; background:rgba(255,255,255,.14); border:1px solid rgba(255,255,255,.2); }
 .tog i { position:absolute; top:5px; left:6px; width:40px; height:40px; border-radius:50%; background:#cfd3e6; box-shadow:0 4px 10px rgba(0,0,0,.4); }
@@ -426,6 +473,7 @@ def main():
     nome = spec.get("nome") or spec_path.stem
     saida = Path(a.saida).resolve() if a.saida else spec_path.parent / "saida"
     saida.mkdir(parents=True, exist_ok=True)
+    CONTEXTO["spec_dir"], CONTEXTO["saida"] = spec_path.parent, saida
     shutil.copy(AQUI / marca["logo"], saida / "logo.png")
 
     html_path = saida / (nome + ".html")
