@@ -73,6 +73,15 @@ documente aqui. Não force a novidade num módulo que não é dela.
 **Quando tudo é novo** (ex.: seis modelos novos), deixe `novo: true` para o tom dourado e **não**
 ponha a `etiqueta` em todos. O selo NOVIDADE do topo já diz isso.
 
+**Postagem que não é novidade de hoje** (um catálogo, um lembrete do que já existe): troque o selo com
+`"selo": "Catálogo"` (ou outra palavra curta e verdadeira). O selo NOVIDADE só vale para o que é novo.
+
+**Comparativo com prévia:** cada lado aceita `previa` (`capa` "marca" ou "foto", `titulo`, `sub`), que
+desenha um cartão de link. Use quando a novidade é visual (ex.: a prévia do link no WhatsApp). Antes/agora
+só com texto fica fraco.
+
+O gerador cola palavra de 1 ou 2 letras (o, a, de, se) à seguinte, para não sobrar no fim da linha.
+
 ---
 
 ## Marcas por produto

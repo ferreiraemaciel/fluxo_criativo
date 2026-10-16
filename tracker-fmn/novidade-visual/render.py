@@ -72,16 +72,22 @@ def esc(t):
 
 
 # ---------------------------------------------------------------- texto
+def cola_curtas(h):
+    """Palavra de 1 ou 2 letras (o, a, de, se...) fica junto da próxima, para não sobrar no fim da linha."""
+    partes = re.split(r"(<[^>]+>)", h)
+    return "".join(p if p.startswith("<") else re.sub(r"(?<![\wÀ-ÿ])([\wÀ-ÿ]{1,2}) ", "\\1\u00a0", p) for p in partes)
+
+
 def fmt_titulo(t):
     """{ouro:palavra} vira dourado, {suave:trecho} vira cinza claro. O resto é branco."""
     s = esc(t)
     s = re.sub(r"\{ouro:(.*?)\}", r'<span class="ouro">\1</span>', s)
     s = re.sub(r"\{suave:(.*?)\}", r'<span class="suave-t">\1</span>', s)
-    return s
+    return cola_curtas(s)
 
 
 def fmt_apoio(t):
-    return re.sub(r"\*\*(.*?)\*\*", r"<b>\1</b>", esc(t))
+    return cola_curtas(re.sub(r"\*\*(.*?)\*\*", r"<b>\1</b>", esc(t)))
 
 
 def sem_marcas(t):
@@ -173,13 +179,20 @@ def hero_numero(d):
 
 def hero_comparativo(d):
     """Antes e agora lado a lado. Serve para melhoria de algo que já existia."""
+    def previa(pv):
+        if not pv:
+            return ""
+        capa = ('<img src="logo.png" alt="">' if pv.get("capa") == "marca" else ico("camera"))
+        return ('<div class="previa"><div class="capa %s">%s</div><div class="pt"><b>%s</b><small>%s</small></div></div>') % (
+            "marca" if pv.get("capa") == "marca" else "foto", capa, esc(pv.get("titulo", "")), esc(pv.get("sub", "")))
+
     def lado(x, novo):
         return ('<div class="cartao col%s">%s<div class="icone">%s</div><div class="rot">%s</div>'
-                '<div class="texto"><b>%s</b>%s</div></div>') % (
+                '<div class="texto"><b>%s</b>%s</div>%s</div>') % (
             " destaque" if novo else "",
             '<div class="etiqueta">%s</div>' % esc(x["etiqueta"]) if x.get("etiqueta") else "",
             ico(x.get("icone")), esc(x.get("rotulo", "")), esc(x["titulo"]),
-            "<small>%s</small>" % esc(x["sub"]) if x.get("sub") else "")
+            "<small>%s</small>" % esc(x["sub"]) if x.get("sub") else "", previa(x.get("previa")))
     return '<div class="duplo">%s<div class="vai">%s</div>%s</div>' % (
         lado(d["antes"], False), ico("seta"), lado(d["agora"], True))
 
@@ -318,7 +331,16 @@ body { font-family:"Inter","Helvetica Neue",Arial,sans-serif; color:var(--branco
 .duplo .destaque .rot { color:#ffe3b3; }
 .duplo .vai { flex:none; width:64px; height:64px; margin:0 -14px; border-radius:50%; display:grid; place-items:center; background:var(--fundo); border:1px solid rgba(249,182,79,.7); z-index:5; transform:translateZ(60px); }
 .duplo .vai svg { width:32px; height:32px; stroke:var(--ouro); fill:none; stroke-width:2.4; stroke-linecap:round; stroke-linejoin:round; }
-.duplo .col .texto b { font-size:38px; }
+.duplo .col .texto b { font-size:36px; }
+.previa { width:100%; margin-top:10px; border-radius:20px; overflow:hidden; background:rgba(0,0,0,.32); border:1px solid var(--borda); transform:translateZ(18px); box-shadow:0 14px 30px rgba(0,0,0,.45); }
+.previa .capa { height:170px; display:grid; place-items:center; }
+.previa .capa.marca { background:linear-gradient(135deg, rgba(255,255,255,.08), rgba(255,255,255,.02)); }
+.previa .capa.marca img { height:118px; width:auto; }
+.previa .capa.foto { background:linear-gradient(135deg,#4a3a2c,#b98d62 55%,#f1d9b5); }
+.previa .capa.foto svg { width:64px; height:64px; stroke:rgba(255,255,255,.9); fill:none; stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round; }
+.previa .pt { padding:14px 18px 16px; }
+.previa .pt b { display:block; font-size:24px; font-weight:700; letter-spacing:-.01em; }
+.previa .pt small { display:block; margin-top:3px; font-size:19px; color:var(--suave); font-weight:500; }
 .duplo .col .texto small { font-size:26px; }
 
 /* título, apoio, rodapé */
