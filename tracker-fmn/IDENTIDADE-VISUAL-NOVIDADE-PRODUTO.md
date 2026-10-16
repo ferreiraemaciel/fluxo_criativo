@@ -186,3 +186,28 @@ Plataforma **Imagem**. O card nasce em Fazendo e vai para **Feito** sozinho ao r
 - 2026-10-15 (mesmo dia): Transformado em gerador com cinco heros e duas marcas, testado com cinco
   novidades diferentes (corrente, número, lista, tela e antes/agora) para provar que o modelo serve
   além do primeiro caso. Entrou a regra de **sem @** e a exceção de aparência.
+
+---
+
+## Capa de tutorial (formato `capa`, 1920x1080)
+
+Combinado com o Felipe em 16/10/2026. As capas dos vídeos de tutorial do app (tabela `public.tutorials`, banco do Blindagem) seguem este estilo, não o cartão antigo preto com a etiqueta TUTORIAL.
+
+**Regras**
+- Tamanho **1920x1080** (thumbnail de YouTube, horizontal). `"formato": "capa"` no spec.
+- **Selo "Tutorial" no canto superior direito**, nunca ao lado da marca.
+- **Texto à esquerda**, janela 3D à direita, fundo camurça, marca do produto no topo esquerdo.
+- **Título curto, até 4 linhas, uma palavra ou trecho em dourado.** O nome completo do tutorial vai em negrito na frase de apoio, sem frase de fechamento ("também se faz uma vez só" foi cortada).
+- **Hero mostra o visual do que o tutorial ensina**, não uma lista abstrata. Foto de capa de verdade quando o tema é foto (usar a foto da própria FeM, nunca foto de aluno). Logo de fotógrafo fictícia (monograma com abertura de lente) no lugar de foto de perfil.
+- Hero `tela` para configuração com linhas e chaves. Hero `linkcliente` para a página que o cliente recebe (capa, perfil, nome do estúdio, botão).
+- Dados de exemplo fictícios (Marina Costa Fotografia). Textos das linhas vêm do próprio app.
+
+**Como fazer uma nova**
+1. Ler o tutorial em `public.tutorials` (título, descrição) e abrir a tela real no app para usar os nomes certos.
+2. Copiar `tracker-fmn/novidade-visual/exemplos/` ou os specs de `output/capas-tutoriais/specs/` e trocar título, apoio e as linhas do hero.
+3. `python3 tracker-fmn/novidade-visual/render.py spec.json --saida pasta`, ler o relatório e olhar a imagem.
+4. Mostrar ao Felipe. Depois de aprovada, ele troca a miniatura no YouTube.
+
+**No app, a miniatura é automática.** O Blindagem monta a imagem pelo endereço `i.ytimg.com/vi/<id>/maxresdefault.jpg` (e `mqdefault` no admin). Trocou no YouTube, o app acompanha sozinho, com um pequeno atraso de cache. Não existe campo de capa no app para subir imagem.
+
+**Texto do tutorial por escrito.** Cada tutorial tem um passo a passo em `tracker-fmn/tutoriais-blindagem/`. Antes de escrever, abrir o código da tela (nome de aba, cartão e botão) para não descrever o que mudou.
