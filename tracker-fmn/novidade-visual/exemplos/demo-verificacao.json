@@ -1,0 +1,9 @@
+{
+  "nome": "demo-verificacao",
+  "produto": "blindagem",
+  "textura": "camurca",
+  "titulo": "Mudou uma vírgula, {ouro:a página acusa}",
+  "apoio": "**Aponte a câmera ou arraste o PDF.** Em segundos você sabe se é o contrato original.",
+  "rodape": "Conheça o Blindagem",
+  "hero": {"tipo": "demo", "cena": "verificacao", "quadro": 14.0}
+}

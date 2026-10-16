@@ -111,7 +111,9 @@ Produto novo: copie a logo para `novidade-visual/marcas/<produto>/logo.png` e ca
 arte e entrega um MP4 1080x1350, 30 quadros por segundo, em cerca de 9 segundos. A ordem é: o título
 entra primeiro (é o gancho), o bloco se monta em seguida (cada tipo de hero tem a sua coreografia) e o
 rodapé fecha. Precisa de `node` e `ffmpeg`; na primeira vez, `cd novidade-visual/motion && npm install`.
-O vídeo sai sem áudio. Para Reels (9:16) o quadro precisa ser refeito mais alto: ainda não existe.
+O vídeo sai sem áudio.
+
+**Vídeo para anúncio em Reels: sempre 1080x1920 (vertical, 9:16).** Combinado com o Felipe em 16/10/2026. Use `"formato": "reels"` no spec: o quadro fica 1080x1920 com folga em cima (200px) e embaixo (310px) para a interface do Reels. O hero `demo` (janela de navegador, 16 s em laço) tem câmera 3D que balança e se aproxima conforme a ação. Exemplo: `exemplos/demo-verificacao-reels.json`. Hero `carrossel`: fileira de páginas inteiras de contrato lado a lado, cortadas nas pontas, uma em foco e uma setinha (as imagens por modelo estão no Drive, em Modelos de Contratos.../Mockups/Blindagem).
 
 ---
 

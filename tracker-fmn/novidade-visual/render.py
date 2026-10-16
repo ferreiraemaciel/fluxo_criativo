@@ -60,6 +60,11 @@ ICONES = {
     "sino": '<path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 21a2 2 0 0 0 4 0"/>',
     "dinheiro": '<rect x="3" y="6" width="18" height="12" rx="3"/><circle cx="12" cy="12" r="2.6"/><path d="M6.5 9.5v.01M17.5 14.5v.01"/>',
     "painel": '<rect x="3" y="4" width="18" height="16" rx="3"/><path d="M3 9h18M9 9v11"/>',
+    "escudo": '<path d="M12 3 4.5 6v5.5c0 4.6 3.2 8.2 7.5 9.5 4.3-1.3 7.5-4.9 7.5-9.5V6z"/><path d="m8.8 12 2.4 2.4 4-4.4"/>',
+    "xcirculo": '<circle cx="12" cy="12" r="9"/><path d="m9 9 6 6M15 9l-6 6"/>',
+    "upload": '<path d="M12 16V5M7.5 9.5 12 5l4.5 4.5"/><path d="M5 17v1.5A1.5 1.5 0 0 0 6.5 20h11a1.5 1.5 0 0 0 1.5-1.5V17"/>',
+    "carregando": '<path d="M12 3a9 9 0 1 0 9 9"/>',
+    "busca": '<circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/>',
     "mensagem": '<path d="M4 5h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H9l-4 3.5V17H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z"/>',
 }
 
@@ -216,7 +221,7 @@ def hero_comparativo(d):
             src = Path(pv["imagem"])
             if not src.is_absolute():
                 src = (CONTEXTO["spec_dir"] / src).resolve()
-            dest = "img-" + src.name
+            dest = "img-" + re.sub(r"[^A-Za-z0-9._-]+", "_", src.name)
             shutil.copy(src, CONTEXTO["saida"] / dest)
             estilo = " style=\"background-image:url('%s'); background-size:cover; background-position:%s\"" % (dest, pv.get("posicao", "50% 30%"))
             capa = ""
@@ -234,7 +239,101 @@ def hero_comparativo(d):
         lado(d["antes"], False), ico("seta"), lado(d["agora"], True))
 
 
-HEROS = {"corrente": hero_corrente, "tela": hero_tela, "lista": hero_lista,
+def hero_demo(d):
+    """Demonstração em movimento de uma função do produto, dentro de uma janela de navegador.
+    Cena disponível: "verificacao" (conferência de autenticidade). Os dados são de exemplo."""
+    if d.get("cena", "verificacao") != "verificacao":
+        sys.exit("Cena de demo desconhecida: %s" % d.get("cena"))
+    cod = d.get("codigo", "BLD-7K2M-9QXD")
+    pessoa1 = d.get("contratante", "Maria S.")
+    pessoa2 = d.get("estudio", "Estúdio Ipê Fotografia")
+    arq1 = d.get("arquivo_ok", "contrato-maria.pdf")
+    arq2 = d.get("arquivo_alterado", "contrato-maria-editado.pdf")
+    linhas = "".join('<div class="ln %s"></div>' % c for c in "m s m m s m s m m s m s m s".split())
+    ok = ico("check")
+    def elo(n, titulo, ator, carimbo=""):
+        return ('<div class="elo4 b-e%d"><span class="n">%d</span><b>%s</b><span class="at">%s</span>%s<span class="ck">%s</span></div>'
+                % (n, n, esc(titulo), esc(ator), '<em>%s</em>' % esc(carimbo) if carimbo else "", ok))
+    return (
+        '<div class="cartao dtela">'
+        '<div class="dbarra"><i></i><i></i><i></i><span class="url">blindagem.fotografiaeomeunegocio.com.br/verificar</span></div>'
+        '<div class="dclip">'
+        # cena A: o contrato com o QR e a câmera lendo
+        '<div class="cena cenaA"><div class="papel"><div class="ph">CONTRATO DE PRESTAÇÃO DE SERVIÇOS</div>%(linhas)s'
+        '<div class="assin">%(p1)s</div><div class="qrbox">%(qr)s</div><div class="cod">%(cod)s</div>'
+        '<div class="rod">Documento %(cod)s · página 1 de 3</div></div>'
+        '<div class="mira"><i></i><i></i><i></i><i></i><b class="scan"></b></div><div class="ping"></div></div>'
+        # cena B: a página de conferência
+        '<div class="cena cenaB">'
+        '<div class="rcard verde b-card"><div class="ic">%(escudo)s</div><div><b>Documento autêntico e assinado por todas as partes</b>'
+        '<small>O registro mostra cada etapa, na ordem em que aconteceu.</small></div></div>'
+        '<div class="sec b-corr">%(elo)s Corrente de evidências'
+        '<span class="st wait">%(carr)s Conferindo no seu aparelho</span><span class="st ok">%(ok)s Íntegra, conferida no seu aparelho</span></div>'
+        '%(e1)s%(e2)s%(e3)s%(e4)s</div>'
+        # cena C: conferir o arquivo
+        '<div class="cena cenaC"><div class="sec">%(busca)s Confira o seu arquivo</div>'
+        '<div class="zona">%(up)s<span>Arraste o PDF aqui ou clique para escolher</span>'
+        '<div class="arq arq1">%(doc)s%(a1)s</div><div class="arq arq2">%(doc)s%(a2)s</div>'
+        '<div class="calc calc1"><span class="spin">%(carr)s</span> Conferindo no seu aparelho</div>'
+        '<div class="calc calc2"><span class="spin">%(carr)s</span> Conferindo no seu aparelho</div></div>'
+        '<div class="resbox">'
+        '<div class="res res1 rcard verde"><div class="ic">%(escudo)s</div><div><b>Arquivo íntegro e autêntico</b>'
+        '<small>“%(a1)s” é idêntico ao PDF assinado. Nada foi alterado.</small></div></div>'
+        '<div class="res res2 rcard verm"><div class="ic">%(xc)s</div><div><b>Arquivo diferente do registrado</b>'
+        '<small>“%(a2)s” foi alterado. Não confie no conteúdo dele.</small></div></div>'
+        '</div></div>'
+        '</div></div>') % dict(
+            linhas=linhas, p1=esc(pessoa1), p2=esc(pessoa2), qr=qr_simbolico(11), cod=esc(cod), escudo=ico("escudo"), busca=ico("busca"),
+            ok=ok, elo=ico("elo"), carr=ico("carregando"), up=ico("upload"), doc=ico("documento"), xc=ico("xcirculo"),
+            a1=esc(arq1), a2=esc(arq2),
+            e1=elo(1, "Documento criado", "Fotógrafo"),
+            e2=elo(2, "E-mail confirmado por código", "Contratante 1"),
+            e3=elo(3, "Assinatura eletrônica", "Contratante 1", "2 carimbos de tempo"),
+            e4=elo(4, "Assinatura eletrônica", "Fotógrafo", "2 carimbos de tempo"))
+
+
+def _copia_img(caminho):
+    src = Path(caminho)
+    if not src.is_absolute():
+        src = (CONTEXTO["spec_dir"] / src).resolve()
+    dest = "img-" + re.sub(r"[^A-Za-z0-9._-]+", "_", src.name)
+    shutil.copy(src, CONTEXTO["saida"] / dest)
+    return dest
+
+
+def hero_vitrine(d):
+    """Faixas de capas de contrato passando como num catálogo de streaming, mais um pôster em foco.
+    `faixas`: lista de {imagem, desloca} (a imagem é uma faixa larga de capas lado a lado).
+    `poster`: {imagem, rotulo} (a página vertical inteira de um contrato, em destaque)."""
+    linhas = []
+    for f in d["faixas"]:
+        im = _copia_img(f["imagem"])
+        linhas.append('<div class="vrow"><div class="vtril" style="--d:%spx"><img src="%s" alt=""><img src="%s" alt=""></div></div>'
+                      % (f.get("desloca", 0), im, im))
+    poster = ""
+    if d.get("poster"):
+        pi = _copia_img(d["poster"]["imagem"])
+        poster = ('<div class="vposter"><img src="%s" alt="">%s</div>' % (
+            pi, '<div class="etiqueta">%s</div>' % esc(d["poster"]["rotulo"]) if d["poster"].get("rotulo") else ""))
+    return '<div class="vit">%s%s</div>' % ("".join(linhas), poster)
+
+
+
+def hero_carrossel(d):
+    """Uma fileira de páginas inteiras de contrato lado a lado, cortadas nas pontas (dá a ideia de que tem mais),
+    uma em foco (dourada) e uma setinha convidando a passar para o lado.
+    `paginas`: lista de {imagem, rotulo}; `foco`: índice da página em destaque."""
+    foco = d.get("foco", len(d["paginas"]) // 2)
+    cards = []
+    for k, pg in enumerate(d["paginas"]):
+        im = _copia_img(pg["imagem"])
+        cards.append('<div class="pag%s"><img src="%s" alt="">%s</div>' % (
+            " foco" if k == foco else "", im,
+            '<div class="etiqueta">%s</div>' % esc(pg["rotulo"]) if pg.get("rotulo") else ""))
+    return '<div class="car"><div class="trilho">%s</div><div class="seta">%s</div></div>' % ("".join(cards), ico("seta"))
+
+
+HEROS = {"carrossel": hero_carrossel, "vitrine": hero_vitrine, "demo": hero_demo, "corrente": hero_corrente, "tela": hero_tela, "lista": hero_lista,
          "numero": hero_numero, "comparativo": hero_comparativo}
 
 # ---------------------------------------------------------------- textura do fundo
@@ -390,6 +489,107 @@ body { font-family:"Inter","Helvetica Neue",Arial,sans-serif; color:var(--branco
 .previa .pt small { display:block; margin-top:3px; font-size:19px; color:var(--suave); font-weight:500; }
 .duplo .col .texto small { font-size:26px; }
 
+
+/* ===== demo em movimento (janela de navegador) ===== */
+.glow { position:absolute; border-radius:50%; filter:blur(70px); pointer-events:none; z-index:0; }
+.glow.g1 { width:520px; height:520px; right:-140px; top:280px; background:rgba(249,182,79,.20); }
+.glow.g2 { width:460px; height:460px; left:-170px; top:640px; background:rgba(67,97,238,.26); }
+.cartao.dtela { display:block; padding:0; height:620px; min-height:620px; }
+.dtela .dbarra { position:absolute; left:0; right:0; top:0; height:56px; display:flex; align-items:center; gap:10px; padding:0 22px; border-bottom:1px solid var(--borda); z-index:3; }
+.dtela .dbarra i { width:13px; height:13px; border-radius:50%; background:rgba(255,255,255,.22); }
+.dtela .url { margin:0 auto; padding:7px 22px; border-radius:999px; background:rgba(0,0,0,.30); border:1px solid var(--borda); font-family:"SF Mono",Menlo,monospace; font-size:19px; color:var(--suave); transform:translateX(-30px); }
+.dtela .dclip { position:absolute; left:0; right:0; top:56px; bottom:0; border-radius:0 0 28px 28px; overflow:hidden; }
+.dtela .cena { position:absolute; inset:0; }
+.papel { position:absolute; left:50%; top:22px; width:440px; height:500px; margin-left:-220px; border-radius:10px; background:linear-gradient(180deg,#fbf8f1,#efe9db); box-shadow:0 24px 60px rgba(0,0,0,.55); color:#2a2a32; padding:26px 28px; }
+.papel .ph { font-size:15px; font-weight:800; letter-spacing:.08em; text-align:center; color:#33333c; margin-bottom:12px; }
+.papel .ln { height:8px; border-radius:4px; background:rgba(60,60,70,.16); margin-top:11px; }
+.papel .ln.s { width:68%; } .papel .ln.m { width:92%; }
+.papel .assin { position:absolute; left:28px; bottom:52px; width:160px; border-top:1.5px solid rgba(60,60,70,.45); padding-top:6px; font-size:13px; color:#555; }
+.papel .qrbox { position:absolute; right:26px; bottom:56px; width:118px; height:118px; }
+.papel .qrbox svg { width:100%; height:100%; display:block; }
+.papel .cod { position:absolute; right:22px; bottom:28px; font-family:"SF Mono",Menlo,monospace; font-size:14px; font-weight:700; color:#2a2a32; }
+.papel .rod { position:absolute; left:28px; bottom:10px; font-size:11px; color:#8a8a92; }
+.mira { position:absolute; left:499px; top:327px; width:160px; height:160px; transform-origin:50% 50%; }
+.mira i { position:absolute; width:36px; height:36px; border:5px solid var(--ouro); filter:drop-shadow(0 0 10px rgba(249,182,79,.8)); }
+.mira i:nth-child(1) { left:0; top:0; border-right:0; border-bottom:0; border-radius:12px 0 0 0; }
+.mira i:nth-child(2) { right:0; top:0; border-left:0; border-bottom:0; border-radius:0 12px 0 0; }
+.mira i:nth-child(3) { left:0; bottom:0; border-right:0; border-top:0; border-radius:0 0 0 12px; }
+.mira i:nth-child(4) { right:0; bottom:0; border-left:0; border-top:0; border-radius:0 0 12px 0; }
+.scan { position:absolute; left:8px; right:8px; top:78px; height:5px; border-radius:3px; background:linear-gradient(90deg,transparent,var(--ouro),transparent); box-shadow:0 0 18px 6px rgba(249,182,79,.55); }
+.ping { position:absolute; left:499px; top:327px; width:160px; height:160px; border-radius:22px; border:4px solid #7ff0a8; box-shadow:0 0 30px rgba(127,240,168,.6); }
+.cenaB { padding:26px 28px; display:flex; flex-direction:column; gap:14px; }
+.cenaC { padding:26px 28px; display:flex; flex-direction:column; gap:14px; }
+.rcard { display:flex; align-items:center; gap:20px; padding:20px 24px; border-radius:20px; border:1.5px solid; }
+.rcard .ic { flex:none; width:70px; height:70px; border-radius:50%; display:grid; place-items:center; }
+.rcard .ic svg { width:40px; height:40px; fill:none; stroke-width:2.2; stroke-linecap:round; stroke-linejoin:round; }
+.rcard b { display:block; font-size:31px; font-weight:700; line-height:1.18; letter-spacing:-.01em; }
+.rcard small { display:block; margin-top:6px; font-size:21px; color:rgba(244,246,255,.74); line-height:1.3; }
+.rcard.verde { border-color:rgba(130,230,165,.55); background:rgba(46,160,90,.15); } .rcard.verde .ic { background:rgba(46,160,90,.28); } .rcard.verde .ic svg { stroke:#7ff0a8; }
+.rcard.verm { border-color:rgba(255,125,125,.7); background:rgba(220,70,70,.17); } .rcard.verm .ic { background:rgba(220,70,70,.30); } .rcard.verm .ic svg { stroke:#ff9a9a; }
+.sec { display:flex; align-items:center; gap:12px; font-size:27px; font-weight:700; margin-top:4px; }
+.sec svg { width:26px; height:26px; stroke:var(--suave); fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+.sec .st { margin-left:auto; font-size:19px; font-weight:600; display:inline-flex; align-items:center; gap:6px; }
+.sec .st + .st { position:absolute; right:26px; }
+.sec .st svg { width:20px; height:20px; }
+.st.ok { color:#7ff0a8; } .st.ok svg { stroke:#7ff0a8; stroke-width:3; } .st.wait { color:var(--suave); }
+.pessoa { display:flex; align-items:center; gap:12px; padding:9px 16px; border-radius:14px; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.10); font-size:16px; color:var(--suave); }
+.pessoa b { font-size:18px; color:var(--branco); } .pessoa small { margin-left:auto; font-size:15px; }
+.ck svg { width:28px; height:28px; stroke:#7ff0a8; fill:none; stroke-width:3.2; stroke-linecap:round; stroke-linejoin:round; display:block; }
+.elo4 { display:flex; align-items:center; gap:14px; padding:12px 18px; border-radius:16px; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.09); font-size:23px; }
+.elo4 .n { width:36px; height:36px; border-radius:50%; display:grid; place-items:center; font-size:19px; font-weight:800; background:rgba(124,147,255,.18); color:var(--icone); }
+.elo4 b { font-weight:700; } .elo4 .at { color:var(--suave); font-size:19px; }
+.elo4 em { margin-left:auto; font-style:normal; font-size:16px; color:#bfe7c8; background:rgba(46,160,90,.16); border:1px solid rgba(120,220,150,.35); padding:3px 12px; border-radius:999px; }
+.elo4 .ck { margin-left:8px; } .elo4 em + .ck { margin-left:8px; } .elo4 .at + .ck { margin-left:auto; }
+.peq { font-size:16.5px; color:var(--suave); line-height:1.35; }
+.zona { position:relative; margin-top:6px; height:200px; border-radius:18px; border:2px dashed rgba(255,255,255,.28); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; color:var(--suave); font-size:25px; }
+.zona > svg { width:50px; height:50px; stroke:var(--suave); fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+.arq { position:absolute; left:50%; top:50%; width:420px; height:84px; margin:-42px 0 0 -210px; border-radius:16px; background:#fff; color:#222; display:flex; align-items:center; gap:14px; padding:0 20px; font-size:24px; font-weight:700; box-shadow:0 18px 40px rgba(0,0,0,.55); }
+.arq svg { width:36px; height:36px; stroke:#d33; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; flex:none; }
+.calc { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; gap:14px; font-size:26px; font-weight:600; color:var(--ouro); background:rgba(7,10,24,.80); border-radius:16px; }
+.calc .spin { display:inline-flex; } .calc svg { width:38px; height:38px; stroke:var(--ouro); fill:none; stroke-width:2.6; stroke-linecap:round; }
+.resbox { position:relative; height:170px; margin-top:4px; }
+.res { position:absolute; left:0; right:0; top:0; }
+
+
+/* ===== vitrine (faixas de capas + pôster em foco) ===== */
+.hero.vitrine { max-width:1080px; margin:0 -96px; width:1080px; }
+.vit { position:relative; transform-style:preserve-3d; }
+.vrow { height:206px; overflow:hidden; border-radius:16px; margin-bottom:16px; position:relative; transform-style:flat;
+  box-shadow:-14px 20px 40px rgba(0,0,0,.55), inset 0 0 0 1px rgba(255,255,255,.10); }
+.vrow::after { content:""; position:absolute; inset:0; pointer-events:none;
+  background:linear-gradient(90deg, rgba(7,10,24,.78), rgba(7,10,24,0) 18%, rgba(7,10,24,0) 82%, rgba(7,10,24,.78)); }
+.vtril { display:flex; width:max-content; transform:translateX(var(--d,0px)); will-change:transform; }
+.vtril img { height:206px; width:auto; display:block; filter:brightness(.78) saturate(.92); }
+.vposter { position:absolute; left:50%; top:50%; width:340px; transform:translate3d(-50%,-50%,90px); border-radius:10px; border:3px solid rgba(255,214,140,.95);
+  box-shadow:-10px 14px 0 #8f5d16, -22px 30px 70px rgba(0,0,0,.7), 0 0 90px rgba(249,182,79,.38); background:#fff; }
+.vposter img { display:block; width:100%; border-radius:7px; }
+.vposter .etiqueta { top:-20px; right:auto; left:50%; transform:translate(-50%,0) translateZ(40px); font-size:19px; padding:8px 20px; }
+
+/* ===== formato reels 1080x1920 (vídeo vertical): folga em cima e embaixo para a interface do Reels ===== */
+@property --rx { syntax:"<angle>"; inherits:false; initial-value:7deg; }
+@property --ry { syntax:"<angle>"; inherits:false; initial-value:13deg; }
+html.reels, html.reels body { width:1080px; height:1920px; }
+html.reels .arte { width:1080px; height:1920px; padding:200px 72px 310px; }
+html.reels .heroarea { padding:0 0 30px; }
+html.reels .hero { max-width:888px; transform:perspective(1900px) scale(1.05) rotateX(var(--rx)) rotateY(var(--ry)) rotateZ(-.8deg); transform-origin:50% 50%; }
+html.reels .glow.g1 { top:380px; } html.reels .glow.g2 { top:1100px; }
+html.reels .rodape { margin-top:20px; }
+
+/* ===== carrossel (páginas de contrato lado a lado, cortadas nas pontas) ===== */
+.hero.carrossel { max-width:none; width:1080px; margin:0 -96px; transform:perspective(2600px) rotateY(7deg) rotateZ(-.6deg) scale(1.02) !important; }
+.car { position:relative; height:640px; display:flex; align-items:center; }
+.trilho { display:flex; gap:26px; align-items:center; width:max-content; margin-left:0; }
+.pag { position:relative; flex:none; width:392px; height:570px; overflow:hidden; border-radius:12px; background:#fff;
+  box-shadow:-12px 18px 0 rgba(0,0,0,.28), -26px 34px 60px rgba(0,0,0,.6); filter:brightness(.8); }
+.pag img { display:block; width:100%; }
+.pag.foco { height:640px; width:442px; filter:none; overflow:visible; border-radius:12px; border:3px solid rgba(255,214,140,.95);
+  box-shadow:-12px 16px 0 #8f5d16, -26px 34px 70px rgba(0,0,0,.7), 0 0 100px rgba(249,182,79,.42); z-index:2; }
+.pag.foco img { height:100%; object-fit:cover; object-position:top; border-radius:9px; }
+.pag .etiqueta { top:-20px; right:auto; left:50%; transform:translateX(-50%); }
+.seta { position:absolute; right:66px; top:50%; margin-top:-44px; width:88px; height:88px; border-radius:50%; display:grid; place-items:center; z-index:5;
+  background:linear-gradient(135deg,#ffd48a,var(--ouro) 60%,var(--ouro-escuro)); box-shadow:0 10px 0 #8f5d16, 0 18px 40px rgba(0,0,0,.55), 0 0 50px rgba(249,182,79,.5); }
+.seta svg { width:46px; height:46px; stroke:#1a1204; fill:none; stroke-width:3; stroke-linecap:round; stroke-linejoin:round; }
+
 /* título, apoio, rodapé */
 .bloco { flex:none; }
 .grande, .apoio, .sub-num, .duplo .texto { text-wrap:balance; }
@@ -409,15 +609,18 @@ document.fonts.ready.then(function () {
   var rel = {};
   var g = document.querySelector('.grande'), a = document.querySelector('.apoio');
   function linhas(el) { var lh = parseFloat(getComputedStyle(el).lineHeight); return Math.round(el.getBoundingClientRect().height / lh); }
-  var fs = 98; g.style.fontSize = fs + 'px';
-  while (linhas(g) > 2 && fs > 74) { fs -= 4; g.style.fontSize = fs + 'px'; }
+  var P = document.documentElement.classList.contains('reels'), MAXL = P ? 3 : 2;
+  var fs = P ? 104 : 98; g.style.fontSize = fs + 'px';
+  while (linhas(g) > MAXL && fs > (P ? 70 : 74)) { fs -= 4; g.style.fontSize = fs + 'px'; }
   rel.tituloLinhas = linhas(g); rel.tituloFonte = fs; rel.apoioLinhas = linhas(a);
+  var tr = document.querySelector('.trilho'), fo = tr && tr.querySelector('.foco');
+  if (fo) { tr.style.transform = 'translateX(' + (tr.parentElement.clientWidth / 2 - (fo.offsetLeft + fo.offsetWidth / 2)) + 'px)'; }
   var area = document.querySelector('.heroarea'), h = document.querySelector('.hero');
   var cs = getComputedStyle(area), disp = area.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom) - 10, need = h.offsetHeight * 1.1, esc = 0.93;
   if (need * esc > disp) { esc = Math.max(0.5, disp / need); }
   h.style.setProperty('--escala', esc.toFixed(3));
   rel.heroEscala = +esc.toFixed(3); rel.heroAltura = h.offsetHeight; rel.areaDisponivel = Math.round(disp);
-  rel.estouro = document.querySelector('.arte').scrollHeight > 1350;
+  var ar = document.querySelector('.arte'); rel.estouro = ar.scrollHeight > ar.clientHeight + 1; rel.maxLinhas = MAXL;
   var p = document.createElement('pre'); p.id = 'rel'; p.style.display = 'none'; p.textContent = JSON.stringify(rel); document.body.appendChild(p);
 });
 """
@@ -494,6 +697,18 @@ MOTION_JS = r"""
         A($('.chip', l), [{ opacity: 0 }, { opacity: 1 }], t0 + .4, .5);
       });
       t += .5 + $$('.linha').length * .42 + .6;
+    } else if (hero.classList.contains('carrossel')) {
+      A($('.trilho'), [{ translate: '0 0' }, { translate: '-70px 0' }], 0, 9, 'ease-in-out');
+      A($('.seta'), [{ translate: '0 0' }, { translate: '14px 0' }, { translate: '0 0' }], t + 1, 1.1, 'ease-in-out', { iterations: 4 });
+      t += 1.4;
+    } else if (hero.classList.contains('vitrine')) {
+      $$('.vrow').forEach(function (r, i) {
+        A(r, [{ opacity: 0, translate: (i % 2 ? '240px' : '-240px') + ' 0' }, { opacity: 1, translate: '0 0' }], t + i * .2, .9);
+        A($('.vtril', r), [{ translate: '0 0' }, { translate: (i % 2 ? '' : '-') + '520px 0' }], 0, 14, 'linear');
+      });
+      A($('.vposter'), [{ opacity: 0, scale: .6, translate: '0 40px' }, { opacity: 1, scale: 1, translate: '0 0' }], t + 1.0, .8, POP);
+      A($('.vposter .etiqueta'), [{ opacity: 0, scale: 2.2 }, { opacity: 1, scale: 1 }], t + 1.7, .45, POP);
+      t += 2.4;
     } else if (hero.classList.contains('lista')) {
       $$('.cartao.mini').forEach(function (c, i) {
         A(c, [{ opacity: 0, translate: '0 60px', scale: .92 }, { opacity: 1, translate: '0 0', scale: 1 }], t + i * .16, .6, POP);
@@ -525,6 +740,77 @@ MOTION_JS = r"""
 })();
 """
 
+# Roteiro da demonstração em laço (16 s). Cada elemento tem UMA animação que cobre o laço inteiro, e o fim
+# volta ao estado do início, para o vídeo repetir sem corte. A moldura de texto não se mexe.
+DEMO_JS = r"""
+(function () {
+  var L = 16, anims = [];
+  var E = 'cubic-bezier(.4,0,.2,1)', POP = 'cubic-bezier(.34,1.56,.64,1)', MOVE = 'cubic-bezier(.3,.7,.2,1)';
+  function $(s, r) { return (r || document).querySelector(s); }
+  function S(o, tr, sc) { return { opacity: o, translate: tr || '0 0', scale: sc == null ? 1 : sc }; }
+  function K(el, pts) {
+    if (!el) return;
+    var kf = pts.map(function (p) { return Object.assign({ offset: p[0] / L, easing: p[2] || E }, p[1]); });
+    if (kf[0].offset > 0) kf.unshift(Object.assign({}, kf[0], { offset: 0 }));
+    if (kf[kf.length - 1].offset < 1) kf.push(Object.assign({}, kf[kf.length - 1], { offset: 1 }));
+    var a = el.animate(kf, { duration: L * 1000, fill: 'both', easing: 'linear' }); a.pause(); anims.push(a);
+  }
+  window.__ir = function (t) { anims.forEach(function (a) { a.currentTime = (t % L) * 1000; }); };
+  window.__montar = function () {
+    var A = $('.cenaA'), B = $('.cenaB'), C = $('.cenaC');
+    // cena A: a câmera lê o QR Code do contrato
+    K(A, [[0, S(1)], [2.55, S(1)], [3.15, S(0, '0 -20px', .96)], [15.0, S(0, '0 -20px', .96)], [15.9, S(1)]]);
+    K($('.mira'), [[0, S(0, '0 0', 3.4)], [.5, S(0, '0 0', 3.4)], [.9, S(1, '0 0', 3.4)], [2.1, S(1, '0 0', 1)], [2.6, S(1, '0 0', 1)], [2.9, S(0, '0 0', 1.2)], [15.9, S(0, '0 0', 3.4)]]);
+    K($('.scan'), [[0, S(0, '0 -66px')], [2.0, S(0, '0 -66px')], [2.1, S(1, '0 -66px')], [2.55, S(1, '0 66px')], [2.65, S(0, '0 66px')], [15.9, S(0, '0 -66px')]]);
+    K($('.ping'), [[0, S(0)], [2.55, S(0)], [2.6, S(.9)], [3.2, S(0, '0 0', 2.2)], [15.9, S(0)]]);
+    // cena B: a página de conferência se monta
+    K(B, [[0, S(0, '0 40px')], [3.0, S(0, '0 40px')], [3.6, S(1)], [8.0, S(1)], [8.5, S(0, '0 -30px')], [8.6, S(0, '0 40px')]]);
+    [['.b-card', 3.8], ['.b-quem', 4.3], ['.b-p1', 4.5], ['.b-p2', 4.8], ['.b-corr', 5.2], ['.b-e1', 5.4], ['.b-e2', 5.75], ['.b-e3', 6.1], ['.b-e4', 6.45]].forEach(function (x) {
+      K($(x[0]), [[0, S(0, '0 18px')], [x[1], S(0, '0 18px')], [x[1] + .45, S(1)], [8.0, S(1)], [8.5, S(0)], [8.6, S(0, '0 18px')]]);
+      var ck = $('.ck', $(x[0]));
+      if (ck) K(ck, [[0, S(0, '0 0', 0)], [x[1] + .3, S(0, '0 0', 0)], [x[1] + .75, S(1, '0 0', 1), POP], [8.5, S(1)], [8.6, S(0, '0 0', 0)]]);
+    });
+    K($('.st.wait'), [[0, S(0)], [5.3, S(0)], [5.5, S(1)], [6.9, S(1)], [7.05, S(0)]]);
+    K($('.st.ok'), [[0, S(0)], [7.0, S(0, '0 0', .8)], [7.3, S(1, '0 0', 1), POP], [8.0, S(1)], [8.5, S(0)]]);
+    // cena C: arrastar o PDF, primeiro o original, depois o alterado
+    K(C, [[0, S(0, '0 40px')], [8.3, S(0, '0 40px')], [8.9, S(1)], [15.0, S(1)], [15.6, S(0, '0 -20px')], [15.7, S(0, '0 40px')]]);
+    K($('.zona'), [[0, S(1)], [9.4, S(1)], [9.7, S(1, '0 0', 1.03)], [10.1, S(1)], [12.2, S(1)], [12.5, S(1, '0 0', 1.03)], [12.9, S(1)]]);
+    K($('.arq1'), [[0, S(0, '430px -90px')], [8.9, S(0, '430px -90px')], [9.05, S(1, '430px -90px')], [9.6, S(1, '0 0'), MOVE], [9.85, S(0, '0 12px', .6)]]);
+    K($('.calc1'), [[0, S(0)], [9.85, S(0)], [10.0, S(1)], [10.5, S(1)], [10.65, S(0)]]);
+    K($('.res1'), [[0, S(0, '0 24px', .96)], [10.55, S(0, '0 24px', .96)], [11.0, S(1, '0 0', 1), POP], [11.9, S(1)], [12.3, S(0, '0 -8px')]]);
+    K($('.arq2'), [[0, S(0, '430px -90px')], [11.8, S(0, '430px -90px')], [11.95, S(1, '430px -90px')], [12.5, S(1, '0 0'), MOVE], [12.75, S(0, '0 12px', .6)]]);
+    K($('.calc2'), [[0, S(0)], [12.75, S(0)], [12.9, S(1)], [13.2, S(1)], [13.35, S(0)]]);
+    K($('.res2'), [[0, S(0, '0 24px', .96)], [13.2, S(0, '0 24px', .96)], [13.5, S(1, '0 0', 1), POP], [13.55, S(1, '-10px 0')], [13.63, S(1, '10px 0')],
+      [13.71, S(1, '-7px 0')], [13.79, S(1, '5px 0')], [13.87, S(1, '0 0')], [15.0, S(1)], [15.5, S(0, '0 -8px')]]);
+    Array.prototype.slice.call(document.querySelectorAll('.spin')).forEach(function (el) {
+      var a = el.animate([{ rotate: '0deg' }, { rotate: '360deg' }], { duration: 900, iterations: Infinity }); a.pause(); anims.push(a);
+    });
+    // profundidade barata: o brilho passeia e o bloco respira
+    K($('.glow.g1'), [[0, { translate: '0 0' }], [8, { translate: '-60px 50px' }], [16, { translate: '0 0' }]]);
+    K($('.glow.g2'), [[0, { translate: '0 0' }], [8, { translate: '70px -40px' }], [16, { translate: '0 0' }]]);
+    if (document.documentElement.classList.contains('reels')) {
+      var c0 = { '--ry': '13deg', '--rx': '7deg', scale: 1, translate: '0 0' };
+      K($('.hero'), [[0, c0],
+        [2.6, { '--ry': '7deg', '--rx': '9deg', scale: 1.07, translate: '-12px 8px' }],
+        [5.5, { '--ry': '16deg', '--rx': '5deg', scale: 1.0, translate: '0 -16px' }],
+        [8.4, { '--ry': '9deg', '--rx': '10deg', scale: 1.06, translate: '-20px 10px' }],
+        [11.0, { '--ry': '17deg', '--rx': '6deg', scale: 1.09, translate: '0 -8px' }],
+        [13.6, { '--ry': '8deg', '--rx': '9deg', scale: 1.05, translate: '-10px 6px' }],
+        [16, c0]]);
+    } else {
+      K($('.hero'), [[0, { scale: .985, translate: '0 0' }], [8, { scale: 1.015, translate: '0 -8px' }], [16, { scale: .985, translate: '0 0' }]]);
+    }
+    return L;
+  };
+})();
+"""
+
+PREVIEW_JS = r"""
+document.fonts.ready.then(function () { setTimeout(function () {
+  if (window.__preview != null) { window.__montar(); window.__ir(window.__preview); }
+}, 120); });
+"""
+
 
 def montar(spec, marca, movimento=False):
     t = dict(marca)
@@ -540,30 +826,35 @@ def montar(spec, marca, movimento=False):
         sys.exit("Hero '%s' não existe. Use um de: %s" % (tipo, ", ".join(HEROS)))
     rodape = spec.get("rodape", "Já disponível para todos os usuários, confira")
     return """<!doctype html>
-<html lang="pt-BR"><head><meta charset="utf-8"><title>%(titulo_plano)s</title>
+<html lang="pt-BR" class="%(classe_html)s"><head><meta charset="utf-8"><title>%(titulo_plano)s</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>%(css)s</style></head>
-<body><div class="arte">
+<body><div class="arte">%(glows)s
   <div class="topo"><div class="marca"><img src="%(logo)s" alt="%(nome)s"><span>%(nome)s</span></div><div class="selo"><i></i>%(selo)s</div></div>
   <div class="heroarea"><div class="hero %(tipo)s">%(hero)s</div></div>
   <div class="bloco"><div class="grande">%(titulo)s</div><div class="apoio">%(apoio)s</div></div>
   <div class="rodape"><div class="fim">%(rodape)s %(seta)s</div></div>
 </div><script>%(js)s</script>%(movimento)s</body></html>""" % dict(
-        movimento=("<script>%s</script>" % MOTION_JS) if movimento else "",
-        titulo_plano=esc(sem_marcas(spec["titulo"])), css=css, logo="logo.png", nome=esc(marca["nome"]),
+        glows='<div class="glow g1"></div><div class="glow g2"></div>' if tipo == "demo" else "",
+        movimento=(("<script>%s</script>" % DEMO_JS + ("" if movimento else "<script>window.__preview=%s;</script>" % hero.get("quadro", 14.0)) + "<script>%s</script>" % PREVIEW_JS)
+                   if tipo == "demo" else (("<script>%s</script>" % MOTION_JS) if movimento else "")),
+        classe_html="reels" if spec.get("formato") == "reels" else "", titulo_plano=esc(sem_marcas(spec["titulo"])), css=css, logo="logo.png", nome=esc(marca["nome"]),
         selo=esc(spec.get("selo", "Novidade")), tipo=tipo, hero=HEROS[tipo](hero),
         titulo=fmt_titulo(spec["titulo"]), apoio=fmt_apoio(spec["apoio"]), rodape=esc(rodape), seta=ico("seta"), js=JS)
 
 
+TAMANHO = {"w": 1080, "h": 1350}
+
+
 def chrome(args, timeout=120):
     base = [CHROME, "--headless=new", "--disable-gpu", "--hide-scrollbars", "--force-device-scale-factor=1",
-            "--window-size=1080,1350", "--virtual-time-budget=12000"]
+            "--window-size=%d,%d" % (TAMANHO["w"], TAMANHO["h"]), "--virtual-time-budget=12000"]
     return subprocess.run(base + args, capture_output=True, text=True, timeout=timeout)
 
 
 def main():
-    ap = argparse.ArgumentParser(description="Gera a arte de Novidade de Produto (1080x1350).")
+    ap = argparse.ArgumentParser(description="Gera a arte de Novidade de Produto (1080x1350, ou 1080x1920 vertical para Reels com \"formato\": \"reels\" no spec).")
     ap.add_argument("spec", help="arquivo .json com a especificação")
     ap.add_argument("--saida", help="pasta de saída (padrão: saida/ ao lado do spec)")
     ap.add_argument("--video", action="store_true", help="gera também o vídeo MP4 animado (precisa do node e do ffmpeg)")
@@ -582,6 +873,8 @@ def main():
     CONTEXTO["spec_dir"], CONTEXTO["saida"] = spec_path.parent, saida
     shutil.copy(AQUI / marca["logo"], saida / "logo.png")
 
+    if spec.get("formato") == "reels":
+        TAMANHO["w"], TAMANHO["h"] = 1080, 1920
     html_path = saida / (nome + ".html")
     png_path = saida / (nome + ".png")
     html_path.write_text(montar(spec, marca), encoding="utf-8")
@@ -597,7 +890,7 @@ def main():
         mov_html.write_text(montar(spec, marca, movimento=True), encoding="utf-8")
         node = AQUI / "motion" / "capturar.js"
         print("Gerando o vídeo (pode levar alguns minutos)...")
-        r = subprocess.run(["node", str(node), str(mov_html), str(saida), nome + "-movimento", str(a.fps)], text=True)
+        r = subprocess.run(["node", str(node), str(mov_html), str(saida), nome + "-movimento", str(a.fps), str(TAMANHO["w"]), str(TAMANHO["h"])], text=True)
         if r.returncode != 0:
             print("AVISO: o vídeo não saiu, veja o erro acima.")
     if not rel:
@@ -606,8 +899,8 @@ def main():
     print("Conferência: título %d linha(s) a %dpx, apoio %d linha(s), hero %dpx em área de %dpx (escala %.2f)" % (
         rel["tituloLinhas"], rel["tituloFonte"], rel["apoioLinhas"], rel["heroAltura"], rel["areaDisponivel"], rel["heroEscala"]))
     avisos = []
-    if rel["tituloLinhas"] > 2:
-        avisos.append("título passou de 2 linhas: encurte.")
+    if rel["tituloLinhas"] > rel.get("maxLinhas", 2):
+        avisos.append("título passou do limite de linhas: encurte.")
     if rel["tituloFonte"] < 90:
         avisos.append("título encolheu para %dpx: prefira um título mais curto." % rel["tituloFonte"])
     if rel["apoioLinhas"] > 3:

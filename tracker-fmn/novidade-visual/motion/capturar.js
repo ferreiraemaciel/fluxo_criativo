@@ -9,7 +9,7 @@ const CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const FFMPEG = fs.existsSync('/opt/homebrew/bin/ffmpeg') ? '/opt/homebrew/bin/ffmpeg' : 'ffmpeg';
 
 (async () => {
-  const [html, saida, nome, fpsArg] = process.argv.slice(2);
+  const [html, saida, nome, fpsArg, larg, alt] = process.argv.slice(2);
   const fps = Number(fpsArg) || 30;
   const quadros = path.join(__dirname, 'quadros', nome);
   fs.rmSync(quadros, { recursive: true, force: true });
@@ -20,7 +20,7 @@ const FFMPEG = fs.existsSync('/opt/homebrew/bin/ffmpeg') ? '/opt/homebrew/bin/ff
     args: ['--hide-scrollbars', '--force-device-scale-factor=1', '--disable-gpu'],
   });
   const page = await browser.newPage();
-  await page.setViewport({ width: 1080, height: 1350, deviceScaleFactor: 1 });
+  await page.setViewport({ width: Number(larg) || 1080, height: Number(alt) || 1350, deviceScaleFactor: 1 });
   await page.goto('file://' + path.resolve(html), { waitUntil: 'networkidle0' });
   await page.waitForFunction(() => document.getElementById('rel'), { timeout: 30000 }); // o ajuste de texto terminou
   const duracao = await page.evaluate(() => window.__montar());
