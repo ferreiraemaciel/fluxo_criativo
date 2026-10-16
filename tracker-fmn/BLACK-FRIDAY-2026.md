@@ -3338,7 +3338,17 @@ Viraram card em Anúncios com a tag do pico, prontos para gravar junto com os tr
 
 Com os dois trailers (ADS 395 e 396), a fase de antecipação fecha em **6 peças**, dentro da conta de 46 anúncios.
 
-**A régua aplicada nos quatro:** nenhum vende produto, nenhum fala preço ou percentual, nenhum revela o que tem dentro da oferta, CTA único "Saiba Mais" no fim, 48 segundos em três blocos, sem OAB nem honorário. Todos vendem só a entrada na lista.
+**A régua aplicada nos quatro:** nenhum vende produto, nenhum fala preço ou percentual, nenhum revela o que tem dentro da oferta, 48 segundos em três blocos, sem OAB nem honorário.
+
+> **CORRIGIDO EM 16/10/2026.** A frase original desta régua era `CTA único "Saiba Mais" no fim. Todos vendem só a entrada na lista.` **Isso é a régua da captação, não da antecipação**, e foi ela que gerou as sete peças com a CTA errada. A correção veio do Samuel.
+>
+> O playbook separa as duas fases pelo objetivo de campanha (ver Parte 11): antecipação é **Engajamento**, estrutura 1-3-3, ABO, só público quente, sem evento de Lead e sem página. Captação é **Leads**, com evento de conversão, e só aí entram a página de inscrição e o grupo.
+>
+> **A CTA da antecipação é comentário**, nunca link. Três lastros: o objetivo Engajamento é escolhido justamente para gerar comentário, o case do banho e tosa (que o Gabriel chamou de melhor exemplo da aula) fecha com "comenta a palavra BLACK aqui para participar", e a frase que ele destacou para a fase é "Não compre nada ainda, combinado?".
+>
+> **A otimização, porém, é visualização de vídeo, não comentário.** O ativo que a antecipação constrói é o público de quem assistiu 75%, que vira os conjuntos 1 e 3 da captação. O comentário é sinal secundário, bom para alcance orgânico.
+>
+> **Palavra-chave escolhida: ENVELOPE**, não BLACK. Em novembro "comenta BLACK" vai estar em todo lugar, e o envelope já é o objeto da nossa campanha.
 
 **Nenhum tem trecho esperando ser preenchido**, de propósito, porque a campanha sobe em 13/10. Os números do ADS 398 são reais, apurados no nosso quiz, e não podem ser arredondados na edição.
 
