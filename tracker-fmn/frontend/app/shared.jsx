@@ -358,13 +358,13 @@ function Divider({ style = {} }) {
 function Sidebar({ activePage, onNavigate, collapsed = false, onToggle }) {
   // Alguma conversa precisando de humano? Mostra um alerta na aba Conversas
   // mesmo quando o usuário está em outra tela, pra nunca passar batido.
-  const [precisaHumano, setPrecisaHumano] = useState(false);
+  const [precisaHumano, setPrecisaHumano] = useState(0);
   useEffect(() => {
     if (!window.db) return;
     function checar() {
       window.db.from('whatsapp_contatos').select('telefone', { count: 'exact', head: true })
         .eq('precisa_humano', true).eq('is_spam', false)
-        .then(({ count }) => setPrecisaHumano((count || 0) > 0));
+        .then(({ count }) => setPrecisaHumano(count || 0));
     }
     checar();
     const t = setInterval(checar, 20000);
@@ -406,7 +406,7 @@ function Sidebar({ activePage, onNavigate, collapsed = false, onToggle }) {
   function NavItem({ item }) {
     const active = activePage === item.id;
     const [hov, setHov] = useState(false);
-    const alerta = item.id === 'conversas' && precisaHumano;
+    const alerta = item.id === 'conversas' && precisaHumano > 0;
     return (
       <button onClick={() => onNavigate(item.id)}
         onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
@@ -428,13 +428,22 @@ function Sidebar({ activePage, onNavigate, collapsed = false, onToggle }) {
         }}>
         <span style={{ position: 'relative', display: 'inline-flex' }}>
           <LucideIcon icon={item.icon} size={16} />
-          {alerta && (
+          {alerta && collapsed && (
             <span title="Precisa de humano" style={{
               position: 'absolute', top: -3, right: -3, width: 8, height: 8, borderRadius: '50%',
-              background: '#fe626c', border: '1.5px solid var(--app-bg, #080a0e)' }} />
+              background: '#fe626c' }} />
           )}
         </span>
         {!collapsed && item.label}
+        {/* Padrão Blindagem: contador vermelho à direita; recolhido, só a bolinha. */}
+        {alerta && !collapsed && (
+          <span title={`${precisaHumano} conversa(s) esperando atendimento humano`} style={{
+            marginLeft: 'auto', minWidth: 20, height: 20, padding: '0 6px', borderRadius: 999,
+            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+            background: '#fe626c', color: '#fff', fontSize: 10, fontWeight: 600 }}>
+            {precisaHumano > 99 ? '99+' : precisaHumano}
+          </span>
+        )}
       </button>
     );
   }
@@ -668,7 +677,26 @@ function RefBlock({ value, onChange }) {
    Escurece o resto da tela, mostra imagem/vídeo em tamanho maior sem
    distorcer (contain), com setas/dots quando há mais de um item.
 ─────────────────────────────────────────────────────────────────*/
-function CarouselLightbox({ urls, initialIdx, onClose }) {
+// Baixa o arquivo de verdade, em vez de abrir numa aba. Como o R2 está noutro
+// domínio, o atributo download sozinho é ignorado pelo navegador: busca o
+// conteúdo, guarda em memória e salva com o nome do próprio arquivo.
+async function baixar(url) {
+  if (!url) return;
+  const nome = (url.split('/').pop() || 'arquivo').split('?')[0];
+  try {
+    const r = await fetch(url);
+    const blob = await r.blob();
+    const tmp = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = tmp; a.download = nome;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(tmp), 4000);
+  } catch {
+    window.open(url, '_blank', 'noopener');   // bloqueio de CORS: abre numa aba
+  }
+}
+
+function CarouselLightbox({ urls, initialIdx, onClose, onBaixar }) {
   const [idx, setIdx] = useState(initialIdx || 0);
   const prev = () => setIdx(i => (i - 1 + urls.length) % urls.length);
   const next = () => setIdx(i => (i + 1) % urls.length);
@@ -751,8 +779,22 @@ function CarouselLightbox({ urls, initialIdx, onClose }) {
         </button>
       </>)}
 
+      {/* Baixar e fechar. O clique na imagem nunca baixa sozinho: quem decide
+          baixar é o botão, e dá para sair no X, no ESC ou clicando fora. */}
+      <button onClick={e => { e.stopPropagation(); (onBaixar || baixar)(urls[idx]); }}
+        title="Baixar este arquivo"
+        style={{ position:'fixed', top:16, right:62, gap:7,
+          background:'rgba(255,255,255,.1)', border:'1px solid rgba(255,255,255,.15)',
+          borderRadius:999, height:36, padding:'0 14px', cursor:'pointer', color:'#fff',
+          display:'flex', alignItems:'center', justifyContent:'center',
+          fontSize:12.5, fontFamily:'Roboto,sans-serif', fontWeight:700 }}
+        onMouseEnter={e => e.currentTarget.style.background='rgba(255,255,255,.2)'}
+        onMouseLeave={e => e.currentTarget.style.background='rgba(255,255,255,.1)'}>
+        <LucideIcon icon="download" size={15}/> Baixar
+      </button>
+
       {/* Fechar */}
-      <button onClick={onClose}
+      <button onClick={onClose} title="Fechar (ESC)"
         style={{ position:'fixed', top:16, right:16,
           background:'rgba(255,255,255,.1)', border:'1px solid rgba(255,255,255,.15)',
           borderRadius:'50%', width:36, height:36, cursor:'pointer', color:'#fff',
