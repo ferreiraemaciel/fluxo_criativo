@@ -295,11 +295,12 @@ def hero_demo(d):
 
 
 def hero_demo_contrato(d):
-    """Demo do fluxo inteiro: escolher o modelo, personalizar, salvar e copiar o link, o cliente assina, contrato assinado.
-    Textos e rótulos são os do app. Dados de exemplo (fictícios)."""
+    """Demo do fluxo inteiro: o que o produto promete, escolher o modelo, personalizar, salvar e copiar o link,
+    o cliente lê e aceita, assinatura com validade jurídica, e o que o fotógrafo ganha (decorados).
+    Textos e rótulos são os do app. Dados de exemplo (fictícios). Nada de 'contrato visual', 'fotógrafo' ou 'videomaker'."""
     ok = ico("check")
-    modelos = [("Casamento", "Fotografia e filmagem", "pessoas"), ("Newborn", "Fotografia", "presente"), ("Gestante", "Estúdio ou externo", "estrela"),
-               ("Formatura", "Fotografia e filmagem", "documento"), ("Ensaio", "Estúdio ou externo", "camera"), ("Quinze Anos", "Fotografia e filmagem", "presente")]
+    modelos = [("Casamento", "Cerimônia e festa", "pessoas"), ("Newborn", "Primeiros dias", "presente"), ("Gestante", "Estúdio ou externo", "estrela"),
+               ("Formatura", "Colação e jantar", "documento"), ("Ensaio", "Individual ou casal", "camera"), ("Quinze Anos", "Ensaio e festa", "presente")]
     cards = "".join('<div class="mod%s"><div class="icone peq">%s</div><div class="texto"><b>%s</b><small>%s</small></div>%s</div>' % (
         " foco" if i == 0 else "", ico(ic), esc(n), esc(sub), '<span class="sel">%s</span>' % ok if i == 0 else "")
         for i, (n, sub, ic) in enumerate(modelos))
@@ -309,10 +310,19 @@ def hero_demo_contrato(d):
     linhas = "".join('<div class="cp"><label>%s</label><div class="val"><span>%s</span></div>%s</div>' % (
         esc(r), esc(v), '<em class="padrao">do seu padrão</em>' if r == "Entregáveis" else "") for r, v in campos)
     url = d.get("link", "blindagem.fotografiaeomeunegocio.com.br/c/Xk3m9")
-    cod = d.get("codigo", "BLD-7K2M-9QXD")
+    prom = ["Modelo pronto", "Envio em minutos", "Validade jurídica"]
+    prom_h = "".join('<div class="prom k0r"><span class="ck">%s</span><b>%s</b></div>' % (ok, esc(t)) for t in prom)
+    regs = ["Nome e CPF", "Data e hora", "Endereço IP", "Impressão digital SHA-256"]
+    regs_h = "".join('<div class="reg k5r"><span class="ck">%s</span>%s</div>' % (ok, esc(t)) for t in regs)
+    deco = [("dinheiro", "Sinal de 30% a 50% antes do evento", ""),
+            ("calendario", "Multa de cancelamento prevista", ""),
+            ("imagem", "Uso de imagem cobrado à parte", "")]
+    deco_h = "".join('<div class="dec k6c"><div class="icone">%s</div><div class="texto"><b>%s</b></div></div>' % (ico(ic), esc(t)) for ic, t, sb in deco)
     return (
         '<div class="cartao dtela"><div class="dbarra"><i></i><i></i><i></i><span class="url">blindagem.fotografiaeomeunegocio.com.br</span></div>'
         '<div class="dclip">'
+        # 0 promessa (quadro)
+        '<div class="cena k0"><div class="escudo-g k0s">%(escudo)s</div>%(prom)s</div>'
         # 1 modelo
         '<div class="cena k1"><div class="sec k1t">%(busca)s Novo contrato</div><div class="fakebusca k1b">Buscar tipo de contrato...</div>'
         '<div class="mods">%(cards)s</div></div>'
@@ -323,22 +333,22 @@ def hero_demo_contrato(d):
         '<div class="cena k3"><div class="toast k3a">%(ok)s<span>Contrato criado. Envie o link para o cliente assinar.</span></div>'
         '<div class="lcard k3b"><div class="sec">%(elo)s Link de coleta</div><div class="status">Aguardando assinatura</div>'
         '<div class="urlbox"><span>%(url)s</span></div><div class="botao copiar"><span class="b1">%(cop)s Copiar link</span><span class="b2">%(ok)s Link copiado</span></div></div></div>'
-        # 4 cliente no celular
+        # 4 cliente lê e aceita (celular)
         '<div class="cena k4"><div class="fone"><div class="entalhe"></div>'
-        '<div class="tela t1"><h5>Preencha seus dados</h5><div class="fc"><label>Nome</label><div>Rafael Moraes Tavares</div></div>'
-        '<div class="fc"><label>CPF</label><div>104.204.304-04</div></div><div class="fc"><label>E-mail</label><div>rafael@exemplo.com.br</div></div>'
-        '<div class="fbtn">Confirmar informações</div></div>'
-        '<div class="tela t2"><h5>Leia o contrato e assine</h5><div class="mini"><i></i><i class="s"></i><i></i><i></i><i class="s"></i><i></i></div>'
-        '<div class="assin2"><svg viewBox="0 0 300 80"><path class="traco" d="M10 55 C 40 5, 60 75, 85 38 S 130 12, 150 50 S 200 70, 230 25 S 270 40, 290 30"/></svg><span>Assinatura</span></div>'
-        '<div class="fbtn b2">Assinar contrato</div></div></div></div>'
-        # 5 pronto
+        '<div class="tela t2"><h5>Leia o contrato e assine</h5>'
+        '<div class="docc"><div class="di">%(doc)s</div><div><b>Contrato de Casamento</b><small>Prévia para conferência</small></div></div>'
+        '<div class="vbtn"><span class="v1">Visualizar documento</span><span class="v2">%(ok)s Documento visualizado</span></div>'
+        '<div class="termo"><div class="th">%(escudo2)s Termo de aceite</div><div class="tl"><span class="cx"><i>%(ok)s</i></span>'
+        '<span>Li e concordo com todas as cláusulas deste contrato.</span></div></div>'
+        '<div class="fbtn b2"><span class="a1">Assinar</span></div></div></div></div>'
+        # 5 validade jurídica
         '<div class="cena k5"><div class="grande-ok"><div class="anel"></div>%(escudo)s</div>'
-        '<div class="rcard verde k5a"><div class="ic">%(ok)s</div><div><b>Contrato assinado por todas as partes</b><small>O registro guarda cada etapa, com dia e hora.</small></div></div>'
-        '<div class="quem k5b"><span>Rafael Moraes Tavares</span><em>20/10/2026 às 14:32</em></div>'
-        '<div class="quem k5c"><span>Marina Costa Fotografia</span><em>20/10/2026 às 14:40</em></div>'
-        '<div class="codigo2 k5d">%(cod)s</div></div>'
+        '<div class="rcard verde k5a"><div class="ic">%(ok)s</div><div><b>Contrato assinado por todas as partes</b></div></div>'
+        '<div class="regs">%(regs)s</div></div>'
+        # 6 decorados
+        '<div class="cena k6">%(deco)s<div class="pill k6p">Está no contrato.</div></div>'
         '</div></div>') % dict(busca=ico("busca"), cards=cards, linhas=linhas, ok=ok, elo=ico("elo"), url=esc(url), cop=ico("documento"),
-                               escudo=ico("escudo"), cod=esc(cod))
+                               escudo=ico("escudo"), escudo2=ico("escudo"), doc=ico("documento"), prom=prom_h, regs=regs_h, deco=deco_h)
 
 
 def _copia_img(caminho):
@@ -656,6 +666,7 @@ html.reels .hero { max-width:888px; transform:perspective(1900px) scale(1.05) ro
 html.reels .glow.g1 { top:380px; } html.reels .glow.g2 { top:1100px; }
 html.reels .rodape { margin-top:20px; }
 
+.apoio:empty { display:none; }
 .bloco.pilha { display:grid; }
 .bloco.pilha .tb { grid-area:1/1; }
 /* demo no formato reels: janela mais alta, cenas centradas na vertical, respiro dos lados */
@@ -772,6 +783,39 @@ html.reels .k2 { justify-content:flex-start; gap:11px; padding-top:34px; padding
 .k2 .cp .padrao { top:24px; }
 .k2 .botao { padding:15px; font-size:25px; }
 .k2 .sec { font-size:25px; margin:0 0 2px; }
+
+/* ===== demo do contrato: promessa, celular com aceite, validade, decorados ===== */
+.k0 { display:flex; flex-direction:column; align-items:stretch; justify-content:center; gap:18px; padding:20px 30px; }
+.escudo-g { align-self:center; width:150px; height:150px; border-radius:50%; display:grid; place-items:center; margin-bottom:10px; background:radial-gradient(circle at 35% 30%, #ffd48a, #c98a1d); box-shadow:0 0 70px rgba(249,182,79,.5); }
+.escudo-g svg { width:84px; height:84px; fill:none; stroke:#1a1204; stroke-width:2.2; stroke-linecap:round; stroke-linejoin:round; }
+.prom { display:flex; align-items:center; gap:16px; padding:20px 24px; border-radius:18px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.14); font-size:27px; }
+.ck svg { width:32px; height:32px; stroke:#7ff0a8; fill:none; stroke-width:3.2; stroke-linecap:round; stroke-linejoin:round; display:block; flex:none; }
+.docc { display:flex; align-items:center; gap:14px; padding:16px; border-radius:14px; background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.14); }
+.docc .di { width:54px; height:54px; border-radius:14px; display:grid; place-items:center; background:rgba(249,182,79,.16); }
+.docc .di svg { width:30px; height:30px; stroke:var(--ouro); fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+.docc b { display:block; font-size:21px; } .docc small { display:block; margin-top:3px; font-size:16px; color:var(--suave); }
+.vbtn { position:relative; text-align:center; padding:14px; border-radius:12px; border:1.5px solid rgba(255,255,255,.28); font-size:20px; font-weight:700; height:56px; }
+.vbtn .v1, .vbtn .v2 { position:absolute; left:0; right:0; top:14px; }
+.vbtn .v2 { display:inline-flex; align-items:center; justify-content:center; gap:8px; color:#7ff0a8; }
+.vbtn .v2 svg { width:22px; height:22px; stroke:#7ff0a8; fill:none; stroke-width:3; stroke-linecap:round; stroke-linejoin:round; }
+.termo { padding:16px; border-radius:14px; background:rgba(249,182,79,.07); border:1px solid rgba(249,182,79,.4); font-size:17px; line-height:1.4; }
+.termo .th { display:flex; align-items:center; gap:8px; font-weight:800; font-size:19px; margin-bottom:10px; }
+.termo .th svg { width:22px; height:22px; stroke:var(--ouro); fill:none; stroke-width:2.2; stroke-linecap:round; stroke-linejoin:round; }
+.termo .tl { display:flex; gap:12px; align-items:flex-start; color:rgba(244,246,255,.85); }
+.cx { flex:none; width:30px; height:30px; border-radius:8px; border:2px solid rgba(255,255,255,.4); display:grid; place-items:center; margin-top:2px; }
+.cx i svg { width:20px; height:20px; stroke:#1a1204; fill:none; stroke-width:3.6; stroke-linecap:round; stroke-linejoin:round; display:block; }
+.cx i { display:grid; place-items:center; width:100%; height:100%; border-radius:6px; background:var(--ouro); }
+.fbtn .a1 { display:block; }
+.regs { width:100%; display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.reg { display:flex; align-items:center; gap:10px; padding:16px 18px; border-radius:14px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); font-size:21px; font-weight:700; }
+.reg .ck svg { width:26px; height:26px; }
+.k6 { display:flex; flex-direction:column; gap:16px; justify-content:center; padding:20px 28px; }
+.dec { display:flex; align-items:center; gap:18px; padding:20px 22px; border-radius:18px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.14); }
+.dec .texto b { font-size:26px; } .dec .texto small { font-size:20px; margin-top:4px; }
+.dec .icone { background:linear-gradient(135deg,#ffd48a,var(--ouro)); border:none; }
+.dec .icone svg { stroke:#1a1204; }
+.pill { align-self:center; margin-top:8px; font-weight:800; font-size:34px; color:#1a1204; padding:16px 38px; border-radius:999px; background:linear-gradient(135deg,#ffd48a,var(--ouro) 60%,var(--ouro-escuro)); box-shadow:0 8px 0 #8f5d16, 0 0 50px rgba(249,182,79,.45); }
+.k4 .tela { padding-top:64px; gap:12px; }
 
 /* título, apoio, rodapé */
 .bloco { flex:none; }
@@ -999,7 +1043,7 @@ DEMO_JS = r"""
 # então o laço fecha sem salto.
 DEMO2_JS = r"""
 (function () {
-  var L = 22, anims = [];
+  var L = 46, anims = [];
   var E = 'cubic-bezier(.4,0,.2,1)', POP = 'cubic-bezier(.34,1.56,.64,1)';
   function $(s, r) { return (r || document).querySelector(s); }
   function $$(s, r) { return [].slice.call((r || document).querySelectorAll(s)); }
@@ -1011,64 +1055,74 @@ DEMO2_JS = r"""
     if (kf[kf.length - 1].offset < 1) kf.push(Object.assign({}, kf[kf.length - 1], { offset: 1 }));
     var a = el.animate(kf, { duration: L * 1000, fill: 'both', easing: 'linear' }); a.pause(); anims.push(a);
   }
-  // elemento que aparece em t e some em f (some = estado final), subindo 20px
-  function ENT(el, t, f, de) { var h = S(0, de || '0 20px', .96); K(el, [[0, h], [t, h], [t + .5, S(1), POP], [f, S(1)], [f + .4, S(0, '0 -14px')], [L, S(0, '0 -14px')]]); }
-  function CENA(el, a, b) { K(el, [[0, S(0)], [a, S(0)], [a + .35, S(1)], [b, S(1)], [b + .35, S(0)], [L, S(0)]]); }
+  function ENT(el, t, f, de) { var h = S(0, de || '0 20px', .96); K(el, [[0, h], [t, h], [t + .55, S(1), POP], [f, S(1)], [f + .45, S(0, '0 -14px')], [L, S(0, '0 -14px')]]); }
+  function CENA(el, a, b) { K(el, [[0, S(0)], [a, S(0)], [a + .4, S(1)], [b, S(1)], [b + .4, S(0)], [L, S(0)]]); }
+  function PRESS(el, t) { K(el, [[0, S(1)], [t, S(1)], [t + .15, S(1, '0 0', .95)], [t + .35, S(1)], [L, S(1)]]); }
   window.__ir = function (t) { anims.forEach(function (x) { x.currentTime = (t % L) * 1000; }); };
   window.__montar = function () {
-    K($('.dclip'), [[0, S(0)], [.4, S(1)], [21.4, S(1)], [21.9, S(0)]]);
-    // 1) escolher o modelo (0 a 4,3)
-    CENA($('.k1'), 0, 4.0);
-    ENT($('.k1t'), .35, 4.0); ENT($('.k1b'), .55, 4.0);
+    K($('.dclip'), [[0, S(0)], [.5, S(1)], [45.2, S(1)], [45.8, S(0)]]);
+    // 0) a promessa (0 a 4,8)
+    CENA($('.k0'), 0, 4.4);
+    K($('.k0s'), [[0, S(0, '0 0', .3)], [.4, S(0, '0 0', .3)], [1.0, S(1), POP], [4.4, S(1)], [4.8, S(0)], [L, S(0)]]);
+    $$('.k0r').forEach(function (r, i) { ENT(r, 1.5 + .75 * i, 4.4); });
+    // 1) escolher o modelo (4,8 a 11,6)
+    CENA($('.k1'), 4.8, 11.2);
+    ENT($('.k1t'), 5.2, 11.2); ENT($('.k1b'), 5.5, 11.2);
     $$('.mod').forEach(function (m, i) {
-      ENT(m, .75 + .16 * i, 4.0);
-      if (i > 0) K($('.texto', m), [[0, S(1)], [2.5, S(1)], [2.9, S(.4)], [16, S(.4)]]);
+      ENT(m, 5.9 + .3 * i, 11.2);
+      if (i > 0) K($('.texto', m), [[0, S(1)], [8.5, S(1)], [9.0, S(.4)], [L, S(.4)]]);
     });
-    K($('.mod.foco'), [[0, S(0, '0 20px', .96)], [.75, S(0, '0 20px', .96)], [1.25, S(1), POP], [2.5, S(1)], [2.9, S(1, '0 0', 1.04)], [4.0, S(1, '0 0', 1.04)], [4.4, S(0)], [L, S(0)]]);
-    K($('.mod .sel'), [[0, S(0, '0 0', 0)], [3.0, S(0, '0 0', 0)], [3.4, S(1), POP], [4.0, S(1)], [4.4, S(0)], [L, S(0)]]);
-    // 2) personalizar (4,3 a 10,3)
-    CENA($('.k2'), 4.3, 10.0);
-    ENT($('.k2t'), 4.6, 9.9);
+    K($('.mod.foco'), [[0, S(0, '0 20px', .96)], [5.9, S(0, '0 20px', .96)], [6.45, S(1), POP], [8.5, S(1)], [9.0, S(1, '0 0', 1.04)], [11.2, S(1, '0 0', 1.04)], [11.65, S(0)], [L, S(0)]]);
+    K($('.mod .sel'), [[0, S(0, '0 0', 0)], [9.4, S(0, '0 0', 0)], [9.9, S(1), POP], [11.2, S(1)], [11.6, S(0)], [L, S(0)]]);
+    // 2) personalizar (11,6 a 20)
+    CENA($('.k2'), 11.6, 19.7);
+    ENT($('.k2t'), 12.0, 19.6);
     $$('.cp').forEach(function (c, i) {
-      var t = 4.9 + .55 * i;
-      ENT(c, t, 9.9);
-      K($('.val span', c), [[0, { clipPath: 'inset(0 100% 0 0)' }], [t + .3, { clipPath: 'inset(0 100% 0 0)' }], [t + .9, { clipPath: 'inset(0 0 0 0)' }, 'linear'], [L, { clipPath: 'inset(0 0 0 0)' }]]);
+      var t = 12.4 + 1.0 * i;
+      ENT(c, t, 19.6);
+      K($('.val span', c), [[0, { clipPath: 'inset(0 100% 0 0)' }], [t + .4, { clipPath: 'inset(0 100% 0 0)' }], [t + 1.3, { clipPath: 'inset(0 0 0 0)' }, 'linear'], [L, { clipPath: 'inset(0 0 0 0)' }]]);
     });
-    K($('.padrao'), [[0, S(0, '0 0', .8)], [8.0, S(0, '0 0', .8)], [8.4, S(1), POP], [9.9, S(1)], [10.3, S(0)], [L, S(0)]]);
-    ENT($('.k2b'), 8.9, 9.9);
-    K($('.k2b'), [[0, S(0, '0 20px', .96)], [8.9, S(0, '0 20px', .96)], [9.4, S(1), POP], [9.55, S(1, '0 0', .95)], [9.75, S(1)], [10.0, S(1)], [10.4, S(0)], [L, S(0)]]);
-    // 3) salvar e copiar o link (10,3 a 13,8)
-    CENA($('.k3'), 10.3, 13.5);
-    ENT($('.k3a'), 10.55, 13.4, '0 -30px'); ENT($('.k3b'), 11.0, 13.4);
-    K($('.copiar .b1'), [[0, S(1)], [12.2, S(1)], [12.3, S(0)], [L, S(0)]]);
-    K($('.copiar .b2'), [[0, S(0)], [12.2, S(0)], [12.35, S(1)], [13.4, S(1)], [13.8, S(0)], [L, S(0)]]);
-    K($('.copiar'), [[0, S(1)], [12.0, S(1)], [12.15, S(1, '0 0', .95)], [12.35, S(1)], [L, S(1)]]);
-    // 4) cliente no celular (13,8 a 19)
-    CENA($('.k4'), 13.8, 18.7);
-    K($('.fone'), [[0, S(0, '0 50px', .94)], [14.0, S(0, '0 50px', .94)], [14.6, S(1), POP], [18.6, S(1)], [19.0, S(0)], [L, S(0)]]);
-    K($('.t1'), [[0, S(1)], [16.4, S(1)], [16.8, S(0, '-40px 0')], [L, S(0, '-40px 0')]]);
-    $$('.t1 .fc').forEach(function (c, i) { ENT(c, 14.9 + .35 * i, 16.5); });
-    K($('.t1 .fbtn'), [[0, S(1)], [16.0, S(1)], [16.12, S(1, '0 0', .95)], [16.3, S(1)], [L, S(1)]]);
-    K($('.t2'), [[0, S(0, '40px 0')], [16.5, S(0, '40px 0')], [16.9, S(1)], [18.6, S(1)], [L, S(1)]]);
-    var tr = $('.traco'); if (tr) { var a = tr.animate([{ strokeDashoffset: 700 }, { strokeDashoffset: 0 }, { strokeDashoffset: 0 }, { strokeDashoffset: 700 }], { duration: L * 1000, fill: 'both', easing: 'linear' }); a.pause(); anims.push(a);
-      a.effect.setKeyframes([{ offset: 0, strokeDashoffset: 700 }, { offset: 17.0 / L, strokeDashoffset: 700 }, { offset: 18.0 / L, strokeDashoffset: 0, easing: 'ease-in-out' }, { offset: 1, strokeDashoffset: 0 }]); }
-    K($('.t2 .fbtn'), [[0, S(1)], [18.15, S(1)], [18.27, S(1, '0 0', .95)], [18.45, S(1)], [L, S(1)]]);
-    // 5) pronto (19 a 21,9)
-    CENA($('.k5'), 19.0, 21.5);
-    K($('.grande-ok'), [[0, S(0, '0 0', .3)], [19.2, S(0, '0 0', .3)], [19.7, S(1), POP], [21.5, S(1)], [21.9, S(0)], [L, S(0)]]);
-    K($('.grande-ok .anel'), [[0, S(0, '0 0', .8)], [19.6, S(0, '0 0', .8)], [19.8, S(.9)], [20.6, S(0, '0 0', 1.35)], [L, S(0, '0 0', 1.35)]]);
-    ENT($('.k5a'), 20.0, 21.5); ENT($('.k5b'), 20.35, 21.5); ENT($('.k5c'), 20.6, 21.5); ENT($('.k5d'), 20.9, 21.5);
+    K($('.padrao'), [[0, S(0, '0 0', .8)], [17.7, S(0, '0 0', .8)], [18.1, S(1), POP], [19.6, S(1)], [20.0, S(0)], [L, S(0)]]);
+    K($('.k2b'), [[0, S(0, '0 20px', .96)], [18.4, S(0, '0 20px', .96)], [18.9, S(1), POP], [19.1, S(1, '0 0', .95)], [19.3, S(1)], [19.6, S(1)], [20.0, S(0)], [L, S(0)]]);
+    // 3) salvar e copiar o link (20 a 25,8)
+    CENA($('.k3'), 20.0, 25.4);
+    ENT($('.k3a'), 20.5, 25.3, '0 -30px'); ENT($('.k3b'), 21.3, 25.3);
+    K($('.copiar .b1'), [[0, S(1)], [23.3, S(1)], [23.4, S(0)], [L, S(0)]]);
+    K($('.copiar .b2'), [[0, S(0)], [23.3, S(0)], [23.45, S(1)], [25.3, S(1)], [25.7, S(0)], [L, S(0)]]);
+    PRESS($('.copiar'), 23.1);
+    // 4) o cliente lê e aceita (25,8 a 33)
+    CENA($('.k4'), 25.8, 32.7);
+    K($('.fone'), [[0, S(0, '0 50px', .94)], [26.0, S(0, '0 50px', .94)], [26.6, S(1), POP], [32.6, S(1)], [33.0, S(0)], [L, S(0)]]);
+    ENT($('.tela h5'), 26.9, 32.6); ENT($('.docc'), 27.3, 32.6); ENT($('.vbtn'), 27.7, 32.6);
+    K($('.vbtn .v1'), [[0, S(1)], [28.9, S(1)], [29.0, S(0)], [L, S(0)]]);
+    K($('.vbtn .v2'), [[0, S(0)], [28.9, S(0)], [29.1, S(1)], [32.6, S(1)], [L, S(1)]]);
+    PRESS($('.vbtn'), 28.7);
+    ENT($('.termo'), 29.4, 32.6);
+    K($('.cx i'), [[0, S(0, '0 0', 0)], [30.6, S(0, '0 0', 0)], [31.0, S(1), POP], [32.6, S(1)], [33.0, S(0)], [L, S(0)]]);
+    K($('.t2 .fbtn'), [[0, S(0, '0 16px', .96)], [27.9, S(0, '0 16px', .96)], [28.4, S(.4), POP], [31.0, S(.4)], [31.4, S(1)], [32.0, S(1)], [32.15, S(1, '0 0', .95)], [32.35, S(1)], [32.7, S(1)], [33.0, S(0)], [L, S(0)]]);
+    // 5) validade jurídica (33 a 39,5)
+    CENA($('.k5'), 33.0, 39.1);
+    K($('.grande-ok'), [[0, S(0, '0 0', .3)], [33.3, S(0, '0 0', .3)], [33.9, S(1), POP], [39.1, S(1)], [39.5, S(0)], [L, S(0)]]);
+    K($('.grande-ok .anel'), [[0, S(0, '0 0', .8)], [33.8, S(0, '0 0', .8)], [34.0, S(.9)], [35.0, S(0, '0 0', 1.35)], [L, S(0, '0 0', 1.35)]]);
+    ENT($('.k5a'), 34.5, 39.1);
+    $$('.k5r').forEach(function (r, i) { ENT(r.parentNode === document ? r : r, 35.4 + .6 * i, 39.1); });
+    // 6) o que isso muda (39,5 a 45,4)
+    CENA($('.k6'), 39.5, 45.0);
+    $$('.k6c').forEach(function (c, i) { ENT(c, 40.0 + .9 * i, 45.0); });
+    ENT($('.k6p'), 43.0, 45.0);
     // título por cena
-    var tbs = $$('.tb'), JAN = [[.1, 4.3], [4.3, 10.3], [10.3, 13.8], [13.8, 19.0], [19.0, 21.7]];
+    var tbs = $$('.tb'), JAN = [[.1, 4.8], [4.8, 11.6], [11.6, 20.0], [20.0, 25.8], [25.8, 33.0], [33.0, 39.5], [39.5, 45.4]];
     tbs.forEach(function (el, i) {
       var j = JAN[i] || [0, 0], dn = S(0, '0 18px'), up = S(0, '0 -18px');
-      K(el, [[0, dn], [j[0] + .1, dn], [j[0] + .55, S(1)], [j[1] - .15, S(1)], [j[1] + .25, up], [L, up]]);
+      K(el, [[0, dn], [j[0] + .1, dn], [j[0] + .6, S(1)], [j[1] - .15, S(1)], [j[1] + .3, up], [L, up]]);
     });
     var c0 = { '--ry': '10deg', '--rx': '6deg', scale: 1, translate: '0 0' };
     K($('.hero'), [[0, c0],
-      [5.5, { '--ry': '8deg', '--rx': '5deg', scale: 1.02, translate: '-4px 3px' }],
-      [11, { '--ry': '11.5deg', '--rx': '6.5deg', scale: 1, translate: '0 -5px' }],
-      [16.5, { '--ry': '8.5deg', '--rx': '5deg', scale: 1.025, translate: '-4px 3px' }],
+      [8, { '--ry': '8deg', '--rx': '5deg', scale: 1.02, translate: '-4px 3px' }],
+      [16, { '--ry': '11.5deg', '--rx': '6.5deg', scale: 1, translate: '0 -5px' }],
+      [24, { '--ry': '8.5deg', '--rx': '5deg', scale: 1.025, translate: '-4px 3px' }],
+      [32, { '--ry': '11deg', '--rx': '6.5deg', scale: 1, translate: '0 -5px' }],
+      [40, { '--ry': '8.5deg', '--rx': '5deg', scale: 1.02, translate: '-4px 3px' }],
       [L, c0]]);
     return L;
   };
