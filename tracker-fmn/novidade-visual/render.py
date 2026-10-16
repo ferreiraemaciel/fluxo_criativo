@@ -333,7 +333,26 @@ def hero_carrossel(d):
     return '<div class="car"><div class="trilho">%s</div><div class="seta">%s</div></div>' % ("".join(cards), ico("seta"))
 
 
-HEROS = {"carrossel": hero_carrossel, "vitrine": hero_vitrine, "demo": hero_demo, "corrente": hero_corrente, "tela": hero_tela, "lista": hero_lista,
+
+def hero_linkcliente(d):
+    """O link que o cliente recebe: foto de capa, foto de perfil, nome do estúdio e o botão de assinar.
+    `capa` e `perfil`: {imagem, posicao, zoom?}; `nome`, `sub`, `etiqueta_capa`, `etiqueta_perfil`, `medida`."""
+    def foto(f, extra=""):
+        im = _copia_img(f["imagem"])
+        return "background-image:url('%s'); background-position:%s; background-size:%s;%s" % (im, f.get("posicao", "50% 30%"), f.get("zoom", "cover"), extra)
+    return (
+        '<div class="cartao lc"><div class="dbarra"><i></i><i></i><i></i><span class="url">%(url)s</span></div>'
+        '<div class="lc-capa" style="%(capa)s"><div class="etiqueta">%(et_capa)s</div><div class="medida">%(medida)s</div></div>'
+        '<div class="lc-corpo"><div class="lc-avatar" style="%(perfil)s"><div class="etiqueta peq">%(et_perfil)s</div></div>'
+        '<div class="lc-nome"><b>%(nome)s</b><small>%(sub)s</small></div>'
+        '<div class="lc-campos"><i></i><i></i></div><div class="lc-botao">%(botao)s</div></div></div>') % dict(
+            url=esc(d.get("url", "seu-estudio.blindagem.app/contrato")), capa=foto(d["capa"]), perfil=foto(d["perfil"]),
+            et_capa=esc(d.get("etiqueta_capa", "Foto de capa")), et_perfil=esc(d.get("etiqueta_perfil", "Foto de perfil")),
+            medida=esc(d.get("medida", "1920 × 540")), nome=esc(d.get("nome", "")), sub=esc(d.get("sub", "")),
+            botao=esc(d.get("botao", "Preencher e assinar")))
+
+
+HEROS = {"linkcliente": hero_linkcliente, "carrossel": hero_carrossel, "vitrine": hero_vitrine, "demo": hero_demo, "corrente": hero_corrente, "tela": hero_tela, "lista": hero_lista,
          "numero": hero_numero, "comparativo": hero_comparativo}
 
 # ---------------------------------------------------------------- textura do fundo
@@ -593,13 +612,36 @@ html.reels .rodape { margin-top:20px; }
 /* ===== formato capa 1920x1080 (capa de tutorial / thumbnail do YouTube): texto à esquerda, janela à direita ===== */
 html.capa, html.capa body { width:1920px; height:1080px; }
 html.capa .arte { width:1920px; height:1080px; display:grid; grid-template-columns:820px 1fr; grid-template-rows:auto 1fr; column-gap:20px; padding:70px 96px 70px; }
-html.capa .topo { grid-column:1; grid-row:1; }
+html.capa .topo { grid-column:1; grid-row:1; position:static; }
+html.capa .selo { position:absolute; right:96px; top:70px; }
 html.capa .bloco { grid-column:1; grid-row:2; align-self:center; }
 html.capa .rodape { display:none; }
 html.capa .heroarea { grid-column:2; grid-row:1 / 3; padding:0; }
 html.capa .hero { max-width:888px; transform:perspective(1900px) scale(1.12) rotateX(7deg) rotateY(13deg) rotateZ(-.8deg) !important; transform-origin:50% 50%; }
 html.capa .apoio { font-size:38px; max-width:760px; }
 html.capa .glow.g1 { right:60px; top:60px; }
+
+/* ===== link do cliente (capa, perfil e nome do estúdio) ===== */
+.cartao.lc { display:block; padding:0; min-height:0; overflow:visible; }
+.lc .dbarra { display:flex; align-items:center; gap:10px; height:56px; padding:0 22px; border-bottom:1px solid var(--borda); }
+.lc .dbarra i { width:13px; height:13px; border-radius:50%; background:rgba(255,255,255,.22); }
+.lc .url { margin:0 auto; padding:7px 22px; border-radius:999px; background:rgba(0,0,0,.30); border:1px solid var(--borda); font-family:"SF Mono",Menlo,monospace; font-size:19px; color:var(--suave); transform:translateX(-30px); }
+.lc-capa { position:relative; height:300px; background-repeat:no-repeat; }
+.lc-capa::after { content:""; position:absolute; inset:0; background:linear-gradient(180deg, rgba(7,10,24,0) 55%, rgba(7,10,24,.55)); }
+.lc-capa .etiqueta { top:18px; right:22px; z-index:4; }
+.lc-capa .medida { position:absolute; right:22px; bottom:16px; z-index:4; font-family:"SF Mono",Menlo,monospace; font-size:21px; font-weight:700; color:#ffe3b3;
+  background:rgba(7,10,24,.72); border:1px solid rgba(249,182,79,.6); padding:6px 14px; border-radius:10px; }
+.lc-corpo { position:relative; padding:0 36px 34px; }
+.lc-avatar { position:absolute; left:36px; top:-62px; width:132px; height:132px; border-radius:50%; background-repeat:no-repeat; z-index:3;
+  border:5px solid var(--ouro); box-shadow:0 14px 34px rgba(0,0,0,.6), 0 0 40px rgba(249,182,79,.4); }
+.lc-avatar .etiqueta { top:auto; bottom:-14px; right:auto; left:50%; transform:translateX(-50%); white-space:nowrap; font-size:15px; padding:5px 12px; }
+.lc-nome { padding:90px 0 0 0; margin-left:0; }
+.lc-nome b { display:block; font-size:36px; font-weight:800; letter-spacing:-.02em; }
+.lc-nome small { display:block; margin-top:4px; font-size:22px; color:var(--suave); font-weight:500; }
+.lc-campos { display:flex; gap:16px; margin-top:22px; }
+.lc-campos i { flex:1; height:46px; border-radius:12px; background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.10); }
+.lc-botao { margin-top:20px; text-align:center; font-weight:800; font-size:26px; color:#1a1204; padding:18px; border-radius:16px;
+  background:linear-gradient(135deg,#ffd48a,var(--ouro) 60%,var(--ouro-escuro)); box-shadow:0 8px 0 #8f5d16, 0 16px 34px rgba(249,182,79,.35); }
 
 /* título, apoio, rodapé */
 .bloco { flex:none; }
