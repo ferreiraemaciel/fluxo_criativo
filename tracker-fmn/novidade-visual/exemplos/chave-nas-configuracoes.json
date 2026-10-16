@@ -1,0 +1,16 @@
+{
+  "nome": "chave-nas-configuracoes",
+  "produto": "blindagem",
+  "textura": "papel",
+  "titulo": "Agora é só {ouro:ligar} {suave:uma chave}",
+  "apoio": "**Código por e-mail antes de assinar.** Fica em Configurações, no seu perfil.",
+  "hero": {
+    "tipo": "tela",
+    "janela": "Configurações",
+    "linhas": [
+      {"icone": "relogio", "titulo": "Link do cliente vale por", "sub": "Depois disso, gera um novo", "controle": "chip", "valor": "3 dias"},
+      {"icone": "email", "destaque": true, "etiqueta": "Novo", "titulo": "Código por e-mail antes de assinar", "sub": "O cliente digita 6 números", "controle": "ligado"},
+      {"icone": "imagem", "titulo": "Autoriza uso em galeria", "sub": "Fotos do cliente no seu portfólio", "controle": "desligado"}
+    ]
+  }
+}

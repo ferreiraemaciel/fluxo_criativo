@@ -1,0 +1,23 @@
+{
+  "nome": "agenda-antes-e-agora",
+  "produto": "fmnpro",
+  "textura": "camurca",
+  "titulo": "Contrato assinado {ouro:entra} {suave:na agenda}",
+  "apoio": "**Sem copiar data de um lugar para o outro.** O evento nasce sozinho, com o lembrete.",
+  "hero": {
+    "tipo": "comparativo",
+    "antes": {
+      "icone": "caneta",
+      "rotulo": "Antes",
+      "titulo": "Marcar à mão",
+      "sub": "Você copiava a data do contrato para a agenda."
+    },
+    "agora": {
+      "icone": "calendario",
+      "rotulo": "Agora",
+      "titulo": "Cai sozinho",
+      "sub": "Assinou, entrou na agenda, com lembrete.",
+      "etiqueta": "Novo"
+    }
+  }
+}

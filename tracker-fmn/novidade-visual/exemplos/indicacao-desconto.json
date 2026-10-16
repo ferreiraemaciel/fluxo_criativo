@@ -1,0 +1,14 @@
+{
+  "nome": "indicacao-desconto",
+  "produto": "blindagem",
+  "textura": "camurca",
+  "titulo": "Cada indicação sua vale {ouro:10%} {suave:de desconto}",
+  "apoio": "**Programa de indicação.** O seu link fica na aba Indicações, dentro de Conta.",
+  "hero": {
+    "tipo": "numero",
+    "rotulo": "Desconto na renovação",
+    "numero": "10%",
+    "legenda": "Para cada colega que assinar pelo seu link. O desconto acumula.",
+    "passos": [{"texto": "1 indicação · 10%"}, {"texto": "5 indicações · 50%"}, {"texto": "10 indicações · renovação grátis", "destaque": true}]
+  }
+}

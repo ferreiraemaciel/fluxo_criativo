@@ -25,19 +25,23 @@ O contraste entre DUAS IMAGENS é o próprio argumento, e as duas
 juntas já dizem alguma coisa antes de o leitor ler a frase?
   → COMPARAÇÃO VISUAL
 
+O conteúdo é uma NOVIDADE DO PRODUTO, algo que ele passou a fazer e
+que o usuário já pode usar hoje, com a tela do produto como protagonista?
+  → NOVIDADE DE PRODUTO
+
 O conteúdo é grande demais pra caber numa imagem só?
   → CARROSSEL
 ```
 
 Atalho: **uma frase** é Citação Crua, **um caso** é Caso Real, **itens** é Card de Consulta, **duas
-imagens que se contrastam** é Comparação Visual, e o que não cabe em uma imagem é Carrossel.
+imagens que se contrastam** é Comparação Visual, **uma novidade do produto** é Novidade de Produto, e o que não cabe em uma imagem é Carrossel.
 
 Quando o mesmo tema já foi decidido em conversa (ex: "a peça 5 vira Citação Crua"), não precisa
 reconsultar esse fluxo, só seguir a decisão já tomada.
 
 ---
 
-## Os 5 formatos
+## Os 6 formatos
 
 | Formato | Quando usar | Visual | Doc detalhado |
 |---|---|---|---|
@@ -46,6 +50,7 @@ reconsultar esse fluxo, só seguir a decisão já tomada.
 | **Card de Consulta** | Lista, régua, checklist ou comparativo que cabe numa imagem só, feito pra ser salvo | Fundo cinza escuro com folha branca texturizada flutuando por dentro, título grande na cor de destaque, itens numerados, @ na base da folha. Montado no Canva, não gerado por IA | `IDENTIDADE-VISUAL-CARD-CONSULTA.md` |
 | **Comparação Visual** | Contraste entre duas imagens, quando elas provam o ponto sozinhas | Duas imagens ocupando metade da altura cada, corte reto no meio, uma frase em caixa preta na divisa, @ no canto. Montado no Canva a partir de imagens prontas, não gerado de uma vez pela IA | `IDENTIDADE-VISUAL-COMPARACAO.md` |
 | **Carrossel** | Conteúdo grande demais pra uma imagem só | 8 slides 1080x1350 (referência), capa e CTA, sistema de cor semântica | `IDENTIDADE-VISUAL-CARROSSEL.md` |
+| **Novidade de Produto** | O produto (Blindagem, FMN Pro...) passou a fazer algo novo e o usuário já pode usar | Fundo escuro com textura de camurça, tela do produto em vidro 3D com o lado maior na esquerda, selo NOVIDADE dourado, título em dois pesos, rodapé amarelo centralizado. **Sem @.** Gerado em HTML por `novidade-visual/render.py`, não por IA | `IDENTIDADE-VISUAL-NOVIDADE-PRODUTO.md` |
 
 **Citação Crua e Card de Consulta são vizinhos e precisam se diferenciar de longe.** Os dois são
 imagem única e tipográfica. O que separa: a Citação Crua tem fundo creme cheio e uma frase solta com
@@ -63,12 +68,16 @@ no `IDENTIDADE-VISUAL-CARROSSEL.md`.
 
 ---
 
-## Regras que valem pros 5 formatos
+## Regras que valem pros formatos
+
+> A Novidade de Produto tem duas exceções, marcadas abaixo. Todo o resto vale para os seis.
 
 - **Nunca pode parecer feito por IA.** Cara humanizada, imperfeita, "feito é melhor que perfeito".
-- **`@felipeferreirafotografo` é obrigatório em toda peça**, sem exceção. Cada formato tem sua
-  posição fixa (ver doc específico), mas a presença do @ não é opcional em nenhum dos cinco.
-- **1080x1350px, vertical, 4:5**, sempre, nos 5 formatos.
+  **Exceção: Novidade de Produto**, que é polida de propósito (e mesmo assim não é IA, é HTML renderizado).
+- **`@felipeferreirafotografo` é obrigatório em toda peça**, com **uma única exceção: Novidade de
+  Produto**, que leva a marca do produto no topo no lugar do @ (decidido em 2026-10-15). Nos outros
+  cinco formatos, cada um tem sua posição fixa (ver doc específico) e o @ não é opcional.
+- **1080x1350px, vertical, 4:5**, sempre, nos 6 formatos.
 - Identificação com fotografia/fotógrafo precisa estar no conteúdo (frase, manchete ou headline),
   não só implícita pelo contexto da conta.
 - **A legenda nunca repete o texto que já está escrito na arte** (frase principal da Citação Crua,
@@ -143,3 +152,8 @@ Depois de montar, ler o carrossel inteiro na ordem, uma vez, como leitor.
   lista saindo errada (3 vezes) e ordem de leitura mudando na montagem (2 vezes). Todos nascem na
   geração, não no roteiro, então são invisíveis pra quem escreveu o texto e só aparecem conferindo
   a arte final.
+- 2026-10-15: Entrou o sexto formato, **Novidade de Produto**. Motivo: o post de novidade do código por
+  e-mail antes de assinar (ORG 320, Blindagem) não cabia em nenhum dos cinco, porque o assunto é o
+  produto funcionando, não uma tese, um caso ou uma lista. É o único formato **sem @** (a marca do
+  produto no topo faz esse papel) e o único **polido de propósito**. É gerado por script, com cinco
+  heros e uma marca por produto, para servir a qualquer novidade futura sem recomeçar a arte.

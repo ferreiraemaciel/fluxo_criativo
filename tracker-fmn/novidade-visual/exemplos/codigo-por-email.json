@@ -1,0 +1,15 @@
+{
+  "nome": "codigo-por-email",
+  "produto": "blindagem",
+  "textura": "camurca",
+  "titulo": "Mais um {ouro:elo} {suave:na prova do seu contrato}",
+  "apoio": "**Código por e-mail antes de assinar.** Você liga nas configurações e escolhe contrato a contrato.",
+  "hero": {
+    "tipo": "corrente",
+    "itens": [
+      {"icone": "documento", "titulo": "1 · Documento criado", "sub": "Fotógrafo · 20:25:07", "chip": "c25b…32c4"},
+      {"icone": "email", "destaque": true, "etiqueta": "Novo", "titulo": "2 · E-mail confirmado por código", "sub": "Contratante 1 · fe***@gmail.com · 20:26:11", "codigo": "482913", "chip": "8f79…c867"},
+      {"icone": "caneta", "titulo": "3 · Assinatura eletrônica", "sub": "Contratante 1 · 20:26:11", "tag": "Assinado", "chip": "166c…3ab1"}
+    ]
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "nome": "novos-modelos",
+  "produto": "blindagem",
+  "textura": "camurca",
+  "titulo": "{ouro:Seis modelos} {suave:novos de contrato}",
+  "apoio": "**Já estão na sua lista.** É só clicar em Novo contrato, personalizar e mandar para assinar.",
+  "hero": {
+    "tipo": "lista",
+    "itens": [
+      {
+        "icone": "estrela",
+        "titulo": "Chá de bebê",
+        "sub": "Festa e brindes",
+        "novo": true
+      },
+      {
+        "icone": "camera",
+        "titulo": "Batizado",
+        "sub": "Cerimônia e festa",
+        "novo": true
+      },
+      {
+        "icone": "documento",
+        "titulo": "Casamento civil",
+        "sub": "Cartório e jantar",
+        "novo": true
+      },
+      {
+        "icone": "pessoas",
+        "titulo": "Palestra",
+        "sub": "Evento corporativo",
+        "novo": true
+      },
+      {
+        "icone": "presente",
+        "titulo": "Jantar de formatura",
+        "sub": "Turma e comissão",
+        "novo": true
+      },
+      {
+        "icone": "imagem",
+        "titulo": "Elopement",
+        "sub": "Casamento a dois",
+        "novo": true
+      }
+    ]
+  }
+}

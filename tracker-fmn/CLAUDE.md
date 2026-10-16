@@ -392,6 +392,16 @@ Google Drive API em Python continua normal, esses não passam pela Cloudflare.
 Se precisar mesmo de Python na chamada ao worker, mandar um `User-Agent` de
 navegador no cabeçalho resolve. Mas o caminho curto é `curl`.
 
+## Orgânico: formatos visuais (ler ANTES de gerar qualquer peça de imagem)
+
+O projeto tem seis formatos próprios de imagem de Orgânico, todos em 1080x1350, com um documento de
+identidade cada. Ponto de partida obrigatório: **`IDENTIDADE-VISUAL-INDICE.md`** (decide qual formato
+usar e traz a conferência obrigatória depois que a arte fica pronta). Os formatos: Citação Crua, Caso
+Real, Card de Consulta, Comparação Visual, Carrossel e **Novidade de Produto** (post que anuncia algo
+novo do Blindagem, FMN Pro e outros; é gerado por `novidade-visual/render.py`, leia
+`IDENTIDADE-VISUAL-NOVIDADE-PRODUTO.md`). Não são skills do VTSD (a `criativo-estatico` é de anúncio).
+A Novidade de Produto é o único formato sem o @.
+
 ## Orgânico — pasta padrão do Drive (fonte oficial de mídia)
 
 **A mídia de qualquer card do Orgânico (imagem, carrossel ou vídeo) SEMPRE vem da pasta do Google Drive, nunca de arquivo solto no Downloads, Desktop ou qualquer outro lugar do Mac.** Pasta raiz: `https://drive.google.com/open?id=1h3cPqEoOnXld-6Sqh3IjsYcsb2bh_PLp` (ID `1h3cPqEoOnXld-6Sqh3IjsYcsb2bh_PLp`, já cadastrado como `ORGANICO_FOLDER_ID` em `scripts/adicionar-criativo-organico.py`). Dentro dela, cada card tem sua própria subpasta `ORG <numero>` (ex: `ORG 019`), e o número segue o mesmo índice por `created_at` mostrado na UI do Kanban.
