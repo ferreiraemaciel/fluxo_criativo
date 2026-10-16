@@ -3513,3 +3513,64 @@ Baixados e olhados quadro a quadro em 16/10, porque a dúvida era exatamente o q
 
 O ADS 401 já está resolvido assim, porque o manifesto foi publicado como ORG 309 em 15/10.
 
+
+
+---
+
+# PARTE 29. A CAPTAÇÃO, PELOS SLIDES DO SAMUEL (16/10/2026)
+
+## 29.1 Pré-requisitos, e onde a gente está em cada um
+
+| # | Pré-requisito do slide | Nosso estado em 16/10 |
+|---|---|---|
+| 1 | Página de captura com Page View instalado | **Pronto.** `/black-2026`, pixel 2021111734750468 |
+| 2 | Página de obrigado com Page View e Lead/Cadastro | **Pronto em 16/10.** O Lead agora só dispara com o código do cadastro, e deduplica com a CAPI pelo `eventID` |
+| 3 | Ferramenta de e-mail vinculada ao formulário | **FALTA.** O e-mail é gravado em `quiz_leads` e hasheado para a CAPI, e não entra em ferramenta de disparo nenhuma |
+| 4 | Grupo de WhatsApp vinculado na página de obrigado | **Pronto.** Passo 01 da página, grupo #008 |
+| 5 | Criativos: no mínimo 15 | **FALTA.** 8 cards de captação (ADS 366 a 373), só o 371 com arquivo |
+
+## 29.2 Estrutura da campanha
+
+| | |
+|---|---|
+| Objetivo de campanha | Leads/Cadastro |
+| Evento de conversão | Lead |
+| Criativos por campanha | 5 a 8, misturando estático e vídeo |
+| Advantage+ | **desligado**, campanhas só para público quente |
+| Orçamento | **CBO**, verba total de captação dividida pelos dias de captação |
+
+| Conjunto | Público | Anúncios |
+|---|---|---|
+| 1 | Visitantes da página de captura + quem viu 15s dos anúncios da Black | AD01 a AD06 |
+| 2 | Visitante da página de vendas + checkout 90D + leads de picos passados | AD01 a AD06 |
+| 3 | Envolvimento 180D + viu 75% dos vídeos 180D + enviou direct 180D | AD01 a AD06 |
+| 4 | Públicos quentes amplos + leads de pico passado + seguidores | AD01 a AD06 |
+
+Os mesmos seis anúncios rodam em todos os conjuntos. Os 15 do pré-requisito são o estoque para substituir o que cansar, não o que sobe de uma vez.
+
+## 29.3 Otimização, a rotina escrita
+
+**Passo 1, todos os dias.** Se o custo por lead estiver dentro do ideal, **aumentar o orçamento da campanha em 20%**.
+
+**Passo 2, a cada 3 ou 4 dias.** Se o custo por lead **do conjunto** estiver dentro da meta, manter o conjunto ativo. Desativar os conjuntos com custo por lead acima da meta.
+
+Repare que são duas réguas diferentes: a diária olha a campanha inteira e mexe em verba. A de 3 em 3 dias olha conjunto por conjunto e mexe em liga e desliga.
+
+## 29.4 A conta da verba, com os números do nosso plano
+
+Do `plano_midia` do pico: CPL meta de R$ 8, meta de 100 vendas, conversão de 8%, 14 dias de captação.
+
+| | |
+|---|---|
+| Leads necessários | 100 ÷ 0,08 = **1.250** |
+| Verba de captação | 1.250 × R$ 8 = **R$ 10.000** |
+| Orçamento diário, CBO | R$ 10.000 ÷ 14 = **cerca de R$ 714 por dia** |
+
+Esse é o valor de partida. Pelo passo 1 da otimização, ele sobe 20% a cada dia em que o CPL estiver dentro da meta, então a verba real tende a ficar acima disso se a captação for bem.
+
+## 29.5 As duas pendências que travam a captação
+
+A captação sobe em **20/10**, quatro dias depois desta anotação.
+
+1. **Ferramenta de e-mail.** Hoje o cadastro não dispara e-mail nenhum. O lead entra no banco, recebe o grupo na página de obrigado, e acabou. Se ele não entrar no grupo, não existe segundo caminho. Decisão pendente do Felipe, e conversa com a pendência de sair do Hotmart Send.
+2. **Criativos.** São 8 cards escritos e 1 com arquivo, contra o mínimo de 15 do slide. Depende da rodada de gravação.
