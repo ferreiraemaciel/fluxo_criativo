@@ -13,11 +13,15 @@
     "quadro": 8.0,
     "titulos": [
       {
+        "titulo": "Para {ouro:fotógrafo e videomaker}",
+        "apoio": ""
+      },
+      {
         "titulo": "Cada trabalho {ouro:blindado} antes do primeiro clique",
         "apoio": ""
       },
       {
-        "titulo": "Mais de 35 modelos {ouro:prontos e automáticos}",
+        "titulo": "Mais de 35 contratos visuais {ouro:prontos e automáticos}",
         "apoio": ""
       },
       {
@@ -29,7 +33,11 @@
         "apoio": ""
       },
       {
-        "titulo": "O cliente {ouro:assina} no celular",
+        "titulo": "O cliente {ouro:preenche os dados}",
+        "apoio": ""
+      },
+      {
+        "titulo": "E {ouro:assina} no celular",
         "apoio": ""
       },
       {
@@ -40,6 +48,16 @@
         "titulo": "Cobre o sinal {ouro:sem constrangimento}",
         "apoio": ""
       }
-    ]
+    ],
+    "modelos": [
+      "../assets/modelos/m00.jpg",
+      "../assets/modelos/m01.jpg",
+      "../assets/modelos/m02.jpg",
+      "../assets/modelos/m03.jpg",
+      "../assets/modelos/m04.jpg",
+      "../assets/modelos/m05.jpg",
+      "../assets/modelos/m06.jpg"
+    ],
+    "foco": 3
   }
 }

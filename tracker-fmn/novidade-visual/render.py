@@ -295,37 +295,34 @@ def hero_demo(d):
 
 
 def hero_demo_contrato(d):
-    """Demo do fluxo inteiro: o que o produto promete, escolher o modelo, personalizar, salvar e copiar o link,
-    o cliente lê e aceita, assinatura com validade jurídica, e o que o fotógrafo ganha (decorados).
-    Textos e rótulos são os do app. Dados de exemplo (fictícios). Nada de 'contrato visual', 'fotógrafo' ou 'videomaker'."""
+    """Demo do fluxo inteiro: a promessa, os contratos visuais passando de lado, personalizar, link,
+    o cliente preenche os dados e assina (aceite eletrônico), validade jurídica e os decorados.
+    Textos e rótulos são os do app. Dados de exemplo (fictícios)."""
     ok = ico("check")
-    modelos = [("Casamento", "Cerimônia e festa", "pessoas"), ("Newborn", "Primeiros dias", "presente"), ("Gestante", "Estúdio ou externo", "estrela"),
-               ("Formatura", "Colação e jantar", "documento"), ("Ensaio", "Individual ou casal", "camera"), ("Quinze Anos", "Ensaio e festa", "presente")]
-    cards = "".join('<div class="mod%s"><div class="icone peq">%s</div><div class="texto"><b>%s</b><small>%s</small></div>%s</div>' % (
-        " foco" if i == 0 else "", ico(ic), esc(n), esc(sub), '<span class="sel">%s</span>' % ok if i == 0 else "")
-        for i, (n, sub, ic) in enumerate(modelos))
+    imgs = d.get("modelos", [])
+    foco = int(d.get("foco", 3))
+    paginas = "".join('<div class="pg"><img src="%s" alt=""><i class="gl"></i></div>' % _copia_img(m) for m in imgs)
+    foto_foco = _copia_img(imgs[foco]) if imgs else ""
     campos = [("Nome do contrato", d.get("nome_contrato", "Casamento Rafael e Thiago")), ("Contratante 1", d.get("contratante", "Rafael Moraes Tavares")),
               ("Data da celebração", d.get("data_evento", "07/05/2027")), ("Local", d.get("local", "Jardim Botânico, Salvador - BA")),
               ("Entregáveis", d.get("entregaveis", "Galeria digital com 200 fotos tratadas")), ("Pagamento", d.get("pagamento", "A prazo, Pix, 3 parcelas"))]
     linhas = "".join('<div class="cp"><label>%s</label><div class="val"><span>%s</span></div>%s</div>' % (
         esc(r), esc(v), '<em class="padrao">do seu padrão</em>' if r == "Entregáveis" else "") for r, v in campos)
     url = d.get("link", "blindagem.fotografiaeomeunegocio.com.br/c/Xk3m9")
-    prom = ["Modelo pronto", "Envio em minutos", "Validade jurídica"]
+    prom = ["Contrato visual pronto", "Envio em minutos", "Validade jurídica"]
     prom_h = "".join('<div class="prom k0r"><span class="ck">%s</span><b>%s</b></div>' % (ok, esc(t)) for t in prom)
     regs = ["Nome e CPF", "Data e hora", "Endereço IP", "Impressão digital SHA-256"]
     regs_h = "".join('<div class="reg k5r"><span class="ck">%s</span>%s</div>' % (ok, esc(t)) for t in regs)
-    deco = [("dinheiro", "Sinal de 30% a 50% antes do evento", ""),
-            ("calendario", "Multa de cancelamento prevista", ""),
-            ("imagem", "Uso de imagem cobrado à parte", "")]
-    deco_h = "".join('<div class="dec k6c"><div class="icone">%s</div><div class="texto"><b>%s</b></div></div>' % (ico(ic), esc(t)) for ic, t, sb in deco)
+    deco = [("dinheiro", "Sinal de 30% a 50% antes do evento"), ("calendario", "Multa de cancelamento prevista"), ("imagem", "Uso de imagem cobrado à parte")]
+    deco_h = "".join('<div class="dec k6c"><div class="icone">%s</div><div class="texto"><b>%s</b></div></div>' % (ico(ic), esc(t)) for ic, t in deco)
     return (
         '<div class="cartao dtela"><div class="dbarra"><i></i><i></i><i></i><span class="url">blindagem.fotografiaeomeunegocio.com.br</span></div>'
         '<div class="dclip">'
-        # 0 promessa (quadro)
-        '<div class="cena k0"><div class="escudo-g k0s">%(escudo)s</div>%(prom)s</div>'
-        # 1 modelo
-        '<div class="cena k1"><div class="sec k1t">%(busca)s Novo contrato</div><div class="fakebusca k1b">Buscar tipo de contrato...</div>'
-        '<div class="mods">%(cards)s</div></div>'
+        # 0 promessa: o contrato visual com o escudo
+        '<div class="cena k0"><div class="k0p"><img src="%(foco)s" alt=""><div class="carimbo">%(escudo)s</div></div><div class="k0l">%(prom)s</div></div>'
+        # 1 os contratos visuais passando de lado
+        '<div class="cena k1"><div class="sec k1t">%(busca)s Novo contrato</div>'
+        '<div class="car2" style="--foco:%(fi)s"><div class="trilho2">%(paginas)s</div></div><div class="rotfoco k1r">Casamento</div></div>'
         # 2 personalizar
         '<div class="cena k2"><div class="sec k2t"><span class="chipm">Casamento</span> Personalize os dados</div>%(linhas)s'
         '<div class="botao k2b">Salvar contrato</div></div>'
@@ -333,10 +330,15 @@ def hero_demo_contrato(d):
         '<div class="cena k3"><div class="toast k3a">%(ok)s<span>Contrato criado. Envie o link para o cliente assinar.</span></div>'
         '<div class="lcard k3b"><div class="sec">%(elo)s Link de coleta</div><div class="status">Aguardando assinatura</div>'
         '<div class="urlbox"><span>%(url)s</span></div><div class="botao copiar"><span class="b1">%(cop)s Copiar link</span><span class="b2">%(ok)s Link copiado</span></div></div></div>'
-        # 4 cliente lê e aceita (celular)
+        # 4 o cliente no celular: preenche os dados, depois lê e assina
         '<div class="cena k4"><div class="fone"><div class="entalhe"></div>'
+        '<div class="tela t1"><h5>Preencha seus dados</h5>'
+        '<div class="fc"><label>Nome</label><div class="val"><span>Rafael Moraes Tavares</span></div></div>'
+        '<div class="fc"><label>CPF</label><div class="val"><span>104.204.304-04</span></div></div>'
+        '<div class="fc"><label>E-mail</label><div class="val"><span>rafael@exemplo.com.br</span></div></div>'
+        '<div class="fbtn b1">Confirmar informações</div></div>'
         '<div class="tela t2"><h5>Leia o contrato e assine</h5>'
-        '<div class="docc"><div class="di">%(doc)s</div><div><b>Contrato de Casamento</b><small>Prévia para conferência</small></div></div>'
+        '<div class="docc"><div class="prev"><img src="%(foco)s" alt=""></div><div><b>Contrato de Casamento</b><small>Prévia para conferência</small></div></div>'
         '<div class="vbtn"><span class="v1">Visualizar documento</span><span class="v2">%(ok)s Documento visualizado</span></div>'
         '<div class="termo"><div class="th">%(escudo2)s Termo de aceite</div><div class="tl"><span class="cx"><i>%(ok)s</i></span>'
         '<span>Li e concordo com todas as cláusulas deste contrato.</span></div></div>'
@@ -347,8 +349,8 @@ def hero_demo_contrato(d):
         '<div class="regs">%(regs)s</div></div>'
         # 6 decorados
         '<div class="cena k6">%(deco)s<div class="pill k6p">Está no contrato.</div></div>'
-        '</div></div>') % dict(busca=ico("busca"), cards=cards, linhas=linhas, ok=ok, elo=ico("elo"), url=esc(url), cop=ico("documento"),
-                               escudo=ico("escudo"), escudo2=ico("escudo"), doc=ico("documento"), prom=prom_h, regs=regs_h, deco=deco_h)
+        '</div></div>') % dict(busca=ico("busca"), paginas=paginas, fi=foco, foco=foto_foco, linhas=linhas, ok=ok, elo=ico("elo"), url=esc(url), cop=ico("documento"),
+                               escudo=ico("escudo"), escudo2=ico("escudo"), prom=prom_h, regs=regs_h, deco=deco_h)
 
 
 def _copia_img(caminho):
@@ -785,7 +787,7 @@ html.reels .k2 { justify-content:flex-start; gap:11px; padding-top:34px; padding
 .k2 .sec { font-size:25px; margin:0 0 2px; }
 
 /* ===== demo do contrato: promessa, celular com aceite, validade, decorados ===== */
-.k0 { display:flex; flex-direction:column; align-items:stretch; justify-content:center; gap:18px; padding:20px 30px; }
+.k0 { display:flex; flex-direction:row; align-items:center; justify-content:center; gap:26px; padding:20px 26px; }
 .escudo-g { align-self:center; width:150px; height:150px; border-radius:50%; display:grid; place-items:center; margin-bottom:10px; background:radial-gradient(circle at 35% 30%, #ffd48a, #c98a1d); box-shadow:0 0 70px rgba(249,182,79,.5); }
 .escudo-g svg { width:84px; height:84px; fill:none; stroke:#1a1204; stroke-width:2.2; stroke-linecap:round; stroke-linejoin:round; }
 .prom { display:flex; align-items:center; gap:16px; padding:20px 24px; border-radius:18px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.14); font-size:27px; }
@@ -816,6 +818,26 @@ html.reels .k2 { justify-content:flex-start; gap:11px; padding-top:34px; padding
 .dec .icone svg { stroke:#1a1204; }
 .pill { align-self:center; margin-top:8px; font-weight:800; font-size:34px; color:#1a1204; padding:16px 38px; border-radius:999px; background:linear-gradient(135deg,#ffd48a,var(--ouro) 60%,var(--ouro-escuro)); box-shadow:0 8px 0 #8f5d16, 0 0 50px rgba(249,182,79,.45); }
 .k4 .tela { padding-top:64px; gap:12px; }
+
+.k0p { position:relative; flex:none; width:330px; height:560px; border-radius:12px; overflow:hidden; border:3px solid rgba(255,214,140,.95); background:#fff; box-shadow:0 0 60px rgba(249,182,79,.35), 0 24px 50px rgba(0,0,0,.5); }
+.k0p img { display:block; width:100%; }
+.carimbo { position:absolute; right:14px; bottom:14px; width:104px; height:104px; border-radius:50%; display:grid; place-items:center; background:radial-gradient(circle at 35% 30%, #ffd48a, #c98a1d); box-shadow:0 0 40px rgba(249,182,79,.6); }
+.carimbo svg { width:60px; height:60px; fill:none; stroke:#1a1204; stroke-width:2.2; stroke-linecap:round; stroke-linejoin:round; }
+.k0l { flex:1; display:flex; flex-direction:column; gap:16px; }
+.k0l .prom { font-size:25px; padding:18px 20px; }
+.k1 { padding-top:26px; }
+.car2 { position:absolute; left:0; right:0; top:112px; height:560px; overflow:hidden; }
+.k1t { position:relative; z-index:3; }
+.trilho2 { position:absolute; left:50%; top:20px; display:flex; gap:22px; transform:translateX(calc(var(--foco) * -352px - 165px)); }
+.pg { position:relative; flex:none; width:330px; height:500px; border-radius:12px; overflow:hidden; background:#fff; box-shadow:-10px 14px 40px rgba(0,0,0,.5); }
+.pg img { display:block; width:100%; }
+.pg .gl { position:absolute; inset:0; border-radius:12px; border:3px solid rgba(255,214,140,.95); box-shadow:inset 0 0 0 1px rgba(255,255,255,.2); opacity:0; }
+.rotfoco { position:absolute; left:50%; bottom:34px; transform:translateX(-50%); font-weight:800; font-size:26px; letter-spacing:.08em; text-transform:uppercase; color:#1a1204; padding:10px 28px; border-radius:999px; background:linear-gradient(135deg,#ffd48a,var(--ouro) 60%,var(--ouro-escuro)); box-shadow:0 8px 24px rgba(249,182,79,.45); }
+.rotfoco { margin-left:0; }
+.docc .prev { flex:none; width:70px; height:86px; border-radius:8px; overflow:hidden; background:#fff; }
+.docc .prev img { display:block; width:100%; }
+.fc .val { padding:14px 16px; border-radius:12px; background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.14); font-size:21px; font-weight:600; white-space:nowrap; overflow:hidden; }
+.fbtn.b1 { margin-top:auto; }
 
 /* título, apoio, rodapé */
 .bloco { flex:none; }
@@ -1043,8 +1065,11 @@ DEMO_JS = r"""
 # então o laço fecha sem salto.
 DEMO2_JS = r"""
 (function () {
-  var L = 46, anims = [];
-  var E = 'cubic-bezier(.4,0,.2,1)', POP = 'cubic-bezier(.34,1.56,.64,1)';
+  // Durações das cenas (s). Tudo é calculado a partir daqui, então mudar o ritmo é mexer só nesta lista.
+  var D = [6.0, 8.4, 8.4, 5.8, 12.4, 6.2, 6.0], B = [], acc = 0;
+  D.forEach(function (d) { B.push(acc); acc += d; });
+  var L = Math.ceil(acc + .6), anims = [];
+  var E = 'cubic-bezier(.4,0,.2,1)', POP = 'cubic-bezier(.34,1.56,.64,1)', SLIDE = 'cubic-bezier(.22,.7,.25,1)';
   function $(s, r) { return (r || document).querySelector(s); }
   function $$(s, r) { return [].slice.call((r || document).querySelectorAll(s)); }
   function S(o, tr, sc) { return { opacity: o, translate: tr || '0 0', scale: sc == null ? 1 : sc }; }
@@ -1058,72 +1083,77 @@ DEMO2_JS = r"""
   function ENT(el, t, f, de) { var h = S(0, de || '0 20px', .96); K(el, [[0, h], [t, h], [t + .55, S(1), POP], [f, S(1)], [f + .45, S(0, '0 -14px')], [L, S(0, '0 -14px')]]); }
   function CENA(el, a, b) { K(el, [[0, S(0)], [a, S(0)], [a + .4, S(1)], [b, S(1)], [b + .4, S(0)], [L, S(0)]]); }
   function PRESS(el, t) { K(el, [[0, S(1)], [t, S(1)], [t + .15, S(1, '0 0', .95)], [t + .35, S(1)], [L, S(1)]]); }
+  function TYPE(el, t, dur) { K(el, [[0, { clipPath: 'inset(0 100% 0 0)' }], [t, { clipPath: 'inset(0 100% 0 0)' }], [t + dur, { clipPath: 'inset(0 0 0 0)' }, 'linear'], [L, { clipPath: 'inset(0 0 0 0)' }]]); }
   window.__ir = function (t) { anims.forEach(function (x) { x.currentTime = (t % L) * 1000; }); };
   window.__montar = function () {
-    K($('.dclip'), [[0, S(0)], [.5, S(1)], [45.2, S(1)], [45.8, S(0)]]);
-    // 0) a promessa (0 a 4,8)
-    CENA($('.k0'), 0, 4.4);
-    K($('.k0s'), [[0, S(0, '0 0', .3)], [.4, S(0, '0 0', .3)], [1.0, S(1), POP], [4.4, S(1)], [4.8, S(0)], [L, S(0)]]);
-    $$('.k0r').forEach(function (r, i) { ENT(r, 1.5 + .75 * i, 4.4); });
-    // 1) escolher o modelo (4,8 a 11,6)
-    CENA($('.k1'), 4.8, 11.2);
-    ENT($('.k1t'), 5.2, 11.2); ENT($('.k1b'), 5.5, 11.2);
-    $$('.mod').forEach(function (m, i) {
-      ENT(m, 5.9 + .3 * i, 11.2);
-      if (i > 0) K($('.texto', m), [[0, S(1)], [8.5, S(1)], [9.0, S(.4)], [L, S(.4)]]);
+    var b0 = B[0], b1 = B[1], b2 = B[2], b3 = B[3], b4 = B[4], b5 = B[5], b6 = B[6], fim = acc;
+    K($('.dclip'), [[0, S(0)], [.5, S(1)], [fim - .4, S(1)], [fim + .2, S(0)]]);
+    // 0) a promessa: o contrato visual com o escudo
+    var e0 = b0 + D[0] - .4; CENA($('.k0'), b0, e0);
+    K($('.k0p'), [[0, S(0, '-30px 30px', .9)], [.5, S(0, '-30px 30px', .9)], [1.1, S(1), POP], [e0, S(1)], [e0 + .4, S(0)], [L, S(0)]]);
+    K($('.carimbo'), [[0, S(0, '0 0', 2.4)], [1.9, S(0, '0 0', 2.4)], [2.4, S(1), POP], [e0, S(1)], [e0 + .4, S(0)], [L, S(0)]]);
+    $$('.k0r').forEach(function (r, i) { ENT(r, 3.3 + .7 * i, e0); });
+    // 1) os contratos visuais passando de um lado para o outro, e o Casamento fica em foco
+    var e1 = b1 + D[1] - .4; CENA($('.k1'), b1, e1);
+    ENT($('.k1t'), b1 + .4, e1);
+    K($('.car2'), [[0, S(0)], [b1 + .6, S(0)], [b1 + 1.0, S(1)], [e1, S(1)], [e1 + .4, S(0)], [L, S(0)]]);
+    var tr = $('.trilho2'); if (tr) {
+      var kf = [{ offset: 0, translate: '1060px 0' }, { offset: (b1 + .6) / L, translate: '1060px 0' }, { offset: (b1 + 5.8) / L, translate: '0 0', easing: SLIDE }, { offset: 1, translate: '0 0' }];
+      kf[1].easing = SLIDE; var a = tr.animate(kf, { duration: L * 1000, fill: 'both', easing: 'linear' }); a.pause(); anims.push(a);
+    }
+    $$('.pg').forEach(function (pg, i) {
+      var foco = (i === parseInt(getComputedStyle($('.car2')).getPropertyValue('--foco'), 10));
+      K(pg, [[0, S(1)], [b1 + 5.8, S(1)], [b1 + 6.3, S(foco ? 1 : .45, '0 0', foco ? 1.04 : 1)], [e1, S(foco ? 1 : .45, '0 0', foco ? 1.04 : 1)], [e1 + .4, S(1)], [L, S(1)]]);
+      if (foco) K($('.gl', pg), [[0, S(0)], [b1 + 5.8, S(0)], [b1 + 6.3, S(1)], [e1, S(1)], [e1 + .4, S(0)], [L, S(0)]]);
     });
-    K($('.mod.foco'), [[0, S(0, '0 20px', .96)], [5.9, S(0, '0 20px', .96)], [6.45, S(1), POP], [8.5, S(1)], [9.0, S(1, '0 0', 1.04)], [11.2, S(1, '0 0', 1.04)], [11.65, S(0)], [L, S(0)]]);
-    K($('.mod .sel'), [[0, S(0, '0 0', 0)], [9.4, S(0, '0 0', 0)], [9.9, S(1), POP], [11.2, S(1)], [11.6, S(0)], [L, S(0)]]);
-    // 2) personalizar (11,6 a 20)
-    CENA($('.k2'), 11.6, 19.7);
-    ENT($('.k2t'), 12.0, 19.6);
-    $$('.cp').forEach(function (c, i) {
-      var t = 12.4 + 1.0 * i;
-      ENT(c, t, 19.6);
-      K($('.val span', c), [[0, { clipPath: 'inset(0 100% 0 0)' }], [t + .4, { clipPath: 'inset(0 100% 0 0)' }], [t + 1.3, { clipPath: 'inset(0 0 0 0)' }, 'linear'], [L, { clipPath: 'inset(0 0 0 0)' }]]);
-    });
-    K($('.padrao'), [[0, S(0, '0 0', .8)], [17.7, S(0, '0 0', .8)], [18.1, S(1), POP], [19.6, S(1)], [20.0, S(0)], [L, S(0)]]);
-    K($('.k2b'), [[0, S(0, '0 20px', .96)], [18.4, S(0, '0 20px', .96)], [18.9, S(1), POP], [19.1, S(1, '0 0', .95)], [19.3, S(1)], [19.6, S(1)], [20.0, S(0)], [L, S(0)]]);
-    // 3) salvar e copiar o link (20 a 25,8)
-    CENA($('.k3'), 20.0, 25.4);
-    ENT($('.k3a'), 20.5, 25.3, '0 -30px'); ENT($('.k3b'), 21.3, 25.3);
-    K($('.copiar .b1'), [[0, S(1)], [23.3, S(1)], [23.4, S(0)], [L, S(0)]]);
-    K($('.copiar .b2'), [[0, S(0)], [23.3, S(0)], [23.45, S(1)], [25.3, S(1)], [25.7, S(0)], [L, S(0)]]);
-    PRESS($('.copiar'), 23.1);
-    // 4) o cliente lê e aceita (25,8 a 33)
-    CENA($('.k4'), 25.8, 32.7);
-    K($('.fone'), [[0, S(0, '0 50px', .94)], [26.0, S(0, '0 50px', .94)], [26.6, S(1), POP], [32.6, S(1)], [33.0, S(0)], [L, S(0)]]);
-    ENT($('.tela h5'), 26.9, 32.6); ENT($('.docc'), 27.3, 32.6); ENT($('.vbtn'), 27.7, 32.6);
-    K($('.vbtn .v1'), [[0, S(1)], [28.9, S(1)], [29.0, S(0)], [L, S(0)]]);
-    K($('.vbtn .v2'), [[0, S(0)], [28.9, S(0)], [29.1, S(1)], [32.6, S(1)], [L, S(1)]]);
-    PRESS($('.vbtn'), 28.7);
-    ENT($('.termo'), 29.4, 32.6);
-    K($('.cx i'), [[0, S(0, '0 0', 0)], [30.6, S(0, '0 0', 0)], [31.0, S(1), POP], [32.6, S(1)], [33.0, S(0)], [L, S(0)]]);
-    K($('.t2 .fbtn'), [[0, S(0, '0 16px', .96)], [27.9, S(0, '0 16px', .96)], [28.4, S(.4), POP], [31.0, S(.4)], [31.4, S(1)], [32.0, S(1)], [32.15, S(1, '0 0', .95)], [32.35, S(1)], [32.7, S(1)], [33.0, S(0)], [L, S(0)]]);
-    // 5) validade jurídica (33 a 39,5)
-    CENA($('.k5'), 33.0, 39.1);
-    K($('.grande-ok'), [[0, S(0, '0 0', .3)], [33.3, S(0, '0 0', .3)], [33.9, S(1), POP], [39.1, S(1)], [39.5, S(0)], [L, S(0)]]);
-    K($('.grande-ok .anel'), [[0, S(0, '0 0', .8)], [33.8, S(0, '0 0', .8)], [34.0, S(.9)], [35.0, S(0, '0 0', 1.35)], [L, S(0, '0 0', 1.35)]]);
-    ENT($('.k5a'), 34.5, 39.1);
-    $$('.k5r').forEach(function (r, i) { ENT(r.parentNode === document ? r : r, 35.4 + .6 * i, 39.1); });
-    // 6) o que isso muda (39,5 a 45,4)
-    CENA($('.k6'), 39.5, 45.0);
-    $$('.k6c').forEach(function (c, i) { ENT(c, 40.0 + .9 * i, 45.0); });
-    ENT($('.k6p'), 43.0, 45.0);
-    // título por cena
-    var tbs = $$('.tb'), JAN = [[.1, 4.8], [4.8, 11.6], [11.6, 20.0], [20.0, 25.8], [25.8, 33.0], [33.0, 39.5], [39.5, 45.4]];
+    K($('.k1r'), [[0, S(0, '0 16px', .9)], [b1 + 6.2, S(0, '0 16px', .9)], [b1 + 6.7, S(1), POP], [e1, S(1)], [e1 + .4, S(0)], [L, S(0)]]);
+    // 2) personalizar
+    var e2 = b2 + D[2] - .4; CENA($('.k2'), b2, e2);
+    ENT($('.k2t'), b2 + .4, e2);
+    $$('.cp').forEach(function (c, i) { var t = b2 + .8 + 1.0 * i; ENT(c, t, e2); TYPE($('.val span', c), t + .4, 1.3); });
+    K($('.padrao'), [[0, S(0, '0 0', .8)], [b2 + 6.2, S(0, '0 0', .8)], [b2 + 6.6, S(1), POP], [e2, S(1)], [e2 + .4, S(0)], [L, S(0)]]);
+    K($('.k2b'), [[0, S(0, '0 20px', .96)], [b2 + 6.9, S(0, '0 20px', .96)], [b2 + 7.4, S(1), POP], [b2 + 7.6, S(1, '0 0', .95)], [b2 + 7.8, S(1)], [e2, S(1)], [e2 + .4, S(0)], [L, S(0)]]);
+    // 3) salvar e copiar o link
+    var e3 = b3 + D[3] - .4; CENA($('.k3'), b3, e3);
+    ENT($('.k3a'), b3 + .5, e3, '0 -30px'); ENT($('.k3b'), b3 + 1.3, e3);
+    K($('.copiar .b1'), [[0, S(1)], [b3 + 3.3, S(1)], [b3 + 3.4, S(0)], [L, S(0)]]);
+    K($('.copiar .b2'), [[0, S(0)], [b3 + 3.3, S(0)], [b3 + 3.45, S(1)], [e3, S(1)], [e3 + .4, S(0)], [L, S(0)]]);
+    PRESS($('.copiar'), b3 + 3.1);
+    // 4) o cliente no celular: preenche os dados, confirma, lê e assina
+    var e4 = b4 + D[4] - .4, m = b4 + 6.0; CENA($('.k4'), b4, e4);
+    K($('.fone'), [[0, S(0, '0 50px', .94)], [b4 + .3, S(0, '0 50px', .94)], [b4 + .9, S(1), POP], [e4, S(1)], [e4 + .4, S(0)], [L, S(0)]]);
+    K($('.t1'), [[0, S(0)], [b4 + .8, S(0)], [b4 + 1.2, S(1)], [m - .3, S(1)], [m + .1, S(0, '-40px 0')], [L, S(0, '-40px 0')]]);
+    ENT($('.t1 h5'), b4 + 1.3, m - .3);
+    $$('.t1 .fc').forEach(function (c, i) { var t = b4 + 1.8 + 1.0 * i; ENT(c, t, m - .3); TYPE($('.val span', c), t + .35, 1.2); });
+    K($('.t1 .fbtn'), [[0, S(0, '0 16px', .96)], [b4 + 4.7, S(0, '0 16px', .96)], [b4 + 5.1, S(1), POP], [b4 + 5.3, S(1, '0 0', .95)], [b4 + 5.5, S(1)], [m - .3, S(1)], [m + .1, S(0)], [L, S(0)]]);
+    K($('.t2'), [[0, S(0, '40px 0')], [m, S(0, '40px 0')], [m + .4, S(1)], [e4, S(1)], [e4 + .4, S(0)], [L, S(0)]]);
+    ENT($('.t2 h5'), m + .5, e4); ENT($('.docc'), m + .9, e4); ENT($('.vbtn'), m + 1.3, e4);
+    K($('.vbtn .v1'), [[0, S(1)], [m + 2.6, S(1)], [m + 2.7, S(0)], [L, S(0)]]);
+    K($('.vbtn .v2'), [[0, S(0)], [m + 2.6, S(0)], [m + 2.8, S(1)], [e4, S(1)], [L, S(1)]]);
+    PRESS($('.vbtn'), m + 2.4);
+    ENT($('.termo'), m + 3.2, e4);
+    K($('.cx i'), [[0, S(0, '0 0', 0)], [m + 4.4, S(0, '0 0', 0)], [m + 4.8, S(1), POP], [e4, S(1)], [e4 + .4, S(0)], [L, S(0)]]);
+    K($('.t2 .fbtn'), [[0, S(0, '0 16px', .96)], [m + 1.5, S(0, '0 16px', .96)], [m + 2.0, S(.4), POP], [m + 4.8, S(.4)], [m + 5.2, S(1)], [m + 5.5, S(1)], [m + 5.65, S(1, '0 0', .95)], [m + 5.85, S(1)], [e4, S(1)], [e4 + .4, S(0)], [L, S(0)]]);
+    // 5) validade jurídica
+    var e5 = b5 + D[5] - .4; CENA($('.k5'), b5, e5);
+    K($('.grande-ok'), [[0, S(0, '0 0', .3)], [b5 + .3, S(0, '0 0', .3)], [b5 + .9, S(1), POP], [e5, S(1)], [e5 + .4, S(0)], [L, S(0)]]);
+    K($('.grande-ok .anel'), [[0, S(0, '0 0', .8)], [b5 + .8, S(0, '0 0', .8)], [b5 + 1.0, S(.9)], [b5 + 2.0, S(0, '0 0', 1.35)], [L, S(0, '0 0', 1.35)]]);
+    ENT($('.k5a'), b5 + 1.5, e5);
+    $$('.k5r').forEach(function (r, i) { ENT(r, b5 + 2.4 + .6 * i, e5); });
+    // 6) o que isso muda (decorados)
+    var e6 = b6 + D[6] - .4; CENA($('.k6'), b6, e6);
+    $$('.k6c').forEach(function (c, i) { ENT(c, b6 + .5 + .9 * i, e6); });
+    ENT($('.k6p'), b6 + 3.5, e6);
+    // título por cena (cada título, a janela em que aparece)
+    var tbs = $$('.tb'), JAN = [[b0 + .1, b0 + 2.9], [b0 + 2.9, b1], [b1, b2], [b2, b3], [b3, b4], [b4, m], [m, b5], [b5, b6], [b6, fim - .3]];
     tbs.forEach(function (el, i) {
       var j = JAN[i] || [0, 0], dn = S(0, '0 18px'), up = S(0, '0 -18px');
       K(el, [[0, dn], [j[0] + .1, dn], [j[0] + .6, S(1)], [j[1] - .15, S(1)], [j[1] + .3, up], [L, up]]);
     });
-    var c0 = { '--ry': '10deg', '--rx': '6deg', scale: 1, translate: '0 0' };
-    K($('.hero'), [[0, c0],
-      [8, { '--ry': '8deg', '--rx': '5deg', scale: 1.02, translate: '-4px 3px' }],
-      [16, { '--ry': '11.5deg', '--rx': '6.5deg', scale: 1, translate: '0 -5px' }],
-      [24, { '--ry': '8.5deg', '--rx': '5deg', scale: 1.025, translate: '-4px 3px' }],
-      [32, { '--ry': '11deg', '--rx': '6.5deg', scale: 1, translate: '0 -5px' }],
-      [40, { '--ry': '8.5deg', '--rx': '5deg', scale: 1.02, translate: '-4px 3px' }],
-      [L, c0]]);
+    var c0 = { '--ry': '10deg', '--rx': '6deg', scale: 1, translate: '0 0' }, cam = [c0], n = 0;
+    for (var t = 8; t < fim; t += 8) { n++; cam.push([t, n % 2 ? { '--ry': '8.5deg', '--rx': '5deg', scale: 1.022, translate: '-4px 3px' } : { '--ry': '11.5deg', '--rx': '6.5deg', scale: 1, translate: '0 -5px' }]); }
+    cam = [[0, c0]].concat(cam.slice(1)).concat([[L, c0]]);
+    K($('.hero'), cam);
     return L;
   };
 })();
