@@ -334,6 +334,16 @@ def hero_carrossel(d):
 
 
 
+def LOGO_FOTOGRAFO(iniciais):
+    """Logo fictícia de um fotógrafo: monograma com abertura de lente e a palavra Fotografia."""
+    return ('<svg viewBox="0 0 100 100" class="lg"><circle cx="50" cy="50" r="49" fill="#0d1130"/><circle cx="50" cy="50" r="44" fill="none" stroke="#f9b64f" stroke-width="1.2"/>'
+            '<g fill="none" stroke="#f9b64f" stroke-width="1.6" stroke-linecap="round"><circle cx="50" cy="29" r="9"/>'
+            '<path d="M50 20 L55 25 M59 29 L53 31 M54 37 L49 33 M41 32 L47 33 M43 22 L48 26"/></g>'
+            '<text x="50" y="62" text-anchor="middle" font-family="Georgia,Times New Roman,serif" font-size="25" font-weight="700" fill="#ffe3b3" letter-spacing="1">%s</text>'
+            '<line x1="30" y1="69" x2="70" y2="69" stroke="#f9b64f" stroke-width=".8"/>'
+            '<text x="50" y="79" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-size="6.2" font-weight="600" fill="#f9b64f" letter-spacing="2.2">FOTOGRAFIA</text></svg>') % esc(iniciais)
+
+
 def hero_linkcliente(d):
     """O link que o cliente recebe: foto de capa, foto de perfil, nome do estúdio e o botão de assinar.
     `capa` e `perfil`: {imagem, posicao, zoom?}; `nome`, `sub`, `etiqueta_capa`, `etiqueta_perfil`, `medida`."""
@@ -343,10 +353,12 @@ def hero_linkcliente(d):
     return (
         '<div class="cartao lc"><div class="dbarra"><i></i><i></i><i></i><span class="url">%(url)s</span></div>'
         '<div class="lc-capa" style="%(capa)s"><div class="etiqueta">%(et_capa)s</div><div class="medida">%(medida)s</div></div>'
-        '<div class="lc-corpo"><div class="lc-avatar" style="%(perfil)s"><div class="etiqueta peq">%(et_perfil)s</div></div>'
+        '<div class="lc-corpo"><div class="lc-avatar%(cls)s" style="%(perfil)s">%(logo)s<div class="etiqueta peq">%(et_perfil)s</div></div>'
         '<div class="lc-nome"><b>%(nome)s</b><small>%(sub)s</small></div>'
         '<div class="lc-campos"><i></i><i></i></div><div class="lc-botao">%(botao)s</div></div></div>') % dict(
-            url=esc(d.get("url", "seu-estudio.blindagem.app/contrato")), capa=foto(d["capa"]), perfil=foto(d["perfil"]),
+            url=esc(d.get("url", "seu-estudio.blindagem.app/contrato")), capa=foto(d["capa"]),
+            perfil="" if d["perfil"].get("logo") else foto(d["perfil"]), cls=" logo" if d["perfil"].get("logo") else "",
+            logo=LOGO_FOTOGRAFO(d["perfil"]["logo"]) if d["perfil"].get("logo") else "",
             et_capa=esc(d.get("etiqueta_capa", "Foto de capa")), et_perfil=esc(d.get("etiqueta_perfil", "Foto de perfil")),
             medida=esc(d.get("medida", "1920 × 540")), nome=esc(d.get("nome", "")), sub=esc(d.get("sub", "")),
             botao=esc(d.get("botao", "Preencher e assinar")))
@@ -634,6 +646,7 @@ html.capa .glow.g1 { right:60px; top:60px; }
 .lc-corpo { position:relative; padding:0 36px 34px; }
 .lc-avatar { position:absolute; left:36px; top:-62px; width:132px; height:132px; border-radius:50%; background-repeat:no-repeat; z-index:3;
   border:5px solid var(--ouro); box-shadow:0 14px 34px rgba(0,0,0,.6), 0 0 40px rgba(249,182,79,.4); }
+.lc-avatar.logo { background:#0d1130; } .lc-avatar .lg { position:absolute; inset:0; width:100%; height:100%; border-radius:50%; }
 .lc-avatar .etiqueta { color:#1a1204 !important; text-shadow:none; top:auto; bottom:-14px; right:auto; left:50%; transform:translateX(-50%); white-space:nowrap; font-size:15px; padding:5px 12px; }
 .lc-nome { padding:90px 0 0 0; margin-left:0; }
 .lc-nome b { display:block; font-size:36px; font-weight:800; letter-spacing:-.02em; }
