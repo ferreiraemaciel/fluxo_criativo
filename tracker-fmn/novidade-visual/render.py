@@ -590,6 +590,17 @@ html.reels .rodape { margin-top:20px; }
   background:linear-gradient(135deg,#ffd48a,var(--ouro) 60%,var(--ouro-escuro)); box-shadow:0 10px 0 #8f5d16, 0 18px 40px rgba(0,0,0,.55), 0 0 50px rgba(249,182,79,.5); }
 .seta svg { width:46px; height:46px; stroke:#1a1204; fill:none; stroke-width:3; stroke-linecap:round; stroke-linejoin:round; }
 
+/* ===== formato capa 1920x1080 (capa de tutorial / thumbnail do YouTube): texto à esquerda, janela à direita ===== */
+html.capa, html.capa body { width:1920px; height:1080px; }
+html.capa .arte { width:1920px; height:1080px; display:grid; grid-template-columns:820px 1fr; grid-template-rows:auto 1fr; column-gap:20px; padding:70px 96px 70px; }
+html.capa .topo { grid-column:1; grid-row:1; }
+html.capa .bloco { grid-column:1; grid-row:2; align-self:center; }
+html.capa .rodape { display:none; }
+html.capa .heroarea { grid-column:2; grid-row:1 / 3; padding:0; }
+html.capa .hero { max-width:888px; transform:perspective(1900px) scale(1.12) rotateX(7deg) rotateY(13deg) rotateZ(-.8deg) !important; transform-origin:50% 50%; }
+html.capa .apoio { font-size:38px; max-width:760px; }
+html.capa .glow.g1 { right:60px; top:60px; }
+
 /* título, apoio, rodapé */
 .bloco { flex:none; }
 .grande, .apoio, .sub-num, .duplo .texto { text-wrap:balance; }
@@ -609,9 +620,9 @@ document.fonts.ready.then(function () {
   var rel = {};
   var g = document.querySelector('.grande'), a = document.querySelector('.apoio');
   function linhas(el) { var lh = parseFloat(getComputedStyle(el).lineHeight); return Math.round(el.getBoundingClientRect().height / lh); }
-  var P = document.documentElement.classList.contains('reels'), MAXL = P ? 3 : 2;
-  var fs = P ? 104 : 98; g.style.fontSize = fs + 'px';
-  while (linhas(g) > MAXL && fs > (P ? 70 : 74)) { fs -= 4; g.style.fontSize = fs + 'px'; }
+  var dc = document.documentElement.classList, CAPA = dc.contains('capa'), P = dc.contains('reels') || CAPA, MAXL = CAPA ? 4 : (P ? 3 : 2);
+  var fs = CAPA ? 118 : (P ? 104 : 98); g.style.fontSize = fs + 'px';
+  while (linhas(g) > MAXL && fs > (CAPA ? 84 : (P ? 70 : 74))) { fs -= 4; g.style.fontSize = fs + 'px'; }
   rel.tituloLinhas = linhas(g); rel.tituloFonte = fs; rel.apoioLinhas = linhas(a);
   var tr = document.querySelector('.trilho'), fo = tr && tr.querySelector('.foco');
   if (fo) { tr.style.transform = 'translateX(' + (tr.parentElement.clientWidth / 2 - (fo.offsetLeft + fo.offsetWidth / 2)) + 'px)'; }
@@ -839,7 +850,7 @@ def montar(spec, marca, movimento=False):
         glows='<div class="glow g1"></div><div class="glow g2"></div>' if tipo == "demo" else "",
         movimento=(("<script>%s</script>" % DEMO_JS + ("" if movimento else "<script>window.__preview=%s;</script>" % hero.get("quadro", 14.0)) + "<script>%s</script>" % PREVIEW_JS)
                    if tipo == "demo" else (("<script>%s</script>" % MOTION_JS) if movimento else "")),
-        classe_html="reels" if spec.get("formato") == "reels" else "", titulo_plano=esc(sem_marcas(spec["titulo"])), css=css, logo="logo.png", nome=esc(marca["nome"]),
+        classe_html=spec.get("formato") if spec.get("formato") in ("reels", "capa") else "", titulo_plano=esc(sem_marcas(spec["titulo"])), css=css, logo="logo.png", nome=esc(marca["nome"]),
         selo=esc(spec.get("selo", "Novidade")), tipo=tipo, hero=HEROS[tipo](hero),
         titulo=fmt_titulo(spec["titulo"]), apoio=fmt_apoio(spec["apoio"]), rodape=esc(rodape), seta=ico("seta"), js=JS)
 
@@ -875,6 +886,8 @@ def main():
 
     if spec.get("formato") == "reels":
         TAMANHO["w"], TAMANHO["h"] = 1080, 1920
+    elif spec.get("formato") == "capa":
+        TAMANHO["w"], TAMANHO["h"] = 1920, 1080
     html_path = saida / (nome + ".html")
     png_path = saida / (nome + ".png")
     html_path.write_text(montar(spec, marca), encoding="utf-8")
