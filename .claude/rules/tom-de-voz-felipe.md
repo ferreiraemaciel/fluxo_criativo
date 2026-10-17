@@ -107,6 +107,77 @@ de produtividade.
 
 ---
 
+## 5b. As três referências de humor, e o que pegar de cada uma
+
+> Trazidas pelo Felipe em 17/10/2026. São as pessoas em quem ele se espelha para
+> falar: **Gregório Duvivier**, **Fábio Porchat** e **Tiago Ventura**. O que
+> interessa aqui não é imitar nenhum dos três, é entender a técnica de cada um e
+> usar onde ela cabe no conteúdo de contrato para fotógrafo.
+
+### De Gregório: a piada nasce do argumento, não é colada nele
+
+O humor dele não entra como enfeite num texto sério. Ele constrói o raciocínio
+com cuidado e a graça aparece quando o raciocínio chega onde tinha que chegar.
+A piada **é** a conclusão, não uma pausa para rir no meio.
+
+Na prática: nunca escrever o argumento e depois procurar onde encaixar uma
+tirada. Levar o argumento até o fim e deixar a conclusão absurda falar sozinha.
+
+> Ruim: "Sem contrato você fica na mão do cliente. E olha, isso é osso kkkkkk"
+> Bom: "Sem nada assinado, quem decide se você recebe é ele. E ele já decidiu
+> que a foto ficou boa demais pra custar isso tudo."
+
+### De Porchat: a premissa absurda tratada com total naturalidade
+
+O esquete não avisa que é esquete. O ridículo é encenado com cara séria, do
+começo ao fim, sem ninguém dentro da cena achar aquilo estranho. É isso que faz
+rir, e é isso que faz o espectador se reconhecer.
+
+Na prática, isso muda o formato do Reels: em vez de **falar sobre** a situação,
+**encenar** a situação como se fosse normal. O fotógrafo fechando casamento por
+áudio enquanto dirige. O cliente pedindo os brutos como quem pede sal. Ninguém
+comenta que é absurdo, e é justamente aí que o público entende que é absurdo.
+
+Também é o que sustenta a arte do bicho de sete cabeças: a hidra está lá, de
+beca, e ninguém na imagem acha aquilo esquisito.
+
+### De Tiago Ventura: o callback e o detalhe específico demais
+
+Duas coisas. A primeira é **voltar no fim ao detalhe do começo**, o que fecha a
+peça e é o que mais faz as pessoas mandarem para alguém. A segunda é o detalhe
+tão específico que não poderia ter sido inventado, que é o que faz o público
+pensar "isso aconteceu comigo".
+
+A segunda já está na seção 8 deste arquivo. A primeira é nova e vale para
+qualquer peça com começo e fim: artigo, Reels, carrossel, legenda longa.
+
+> Abriu com a pasta "final_final_2"? Fecha com ela. Abriu com o áudio de sete
+> minutos? O fecho volta no áudio.
+
+### A régua que junta os três
+
+Depois de escrever qualquer peça com humor, conferir:
+
+1. **A graça vem do argumento?** Se a piada pudesse ser recortada sem o texto
+   perder o sentido, ela é enfeite. Reescrever.
+2. **Alguém dentro da cena comenta que é absurdo?** Se sim, tirar. Quem comenta
+   é o leitor, não o texto.
+3. **O fim conversa com o começo?** Se o fecho poderia abrir outra peça
+   qualquer, falta o callback.
+4. **Tem um detalhe que ninguém inventaria?** Se todos os detalhes são
+   genéricos, o público não se reconhece.
+
+### O que NÃO pegar
+
+Nenhum dos três é referência de **tema**, só de forma. Nada de política, nada de
+piada sobre terceiro, nada de humor que precise de contexto que o público de
+fotografia não tem. O assunto continua sendo o contrato, o cliente, a entrega e
+o dinheiro que escorre.
+
+E humor nunca entra em peça de caso real com pessoa identificável, nem em
+qualquer texto que afirme coisa jurídica sobre caso concreto. Ali vale a seção 6
+deste arquivo, rigor de fonte, sem exceção.
+
 ## 6. Rigor de fonte, sem exceção
 
 Toda afirmação jurídica precisa de lastro real: lei, artigo, decreto, súmula ou decisão. Menção de
