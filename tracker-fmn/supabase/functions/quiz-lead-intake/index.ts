@@ -87,6 +87,15 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: "code obrigatório" }), { status: 400, headers: { ...cors, "content-type": "application/json" } });
     }
 
+    // Clique no "Entrar no grupo" da página de obrigado (17/10/2026). Só marca a
+    // primeira vez, nunca cria lead nem mexe em outro campo.
+    if (body.acao === "clicou_grupo") {
+      const sb0 = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+      await sb0.from("quiz_leads").update({ grupo_clicou_em: new Date().toISOString() })
+        .eq("funnel_slug", String(body.funnel_slug || "")).eq("code", String(body.code)).is("grupo_clicou_em", null);
+      return new Response(JSON.stringify({ ok: true }), { headers: { ...cors, "content-type": "application/json" } });
+    }
+
     const origemLead = ORIGENS_LEAD.includes(String(body.origem)) ? String(body.origem) : "novo";
     const row: Record<string, unknown> = { funnel_slug: body.funnel_slug || "fotografo-protegido", origem: origemLead };
     for (const k of COLS) if (k in body) row[k] = body[k];

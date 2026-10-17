@@ -110,6 +110,9 @@ const abrevContrato = v => {
 };
 
 function LeadsTable({ leads, adsMap = {} }) {
+  // Coluna Grupo só aparece quando há lead da Black: marca quem clicou em
+  // "Entrar no grupo" na página de obrigado (grupo_clicou_em).
+  const temBlack = leads.some(l => l.funnel_slug === 'black-2026');
   const [busca, setBusca] = useState('');
   const [pagina, setPagina] = useState(0);
   const POR_PAG = 50;
@@ -173,6 +176,7 @@ function LeadsTable({ leads, adsMap = {} }) {
               <TH w={180}>E-mail</TH>
               <TH w={120}>Perfil</TH>
               <TH w={60}>Lead?</TH>
+              {temBlack && <TH w={120}>Grupo</TH>}
               <TH w={150}>Passo de saída</TH>
               <TH w={100}>Usa contrato</TH>
               <TH w={100}>Tipo contrato</TH>
@@ -219,6 +223,14 @@ function LeadsTable({ leads, adsMap = {} }) {
                       {l.completou_lead ? 'Sim' : 'Não'}
                     </span>
                   </TD>
+                  {temBlack && (
+                    <TD style={{ fontSize:10.5 }}>
+                      {l.funnel_slug !== 'black-2026' ? <span style={{ color:'var(--text-3)' }}>—</span>
+                        : l.grupo_clicou_em
+                          ? <span title="Clicou em Entrar no grupo na página de obrigado" style={{ color:'#79e06f', fontWeight:700 }}>Clicou {fmtDate(l.grupo_clicou_em)}</span>
+                          : <span style={{ color:'#fe626c', fontWeight:700 }}>Não clicou</span>}
+                    </TD>
+                  )}
                   <TD style={{ fontSize:10.5 }}>{passo}</TD>
                   <TD style={{ fontSize:10.5 }}>{l.usa_contrato || '—'}</TD>
                   <TD style={{ fontSize:10.5 }}>{abrevContrato(l.tipo_contrato_atual)}</TD>
@@ -1134,7 +1146,7 @@ function FunisScreen({ onNavigate }) {
     setLoadingLeads(true);
     const montar = () => {
       let q = window.db.from('quiz_leads').select(
-        'id,nome,email,whatsapp,area_atuacao,profissionalizacao,tipo_negocio,confianca_clientes,situacoes,custo_processo,usa_contrato,tipo_contrato_atual,foco_artistico,sentimentos,protege_dinheiro,temas_dominados,entende_contrato,quer_modelos,nivel_risco,completou_lead,completou_quiz,utm_source,utm_medium,utm_campaign,utm_content,created_at,perfil,device_platform'
+        'id,nome,email,whatsapp,area_atuacao,profissionalizacao,tipo_negocio,confianca_clientes,situacoes,custo_processo,usa_contrato,tipo_contrato_atual,foco_artistico,sentimentos,protege_dinheiro,temas_dominados,entende_contrato,quer_modelos,nivel_risco,completou_lead,completou_quiz,utm_source,utm_medium,utm_campaign,utm_content,created_at,perfil,device_platform,funnel_slug,grupo_clicou_em'
       ).order('created_at', { ascending: false });
       // Dia em horário de Brasília. Antes era UTC: tudo das 21h à meia-noite do
       // último dia sumia (Renata, Pix das 22h54 de 30/09/2026, fora da Recuperação).
