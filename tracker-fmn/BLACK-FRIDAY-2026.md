@@ -3680,3 +3680,83 @@ agendamento do worker. `meta_media_id` 18086483174701602.
 É a primeira peça da campanha a sair sem ninguém apertar botão, e a primeira a
 usar a chamada "comenta ENVELOPE que a gente te manda o link", que é o que
 dispara o ManyChat.
+
+
+---
+
+# PARTE 30. A OFERTA, FECHADA EM 17/10/2026
+
+> Substitui a tabela de preços da Parte 26.1 no que diverge. O combo saiu.
+
+## 30.1 Os preços
+
+| Quem compra | O que leva | Preço de site | Preço da Black |
+|---|---|---|---|
+| Quem não é aluno | Modelos de Contrato Visual | R$ 297 | **R$ 197** |
+| Quem não é aluno | Blindagem, um ano | R$ 397 | **R$ 297** |
+| Quem já tem o MCV | Blindagem, um ano | R$ 397 | **R$ 197** |
+
+## 30.2 O combo saiu, e por quê
+
+A linha "MCV mais Blindagem por R$ 494" foi retirada. Dois motivos, levantados
+pelo Felipe em 17/10.
+
+**Não havia desconto nenhum.** 197 mais 297 dá exatamente 494. O combo era a
+soma dos dois pelo preço cheio de cada um, então a pessoa não ganhava nada por
+levar junto e não existia motivo para levar junto.
+
+**Um substitui o outro.** O Blindagem gera o contrato, preenche, manda assinar
+e guarda a prova. O MCV é o modelo que a pessoa edita na mão no Canva. É a
+mesma tarefa feita de dois jeitos, e vender os dois juntos é vender a escada e
+o elevador no mesmo pacote.
+
+**A única vantagem real do MCV para quem tem o app** é que ele não expira. No
+código do Blindagem, `expires_at` é nulo para o MCV e um ano para o app. Quem
+tem os dois fica com os contratos no Canva mesmo se um dia parar de renovar.
+É verdade, mas é ruim de vender: seria pedir para a pessoa comprar algo para
+quando ela desistir do que você está vendendo na mesma frase.
+
+**Efeito colateral bom:** sem combo, não precisa de order bump nem de produto
+novo na Hotmart, e o webhook do Blindagem continua reconhecendo todas as
+compras sem nenhuma mudança de código. Ver 30.4.
+
+## 30.3 Os sete bônus
+
+| # | Bônus | O que é | Quem leva |
+|---|---|---|---|
+| 1 | Álbum 30x30, capa fotográfica, 10 lâminas | Álbum físico | O **primeiro** comprador da abertura |
+| 2 | Álbum pocket 15x21 | Álbum físico, frete de quem ganha | Os **10 seguintes** |
+| 3 | F*ck Burocracia | Encontro de implementação mão na massa | A definir |
+| 4 | Aula da Lei Felca e do ECA Digital | Ao vivo, com gravação | A confirmar |
+| 5 | Tira-dúvidas de contrato em grupo | Encontro ao vivo | A confirmar |
+| 6 | Gerador de autorização de uso de imagem | Ferramenta, fica para sempre | Todos, até o fim |
+| 7 | **Quanto Sobra**, com a Propulse Contabilidade | 1 hora ao vivo, 20 min de pergunta aberta | A definir |
+
+O desenho da pilha: **dois por velocidade** (1 e 2), **três por conhecimento**
+(4, 5 e 7), **um de implementação** (3) e **um que é ferramenta e fica** (6).
+
+O bônus 7 é o mais forte para quem já vive de fotografia, porque dinheiro é a
+segunda dor mais citada do público: 10.558 pessoas marcaram no quiz "estresse
+por ter que estar sempre atrás do dinheiro". Ver a Parte 27 para o formato.
+
+**Quatro ainda sem data:** 3, 4, 5 e 7. Nenhum entra no card de bônus nem na
+página de vendas antes de ter dia e hora.
+
+## 30.4 O que isso resolve na Hotmart
+
+Com combo, haveria três caminhos, e todos com problema:
+
+| Caminho | Problema |
+|---|---|
+| Produto novo "Combo" | Id novo que o webhook não conhece. `productKeyFromId` devolve null, a compra é ignorada e **o comprador não recebe nada** |
+| Order bump | Funciona, mas é opt-in: quem não marcar a caixa leva só um |
+| Upsell pós-compra | Funciona, já existe, mas é outra venda, não um combo |
+
+Sem combo, nada disso é necessário. Cada produto mantém o id que o webhook já
+conhece (`PRODUCT_MCV_IDS` e `PRODUCT_APP_IDS` em `hotmart-core.server.ts`),
+e a entrega continua pelo caminho já testado em centenas de compras.
+
+**Se um dia o combo voltar**, exige três mudanças no Blindagem: criar a lista de
+ids do combo, fazer `productKeyFromId` devolver uma lista em vez de um produto,
+e rodar a gravação de acesso uma vez por produto. É trabalho de uma tarde mais
+teste, e não se faz na semana da maior campanha do ano.
