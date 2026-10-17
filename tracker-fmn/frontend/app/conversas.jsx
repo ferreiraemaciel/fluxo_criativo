@@ -1152,6 +1152,23 @@ function ConversasScreen({ telefoneAlvo = null, onConsumirAlvo } = {}) {
     })();
   }
 
+  async function bloquearNumero(telefone) {
+    if (!window.confirm('Bloquear esse número? Ele não consegue mais mandar mensagem pro nosso WhatsApp e some da Lista, Kanban e Métricas.')) return;
+    setContatosDb(prev => prev.filter(c => c.telefone !== telefone));
+    setMsgs(prev => prev.filter(m => m.telefone !== telefone));
+    if (selecionado === telefone) setSelecionado(null);
+    try {
+      const r = await fetch(`${SUPA_URL}/functions/v1/whatsapp-enviar`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPA_KEY}` },
+        body: JSON.stringify({ action: 'bloquear', to: telefone }),
+      });
+      const d = await r.json();
+      if (!d.ok) window.alert(d.aviso || d.error || 'Não consegui bloquear na Meta.');
+    } catch { window.alert('Não consegui bloquear na Meta. O contato saiu da tela, tente de novo mais tarde.'); }
+    carregar();
+  }
+
   function marcarSpam(telefone) {
     if (!window.confirm('Marcar esse contato como spam? Ele some da Lista, Kanban e Métricas.')) return;
     setContatosDb(prev => prev.filter(c => c.telefone !== telefone));
@@ -1665,6 +1682,10 @@ function ConversasScreen({ telefoneAlvo = null, onConsumirAlvo } = {}) {
                   <Btn size="sm" variant="ghost" title="Marcar como spam (some da Lista, Kanban e Métricas)"
                     onClick={() => marcarSpam(selecionado)}>
                     <LucideIcon icon="shield-off" size={13} />
+                  </Btn>
+                  <Btn size="sm" variant="ghost" title="Bloquear número (não consegue mais mandar mensagem)"
+                    onClick={() => bloquearNumero(selecionado)}>
+                    <LucideIcon icon="ban" size={13} />
                   </Btn>
                   {contatoAtivo?.precisaHumano && (
                     <span onClick={() => dispensarAtencaoHumana(selecionado)}

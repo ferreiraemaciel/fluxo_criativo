@@ -176,6 +176,22 @@ Deno.serve(async (req) => {
   if (!toRaw) return json({ error: "to é obrigatório" }, 400);
   const to = normalizarTelefone(toRaw);
 
+  // Bloqueio oficial da Meta (17/10/2026): o número para de conseguir mandar
+  // mensagem pro nosso WhatsApp e some da tela (is_spam). Desbloquear desfaz os dois.
+  if (action === "bloquear" || action === "desbloquear") {
+    const r = await fetch(`${GRAPH}/${PHONE_NUMBER_ID}/block_users`, {
+      method: action === "bloquear" ? "POST" : "DELETE",
+      headers: { "Authorization": `Bearer ${META_TOKEN}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ messaging_product: "whatsapp", block_users: [{ user: to }] }),
+    });
+    const resp = await r.json().catch(() => ({}));
+    const falhou = !r.ok || (resp?.block_users?.failed_users || []).length > 0;
+    await supabase.from("whatsapp_contatos")
+      .upsert({ telefone: to, is_spam: action === "bloquear" }, { onConflict: "telefone" });
+    if (falhou) return json({ ok: false, aviso: "Escondido da tela, mas a Meta não confirmou o bloqueio", meta: resp }, 200);
+    return json({ ok: true });
+  }
+
   try {
     if (action === "midia_link") {
       const url = String(body.url || "").trim();
