@@ -179,10 +179,15 @@ Deno.serve(async (req) => {
   // Bloqueio oficial da Meta (17/10/2026): o número para de conseguir mandar
   // mensagem pro nosso WhatsApp e some da tela (is_spam). Desbloquear desfaz os dois.
   if (action === "bloquear" || action === "desbloquear") {
+    // Bloqueia o identificador que o próprio WhatsApp mandou (raw.from), nunca o
+    // telefone normalizado: número fixo/comercial não tem o nono dígito e a Meta recusa.
+    const { data: ult } = await supabase.from("whatsapp_mensagens").select("raw")
+      .eq("telefone", to).eq("direcao", "entrada").order("created_at", { ascending: false }).limit(1);
+    const waId = String(ult?.[0]?.raw?.from || to);
     const r = await fetch(`${GRAPH}/${PHONE_NUMBER_ID}/block_users`, {
       method: action === "bloquear" ? "POST" : "DELETE",
       headers: { "Authorization": `Bearer ${META_TOKEN}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ messaging_product: "whatsapp", block_users: [{ user: to }] }),
+      body: JSON.stringify({ messaging_product: "whatsapp", block_users: [{ user: waId }] }),
     });
     const resp = await r.json().catch(() => ({}));
     const falhou = !r.ok || (resp?.block_users?.failed_users || []).length > 0;
