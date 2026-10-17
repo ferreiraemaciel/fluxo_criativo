@@ -3720,7 +3720,7 @@ quando ela desistir do que você está vendendo na mesma frase.
 novo na Hotmart, e o webhook do Blindagem continua reconhecendo todas as
 compras sem nenhuma mudança de código. Ver 30.4.
 
-## 30.3 Os sete bônus
+## 30.3 Os cinco bônus
 
 | # | Bônus | O que é | Quem leva |
 |---|---|---|---|
@@ -3728,12 +3728,28 @@ compras sem nenhuma mudança de código. Ver 30.4.
 | 2 | Álbum pocket 15x21 | Álbum físico, frete de quem ganha | Os **10 seguintes** |
 | 3 | F*ck Burocracia | Encontro de implementação mão na massa | A definir |
 | 4 | Aula da Lei Felca e do ECA Digital | Ao vivo, com gravação | A confirmar |
-| 5 | Tira-dúvidas de contrato em grupo | Encontro ao vivo | A confirmar |
-| 6 | Gerador de autorização de uso de imagem | Ferramenta, fica para sempre | Todos, até o fim |
-| 7 | **Quanto Sobra**, com a Propulse Contabilidade | 1 hora ao vivo, 20 min de pergunta aberta | A definir |
+| 5 | **Quanto Sobra**, com a Propulse Contabilidade | 1 hora ao vivo, 20 min de pergunta aberta | A definir |
 
-O desenho da pilha: **dois por velocidade** (1 e 2), **três por conhecimento**
-(4, 5 e 7), **um de implementação** (3) e **um que é ferramenta e fica** (6).
+O desenho da pilha: **dois por velocidade** (1 e 2), **dois por conhecimento**
+(4 e 5) e **um de implementação** (3).
+
+**Dois bônus saíram em 17/10**, por decisão do Felipe:
+
+*Tira-dúvidas de contrato em grupo.* Virava o terceiro encontro ao vivo da
+pilha, junto com o F*ck Burocracia e o Quanto Sobra. Três encontros cansam o
+comprador e cansam quem entrega.
+
+*Gerador de autorização de uso de imagem.* Isso **já existe dentro do produto**:
+a autorização de uso de imagem é a cláusula 5 de todo contrato do Blindagem,
+com plataformas configuráveis e campo para identificação de menor. Oferecer
+como bônus era vender de novo o que a pessoa já leva no produto principal, e
+o público percebe isso.
+
+> Nota para quando a Black acabar: o banco de linguagem da Parte 17.4 registrou
+> que o público pediu **autorização avulsa**, separada do contrato, e **termo
+> de entrega para regularizar trabalho antigo**. A cláusula 5 atende o contrato
+> novo, não o trabalho que já foi feito sem nada assinado. Se um dia virar
+> entregável, é peça própria, não bônus de campanha.
 
 O bônus 7 é o mais forte para quem já vive de fotografia, porque dinheiro é a
 segunda dor mais citada do público: 10.558 pessoas marcaram no quiz "estresse
