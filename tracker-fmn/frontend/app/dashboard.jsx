@@ -1630,7 +1630,7 @@ function useRecentSales(limit = 10) {
     async function load(isUpdate) {
       const { data: rows } = await window.db
         .from('vendas')
-        .select('id,hotmart_transaction_id,valor_bruto,status,created_at,utm_source,utm_medium,utm_campaign,utm_content,meta_ad_id,ads_numero,produto_nome,hotmart_event,comprador_nome,comprador_telefone,parcelas,metodo_pagamento,atribuicao_fonte,hotmart_sales_agent,whatsapp_auxilio')
+        .select('id,hotmart_transaction_id,valor_bruto,status,created_at,utm_source,utm_medium,utm_campaign,utm_content,meta_ad_id,ads_numero,produto_nome,hotmart_event,comprador_nome,comprador_telefone,parcelas,metodo_pagamento,atribuicao_fonte,hotmart_sales_agent,whatsapp_auxilio,cupom_codigo,desconto_cupom')
         .in('status', ['aprovada','reembolsada','recuperacao'])
         .order('created_at', { ascending: false })
         .limit(limit);
@@ -1949,6 +1949,20 @@ function RecentSalesFeed({ sales }) {
                       color:'#ff9845', background:'rgba(255,152,69,.12)',
                       border:'1px solid rgba(255,152,69,.3)' }}>
                     agente Hotmart
+                  </span>
+                )}
+                {/* Etiqueta de campanha. O cupom é o que amarra a venda à Black:
+                    o hotmart-webhook grava cupom_codigo em toda compra, então
+                    não depende do sck chegar inteiro. Cupom BLACK2026 (os dois
+                    produtos) e BLACKMCV7K2 (Blindagem para quem já tem o MCV). */}
+                {/^BLACK/i.test(sale.cupom_codigo || '') && (
+                  <span title={`Venda da Black Friday 2026. Cupom ${sale.cupom_codigo}`
+                      + (sale.desconto_cupom ? `, desconto de ${fmt(sale.desconto_cupom)}` : '')}
+                    style={{ flexShrink:0, fontSize:9, fontFamily:'Roboto,sans-serif', fontWeight:700,
+                      padding:'1px 5px', borderRadius:4, whiteSpace:'nowrap',
+                      color:'#f5f5f5', background:'rgba(0,0,0,.55)',
+                      border:'1px solid rgba(255,255,255,.35)' }}>
+                    Black 2026
                   </span>
                 )}
               </div>

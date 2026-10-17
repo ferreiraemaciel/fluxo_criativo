@@ -3776,3 +3776,103 @@ e a entrega continua pelo caminho já testado em centenas de compras.
 ids do combo, fazer `productKeyFromId` devolver uma lista em vez de um produto,
 e rodar a gravação de acesso uma vez por produto. É trabalho de uma tarde mais
 teste, e não se faz na semana da maior campanha do ano.
+
+
+---
+
+# PARTE 31. OS CUPONS E OS LINKS DA BLACK (17/10/2026)
+
+## 31.1 Os três cupons, criados e agendados
+
+Criados pela API da Hotmart em 17/10, já com validade travada na própria
+Hotmart. Status "soon" até lá, ou seja, inativos: antes de 10/11 às 20h e
+depois de 30/11 às 23h59 eles simplesmente não descontam nada.
+
+| Cupom | Produto | Desconto | De | Para | Id |
+|---|---|---|---|---|---|
+| `BLACK2026` | Modelos de Contrato Visual | 0,33670034 | R$ 297 | **R$ 197,00** | 4298230 |
+| `BLACK2026` | Blindagem | 0,25188917 | R$ 397 | **R$ 297,00** | 4298231 |
+| `BLACKMCV7K2` | Blindagem, para quem já tem o MCV | 0,50377834 | R$ 397 | **R$ 197,00** | 4298232 |
+
+**Validade:** 10/11/2026 às 20h (a hora da live de abertura) a 30/11/2026 às
+23h59. Vinte e um dias, a janela decidida na seção 3.1.
+
+**Por que o desconto tem oito casas decimais.** O cupom da Hotmart é percentual,
+não valor fixo, e os nossos preços da Black são redondos. Com duas casas nenhum
+dos três fecha: 33% deixa o MCV em R$ 198,99 e 34% em R$ 196,02. Testado em
+17/10 com dois cupons descartáveis, criados e apagados em seguida: a API aceita
+oito casas. Com elas, os três preços batem no centavo.
+
+**O mesmo código vale nos dois produtos.** Cupom na Hotmart é por produto, então
+`BLACK2026` existe duas vezes, com percentual diferente em cada. Para quem
+compra é um código só, que é o que importa na comunicação.
+
+**O terceiro cupom tem código difícil de adivinhar de propósito.** A Hotmart não
+sabe quem é aluno do MCV, então o que separa esse público é só a distribuição:
+ele vai na comunicação para a base, nunca em peça pública. Se vazar, cada uso
+indevido custa R$ 100.
+
+## 31.2 O cupom é a etiqueta da campanha
+
+O `hotmart-webhook` já grava `vendas.cupom_codigo` e `vendas.desconto_cupom` em
+toda compra, vindo de `purchase.coupon.code`. Então a venda da Black se
+identifica pelo cupom, e não depende do `sck` sobreviver ao caminho, que é
+justamente onde a Hotmart costuma atrapalhar (agente de vendas, recuperação
+dela, e-mail dela).
+
+**Na tela:** etiqueta preta "Black 2026" nas Últimas Vendas do Financeiro,
+ao lado das etiquetas que já existiam (via quiz, agente Hotmart, Claudinho).
+Dispara em qualquer cupom que comece com BLACK, com o código e o valor do
+desconto no title. `dashboard.jsx`, publicado em 17/10.
+
+## 31.3 As páginas de vendas passaram a repassar o cupom
+
+As duas LPs já repassavam o `sck` para o botão de compra, mas ignoravam o
+cupom. Quer dizer: um link da Black que caísse na página de vendas perdia o
+desconto no caminho e a pessoa pagava cheio.
+
+Corrigido em `contratos.html` e `blindagem.html` (fmn-site), no mesmo laço que
+repassa o rastreio: `offDiscount` que chega na URL vai para o checkout. É
+genérico, serve para qualquer campanha futura, e fora da janela a Hotmart
+ignora o cupom sozinha. Testado em produção nas duas páginas.
+
+## 31.4 Os links prontos
+
+Padrão: `offDiscount` carrega o cupom, `sck` carrega o rastreio. As regras de
+`sck` (máximo 30 caracteres, separador `hQwK21wXxR`, `-ah` quando é humano que
+manda) continuam valendo sem mudança.
+
+**MCV, R$ 197**
+- Página: `https://www.contratos.fotografiaeomeunegocio.com.br/?sck={SCK}&offDiscount=BLACK2026`
+- Checkout: `https://pay.hotmart.com/W87258826R?off=bdujzvze&checkoutMode=10&sck={SCK}&offDiscount=BLACK2026`
+
+**Blindagem, R$ 297**
+- Página: `https://www.contratosblindagem.fotografiaeomeunegocio.com.br/?sck={SCK}&offDiscount=BLACK2026`
+- Checkout: `https://pay.hotmart.com/C106394543X?checkoutMode=10&sck={SCK}&offDiscount=BLACK2026`
+
+**Blindagem para aluno do MCV, R$ 197**
+- Checkout: `https://pay.hotmart.com/C106394543X?checkoutMode=10&sck={SCK}&offDiscount=BLACKMCV7K2`
+
+| Canal | `{SCK}` |
+|---|---|
+| Grupo de WhatsApp da Black | `whatsapp-ah-lp` (página) ou `whatsapp-ah` (checkout) |
+| Instagram Stories | `instagram-lphQwK21wXxRstories` |
+| Instagram bio | `instagram-lphQwK21wXxRbio` |
+| Instagram Direct | `instagram-ah-lphQwK21wXxRdm` |
+| E-mail | `emailhQwK21wXxRblack` |
+
+## 31.5 As duas pendências que ficaram
+
+**1. O cupom não está restrito por oferta.** O endpoint de ofertas da Hotmart
+devolve erro 500 pela API, então não dá para pegar o id numérico das ofertas e
+passar em `offer_ids`. Consequência: `BLACK2026` também desconta na oferta
+`bgz81lg3` do Blindagem, que é o upsell pós-compra de R$ 100, derrubando ela
+para R$ 74,81. Resolve no painel da Hotmart, editando o cupom e marcando só a
+oferta principal (`j7qvwx24` no Blindagem, `bdujzvze` no MCV).
+
+**2. Quem chegar na página sem o link da campanha paga cheio.** O desconto só
+existe com o cupom na URL. Dá para controlar os links que a gente publica, não
+dá para controlar quem salvou a página ou digita o endereço de cabeça. Na
+abertura, cravar `offDiscount` direto no botão das duas LPs e tirar em 01/12.
+Seguro de fazer porque a validade mora no cupom, mas tem que ser no dia, senão
+quem entrar antes vê aviso de cupom inválido no checkout.
