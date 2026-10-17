@@ -107,6 +107,32 @@ de produtividade.
 
 ---
 
+## 5a. Leandro Ladeira é a referência permanente
+
+> Confirmado pelo Felipe em 17/10/2026. O Ladeira não é uma referência entre
+> outras, é **a** referência de comunicação do projeto, e entra em qualquer peça,
+> sempre.
+
+O método inteiro do projeto vem dele (VTSD, Light Copy, Mandala, 8D, elementos
+literários), então aqui o que importa é o que ele faz com a VOZ, não com a
+estrutura. Três coisas:
+
+**Argumento no lugar de adjetivo.** Ele não diz que algo é incrível, ele mostra
+por que é, com uma razão que a pessoa não tinha pensado. Light Copy é isso:
+copy que argumenta, não que elogia.
+
+**O não óbvio dito com naturalidade.** A frase que faz a pessoa parar não é a
+mais bonita, é a que inverte o que ela achava. E vem solta, como quem comenta,
+não como quem revela.
+
+**Humor que desarma antes de vender.** Ele ri da própria operação, do próprio
+exagero, do próprio marketing. É o que faz a venda não soar como venda. Isso
+conversa direto com as três referências da seção 5b, e por isso elas somam em
+vez de competir.
+
+Quando houver dúvida entre duas formas de escrever, a régua é: qual delas o
+Ladeira usaria no lugar de um adjetivo?
+
 ## 5b. As três referências de humor, e o que pegar de cada uma
 
 > Trazidas pelo Felipe em 17/10/2026. São as pessoas em quem ele se espelha para
