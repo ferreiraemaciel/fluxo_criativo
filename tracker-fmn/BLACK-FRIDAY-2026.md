@@ -3631,3 +3631,52 @@ Descrição: Comenta ENVELOPE ou entra pelo link
 `arte-ads400-envelope.html`, pasta no Drive https://drive.google.com/drive/folders/1Xi3jLM5VTNC6uvIRbnGZk_bjd3Ey3jnO.
 A versão que foi ao ar como orgânico é `png-ads/envelope-organico.png`, com a
 chamada trocada para "Comenta ENVELOPE que a gente te manda o link".
+
+
+---
+
+## 26.10 Template do WhatsApp para quem não entrou no grupo (17/10/2026)
+
+Submetido ao Meta em 17/10. É o template que fecha o único buraco de medição do
+funil: **entrar no grupo não dá para medir**, porque o WhatsApp não devolve a
+lista de membros nem avisa ninguém. Quem cadastra e não entra some do radar, e
+o grupo é por onde o aviso da abertura chega.
+
+**Corpo**
+
+```
+Oi, {{1}}. Sua inscrição na lista da Black dos Fotógrafos Protegidos está confirmada.
+
+Falta um passo para concluir: entrar no grupo do WhatsApp, que é por onde chegam
+os avisos da abertura em 10/11.
+
+É só tocar no botão abaixo.
+```
+
+**Botão de URL:** "Entrar no grupo", apontando para o convite do grupo.
+**Variável:** `{{1}}` é o primeiro nome. Exemplo enviado à Meta: "Marcelo".
+
+**Por que foi escrito assim.** É **utility, não marketing**. Confirma algo que a
+pessoa já fez, informa o passo que falta e não vende nada. Template de marketing
+tem aprovação mais lenta e custo por envio maior, e aqui não há oferta nenhuma.
+
+**Como achar quem recebe.** Quem está em `quiz_leads` com `funnel_slug = black-2026`
+e não aparece no grupo. Como o WhatsApp não exporta membro, a conferência é na
+mão ou pelo cruzamento com o evento de clique no botão do grupo, que a página de
+obrigado passou a marcar em 16/10. Quem cadastrou e nunca clicou é o alvo mais
+provável.
+
+Guardado também na mãe, na tarefa "Submeter os templates que faltam", para a
+próxima campanha já nascer com o texto pronto em vez de escrever em cima da hora
+e esperar aprovação.
+
+---
+
+## 26.11 Primeira peça da Black no ar pela automação (17/10/2026)
+
+O **ORG 343**, a arte do envelope lacrado, publicou sozinho hoje às 10h, pelo
+agendamento do worker. `meta_media_id` 18086483174701602.
+
+É a primeira peça da campanha a sair sem ninguém apertar botão, e a primeira a
+usar a chamada "comenta ENVELOPE que a gente te manda o link", que é o que
+dispara o ManyChat.
