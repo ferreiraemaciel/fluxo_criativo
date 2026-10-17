@@ -3574,3 +3574,60 @@ A captação sobe em **20/10**, quatro dias depois desta anotação.
 
 1. **Ferramenta de e-mail.** Hoje o cadastro não dispara e-mail nenhum. O lead entra no banco, recebe o grupo na página de obrigado, e acabou. Se ele não entrar no grupo, não existe segundo caminho. Decisão pendente do Felipe, e conversa com a pendência de sair do Hotmart Send.
 2. **Criativos.** São 8 cards escritos e 1 com arquivo, contra o mínimo de 15 do slide. Depende da rodada de gravação.
+
+
+---
+
+## 26.9 Registro do ADS 400, apagado em 16/10/2026
+
+> O card foi apagado a pedido do Felipe, para o número 400 ser reusado por outra
+> peça. A arte não se perdeu: ela virou o ORG 343, o post do envelope. O que fica
+> aqui é o conteúdo escrito do card, caso a peça precise ser refeita.
+
+**Título:** ADS 400 - Antecipação, a data está marcada
+**Headline:** Fotógrafo e videomaker. 10 de novembro, às 20h, ao vivo.
+
+**Roteiro**
+```
+GANCHO (o que para o dedo): o número 10 . 11 ocupando quase metade da arte, em dourado sobre preto.
+DESENVOLVIMENTO (o que a arte afirma): a maior condição que eu já fiz pra fotógrafo, ao vivo, uma vez só.
+CTA: entra na lista, clica em Saiba Mais.
+```
+
+**Estética visual**
+```
+Arte final: https://imagens.ferreiraemaciel.com.br/fmn/black2026-ads400.png
+
+1080x1350, fundo preto da campanha. Foto real do envelope kraft com o carimbo vermelho, segurado na mão, em largura cheia, sem moldura.
+
+LAYOUT
+Topo, no respiro preto: A MAIOR PROMOÇÃO JÁ FEITA ATÉ HOJE, em Montserrat 900 caixa alta, com o risco dourado embaixo.
+Meio: o envelope, com a mão aparecendo inteira.
+Base, sobre o degradê: Entre na lista e fique sabendo antes de todo mundo, em Montserrat 700, e a data em Roboto Mono dourado.
+
+TIPOGRAFIA DA CAMPANHA
+Montserrat nos títulos e no corpo, Roboto Mono só nas etiquetas e no carimbo.
+
+Sem preço, sem porcentagem, sem produto.
+```
+
+**Nota de produção**
+```
+ARTE PRONTA EM 13/10/2026, não precisa mais gerar nada. A base é foto real do envelope, tirada pelo Felipe, com o carimbo vermelho da campanha impresso no kraft. O fundo de estante foi trocado por preto no ChatGPT, mantendo envelope, mão, textura e luz originais. Prompt usado guardado no caderno.
+```
+
+**Copy do Meta**
+```
+Dia 10 de novembro, às 20h, ao vivo.
+
+É quando eu abro a maior condição que já fiz pra fotógrafo parar de fechar trabalho no escuro. Uma vez só, com presente físico pra quem chegar primeiro.
+
+Comenta ENVELOPE que eu te mando o link, ou clica em Saiba Mais e entra agora.
+```
+Título: 10 de novembro, ao vivo
+Descrição: Comenta ENVELOPE ou entra pelo link
+
+**Arquivos:** arte em `png-ads/ads400-envelope-cta.png`, montagem em
+`arte-ads400-envelope.html`, pasta no Drive https://drive.google.com/drive/folders/1Xi3jLM5VTNC6uvIRbnGZk_bjd3Ey3jnO.
+A versão que foi ao ar como orgânico é `png-ads/envelope-organico.png`, com a
+chamada trocada para "Comenta ENVELOPE que a gente te manda o link".

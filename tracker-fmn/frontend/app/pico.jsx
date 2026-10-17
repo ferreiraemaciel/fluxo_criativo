@@ -497,8 +497,14 @@ function BlocoCaderno({ partes }) {
 ──────────────────────────────────────────────────────────────────*/
 const CATEGORIAS_BIB = ["Oferta e combo", "Narrativa, trailer e manifesto", "Páginas de captura", "Páginas de vendas", "Criativos de captação", "Criativos de aquecimento e contagem", "Criativos de venda", "Posts orgânicos por fase", "Stories", "Lives e aulas", "Disparos e e-mails", "Encerramento", "Playbooks e casos", "Skills e ferramentas", "Aulas do Academy"];
 
+// Imagem e vídeo abrem no visor, não baixam no clique. Link de página segue
+// abrindo numa aba, que é o que se espera de um link.
+const EH_ARQUIVO = /\.(jpe?g|png|webp|gif|mp4|webm|mov)(\?|$)/i;
+
 function ItemBib({ i, onRemover }) {
   const [hov, setHov] = useState(false);
+  const [verArquivo, setVerArquivo] = useState(false);
+  const arquivo = !!i.url && EH_ARQUIVO.test(i.url);
   const estilo = { display:'flex', alignItems:'flex-start', gap:7, padding:'7px 9px', borderRadius:8,
     textDecoration:'none', fontSize:12, fontFamily:'Roboto,sans-serif', lineHeight:1.4,
     background: hov ? 'rgba(255,255,255,.045)' : 'rgba(255,255,255,.02)',
@@ -515,9 +521,17 @@ function ItemBib({ i, onRemover }) {
   );
   return (
     <div onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)} style={{ position:'relative' }}>
-      {i.url
-        ? <a href={i.url} target="_blank" rel="noopener noreferrer" style={estilo}>{conteudo}</a>
-        : <div style={estilo}>{conteudo}</div>}
+      {arquivo
+        ? <button onClick={() => setVerArquivo(true)}
+            style={{ ...estilo, width:'100%', cursor:'zoom-in', textAlign:'left', font:'inherit' }}>
+            {conteudo}
+          </button>
+        : i.url
+          ? <a href={i.url} target="_blank" rel="noopener noreferrer" style={estilo}>{conteudo}</a>
+          : <div style={estilo}>{conteudo}</div>}
+      {verArquivo && (
+        <CarouselLightbox urls={[i.url]} initialIdx={0} onClose={() => setVerArquivo(false)}/>
+      )}
       {hov && (
         <button onClick={() => { if (window.confirm('Tirar este exemplo da biblioteca?')) onRemover(i.id); }}
           title="Tirar da biblioteca"
@@ -2439,7 +2453,7 @@ function AbaAgora({ tarefas, pecasPorTarefa, onToggle, onAbrirPeca, onMudar }) {
    O arquivo vai original para o R2 (fmn/pico/<projeto>/) pelo link assinado
    do worker fem-upload; a linha fica em pico_arquivos. */
 const UPLOAD_FEM = 'https://fem-upload.blindagem-fmn.workers.dev';
-const CATEGORIAS_ARQ = [['logo','Logos e fundos'],['grupo','Capas dos grupos'],['contagem','Jogo de contagem regressiva'],['bonus','Cards de revelação dos bônus'],['arte','Artes'],['foto','Fotos'],['video','Vídeos'],['documento','Documentos']];
+const CATEGORIAS_ARQ = [['pagina','Páginas da campanha'],['logo','Logos e fundos'],['grupo','Capas dos grupos'],['contagem','Jogo de contagem regressiva'],['bonus','Cards de revelação dos bônus'],['arte','Artes'],['foto','Fotos'],['video','Vídeos'],['documento','Documentos']];
 
 /* Mini manual de identidade por campanha (resumo da página de marca). */
 const IDENTIDADE_PICO = {
@@ -2562,6 +2576,13 @@ function AcervoArquivos({ projetoId }) {
     const doTipo = itens.filter(a => a.categoria === id)
       .sort((x, y) => chave(x).localeCompare(chave(y)) || x.nome.localeCompare(y.nome, 'pt-BR', { numeric:true }));
     if (!doTipo.length) return;
+    if (id === 'pagina') {
+      secoes.push({ id, titulo:lb, n:doTipo.length, corpo:(
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(260px, 1fr))', gap:10 }}>
+          {doTipo.map(a => <PaginaTile key={a.id} a={a} onRemover={remover}/>)}
+        </div>) });
+      return;
+    }
     const sub = id === 'contagem'
       ? [['Feed 1080x1350', doTipo.filter(a => !/story/i.test(a.url)), '4 / 5'], ['Story 1080x1920', doTipo.filter(a => /story/i.test(a.url)), '9 / 16']]
       : [[null, doTipo, id === 'bonus' ? '4 / 5' : '1 / 1']];
@@ -2583,7 +2604,7 @@ function AcervoArquivos({ projetoId }) {
       <div style={{ display:'flex', alignItems:'flex-end', justifyContent:'space-between', gap:12, flexWrap:'wrap' }}>
         <div>
           <p style={{ fontSize:16, fontWeight:600, fontFamily:'Roboto,sans-serif', color:'var(--text-1)' }}>Arquivos da campanha</p>
-          <p style={{ fontSize:13, color:'var(--text-2)', fontFamily:'Roboto,sans-serif', marginTop:2 }}>Clique numa peça para baixar o original.</p>
+          <p style={{ fontSize:13, color:'var(--text-2)', fontFamily:'Roboto,sans-serif', marginTop:2 }}>Clique numa peça para abrir. O botão de baixar fica dentro, e dá para sair no ESC.</p>
         </div>
         <label style={{ display:'inline-flex', alignItems:'center', gap:8, height:36, padding:'0 16px', borderRadius:10, cursor:'pointer',
           background:'var(--app-primary)', color:'var(--app-primary-fg)', fontSize:14, fontWeight:500, fontFamily:'Roboto,sans-serif' }}>
@@ -2604,11 +2625,50 @@ function AcervoArquivos({ projetoId }) {
   );
 }
 
+// Página não é arquivo para baixar, é endereço para abrir. Por isso cartão
+// próprio, com o domínio à vista, em vez da moldura de miniatura.
+function PaginaTile({ a, onRemover }) {
+  const [hov, setHov] = useState(false);
+  let dominio = a.url;
+  try { dominio = new URL(a.url).host.replace(/^www\./, ''); } catch {}
+  return (
+    <div onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
+      style={{ position:'relative' }}>
+      <a href={a.url} target="_blank" rel="noopener noreferrer"
+        style={{ display:'flex', alignItems:'center', gap:10, padding:'12px 13px', borderRadius:10,
+          textDecoration:'none', background:'var(--app-surface-2)',
+          border:'1px solid ' + (hov ? 'var(--app-primary)' : 'var(--app-border)') }}>
+        <LucideIcon icon="external-link" size={16} style={{ color:'var(--app-primary)', flexShrink:0 }}/>
+        <span style={{ flex:1, minWidth:0 }}>
+          <span style={{ display:'block', fontSize:13, color:'var(--text-1)',
+            fontFamily:'Roboto,sans-serif', lineHeight:1.3 }}>{a.nome}</span>
+          <span style={{ display:'block', fontSize:11, color:'var(--text-3)',
+            fontFamily:'Roboto,sans-serif', marginTop:2 }}>{dominio}</span>
+        </span>
+      </a>
+      {hov && (
+        <button onClick={() => onRemover(a)} title="Tirar do acervo"
+          style={{ position:'absolute', top:6, right:6, color:'var(--text-3)', cursor:'pointer', padding:2 }}>
+          <LucideIcon icon="x" size={13}/>
+        </button>
+      )}
+    </div>
+  );
+}
+
 function ArquivoTile({ a, prop, onRemover }) {
   const logo = a.categoria === 'logo';
+  // Clicar abre o visor, nunca baixa sozinho. Quem baixa é o botão de dentro,
+  // e dá para sair no X, no ESC ou clicando fora. Arquivo que não é imagem nem
+  // vídeo não tem o que mostrar, então esse continua baixando direto.
+  const [ver, setVer] = useState(false);
+  const visualizavel = ehImagem(a.url) || a.categoria === 'video';
   return (
     <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
-      <button onClick={() => baixarArquivo(a)} title="Baixar o original"
+      {ver && <CarouselLightbox urls={[a.url]} initialIdx={0}
+        onClose={() => setVer(false)} onBaixar={() => baixarArquivo(a)}/>}
+      <button onClick={() => visualizavel ? setVer(true) : baixarArquivo(a)}
+        title={visualizavel ? 'Abrir' : 'Baixar o original'}
         style={{ position:'relative', width:'100%', aspectRatio:prop, borderRadius:12, overflow:'hidden', cursor:'pointer',
           background: logo ? 'repeating-conic-gradient(#14161b 0% 25%, #0e1115 0% 50%) 50% / 16px 16px' : 'var(--app-surface-2)',
           border:'1px solid var(--app-border)', display:'flex', alignItems:'center', justifyContent:'center' }}
@@ -2619,7 +2679,8 @@ function ArquivoTile({ a, prop, onRemover }) {
           : <LucideIcon icon={a.categoria === 'video' ? 'film' : 'file-text'} size={36} style={{ color:'var(--text-2)' }}/>}
         <span style={{ position:'absolute', inset:0, background:'rgba(0,0,0,.55)', display:'flex', alignItems:'center', justifyContent:'center',
           gap:6, color:'#fff', fontSize:13, fontWeight:500, fontFamily:'Roboto,sans-serif', opacity:0, transition:'opacity 150ms' }}>
-          <LucideIcon icon="download" size={16}/>Baixar
+          <LucideIcon icon={visualizavel ? 'maximize-2' : 'download'} size={16}/>
+          {visualizavel ? 'Abrir' : 'Baixar'}
         </span>
       </button>
       <div style={{ display:'flex', alignItems:'flex-start', gap:6 }}>
@@ -2659,7 +2720,7 @@ function AbaPecas({ pecas, tarefas, onAbrirPeca, projetoId }) {
       <Pilulas valor={filtro} onChange={setFiltro}
         opcoes={[{ id:'todas', label:`Todas (${pecas.length})` },
           { id:'organico', label:`Orgânico (${pecas.filter(p => p.tipo === 'organico').length})` },
-          { id:'ads', label:`Anúncios (${pecas.filter(p => p.tipo === 'ads').length})` }]}/>
+          { id:'ads', label:`Tráfego pago (${pecas.filter(p => p.tipo === 'ads').length})` }]}/>
       {ordem.filter(f => grupos[f]).map(f => (
         <section key={f} style={{ display:'flex', flexDirection:'column', gap:10 }}>
           <p style={{ fontSize:14, fontWeight:600, fontFamily:'Roboto,sans-serif', color:'var(--text-1)', display:'flex', alignItems:'center', gap:8 }}>
@@ -2667,9 +2728,30 @@ function AbaPecas({ pecas, tarefas, onAbrirPeca, projetoId }) {
             {FASE_MAP[f]?.label || 'Da campanha, sem tarefa'}
             <span style={{ color:'var(--text-2)', fontWeight:400 }}>({grupos[f].length})</span>
           </p>
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(150px, 1fr))', gap:16 }}>
-            {grupos[f].map(p => <MiniPeca key={p.tipo + p.id} p={p} onAbrir={onAbrirPeca} grande/>)}
-          </div>
+          {/* Dentro da fase, orgânico e anúncio vão em blocos separados: são
+              dois fluxos de trabalho diferentes e misturar atrapalha na hora
+              de conferir o que falta de cada lado. Quando o filtro já restringe
+              a um tipo só, o subtítulo some, porque viraria ruído. */}
+          {['organico', 'ads'].map(tp => {
+            const doTipo = grupos[f].filter(p => p.tipo === tp);
+            if (!doTipo.length) return null;
+            return (
+              <div key={tp} style={{ display:'flex', flexDirection:'column', gap:8 }}>
+                {filtro === 'todas' && (
+                  <p style={{ fontSize:12, fontWeight:600, fontFamily:'Roboto,sans-serif',
+                    color:'var(--text-2)', textTransform:'uppercase', letterSpacing:'.08em',
+                    display:'flex', alignItems:'center', gap:6 }}>
+                    <LucideIcon icon={tp === 'organico' ? 'leaf' : 'megaphone'} size={13}/>
+                    {tp === 'organico' ? 'Orgânico' : 'Tráfego pago'}
+                    <span style={{ fontWeight:400 }}>({doTipo.length})</span>
+                  </p>
+                )}
+                <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(150px, 1fr))', gap:16 }}>
+                  {doTipo.map(p => <MiniPeca key={p.tipo + p.id} p={p} onAbrir={onAbrirPeca} grande/>)}
+                </div>
+              </div>
+            );
+          })}
         </section>
       ))}
     </div>

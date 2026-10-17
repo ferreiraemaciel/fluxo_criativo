@@ -989,7 +989,16 @@ function CrossList({ title, hint, rows, render, color }) {
 const FUNIS_CPL = [
   { slug: 'fotografo-protegido', label: 'MCV · Fotógrafo Protegido' },
   { slug: 'blindagem',           label: 'Blindagem' },
+  // Captura da Black 2026, pela página própria /black-2026. Entra aqui porque
+  // a lista de funis vive no código: sem a linha, o lead grava em quiz_leads
+  // normalmente mas não aparece em tela nenhuma do Tracker.
+  { slug: 'black-2026',          label: 'Black 2026' },
 ];
+
+// A tela lista os funis e a função custo-por-lead calcula só os que ela
+// conhece. Quando um slug novo entra aqui e ainda não entrou lá, o resultado
+// vem sem ele, e ler .cpl de undefined derrubava a aba inteira.
+const VAZIO = { gasto: 0, leads: 0, cpl: null };
 
 function CardCustoPorLead({ range, funnel }) {
   const [d, setD]       = useState(null);
@@ -1033,7 +1042,7 @@ function CardCustoPorLead({ range, funnel }) {
       </div>}
       {d && (<>
         <div style={{ display:'flex', gap:12, flexWrap:'wrap' }}>
-          {funis.map(f => { const v = d.funis[f.slug]; return (
+          {funis.map(f => { const v = d.funis[f.slug] || VAZIO; return (
             <div key={f.slug} style={tile}>
               <div style={rot}>{f.label}</div>
               <div style={{ fontSize:26, fontWeight:800, color:'var(--fmn-gold)', fontFamily:'Roboto,sans-serif', margin:'6px 0 2px' }}>{brl(v.cpl)}</div>
@@ -1058,8 +1067,8 @@ function CardCustoPorLead({ range, funnel }) {
                     {dm(s.inicio)} a {dm(s.fim)}{i === d.semanas.length - 1 && <span style={{ color:'var(--text-3)' }}> · em andamento</span>}
                   </td>
                   {funis.map(f => {
-                    const v = s.funis[f.slug];
-                    const max = Math.max(1, ...d.semanas.map(x => x.funis[f.slug].cpl || 0));
+                    const v = s.funis[f.slug] || VAZIO;
+                    const max = Math.max(1, ...d.semanas.map(x => (x.funis[f.slug] || VAZIO).cpl || 0));
                     return (
                       <td key={f.slug} style={{ padding:'7px 10px', borderBottom:'1px solid var(--app-border)', color:'var(--text-2)' }}>
                         <div style={{ display:'flex', alignItems:'center', gap:10 }}>
@@ -1328,6 +1337,7 @@ function FunisScreen({ onNavigate }) {
     { id: 'all',                  label: 'Todos' },
     { id: 'fotografo-protegido',  label: 'Fotógrafo Protegido' },
     { id: 'blindagem',            label: 'Blindagem' },
+    { id: 'black-2026',           label: 'Black 2026' },
   ];
 
   const FunnelBar = () => (

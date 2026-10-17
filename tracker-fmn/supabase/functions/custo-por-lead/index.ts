@@ -27,6 +27,9 @@ const INICIO_QUIZ_PROPRIO = "2026-07-06";
 const FUNIS = [
   { slug: "fotografo-protegido", prefixo: "MCV" },
   { slug: "blindagem",           prefixo: "BLI" },
+  // Captura do pico, pela página própria. O prefixo casa com o nome das
+  // campanhas da Black no Meta ("BF 2026 - Antecipação", "BF 2026 - Captação").
+  { slug: "black-2026",          prefixo: "BF" },
 ];
 
 const cors = {
