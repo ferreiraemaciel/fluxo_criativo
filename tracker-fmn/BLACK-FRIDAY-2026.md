@@ -3790,7 +3790,7 @@ depois de 30/11 às 23h59 eles simplesmente não descontam nada.
 
 | Cupom | Produto | Desconto | De | Para | Ofertas |
 |---|---|---|---|---|---|
-| `BLACK2026` | Modelos de Contrato Visual | 33,67% | R$ 297 | **R$ 197,00** | `bdujzvze` e `2zbq8e15` |
+| `BLACK2026` | Modelos de Contrato Visual | 33,67% | R$ 297 | **R$ 197,00** | `bdujzvze` |
 | `BLACK2026` | Blindagem | 25,19% | R$ 397 | **R$ 297,00** | `j7qvwx24` |
 | `BLACKMCV7K2` | Blindagem, para quem já tem o MCV | 50,38% | R$ 397 | **R$ 197,00** | `j7qvwx24` |
 
@@ -3840,30 +3840,68 @@ repassa o rastreio: `offDiscount` que chega na URL vai para o checkout. É
 genérico, serve para qualquer campanha futura, e fora da janela a Hotmart
 ignora o cupom sozinha. Testado em produção nas duas páginas.
 
-## 31.4 Os links prontos
+## 31.4 Os links da Black
 
-Padrão: `offDiscount` carrega o cupom, `sck` carrega o rastreio. As regras de
-`sck` (máximo 30 caracteres, separador `hQwK21wXxR`, `-ah` quando é humano que
-manda) continuam valendo sem mudança.
+Dois parâmetros, cada um para um lado: **`offDiscount`** carrega o cupom até a
+Hotmart e **`sck`** carrega o rastreio até o Tracker. As regras do `sck` não
+mudam na Black (teto de 30 caracteres, separador `hQwK21wXxR`, `-ah` quando é
+humano que manda, `-lp` quando o destino é página de vendas).
 
-**MCV, R$ 197**
-- Página: `https://www.contratos.fotografiaeomeunegocio.com.br/?sck={SCK}&offDiscount=BLACK2026`
-- Checkout: `https://pay.hotmart.com/W87258826R?off=bdujzvze&checkoutMode=10&sck={SCK}&offDiscount=BLACK2026`
+**A etiqueta da campanha não vai no `sck`.** Quem diz que a venda é da Black é o
+cupom, que o webhook grava em `vendas.cupom_codigo`. Isso libera o `sck` inteiro
+para dizer o canal, que é o que ele faz bem, e sobrevive aos caminhos em que a
+Hotmart engole o rastreio (agente de vendas, recuperação dela).
 
-**Blindagem, R$ 297**
-- Página: `https://www.contratosblindagem.fotografiaeomeunegocio.com.br/?sck={SCK}&offDiscount=BLACK2026`
-- Checkout: `https://pay.hotmart.com/C106394543X?checkoutMode=10&sck={SCK}&offDiscount=BLACK2026`
+### Endereços
 
-**Blindagem para aluno do MCV, R$ 197**
-- Checkout: `https://pay.hotmart.com/C106394543X?checkoutMode=10&sck={SCK}&offDiscount=BLACKMCV7K2`
+| Produto | Preço | Página de vendas | Checkout |
+|---|---|---|---|
+| MCV | R$ 197 | `www.contratos.fotografiaeomeunegocio.com.br` | `pay.hotmart.com/W87258826R?off=bdujzvze&checkoutMode=10` |
+| Blindagem | R$ 297 | `www.contratosblindagem.fotografiaeomeunegocio.com.br` | `pay.hotmart.com/C106394543X?checkoutMode=10` |
+| Blindagem, aluno do MCV | R$ 197 | não tem, é link fechado | `pay.hotmart.com/C106394543X?checkoutMode=10` |
 
-| Canal | `{SCK}` |
-|---|---|
-| Grupo de WhatsApp da Black | `whatsapp-ah-lp` (página) ou `whatsapp-ah` (checkout) |
-| Instagram Stories | `instagram-lphQwK21wXxRstories` |
-| Instagram bio | `instagram-lphQwK21wXxRbio` |
-| Instagram Direct | `instagram-ah-lphQwK21wXxRdm` |
-| E-mail | `emailhQwK21wXxRblack` |
+Cupom: `BLACK2026` nos dois primeiros, `BLACKMCV7K2` no terceiro.
+
+### O `sck` de cada canal, conferido no tamanho
+
+| Canal | Para página de vendas | Para checkout |
+|---|---|---|
+| Grupo de WhatsApp | `whatsapp-ah-lp` | `whatsapp-ah` |
+| Instagram Stories | `instagram-lphQwK21wXxRstories` | `instagramhQwK21wXxRstories` |
+| Instagram bio | `instagram-lphQwK21wXxRbio` | `instagramhQwK21wXxRbio` |
+| Instagram Direct | `instagram-ah-lphQwK21wXxRdm` | `instagram-ahhQwK21wXxRdm` |
+| E-mail | `email-lphQwK21wXxRnewsletter` | `emailhQwK21wXxRnewsletter` |
+| YouTube | `youtube-lphQwK21wXxRbio` | `youtubehQwK21wXxRbio` |
+
+Os seis foram medidos: o maior tem 29 caracteres. **Anúncio não entra nesta
+tabela**: ali o `sck` sai do id do anúncio sozinho, pelo `UTM_GLOBAL` da
+campanha, e o Tracker lê como `meta_ad_id`.
+
+### Montagem
+
+```
+{página ou checkout}?sck={SCK}&offDiscount={CUPOM}
+```
+
+Exemplo, MCV pelo Stories:
+`https://www.contratos.fotografiaeomeunegocio.com.br/?sck=instagram-lphQwK21wXxRstories&offDiscount=BLACK2026`
+
+### O botão das páginas de vendas da Black
+
+Quando as páginas da Black existirem, o botão de compra delas segue esta regra,
+que é a mesma já implementada em `contratos.html` e `blindagem.html`:
+
+1. **Cupom cravado no `href`**, não vindo da URL. Na página da Black o desconto
+   é a oferta, então ele não pode depender de a pessoa ter chegado por um link
+   certo. Quem salvou a página ou digitou o endereço tem que ver o mesmo preço.
+2. **`sck` repassado da URL**, com o mesmo bloco que já roda nas duas LPs: `sck`
+   pronto passa inteiro; sem ele, monta a partir de `utm_source` e `utm_medium`;
+   com id de anúncio em `utm_content`, o id vai puro.
+3. **Fora da janela a Hotmart ignora o cupom sozinha**, então a página não
+   precisa de data nenhuma no código. Quando o carrinho fechar, ela volta a
+   vender pelo preço cheio sem ninguém mexer nela.
+
+Nas LPs de hoje o cupom só passa se vier na URL, que era o certo para elas.
 
 ## 31.5 O que a API errou, e o que o painel resolveu
 
@@ -3878,10 +3916,12 @@ Sem isso, `BLACK2026` descontaria também na oferta `bgz81lg3` do Blindagem, o
 upsell pós-compra de R$ 100, derrubando ela para R$ 74,81. No painel as ofertas
 aparecem por nome e chave, e a restrição levou dois cliques.
 
-**O MCV ficou com duas ofertas de propósito.** `bdujzvze` é a principal e
-`2zbq8e15` é a parcelada, as duas a R$ 297. Deixar o cupom só na principal
-faria quem pede parcelamento perder o desconto da Black, que é justamente o
-público que mais precisa dele.
+**A oferta parcelada do MCV ficou de fora, por decisão do Felipe em 17/10.**
+`2zbq8e15` é o parcelamento sem cartão, boleto ou Pix dividido pela Hotmart,
+que hoje só sai quando alguém pede e sempre por um humano. A Black não vai ter
+essa condição, então o cupom vale só em `bdujzvze`. Cheguei a deixar as duas e
+ele corrigiu: dar desconto onde a condição não existe é abrir uma porta que
+ninguém vai usar e que ninguém está controlando.
 
 **Precisão:** o painel aceita duas casas decimais no percentual, o que basta.
 33,67% sobre 297 dá R$ 197,00 e 25,19% sobre 397 dá R$ 297,00. O de aluno sai
