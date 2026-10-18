@@ -3788,11 +3788,15 @@ Criados pela API da Hotmart em 17/10, já com validade travada na própria
 Hotmart. Status "soon" até lá, ou seja, inativos: antes de 10/11 às 20h e
 depois de 30/11 às 23h59 eles simplesmente não descontam nada.
 
-| Cupom | Produto | Desconto | De | Para | Id |
+| Cupom | Produto | Desconto | De | Para | Ofertas |
 |---|---|---|---|---|---|
-| `BLACK2026` | Modelos de Contrato Visual | 0,33670034 | R$ 297 | **R$ 197,00** | 4298230 |
-| `BLACK2026` | Blindagem | 0,25188917 | R$ 397 | **R$ 297,00** | 4298231 |
-| `BLACKMCV7K2` | Blindagem, para quem já tem o MCV | 0,50377834 | R$ 397 | **R$ 197,00** | 4298232 |
+| `BLACK2026` | Modelos de Contrato Visual | 33,67% | R$ 297 | **R$ 197,00** | `bdujzvze` e `2zbq8e15` |
+| `BLACK2026` | Blindagem | 25,19% | R$ 397 | **R$ 297,00** | `j7qvwx24` |
+| `BLACKMCV7K2` | Blindagem, para quem já tem o MCV | 50,38% | R$ 397 | **R$ 197,00** | `j7qvwx24` |
+
+> **Refeitos à mão em 17/10, pelo painel.** Os três primeiros, criados pela API,
+> tinham dois defeitos que só apareceram na tela da Hotmart, e cupom lá não se
+> edita: ou se remove e refaz, ou fica como está. Ver 31.5.
 
 **Validade:** 10/11/2026 às 20h (a hora da live de abertura) a 30/11/2026 às
 23h59. Vinte e um dias, a janela decidida na seção 3.1.
@@ -3861,16 +3865,29 @@ manda) continuam valendo sem mudança.
 | Instagram Direct | `instagram-ah-lphQwK21wXxRdm` |
 | E-mail | `emailhQwK21wXxRblack` |
 
-## 31.5 As duas pendências que ficaram
+## 31.5 O que a API errou, e o que o painel resolveu
 
-**1. O cupom não está restrito por oferta.** O endpoint de ofertas da Hotmart
-devolve erro 500 pela API, então não dá para pegar o id numérico das ofertas e
-passar em `offer_ids`. Consequência: `BLACK2026` também desconta na oferta
-`bgz81lg3` do Blindagem, que é o upsell pós-compra de R$ 100, derrubando ela
-para R$ 74,81. Resolve no painel da Hotmart, editando o cupom e marcando só a
-oferta principal (`j7qvwx24` no Blindagem, `bdujzvze` no MCV).
+**1. A hora saiu três horas adiantada.** Mandei timestamp em UTC, como a
+documentação pede, e a Hotmart gravou o número como se já fosse horário de
+Brasília: o cupom abriria às 23h, não às 20h da live. Pela tela isso ficou
+óbvio na coluna Validade. Refeito, agora marca 10/11 às 20:00.
 
-**2. Quem chegar na página sem o link da campanha paga cheio.** O desconto só
+**2. O cupom valia para todas as ofertas.** O endpoint de ofertas devolve erro
+500 pela API, então não dava para pegar o id numérico e passar em `offer_ids`.
+Sem isso, `BLACK2026` descontaria também na oferta `bgz81lg3` do Blindagem, o
+upsell pós-compra de R$ 100, derrubando ela para R$ 74,81. No painel as ofertas
+aparecem por nome e chave, e a restrição levou dois cliques.
+
+**O MCV ficou com duas ofertas de propósito.** `bdujzvze` é a principal e
+`2zbq8e15` é a parcelada, as duas a R$ 297. Deixar o cupom só na principal
+faria quem pede parcelamento perder o desconto da Black, que é justamente o
+público que mais precisa dele.
+
+**Precisão:** o painel aceita duas casas decimais no percentual, o que basta.
+33,67% sobre 297 dá R$ 197,00 e 25,19% sobre 397 dá R$ 297,00. O de aluno sai
+em R$ 196,99, um centavo abaixo, a favor de quem compra.
+
+**A pendência que sobrou: quem chegar na página sem o link da campanha paga cheio.** O desconto só
 existe com o cupom na URL. Dá para controlar os links que a gente publica, não
 dá para controlar quem salvou a página ou digita o endereço de cabeça. Na
 abertura, cravar `offDiscount` direto no botão das duas LPs e tirar em 01/12.
