@@ -3550,11 +3550,33 @@ Os mesmos seis anúncios rodam em todos os conjuntos. Os 15 do pré-requisito s�
 
 ## 29.3 Otimização, a rotina escrita
 
+> **Completada em 18/10/2026**, depois de ler o PDF da palestra inteiro. A versão
+> anterior tinha só os passos 1 e 2, e os quatro que faltavam são justamente os
+> que mudam decisão no dia a dia.
+
 **Passo 1, todos os dias.** Se o custo por lead estiver dentro do ideal, **aumentar o orçamento da campanha em 20%**.
 
 **Passo 2, a cada 3 ou 4 dias.** Se o custo por lead **do conjunto** estiver dentro da meta, manter o conjunto ativo. Desativar os conjuntos com custo por lead acima da meta.
 
 Repare que são duas réguas diferentes: a diária olha a campanha inteira e mexe em verba. A de 3 em 3 dias olha conjunto por conjunto e mexe em liga e desliga.
+
+**Passo 3, criativos, a cada 2 ou 3 dias.** Mesma lógica do público: pausa o que está acima do custo por lead, mantém o que está abaixo, e **cria um criativo novo toda vez que pausar um**, mantendo sempre **6 a 8 anúncios ativos em cada grupo**.
+
+**Passo 4, e o slide marca como MUITO IMPORTANTE.** O melhor anúncio não é necessariamente o do lead mais barato. Se o **único** anúncio que traz volume estiver R$ 1, R$ 2 ou R$ 3 acima da meta, **não pause**. A Black pode ter custo por lead acima da meta, e o caminho é usar orgânico e API oficial para fechar o volume de leads sem gastar mais em tráfego.
+
+**Passo 5, métricas secundárias.** Só importam quando o custo por lead está muito acima da meta, e cada uma aponta para um lugar diferente:
+
+| Métrica | Régua | Se furar, o problema está |
+|---|---|---|
+| CTR | acima de 2% | no anúncio |
+| CPC | até R$ 3,50 (referência) | no anúncio |
+| Connect rate | mínimo 70% | no carregamento da página |
+| Conversão da página de captura | mínimo 40% | na copy da página |
+
+**Passo 6, métricas fora do tráfego**, que são responsabilidade do gestor: qualificação pela pesquisa com os leads, **entrada nos grupos de WhatsApp mínimo 70%** e **abertura do primeiro e-mail mínimo 15%**.
+
+> A última delas hoje é cega: sem ferramenta de e-mail, não há primeiro e-mail
+> para abrir. Ver a pendência 1 da 29.5.
 
 ## 29.4 A conta da verba, com os números do nosso plano
 
@@ -3933,3 +3955,115 @@ dá para controlar quem salvou a página ou digita o endereço de cabeça. Na
 abertura, cravar `offDiscount` direto no botão das duas LPs e tirar em 01/12.
 Seguro de fazer porque a validade mora no cupom, mas tem que ser no dia, senão
 quem entrar antes vê aviso de cupom inválido no checkout.
+
+
+---
+
+# PARTE 32. AS FASES 4 E 5, PELOS SLIDES DO SAMUEL (18/10/2026)
+
+> Fecha o mapa do tráfego. As fases 1, 2 e 3 já estavam registradas (Partes 28 e
+> 29). Estas duas não estavam em lugar nenhum, e somam 12 peças com data certa.
+
+## 32.1 O mapa inteiro, para não confundir de novo
+
+| Fase | O que é | Criativos |
+|---|---|---|
+| 1 | Planejamento e Metas | nenhum |
+| 2 | Antecipação, o tiro de alerta | 1 a 3 teasers |
+| 3 | Captação | 6 no ar, 15 de estoque |
+| 4 | **Relacionamento** | 6 de lembrete + 3 a 6 de aquecimento |
+| 5 | **Remarketing** | mínimo 6 |
+
+## 32.2 Fase 4, e o que ninguém percebe: são DUAS campanhas
+
+A fase 4 roda **em paralelo com a captação**, e não é uma campanha só. São duas,
+com objetivos diferentes, dividindo o orçamento **meio a meio**.
+
+### A campanha de LEMBRETE
+
+| | |
+|---|---|
+| Objetivo | Reconhecimento de marca |
+| Meta de desempenho | Maximizar o alcance dos anúncios |
+| Orçamento | ABO |
+| Advantage+ | desligado |
+| Conjuntos | os mesmos 4 da captação |
+| Anúncios | 1 por conjunto, o AD LEMBRETE do dia |
+
+**Uma campanha por dia de lembrete**, programada para rodar **somente das 00:00
+às 23:59 daquele dia**. São seis, e o orçamento sobe junto com a proximidade:
+
+| Peça | Dia | Fatia do orçamento de lembrete |
+|---|---|---|
+| Faltam 7 dias | 03/11 | 7% |
+| Faltam 5 dias | 05/11 | 10% |
+| Faltam 3 dias | 07/11 | 15% |
+| É amanhã | 09/11 | 15% |
+| É hoje | 10/11 | 25% |
+| Estou ao vivo | 10/11 | 28% |
+
+O que entra nessas peças: contagem regressiva, "está chegando", "é dia X",
+"é hoje", "tô ao vivo". São curtas, vídeo ou arte.
+
+### A campanha de AQUECIMENTO
+
+| | |
+|---|---|
+| Objetivo | Engajamento |
+| Tipo | Visualizações do vídeo |
+| Orçamento | CBO |
+| Advantage+ | desligado |
+| Conjuntos | os mesmos 4 |
+| Anúncios | AD01, AD02 e AD03 |
+
+São **3 a 6 vídeos longos, de até 5 minutos**, para nível de consciência mais
+alto: quebra de objeção, depoimentos, trechos de live de aquecimento.
+
+**Otimização do aquecimento:** olhar o **custo por view de 50%** e desativar só
+o anúncio que estiver muito acima dos outros, porque não existe referência
+mínima. E acompanhar os comentários: custo por view baixo demais pode ser sinal
+de mensagem mal interpretada pelo público.
+
+## 32.3 Fase 5, Remarketing
+
+| | |
+|---|---|
+| Objetivo | Vendas |
+| Evento | Compra |
+| Orçamento | CBO, verba da fase dividida pelos dias |
+| Advantage+ | desligado |
+| Conjuntos | os mesmos 4 |
+| Anúncios | AD01 a AD06 |
+
+**Pré-requisito que hoje não existe: página de oferta especial publicada.** É a
+página de vendas da Black. Enquanto ela não existir, os seis criativos de
+remarketing não têm para onde mandar.
+
+Roda enquanto as inscrições estiverem abertas, ou seja, de 10/11 a 30/11.
+
+**Os três ângulos dos anúncios:** inscrições abertas, depoimentos e bônus,
+desconto e bônus.
+
+**Otimização:** depois de 72 horas no ar, se o CPA estiver **até 50% do valor do
+produto na oferta especial**, aumentar 20%. Se estiver acima de 50% do ticket,
+**diminuir** 20%. Depois, a cada 3 ou 4 dias, desligar os conjuntos com CPA alto
+e, a cada 2 ou 3 dias, pausar os criativos acima do CPA ideal.
+
+> Com o Blindagem a R$ 297 na Black, o CPA de corte é **R$ 148,50**. Com o MCV a
+> R$ 197, é **R$ 98,50**. Vale anotar porque é outra régua que a do perpétuo
+> (R$ 207,90 no MCV e R$ 277,90 no Blindagem, da Parte do Tracker).
+
+## 32.4 A conta de criativos que falta, em 18/10
+
+| Fase | Precisa | Tem | Falta |
+|---|---|---|---|
+| Antecipação | 1 a 3 | 4 | feito |
+| Captação | 15 | 2 | 13 |
+| Lembrete | 6 | 0 | 6 |
+| Aquecimento | 3 a 6 | 0 | 3 a 6 |
+| Remarketing | 6 | 0 | 6 |
+| **Total** | | | **28 a 31** |
+
+**As 6 de lembrete saem sem o Felipe**, porque são contagem regressiva, formato
+tipográfico que o motor dos cartazes já faz. **Os vídeos de aquecimento são os
+mais caros em tempo dele**, até 5 minutos falando, sem atalho.
