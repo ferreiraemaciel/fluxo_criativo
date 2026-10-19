@@ -3,12 +3,11 @@
   "configurations": [
     {
       "name": "contratovisual",
-      "runtimeExecutable": "npm",
+      "runtimeExecutable": "/bin/bash",
       "runtimeArgs": [
-        "run",
-        "dev"
+        "-c",
+        "cd /Users/ferreiraemaciel/Documents/contratovisual && exec npm run dev -- --port 8080 --strictPort"
       ],
-      "cwd": "/Users/ferreiraemaciel/Documents/contratovisual",
       "port": 8080,
       "autoPort": false
     },
