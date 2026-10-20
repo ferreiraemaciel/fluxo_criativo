@@ -392,6 +392,7 @@ function Sidebar({ activePage, onNavigate, collapsed = false, onToggle }) {
       { id: 'ideias',     icon: 'lightbulb',        label: 'Ideias' },
       { id: 'organico',   icon: 'leaf',             label: 'Orgânico' },
       { id: 'criativos',  icon: 'clapperboard',     label: 'Anúncios' },
+      { id: 'desafio',    icon: 'trophy',           label: 'Desafio MMM' },
     ]},
     { titulo: 'Vendas', itens: [
       { id: 'trafego',    icon: 'trending-up',      label: 'Tráfego' },

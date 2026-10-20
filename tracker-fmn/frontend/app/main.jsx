@@ -6,16 +6,16 @@
   const DEPS = [
     'LucideIcon','Btn','Badge','CardKPI','SectionCard','Sidebar','TopBar',
     'DashboardScreen','KanbanScreen','FinancialScreen',
-    'IdeiaScreen','OrganicoScreen','TrafficScreen','FunisScreen','SystemScreen','SiteScreen','ConversasScreen','PicoScreen'
+    'IdeiaScreen','OrganicoScreen','DesafioScreen','TrafficScreen','FunisScreen','SystemScreen','SiteScreen','ConversasScreen','PicoScreen'
   ];
   if (DEPS.some(d => !window[d])) { setTimeout(tryMount, 80); return; }
 
   const { useState, useEffect } = React;
-  const TELAS_VALIDAS = ['dashboard','ideias','organico','criativos','trafego','funis','conversas','financeiro','pico','site','sistema'];
+  const TELAS_VALIDAS = ['dashboard','ideias','organico','desafio','criativos','trafego','funis','conversas','financeiro','pico','site','sistema'];
   const {
     Sidebar, TopBar, LucideIcon,
     DashboardScreen, KanbanScreen,
-    FinancialScreen, IdeiaScreen, OrganicoScreen, TrafficScreen, FunisScreen, AutomacaoScreen, SystemScreen, SiteScreen, ConversasScreen, PicoScreen
+    FinancialScreen, IdeiaScreen, OrganicoScreen, DesafioScreen, TrafficScreen, FunisScreen, AutomacaoScreen, SystemScreen, SiteScreen, ConversasScreen, PicoScreen
   } = window;
 
   function PlaceholderScreen({ title, icon }) {
@@ -72,6 +72,7 @@
         case 'dashboard':  return <DashboardScreen period={period} onPeriodChange={setPeriod} dateRange={dateRange} onDateRangeChange={setDateRange} onNavigate={navigate}/>;
         case 'ideias':     return <IdeiaScreen/>;
         case 'organico':   return <OrganicoScreen targetCard={targetAd} onConsumeTarget={() => setTargetAd(null)}/>;
+        case 'desafio':    return <DesafioScreen onNavigate={navigate}/>;
         case 'criativos':  return <KanbanScreen targetAd={targetAd} onConsumeTarget={() => setTargetAd(null)}/>;
         case 'trafego':    return <TrafficScreen/>;
         case 'funis':      return <FunisScreen onNavigate={navigate}/>;
