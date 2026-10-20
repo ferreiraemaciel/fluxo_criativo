@@ -37,6 +37,23 @@ Pódio: 1º leva 3 meses de Fluxo mais jantar com o Leandro, 2º leva 2 meses ma
 O desafio termina em **21/11**, seis dias antes da **Black Friday de 27/11**, que já tem caderno
 próprio em `BLACK-FRIDAY-2026.md`. O que performar aqui vira munição de campanha lá.
 
+## A aba Desafio MMM no Tracker
+
+Desde 20/10/2026 o painel tem a aba **Desafio MMM** (`frontend/app/desafio.jsx`), entre Anúncios e
+Tráfego. Ela mostra o progresso (X de 30), os pontos de volume, os dias restantes, o ritmo necessário
+por dia, e o alcance, as interações e os seguidores somados de tudo que já foi ao ar.
+
+**Nada é marcado à mão.** Entra sozinho todo card do Orgânico com `published_at` entre 21/10 e 21/11,
+mais todo anúncio criado na mesma janela. Por isso não foi preciso coluna nova no banco.
+
+Cada linha leva ao card no Kanban e ao post publicado, com alcance, interações, salvos,
+compartilhamentos e seguidores vindos de `organico_metricas` (a coleta é diária, então post de hoje
+pode aparecer sem número até a próxima varredura). Os anúncios aparecem com gasto, vendas e custo
+por venda.
+
+Cada uma das quatro semanas tem o próprio cartão, com a contagem, a situação do formulário e o botão
+**Copiar links**, que põe na área de transferência a lista pronta pro formulário daquela semana.
+
 ## O que eu faço por aqui
 
 Manter esta tabela atualizada a cada conteúdo publicado, para o preenchimento do formulário semanal
