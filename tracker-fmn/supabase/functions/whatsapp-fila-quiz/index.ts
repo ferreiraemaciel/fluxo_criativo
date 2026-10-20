@@ -144,10 +144,18 @@ async function processarLembreteGrupoBlack(): Promise<Record<string, number>> {
     if (!lead.whatsapp || telefonePareceSpam(lead.whatsapp)) { pulados++; continue; }
     const tel = normalizarTelefoneWhatsapp(lead.whatsapp);
 
-    // O mesmo número já recebeu este modelo (inscrição repetida, outro e-mail)?
+    // O mesmo número já recebeu este modelo (inscrição repetida, outro e-mail,
+    // ou envio feito à mão antes desta rotina existir)?
+    //
+    // O filtro aqui NÃO pode ser status "enviado": o status evolui sozinho
+    // conforme a Meta confirma (enviado → entregue → lido), então procurar só
+    // por "enviado" deixa passar justamente quem recebeu e leu. Foi o que
+    // aconteceu em 20/10/2026 com o Marcelo e o Fabio, que tinham recebido em
+    // 17/10, estavam como "lido", e levaram a mensagem de novo. Vale qualquer
+    // status menos "falhou", que é a única tentativa que não chegou.
     const { data: ja } = await supabase.from("whatsapp_mensagens").select("id")
       .eq("telefone", tel).eq("template_nome", "black_2026_entrar_grupo")
-      .eq("status", "enviado").limit(1).maybeSingle();
+      .neq("status", "falhou").limit(1).maybeSingle();
     if (ja) { pulados++; continue; }
 
     const primeiroNome = (lead.nome || "").trim().split(/\s+/)[0] || "tudo bem";
