@@ -240,18 +240,42 @@ Sempre nesta ordem:
 
 ---
 
+## 1ª camada da Mandala: o Objetivo
+
+> Da aula de abertura do Desafio Mandala Mão na Massa, 20/10/2026.
+
+No objetivo você define duas coisas da peça: a **abordagem** e o **CTA**.
+
+| Objetivo | Para que serve | Abordagem |
+|---|---|---|
+| Descoberta | Criar público. Para que a pessoa te siga | Conteúdo que chama a atenção de quem ainda não te conhece |
+| Relacionamento | Criar consciência. Para que a pessoa confie em você | Conteúdo que aprofunda o assunto e gera identificação |
+| Conversão | A venda. Para que a pessoa compre | Conteúdo que mostra o produto e o que ele resolve |
+| Remarketing | Para quem não comprou, comprar | Conteúdo que quebra objeção e mostra prova |
+
+---
+
 ## CTA por fase do funil
 
 | Fase | CTA permitido |
 |---|---|
 | Descoberta | Seguir o perfil. Sempre dar um **motivo concreto** para a pessoa seguir (ex: "Se você quer aprender a cuidar da pele com informação de verdade, segue esse perfil."). Nunca pedir só pra salvar, comentar ou compartilhar. Nunca mencionar frequência de postagem ("toda semana", "todo dia"). |
 | Relacionamento | Marcar amigo, comentar, salvar ou compartilhar. |
-| Conversão | Convidar para o próximo passo: assistir aula gratuita, baixar isca, ver o material. **Nunca** pedir compra. |
+| Conversão | Vender. A abordagem mostra o produto e o que ele resolve. O fecho muda com o destino: em anúncio de tráfego, "clica no link abaixo"; em post do perfil, "clica no link na bio". |
 | Remarketing | Comprar agora, garantir sua vaga. |
 
 CTA com verbo no imperativo + objeto concreto sempre que possível. Evite "saiba mais", "clique aqui", "garanta sua vaga" como única forma. Prefira coisas como "pegue o atalho", "destrave o material", "baixe o checklist", "veja a aula" — verbo + objeto que diga o que a pessoa vai receber.
 
-Em Conversão é proibido pedir a compra — só convite para o próximo passo.
+Conversão é para vender, sem rodeio. A abordagem mostra o produto e o que ele resolve, e o CTA leva ao link.
+
+**O fecho muda com o lugar em que a peça roda**, não com o tipo do anúncio:
+
+| Onde a peça vai rodar | Fecho |
+|---|---|
+| Anúncio de tráfego pago | "clica no link abaixo" |
+| Post no perfil (orgânico) | "clica no link na bio" |
+
+**Exceção, e ela é de campanha, não de método:** quando a campanha é de captação de lead em vez de venda direta (caso da Black Friday da FMN, ver `tracker-fmn/BLACK-FRIDAY-2026.md`), o CTA de Conversão convida para o próximo passo (entrar na lista, assistir a aula, baixar o material) em vez de pedir a compra. Fora de uma campanha assim, Conversão sempre vende.
 
 ---
 
@@ -395,7 +419,7 @@ Quando o aluno escolher uma ideia:
 - [ ] Quadro **e** Decorado defendidos (no Passo 4)
 - [ ] Dor real, não a superficial
 - [ ] Tipo da mandala aplicado de forma consistente
-- [ ] CTA correto da fase do funil (em Conversão, sem pedido de compra)
+- [ ] CTA correto da fase do funil (em Conversão, leva ao link; o fecho muda se é tráfego ou post do perfil)
 - [ ] CTA de Descoberta sempre com motivo concreto pra seguir o perfil
 - [ ] Parágrafos concisos (4-6 linhas cada, não esticar)
 
