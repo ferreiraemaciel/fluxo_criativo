@@ -78,6 +78,45 @@ def sb_patch(numero, updates):
         raise RuntimeError(f"Supabase {r.status_code}: {r.text[:200]}")
 
 
+def r2_delete(key, tentativas=2):
+    for i in range(tentativas):
+        r = subprocess.run(["npx", "wrangler", "r2", "object", "delete", f"{BUCKET}/{key}",
+                            "--remote"], capture_output=True, text=True)
+        if r.returncode == 0:
+            return True
+        time.sleep(1 + i)
+    return False
+
+
+def limpar_midia_antiga(numero, novas_urls):
+    """Troca de criativo apaga a versao anterior do R2, imagem inclusive.
+
+    Antes isso so acontecia com video, entao cada reexportacao de uma imagem
+    deixava a anterior no bucket para sempre. Como a chave carrega timestamp,
+    nada e sobrescrito e o lixo so cresce. Roda depois da gravacao, nunca
+    antes: se a nova nao subir, a antiga continua sendo o que o card mostra.
+    """
+    antes = sb_get(f"numero=eq.{numero}&select=media_url,thumb_url,media_preview_url")
+    if not antes:
+        return
+    row = antes[0]
+    candidatas = []
+    for campo in ("media_url", "thumb_url", "media_preview_url"):
+        v = row.get(campo)
+        if not v:
+            continue
+        try:
+            parsed = json.loads(v)
+            candidatas += parsed if isinstance(parsed, list) else [parsed]
+        except Exception:
+            candidatas.append(v)
+    novas = set(novas_urls)
+    for u in set(candidatas):
+        if not u or u in novas or not u.startswith(R2_PUBLIC):
+            continue
+        r2_delete(u[len(R2_PUBLIC) + 1:])
+
+
 def avancar_se_estava_em_fazer(numero):
     """Card que recebe midia nunca fica parado em 'Fazer'.
 
@@ -186,8 +225,18 @@ def main():
     ap.add_argument("--numero", type=int, required=True)
     ap.add_argument("--auto", action="store_true")
     ap.add_argument("--pasta", help="ID ou URL da pasta no Drive (modo manual)")
+    ap.add_argument("--arquivo", action="append", default=[],
+                    help="Caminho local da midia; pula o Drive. Pode repetir para carrossel")
     args = ap.parse_args()
     numero = args.numero
+
+    # Caminho local: o arquivo que esta no disco AGORA e a verdade do momento.
+    # O Drive demora a publicar uma revisao nova e a API chega a devolver a
+    # versao anterior sem avisar, o que ja gravou arte velha num card depois
+    # de uma reexportacao. Quando o arquivo esta aqui, nao ha por que ir longe.
+    if args.arquivo:
+        return main_local(args, numero)
+
     drv = drive_service()
 
     # localiza a pasta
@@ -215,6 +264,7 @@ def main():
             mk = f"ads/media/{uid_base}.mp4"; tk = f"ads/thumbs/{uid_base}.jpg"
             r2_put(mk, opt, "video/mp4"); r2_put(tk, th, "image/jpeg")
             media_url = json.dumps([f"{R2_PUBLIC}/{mk}"]); thumb_url = f"{R2_PUBLIC}/{tk}"
+            limpar_midia_antiga(numero, [f"{R2_PUBLIC}/{mk}", thumb_url])
             sb_patch(numero, {"media_url": media_url, "thumb_url": thumb_url,
                               "media_tipo": "video", "tipo": tipo})
         else:
@@ -226,9 +276,48 @@ def main():
                 optimize_image(orig, opt)
                 k = f"ads/thumbs/{uid_base}_{i}.jpg"; r2_put(k, opt, "image/jpeg")
                 urls.append(f"{R2_PUBLIC}/{k}")
+            limpar_midia_antiga(numero, urls)
             sb_patch(numero, {"media_url": json.dumps(urls), "thumb_url": urls[0],
                               "media_tipo": "imagem", "tipo": tipo})
 
+        print(f"  ✅ ADS {numero} — preview gerado ({tipo})")
+        avancar_se_estava_em_fazer(numero)
+    print(f"##DONE {numero}", flush=True)
+
+
+def main_local(args, numero):
+    """Importa a midia a partir de arquivo local, sem passar pelo Drive."""
+    caminhos = [Path(a).expanduser() for a in args.arquivo]
+    for c in caminhos:
+        if not c.exists():
+            sys.exit(f"arquivo nao encontrado: {c}")
+    print(f"📁 ADS {numero} — {len(caminhos)} arquivo(s) local(is)")
+
+    ehVideo = caminhos[0].suffix.lower() in (".mp4", ".mov", ".m4v", ".webm")
+    uid_base = f"{numero}_{int(time.time()*1000)}_{random.randint(1000,9999)}"
+    with tempfile.TemporaryDirectory() as wd:
+        if ehVideo:
+            tipo = "reels"; print("##TIPO reels")
+            opt = str(Path(wd)/"p.mp4"); th = str(Path(wd)/"t.jpg")
+            optimize_video(str(caminhos[0]), opt); capture_thumb(opt, th)
+            mk = f"ads/media/{uid_base}.mp4"; tk = f"ads/thumbs/{uid_base}.jpg"
+            r2_put(mk, opt, "video/mp4"); r2_put(tk, th, "image/jpeg")
+            urls = [f"{R2_PUBLIC}/{mk}"]; thumb = f"{R2_PUBLIC}/{tk}"
+            limpar_midia_antiga(numero, urls + [thumb])
+            sb_patch(numero, {"media_url": json.dumps(urls), "thumb_url": thumb,
+                              "media_tipo": "video", "tipo": tipo})
+        else:
+            tipo = "carrossel" if len(caminhos) > 1 else "imagem"; print(f"##TIPO {tipo}")
+            urls = []
+            for i, c in enumerate(caminhos):
+                opt = str(Path(wd)/f"p{i}.jpg")
+                print(f"  ⚙ imagem {i+1}/{len(caminhos)}…")
+                optimize_image(str(c), opt)
+                k = f"ads/thumbs/{uid_base}_{i}.jpg"; r2_put(k, opt, "image/jpeg")
+                urls.append(f"{R2_PUBLIC}/{k}")
+            limpar_midia_antiga(numero, urls)
+            sb_patch(numero, {"media_url": json.dumps(urls), "thumb_url": urls[0],
+                              "media_tipo": "imagem", "tipo": tipo})
         print(f"  ✅ ADS {numero} — preview gerado ({tipo})")
         avancar_se_estava_em_fazer(numero)
     print(f"##DONE {numero}", flush=True)
