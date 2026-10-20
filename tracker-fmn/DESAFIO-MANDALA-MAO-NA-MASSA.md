@@ -43,13 +43,19 @@ Desde 20/10/2026 o painel tem a aba **Desafio MMM** (`frontend/app/desafio.jsx`)
 Tráfego. Ela mostra o progresso (X de 30), os pontos de volume, os dias restantes, o ritmo necessário
 por dia, e o alcance, as interações e os seguidores somados de tudo que já foi ao ar.
 
-**Nada é marcado à mão.** Entra sozinho todo card do Orgânico com `published_at` entre 21/10 e 21/11,
-mais todo anúncio criado na mesma janela. Por isso não foi preciso coluna nova no banco.
+**O vínculo é na mão** (combinado com Felipe em 20/10/2026). O Orgânico publica muita coisa que não
+entra no desafio, então só conta o que for escolhido no botão **Vincular criativo**, um por dia. O
+modal pede o card (ORG ou ADS), o dia do desafio e o tipo da Mandala. A lista mora em
+`app_config.chave='desafio_mmm'`, mesmo padrão do alarme da Visão Geral, então não precisou de coluna
+nem de migration.
 
-Cada linha leva ao card no Kanban e ao post publicado, com alcance, interações, salvos,
-compartilhamentos e seguidores vindos de `organico_metricas` (a coleta é diária, então post de hoje
-pode aparecer sem número até a próxima varredura). Os anúncios aparecem com gasto, vendas e custo
-por venda.
+As peças aparecem em grade, no mesmo visual da aba Picos de Venda: capa 4:5, rótulo, situação, dia,
+etiqueta da Mandala, link do post e as métricas embaixo (alcance e interações vindos de
+`organico_metricas`, coletados uma vez por dia). Passando o mouse na peça aparecem o lápis, para
+trocar dia ou tipo da Mandala, e o X, para tirar do desafio.
+
+Uma seção recolhível lista o que foi publicado dentro da janela e ainda está fora do desafio, com um
+clique para vincular.
 
 Cada uma das quatro semanas tem o próprio cartão, com a contagem, a situação do formulário e o botão
 **Copiar links**, que põe na área de transferência a lista pronta pro formulário daquela semana.
