@@ -97,9 +97,101 @@ async function processarPrecheckout(): Promise<Record<string, number>> {
   return { precheckout_enviados: enviados, precheckout_pulados: pulados };
 }
 
+/* Black 2026 (20/10/2026). Quem se inscreve na lista da Black cai numa página
+   de obrigado com o botão "Entrar no grupo". Parte das pessoas fecha a página
+   antes de clicar, e o grupo é por onde os avisos da abertura chegam, então
+   ficar de fora da lista é ficar sem saber da abertura.
+
+   Esta rotina manda o modelo black_2026_entrar_grupo (utilidade, aprovado na
+   Meta) pelo número comercial, meia hora depois da inscrição, só para quem
+   não clicou. Meia hora é tempo de quem ia clicar ter clicado, e ainda pega
+   a pessoa com o assunto quente.
+
+   Nasce DESLIGADA: só sai mensagem quando app_config.black_lembrete_grupo_ativo
+   vira "true". No projeto nada dispara sozinho sem alguém mandar ligar. */
+const ESPERA_LEMBRETE_GRUPO_MIN = 30;
+
+async function processarLembreteGrupoBlack(): Promise<Record<string, number>> {
+  const { data: chave } = await supabase.from("app_config").select("valor")
+    .eq("chave", "black_lembrete_grupo_ativo").maybeSingle();
+  if (String(chave?.valor ?? "").toLowerCase() !== "true") return {};
+
+  const corte = new Date(Date.now() - ESPERA_LEMBRETE_GRUPO_MIN * 60e3).toISOString();
+  const { data: leads } = await supabase
+    .from("quiz_leads")
+    .select("code, funnel_slug, nome, whatsapp, created_at")
+    .eq("funnel_slug", "black-2026")
+    .is("grupo_clicou_em", null)
+    .is("grupo_lembrete_em", null)
+    .not("whatsapp", "is", null)
+    .lte("created_at", corte)
+    .limit(50);
+
+  let enviados = 0, pulados = 0;
+  const token = Deno.env.get("FB_ACCESS_TOKEN_PERMANENTE");
+  const phoneNumberId = Deno.env.get("WHATSAPP_PHONE_NUMBER_ID");
+
+  for (const lead of leads || []) {
+    // Trava antes de mandar: o cron roda de minuto em minuto e duas execuções
+    // podem pegar a mesma fila. Só segue quem conseguir marcar a coluna.
+    const { data: travada } = await supabase.from("quiz_leads")
+      .update({ grupo_lembrete_em: new Date().toISOString() })
+      .eq("funnel_slug", "black-2026").eq("code", lead.code)
+      .is("grupo_lembrete_em", null)
+      .select("code");
+    if (!travada?.length) continue;
+
+    if (!lead.whatsapp || telefonePareceSpam(lead.whatsapp)) { pulados++; continue; }
+    const tel = normalizarTelefoneWhatsapp(lead.whatsapp);
+
+    // O mesmo número já recebeu este modelo (inscrição repetida, outro e-mail)?
+    const { data: ja } = await supabase.from("whatsapp_mensagens").select("id")
+      .eq("telefone", tel).eq("template_nome", "black_2026_entrar_grupo")
+      .eq("status", "enviado").limit(1).maybeSingle();
+    if (ja) { pulados++; continue; }
+
+    const primeiroNome = (lead.nome || "").trim().split(/\s+/)[0] || "tudo bem";
+    const corpo = renderCorpoTemplate("black_2026_entrar_grupo", [primeiroNome]);
+    try {
+      const r = await fetch(`https://graph.facebook.com/v25.0/${phoneNumberId}/messages`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messaging_product: "whatsapp", to: tel, type: "template",
+          template: { name: "black_2026_entrar_grupo", language: { code: "pt_BR" },
+            components: [{ type: "body", parameters: [{ type: "text", text: primeiroNome }] }] },
+        }),
+      });
+      const d = await r.json();
+      if (!r.ok || d.error) throw new Error(d.error?.message || `whatsapp ${r.status}`);
+      await supabase.from("whatsapp_mensagens").insert({
+        telefone: tel, nome: lead.nome, direcao: "saida", tipo: "template", corpo,
+        template_nome: "black_2026_entrar_grupo", wa_message_id: d?.messages?.[0]?.id || null,
+        status: "enviado", origem: "black-grupo", raw: d,
+        custo_usd: await custoTemplateUsd(supabase, "utility"), funnel_slug: "black-2026",
+      });
+      await upsertContato(supabase, tel, lead.nome, "lead_novo", { iaElegivel: true });
+      enviados++;
+    } catch (err) {
+      console.error("[black-grupo] falha:", err);
+      // Devolve a marca: falha de rede nao pode custar o lembrete da pessoa.
+      await supabase.from("quiz_leads").update({ grupo_lembrete_em: null })
+        .eq("funnel_slug", "black-2026").eq("code", lead.code);
+      await supabase.from("whatsapp_mensagens").insert({
+        telefone: tel, nome: lead.nome, direcao: "saida", tipo: "template",
+        corpo: "black_2026_entrar_grupo", template_nome: "black_2026_entrar_grupo",
+        status: "falhou", origem: "black-grupo", raw: { erro: String(err) },
+        funnel_slug: "black-2026",
+      });
+    }
+  }
+  return { black_grupo_enviados: enviados, black_grupo_pulados: pulados };
+}
+
 Deno.serve(async (_req) => {
   try {
     const pre = await processarPrecheckout().catch((e) => { console.error("[precheckout]", e); return {}; });
+    const blk = await processarLembreteGrupoBlack().catch((e) => { console.error("[black-grupo]", e); return {}; });
     const agora = new Date().toISOString();
     const { data: pendentes, error } = await supabase
       .from("quiz_leads")
@@ -112,7 +204,7 @@ Deno.serve(async (_req) => {
       .limit(50);
 
     if (error) throw error;
-    if (!pendentes?.length) return new Response(JSON.stringify({ ok: true, processados: 0, ...pre }), { headers: { "content-type": "application/json" } });
+    if (!pendentes?.length) return new Response(JSON.stringify({ ok: true, processados: 0, ...pre, ...blk }), { headers: { "content-type": "application/json" } });
 
     let enviados = 0, cancelados = 0, spam = 0;
     for (const lead of pendentes) {
@@ -191,7 +283,7 @@ Deno.serve(async (_req) => {
       enviados++;
     }
 
-    return new Response(JSON.stringify({ ok: true, processados: pendentes.length, enviados, cancelados, spam, ...pre }), { headers: { "content-type": "application/json" } });
+    return new Response(JSON.stringify({ ok: true, processados: pendentes.length, enviados, cancelados, spam, ...pre, ...blk }), { headers: { "content-type": "application/json" } });
   } catch (e) {
     console.error("[whatsapp-fila-quiz] erro:", e);
     return new Response(JSON.stringify({ error: String(e) }), { status: 500, headers: { "content-type": "application/json" } });

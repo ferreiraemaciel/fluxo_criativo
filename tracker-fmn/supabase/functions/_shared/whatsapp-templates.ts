@@ -23,6 +23,12 @@ const CORPOS: Record<string, string> = {
   // Pré-checkout da página de vendas do Blindagem (aprovados em 09/10/2026).
   blindagem_contato_solicitado:
     "Oi, {{1}}, aqui é do time da Fotografia é o Meu Negócio. Recebemos seu cadastro na página do Blindagem pedindo pra falar com a gente por aqui. Conta pra gente o que você quer saber sobre o app que a gente te responde por aqui mesmo.",
+  // Black 2026: lembrete para quem entrou na lista e não clicou em "Entrar no
+  // grupo" na página de obrigado. O botão do modelo leva à página de obrigado.
+  black_2026_entrar_grupo:
+    "Oi, {{1}}. Sua inscrição na lista da Black dos Fotógrafos Protegidos está confirmada.\n" +
+    "Falta um passo para concluir: entrar no grupo do WhatsApp, que é por onde chegam os avisos da abertura em 10/11.\n" +
+    "É só tocar no botão abaixo.",
   blindagem_checkout_pendente:
     "Oi, {{1}}, aqui é do time da Fotografia é o Meu Negócio. Vimos que você começou a compra do Blindagem e não chegou a finalizar. Se travou em alguma coisa no pagamento ou ficou alguma dúvida sobre o app, responde aqui que a gente te ajuda.",
 };
