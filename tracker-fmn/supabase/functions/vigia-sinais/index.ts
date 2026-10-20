@@ -5,7 +5,8 @@
 // 25/08) só foram descobertos porque alguém estranhou a tela dias depois.
 // Cinco dias sem mensagem de lead entrando é lead perdido que não volta.
 //
-// Este vigia roda de meia em meia hora e confere quatro relógios:
+// Este vigia roda de meia em meia hora e confere quatro relógios, mais se o Blindagem e o
+// FMN Pro estão no ar (vigia de fora, 20/10/2026):
 //   1. última mensagem recebida no WhatsApp
 //   2. última venda gravada pelo webhook da Hotmart (não pelo backfill)
 //   3. última atualização do sincronismo do Meta
@@ -103,6 +104,26 @@ Deno.serve(async (req) => {
     .map((r) => ({ ...r, horas: horasDesde(r.ultima) }))
     .filter((r) => r.horas == null || r.horas > r.limiteHoras);
 
+  // Vigia de fora do Blindagem e do FMN Pro (20/10/2026, checklist de segurança do Asaas 5.1.1).
+  // O Tracker roda em outro servidor: se o app cair, quem avisa é ele. Fora do ar é caso grave,
+  // então vai também para o WhatsApp pessoal do Felipe (app_config `vigia_blindagem`), com
+  // lembrete a cada hora enquanto não voltar.
+  const SAUDE = [
+    { nome: "Blindagem", url: "https://blindagem.fotografiaeomeunegocio.com.br/api/public/saude" },
+    { nome: "FMN Pro", url: "https://www.fmnpro.fotografiaeomeunegocio.com.br/api/public/saude" },
+  ];
+  const foraDoAr: string[] = [];
+  for (const alvo of SAUDE) {
+    let ok = false;
+    for (let tentativa = 0; tentativa < 2 && !ok; tentativa++) {
+      try {
+        const r = await fetch(alvo.url, { signal: AbortSignal.timeout(15000), headers: { "User-Agent": "vigia-tracker-fmn" } });
+        ok = r.ok;
+      } catch { ok = false; }
+    }
+    if (!ok) foraDoAr.push(alvo.nome);
+  }
+
   const estado = {
     conferido_em: new Date().toISOString(),
     relogios: relogios.map((r) => ({
@@ -113,9 +134,10 @@ Deno.serve(async (req) => {
       limite_horas: r.limiteHoras,
       parado: parados.some((p) => p.chave === r.chave),
     })),
-    parados: parados.map((p) => p.chave),
-    mensagem: parados.length
-      ? parados.map((p) => `${p.titulo}: nada há ${comoTexto(p.horas)}`).join(" · ")
+    parados: [...parados.map((p) => p.chave), ...foraDoAr.map((n) => `fora:${n}`)],
+    fora_do_ar: foraDoAr,
+    mensagem: parados.length || foraDoAr.length
+      ? [...foraDoAr.map((n) => `${n} fora do ar`), ...parados.map((p) => `${p.titulo}: nada há ${comoTexto(p.horas)}`)].join(" · ")
       : null,
   };
 
@@ -176,5 +198,42 @@ Deno.serve(async (req) => {
     }
   }
 
-  return json({ ok: true, parados: estado.parados, avisou, estado });
+  // Fora do ar: WhatsApp para o número de casos graves, separado do aviso do Tracker acima.
+  let avisouGrave = false;
+  const { data: cfgGrave } = await supabase.from("app_config").select("valor").eq("chave", "vigia_blindagem").maybeSingle();
+  const graveNumero = String((cfgGrave?.valor as any)?.telefone || "").replace(/\D/g, "");
+  const graveAvisadoEm = (cfgGrave?.valor as any)?.avisado_em as string | undefined;
+  const graveForaAntes = ((cfgGrave?.valor as any)?.fora as string[] | undefined) ?? [];
+  const voltou = graveForaAntes.length > 0 && foraDoAr.length === 0;
+  const lembrar = foraDoAr.length > 0 && (!graveAvisadoEm || Date.now() - new Date(graveAvisadoEm).getTime() > 3_600_000 || graveForaAntes.join() !== foraDoAr.join());
+  if (graveNumero && (lembrar || voltou)) {
+    try {
+      const { data: contato } = await khronus.from("crm_whatsapp_contatos").select("id")
+        .eq("studio_id", STUDIO_FMN).eq("telefone", graveNumero).maybeSingle();
+      let contatoId = contato?.id;
+      if (!contatoId) {
+        const { data: novo } = await khronus.from("crm_whatsapp_contatos")
+          .insert({ studio_id: STUDIO_FMN, telefone: graveNumero, nome: "Vigia do sistema" }).select("id").single();
+        contatoId = novo?.id;
+      }
+      if (contatoId) {
+        const corpo = voltou
+          ? `Vigia do sistema: ${graveForaAntes.join(" e ")} voltou ao ar.`
+          : `Alerta do sistema: ${foraDoAr.join(" e ")} fora do ar. Conferido duas vezes pelo Tracker agora.`;
+        await khronus.from("crm_whatsapp_fila_envio").insert({
+          studio_id: STUDIO_FMN, contato_id: contatoId, telefone: graveNumero, tipo: "texto", corpo, status: "pendente",
+        });
+        avisouGrave = true;
+      }
+    } catch (e) {
+      console.error("[vigia] falha ao avisar caso grave:", (e as Error).message);
+    }
+  }
+  await supabase.from("app_config").upsert({ chave: "vigia_blindagem", valor: {
+    telefone: graveNumero || null,
+    fora: foraDoAr,
+    avisado_em: avisouGrave && !voltou ? new Date().toISOString() : (foraDoAr.length ? graveAvisadoEm ?? null : null),
+  } }, { onConflict: "chave" });
+
+  return json({ ok: true, parados: estado.parados, avisou, avisouGrave, estado });
 });
