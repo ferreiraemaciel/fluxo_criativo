@@ -28,7 +28,11 @@ const CORPOS: Record<string, string> = {
   black_2026_entrar_grupo:
     "Oi, {{1}}. Sua inscrição na lista da Black dos Fotógrafos Protegidos está confirmada.\n" +
     "Falta um passo para concluir: entrar no grupo do WhatsApp, que é por onde chegam os avisos da abertura em 10/11.\n" +
-    "É só tocar no botão abaixo.",
+    "É só tocar no botão abaixo.\n" +
+    // O link deste modelo vive no botão, não no corpo. Sem esta linha, quem
+    // lê a conversa no Tracker vê um texto que manda tocar num botão que não
+    // aparece em lugar nenhum, e não tem como conferir para onde ele leva.
+    "[botão] Entrar no grupo → https://www.fotografiaeomeunegocio.com.br/black-2026-obrigado",
   blindagem_checkout_pendente:
     "Oi, {{1}}, aqui é do time da Fotografia é o Meu Negócio. Vimos que você começou a compra do Blindagem e não chegou a finalizar. Se travou em alguma coisa no pagamento ou ficou alguma dúvida sobre o app, responde aqui que a gente te ajuda.",
 };
