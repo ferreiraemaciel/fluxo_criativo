@@ -130,6 +130,14 @@ async function processarLembreteGrupoBlack(): Promise<Record<string, number>> {
   let enviados = 0, pulados = 0;
   const token = Deno.env.get("FB_ACCESS_TOKEN_PERMANENTE");
   const phoneNumberId = Deno.env.get("WHATSAPP_PHONE_NUMBER_ID");
+  // Qual modelo sai (20/10/2026): a v2 tem o botão com link de passagem
+  // personalizado (fotografiaeomeunegocio.com.br/grupo-black?g=CODIGO), que grava
+  // o clique de cada pessoa e leva direto ao grupo. A v1 manda pra página de
+  // obrigado sem código, e o clique vindo dela não dá pra atribuir.
+  const { data: cfgModelo } = await supabase.from("app_config").select("valor")
+    .eq("chave", "black_lembrete_grupo_modelo").maybeSingle();
+  const modelo = String(cfgModelo?.valor || "black_2026_entrar_grupo");
+  const comLinkProprio = modelo === "black_2026_entrar_grupo_v2";
 
   for (const lead of leads || []) {
     // Trava antes de mandar: o cron roda de minuto em minuto e duas execuções
@@ -154,27 +162,28 @@ async function processarLembreteGrupoBlack(): Promise<Record<string, number>> {
     // 17/10, estavam como "lido", e levaram a mensagem de novo. Vale qualquer
     // status menos "falhou", que é a única tentativa que não chegou.
     const { data: ja } = await supabase.from("whatsapp_mensagens").select("id")
-      .eq("telefone", tel).eq("template_nome", "black_2026_entrar_grupo")
+      .eq("telefone", tel).in("template_nome", ["black_2026_entrar_grupo", "black_2026_entrar_grupo_v2"])
       .neq("status", "falhou").limit(1).maybeSingle();
     if (ja) { pulados++; continue; }
 
     const primeiroNome = (lead.nome || "").trim().split(/\s+/)[0] || "tudo bem";
-    const corpo = renderCorpoTemplate("black_2026_entrar_grupo", [primeiroNome]);
+    const corpo = renderCorpoTemplate(modelo, [primeiroNome]);
+    const componentes: unknown[] = [{ type: "body", parameters: [{ type: "text", text: primeiroNome }] }];
+    if (comLinkProprio) componentes.push({ type: "button", sub_type: "url", index: "0", parameters: [{ type: "text", text: lead.code }] });
     try {
       const r = await fetch(`https://graph.facebook.com/v25.0/${phoneNumberId}/messages`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
         body: JSON.stringify({
           messaging_product: "whatsapp", to: tel, type: "template",
-          template: { name: "black_2026_entrar_grupo", language: { code: "pt_BR" },
-            components: [{ type: "body", parameters: [{ type: "text", text: primeiroNome }] }] },
+          template: { name: modelo, language: { code: "pt_BR" }, components: componentes },
         }),
       });
       const d = await r.json();
       if (!r.ok || d.error) throw new Error(d.error?.message || `whatsapp ${r.status}`);
       await supabase.from("whatsapp_mensagens").insert({
         telefone: tel, nome: lead.nome, direcao: "saida", tipo: "template", corpo,
-        template_nome: "black_2026_entrar_grupo", wa_message_id: d?.messages?.[0]?.id || null,
+        template_nome: modelo, wa_message_id: d?.messages?.[0]?.id || null,
         status: "enviado", origem: "black-grupo", raw: d,
         custo_usd: await custoTemplateUsd(supabase, "utility"), funnel_slug: "black-2026",
       });
@@ -187,7 +196,7 @@ async function processarLembreteGrupoBlack(): Promise<Record<string, number>> {
         .eq("funnel_slug", "black-2026").eq("code", lead.code);
       await supabase.from("whatsapp_mensagens").insert({
         telefone: tel, nome: lead.nome, direcao: "saida", tipo: "template",
-        corpo: "black_2026_entrar_grupo", template_nome: "black_2026_entrar_grupo",
+        corpo: modelo, template_nome: modelo,
         status: "falhou", origem: "black-grupo", raw: { erro: String(err) },
         funnel_slug: "black-2026",
       });

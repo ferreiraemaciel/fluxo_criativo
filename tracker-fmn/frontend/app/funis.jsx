@@ -113,6 +113,12 @@ function LeadsTable({ leads, adsMap = {} }) {
   // Coluna Grupo só aparece quando há lead da Black: marca quem clicou em
   // "Entrar no grupo" na página de obrigado (grupo_clicou_em).
   const temBlack = leads.some(l => l.funnel_slug === 'black-2026');
+  // Métrica do lembrete (20/10/2026): de quem recebeu o template, quantos
+  // clicaram depois dele. Clique anterior ao envio não conta como efeito.
+  const blackLeads = leads.filter(l => l.funnel_slug === 'black-2026');
+  const comTemplate = blackLeads.filter(l => l.grupo_lembrete_em);
+  const entrouDepois = comTemplate.filter(l => l.grupo_clicou_em && l.grupo_clicou_em > l.grupo_lembrete_em);
+  const clicouSozinho = blackLeads.filter(l => l.grupo_clicou_em && !(l.grupo_lembrete_em && l.grupo_clicou_em > l.grupo_lembrete_em));
   const [busca, setBusca] = useState('');
   const [pagina, setPagina] = useState(0);
   const POR_PAG = 50;
@@ -164,6 +170,14 @@ function LeadsTable({ leads, adsMap = {} }) {
         <span style={{ fontSize:11, color:'var(--text-3)', fontFamily:'Roboto,sans-serif' }}>
           {nf(total)} leads
         </span>
+        {temBlack && (
+          <span style={{ fontSize:12, color:'var(--text-2)', fontFamily:'Roboto,sans-serif', marginLeft:'auto' }}>
+            Grupo: <b style={{ color:'var(--text-1)' }}>{clicouSozinho.length}</b> clicaram sozinhos
+            {' · '}template enviado para <b style={{ color:'var(--text-1)' }}>{comTemplate.length}</b>
+            {' · '}<b style={{ color:'#79e06f' }}>{entrouDepois.length}</b> clicaram depois
+            {comTemplate.length > 0 && ` (${Math.round(entrouDepois.length / comTemplate.length * 100)}%)`}
+          </span>
+        )}
       </div>
 
       {/* Tabela */}
@@ -176,7 +190,8 @@ function LeadsTable({ leads, adsMap = {} }) {
               <TH w={180}>E-mail</TH>
               <TH w={120}>Perfil</TH>
               <TH w={60}>Lead?</TH>
-              {temBlack && <TH w={120}>Grupo</TH>}
+              {temBlack && <TH w={120}>WhatsApp (lembrete)</TH>}
+              {temBlack && <TH w={140}>Grupo</TH>}
               <TH w={150}>Passo de saída</TH>
               <TH w={100}>Usa contrato</TH>
               <TH w={100}>Tipo contrato</TH>
@@ -226,9 +241,19 @@ function LeadsTable({ leads, adsMap = {} }) {
                   {temBlack && (
                     <TD style={{ fontSize:10.5 }}>
                       {l.funnel_slug !== 'black-2026' ? <span style={{ color:'var(--text-3)' }}>—</span>
-                        : l.grupo_clicou_em
-                          ? <span title="Clicou em Entrar no grupo na página de obrigado" style={{ color:'#79e06f', fontWeight:700 }}>Clicou {fmtDate(l.grupo_clicou_em)}</span>
-                          : <span style={{ color:'#fe626c', fontWeight:700 }}>Não clicou</span>}
+                        : l.grupo_lembrete_em
+                          ? <span style={{ color:'var(--app-primary)', fontWeight:700 }}>Enviado {fmtDate(l.grupo_lembrete_em)}</span>
+                          : <span style={{ color:'var(--text-3)' }}>{l.grupo_clicou_em ? 'Não precisou' : 'Aguardando'}</span>}
+                    </TD>
+                  )}
+                  {temBlack && (
+                    <TD style={{ fontSize:10.5 }}>
+                      {l.funnel_slug !== 'black-2026' ? <span style={{ color:'var(--text-3)' }}>—</span>
+                        : !l.grupo_clicou_em
+                          ? <span style={{ color:'#fe626c', fontWeight:700 }}>Não clicou</span>
+                          : l.grupo_lembrete_em && l.grupo_clicou_em > l.grupo_lembrete_em
+                            ? <span title="Clicou no botão do template" style={{ color:'#79e06f', fontWeight:700 }}>Após o template {fmtDate(l.grupo_clicou_em)}</span>
+                            : <span title="Clicou na página de obrigado, sem precisar de lembrete" style={{ color:'#79e06f', fontWeight:700 }}>Sozinho {fmtDate(l.grupo_clicou_em)}</span>}
                     </TD>
                   )}
                   <TD style={{ fontSize:10.5 }}>{passo}</TD>
@@ -1146,7 +1171,7 @@ function FunisScreen({ onNavigate }) {
     setLoadingLeads(true);
     const montar = () => {
       let q = window.db.from('quiz_leads').select(
-        'id,nome,email,whatsapp,area_atuacao,profissionalizacao,tipo_negocio,confianca_clientes,situacoes,custo_processo,usa_contrato,tipo_contrato_atual,foco_artistico,sentimentos,protege_dinheiro,temas_dominados,entende_contrato,quer_modelos,nivel_risco,completou_lead,completou_quiz,utm_source,utm_medium,utm_campaign,utm_content,created_at,perfil,device_platform,funnel_slug,grupo_clicou_em'
+        'id,nome,email,whatsapp,area_atuacao,profissionalizacao,tipo_negocio,confianca_clientes,situacoes,custo_processo,usa_contrato,tipo_contrato_atual,foco_artistico,sentimentos,protege_dinheiro,temas_dominados,entende_contrato,quer_modelos,nivel_risco,completou_lead,completou_quiz,utm_source,utm_medium,utm_campaign,utm_content,created_at,perfil,device_platform,funnel_slug,grupo_clicou_em,grupo_lembrete_em'
       ).order('created_at', { ascending: false });
       // Dia em horário de Brasília. Antes era UTC: tudo das 21h à meia-noite do
       // último dia sumia (Renata, Pix das 22h54 de 30/09/2026, fora da Recuperação).
