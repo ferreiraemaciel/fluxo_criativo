@@ -250,14 +250,26 @@ fala em pedacinhos que ninguém fala assim.
 | Você manda uma pergunta de uma linha. Ele responde com sete áudios. | Você manda uma pergunta de uma linha, ele responde com sete áudios |
 | Ele não tá te enrolando. Tá dirigindo. Só que o seu orçamento fica pendurado nisso. | Ele não tá te enrolando, tá dirigindo, com o filho no banco de trás, resolvendo a vida dele, só que o seu orçamento fica pendurado nisso |
 
-**Régua medida nos textos que ele mesmo reescreveu:**
+**Régua medida em 20/10/2026 nas 51 legendas aprovadas por ele (ORG 326 a 342):**
 
-- **11 a 14 palavras por frase**, em média. Abaixo de 10 está fragmentado demais.
-- **4 a 7 vírgulas** num texto de legenda. Se tiver 1 ou 2, faltou emenda.
-- Enumeração corre com vírgula até o fim, sem virar frases separadas.
+A medição anterior falava em "11 a 14 palavras por frase" e estava errada, porque contava quebra de
+parágrafo como fim de frase. Medindo do jeito certo, o padrão real dele é:
 
-Depois de escrever, contar: número de palavras dividido por número de frases. Se der menos que 10,
-juntar frases com vírgula antes de entregar.
+| O que medir | Padrão dele |
+|---|---|
+| Parágrafos por legenda | **3** |
+| Palavras por parágrafo | **18 em média**, faixa de 9 a 31 |
+| Ponto final dentro do parágrafo | **praticamente zero** (média de 0,02) |
+| Vírgulas por parágrafo | **1**, raramente 2 |
+
+Lido em uma frase: **a legenda dele são três parágrafos de cerca de 18 palavras cada, cada um
+corrido, com uma vírgula só no meio e ponto final apenas no fim.** A emenda é a quebra de parágrafo,
+não a vírgula. Encher de vírgula é tão errado quanto encher de ponto.
+
+Enumeração corre com vírgula até o fim, sem virar frases separadas.
+
+Depois de escrever, contar parágrafo por parágrafo. Passou de 30 palavras, cortar. Passou de 2
+vírgulas, cortar. Mais de 3 parágrafos, juntar ou tirar o que sobra.
 
 ### O resto do registro
 
