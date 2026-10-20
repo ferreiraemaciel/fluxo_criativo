@@ -77,6 +77,22 @@ def sb_patch(numero, updates):
     if r.status_code not in (200, 204):
         raise RuntimeError(f"Supabase {r.status_code}: {r.text[:200]}")
 
+
+def avancar_se_estava_em_fazer(numero):
+    """Card que recebe midia nunca fica parado em 'Fazer'.
+
+    Regra global do projeto. Os workers ja fazem isso no /card-slides, mas este
+    script grava direto no Supabase, entao e um quarto caminho de importacao e
+    precisa da mesma regra. O patch e condicional (status=eq.fazer), entao
+    rodar sempre e seguro: card que ja saiu de 'Fazer' nao e tocado.
+    """
+    r = requests.patch(f"{SB_URL}/rest/v1/ads?numero=eq.{numero}&status=eq.fazer",
+        headers={"apikey": SB_KEY, "Authorization": f"Bearer {SB_KEY}",
+                 "Content-Type": "application/json", "Prefer": "return=minimal"},
+        json={"status": "fazendo"})
+    if r.status_code not in (200, 204):
+        print(f"  aviso: nao consegui avancar o card {numero} ({r.status_code})")
+
 def r2_put(key, path, content_type, tentativas=4):
     # O R2 às vezes devolve 500 transitório; tenta de novo com espera.
     last = ""
@@ -214,7 +230,8 @@ def main():
                               "media_tipo": "imagem", "tipo": tipo})
 
         print(f"  ✅ ADS {numero} — preview gerado ({tipo})")
-        print(f"##DONE {numero}", flush=True)
+        avancar_se_estava_em_fazer(numero)
+    print(f"##DONE {numero}", flush=True)
 
 
 if __name__ == "__main__":

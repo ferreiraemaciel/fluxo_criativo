@@ -1860,22 +1860,52 @@ function BlocoAuditoria({ projeto, tarefas }) {
         .eq('pico_projeto_id', projeto.id);
       const comId = (ads || []).filter(a => a.meta_ad_id);
 
-      let gasto = 0, compras = 0, porAd = [];
+      let gasto = 0, compras = 0, receita = 0, porAd = [];
       if (comId.length) {
         const { data: ins } = await window.db.from('insights_cache')
-          .select('meta_ad_id,gasto,compras')
+          .select('meta_ad_id,gasto,compras,valor_compras')
           .eq('periodo', 'maximum')
           .in('meta_ad_id', comId.map(a => a.meta_ad_id));
         const mapa = Object.fromEntries((ins || []).map(i => [i.meta_ad_id, i]));
-        porAd = comId.map(a => ({
-          numero: a.numero, titulo: a.titulo, status: a.status,
-          gasto: Number(mapa[a.meta_ad_id]?.gasto) || 0,
-          compras: Number(mapa[a.meta_ad_id]?.compras) || 0,
-        })).sort((x, y) => y.gasto - x.gasto);
+
+        /* A venda vem das duas fontes, nunca de uma só. O Meta perde a compra
+           que a Hotmart não entrega ao pixel, e a Hotmart perde o anúncio
+           sempre que o sck cai no caminho (WhatsApp, recuperação, agente).
+           Régua da casa: por anúncio, vale o MAIOR dos dois, nunca a soma,
+           senão a mesma venda contaria duas vezes. Ver o CLAUDE.md daqui. */
+        const { data: vds } = await window.db.from('vendas')
+          .select('meta_ad_id,ads_numero,valor_liquido')
+          .eq('status', 'aprovada')
+          .or('meta_ad_id.in.(' + comId.map(a => a.meta_ad_id).join(',') + '),'
+            + 'ads_numero.in.(' + (ads || []).map(a => a.numero).join(',') + ')');
+        const hot = {};
+        for (const v of (vds || [])) {
+          const chave = (ads || []).find(a =>
+            (v.meta_ad_id && a.meta_ad_id === v.meta_ad_id) || a.numero === v.ads_numero);
+          if (!chave) continue;
+          const h = hot[chave.numero] || (hot[chave.numero] = { n: 0, valor: 0 });
+          h.n += 1;
+          h.valor += Number(v.valor_liquido) || 0;
+        }
+
+        porAd = comId.map(a => {
+          const m = mapa[a.meta_ad_id] || {};
+          const h = hot[a.numero] || { n: 0, valor: 0 };
+          const vMeta = Number(m.compras) || 0;
+          const rMeta = Number(m.valor_compras) || 0;
+          return {
+            numero: a.numero, titulo: a.titulo, status: a.status,
+            gasto: Number(m.gasto) || 0,
+            compras: Math.max(vMeta, h.n),
+            receita: Math.max(rMeta, h.valor),
+            soMeta: vMeta > h.n, soHotmart: h.n > vMeta,
+          };
+        }).sort((x, y) => y.gasto - x.gasto);
         gasto   = porAd.reduce((a, x) => a + x.gasto, 0);
         compras = porAd.reduce((a, x) => a + x.compras, 0);
+        receita = porAd.reduce((a, x) => a + x.receita, 0);
       }
-      setDados({ total: (ads || []).length, comId: comId.length, gasto, compras, porAd });
+      setDados({ total: (ads || []).length, comId: comId.length, gasto, compras, receita, porAd });
     } catch (e) {
       setDados({ erro: e.message });
     }
@@ -1896,6 +1926,7 @@ function BlocoAuditoria({ projeto, tarefas }) {
   const gasto = dados?.gasto || 0;
   const consumo = planejado > 0 ? (gasto / planejado) * 100 : null;
   const cpaReal = dados?.compras > 0 ? gasto / dados.compras : null;
+  const roas    = gasto > 0 && dados?.receita > 0 ? dados.receita / gasto : null;
 
   return (
     <SectionCard recolhivel idRecolher="pico:auditoria" title="Plano contra o real"
@@ -1934,8 +1965,10 @@ function BlocoAuditoria({ projeto, tarefas }) {
               ['Gasto real', brl(gasto), '#38bdf8'],
               ['Consumo', consumo == null ? '—' : consumo.toFixed(0) + '%',
                 consumo > 100 ? '#fe626c' : '#79e06f'],
-              ['Vendas no Meta', String(dados.compras), 'var(--text-1)'],
+              ['Vendas', String(dados.compras), 'var(--text-1)'],
               ['CPA real', cpaReal ? brl(cpaReal) : '—', 'var(--text-1)'],
+              ['ROAS', roas ? roas.toFixed(2) + 'x' : '—',
+                roas >= 1 ? '#79e06f' : 'var(--text-1)'],
             ].map(([lb, v, cor]) => (
               <div key={lb} style={{ padding:'8px 10px', borderRadius:8,
                 background:'rgba(255,255,255,.025)', border:'1px solid var(--app-border)' }}>
@@ -1998,6 +2031,8 @@ function BlocoAuditoria({ projeto, tarefas }) {
         marginTop:11, lineHeight:1.45 }}>
         O gasto vem do Meta pelos anúncios marcados com este pico, e o Tracker
         sincroniza sozinho quatro vezes por dia. O perpétuo não entra na conta.
+        A venda de cada anúncio é o maior número entre o que o Meta viu e o que
+        a Hotmart registrou, nunca a soma dos dois.
       </div>
     </SectionCard>
   );
