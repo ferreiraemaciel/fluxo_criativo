@@ -388,10 +388,20 @@ async function sincronizarGastoDiarioHoje() {
     access_token: META_TOKEN,
   });
   try {
-    const res  = await fetch(`${GRAPH_BASE}/act_${AD_ACCOUNT_ID}/insights?${qs}`);
-    const json = await res.json();
+    // A Meta às vezes recusa a consulta da conta (limite de chamadas, já que o
+    // kanban-sync roda junto). Antes isso fazia o trecho desistir calado e o
+    // dia ficava com o zero gravado à meia-noite (18 a 21/10/2026). Agora
+    // tenta até 3 vezes e deixa o motivo no log.
+    let json: any = null;
+    for (let tentativa = 1; tentativa <= 3; tentativa++) {
+      const res = await fetch(`${GRAPH_BASE}/act_${AD_ACCOUNT_ID}/insights?${qs}`);
+      json = await res.json();
+      if (!json?.error) break;
+      console.error(`[gasto_diario] Meta recusou (tentativa ${tentativa}):`, JSON.stringify(json.error));
+      await new Promise((r) => setTimeout(r, 8000 * tentativa));
+    }
     const dias = json?.data || [];
-    if (!dias.length) return;
+    if (!dias.length) { console.error("[gasto_diario] nada gravado, resposta:", JSON.stringify(json).slice(0, 300)); return; }
 
     for (const raw of dias) {
       const dataDia    = raw.date_start;
@@ -409,7 +419,7 @@ async function sincronizarGastoDiarioHoje() {
         cliques,
         lp_views: lpViews,
         initiate_checkout: initCheck,
-      }, { onConflict: "data" });
+      }, { onConflict: "data" }).then(({ error }) => { if (error) console.error("[gasto_diario] falha ao gravar", dataDia, error.message); });
     }
   } catch (err) {
     console.error("Erro ao sincronizar gasto_diario:", String(err));
