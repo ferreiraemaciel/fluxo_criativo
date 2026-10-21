@@ -69,7 +69,7 @@ ser só copiar e colar. O link do post entra quando o Felipe publicar.
 
 | # | Data | ORG/ADS | Formato | Tipo da Mandala | Tema | Link do post |
 |---|---|---|---|---|---|---|
-| 1 | 21/10 | ORG 344 | Reels | Contraste | A lente nova e o contrato que não existe | |
+| 1 | 21/10 | ORG 344 | Reels | Contraste | A lente nova e o contrato que não existe | https://www.instagram.com/reel/DexYL71DE_Q/ |
 | 2 | | ORG 345 | Reels | Certo vs Errado | Antes do preço, o valor | |
 | 3 | | ORG 346 | Reels | Dilema | O prato da equipe | |
 | 4 | | ORG 347 | Reels | Reflexão | O elogio que não paga e o que paga | |
