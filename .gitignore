@@ -170,3 +170,20 @@ tracker-fmn/referencias-bf/
 video-blindagem/trilhas/
 video-blindagem/*.mp4
 video-blindagem/legendas/*.mov
+
+# Entregas geradas (imagem, video, PDF) nao ficam no projeto.
+# Regra global de 2026-10-20: entrega vai para ~/Downloads ou pasta indicada pelo usuario.
+output/
+tracker-fmn/outputs/
+tracker-fmn/generated-covers/
+tracker-fmn/referencias-bf/
+video-blindagem/
+quiz-fotografo-protegido/versoes/
+radar-juridico/documentos/
+meus-produtos/*/entregas/**/*.png
+meus-produtos/*/entregas/**/*.jpg
+meus-produtos/*/entregas/**/*.mp4
+meus-produtos/*/entregas/**/*.pdf
+.claude/worktrees/
+dist-electron/
+.DS_Store
