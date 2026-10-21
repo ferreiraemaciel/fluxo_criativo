@@ -69,13 +69,15 @@ ser só copiar e colar. O link do post entra quando o Felipe publicar.
 
 | # | Data | ORG/ADS | Formato | Tipo da Mandala | Tema | Link do post |
 |---|---|---|---|---|---|---|
-| 1 | | ORG 344 | Reels | Contraste | A lente nova e o contrato que não existe | |
+| 1 | 21/10 | ORG 344 | Reels | Contraste | A lente nova e o contrato que não existe | |
 | 2 | | ORG 345 | Reels | Certo vs Errado | Antes do preço, o valor | |
 | 3 | | ORG 346 | Reels | Dilema | O prato da equipe | |
 | 4 | | ORG 347 | Reels | Reflexão | O elogio que não paga e o que paga | |
 | 5 | | ORG 348 | Reels | Explicação | Prazo folgado é estratégia | |
 
-> Os cinco acima estão prontos no Tracker, aguardando gravação. A data entra quando forem ao ar.
+> O ORG 344 foi gravado e editado em 21/10 (corte, movimento, trilha, legenda e quatro animações
+> explicativas), e é o primeiro conteúdo do desafio. Os outros quatro seguem aguardando gravação.
+> A data entra quando forem ao ar.
 > Já existem outros 17 cards montados (ORG 326 a 342) que também servem ao desafio.
 
 ### Tipos da Mandala já usados
