@@ -32,3 +32,4 @@ Um achado só volta a aparecer quando houver fato novo (dado atualizado, virada 
 - 2026-10-12 | O maior negócio de foto escolar do mundo ganha por ter a porta aberta, não por fotografar | https://fstoppers.com/business/school-picture-day-strange-economics-largest-portrait-operation-earth-904158
 - 2026-10-12 | ATUALIZAÇÃO (RELEVANTE MAS SECO). Prazo do pedido de Simples Nacional vence em 15 de outubro, balanço de 05/10 | https://contabeis.com.br/noticias/79879/simples-nacional-2027-270-mil-pedidos-estao-indeferidos
 - 2026-10-12 | Fotógrafa de casamento condenada à revelia por não entregar, US$ 1,7 milhão (Para você saber, sinal ao radar jurídico) | https://abc11.com/post/nc-ag-says-fight-holly-christina-photography-is-far-17m-judgment/19914581/
+- 2026-10-19 | Uma das maiores agências de banco de imagens do mundo vai à recuperação judicial, e quem vende foto por ela só tem a palavra da empresa de que vai receber | https://www.photoworkout.com/?p=223580

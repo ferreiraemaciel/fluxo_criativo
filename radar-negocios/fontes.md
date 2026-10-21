@@ -118,3 +118,9 @@ Mesma regra do radar jurídico: a tabela acima é piso, não é cerca. Qualquer 
 - **Funcionou:** Fstoppers (`/business`, busca com allowed_domains), Contábeis.com.br (número de balanço da Receita com data), ABC11 (cobertura local primária de caso de não entrega nos EUA, ótima para confirmar valores quando o PetaPixel bloqueia).
 - **Não funcionou:** PetaPixel passou a responder 403 ao WebFetch direto (home, `/topic/industry/` e matérias). Alternativa: WebSearch com `allowed_domains: petapixel.com`, que devolve título, data e resumo, mas a página não é aberta. Digital Camera World também veio sem corpo do artigo. WSOC-TV deu erro 451 (bloqueio por localização).
 - **Seguem secas:** frentes C, D, E e J com busca aberta. Sebrae/DataSebrae não traz recorte de fotografia.
+
+### Rodada de 19/10/2026
+
+- **Funcionou:** PhotoWorkout (abre o texto e traz números de reestruturação de empresa, quando PetaPixel e DIYPhotography não abrem), página de FAQ oficial da Adobe (confirmou data do MAX, corrigindo busca).
+- **Não funcionou:** PetaPixel segue com 403 no WebFetch. DIYPhotography abre só o título. Fstoppers `/business` deu 404 direto. Pesquisa Aftershoot sobre IA (63% dos fotógrafos) é de 08/2025, fora de janela e patrocinada.
+- **Seguem secas:** C, D, E, J.
