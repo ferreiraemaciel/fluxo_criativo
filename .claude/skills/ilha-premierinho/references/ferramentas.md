@@ -95,6 +95,28 @@ com extensão .ttf. Confira sempre com `file arquivo.ttf`.
 
 ---
 
+## Playwright, para desenhar cena em HTML
+
+```bash
+npm init -y && npm install playwright && npx playwright install chromium
+```
+
+É o caminho preferido para animação explicativa. Detalhes e código em
+`texto-e-animacao.md`, seção "O caminho do HTML".
+
+## rembg, para recortar a pessoa do fundo
+
+Já instalado, com o modelo `isnet-general-use`. Permite pôr a pessoa na frente
+de um fundo gráfico sem croma. Pesado por quadro, use em trecho curto.
+
+## O que ainda não temos
+
+| Falta | Quando doeria | Caminho |
+|---|---|---|
+| Imagem fotorrealista nova | render de produto, retrato, ilustração técnica | skill `gerar-imagem`, que usa o ChatGPT no navegador |
+| 3D de verdade com profundidade | texto em planos inclinados, câmera orbitando | Blender em linha de comando, se virar rotina |
+| Tracking de movimento | grudar gráfico na mão de quem fala | nenhum instalado |
+
 ## Armadilhas de shell que já quebraram o trabalho
 
 **O ffmpeg come o stdin e mata o laço de leitura.** Num `while read ... done <

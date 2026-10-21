@@ -170,6 +170,57 @@ explica melhor que a fala**:
 - dois números lado a lado, representando contraste
 - um carimbo que bate, representando veredito
 
+### O caminho do HTML, que é o melhor deles
+
+**Desde 21/10/2026 dá para desenhar a cena como página e capturar quadro a
+quadro.** É o caminho mais rápido e o que chega mais perto de peça de agência,
+porque você ganha de graça tudo que o navegador já sabe: fonte web, flexbox,
+grade, gradiente, sombra, borda arredondada, `clip-path`, filtro, e curva de
+animação de verdade.
+
+```javascript
+const { chromium } = require('playwright');
+const b = await chromium.launch();
+const p = await b.newPage({ viewport: { width: 1080, height: 470 } });
+await p.goto('file://' + process.cwd() + '/cena.html');
+await p.waitForTimeout(450);                       // deixa a fonte carregar
+for (let i = 0; i < quadros; i++) {
+  // congela o relógio da animação no instante desejado
+  await p.evaluate(ms => document.getAnimations().forEach(a => {
+    a.pause(); a.currentTime = ms;
+  }), (i / 30) * 1000);
+  await p.screenshot({ path: `quadros/${String(i).padStart(4,'0')}.png` });
+}
+```
+
+A chave é `document.getAnimations()`: ele pega todas as animações CSS da página,
+pausa e posiciona no instante exato. Assim o quadro 37 é sempre o mesmo quadro
+37, sem depender de quanto o computador demorou para desenhar.
+
+**Como amarrar com a fala:** o `animation-delay` de cada elemento é o tempo dele
+em relação ao início da janela. Se a janela começa aos 27,80 s do vídeo e a
+pessoa diz "escolhe o menor" aos 34,15 s, o delay daquele elemento é 6,35 s.
+Mudou o corte, recalcula os delays.
+
+**Instalação** (uma vez, dentro da pasta de trabalho):
+
+```bash
+npm init -y && npm install playwright && npx playwright install chromium
+```
+
+**Para gráfico que fica por cima da imagem** (e não dentro da faixa), capture com
+`{ omitBackground: true }` e um `body` transparente: sai PNG com alfa.
+
+**O que isso abre:** interface falsa (player com onda, barra de busca, caixa de
+seleção), tabela que preenche linha por linha, balão de conversa, etiqueta,
+mapa, planta, barra de progresso de tópicos. Tudo o que um site faz, a cena faz.
+
+### Recorte da pessoa sem croma
+
+`rembg` (já instalado, modelo `isnet-general-use`) separa a pessoa do fundo num
+quadro. Serve para a pessoa aparecer **na frente** do gráfico em vez de embaixo
+dele. Custa caro por quadro, então use em trechos curtos.
+
 ### Movimento
 
 ```python
