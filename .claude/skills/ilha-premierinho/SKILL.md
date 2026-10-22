@@ -34,6 +34,21 @@ derrubar as outras.
 
 ---
 
+## Se o roteiro ainda estiver em aberto: o ápice é o gancho
+
+Esta skill edita, não escreve roteiro. Mas quando o roteiro ainda puder mudar,
+vale a regra que o Felipe fixou em 22/10/2026: **a frase mais forte do roteiro
+tem que estar nos primeiros segundos.**
+
+Ela quase nunca nasce lá. Costuma estar no meio, depois que o argumento
+amadureceu. Leia o roteiro procurando a frase que a pessoa daria print, mova para
+a abertura, e deixe o resto se reorganizar em volta. O que era gancho vira tease,
+ou some.
+
+Detalhe em `.claude/rules/tom-de-voz-felipe.md`, seção 8a.
+
+---
+
 ## Passo 0. Contexto e ferramentas
 
 1. **Onde estão os brutos.** Em geral numa pasta do Downloads com o nome do

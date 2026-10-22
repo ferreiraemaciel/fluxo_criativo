@@ -295,6 +295,31 @@ em frases de cinco palavras achando que isso é ser informal.
 
 ---
 
+## 8a. O ápice do roteiro é o gancho, sempre
+
+> Correção do Felipe em 22/10/2026, no ORG 348: *"sempre o ápice é o gancho"*.
+
+Depois de escrever o roteiro inteiro, **leia procurando a frase mais forte**, a que
+a pessoa daria print ou repetiria para um amigo. Ela quase nunca nasce no começo:
+costuma aparecer no meio, quando o argumento já amadureceu.
+
+**Essa frase vai para os primeiros segundos.** O resto do roteiro se reorganiza em
+volta dela.
+
+No ORG 348 o ápice era *"na lavanderia o expresso custa mais caro, só na fotografia
+a pressa sai de graça"*, e estava aos trinta segundos. Movida para a abertura, ela
+arrumou o roteiro inteiro sozinha: o tease virou virada (a culpa não era do cliente,
+era do contrato) e a mesma frase voltou no fim como callback.
+
+**Como achar o ápice:** é a frase que tem indignação ou reconhecimento coletivo,
+não a que tem mais informação. Conteúdo denso prende quem já parou; o ápice é o que
+faz parar.
+
+**O que sobra no lugar dela:** o trecho que era gancho vira tease, ou some. Quase
+sempre ele era setup, e setup não precisa existir quando a frase forte já abriu.
+
+---
+
 ## 9. Reels
 
 Roteiro em pegada natural de fala, nunca de texto lido em voz alta. Frases curtas, contrações
