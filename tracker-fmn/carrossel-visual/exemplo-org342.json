@@ -1,0 +1,80 @@
+{
+  "gabarito": {
+    "placa_w": 820,
+    "placa_left": 130,
+    "placa_top": 152,
+    "capa_w": 950,
+    "capa_left": 65,
+    "capa_top": 196,
+    "hist_top": 716,
+    "hist_corpo": 56,
+    "hist_entrelinha": 1.38,
+    "ilustra_top": 900,
+    "ilustra_h": 330,
+    "rodape": 1262,
+    "tag_top": 110
+  },
+  "slides": [
+    {
+      "n": 1,
+      "tipo": "capa",
+      "fundo": "fundos/fundo-creme.png",
+      "placa": "biblioteca/placa-01.png",
+      "titulo": "Se tem placa,<br>tem história",
+      "tag": "Fotógrafo e videomaker",
+      "marca": "assets/ilustracoes/camera.png",
+      "poste": true,
+      "nota": "Sim, todas essas placas saíram de<br>história real de fotógrafo.",
+      "arroba": "@felipeferreirafotografo"
+    },
+    {
+      "n": 2,
+      "tipo": "card",
+      "var": "A",
+      "fundo": "fundos/fundo-creme.png",
+      "placa": "biblioteca/placa-02.png",
+      "titulo": "Decoração<br>não está inclusa",
+      "hist": "Pediram orçamento do aniversário e perguntaram se o painel de fotos estava incluso.",
+      "ilustra": "assets/ilustracoes/painel-fotos-festa.png"
+    },
+    {
+      "n": 3,
+      "tipo": "card",
+      "var": "B",
+      "fundo": "fundos/fundo-creme.png",
+      "placa": "biblioteca/placa-03.png",
+      "titulo": "Sem mudar fisionomia<br>ou ambiente",
+      "hist": "Tirar óculos de grau de 30 fotos, luz saindo da barriga, lua gigante no céu.",
+      "ilustra": "assets/ilustracoes/oculos-riscados.png"
+    },
+    {
+      "n": 4,
+      "tipo": "card",
+      "var": "A",
+      "fundo": "fundos/fundo-creme.png",
+      "placa": "biblioteca/placa-04.png",
+      "titulo": "Material cru<br>não sai",
+      "hist": "Pediram o banco de imagens inteiro, seis meses depois do trabalho.",
+      "ilustra": "assets/ilustracoes/pasta-com-cadeado.png"
+    },
+    {
+      "n": 5,
+      "tipo": "virada",
+      "fundo": "biblioteca/fundo-preto-textura.png",
+      "titulo": "Todas parecem bobas<br>até o dia em que acontecem",
+      "hist": "Quase ninguém escreve a cláusula antes do problema. Depois do problema, já é tarde.",
+      "triangulos": [
+        "biblioteca/triangulo-aviso-02.png"
+      ]
+    },
+    {
+      "n": 6,
+      "tipo": "cta",
+      "fundo": "biblioteca/fundo-branco-papel.png",
+      "alerta": "biblioteca/triangulo-alerta-vermelho.png",
+      "titulo": "Me segue",
+      "hist": "Conteúdo todo dia sobre viver bem de fotografia.",
+      "arroba": "@felipeferreirafotografo"
+    }
+  ]
+}
