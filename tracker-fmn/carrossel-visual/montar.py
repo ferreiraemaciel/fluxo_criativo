@@ -17,10 +17,20 @@ from PIL import Image as _Im
 PASTA = Path(sys.argv[1] if len(sys.argv) > 1 else '.').resolve()
 cfg = json.loads((PASTA / 'carrossel.json').read_text(encoding='utf-8'))
 G, SLIDES = cfg['gabarito'], cfg['slides']
+# fonte e cor sao do estilo daquele carrossel, nunca do codigo
+E = {
+  "fonte_display": "Anton", "fonte_mao": "Patrick Hand",
+  "fonte_etiqueta": "Oswald", "fonte_fecho": "Playfair Display",
+  "google_fonts": "family=Anton&family=Patrick+Hand&family=Oswald:wght@600&family=Playfair+Display:wght@800",
+  "tinta": "#15120c", "texto": "#211c15", "etiqueta": "#4d432f", "nota": "#3a3226",
+  "arroba": "#554b39",
+  "virada_destaque": "#F7C53D", "fecho_destaque": "#B3261E", "fecho_apoio": "#7d2a24",
+}
+E.update(cfg.get('estilo', {}))
 G.setdefault('tag_top', G['capa_top'] - 86)
 
 CSS = """
-@import url('https://fonts.googleapis.com/css2?family=Anton&family=Patrick+Hand&family=Oswald:wght@600&family=Playfair+Display:wght@800&display=swap');
+@import url('https://fonts.googleapis.com/css2?%(google_fonts)s&display=swap');
 *{margin:0;padding:0;box-sizing:border-box}
 body{width:1080px;height:1350px;position:relative;overflow:hidden}
 .fundo{position:absolute;inset:0;width:1080px;height:1350px;object-fit:cover}
@@ -32,16 +42,16 @@ body{width:1080px;height:1350px;position:relative;overflow:hidden}
 .poste{z-index:1}
 .naplaca{position:absolute;left:112px;right:112px;top:50%%;transform:translateY(-50%%);
   display:flex;flex-direction:column;justify-content:center;
-  z-index:3;text-align:center;font-family:Anton,sans-serif;color:#15120c;text-transform:uppercase;
+  z-index:3;text-align:center;font-family:'%(fonte_display)s',sans-serif;color:%(tinta)s;text-transform:uppercase;
   line-height:1.2;letter-spacing:.004em;filter:url(#lasca)}
 .naplaca span,.tit span{display:block}
-.tag{position:absolute;left:0;right:0;top:%(tag_top)spx;z-index:3;text-align:center;font-family:Oswald,sans-serif;
-  font-weight:600;font-size:28px;letter-spacing:.26em;text-transform:uppercase;color:#4d432f}
+.tag{position:absolute;left:0;right:0;top:%(tag_top)spx;z-index:3;text-align:center;font-family:'%(fonte_etiqueta)s',sans-serif;
+  font-weight:600;font-size:28px;letter-spacing:.26em;text-transform:uppercase;color:%(etiqueta)s}
 .poste{position:absolute;left:50%%;transform:translateX(-50%%)}
 
 /* ---- historia: corpo 56, entrelinha medida nos slides dele ---- */
-.hist{position:absolute;top:%(hist_top)spx;font-family:'Patrick Hand',cursive;
-  font-size:%(hist_corpo)spx;line-height:%(hist_entrelinha)s;color:#211c15}
+.hist{position:absolute;top:%(hist_top)spx;font-family:'%(fonte_mao)s',cursive;
+  font-size:%(hist_corpo)spx;line-height:%(hist_entrelinha)s;color:%(texto)s}
 .hist.A{left:120px;right:120px;text-align:center}
 .hist.B{left:140px;right:300px;text-align:left}
 
@@ -51,7 +61,7 @@ body{width:1080px;height:1350px;position:relative;overflow:hidden}
 .ilustra.A{left:140px} .ilustra.B{right:120px}
 .ilustra img{max-height:%(ilustra_h)spx;max-width:600px}
 
-.tit{position:absolute;left:78px;right:78px;text-align:center;font-family:Anton,sans-serif;
+.tit{position:absolute;left:78px;right:78px;text-align:center;font-family:'%(fonte_display)s',sans-serif;
   text-transform:uppercase;line-height:1.08;letter-spacing:.004em;filter:url(#lasca)}
 .tri{position:absolute;left:0;right:0;display:flex;justify-content:center;align-items:center;gap:46px}
 .tri img{max-height:240px}
@@ -62,30 +72,30 @@ body{width:1080px;height:1350px;position:relative;overflow:hidden}
 .marca2{position:absolute;right:58px;bottom:126px;width:150px;opacity:.16;
   transform:rotate(6deg);pointer-events:none}
 .nota{position:absolute;left:200px;right:200px;bottom:150px;text-align:center;
-  font-family:'Patrick Hand',cursive;font-size:44px;line-height:1.34;color:#3a3226}
+  font-family:'%(fonte_mao)s',cursive;font-size:44px;line-height:1.34;color:%(nota)s}
 .arroba{position:absolute;left:0;right:0;bottom:50px;text-align:center;
-  font-family:'Patrick Hand',cursive;font-size:36px;color:#554b39}
+  font-family:'%(fonte_mao)s',cursive;font-size:36px;color:%(arroba)s}
 .pontos{position:absolute;left:62px;top:%(rodape)spx;display:flex;gap:13px}
-.pontos i{width:14px;height:14px;border-radius:50%%;border:3px solid #15120c;display:block}
-.pontos i.on{background:#15120c}
+.pontos i{width:14px;height:14px;border-radius:50%%;border:3px solid %(tinta)s;display:block}
+.pontos i.on{background:%(tinta)s}
 .setas{position:absolute;right:62px;top:%(rodape)spx;margin-top:-14px;
-  font-family:Anton,sans-serif;font-size:36px;color:#15120c;letter-spacing:.1em}
+  font-family:'%(fonte_display)s',sans-serif;font-size:36px;color:%(tinta)s;letter-spacing:.1em}
 
 /* a virada e o fecho trocam de fundo, entao trocam de cor */
 .virada .tri{top:214px}
-.virada .tit{color:#F7C53D;top:470px;font-size:92px}
-.virada .hist{color:#F7C53D;left:116px;right:116px;text-align:center;top:930px;font-size:46px}
-.virada .pontos i{border-color:#F7C53D} .virada .pontos i.on{background:#F7C53D}
-.virada .setas{color:#F7C53D}
+.virada .tit{color:%(virada_destaque)s;top:470px;font-size:92px}
+.virada .hist{color:%(virada_destaque)s;left:116px;right:116px;text-align:center;top:930px;font-size:46px}
+.virada .pontos i{border-color:%(virada_destaque)s} .virada .pontos i.on{background:%(virada_destaque)s}
+.virada .setas{color:%(virada_destaque)s}
 .cta .alerta{top:250px}
-.cta .tit{color:#B3261E;top:556px;font-family:'Playfair Display',serif;font-weight:800;
+.cta .tit{color:%(fecho_destaque)s;top:556px;font-family:'%(fonte_fecho)s',serif;font-weight:800;
   text-transform:none;font-size:140px;line-height:1.1;filter:none}
-.cta .hist{color:#7d2a24;left:140px;right:140px;text-align:center;top:764px;font-size:50px;
+.cta .hist{color:%(fecho_apoio)s;left:140px;right:140px;text-align:center;top:764px;font-size:50px;
   line-height:1.38}
-.cta .pontos i{border-color:#B3261E} .cta .pontos i.on{background:#B3261E}
-.cta .arroba{color:#B3261E;font-family:Oswald,sans-serif;font-weight:600;font-size:30px;
+.cta .pontos i{border-color:%(fecho_destaque)s} .cta .pontos i.on{background:%(fecho_destaque)s}
+.cta .arroba{color:%(fecho_destaque)s;font-family:'%(fonte_etiqueta)s',sans-serif;font-weight:600;font-size:30px;
   letter-spacing:.06em}
-""" % G
+""" % {**G, **E}
 
 FILTRO = ('<svg width="0" height="0"><filter id="lasca">'
   '<feTurbulence type="fractalNoise" baseFrequency="0.07 0.11" numOctaves="4" seed="7" result="r"/>'

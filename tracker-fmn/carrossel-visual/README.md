@@ -15,8 +15,27 @@ python3 montar.py  <pasta-do-carrossel>     # escreve 1.html, 2.html, ...
 node     capturar.js <pasta-do-carrossel>   # fotografa cada uma em final/*.png
 ```
 
-A pasta precisa ter um `carrossel.json` com `gabarito` e `slides`, mais as peças em PNG.
-O `exemplo-org342.json` é o do ORG 342 inteiro, serve de modelo.
+A pasta precisa ter um `carrossel.json` com `gabarito`, `slides` e, quando o estilo não for o
+do ORG 342, um bloco `estilo`. As peças em PNG ficam na mesma pasta. O `exemplo-org342.json`
+é o do ORG 342 inteiro, serve de modelo.
+
+### O bloco `estilo`
+
+Fonte e cor são do carrossel, nunca do código. Sem esse bloco valem os valores do ORG 342.
+
+```json
+"estilo": {
+  "fonte_display": "Permanent Marker",
+  "fonte_mao": "Patrick Hand",
+  "fonte_etiqueta": "Oswald",
+  "fonte_fecho": "Playfair Display",
+  "google_fonts": "family=Permanent+Marker&family=Patrick+Hand&family=Oswald:wght@600&family=Playfair+Display:wght@800",
+  "tinta": "#23201B", "texto": "#23201B", "etiqueta": "#6b5f4a",
+  "nota": "#3a3226", "arroba": "#6b5f4a",
+  "virada_destaque": "#E8E2D6",
+  "fecho_destaque": "#C2362B", "fecho_apoio": "#8d3a31"
+}
+```
 
 ## O que se calcula sozinho (não mexer na mão)
 
