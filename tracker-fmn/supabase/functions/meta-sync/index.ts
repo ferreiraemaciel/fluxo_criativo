@@ -480,13 +480,18 @@ async function verificarRegraG1() {
     if (!alertaExistente) {
       const { data: adsRow } = await supabase
         .from("ads")
-        .select("numero, status, produto")
+        .select("numero, status, produto, pico_projeto_id")
         .eq("meta_ad_id", i5d.meta_ad_id)
         .single();
 
       // Mesma proteção do G5: uma vez processado, não fica re-alertando um
       // ADS que já saiu de "ativo" (já foi pausado e classificado).
       if (adsRow?.status && adsRow.status !== "ativo") continue;
+
+      // Anúncio de pico (Black etc.) não é julgado por venda nem por CPA: na
+      // antecipação ele existe pra gerar atenção e lista, não compra. G1 pausou
+      // os ADS 397 e 398 da Black em 21/10/2026 por isso. Pausa ali é só manual.
+      if (adsRow?.pico_projeto_id) continue;
 
       // Limite do produto DESTE anúncio, não um limite global da conta.
       const gastoLimite = limitePara(adsRow?.produto || null);
@@ -564,7 +569,7 @@ async function verificarRegraG5() {
     if (!alertaExistente) {
       const { data: adsRow } = await supabase
         .from("ads")
-        .select("numero, status, produto")
+        .select("numero, status, produto, pico_projeto_id")
         .eq("meta_ad_id", i3d.meta_ad_id)
         .single();
 
@@ -579,6 +584,9 @@ async function verificarRegraG5() {
       // está mais "ativo" na nossa tabela (ou seja, já foi processado antes,
       // virou campeão ou foi arquivado), não há nada novo pra fazer aqui.
       if (adsRow?.status && adsRow.status !== "ativo") continue;
+
+      // Anúncio de pico não passa por regra de CPA (mesmo motivo do G1).
+      if (adsRow?.pico_projeto_id) continue;
 
       // Limite do produto DESTE anúncio (MCV e Blindagem têm ticket
       // diferente), não mais um limite único da conta.

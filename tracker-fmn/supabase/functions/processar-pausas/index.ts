@@ -53,6 +53,17 @@ Deno.serve(async (req) => {
       continue;
     }
 
+    // Segunda trava (22/10/2026): anúncio ligado a um pico nunca é pausado
+    // por regra automática, venha o alerta de onde vier. Só pausa manual.
+    const { data: doPico } = await supabase.from("ads").select("pico_projeto_id")
+      .eq("meta_ad_id", adId).maybeSingle();
+    if (doPico?.pico_projeto_id) {
+      await supabase.from("alertas")
+        .update({ resolvido: true, acao_pendente: null, acao_tomada: "ignorado_anuncio_de_pico" })
+        .eq("id", alertaId);
+      continue;
+    }
+
     try {
       // 1. Pausa o anúncio no Meta
       const pauseUrl = `https://graph.facebook.com/v25.0/${adId}?access_token=${FB_TOKEN}`;
