@@ -111,3 +111,17 @@ Contraste, Certo vs Errado, Dilema, Reflexão, Explicação.
 **Ainda não usados**, para variar nos próximos: Comparação, Apelo Emocional, Curiosidade, Demonstração,
 Oportunidade, Visual, Clickbait, Prova, História, Ultra Segmentado, Problema-Solução, Sensação, Mito,
 Pesquisa Científica, Atualidades, Atualidades Trend.
+
+---
+
+## A data do item é a data do card (22/10/2026)
+
+O campo `dia` de cada item do desafio é espelho da data do card no Tracker:
+`scheduled_at` quando está agendado, `published_at` quando já foi ao ar. Vale para
+ORG e para ADS.
+
+Nunca escolher a data por calendário vago nem encaixar no buraco da sequência. Dois
+itens no mesmo dia tudo bem, se os dois cards estão marcados para aquele dia. Buraco
+na sequência também tudo bem.
+
+Card ainda sem data não entra no desafio. Primeiro agenda, depois lança aqui.
