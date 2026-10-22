@@ -314,3 +314,21 @@ objeto saindo por uma borda e outro da mesma família entrando pelo lado oposto.
 pixel nos dois slides e só a ilustração se move. É a parte travada que dá ao olho licença de
 perceber que uma coisa mudou. Por isso a montagem usa posição fixa por tipo de card, nunca posição
 decidida no olho a cada slide.
+
+---
+
+## Caminho de montagem padrão: Canva (22/10/2026)
+
+Desde o ORG 341 o carrossel é montado pelo Canva, não mais em HTML. O GPT desenha
+cada slide inteiro, **com os textos já escritos na arte**, e a separação de camadas
+do Canva devolve peça e texto como elementos editáveis, com a fonte casada. A partir
+daí o ajuste é por coordenada, que é o que garante os 7 slides batendo no rodapé e
+na tipografia.
+
+O passo a passo completo, com a tabela de fontes, as coordenadas do rodapé e as
+armadilhas (texto inventado pela separação, família de fonte que o MCP não troca),
+está na skill `carrossel-canva`.
+
+O caminho HTML (`tracker-fmn/carrossel-visual/`) continua existindo e serve quando
+o carrossel é de peça repetida com gabarito rígido, tipo o ORG 342. Para carrossel
+com ilustração solta e respiro, o Canva ganha.
