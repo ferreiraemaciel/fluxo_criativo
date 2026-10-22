@@ -31,8 +31,12 @@ acompanha o tema" vem de lá. Esta skill cuida só da execução visual.
 
 ## Passo 1. Prompt pro GPT
 
-Um prompt por slide, canvas **1122 x 1402**, sangria total (sem moldura, sem
-margem branca, sem borda).
+**Um prompt só para o carrossel inteiro**, canvas **1080 x 1350** (o formato padrão
+do projeto), sangria total: sem moldura, sem margem branca, sem borda.
+
+Nunca fatiar em um prompt por slide. O Felipe não vai colar oito vezes o que cabe
+numa vez. O prompt traz o bloco de estilo uma única vez e depois a lista dos slides,
+cada um com a cena e o texto dele.
 
 No prompt entra:
 
@@ -83,19 +87,19 @@ arquivo só.
 
 ## Passo 4. Sistema tipográfico (fixo)
 
-Canvas 1122 x 1402. Toda caixa de texto tem `width: 860`, `left: 131`,
+Canvas 1080 x 1350. Toda caixa de texto tem `width: 828`, `left: 126`,
 `text_align: center`.
 
 | Papel | Fonte | Peso | Corpo | Cor | Espaçamento |
 |---|---|---|---|---|---|
-| Eyebrow (capa) | Inter | Bold | 26 | `#8a7c66` | 200 |
-| Headline (capa) | Playfair Display | Bold | 64 | `#23201b` | 0 |
-| Tag (slides 2 a 6) | Inter | Bold | 26 | `#8a7c66` | 200 |
-| Corpo (slides 2 a 6) | Inter | Regular | 44 | `#2a251e` | 0 |
-| Fonte da lei | Inter | Bold | 22 | `#8a7c66` | 150 |
-| Arroba | Inter | Regular | 28 | `#8a7c66` | 0 |
-| Título do fecho | Playfair Display | Bold | 58 | `#ffffff` | 0 |
-| CTA LINK NA BIO | Inter | Bold | 38 | `#ffffff` | 200 |
+| Eyebrow (capa) | Inter | Bold | 25 | `#8a7c66` | 200 |
+| Headline (capa) | Playfair Display | Bold | 62 | `#23201b` | 0 |
+| Tag (slides do meio) | Inter | Bold | 25 | `#8a7c66` | 200 |
+| Corpo (slides do meio) | Inter | Regular | 42 | `#2a251e` | 0 |
+| Fonte da lei | Inter | Bold | 21 | `#8a7c66` | 150 |
+| Arroba | Inter | Regular | 27 | `#8a7c66` | 0 |
+| Título do fecho | Playfair Display | Bold | 56 | `#ffffff` | 0 |
+| CTA LINK NA BIO | Inter | Bold | 37 | `#ffffff` | 200 |
 
 Slide de fundo escuro: tag e fonte da lei em `#edc4bd`, corpo em `#f7f2e8`.
 
@@ -114,20 +118,21 @@ Template. Nunca prometer troca de fonte por `format_text`.
 
 ## Passo 5. Rodapé (coordenadas fixas em todos os slides)
 
-Contagem, à esquerda:
+Contagem, à esquerda. **Uma bolinha por slide**, nunca cinco fixas:
 
-- 5 bolinhas de 18 x 18, `corner_rounding: 9`
-- `top: 1304`
-- `left: 131, 165, 199, 233, 267`
+- bolinhas de 17 x 17, `corner_rounding: 9`
+- `top: 1256`
+- primeira em `left: 126`, as seguintes de 33 em 33 (126, 159, 192, 225, 258, 291, 324, 357)
 - preenchida na cor da tinta do slide, vazia a 25% de opacidade
 
 Setas, à direita:
 
-- 3 chevrons de 16 x 34, `top: 1296`
-- `left: 931, 957, 983`
+- 3 chevrons de 15 x 33, `top: 1248`
+- `left: 897, 922, 947`
 - `view_box` 24 x 48, path `M2 2 L20 24 L2 46 L10 24 Z`
+- o último slide não leva seta
 
-Linha da fonte da lei, quando houver, em `top: 1263`.
+Linha da fonte da lei, quando houver, em `top: 1216`.
 
 Esse rodapé é a parte que mais escorrega. No ORG 341 os slides 4, 5 e 6 saíram
 26 px mais baixos e isso aparece na passagem de um slide pro outro. **Conferir
@@ -137,16 +142,8 @@ Esse rodapé é a parte que mais escorrega. No ORG 341 os slides 4, 5 e 6 saíra
 
 ## Passo 6. Exportar e entregar
 
-```bash
-# export-design com format {"type":"png"} em cada design, depois:
-python3 - <<'PY'
-from PIL import Image
-for i in range(1, 8):
-    Image.open(f'{i:02d}.png').convert('RGB') \
-        .resize((1080, 1350), Image.LANCZOS) \
-        .save(f'{i:02d}.jpg', 'JPEG', quality=92)
-PY
-```
+`export-design` com `format {"type":"png"}` em cada design. O PNG ja sai em
+1080 x 1350, então é só converter para JPEG 92, sem redimensionar e sem esticar.
 
 Salvar os JPGs na pasta do card dentro do Drive sincronizado:
 
@@ -170,7 +167,7 @@ O card sai de "Fazer" sozinho ao receber a mídia, pela regra do kanban.
 1. Rodapé no mesmo `top` nos 7 slides.
 2. Nenhuma caixa de texto inventada pela separação sobrou na arte.
 3. Corpo e cor conforme a tabela, slide escuro com a paleta clara.
-4. Proporção nunca esticada. Redimensionar sempre mantendo 1122:1402 para 1080:1350.
+4. Proporção nunca esticada. O arquivo nasce e morre em 1080 x 1350.
 5. Texto passou pelo tom de voz (`.claude/rules/tom-de-voz-felipe.md`) e pelo
    checklist de Light Copy.
 
