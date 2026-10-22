@@ -70,8 +70,8 @@ ser só copiar e colar. O link do post entra quando o Felipe publicar.
 | # | Data | ORG/ADS | Formato | Tipo da Mandala | Tema | Link do post |
 |---|---|---|---|---|---|---|
 | 1 | 21/10 | ORG 344 | Reels | Contraste | A lente nova e o contrato que não existe | https://www.instagram.com/reel/DexYL71DE_Q/ |
-| 2 | | ORG 345 | Reels | Certo vs Errado | Antes do preço, o valor | |
-| 3 | | ORG 346 | Reels | Dilema | O prato da equipe | |
+| 2 | 22/10 | ORG 345 | Reels | Certo vs Errado | Antes do preço, o valor | |
+| 3 | 23/10 | ORG 346 | Reels | Dilema | O prato da equipe | |
 | 4 | | ORG 347 | Reels | Reflexão | O elogio que não paga e o que paga | |
 | 5 | | ORG 348 | Reels | Explicação | Prazo folgado é estratégia | |
 
@@ -79,6 +79,30 @@ ser só copiar e colar. O link do post entra quando o Felipe publicar.
 > explicativas), e é o primeiro conteúdo do desafio. Os outros quatro seguem aguardando gravação.
 > A data entra quando forem ao ar.
 > Já existem outros 17 cards montados (ORG 326 a 342) que também servem ao desafio.
+
+## O que a agenda já resolve, e o que não resolve (levantado em 21/10)
+
+**Cuidado com o formato.** Dos 24 posts agendados dentro da janela, **21 são imagem
+estática**, que o desafio não aceita. Só pontuam Reels, carrossel, vídeo de YouTube
+e anúncio.
+
+| Situação | Quantidade |
+|---|---|
+| Já contam (344 publicado, 345 e 346 prontos) | 3 |
+| Agendado na janela e que pontua (carrossel ORG 303, dia 09/11) | 1 |
+| Agendado na janela e que **não** pontua (imagem) | 21 |
+| **Falta para fechar os 30** | **26** |
+
+**A munição parada:** 91 Reels e 33 carrosséis em produção, sem agendamento. Os mais
+prontos são o 347 e o 348 (roteiro escrito), os 326 a 334 (vindos das reuniões com
+leads) e os carrosséis 339 a 342.
+
+**Dias da janela sem nada agendado:** 25, 27 e 28/10, e 1, 4, 8, 11, 14, 15, 17, 18
+e 21/11.
+
+**Decisão do Felipe em 21/10:** as imagens agendadas ficam como estão, sem virar
+carrossel só para pontuar. O desafio se fecha com Reels e carrossel novos, gravados
+em bloco.
 
 ### Tipos da Mandala já usados
 
