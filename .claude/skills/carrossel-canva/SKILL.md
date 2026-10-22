@@ -38,6 +38,28 @@ Nunca fatiar em um prompt por slide. O Felipe não vai colar oito vezes o que ca
 numa vez. O prompt traz o bloco de estilo uma única vez e depois a lista dos slides,
 cada um com a cena e o texto dele.
 
+### Três coisas que o prompt sempre pede, sem exceção
+
+**1. Objeto de identificação em todo slide, inclusive no CTA.** Uma câmera antiga,
+uma lente, um tripé, um rolo de filme, um cartão de memória, desenhado no mesmo
+estilo e com o mesmo detalhe de cor do carrossel. Sem isso a peça é bonita e o
+fotógrafo não se vê dentro dela, e aí ela não filtra o público. O slide de CTA é o
+que mais escapa, porque a tendência é deixar só o texto grande. Ele precisa do
+objeto também.
+
+**2. Os fundos limpos, avulsos, no fim do mesmo prompt.** Depois dos slides, pedir
+uma imagem por cor de fundo que o carrossel usa, vazia, só fundo com a textura,
+sem nenhum elemento e sem nenhum texto. Serve para remendar fundo no Canva quando
+um texto for movido ou um elemento apagado. Se o carrossel tem creme, vermelho e
+amarelo, são três fundos avulsos. Isso vai no prompt desde a primeira vez, nunca
+depois.
+
+**3. Encaixe entre o slide de quebra e os vizinhos.** Quando um slide muda a cor de
+fundo inteira, ele não pode parecer de outro carrossel. O prompt precisa dizer qual
+elemento atravessa a quebra: o mesmo objeto do slide anterior reaparecendo na cor
+nova, ou um pedaço de desenho que sai por uma borda e entra na borda oposta do
+seguinte. A continuidade do carrossel mora nesse encaixe, não no desenho bonito.
+
 No prompt entra:
 
 - O estilo escolhido pro carrossel inteiro (sugerir 2 ou 3 estilos argumentados ao
@@ -164,7 +186,9 @@ O card sai de "Fazer" sozinho ao receber a mídia, pela regra do kanban.
 
 ## Conferência obrigatória antes de entregar
 
-1. Rodapé no mesmo `top` nos 7 slides.
+1. Rodapé no mesmo `top` em todos os slides.
+1b. Todo slide tem objeto de identificação do ofício, inclusive o de CTA.
+1c. Os fundos avulsos vieram junto, um por cor usada.
 2. Nenhuma caixa de texto inventada pela separação sobrou na arte.
 3. Corpo e cor conforme a tabela, slide escuro com a paleta clara.
 4. Proporção nunca esticada. O arquivo nasce e morre em 1080 x 1350.
