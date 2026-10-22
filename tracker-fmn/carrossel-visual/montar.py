@@ -242,9 +242,11 @@ def html(s):
     if s.get('hist'):
         v = s.get('var','A')
         # 70px de respiro depois do pe real daquela peca, que varia de uma pra outra
+        # so quando o carrossel pedir: a historia nasce depois do pe real da peca,
+        # o que importa quando as pecas tem alturas bem diferentes entre si
         est = ''
-        if s['tipo'] == 'card' and s.get('placa'):
-            est = f'top:{G["placa_top"] + alt + 70}px'
+        if G.get('hist_apos_placa') and s['tipo'] == 'card' and s.get('placa'):
+            est = f'top:{G["placa_top"] + alt + G["hist_apos_placa"]}px'
         c.append(f'<div class="hist {v}" style="{est}">{s["hist"]}</div>')
     if s.get('ilustra'):
         v = s.get('var','A')
