@@ -693,6 +693,33 @@ O período entre encher o grupo e abrir o carrinho. A captação trouxe a pessoa
 
 **Modelo Nobre de lives:** CPL 1, 2, 3 e 3.1 em D-6 a D-2. Live de abertura em D0. Lives de vendas em D+3 e D+7. Live de replay em D+9. Encerramento em D+10.
 
+## 4.10b A estrutura de slides da live, pelo Samuel (22/10/2026)
+
+> Trazida pelo Samuel numa reunião de Zoom, como exemplo da ordem que ele usa. Vale para a hora
+> de montar os slides da live de abertura, e convive com o roteiro de 14 blocos da seção seguinte:
+> aquele é a condução da fala, este é a sequência das telas.
+
+1. **Apresentação.** Dizer logo que o vídeo é para revelar a oferta de Black.
+2. **Depoimento, em metralhadora.** Provar por que a pessoa não pode perder a melhor
+   oportunidade do ano. Não precisa ser longo e não precisa comentar caso por caso: aqui é o
+   volume que convence.
+3. **Apresentação do Método.**
+4. **Muitos depoimentos**, agora falando sobre cada caso.
+5. **Trilha**, que no nosso vocabulário é a Furadeira.
+6. **Por dentro do curso.**
+7. **Ancoragem.**
+8. **Preço.**
+9. **Quebra de objeção.**
+
+**O que essa ordem ensina.** Depoimento aparece duas vezes e em funções diferentes: primeiro
+como volume, antes de explicar qualquer coisa, e só depois como história, já com o método na
+mesa. A ancoragem vem antes do preço, e a quebra de objeção fecha a live, com o preço já dito.
+
+**O que isso exige de nós:** a metralhadora de depoimento pede material que a gente ainda não
+organizou em volume. O catálogo que existe hoje está em `DEPOIMENTOS-ALUNOS.md` e tem três
+casos com cena. Para a metralhadora, o número importa mais que a profundidade, então vale
+varrer as pastas Prova Social inteiras antes da live.
+
 ## 4.11 Roteiro da live de abertura, os 14 blocos
 
 | # | Bloco | O que faz |
