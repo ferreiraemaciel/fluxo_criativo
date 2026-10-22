@@ -133,6 +133,15 @@ parece que não há silêncio nenhum. Use `-hide_banner -nostats` e leia o stder
 **`timeout` não existe no mac** sem o coreutils. Para esperar algo, faça um laço
 com `sleep`.
 
+**O `loudnorm` devolve 192 kHz quando ninguém manda o contrário.** O arquivo
+abre normal e nada acusa, mas ao juntar com outro de 48 kHz a parte tratada toca
+quatro vezes mais lenta e mais grave. Sempre feche a cadeia com `aresample=48000`
+e passe `-ar 48000` na saída.
+
+**`curl -F "file=@caminho"` falha com acento no caminho** (erro 26, "failed to
+open"). Todas as pastas deste projeto têm acento, então copie para `/tmp` com
+nome simples antes de subir arquivo por formulário.
+
 **Glob de arquivo que não existe derruba o zsh.** `rm -f *.jpg` numa pasta sem
 jpg aborta o comando inteiro com `no matches found`. Use `rm -f` com nome certo
 ou proteja o glob.

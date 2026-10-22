@@ -146,10 +146,45 @@ Ancore na palavra, achando o tempo dela na transcrição:
 
 ## Animação explicativa
 
-### A faixa
+### Onde a animação vive: por cima, não empurrando
 
-O topo da tela é onde está a cabeça. Para abrir espaço sem distorcer nada, a
-imagem **desce** e a faixa que sobra recebe o gráfico:
+Existem dois jeitos, e o segundo é o preferido.
+
+**Cartão por cima (preferido).** A animação é um PNG com alfa desenhado num
+viewport próprio e sobreposto à imagem inteira. Quem fala continua em tela cheia,
+e o gráfico mora num cartão translúcido (fundo preto a 74%, borda clara de 1 px,
+canto de 26 px) que deixa a pessoa aparecer por trás. Foi o que o Felipe pediu em
+21/10 depois de ver a outra forma: *"prefiro que apareça e mantenha o Felipe em
+tela toda"*.
+
+```bash
+# captura com alfa
+await p.screenshot({ path: nome, omitBackground: true });
+# sobrepõe na altura escolhida, sem mexer na imagem
+ffmpeg -i video.mp4 -i faixa.mov -filter_complex "[0:v][1:v]overlay=0:110" saida.mp4
+```
+
+**Frase no meio da tela.** Quando a animação é só texto (uma pergunta, um termo),
+ela não vira cartão: vai para o centro do quadro, em viewport de 1080x1920, com
+um véu radial escuro atrás (`radial-gradient` de preto a 74% no miolo, zerando
+nas bordas) e cada palavra entrando com desfoque que se dissolve. Nesse trecho a
+legenda **cala**, senão o mesmo texto aparece duas vezes.
+
+**Atenção ao calar a legenda:** silencie apenas o bloco cujo miolo cai dentro da
+janela, nunca por sobreposição parcial, senão somem também a legenda de antes e a
+de depois.
+
+```python
+def calado(ini, fim):
+    meio = (ini + fim) / 2
+    return any(a <= meio <= b for a, b in MUDO)
+```
+
+### A faixa que empurra (segunda opção)
+
+Usar só quando o gráfico for grande demais para caber num cartão. A imagem
+**desce** e a faixa que sobra recebe o gráfico. O custo é que o primeiro quadro do
+vídeo passa a ser o fundo preto, não a pessoa:
 
 ```bash
 # uma expressão só, com as janelas somadas (não se sobrepõem)
@@ -246,6 +281,43 @@ im.putalpha(ImageChops.multiply(im.split()[3], mascara))
 ```
 
 ---
+
+## Emoji na legenda
+
+O libass **não desenha emoji colorido**: sai um quadrado vazio. Emoji vira camada
+própria, renderizada no navegador (que usa a fonte de emoji do sistema), capturada
+com alfa e sobreposta logo acima da legenda.
+
+```css
+font-family:'Apple Color Emoji','Segoe UI Emoji',sans-serif;
+```
+
+## Cartão de fecho
+
+Um ou dois segundos de tela preta no fim, com a oferta e o caminho ("link na
+bio"), na mesma fonte da legenda. Rende como PNG e concatena depois do corpo:
+
+```bash
+ffmpeg -loop 1 -i fim.png -t 1.5 -vf "fps=30,format=yuv420p" -c:v libx264 cartao.mp4
+printf "file 'corpo.mp4'\nfile 'cartao.mp4'\n" > lista.txt
+ffmpeg -f concat -safe 0 -i lista.txt -c:v libx264 final.mp4
+```
+
+A trilha precisa cobrir o cartão: peça a edição da música já com a duração total
+(corpo + cartão) e estenda a voz com `apad=whole_dur=<total>`.
+
+## Limpeza de voz
+
+```
+highpass=f=95,afftdn=nr=14:nf=-32:tn=1,adeclick,deesser=i=0.35,
+acompressor=threshold=-20dB:ratio=2.6:attack=8:release=160:makeup=2,
+loudnorm=I=-16:TP=-1.5:LRA=9,aresample=48000
+```
+
+Corta o grave da sala, reduz o ruído, tira estalo, controla sibilância e nivela.
+Entregue sempre um arquivo curto de comparação (12 s crus e 12 s tratados) antes
+de aplicar no vídeo inteiro. Quando houver conector da Adobe, o `media_enhance_speech`
+é a alternativa, mas ele é assíncrono e pode demorar.
 
 ## Capa
 
