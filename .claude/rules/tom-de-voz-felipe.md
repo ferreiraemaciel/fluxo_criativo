@@ -274,7 +274,11 @@ vírgulas, cortar. Mais de 3 parágrafos, juntar ou tirar o que sobra.
 ### O resto do registro
 
 - **Informal de verdade.** Contração à vontade (tá, pra, tô), gíria natural, jeito de quem fala.
-- **Risada escrita quando couber.** Ele usa "kkkkkk" no fim de tirada, principalmente no fecho.
+- **Risada escrita só quando o contexto pede.** Ele usa "kkkkkk" depois de uma tirada
+  que é de fato engraçada, e isso é raro. **Nunca como fecho automático de roteiro ou
+  de legenda.** Correção dele em 22/10/2026: risada colada no fim de todo texto fica
+  ridícula, porque a risada passa a não significar nada. Se o parágrafo não tem piada,
+  termina com ponto.
 - **Humor pelo detalhe específico, nunca piada pronta.** A pasta "final_final_2", o áudio com
   barulho de trânsito, a frase que importava sendo a mais banal de todas. Detalhe específico
   demais para ter sido inventado é o que faz o leitor rir e se ver ali.
