@@ -27,7 +27,15 @@ E = {
   "virada_destaque": "#F7C53D", "fecho_destaque": "#B3261E", "fecho_apoio": "#7d2a24",
 }
 E.update(cfg.get('estilo', {}))
+# o rodape pode ser desenhado (bolinha e seta de texto) ou usar peca do carrossel
+RODAPE = cfg.get('rodape_pecas', {})
 G.setdefault('tag_top', G['capa_top'] - 86)
+G.setdefault('face_inset', 112)   # moldura da peca, de cada lado
+G.setdefault('marca_esq', 62); G.setdefault('marca_base', 118)
+G.setdefault('marca_larg', 380); G.setdefault('marca_opacidade', .16)
+G.setdefault('marca_giro', -7)
+G.setdefault('teto_titulo', 124)
+G.setdefault('face_altura', 0.60) # fracao da altura da peca que o texto pode ocupar
 
 CSS = """
 @import url('https://fonts.googleapis.com/css2?%(google_fonts)s&display=swap');
@@ -40,7 +48,7 @@ body{width:1080px;height:1350px;position:relative;overflow:hidden}
 .capa .conj{left:%(capa_left)spx;top:%(capa_top)spx;width:%(capa_w)spx}
 .conj img.placa{display:block;width:100%%;position:relative;z-index:2}
 .poste{z-index:1}
-.naplaca{position:absolute;left:112px;right:112px;top:50%%;transform:translateY(-50%%);
+.naplaca{position:absolute;top:50%%;transform:translateY(-50%%);
   display:flex;flex-direction:column;justify-content:center;
   z-index:3;text-align:center;font-family:'%(fonte_display)s',sans-serif;color:%(tinta)s;text-transform:uppercase;
   line-height:1.2;letter-spacing:.004em;filter:url(#lasca)}
@@ -67,9 +75,9 @@ body{width:1080px;height:1350px;position:relative;overflow:hidden}
 .tri img{max-height:240px}
 .alerta{position:absolute;left:0;right:0;display:flex;justify-content:center}
 .alerta img{max-height:250px}
-.marca{position:absolute;left:62px;bottom:118px;width:380px;opacity:.16;
-  transform:rotate(-7deg);pointer-events:none}
-.marca2{position:absolute;right:58px;bottom:126px;width:150px;opacity:.16;
+.marca{position:absolute;left:%(marca_esq)spx;bottom:%(marca_base)spx;width:%(marca_larg)spx;
+  opacity:%(marca_opacidade)s;transform:rotate(%(marca_giro)sdeg);pointer-events:none}
+.marca2{position:absolute;right:58px;bottom:126px;width:150px;opacity:%(marca_opacidade)s;
   transform:rotate(6deg);pointer-events:none}
 .nota{position:absolute;left:200px;right:200px;bottom:150px;text-align:center;
   font-family:'%(fonte_mao)s',cursive;font-size:44px;line-height:1.34;color:%(nota)s}
@@ -78,6 +86,10 @@ body{width:1080px;height:1350px;position:relative;overflow:hidden}
 .pontos{position:absolute;left:62px;top:%(rodape)spx;display:flex;gap:13px}
 .pontos i{width:14px;height:14px;border-radius:50%%;border:3px solid %(tinta)s;display:block}
 .pontos i.on{background:%(tinta)s}
+/* rodape com peca: a fita cheia marca onde ja passou, a apagada o que falta */
+.pontos img{width:46px;height:auto;opacity:.26}
+.pontos img.on{opacity:1}
+.setas.peca{position:absolute;right:62px;top:%(rodape)spx;margin-top:-10px;width:150px;height:auto}
 .setas{position:absolute;right:62px;top:%(rodape)spx;margin-top:-14px;
   font-family:'%(fonte_display)s',sans-serif;font-size:36px;color:%(tinta)s;letter-spacing:.1em}
 
@@ -103,6 +115,7 @@ FILTRO = ('<svg width="0" height="0"><filter id="lasca">'
   'xChannelSelector="R" yChannelSelector="G"/></filter></svg>')
 
 AJUSTE = """<script>
+  var TETO_TITULO = %(teto_titulo)s;
   function largura(s){
     var r = document.createRange(); r.selectNodeContents(s);
     return r.getBoundingClientRect().width;
@@ -111,7 +124,7 @@ AJUSTE = """<script>
     // na placa, cada linha recebe o corpo que faz ela encostar nas duas bordas:
     // a primeira e a segunda comecam e terminam no mesmo lugar
     document.querySelectorAll('.naplaca').forEach(function(el){
-      var limite = el.clientWidth, teto = 124;
+      var limite = el.clientWidth, teto = TETO_TITULO;
       el.querySelectorAll('span').forEach(function(s){
         var base = parseFloat(getComputedStyle(el).fontSize);
         s.style.fontSize = base + 'px';
@@ -153,7 +166,7 @@ AJUSTE = """<script>
       var topo = Math.max(pe, parseFloat(getComputedStyle(el).top));
       el.style.top = topo + 'px';
       el.style.height = Math.max(150, 1206 - topo) + 'px';
-      el.querySelectorAll('img').forEach(function(i){ i.style.maxHeight = '100%'; });
+      el.querySelectorAll('img').forEach(function(i){ i.style.maxHeight = '100%%'; });
     });
   });
 </script>"""
@@ -163,27 +176,50 @@ TOTAL = len(SLIDES)
 def linhas_span(txt):
     return ''.join(f'<span>{l}</span>' for l in txt.split('<br>'))
 
-def altura_placa(caminho, larg):
+def caixa_placa(caminho, larg, alt_fixa=None):
+    """Devolve (largura, altura, esquerda) da peca principal.
+
+    Com alt_fixa, e a ALTURA que manda e a largura se ajusta: e o que mantem o
+    layout previsivel quando as pecas tem proporcoes bem diferentes entre si."""
     im = _Im.open(PASTA / caminho)
-    return round(larg * im.height / im.width)
+    if alt_fixa:
+        larg = round(alt_fixa * im.width / im.height)
+        return larg, alt_fixa, round((1080 - larg) / 2)
+    return larg, round(larg * im.height / im.width), None
 
 def html(s):
     cls = {'virada':'virada','cta':'cta','capa':'capa'}.get(s['tipo'],'')
     # o contador so existe a partir do slide 2, entao conta de 1 a 6
     # o contador existe so no miolo, do slide 2 ao 5, entao sao quatro bolinhas
-    pontos = ('' if s['n'] in (1, TOTAL) else
-              ''.join('<i class="on"></i>' if k < s['n']-1 else '<i></i>' for k in range(TOTAL-2)))
-    setas = '' if s['n']==TOTAL else '<div class="setas">&gt;&gt;&gt;</div>'
+    if s['n'] in (1, TOTAL):
+        pontos = ''
+    elif RODAPE.get('progresso'):
+        pontos = ''.join(
+            f'<img src="{RODAPE["progresso"]}" class="{"on" if k < s["n"]-1 else ""}">'
+            for k in range(TOTAL-2))
+    else:
+        pontos = ''.join('<i class="on"></i>' if k < s['n']-1 else '<i></i>'
+                         for k in range(TOTAL-2))
+    if s['n'] == TOTAL:
+        setas = ''
+    elif RODAPE.get('seta'):
+        setas = f'<img class="setas peca" src="{RODAPE["seta"]}">'
+    else:
+        setas = '<div class="setas">&gt;&gt;&gt;</div>'
     c=[f'<img class="fundo" src="{s["fundo"]}">']
     if s.get('marca'):
         # a camera de um lado e o filme do outro assinam o assunto sem roubar a cena
         c.append(f'<img class="marca" src="{s["marca"]}">')
-        c.append('<img class="marca2" src="assets/ilustracoes/filme-35mm.png">')
+        if s.get('marca2'):
+            c.append(f'<img class="marca2" src="{s["marca2"]}">')
     if s.get('placa'):
-        larg = G['capa_w'] if s['tipo']=='capa' else G['placa_w']
-        topo = G['capa_top'] if s['tipo']=='capa' else G['placa_top']
-        alt = altura_placa(s['placa'], larg)
-        c.append('<div class="conj">')
+        capa = s['tipo'] == 'capa'
+        larg = G['capa_w'] if capa else G['placa_w']
+        topo = G['capa_top'] if capa else G['placa_top']
+        fixa = G.get('capa_altura') if capa else G.get('placa_altura')
+        larg, alt, esq = caixa_placa(s['placa'], larg, fixa)
+        est = f'width:{larg}px' + (f';left:{esq}px' if esq is not None else '')
+        c.append(f'<div class="conj" style="{est}">')
         if s.get('poste'):
             c.append(f'<img class="poste" src="biblioteca/poste-madeira.png" '
                      f'style="top:{alt-46}px;height:{1086-topo-alt}px">')
@@ -192,8 +228,10 @@ def html(s):
         desl = 24 if s.get('tag') else 0
         n_linhas = s['titulo'].count('<br>') + 1
         corpo = 104 if n_linhas == 2 else 86
-        c.append(f'<div class="naplaca" style="font-size:{corpo}px;'
-                 f'height:{int(alt*0.60)}px">{linhas_span(s["titulo"])}</div>')
+        fi = G['face_inset']
+        rec = round(larg * fi) if fi <= 1 else int(fi)
+        c.append(f'<div class="naplaca" style="left:{rec}px;right:{rec}px;font-size:{corpo}px;'
+                 f'height:{int(alt*G["face_altura"])}px">{linhas_span(s["titulo"])}</div>')
         c.append('</div>')
     if s.get('triangulos'):
         c.append('<div class="tri">' + ''.join(f'<img src="{t}">' for t in s['triangulos']) + '</div>')
@@ -203,7 +241,11 @@ def html(s):
         c.append(f'<div class="tit encaixa">{linhas_span(s["titulo"])}</div>')
     if s.get('hist'):
         v = s.get('var','A')
-        c.append(f'<div class="hist {v}">{s["hist"]}</div>')
+        # 70px de respiro depois do pe real daquela peca, que varia de uma pra outra
+        est = ''
+        if s['tipo'] == 'card' and s.get('placa'):
+            est = f'top:{G["placa_top"] + alt + 70}px'
+        c.append(f'<div class="hist {v}" style="{est}">{s["hist"]}</div>')
     if s.get('ilustra'):
         v = s.get('var','A')
         c.append(f'<div class="ilustra {v}"><img src="{s["ilustra"]}"></div>')
@@ -213,7 +255,7 @@ def html(s):
     if pontos: c.append(f'<div class="pontos">{pontos}</div>')
     c.append(setas)
     return ('<!doctype html><meta charset="utf-8"><style>'+CSS+'</style>'+FILTRO+
-            f'<body class="{cls}">'+''.join(c)+AJUSTE)
+            f'<body class="{cls}">'+''.join(c)+(AJUSTE % G))
 
 for s in SLIDES:
     (PASTA / f'{s["n"]}.html').write_text(html(s), encoding='utf-8')
