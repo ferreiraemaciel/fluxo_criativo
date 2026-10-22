@@ -330,6 +330,33 @@ Gancho, estrutura do conteúdo e fechamento seguem `.claude/skills/conteudo/refe
 do público, o conteúdo é cadeia de premissas e o que é caso ou número do Felipe fica marcado para ele
 preencher, nunca inventado.
 
+## 9a. Clareza antes de qualquer elegância
+
+> Correção do Felipe em 22/10/2026, a partir do roteiro do ADS 419, que ele leu e não entendeu
+> de primeira.
+
+Peça falada tem uma chance só. Quem está vendo não volta para reler, não pergunta o que
+significa, não para para montar o quebra-cabeça. Se a frase precisa de um segundo de esforço,
+ela já perdeu a pessoa.
+
+**As quatro coisas que embaçaram o 419, e que se repetem com facilidade:**
+
+1. **Termo técnico onde cabia palavra comum.** "Fiz um acordo extra judicial" virou "fiz um
+   acordo com o cliente". "Peça de processo" saiu inteiro. Soma-se à regra de
+   [[conteudo-sem-juridiques]]: ali o alvo era o juridiquês, aqui é qualquer palavra que o
+   público não usa no dia a dia dele.
+2. **Dois assuntos fortes no mesmo fôlego.** O bloco tinha três números de pesquisa e mais um
+   caso real. Cada um bom sozinho, os dois juntos se anulam. Um bloco, um assunto.
+3. **Número demais.** Três estatísticas seguidas viram ruído. Fica a mais forte, as outras
+   servem em outra peça.
+4. **História fora de ordem.** Caso real se conta na ordem em que aconteceu, com os papéis ditos
+   antes do desfecho: quem contratou, quem pagou, quem assinou, e só então a confusão.
+
+**Teste antes de entregar qualquer roteiro falado:** ler em voz alta uma vez só, no ritmo
+normal de fala. Se em algum ponto der vontade de voltar, reescreve aquele ponto. Explicar por
+negação ("isso não é X, é Y") custa mais do que afirmar direto, e está na lista de proibições
+do checklist de copy por esse motivo.
+
 ---
 
 ## 10. Rotina obrigatória antes de escrever artigo
