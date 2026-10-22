@@ -271,3 +271,46 @@ porque a leitura é instantânea. O critério é reconhecimento imediato, não p
 **Capa.** Título com a palavra que carrega o tema destacada em verde no meio do bloco preto, linha
 de apoio em corpo pequeno logo abaixo, e o sprite do fotógrafo no canto inferior esquerdo sobre a
 tira de filme. O arroba fecha o rodapé.
+
+---
+
+## Peça gerada no GPT, texto montado aqui (combinado em 22/10/2026)
+
+> Decisão do Felipe depois de ver os slides 2 e 3 do ORG 299 lado a lado. Vale para carrossel novo,
+> no lugar de mandar o GPT desenhar o slide inteiro com o texto dentro.
+
+**O GPT desenha, o montador escreve.** O GPT entrega as peças soltas (fundo, placa ou suporte,
+ilustração) em PNG com transparência real e **sem uma letra**. O texto entra depois, na montagem em
+HTML, que é onde o acento é garantido, o contador de slide não erra e a ordem não troca. Os três
+defeitos que a seção de conferência obrigatória do `IDENTIDADE-VISUAL-INDICE.md` lista como os mais
+repetidos nascem todos na geração e os três deixam de existir por esse caminho.
+
+**O estilo é escolhido por carrossel, pelo assunto e aprovado antes de gerar qualquer coisa.** Não
+existe lista fechada de estilos. Claude sugere três, cada um com nome, o porquê de combinar com
+aquele assunto, paleta, tipografia e o bloco de traço em inglês que vai em toda peça daquele
+carrossel. Felipe escolhe. É a regra do ORG 088 aplicada antes da arte, não depois.
+
+Argumento genérico não serve. "Aquarela fica bonito" não é sugestão. "Barroco aqui porque a peça
+inteira é sobre tratar com solenidade um pedido absurdo do cliente e o exagero do traço é a própria
+piada" é sugestão. Para isso, ler o conteúdo do carrossel antes de sugerir.
+
+**Nada vira acervo.** As peças morrem com o carrossel. Não existe biblioteca por estilo, nem peça
+âncora guardada para meses depois, nem pasta que acumula. Peça é arquivo de trabalho, fica na pasta
+temporária da sessão e é apagada no fim. O que fica é o slide montado, no Drive e no card. Carrossel
+novo recomeça a escolha de estilo do zero.
+
+**O que pedir ao GPT, por peça:** PNG com transparência real, fundo transparente de verdade, sem
+texto nenhum, sem sombra projetada, sem moldura, um objeto por arquivo, objeto inteiro dentro do
+quadro e centralizado com respiro. Placa ou suporte com a face **vazia**, porque o texto entra na
+montagem. Nome de arquivo sem acento e em minúscula.
+
+**A peça nunca vem cortada pela borda.** O corte é feito na montagem, posicionando a peça para fora
+da área visível. É isso que permite a mesma peça sair pela direita de um slide e entrar pela esquerda
+do seguinte, que é o efeito de continuidade do ORG 299. O Instagram tem respiro entre um slide e
+outro, então **objeto fatiado ao meio entre dois slides nunca alinha**: o que funciona é o eco, um
+objeto saindo por uma borda e outro da mesma família entrando pelo lado oposto.
+
+**A grade é o que faz a continuidade funcionar.** No ORG 299 todo o texto está ancorado no mesmo
+pixel nos dois slides e só a ilustração se move. É a parte travada que dá ao olho licença de
+perceber que uma coisa mudou. Por isso a montagem usa posição fixa por tipo de card, nunca posição
+decidida no olho a cada slide.
