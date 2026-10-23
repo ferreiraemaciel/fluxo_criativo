@@ -125,3 +125,12 @@ itens no mesmo dia tudo bem, se os dois cards estão marcados para aquele dia. B
 na sequência também tudo bem.
 
 Card ainda sem data não entra no desafio. Primeiro agenda, depois lança aqui.
+
+## Conferir os buracos a cada atualização (23/10/2026)
+
+Toda vez que o desafio for atualizado, listar junto **os dias da janela que estão
+sem material agendado ou publicado**. O desafio é 30 conteúdos em 30 dias, então
+dia vazio é meta perdida, e o Felipe precisa ver isso na hora, não no fim.
+
+Dia só com `data_prevista` **não conta como preenchido**. Data prevista é plano,
+agendamento é compromisso. Só `scheduled_at` ou `published_at` fecham o dia.
