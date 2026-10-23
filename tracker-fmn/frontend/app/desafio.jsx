@@ -383,26 +383,23 @@ function DesafioScreen({ onNavigate }) {
     .sort((a, b) => b.dia.localeCompare(a.dia)),
   [organico, jaVinculados]);
 
-  /* Dia a dia da janela. Só conta o que está publicado ou agendado PARA o dia.
-     Data prevista de propósito não entra: prevista é plano, agendada é compromisso
+  /* Dia a dia da janela. Verde é dia com criativo vinculado ao desafio, vermelho é dia sem nenhum.
+     Card agendado mas não vinculado não pinta verde: o que conta aqui é o vínculo com o desafio
      (combinado com Felipe em 23/10/2026, ver DESAFIO-MANDALA-MAO-NA-MASSA.md). */
   const agenda = useDM(() => {
-    const comCard = new Map();
-    for (const c of (organico || [])) {
-      const dia = dmmmDia(c.published_at) || dmmmDia(c.scheduled_at);
-      if (!dia || dia < DMMM_INICIO || dia > DMMM_FIM) continue;
-      if (!comCard.has(dia)) comCard.set(dia, []);
-      comCard.get(dia).push(c.numero);
+    const porDia = new Map();
+    for (const pe of (pecas || [])) {
+      if (!pe.dia || pe.dia < DMMM_INICIO || pe.dia > DMMM_FIM) continue;
+      if (!porDia.has(pe.dia)) porDia.set(pe.dia, []);
+      porDia.get(pe.dia).push(pe.rotulo || `${pe.tipo} ${pe.numero}`);
     }
-    const comVinculo = new Set((pecas || []).map(p => p.dia));
     return dmmmListaDias(DMMM_INICIO, DMMM_FIM).map(dia => ({
       dia,
-      cards: (comCard.get(dia) || []).sort((x, y) => x - y),
-      vinculado: comVinculo.has(dia),
+      cards: (porDia.get(dia) || []).sort(),
       passou: dia < hoje,
       hojeEh: dia === hoje,
     }));
-  }, [organico, pecas, hoje]);
+  }, [pecas, hoje]);
 
   const diasVazios = useDM(() => agenda.filter(d => d.cards.length === 0), [agenda]);
   const vaziosPassados = useDM(() => diasVazios.filter(d => d.passou).length, [diasVazios]);
@@ -479,7 +476,7 @@ function DesafioScreen({ onNavigate }) {
         <window.CardKPI label="Interações" value={dmmmNum(soma.interacoes)} icon="heart"
           delta={`${dmmmNum(soma.saved)} salvos · ${dmmmNum(soma.shares)} compart.`}/>
         <window.CardKPI label="Seguidores ganhos" value={dmmmNum(soma.follows)} icon="user-plus"/>
-        <window.CardKPI label="Dias sem card" value={diasVazios.length} icon="calendar-x"
+        <window.CardKPI label="Dias sem vínculo" value={diasVazios.length} icon="calendar-x"
           delta={vaziosPassados ? `${vaziosPassados} já passaram` : 'nenhum deles passou ainda'}/>
       </div>
 
@@ -523,38 +520,28 @@ function DesafioScreen({ onNavigate }) {
         </div>
       </window.SectionCard>
 
-      <window.SectionCard title={`Dias sem card (${diasVazios.length})`} icon="calendar-x"
+      <window.SectionCard title={`Dias sem vínculo (${diasVazios.length})`} icon="calendar-x"
         headerRight={<span style={{ fontSize: 12, color: 'var(--text-3)', fontFamily: 'Roboto,sans-serif' }}>
-          {agenda.length - diasVazios.length} de {agenda.length} dias cobertos
+          {agenda.length - diasVazios.length} de {agenda.length} dias com criativo no desafio
         </span>}>
         <div style={{ fontSize: 12.5, color: 'var(--text-2)', marginBottom: 12, fontFamily: 'Roboto,sans-serif' }}>
-          Conta só o que está publicado ou agendado para o dia. Data prevista não cobre o dia, porque
-          prevista é plano e agendada é compromisso.
+          Verde é dia com criativo vinculado ao desafio. Vermelho é dia sem nenhum. Card agendado que
+          ainda não foi vinculado aqui não conta.
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(78px, 1fr))', gap: 8 }}>
           {agenda.map(d => {
-            const vazio = d.cards.length === 0;
-            const borda = vazio
-              ? (d.passou ? 'rgba(239,68,68,.55)' : 'var(--app-border)')
-              : (d.vinculado ? 'var(--app-primary)' : 'rgba(249,182,79,.45)');
-            const fundo = vazio
-              ? (d.passou ? 'rgba(239,68,68,.10)' : 'var(--app-bg)')
-              : 'var(--app-surface-2)';
-            const titulo = vazio
-              ? (d.passou ? 'Passou sem card' : 'Ainda sem card')
-              : `ORG ${d.cards.join(', ')}${d.vinculado ? '' : ' · fora do desafio'}`;
+            const ok = d.cards.length > 0;
+            const cor = ok ? '#22c55e' : '#ef4444';
             return (
-              <div key={d.dia} title={titulo} style={{
-                background: fundo, border: `1px solid ${borda}`, borderRadius: 10,
-                padding: '8px 6px', textAlign: 'center', fontFamily: 'Roboto,sans-serif',
+              <div key={d.dia} title={ok ? d.cards.join(' · ') : 'Nenhum criativo vinculado'} style={{
+                background: ok ? 'rgba(34,197,94,.10)' : 'rgba(239,68,68,.10)',
+                border: `1px solid ${ok ? 'rgba(34,197,94,.55)' : 'rgba(239,68,68,.55)'}`,
+                borderRadius: 10, padding: '8px 6px', textAlign: 'center', fontFamily: 'Roboto,sans-serif',
                 outline: d.hojeEh ? '2px solid rgba(249,182,79,.7)' : 'none', outlineOffset: 1 }}>
-                <div style={{ fontSize: 15, fontWeight: 600,
-                  color: vazio ? (d.passou ? '#ef4444' : 'var(--text-3)') : 'var(--text-1)' }}>
-                  {dmmmFmt(d.dia)}
-                </div>
+                <div style={{ fontSize: 15, fontWeight: 600, color: cor }}>{dmmmFmt(d.dia)}</div>
                 <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 2, minHeight: 14 }}>
-                  {vazio ? 'vazio' : `${d.cards.length} card${d.cards.length > 1 ? 's' : ''}`}
+                  {ok ? d.cards.join(' · ') : 'vazio'}
                 </div>
               </div>
             );
@@ -563,16 +550,14 @@ function DesafioScreen({ onNavigate }) {
 
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14, marginTop: 14,
           fontSize: 11.5, color: 'var(--text-3)', fontFamily: 'Roboto,sans-serif' }}>
-          <span><b style={{ color: 'var(--app-primary)' }}>■</b> card no ar ou agendado e já no desafio</span>
-          <span><b style={{ color: 'rgba(249,182,79,.75)' }}>■</b> tem card, falta vincular no desafio</span>
-          <span><b style={{ color: '#ef4444' }}>■</b> dia já passou sem card</span>
-          <span><b style={{ color: 'var(--text-3)' }}>■</b> ainda sem card, dá tempo</span>
+          <span><b style={{ color: '#22c55e' }}>■</b> criativo vinculado ao desafio</span>
+          <span><b style={{ color: '#ef4444' }}>■</b> nenhum criativo vinculado</span>
         </div>
 
         {diasVazios.length > 0 && (
           <div style={{ marginTop: 14, paddingTop: 14, borderTop: '1px solid var(--app-border)',
             fontSize: 12.5, color: 'var(--text-2)', fontFamily: 'Roboto,sans-serif', lineHeight: 1.6 }}>
-            <b style={{ color: 'var(--text-1)' }}>Sem nada marcado: </b>
+            <b style={{ color: 'var(--text-1)' }}>Sem vínculo: </b>
             {diasVazios.map(d => dmmmFmt(d.dia)).join(' · ')}
           </div>
         )}

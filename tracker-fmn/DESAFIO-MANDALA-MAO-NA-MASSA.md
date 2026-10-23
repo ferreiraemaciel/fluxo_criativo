@@ -135,20 +135,23 @@ dia vazio é meta perdida, e o Felipe precisa ver isso na hora, não no fim.
 Dia só com `data_prevista` **não conta como preenchido**. Data prevista é plano,
 agendamento é compromisso. Só `scheduled_at` ou `published_at` fecham o dia.
 
-## Painel de dias sem card (23/10/2026)
+## Painel de dias sem vínculo (23/10/2026, corrigido no mesmo dia)
 
-A aba Desafio MMM tem a seção **Dias sem card**, com os 32 dias da janela em
-grade. Cada dia mostra se tem conteúdo e em que estado:
+A aba Desafio MMM tem a seção **Dias sem vínculo**, com os 32 dias da janela em
+grade. A conta olha **só os criativos vinculados ao desafio**, não o kanban inteiro:
 
 | Cor | O que quer dizer |
 |---|---|
-| Amarelo cheio | tem card publicado ou agendado e já está vinculado ao desafio |
-| Amarelo fraco | tem card no dia, falta vincular no desafio |
-| Vermelho | o dia já passou e ficou sem card |
-| Cinza | ainda sem card, mas o dia não chegou |
+| Verde | o dia tem criativo vinculado ao desafio |
+| Vermelho | o dia não tem nenhum criativo vinculado |
 
-Embaixo da grade sai a lista corrida dos dias vazios, e o KPI **Dias sem card**
-repete o total no topo, com quantos deles já passaram.
+O contorno amarelo marca o dia de hoje. Card agendado no Orgânico que ainda não
+foi vinculado ao desafio **não pinta verde**, porque o que o painel acompanha é o
+desafio, não a agenda de postagem.
 
-A conta usa só `published_at` e `scheduled_at`. `data_prevista` não cobre o dia,
-porque prevista é plano e agendada é compromisso.
+Embaixo da grade sai a lista corrida dos dias vermelhos, e o KPI **Dias sem
+vínculo** repete o total no topo, com quantos deles já passaram.
+
+O dia de cada vínculo continua espelhando `scheduled_at` ou `published_at` do
+card, conforme a regra acima. `data_prevista` segue de fora, porque prevista é
+plano e agendada é compromisso.
