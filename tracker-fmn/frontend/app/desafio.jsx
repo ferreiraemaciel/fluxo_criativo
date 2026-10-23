@@ -106,8 +106,9 @@ function dmmmSituacaoSemana(sem, hoje) {
 }
 
 /* ── Peça do desafio, no mesmo visual da aba Picos de Venda ──────── */
-function DmmmPeca({ p, onAbrir, onEditar, onSoltar }) {
-  const [hov, setHov] = useDS(false);
+function DmmmPeca({ p, aceso, onAbrir, onEditar, onSoltar }) {
+  const [hov0, setHov] = useDS(false);
+  const hov = hov0 || aceso;
   return (
     <div onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
       style={{ display: 'flex', flexDirection: 'column', gap: 6, position: 'relative', fontFamily: 'Roboto,sans-serif' }}>
@@ -302,6 +303,7 @@ function DmmmModal({ aberto, inicial, organico, anuncios, jaVinculados, onFechar
 /* ── Tela ────────────────────────────────────────────────────────── */
 function DesafioScreen({ onNavigate }) {
   const [vinculos, setVinculos] = useDS([]);   // [{tipo,numero,dia,mandala}]
+  const [destaque, setDestaque] = useDS(null); // peça acesa pelo quadro de dias
   const [organico, setOrganico] = useDS([]);
   const [anuncios, setAnuncios] = useDS([]);
   const [metricas, setMetricas] = useDS({});   // meta_media_id → snapshot mais recente
@@ -391,11 +393,11 @@ function DesafioScreen({ onNavigate }) {
     for (const pe of (pecas || [])) {
       if (!pe.dia || pe.dia < DMMM_INICIO || pe.dia > DMMM_FIM) continue;
       if (!porDia.has(pe.dia)) porDia.set(pe.dia, []);
-      porDia.get(pe.dia).push(pe.rotulo || `${pe.tipo} ${pe.numero}`);
+      porDia.get(pe.dia).push(pe);
     }
     return dmmmListaDias(DMMM_INICIO, DMMM_FIM).map(dia => ({
       dia,
-      cards: (porDia.get(dia) || []).sort(),
+      cards: (porDia.get(dia) || []).sort((a, b) => String(a.rotulo).localeCompare(String(b.rotulo))),
       passou: dia < hoje,
       hojeEh: dia === hoje,
     }));
@@ -533,15 +535,36 @@ function DesafioScreen({ onNavigate }) {
           {agenda.map(d => {
             const ok = d.cards.length > 0;
             const cor = ok ? '#22c55e' : '#ef4444';
+            const pe = d.cards[0];
+            const chave = pe ? `${pe.tipo}:${pe.numero}` : null;
             return (
-              <div key={d.dia} title={ok ? d.cards.join(' · ') : 'Nenhum criativo vinculado'} style={{
-                background: ok ? 'rgba(34,197,94,.10)' : 'rgba(239,68,68,.10)',
-                border: `1px solid ${ok ? 'rgba(34,197,94,.55)' : 'rgba(239,68,68,.55)'}`,
-                borderRadius: 10, padding: '8px 6px', textAlign: 'center', fontFamily: 'Roboto,sans-serif',
-                outline: d.hojeEh ? '2px solid rgba(249,182,79,.7)' : 'none', outlineOffset: 1 }}>
-                <div style={{ fontSize: 15, fontWeight: 600, color: cor }}>{dmmmFmt(d.dia)}</div>
-                <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 2, minHeight: 14 }}>
-                  {ok ? d.cards.join(' · ') : 'vazio'}
+              <div key={d.dia}
+                title={ok ? d.cards.map(c => `${c.rotulo} · ${c.titulo || ''}`).join('\n') + '\nClique para abrir o card' : 'Nenhum criativo vinculado'}
+                onClick={ok ? () => abrirCard(pe) : undefined}
+                onMouseEnter={() => chave && setDestaque(chave)} onMouseLeave={() => setDestaque(null)}
+                style={{
+                  background: ok ? 'rgba(34,197,94,.10)' : 'rgba(239,68,68,.10)',
+                  border: `1px solid ${ok ? 'rgba(34,197,94,.55)' : 'rgba(239,68,68,.55)'}`,
+                  borderRadius: 10, padding: 6, textAlign: 'center', fontFamily: 'Roboto,sans-serif',
+                  cursor: ok ? 'pointer' : 'default',
+                  outline: d.hojeEh ? '2px solid rgba(249,182,79,.7)' : 'none', outlineOffset: 1 }}>
+                <div style={{ fontSize: 14, fontWeight: 600, color: cor }}>{dmmmFmt(d.dia)}</div>
+                {/* Miniatura do card vinculado (23/10/2026): clicar abre o card no Orgânico
+                    ou nos Anúncios, e passar o mouse acende a mesma peça na lista abaixo. */}
+                <div style={{ marginTop: 5, width: '100%', aspectRatio: '4 / 5', borderRadius: 7, overflow: 'hidden',
+                  background: ok ? 'var(--app-surface-2)' : 'transparent', position: 'relative',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  {ok && pe.img
+                    ? <img src={pe.img} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }}/>
+                    : <span style={{ fontSize: 11, color: 'var(--text-3)' }}>{ok ? '' : 'vazio'}</span>}
+                  {d.cards.length > 1 && (
+                    <span style={{ position: 'absolute', top: 4, right: 4, fontSize: 10, fontWeight: 700,
+                      background: 'rgba(0,0,0,.7)', color: '#fff', borderRadius: 999, padding: '1px 6px' }}>+{d.cards.length - 1}</span>
+                  )}
+                </div>
+                <div style={{ fontSize: 10.5, color: 'var(--text-3)', marginTop: 4, minHeight: 13,
+                  whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {ok ? d.cards.map(c => c.rotulo).join(' · ') : ''}
                 </div>
               </div>
             );
@@ -574,7 +597,7 @@ function DesafioScreen({ onNavigate }) {
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(168px, 1fr))', gap: 16 }}>
             {pecas.map(p => (
-              <DmmmPeca key={`${p.tipo}:${p.numero}`} p={p}
+              <DmmmPeca key={`${p.tipo}:${p.numero}`} p={p} aceso={destaque === `${p.tipo}:${p.numero}`}
                 onAbrir={abrirCard} onEditar={setModal} onSoltar={soltar}/>
             ))}
           </div>
