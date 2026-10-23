@@ -66,6 +66,10 @@ O objetivo e um so: o texto nao pode ter cara de IA. Precisa soar como ele.
 Se o texto for artigo de blog, ler antes o conteudo real do artigo mais recente publicado no
 Supabase, porque a memoria e resumo e o texto publicado e a cadencia real dele.
 
+**Texto assinado pela Amanda (atendimento, venda, proposta, legenda em nome dela) usa outra voz.**
+Carregar `.claude/rules/tom-de-voz-amanda.md` e NÃO aplicar a varredura do Felipe acima, só o que
+estiver proibido nesse arquivo. Em dúvida sobre quem assina, perguntar antes de escrever.
+
 ---
 
 ## TRACKER FMN — LANÇAR AD (REGRA GLOBAL)
