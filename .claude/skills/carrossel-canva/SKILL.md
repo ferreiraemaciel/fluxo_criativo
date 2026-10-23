@@ -156,6 +156,15 @@ Setas, à direita:
 
 Linha da fonte da lei, quando houver, em `top: 1216`.
 
+### Capa e último slide não levam rodapé
+
+A primeira e a última página ficam **sem bolinhas e sem setas**. A capa precisa do
+peso inteiro da headline, e no fecho a contagem não serve para nada, porque não tem
+próximo slide. Marcação só nos slides do meio.
+
+Isso vale por padrão. Se o Felipe pedir a contagem na capa ou no fecho, aí sim
+entra, com as mesmas coordenadas dos outros.
+
 Esse rodapé é a parte que mais escorrega. No ORG 341 os slides 4, 5 e 6 saíram
 26 px mais baixos e isso aparece na passagem de um slide pro outro. **Conferir
 `top` de todos os elementos de rodapé dos 7 slides antes de exportar.**
@@ -186,7 +195,7 @@ O card sai de "Fazer" sozinho ao receber a mídia, pela regra do kanban.
 
 ## Conferência obrigatória antes de entregar
 
-1. Rodapé no mesmo `top` em todos os slides.
+1. Rodapé no mesmo `top` em todos os slides do meio, e ausente na capa e no fecho.
 1b. Todo slide tem objeto de identificação do ofício, inclusive o de CTA.
 1c. Os fundos avulsos vieram junto, um por cor usada.
 2. Nenhuma caixa de texto inventada pela separação sobrou na arte.
