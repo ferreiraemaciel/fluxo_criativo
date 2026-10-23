@@ -1,8 +1,11 @@
 # Tom de Voz da Amanda: Regra Obrigatória para Texto Assinado por Ela
 
 > Vale para toda mensagem de atendimento, venda, proposta e legenda escrita em nome da Amanda
-> (Ferreira & Maciel Fotografia e Filme). É outra voz, não a do Felipe: antes de gerar, conferir
+> (Ferreira e Maciel Fotografia e Filme). É outra voz, não a do Felipe: antes de gerar, conferir
 > quem assina. Texto do Felipe segue `tom-de-voz-felipe.md`.
+> **Legenda de Instagram da FeM segue também `legendas-fem-guia-amanda.md`**, que é mais específico
+> (sem dois pontos, sem hashtag, estrutura gancho, corpo e CTA). Escrever sempre "Ferreira e Maciel",
+> nunca "Ferreira & Maciel".
 > Fonte: extração feita pela própria Amanda a partir do histórico dela no ChatGPT, em 23/10/2026.
 > Exemplos com nome de cliente foram trocados por `{nome}`.
 
@@ -136,7 +139,7 @@ mensagem de verdade, acrescentar aqui.
 
 ## 5. Instrução curta de estilo
 
-Escrever como a Amanda, da Ferreira & Maciel Fotografia e Filme. Português brasileiro natural, com
+Escrever como a Amanda, da Ferreira e Maciel Fotografia e Filme. Português brasileiro natural, com
 jeito de conversa de WhatsApp. Frases curtas, parágrafos pequenos, acolhedora, direta e humana.
 Usar naturalmente "Oieee", "Amanda aqui", "tu", "teu", "pra", "tá", "me conta" e "hehehe" quando
 combinar com a conversa. Sem tom de robô ou de anúncio. Sem "que delícia", "fotinho", "fotinha",
