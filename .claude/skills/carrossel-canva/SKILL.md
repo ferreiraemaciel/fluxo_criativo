@@ -156,14 +156,25 @@ Setas, à direita:
 
 Linha da fonte da lei, quando houver, em `top: 1216`.
 
-### Capa e último slide não levam rodapé
+### Capa e último slide não levam a contagem
 
-A primeira e a última página ficam **sem bolinhas e sem setas**. A capa precisa do
-peso inteiro da headline, e no fecho a contagem não serve para nada, porque não tem
-próximo slide. Marcação só nos slides do meio.
+A primeira e a última página ficam **sem as bolinhas**. A capa precisa do peso
+inteiro da headline e do espaço da subheadline, e no fecho a contagem não diz nada,
+porque não tem próximo slide.
 
-Isso vale por padrão. Se o Felipe pedir a contagem na capa ou no fecho, aí sim
-entra, com as mesmas coordenadas dos outros.
+**As setas continuam na capa.** Elas não são contagem, são o convite de arrastar, e
+é justamente na capa que esse convite precisa existir. Na capa elas podem vir na cor
+de destaque do carrossel em vez da cor da tinta. No último slide não entram, porque
+não tem para onde arrastar.
+
+Isso vale por padrão. Se o Felipe pedir a contagem na capa, aí sim entra, com as
+mesmas coordenadas dos outros.
+
+### A contagem tem uma bolinha por slide do carrossel inteiro
+
+Carrossel de 9 slides leva 9 bolinhas em todos os slides do meio, não 7. A contagem
+mostra a posição dentro do total, então o número de bolinhas é o número de slides,
+mesmo que a capa e o fecho não exibam a régua.
 
 Esse rodapé é a parte que mais escorrega. No ORG 341 os slides 4, 5 e 6 saíram
 26 px mais baixos e isso aparece na passagem de um slide pro outro. **Conferir
@@ -195,7 +206,8 @@ O card sai de "Fazer" sozinho ao receber a mídia, pela regra do kanban.
 
 ## Conferência obrigatória antes de entregar
 
-1. Rodapé no mesmo `top` em todos os slides do meio, e ausente na capa e no fecho.
+1. Rodapé no mesmo `top` em todos os slides, com a contagem ausente na capa e no fecho.
+1a. Número de bolinhas igual ao número de slides do carrossel.
 1b. Todo slide tem objeto de identificação do ofício, inclusive o de CTA.
 1c. Os fundos avulsos vieram junto, um por cor usada.
 2. Nenhuma caixa de texto inventada pela separação sobrou na arte.
